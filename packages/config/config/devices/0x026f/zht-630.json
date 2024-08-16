@@ -1,5 +1,5 @@
 {
-	"manufacturer": "Sprue Safety Products Ltd.",
+	"manufacturer": "Sprue Safety Products, Ltd.",
 	"manufacturerId": "0x026f",
 	"label": "ZHT-630",
 	"description": "Thermistek Heat Alarm/Detector",
@@ -13,6 +13,13 @@
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
 	},
 	"metadata": {
 		"inclusion": "1. Triple-press the add button once the Z-Wave module is on the device.\n2. The LED will show a quick blink once per second while the module is being added.\n3. Upon successful inclusion, the Z-Wave module LED will flash 3 times.\n4. If inclusion fails, the LED will simply stop its blink pattern.",
