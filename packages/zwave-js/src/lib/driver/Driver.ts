@@ -136,6 +136,7 @@ import {
 	type MessageParsingContext,
 	MessageType,
 	type SuccessIndicator,
+	TransferProtocolCCRequest,
 	XModemMessageHeaders,
 	type ZWaveSerialBindingFactory,
 	ZWaveSerialFrameType,
@@ -4185,124 +4186,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// To prevent this problem, we just ignore CCs until the controller is ready
 		if (!this._controller && containsCC(msg)) return;
 
-		// If the message could be decoded, forward it to the send thread
-		if (msg) {
-			let wasMessageLogged = false;
-			if (isCommandRequest(msg) && containsCC(msg)) {
-				// SecurityCCCommandEncapsulationNonceGet is two commands in one, but
-				// we're not set up to handle things like this. Reply to the nonce get
-				// and handle the encapsulation part normally
-				if (
-					msg.command
-						instanceof SecurityCCCommandEncapsulationNonceGet
-				) {
-					const node = this.tryGetNode(msg);
-					if (node) {
-						void this.handleSecurityNonceGet(node);
-					}
-				}
-
-				// Transport Service commands must be handled before assembling partial CCs
-				if (isTransportServiceEncapsulation(msg.command)) {
-					// Log Transport Service commands before doing anything else
-					this.driverLog.logMessage(msg, {
-						secondaryTags: ["partial"],
-						direction: "inbound",
-					});
-					wasMessageLogged = true;
-
-					void this.handleTransportServiceCommand(msg.command).catch(
-						() => {
-							// Don't care about errors in incoming transport service commands
-						},
-					);
-				}
-
-				// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
-				if (!(await this.assemblePartialCCs(msg))) {
-					// Check if a message timer needs to be refreshed.
-					for (const entry of this.awaitedMessages) {
-						if (entry.refreshPredicate?.(msg)) {
-							entry.timeout?.refresh();
-							// Since this is a partial message there may be no clear 1:1 match.
-							// Therefore we loop through all awaited messages
-						}
-					}
-					return;
-				}
-
-				// Make sure we are allowed to handle this command
-				if (
-					this.isSecurityLevelTooLow(msg.command)
-					|| this.shouldDiscardCC(msg.command)
-				) {
-					if (!wasMessageLogged) {
-						this.driverLog.logMessage(msg, {
-							direction: "inbound",
-							secondaryTags: ["discarded"],
-						});
-					}
-					return;
-				}
-
-				// When we have a complete CC, save its values
-				try {
-					this.persistCCValues(msg.command);
-				} catch (e) {
-					// Indicate invalid payloads with a special CC type
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.PacketFormat_InvalidPayload
-					) {
-						this.driverLog.print(
-							`dropping CC with invalid values${
-								typeof e.context === "string"
-									? ` (Reason: ${e.context})`
-									: ""
-							}`,
-							"warn",
-						);
-						// TODO: We may need to do the S2 MOS dance here - or we can deal with it when the next valid CC arrives
-						return;
-					} else {
-						throw e;
-					}
-				}
-
-				// Transport Service CC can be eliminated from the encapsulation stack, since it is always the outermost CC
-				if (isTransportServiceEncapsulation(msg.command)) {
-					msg.command = msg.command.encapsulated;
-					// Now we do want to log the command again, so we can see what was inside
-					wasMessageLogged = false;
-				}
-			}
-
-			if (!wasMessageLogged) {
-				try {
-					this.driverLog.logMessage(msg, {
-						direction: "inbound",
-					});
-				} catch (e) {
-					// We shouldn't throw just because logging a message fails
-					this.driverLog.print(
-						`Logging a message failed: ${getErrorMessage(e)}`,
-					);
-				}
-			}
-
-			// // Check if this message is unsolicited by passing it to the Serial API command interpreter if possible
-			// if (
-			// 	this.serialAPIInterpreter?.status === InterpreterStatus.Running
-			// ) {
-			// 	this.serialAPIInterpreter.send({
-			// 		type: "message",
-			// 		message: msg,
-			// 	});
-			// } else {
-			void this.handleUnsolicitedMessage(msg);
-			// }
-		}
+		// If the message could be decoded, continue handing lit
+		if (msg) await this.handleIncomingMessage(msg);
 	}
 
 	/** Handles a decoding error and returns the desired reply to the stick */
@@ -4986,6 +4871,133 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		);
 	}
 
+	private async handleIncomingMessage(msg: Message): Promise<void> {
+		let wasMessageLogged = false;
+		if (isCommandRequest(msg) && containsCC(msg)) {
+			// SecurityCCCommandEncapsulationNonceGet is two commands in one, but
+			// we're not set up to handle things like this. Reply to the nonce get
+			// and handle the encapsulation part normally
+			if (
+				msg.command
+					instanceof SecurityCCCommandEncapsulationNonceGet
+			) {
+				const node = this.tryGetNode(msg);
+				if (node) {
+					void this.handleSecurityNonceGet(node);
+				}
+			}
+
+			// Transport Service commands must be handled before assembling partial CCs
+			if (isTransportServiceEncapsulation(msg.command)) {
+				// Log Transport Service commands before doing anything else
+				this.driverLog.logMessage(msg, {
+					secondaryTags: ["partial"],
+					direction: "inbound",
+				});
+				wasMessageLogged = true;
+
+				void this.handleTransportServiceCommand(msg.command).catch(
+					() => {
+						// Don't care about errors in incoming transport service commands
+					},
+				);
+			}
+
+			// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
+			if (!(await this.assemblePartialCCs(msg))) {
+				// Check if a message timer needs to be refreshed.
+				for (const entry of this.awaitedMessages) {
+					if (entry.refreshPredicate?.(msg)) {
+						entry.timeout?.refresh();
+						// Since this is a partial message there may be no clear 1:1 match.
+						// Therefore we loop through all awaited messages
+					}
+				}
+				return;
+			}
+
+			// Make sure we are allowed to handle this command
+			if (
+				this.isSecurityLevelTooLow(msg.command)
+				|| this.shouldDiscardCC(msg.command)
+			) {
+				if (!wasMessageLogged) {
+					this.driverLog.logMessage(msg, {
+						direction: "inbound",
+						secondaryTags: ["discarded"],
+					});
+				}
+				return;
+			}
+
+			// When we have a complete CC, save its values
+			try {
+				this.persistCCValues(msg.command);
+			} catch (e) {
+				// Indicate invalid payloads with a special CC type
+				if (
+					isZWaveError(e)
+					&& e.code
+						=== ZWaveErrorCodes.PacketFormat_InvalidPayload
+				) {
+					this.driverLog.print(
+						`dropping CC with invalid values${
+							typeof e.context === "string"
+								? ` (Reason: ${e.context})`
+								: ""
+						}`,
+						"warn",
+					);
+					// TODO: We may need to do the S2 MOS dance here - or we can deal with it when the next valid CC arrives
+					return;
+				} else {
+					throw e;
+				}
+			}
+
+			// Transport Service CC can be eliminated from the encapsulation stack, since it is always the outermost CC
+			if (isTransportServiceEncapsulation(msg.command)) {
+				msg.command = msg.command.encapsulated;
+				// Now we do want to log the command again, so we can see what was inside
+				wasMessageLogged = false;
+			}
+		}
+
+		if (!wasMessageLogged) {
+			try {
+				this.driverLog.logMessage(msg, {
+					direction: "inbound",
+				});
+			} catch (e) {
+				// We shouldn't throw just because logging a message fails
+				this.driverLog.print(
+					`Logging a message failed: ${getErrorMessage(e)}`,
+				);
+			}
+		}
+
+		// When receiving a message from a dead node, bring it back to life
+		if (hasNodeId(msg) || containsCC(msg)) {
+			const node = this.tryGetNode(msg);
+			if (node) {
+				if (node.status === NodeStatus.Dead) {
+					node.markAsAlive();
+				}
+			}
+		}
+
+		// Check if we have a dynamic handler waiting for this message
+		for (const entry of this.awaitedMessages) {
+			if (entry.predicate(msg)) {
+				// We do
+				entry.handler(msg);
+				return;
+			}
+		}
+
+		void this.handleUnsolicitedMessage(msg);
+	}
+
 	private partialCCSessions = new Map<string, CommandClass[]>();
 	private getPartialCCSession(
 		command: CommandClass,
@@ -5264,8 +5276,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 * @param msg The decoded message
 	 */
 	private async handleUnsolicitedMessage(msg: Message): Promise<void> {
-		// FIXME: Rename this - msg might not be unsolicited
-		// This is a message we might have registered handlers for
 		try {
 			if (msg.type === MessageType.Request) {
 				await this.handleRequest(msg);
@@ -5622,25 +5632,6 @@ ${handlers.length} left`,
 	 */
 	private async handleRequest(msg: Message): Promise<void> {
 		let handlers: RequestHandlerEntry[] | undefined;
-
-		if (hasNodeId(msg) || containsCC(msg)) {
-			const node = this.tryGetNode(msg);
-			if (node) {
-				// We have received an unsolicited message from a dead node, bring it back to life
-				if (node.status === NodeStatus.Dead) {
-					node.markAsAlive();
-				}
-			}
-		}
-
-		// Check if we have a dynamic handler waiting for this message
-		for (const entry of this.awaitedMessages) {
-			if (entry.predicate(msg)) {
-				// We do
-				entry.handler(msg);
-				return;
-			}
-		}
 
 		if (isCommandRequest(msg) && containsCC(msg)) {
 			const nodeId = msg.getNodeId()!;
@@ -7555,6 +7546,31 @@ ${handlers.length} left`,
 			maxSendAttempts: options.maxSendAttempts || 1,
 			transmitOptions: TransmitOptions.AutoRoute | TransmitOptions.ACK,
 		});
+	}
+
+	private async transferProtocolCC(
+		sourceNodeId: number,
+		securityClass: SecurityClass,
+		plaintext: BytesView,
+	): Promise<void> {
+		// Supervision commands are handled here
+		this.controllerLog.logNode(sourceNodeId, {
+			message: `Forwarding protocol CC to Z-Wave module`,
+			direction: "outbound",
+		});
+
+		const msg = new TransferProtocolCCRequest({
+			sourceNodeId,
+			securityClass,
+			plaintext,
+		});
+		try {
+			await this.sendMessage(msg);
+		} catch (e) {
+			this.driverLog.print(
+				`Failed to forward protocol CC: ${getErrorMessage(e, true)}`,
+			);
+		}
 	}
 
 	private async abortSendData(): Promise<void> {
