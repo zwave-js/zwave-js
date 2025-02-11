@@ -346,6 +346,7 @@ import {
 	RemoveNodeReason,
 	type ReplaceNodeOptions,
 	SecurityBootstrapFailure,
+	type SecurityBootstrapResult,
 	type SmartStartProvisioningEntry,
 } from "./Inclusion.js";
 import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
@@ -2577,9 +2578,7 @@ export class ZWaveController
 			);
 		}
 
-		let bootstrapFailure:
-			| SecurityBootstrapFailure
-			| undefined;
+		let bootstrapResult: SecurityBootstrapResult;
 		let smartStartFailed = false;
 
 		// A controller performing a SmartStart network inclusion shall perform S2 bootstrapping,
@@ -2613,22 +2612,25 @@ export class ZWaveController
 				|| opts.strategy
 					=== InclusionStrategy.SmartStart)
 		) {
-			bootstrapFailure = yield* waitFor(this.secureBootstrapS2(
+			bootstrapResult = yield* waitFor(this.secureBootstrapS2(
 				newNode,
 				opts,
 			));
 			const actualSecurityClass = newNode
 				.getHighestSecurityClass();
 
-			if (bootstrapFailure == undefined) {
+			if (bootstrapResult.success === false) {
 				if (
 					actualSecurityClass
 						== SecurityClass.S0_Legacy
 				) {
 					// Notify user about potential S0 downgrade attack.
 					// S0 is considered insecure if both controller and node are S2-capable
-					bootstrapFailure = SecurityBootstrapFailure
-						.S0Downgrade;
+					bootstrapResult = {
+						success: false,
+						reason: SecurityBootstrapFailure
+							.S0Downgrade,
+					};
 
 					this.driver.controllerLog.logNode(
 						newNode.id,
@@ -2640,7 +2642,10 @@ export class ZWaveController
 				} else if (
 					!securityClassIsS2(actualSecurityClass)
 				) {
-					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+					bootstrapResult = {
+						success: false,
+						reason: SecurityBootstrapFailure.Unknown,
+					};
 				}
 			} else if (
 				opts.strategy
@@ -2671,11 +2676,11 @@ export class ZWaveController
 									?.generic
 						)?.requiresSecurity)))
 		) {
-			bootstrapFailure = yield* waitFor(this.secureBootstrapS0(
+			bootstrapResult = yield* waitFor(this.secureBootstrapS0(
 				newNode,
 				newNodeIsController,
 			));
-			if (bootstrapFailure == undefined) {
+			if (bootstrapResult.success === false) {
 				const actualSecurityClass = newNode
 					.getHighestSecurityClass();
 				if (
@@ -2703,8 +2708,11 @@ export class ZWaveController
 							)
 						) {
 							// Notify user about potential S0 downgrade attack.
-							bootstrapFailure = SecurityBootstrapFailure
-								.S0Downgrade;
+							bootstrapResult = {
+								success: false,
+								reason: SecurityBootstrapFailure
+									.S0Downgrade,
+							};
 
 							this.driver.controllerLog
 								.logNode(
@@ -2718,7 +2726,10 @@ export class ZWaveController
 						}
 					}
 				} else {
-					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+					bootstrapResult = {
+						success: false,
+						reason: SecurityBootstrapFailure.Unknown,
+					};
 				}
 			}
 		} else {
@@ -2729,6 +2740,10 @@ export class ZWaveController
 					false,
 				);
 			}
+			// And that there was no error
+			bootstrapResult = {
+				success: true,
+			};
 		}
 
 		// After an unsuccessful SmartStart inclusion, the node MUST leave the network and return to SmartStart learn mode
@@ -2822,13 +2837,18 @@ export class ZWaveController
 			}
 		}
 
+		// Enable NLS if desired
+		if (bootstrapResult.success && bootstrapResult.enableNLS) {
+			await this.enableAndVerifyNLS(newNode);
+		}
+
 		this.setInclusionState(InclusionState.Idle);
 
 		// We're done adding this node, notify listeners
-		const result: InclusionResult = bootstrapFailure != undefined
+		const result: InclusionResult = bootstrapResult.success === false
 			? {
 				lowSecurity: true,
-				lowSecurityReason: bootstrapFailure,
+				lowSecurityReason: bootstrapResult.reason,
 			}
 			: { lowSecurity: false };
 
@@ -3566,18 +3586,24 @@ export class ZWaveController
 				newNode.markAsAlive();
 
 				// Perform S0/S2 bootstrapping
-				const bootstrapFailure = await this.proxyBootstrap(
+				const bootstrapResult = await this.proxyBootstrap(
 					newNode,
 					inclCtrlr,
 				);
 
+				// Enable NLS if desired
+				if (bootstrapResult.success && bootstrapResult.enableNLS) {
+					await this.enableAndVerifyNLS(newNode);
+				}
+
 				// We're done adding this node, notify listeners
-				const result: InclusionResult = bootstrapFailure != undefined
-					? {
-						lowSecurity: true,
-						lowSecurityReason: bootstrapFailure,
-					}
-					: { lowSecurity: false };
+				const result: InclusionResult =
+					bootstrapResult.success === false
+						? {
+							lowSecurity: true,
+							lowSecurityReason: bootstrapResult.reason,
+						}
+						: { lowSecurity: false };
 
 				this.setInclusionState(InclusionState.Idle);
 				this.emit("node added", newNode, result);
@@ -3947,16 +3973,21 @@ export class ZWaveController
 			}
 
 			// Perform S0/S2 bootstrapping
-			const bootstrapFailure = await this.proxyBootstrap(
+			const bootstrapResult = await this.proxyBootstrap(
 				newNode,
 				inclCtrlr,
 			);
 
+			// Enable NLS if desired
+			if (bootstrapResult.success && bootstrapResult.enableNLS) {
+				await this.enableAndVerifyNLS(newNode);
+			}
+
 			// We're done adding this node, notify listeners
-			const result: InclusionResult = bootstrapFailure != undefined
+			const result: InclusionResult = bootstrapResult.success === false
 				? {
 					lowSecurity: true,
-					lowSecurityReason: bootstrapFailure,
+					lowSecurityReason: bootstrapResult.reason,
 				}
 				: { lowSecurity: false };
 
@@ -3987,25 +4018,28 @@ export class ZWaveController
 	private async proxyBootstrap(
 		newNode: ZWaveNode,
 		inclCtrlr: ZWaveNode,
-	): Promise<SecurityBootstrapFailure | undefined> {
+	): Promise<SecurityBootstrapResult> {
 		// This part is to be done before the interview
 
 		const deviceClass = newNode.deviceClass!;
-		let bootstrapFailure: SecurityBootstrapFailure | undefined;
+		let bootstrapResult: SecurityBootstrapResult;
 
 		// Include using the default inclusion strategy:
 		// * Use S2 if possible,
 		// * only use S0 if necessary,
 		// * use no encryption otherwise
 		if (newNode.supportsCC(CommandClasses["Security 2"])) {
-			bootstrapFailure = await this.secureBootstrapS2(newNode);
-			if (bootstrapFailure == undefined) {
+			bootstrapResult = await this.secureBootstrapS2(newNode);
+			if (bootstrapResult.success) {
 				const actualSecurityClass = newNode.getHighestSecurityClass();
 				if (
 					actualSecurityClass == undefined
 					|| actualSecurityClass < SecurityClass.S2_Unauthenticated
 				) {
-					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+					bootstrapResult = {
+						success: false,
+						reason: SecurityBootstrapFailure.Unknown,
+					};
 				}
 			}
 		} else if (
@@ -4043,11 +4077,21 @@ export class ZWaveController
 						: "failed"
 				}`,
 			);
-			bootstrapFailure = s0result == undefined
-				? SecurityBootstrapFailure.Timeout
-				: s0result.status === InclusionControllerStatus.OK
-				? undefined
-				: SecurityBootstrapFailure.Unknown;
+			if (s0result == undefined) {
+				bootstrapResult = {
+					success: false,
+					reason: SecurityBootstrapFailure.Timeout,
+				};
+			} else if (s0result.status === InclusionControllerStatus.OK) {
+				bootstrapResult = {
+					success: true,
+				};
+			} else {
+				bootstrapResult = {
+					success: false,
+					reason: SecurityBootstrapFailure.Unknown,
+				};
+			}
 
 			// When bootstrapping with S0, no other keys are granted
 			for (const secClass of securityClassOrder) {
@@ -4066,16 +4110,20 @@ export class ZWaveController
 			for (const secClass of securityClassOrder) {
 				newNode.securityClasses.set(secClass, false);
 			}
+			// And that there was no error
+			bootstrapResult = {
+				success: true,
+			};
 		}
 
-		return bootstrapFailure;
+		return bootstrapResult;
 	}
 
 	private async secureBootstrapS0(
 		node: ZWaveNode,
 		nodeIsController: boolean,
 		assumeSupported: boolean = false,
-	): Promise<SecurityBootstrapFailure | undefined> {
+	): Promise<SecurityBootstrapResult> {
 		// When bootstrapping with S0, no other keys are granted
 		for (const secClass of securityClassOrder) {
 			if (secClass !== SecurityClass.S0_Legacy) {
@@ -4086,7 +4134,10 @@ export class ZWaveController
 		if (!this.driver.securityManager) {
 			// Remember that the node was NOT granted the S0 security class
 			node.securityClasses.set(SecurityClass.S0_Legacy, false);
-			return SecurityBootstrapFailure.NoKeysConfigured;
+			return {
+				success: false,
+				reason: SecurityBootstrapFailure.NoKeysConfigured,
+			};
 		}
 
 		// If security has been set up and we are allowed to include the node securely, try to do it
@@ -4150,10 +4201,14 @@ export class ZWaveController
 			});
 
 			// success 🎉
+
+			return {
+				success: true,
+			};
 		} catch (e) {
 			let errorMessage =
 				`Security S0 bootstrapping failed, the node was not granted the S0 security class`;
-			let failure: SecurityBootstrapFailure =
+			let reason: SecurityBootstrapFailure =
 				SecurityBootstrapFailure.Unknown;
 			if (!isZWaveError(e)) {
 				errorMessage += `: ${e as any}`;
@@ -4162,14 +4217,17 @@ export class ZWaveController
 				&& e.code !== ZWaveErrorCodes.Controller_NodeTimeout
 			) {
 				errorMessage += `: ${e.message}`;
-				failure = SecurityBootstrapFailure.Timeout;
+				reason = SecurityBootstrapFailure.Timeout;
 			}
 			this.driver.controllerLog.logNode(node.id, errorMessage, "warn");
 			// Remember that the node was NOT granted the S0 security class
 			node.securityClasses.set(SecurityClass.S0_Legacy, false);
 			node.removeCC(CommandClasses.Security);
 
-			return failure;
+			return {
+				success: false,
+				reason,
+			};
 		}
 	}
 
@@ -4190,6 +4248,8 @@ export class ZWaveController
 		}
 	}
 
+	// FIXME: Expose to the caller whether enabling network-level security is desired
+
 	private async secureBootstrapS2(
 		node: ZWaveNode,
 		// inclusionOptions is passed during normal inclusion, and undefined
@@ -4201,7 +4261,7 @@ export class ZWaveController
 				| InclusionStrategy.SmartStart;
 		},
 		assumeSupported: boolean = false,
-	): Promise<SecurityBootstrapFailure | undefined> {
+	): Promise<SecurityBootstrapResult> {
 		const unGrantSecurityClasses = () => {
 			for (const secClass of securityClassOrder) {
 				node.securityClasses.set(secClass, false);
@@ -4215,7 +4275,10 @@ export class ZWaveController
 		if (!securityManager) {
 			// Remember that the node was NOT granted any S2 security classes
 			unGrantSecurityClasses();
-			return SecurityBootstrapFailure.NoKeysConfigured;
+			return {
+				success: false,
+				reason: SecurityBootstrapFailure.NoKeysConfigured,
+			};
 		}
 
 		let userCallbacks: InclusionUserCallbacks;
@@ -4259,7 +4322,10 @@ export class ZWaveController
 			// Cannot bootstrap S2 without user callbacks, abort.
 			// Remember that the node was NOT granted any S2 security classes
 			unGrantSecurityClasses();
-			return SecurityBootstrapFailure.S2NoUserCallbacks;
+			return {
+				success: false,
+				reason: SecurityBootstrapFailure.S2NoUserCallbacks,
+			};
 		}
 
 		// When replacing a node, we receive no NIF, so we cannot know that the Security CC is supported.
@@ -4305,7 +4371,7 @@ export class ZWaveController
 				this.cancelBootstrapS2Promise = undefined;
 			};
 
-			const abortUser = async () => {
+			const abortUser = async (): Promise<SecurityBootstrapResult> => {
 				setImmediate(() => {
 					try {
 						userCallbacks.abort();
@@ -4314,10 +4380,13 @@ export class ZWaveController
 					}
 				});
 				await abort(KEXFailType.BootstrappingCanceled);
-				return SecurityBootstrapFailure.UserCanceled;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.UserCanceled,
+				};
 			};
 
-			const abortTimeout = async () => {
+			const abortTimeout = async (): Promise<SecurityBootstrapResult> => {
 				this.driver.controllerLog.logNode(node.id, {
 					message:
 						`Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
@@ -4325,7 +4394,10 @@ export class ZWaveController
 				});
 
 				await abort();
-				return SecurityBootstrapFailure.Timeout;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.Timeout,
+				};
 			};
 
 			// Ask the node for its desired security classes and key exchange params
@@ -4339,7 +4411,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort();
-				return SecurityBootstrapFailure.Timeout;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.Timeout,
+				};
 			}
 
 			// Validate the response
@@ -4351,7 +4426,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.NoVerify);
-				return SecurityBootstrapFailure.ParameterMismatch;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.ParameterMismatch,
+				};
 			}
 			// At the time of implementation, only KEXScheme1 and Curve25519 are defined.
 			// The certification testing ensures that no other bits are set, so we need to check that too.
@@ -4368,7 +4446,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.NoSupportedScheme);
-				return SecurityBootstrapFailure.ParameterMismatch;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.ParameterMismatch,
+				};
 			} else if (
 				kexParams.supportedECDHProfiles.length !== 1
 				|| !kexParams.supportedECDHProfiles.includes(
@@ -4381,7 +4462,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.NoSupportedCurve);
-				return SecurityBootstrapFailure.ParameterMismatch;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.ParameterMismatch,
+				};
 			} else if (kexParams.requestCSA) {
 				// We do not support CSA at the moment, so it is never granted.
 				// Alternatively, filter out S2 Authenticated and S2 Access Control
@@ -4391,7 +4475,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.BootstrappingCanceled);
-				return SecurityBootstrapFailure.ParameterMismatch;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.ParameterMismatch,
+				};
 			}
 
 			const supportedKeys = kexParams.requestedKeys.filter((k) =>
@@ -4404,7 +4491,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.NoKeyMatch);
-				return SecurityBootstrapFailure.ParameterMismatch;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.ParameterMismatch,
+				};
 			}
 
 			// TODO: Validate client-side auth if requested
@@ -4414,6 +4504,7 @@ export class ZWaveController
 					.grantSecurityClasses({
 						securityClasses: supportedKeys,
 						clientSideAuth: false,
+						networkLevelSecurity: kexParams.supportsNLS,
 					})
 					// ignore errors in application callbacks
 					.catch(() => false as const),
@@ -4469,7 +4560,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort();
-				return SecurityBootstrapFailure.NodeCanceled;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.NodeCanceled,
+				};
 			}
 			const nodePublicKey = Bytes.from(pubKeyResponse.publicKey);
 
@@ -4578,7 +4672,10 @@ export class ZWaveController
 				// The bootstrapping process was canceled - this is most likely because the PIN was incorrect
 				// and the node's commands cannot be decoded
 				await abort(kexSetEcho);
-				return SecurityBootstrapFailure.S2IncorrectPIN;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.S2IncorrectPIN,
+				};
 			}
 			// Validate that the received command contains the correct list of keys
 			if (kexSetEcho instanceof Security2CCKEXFail) {
@@ -4589,7 +4686,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort();
-				return SecurityBootstrapFailure.NodeCanceled;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.NodeCanceled,
+				};
 			} else if (!kexSetEcho.echo) {
 				this.driver.controllerLog.logNode(node.id, {
 					message:
@@ -4598,7 +4698,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
-				return SecurityBootstrapFailure.NodeCanceled;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.NodeCanceled,
+				};
 			} else if (kexSetEcho._reserved !== 0) {
 				this.driver.controllerLog.logNode(node.id, {
 					message:
@@ -4607,7 +4710,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
-				return SecurityBootstrapFailure.NodeCanceled;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.NodeCanceled,
+				};
 			} else if (
 				!kexSetEcho.isEncapsulatedWith(
 					CommandClasses["Security 2"],
@@ -4621,7 +4727,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
-				return SecurityBootstrapFailure.S2WrongSecurityLevel;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.S2WrongSecurityLevel,
+				};
 			} else if (
 				kexSetEcho.grantedKeys.length !== grantedKeys.length
 				|| !kexSetEcho.grantedKeys.every((k) => grantedKeys.includes(k))
@@ -4632,7 +4741,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
-				return SecurityBootstrapFailure.S2WrongSecurityLevel;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.S2WrongSecurityLevel,
+				};
 			}
 			// Confirm the keys - the node will start requesting the granted keys in response
 			await api.confirmRequestedKeys({
@@ -4664,7 +4776,10 @@ export class ZWaveController
 						level: "warn",
 					});
 					await abort();
-					return SecurityBootstrapFailure.NodeCanceled;
+					return {
+						success: false,
+						reason: SecurityBootstrapFailure.NodeCanceled,
+					};
 				} else if (
 					!keyRequest.isEncapsulatedWith(
 						CommandClasses["Security 2"],
@@ -4678,7 +4793,10 @@ export class ZWaveController
 						level: "warn",
 					});
 					await abort(KEXFailType.WrongSecurityLevel);
-					return SecurityBootstrapFailure.S2WrongSecurityLevel;
+					return {
+						success: false,
+						reason: SecurityBootstrapFailure.S2WrongSecurityLevel,
+					};
 				}
 
 				const securityClass = keyRequest.requestedKey;
@@ -4695,7 +4813,10 @@ export class ZWaveController
 						level: "warn",
 					});
 					await abort(KEXFailType.WrongSecurityLevel);
-					return SecurityBootstrapFailure.S2WrongSecurityLevel;
+					return {
+						success: false,
+						reason: SecurityBootstrapFailure.S2WrongSecurityLevel,
+					};
 				} else if (!grantedKeys.includes(securityClass)) {
 					// and that the requested key is one of the granted keys
 					this.driver.controllerLog.logNode(node.id, {
@@ -4704,7 +4825,10 @@ export class ZWaveController
 						level: "warn",
 					});
 					await abort(KEXFailType.KeyNotGranted);
-					return SecurityBootstrapFailure.S2WrongSecurityLevel;
+					return {
+						success: false,
+						reason: SecurityBootstrapFailure.S2WrongSecurityLevel,
+					};
 				}
 
 				// We need to temporarily mark this security class as granted, so the following exchange will use this
@@ -4739,7 +4863,10 @@ export class ZWaveController
 						level: "warn",
 					});
 					await abort();
-					return SecurityBootstrapFailure.NodeCanceled;
+					return {
+						success: false,
+						reason: SecurityBootstrapFailure.NodeCanceled,
+					};
 				}
 
 				if (
@@ -4754,7 +4881,10 @@ export class ZWaveController
 						level: "warn",
 					});
 					await abort(KEXFailType.NoVerify);
-					return SecurityBootstrapFailure.S2WrongSecurityLevel;
+					return {
+						success: false,
+						reason: SecurityBootstrapFailure.S2WrongSecurityLevel,
+					};
 				}
 
 				// Tell the node that verification was successful. We need to reset the SPAN state
@@ -4782,7 +4912,10 @@ export class ZWaveController
 					level: "warn",
 				});
 				await abort(KEXFailType.NoVerify);
-				return SecurityBootstrapFailure.Timeout;
+				return {
+					success: false,
+					reason: SecurityBootstrapFailure.Timeout,
+				};
 			}
 
 			// Remember all security classes we have granted
@@ -4810,15 +4943,21 @@ export class ZWaveController
 			});
 
 			// success 🎉
+
+			return {
+				success: true,
+				enableNLS: kexParams.supportsNLS
+					&& grantResult.networkLevelSecurity !== false,
+			};
 		} catch (e) {
 			let errorMessage =
 				`Security S2 bootstrapping failed, the node was not granted any S2 security class`;
-			let result = SecurityBootstrapFailure.Unknown;
+			let reason = SecurityBootstrapFailure.Unknown;
 			if (!isZWaveError(e)) {
 				errorMessage += `: ${e as any}`;
 			} else if (e.code === ZWaveErrorCodes.Controller_MessageExpired) {
 				errorMessage += ": a secure inclusion timer has elapsed.";
-				result = SecurityBootstrapFailure.Timeout;
+				reason = SecurityBootstrapFailure.Timeout;
 			} else if (
 				e.code !== ZWaveErrorCodes.Controller_MessageDropped
 				&& e.code !== ZWaveErrorCodes.Controller_NodeTimeout
@@ -4830,7 +4969,10 @@ export class ZWaveController
 			unGrantSecurityClasses();
 			node.removeCC(CommandClasses["Security 2"]);
 
-			return result;
+			return {
+				success: false,
+				reason,
+			};
 		} finally {
 			// Whatever happens, no further communication needs the temporary key
 			deleteTempKey();
@@ -4838,6 +4980,32 @@ export class ZWaveController
 			this._bootstrappingS2NodeId = undefined;
 			this.cancelBootstrapS2Promise = undefined;
 		}
+	}
+
+	private async enableAndVerifyNLS(node: ZWaveNode): Promise<boolean> {
+		try {
+			await node.commandClasses["Security 2"].enableNLS();
+			const result = await node.commandClasses["Security 2"]
+				.getNLSState();
+
+			if (result?.enabled) {
+				this.driver.controllerLog.logNode(
+					node.id,
+					`Network level security enabled`,
+				);
+				return true;
+			}
+		} catch {
+			// ignore
+		}
+
+		this.driver.controllerLog.logNode(
+			node.id,
+			`Network level security could not be enabled`,
+			"warn",
+		);
+
+		return false;
 	}
 
 	private _rebuildRoutesProgress = new Map<number, RebuildRoutesStatus>();
@@ -7062,14 +7230,14 @@ export class ZWaveController
 		// Try perform the security bootstrap process. When replacing a node, we don't know any supported CCs
 		// yet, so we need to trust the chosen inclusion strategy.
 		const strategy = options.strategy;
-		let bootstrapFailure: SecurityBootstrapFailure | undefined;
+		let bootstrapResult: SecurityBootstrapResult;
 		if (strategy === InclusionStrategy.Security_S2) {
-			bootstrapFailure = await this.secureBootstrapS2(
+			bootstrapResult = await this.secureBootstrapS2(
 				newNode,
 				options,
 				true,
 			);
-			if (bootstrapFailure == undefined) {
+			if (bootstrapResult.success === false) {
 				const actualSecurityClass = newNode
 					.getHighestSecurityClass();
 				if (
@@ -7077,11 +7245,14 @@ export class ZWaveController
 					|| actualSecurityClass
 						< SecurityClass.S2_Unauthenticated
 				) {
-					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+					bootstrapResult = {
+						success: false,
+						reason: SecurityBootstrapFailure.Unknown,
+					};
 				}
 			}
 		} else if (strategy === InclusionStrategy.Security_S0) {
-			bootstrapFailure = await this.secureBootstrapS0(
+			bootstrapResult = await this.secureBootstrapS0(
 				newNode,
 				// When replacing a node, we don't receive NIF, so we have to make
 				// some assumptions, just like we do for Security S2 above.
@@ -7091,14 +7262,17 @@ export class ZWaveController
 				// don't know any better at this point.
 				true,
 			);
-			if (bootstrapFailure == undefined) {
+			if (bootstrapResult.success === false) {
 				const actualSecurityClass = newNode
 					.getHighestSecurityClass();
 				if (
 					actualSecurityClass == undefined
 					|| actualSecurityClass < SecurityClass.S0_Legacy
 				) {
-					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+					bootstrapResult = {
+						success: false,
+						reason: SecurityBootstrapFailure.Unknown,
+					};
 				}
 			}
 		} else {
@@ -7106,15 +7280,25 @@ export class ZWaveController
 			for (const secClass of securityClassOrder) {
 				newNode.securityClasses.set(secClass, false);
 			}
+			// And that there was no error
+			bootstrapResult = {
+				success: true,
+			};
+		}
+
+		// Enable NLS if desired
+		if (bootstrapResult.success && bootstrapResult.enableNLS) {
+			await this.enableAndVerifyNLS(newNode);
 		}
 
 		// We're done adding this node, notify listeners. This also kicks off the node interview
-		const inclusionResult: InclusionResult = bootstrapFailure != undefined
-			? {
-				lowSecurity: true,
-				lowSecurityReason: bootstrapFailure,
-			}
-			: { lowSecurity: false };
+		const inclusionResult: InclusionResult =
+			bootstrapResult.success === false
+				? {
+					lowSecurity: true,
+					lowSecurityReason: bootstrapResult.reason,
+				}
+				: { lowSecurity: false };
 
 		this.setInclusionState(InclusionState.Idle);
 		this.emit("node added", newNode, inclusionResult);
