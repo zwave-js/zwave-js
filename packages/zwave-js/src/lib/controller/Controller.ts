@@ -4643,6 +4643,7 @@ export class ZWaveController
 			}
 			// Confirm the keys - the node will start requesting the granted keys in response
 			await api.confirmRequestedKeys({
+				supportsNLS: kexParams.supportsNLS,
 				requestCSA: kexParams.requestCSA,
 				requestedKeys: [...kexParams.requestedKeys],
 				supportedECDHProfiles: [...kexParams.supportedECDHProfiles],
@@ -9777,6 +9778,7 @@ export class ZWaveController
 			// Send with our desired keys
 			await api.requestKeys({
 				requestedKeys: requested.securityClasses,
+				supportsNLS: true,
 				requestCSA: false,
 				supportedECDHProfiles: [ECDHProfiles.Curve25519],
 				supportedKEXSchemes: [KEXSchemes.KEXScheme1],

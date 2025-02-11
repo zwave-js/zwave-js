@@ -811,6 +811,7 @@ export class Security2CCAPI extends CCAPI {
 		);
 		if (response) {
 			return pick(response, [
+				"supportsNLS",
 				"requestCSA",
 				"echo",
 				"supportedKEXSchemes",
@@ -2240,6 +2241,7 @@ export class Security2CCNonceGet extends Security2CC {
 
 // @publicAPI
 export interface Security2CCKEXReportOptions {
+	supportsNLS: boolean;
 	requestCSA: boolean;
 	echo: boolean;
 	_reserved?: number;
@@ -2254,6 +2256,7 @@ export class Security2CCKEXReport extends Security2CC {
 		options: WithAddress<Security2CCKEXReportOptions>,
 	) {
 		super(options);
+		this.supportsNLS = options.supportsNLS;
 		this.requestCSA = options.requestCSA;
 		this.echo = options.echo;
 		this._reserved = options._reserved ?? 0;
@@ -2267,11 +2270,12 @@ export class Security2CCKEXReport extends Security2CC {
 		ctx: CCParsingContext,
 	): Security2CCKEXReport {
 		validatePayload(raw.payload.length >= 4);
+		const supportsNLS = !!(raw.payload[0] & 0b100);
 		const requestCSA = !!(raw.payload[0] & 0b10);
 		const echo = !!(raw.payload[0] & 0b1);
 
 		// Remember the reserved bits for the echo
-		const _reserved = raw.payload[0] & 0b1111_1100;
+		const _reserved = raw.payload[0] & 0b1111_1000;
 
 		// The bit mask starts at 0, but bit 0 is not used
 		const supportedKEXSchemes: KEXSchemes[] = parseBitMask(
@@ -2289,6 +2293,7 @@ export class Security2CCKEXReport extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			supportsNLS,
 			requestCSA,
 			echo,
 			_reserved,
@@ -2299,6 +2304,7 @@ export class Security2CCKEXReport extends Security2CC {
 	}
 
 	public readonly _reserved: number;
+	public readonly supportsNLS: boolean;
 	public readonly requestCSA: boolean;
 	public readonly echo: boolean;
 	public readonly supportedKEXSchemes: readonly KEXSchemes[];
@@ -2309,6 +2315,7 @@ export class Security2CCKEXReport extends Security2CC {
 		this.payload = Bytes.concat([
 			[
 				this._reserved
+				+ (this.supportsNLS ? 0b100 : 0)
 				+ (this.requestCSA ? 0b10 : 0)
 				+ (this.echo ? 0b1 : 0),
 			],
@@ -2339,6 +2346,7 @@ export class Security2CCKEXReport extends Security2CC {
 				"supported ECDH profiles": this.supportedECDHProfiles
 					.map((s) => `\n· ${getEnumMemberName(ECDHProfiles, s)}`)
 					.join(""),
+				"supports NLS": this.supportsNLS,
 				"CSA requested": this.requestCSA,
 				"requested security classes": this.requestedKeys
 					.map((s) => `\n· ${getEnumMemberName(SecurityClass, s)}`)
