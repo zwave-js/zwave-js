@@ -27,6 +27,7 @@ import {
 } from "@zwave-js/serial";
 import {
 	Bytes,
+	type BytesView,
 	buffer2hex,
 	getEnumMemberName,
 	num2hex,
@@ -56,7 +57,7 @@ export class RequestProtocolCCEncryptionRequestBase extends Message {
 
 export interface RequestProtocolCCEncryptionRequestOptions {
 	destinationNodeId: number;
-	plaintext: Uint8Array;
+	plaintext: BytesView;
 	transmitOptions: TransmitOptions;
 }
 
@@ -76,7 +77,7 @@ export class RequestProtocolCCEncryptionRequest
 	}
 
 	public destinationNodeId: number;
-	public plaintext: Uint8Array;
+	public plaintext: BytesView;
 	public transmitOptions: TransmitOptions;
 
 	public static from(
