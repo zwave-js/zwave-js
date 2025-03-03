@@ -233,5 +233,6 @@ export function evalOrStatic<T>(
 	fnOrConst: T,
 	...args: any[]
 ): ReturnTypeOrStatic<T> {
+	// @ts-expect-error https://github.com/microsoft/TypeScript/issues/61337
 	return typeof fnOrConst === "function" ? fnOrConst(...args) : fnOrConst;
 }
