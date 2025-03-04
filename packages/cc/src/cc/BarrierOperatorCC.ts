@@ -63,8 +63,9 @@ import {
 	SubsystemType,
 } from "../lib/_Types.js";
 
-export const BarrierOperatorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Barrier Operator"], {
+export const BarrierOperatorCCValues = V.defineCCValues(
+	CommandClasses["Barrier Operator"],
+	{
 		...V.staticProperty("supportedSubsystemTypes", undefined, {
 			internal: true,
 		}),
@@ -99,9 +100,7 @@ export const BarrierOperatorCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(BarrierState),
 			} as const,
 		),
-	}),
 
-	...V.defineDynamicCCValues(CommandClasses["Barrier Operator"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"signalingState",
 			"signalingState",
@@ -120,8 +119,8 @@ export const BarrierOperatorCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(SubsystemState),
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Barrier Operator"])
 export class BarrierOperatorCCAPI extends CCAPI {

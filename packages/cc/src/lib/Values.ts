@@ -14,6 +14,17 @@ import {
 import type { Overwrite } from "alcalzone-shared/types";
 import type { ValueIDProperties } from "./API.js";
 
+import { values as CCValues } from "../cc/_CCValues.generated.js";
+
+function defineCCValues<T extends CommandClasses>(
+	commandClass: T,
+	_: any,
+	// @ts-ignore
+): typeof import("../cc/_CCValues.generated.js").values[T] {
+	// @ts-ignore
+	return CCValues[commandClass];
+}
+
 // HINT: To fully view types for definitions created by this, open
 // node_modules/typescript/lib/tsserver.js and change the definition of
 // ts.defaultMaximumTruncationLength = 160
@@ -304,8 +315,8 @@ export const V = {
 	/** Returns a CC value definition that is named like the value `property` */
 	staticProperty<
 		TProp extends string | number,
-		TMeta extends ValueMetadata,
-		TOptions extends CCValueOptions,
+		const TMeta extends ValueMetadata,
+		const TOptions extends CCValueOptions,
 	>(
 		property: TProp,
 		meta?: TMeta,
@@ -330,8 +341,8 @@ export const V = {
 	staticPropertyWithName<
 		TName extends string,
 		TProp extends string | number,
-		TMeta extends ValueMetadata,
-		TOptions extends CCValueOptions,
+		const TMeta extends ValueMetadata,
+		const TOptions extends CCValueOptions,
 	>(
 		name: TName,
 		property: TProp,
@@ -455,6 +466,8 @@ export const V = {
 			),
 		} as any;
 	},
+
+	defineCCValues,
 };
 
 export interface CCValueBlueprint extends Readonly<ValueIDProperties> {
