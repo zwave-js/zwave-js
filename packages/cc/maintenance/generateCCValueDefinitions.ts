@@ -1,12 +1,16 @@
 import { ValueMetadata } from "@zwave-js/core";
 import { formatWithDprint } from "@zwave-js/maintenance";
+import { getErrorMessage } from "@zwave-js/shared";
 import fs from "node:fs/promises";
 import {
+	type ArrowFunction,
 	type CallExpression,
 	type ElementAccessExpression,
+	type FunctionDeclaration,
 	type Node,
 	Project,
 	type PropertyAccessExpression,
+	type StringLiteral,
 	SyntaxKind,
 	type ts,
 } from "ts-morph";
@@ -34,7 +38,7 @@ async function main() {
 	});
 
 	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getBaseNameWithoutExtension().endsWith("BarrierOperatorCC")
+		file.getBaseNameWithoutExtension().endsWith("CC")
 	);
 
 	let result = "";
@@ -122,32 +126,43 @@ async function main() {
 		const ${ccValuesDeclaration.getName()} = Object.freeze({
 		`;
 
-		for (const spread of spreads) {
-			const def = spread.getExpressionIfKind(SyntaxKind.CallExpression);
-			if (!def) continue;
+		try {
+			for (const spread of spreads) {
+				const def = spread.getExpressionIfKind(
+					SyntaxKind.CallExpression,
+				);
+				if (!def) continue;
 
-			const propertyKind = def.getExpressionIfKind(
-				SyntaxKind.PropertyAccessExpression,
-			)?.getName();
+				const propertyKind = def.getExpressionIfKind(
+					SyntaxKind.PropertyAccessExpression,
+				)?.getName();
 
-			switch (propertyKind) {
-				case "staticProperty": {
-					result += parseStaticProperty(ccEnum, def);
-					break;
-				}
-				case "staticPropertyWithName": {
-					result += parseStaticPropertyWithName(ccEnum, def);
-					break;
-				}
-				case "dynamicPropertyWithName": {
-					result += parseDynamicPropertyWithName(ccEnum, def);
-					break;
-				}
-				case "dynamicPropertyAndKeyWithName": {
-					result += parseDynamicPropertyAndKeyWithName(ccEnum, def);
-					break;
+				switch (propertyKind) {
+					case "staticProperty": {
+						result += parseStaticProperty(ccEnum, def);
+						break;
+					}
+					case "staticPropertyWithName": {
+						result += parseStaticPropertyWithName(ccEnum, def);
+						break;
+					}
+					case "dynamicPropertyWithName": {
+						result += parseDynamicPropertyWithName(ccEnum, def);
+						break;
+					}
+					case "dynamicPropertyAndKeyWithName": {
+						result += parseDynamicPropertyAndKeyWithName(
+							ccEnum,
+							def,
+						);
+						break;
+					}
 				}
 			}
+		} catch (e) {
+			console.error(`Failed to process file ${file.getFilePath()}:
+${getErrorMessage(e, true)}`);
+			process.exit(1);
 		}
 		result += `
 		});`;
@@ -448,6 +463,49 @@ function parseStaticPropertyWithName(
 	},`;
 }
 
+function resolveLiteralOrFunction(
+	node: Node,
+): StringLiteral | ArrowFunction | FunctionDeclaration | undefined {
+	return node.asKind(SyntaxKind.StringLiteral)
+		?? node.asKind(SyntaxKind.ArrowFunction)
+		?? node.getSymbol()?.getValueDeclaration()?.asKind(
+			SyntaxKind.FunctionDeclaration,
+		)
+		?? node.getSymbol()?.getValueDeclaration()?.asKind(
+			SyntaxKind.ArrowFunction,
+		);
+}
+
+function getLiteralOrFunctionText(
+	node: StringLiteral | ArrowFunction | FunctionDeclaration,
+): string {
+	if (node.isKind(SyntaxKind.StringLiteral)) {
+		return node.getText();
+	}
+	const body = node.getBody();
+	if (!body) {
+		throw new Error(
+			"Cannot determine initializer value from function without body",
+		);
+	}
+	// Blocks are special because we need to wrap them. Everything else can be returned as-is
+	if (!body.isKind(SyntaxKind.Block)) {
+		return body.getText();
+	}
+	// Blocks that only contain a return are simple
+	if (
+		body.getStatements().length === 1
+		&& body.getStatements()[0].isKind(SyntaxKind.ReturnStatement)
+	) {
+		return body.getStatements()[0].asKindOrThrow(SyntaxKind.ReturnStatement)
+			.getExpressionOrThrow().getText();
+	}
+	// Wrap the rest in an IIFE
+	return `(() => {
+	${body.getText()}
+})()`;
+}
+
 function parseDynamicPropertyWithName(
 	ccEnum: CCEnum,
 	expr: CallExpression,
@@ -458,20 +516,17 @@ function parseDynamicPropertyWithName(
 	);
 	const escapedName = nameLiteral.getText();
 
-	const propertyLiteralOrFunction = expr.getArguments()[1]
-		.asKind(SyntaxKind.StringLiteral)
-		?? expr.getArguments()[1].asKind(SyntaxKind.ArrowFunction);
+	const propertyLiteralOrFunction = resolveLiteralOrFunction(
+		expr.getArguments()[1],
+	);
 	if (!propertyLiteralOrFunction) {
 		throw new Error(
 			"parseDynamicPropertyWithName expects the second argument to be a string literal or an arrow function returning one",
 		);
 	}
-	const propertyInitializer = (
-		propertyLiteralOrFunction
-			.asKind(SyntaxKind.StringLiteral)?.getText()
-			?? propertyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
-				?.getBody().getText()
-	) as string; // This is definitely defined, as we checked the kind before
+	const propertyInitializer = getLiteralOrFunctionText(
+		propertyLiteralOrFunction,
+	);
 
 	const isPredicate = expr.getArguments()[2].asKind(
 		SyntaxKind.ArrowFunction,
@@ -498,6 +553,7 @@ function parseDynamicPropertyWithName(
 
 	const valueParams = (
 		propertyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
+			?? propertyLiteralOrFunction.asKind(SyntaxKind.FunctionDeclaration)
 			?? metaLiteralOrFunction?.asKind(SyntaxKind.ArrowFunction)
 	)?.getParameters();
 
@@ -560,35 +616,30 @@ function parseDynamicPropertyAndKeyWithName(
 	);
 	const escapedName = nameLiteral.getText();
 
-	const propertyLiteralOrFunction = expr.getArguments()[1]
-		.asKind(SyntaxKind.StringLiteral)
-		?? expr.getArguments()[1].asKind(SyntaxKind.ArrowFunction);
+	const propertyLiteralOrFunction = resolveLiteralOrFunction(
+		expr.getArguments()[1],
+	);
 	if (!propertyLiteralOrFunction) {
 		throw new Error(
 			"parseDynamicPropertyAndKeyWithName expects the second argument to be a string literal or an arrow function returning one",
 		);
 	}
-	const propertyInitializer = (
-		propertyLiteralOrFunction
-			.asKind(SyntaxKind.StringLiteral)?.getText()
-			?? propertyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
-				?.getBody().getText()
-	) as string; // This is definitely defined, as we checked the kind before
+	const propertyInitializer = getLiteralOrFunctionText(
+		propertyLiteralOrFunction,
+	);
 
-	const propertyKeyLiteralOrFunction = expr.getArguments()[2]
-		.asKind(SyntaxKind.StringLiteral)
-		?? expr.getArguments()[2].asKind(SyntaxKind.ArrowFunction);
+	const propertyKeyLiteralOrFunction = resolveLiteralOrFunction(
+		expr.getArguments()[2],
+	);
 	if (!propertyKeyLiteralOrFunction) {
+		debugger;
 		throw new Error(
 			"parseDynamicPropertyAndKeyWithName expects the third argument to be a string literal or an arrow function returning one",
 		);
 	}
-	const propertyKeyInitializer = (
-		propertyKeyLiteralOrFunction
-			.asKind(SyntaxKind.StringLiteral)?.getText()
-			?? propertyKeyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
-				?.getBody().getText()
-	) as string; // This is definitely defined, as we checked the kind before
+	const propertyKeyInitializer = getLiteralOrFunctionText(
+		propertyKeyLiteralOrFunction,
+	);
 
 	const isPredicate = expr.getArguments()[3].asKind(
 		SyntaxKind.ArrowFunction,
@@ -615,7 +666,11 @@ function parseDynamicPropertyAndKeyWithName(
 
 	const valueParams = (
 		propertyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
+			?? propertyLiteralOrFunction.asKind(SyntaxKind.FunctionDeclaration)
 			?? propertyKeyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
+			?? propertyKeyLiteralOrFunction.asKind(
+				SyntaxKind.FunctionDeclaration,
+			)
 			?? metaLiteralOrFunction?.asKind(SyntaxKind.ArrowFunction)
 	)?.getParameters();
 
