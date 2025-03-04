@@ -44,17 +44,15 @@ import {
 import { V } from "../lib/Values.js";
 import { LockCommand } from "../lib/_Types.js";
 
-export const LockCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Lock, {
-		...V.staticProperty(
-			"locked",
-			{
-				...ValueMetadata.Boolean,
-				label: "Locked",
-				description: "Whether the lock is locked",
-			} as const,
-		),
-	}),
+export const LockCCValues = V.defineCCValues(CommandClasses.Lock, {
+	...V.staticProperty(
+		"locked",
+		{
+			...ValueMetadata.Boolean,
+			label: "Locked",
+			description: "Whether the lock is locked",
+		} as const,
+	),
 });
 
 @API(CommandClasses.Lock)

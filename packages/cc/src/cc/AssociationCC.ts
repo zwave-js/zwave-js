@@ -41,16 +41,11 @@ import { V } from "../lib/Values.js";
 import { type AssociationAddress, AssociationCommand } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 
-export const AssociationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Association, {
-		/** Whether the node has a lifeline association */
+export const AssociationCCValues = V.defineCCValues(
+	CommandClasses.Association,
+	{
 		...V.staticProperty("hasLifeline", undefined, { internal: true }),
-		/** How many association groups the node has */
 		...V.staticProperty("groupCount", undefined, { internal: true }),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Association, {
-		/** The maximum number of nodes in an association group */
 		...V.dynamicPropertyAndKeyWithName(
 			"maxNodes",
 			"maxNodes",
@@ -60,7 +55,6 @@ export const AssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-		/** The node IDs currently belonging to an association group */
 		...V.dynamicPropertyAndKeyWithName(
 			"nodeIds",
 			"nodeIds",
@@ -70,8 +64,8 @@ export const AssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI
 

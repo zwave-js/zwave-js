@@ -50,13 +50,13 @@ import { MultiChannelCommand } from "../lib/_Types.js";
 
 // TODO: Handle removal reports of dynamic endpoints
 
-export const MultiChannelCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multi Channel"], {
+export const MultiChannelCCValues = V.defineCCValues(
+	CommandClasses["Multi Channel"],
+	{
 		...V.staticProperty("endpointIndizes", undefined, {
 			internal: true,
 			supportsEndpoints: false,
 		}),
-
 		...V.staticPropertyWithName(
 			"individualEndpointCount",
 			"individualCount",
@@ -66,7 +66,6 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"aggregatedEndpointCount",
 			"aggregatedCount",
@@ -76,7 +75,6 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"endpointCountIsDynamic",
 			"countIsDynamic",
@@ -86,7 +84,6 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"endpointsHaveIdenticalCapabilities",
 			"identicalCapabilities",
@@ -96,23 +93,18 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"endpointCCs",
 			"commandClasses",
 			undefined,
 			{ internal: true },
 		),
-
 		...V.staticPropertyWithName(
 			"endpointDeviceClass",
 			"deviceClass",
 			undefined,
 			{ internal: true },
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multi Channel"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"aggregatedEndpointMembers",
 			"members",
@@ -122,8 +114,8 @@ export const MultiChannelCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI
 

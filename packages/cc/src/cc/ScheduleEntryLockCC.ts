@@ -57,16 +57,14 @@ import {
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
 import { UserCodeCC } from "./UserCodeCC.js";
 
-export const ScheduleEntryLockCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Schedule Entry Lock"], {
+export const ScheduleEntryLockCCValues = V.defineCCValues(
+	CommandClasses["Schedule Entry Lock"],
+	{
 		...V.staticProperty("numWeekDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numYearDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numDailyRepeatingSlots", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Schedule Entry Lock"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"userEnabled",
 			"userEnabled",
@@ -76,7 +74,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"scheduleKind",
 			"scheduleKind",
@@ -86,7 +83,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
 			"schedule",
@@ -100,8 +96,8 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 function toPropertyKey(
 	scheduleKind: ScheduleEntryLockScheduleKind,

@@ -71,8 +71,9 @@ const switchTypeProperties = Object.keys(SwitchType)
 	.map((key) => switchTypeToActions(key))
 	.reduce<string[]>((acc, cur) => acc.concat(...cur), []);
 
-export const MultilevelSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multilevel Switch"], {
+export const MultilevelSwitchCCValues = V.defineCCValues(
+	CommandClasses["Multilevel Switch"],
+	{
 		...V.staticProperty(
 			"currentValue",
 			{
@@ -80,7 +81,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				label: "Current value",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"targetValue",
 			{
@@ -89,7 +89,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"duration",
 			{
@@ -97,7 +96,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				label: "Remaining duration",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"restorePrevious",
 			{
@@ -108,7 +106,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				},
 			} as const,
 		),
-
 		...V.staticPropertyWithName(
 			"compatEvent",
 			"event",
@@ -123,17 +120,11 @@ export const MultilevelSwitchCCValues = Object.freeze({
 						?.treatMultilevelSwitchSetAsEvent,
 			},
 		),
-
 		...V.staticProperty("switchType", undefined, { internal: true }),
-
-		// TODO: Solve this differently
 		...V.staticProperty("superviseStartStopLevelChange", undefined, {
 			internal: true,
 			supportsEndpoints: false,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multilevel Switch"], {
 		...V.dynamicPropertyWithName(
 			"levelChangeUp",
 			// This is called "up" here, but the actual property name will depend on
@@ -167,7 +158,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyWithName(
 			"levelChangeDown",
 			// This is called "down" here, but the actual property name will depend on
@@ -201,8 +191,8 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Multilevel Switch"])
 export class MultilevelSwitchCCAPI extends CCAPI {

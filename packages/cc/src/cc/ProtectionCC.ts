@@ -54,61 +54,55 @@ import {
 	RFProtectionState,
 } from "../lib/_Types.js";
 
-export const ProtectionCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Protection, {
-		...V.staticProperty(
-			"exclusiveControlNodeId",
-			{
-				...ValueMetadata.UInt8,
-				min: 1,
-				max: MAX_NODES,
-				label: "Node ID with exclusive control",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticPropertyWithName(
-			"localProtectionState",
-			"local",
-			{
-				...ValueMetadata.Number,
-				label: "Local protection state",
-				states: enumValuesToMetadataStates(LocalProtectionState),
-			} as const,
-		),
-
-		...V.staticPropertyWithName(
-			"rfProtectionState",
-			"rf",
-			{
-				...ValueMetadata.Number,
-				label: "RF protection state",
-				states: enumValuesToMetadataStates(RFProtectionState),
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty(
-			"timeout",
-			{
-				...ValueMetadata.UInt8,
-				label: "RF protection timeout",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty("supportsExclusiveControl", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsTimeout", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedLocalStates", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedRFStates", undefined, {
-			internal: true,
-		}),
+export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
+	...V.staticProperty(
+		"exclusiveControlNodeId",
+		{
+			...ValueMetadata.UInt8,
+			min: 1,
+			max: MAX_NODES,
+			label: "Node ID with exclusive control",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticPropertyWithName(
+		"localProtectionState",
+		"local",
+		{
+			...ValueMetadata.Number,
+			label: "Local protection state",
+			states: enumValuesToMetadataStates(LocalProtectionState),
+		} as const,
+	),
+	...V.staticPropertyWithName(
+		"rfProtectionState",
+		"rf",
+		{
+			...ValueMetadata.Number,
+			label: "RF protection state",
+			states: enumValuesToMetadataStates(RFProtectionState),
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty(
+		"timeout",
+		{
+			...ValueMetadata.UInt8,
+			label: "RF protection timeout",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty("supportsExclusiveControl", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportsTimeout", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedLocalStates", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedRFStates", undefined, {
+		internal: true,
 	}),
 });
 

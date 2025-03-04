@@ -72,14 +72,12 @@ import {
 } from "../lib/_Types.js";
 import { type GetUserPreferences } from "../lib/traits.js";
 
-export const MultilevelSensorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multilevel Sensor"], {
+export const MultilevelSensorCCValues = V.defineCCValues(
+	CommandClasses["Multilevel Sensor"],
+	{
 		...V.staticProperty("supportedSensorTypes", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multilevel Sensor"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"supportedScales",
 			"supportedScales",
@@ -90,7 +88,6 @@ export const MultilevelSensorCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyWithName(
 			"value",
 			// This should have been the sensor type, but it is too late to change now
@@ -107,8 +104,8 @@ export const MultilevelSensorCCValues = Object.freeze({
 				label: sensorTypeName,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 /**
  * Determine the scale to use to query a sensor reading. Uses the user-preferred scale if given,

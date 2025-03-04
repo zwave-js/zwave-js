@@ -34,8 +34,9 @@ import {
 import { V } from "../lib/Values.js";
 import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
 
-export const ManufacturerSpecificCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Manufacturer Specific"], {
+export const ManufacturerSpecificCCValues = V.defineCCValues(
+	CommandClasses["Manufacturer Specific"],
+	{
 		...V.staticProperty(
 			"manufacturerId",
 			{
@@ -44,7 +45,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productType",
 			{
@@ -53,7 +53,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productId",
 			{
@@ -62,9 +61,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Manufacturer Specific"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"deviceId",
 			"deviceId",
@@ -79,8 +75,8 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			}),
 			{ minVersion: 2 } as const,
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 

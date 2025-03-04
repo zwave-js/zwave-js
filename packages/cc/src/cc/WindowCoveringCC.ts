@@ -103,16 +103,14 @@ function parameterToLevelChangeLabel(
 	return direction === "up" ? "Open" : "Close";
 }
 
-export const WindowCoveringCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Window Covering"], {
+export const WindowCoveringCCValues = V.defineCCValues(
+	CommandClasses["Window Covering"],
+	{
 		...V.staticProperty(
 			"supportedParameters",
 			undefined, // meta
 			{ internal: true }, // value options
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Window Covering"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"currentValue",
 			"currentValue",
@@ -133,7 +131,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"targetValue",
 			"targetValue",
@@ -160,7 +157,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"duration",
 			"duration",
@@ -180,7 +176,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				},
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeUp",
 			// The direction refers to the change in level, not the physical location
@@ -211,7 +206,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeDown",
 			// The direction refers to the change in level, not the physical location
@@ -243,8 +237,8 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Window Covering"])
 export class WindowCoveringCCAPI extends CCAPI {

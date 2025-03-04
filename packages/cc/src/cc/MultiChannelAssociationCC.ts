@@ -47,14 +47,10 @@ import {
 import * as ccUtils from "../lib/utils.js";
 import { AssociationCCValues } from "./AssociationCC.js";
 
-export const MultiChannelAssociationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multi Channel Association"], {
-		// number multi channel association groups
+export const MultiChannelAssociationCCValues = V.defineCCValues(
+	CommandClasses["Multi Channel Association"],
+	{
 		...V.staticProperty("groupCount", undefined, { internal: true }),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multi Channel Association"], {
-		// maximum number of nodes of a multi channel association group
 		...V.dynamicPropertyAndKeyWithName(
 			"maxNodes",
 			"maxNodes",
@@ -64,8 +60,6 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
-		// node IDs of a multi channel association group
 		...V.dynamicPropertyAndKeyWithName(
 			"nodeIds",
 			"nodeIds",
@@ -75,8 +69,6 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
-		// Endpoint addresses of a multi channel association group
 		...V.dynamicPropertyAndKeyWithName(
 			"endpoints",
 			"endpoints",
@@ -86,8 +78,8 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 function endpointAddressesToString(
 	endpoints: readonly EndpointAddress[],

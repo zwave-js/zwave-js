@@ -62,101 +62,91 @@ import type { NotificationEventPayload } from "../lib/NotificationEventPayload.j
 import { V } from "../lib/Values.js";
 import { KeypadMode, UserCodeCommand, UserIDStatus } from "../lib/_Types.js";
 
-export const UserCodeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["User Code"], {
-		...V.staticProperty("supportedUsers", undefined, { internal: true }),
-		...V.staticProperty("supportsAdminCode", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsAdminCodeDeactivation", undefined, {
-			internal: true,
-		}),
-		// The following two properties are only kept for compatibility with devices
-		// that were interviewed before the rename to admin code
-		...V.staticPropertyWithName(
-			"_deprecated_supportsMasterCode",
-			"supportsMasterCode",
-			undefined,
-			{
-				internal: true,
-			},
-		),
-		...V.staticPropertyWithName(
-			"_deprecated_supportsMasterCodeDeactivation",
-			"supportsMasterCodeDeactivation",
-			undefined,
-			{
-				internal: true,
-			},
-		),
-		...V.staticProperty("supportsUserCodeChecksum", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsMultipleUserCodeReport", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsMultipleUserCodeSet", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedUserIDStatuses", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedKeypadModes", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedASCIIChars", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("userCodeChecksum", undefined, { internal: true }),
-
-		...V.staticProperty(
-			"keypadMode",
-			{
-				...ValueMetadata.ReadOnlyNumber,
-				label: "Keypad Mode",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty(
-			"adminCode",
-			{
-				...ValueMetadata.String,
-				label: "Admin Code",
-				minLength: 4,
-				maxLength: 10,
-			} as const,
-			{
-				minVersion: 2,
-				secret: true,
-			} as const,
-		),
+export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
+	...V.staticProperty("supportedUsers", undefined, { internal: true }),
+	...V.staticProperty("supportsAdminCode", undefined, {
+		internal: true,
 	}),
-
-	...V.defineDynamicCCValues(CommandClasses["User Code"], {
-		...V.dynamicPropertyAndKeyWithName(
-			"userIdStatus",
-			"userIdStatus",
-			(userId: number) => userId,
-			({ property, propertyKey }) =>
-				property === "userIdStatus" && typeof propertyKey === "number",
-			(userId: number) => ({
-				...ValueMetadata.Number,
-				label: `User ID status (${userId})`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"userCode",
-			"userCode",
-			(userId: number) => userId,
-			({ property, propertyKey }) =>
-				property === "userCode" && typeof propertyKey === "number",
-			// The user code metadata is dynamically created
-			undefined,
-			{ secret: true },
-		),
+	...V.staticProperty("supportsAdminCodeDeactivation", undefined, {
+		internal: true,
 	}),
+	...V.staticPropertyWithName(
+		"_deprecated_supportsMasterCode",
+		"supportsMasterCode",
+		undefined,
+		{
+			internal: true,
+		},
+	),
+	...V.staticPropertyWithName(
+		"_deprecated_supportsMasterCodeDeactivation",
+		"supportsMasterCodeDeactivation",
+		undefined,
+		{
+			internal: true,
+		},
+	),
+	...V.staticProperty("supportsUserCodeChecksum", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportsMultipleUserCodeReport", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportsMultipleUserCodeSet", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedUserIDStatuses", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedKeypadModes", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedASCIIChars", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("userCodeChecksum", undefined, { internal: true }),
+	...V.staticProperty(
+		"keypadMode",
+		{
+			...ValueMetadata.ReadOnlyNumber,
+			label: "Keypad Mode",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty(
+		"adminCode",
+		{
+			...ValueMetadata.String,
+			label: "Admin Code",
+			minLength: 4,
+			maxLength: 10,
+		} as const,
+		{
+			minVersion: 2,
+			secret: true,
+		} as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"userIdStatus",
+		"userIdStatus",
+		(userId: number) => userId,
+		({ property, propertyKey }) =>
+			property === "userIdStatus" && typeof propertyKey === "number",
+		(userId: number) => ({
+			...ValueMetadata.Number,
+			label: `User ID status (${userId})`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"userCode",
+		"userCode",
+		(userId: number) => userId,
+		({ property, propertyKey }) =>
+			property === "userCode" && typeof propertyKey === "number",
+		// The user code metadata is dynamically created
+		undefined,
+		{ secret: true },
+	),
 });
 
 function parseExtendedUserCode(payload: Bytes): {

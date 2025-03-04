@@ -57,14 +57,12 @@ import {
 	type HumidityControlSetpointValue,
 } from "../lib/_Types.js";
 
-export const HumidityControlSetpointCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Humidity Control Setpoint"], {
+export const HumidityControlSetpointCCValues = V.defineCCValues(
+	CommandClasses["Humidity Control Setpoint"],
+	{
 		...V.staticProperty("supportedSetpointTypes", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Humidity Control Setpoint"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"setpoint",
 			"setpoint",
@@ -83,7 +81,6 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 				ccSpecific: { setpointType },
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
 			"setpointScale",
@@ -100,8 +97,8 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 				})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 function getScale(scale: number): Scale {
 	return getNamedScale("humidity", scale as any) ?? getUnknownScale(scale);
