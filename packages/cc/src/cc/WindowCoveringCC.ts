@@ -51,57 +51,10 @@ import {
 	WindowCoveringCommand,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
-
-function parameterToMetadataStates(
-	parameter: WindowCoveringParameter,
-): Record<number, string> {
-	switch (parameter) {
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return {
-				0: "Closed (right inside)",
-				50: "Open",
-				99: "Closed (left inside)",
-			};
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			return {
-				0: "Closed (up inside)",
-				50: "Open",
-				99: "Closed (down inside)",
-			};
-	}
-
-	return {
-		0: "Closed",
-		99: "Open",
-	};
-}
-
-function parameterToLevelChangeLabel(
-	parameter: WindowCoveringParameter,
-	direction: "up" | "down",
-): string {
-	switch (parameter) {
-		// For angle control, both directions are closed, so we specify it explicitly
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return `Change tilt (${
-				direction === "up" ? "left inside" : "right inside"
-			})`;
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			// Horizontal slats refer to the position of the inner side of the slats
-			// where a high level (99) actually means they face down
-			return `Change tilt (${
-				direction === "up" ? "down inside" : "up inside"
-			})`;
-	}
-	// For all other parameters, refer to the amount of light that is let in
-	return direction === "up" ? "Open" : "Close";
-}
+import {
+	windowCoveringParameterToLevelChangeLabel,
+	windowCoveringParameterToMetadataStates,
+} from "../lib/utils.js";
 
 export const WindowCoveringCCValues = V.defineCCValues(
 	CommandClasses["Window Covering"],
@@ -126,7 +79,7 @@ export const WindowCoveringCCValues = V.defineCCValues(
 							parameter,
 						)
 					}`,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					ccSpecific: { parameter },
 				} as const;
 			},
@@ -150,7 +103,7 @@ export const WindowCoveringCCValues = V.defineCCValues(
 					}`,
 					// Only odd-numbered parameters have position support and are writable
 					writeable: parameter % 2 === 1,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					allowManualEntry: writeable,
 					ccSpecific: { parameter },
 					valueChangeOptions: ["transitionDuration"],
@@ -187,7 +140,7 @@ export const WindowCoveringCCValues = V.defineCCValues(
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"up",
 						)
@@ -218,7 +171,7 @@ export const WindowCoveringCCValues = V.defineCCValues(
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"down",
 						)

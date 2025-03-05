@@ -54,22 +54,10 @@ import {
 	MultilevelSwitchCommand,
 	SwitchType,
 } from "../lib/_Types.js";
-
-/**
- * Translates a switch type into two actions that may be performed. Unknown types default to Down/Up
- */
-function switchTypeToActions(switchType: string): [down: string, up: string] {
-	if (!switchType.includes("/")) switchType = SwitchType[0x02]; // Down/Up
-	return switchType.split("/", 2) as any;
-}
-
-/**
- * The property names are organized so that positive motions are at odd indices and negative motions at even indices
- */
-const switchTypeProperties = Object.keys(SwitchType)
-	.filter((key) => key.includes("/"))
-	.map((key) => switchTypeToActions(key))
-	.reduce<string[]>((acc, cur) => acc.concat(...cur), []);
+import {
+	multilevelSwitchTypeProperties,
+	multilevelSwitchTypeToActions,
+} from "../lib/utils.js";
 
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],
@@ -134,18 +122,18 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 					SwitchType,
 					switchType,
 				);
-				const [, up] = switchTypeToActions(switchTypeName);
+				const [, up] = multilevelSwitchTypeToActions(switchTypeName);
 				return up;
 			},
 			({ property }) =>
 				typeof property === "string"
-				&& switchTypeProperties.indexOf(property) % 2 === 1,
+				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 1,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
 					switchType,
 				);
-				const [, up] = switchTypeToActions(switchTypeName);
+				const [, up] = multilevelSwitchTypeToActions(switchTypeName);
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `Perform a level change (${up})`,
@@ -167,18 +155,18 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 					SwitchType,
 					switchType,
 				);
-				const [down] = switchTypeToActions(switchTypeName);
+				const [down] = multilevelSwitchTypeToActions(switchTypeName);
 				return down;
 			},
 			({ property }) =>
 				typeof property === "string"
-				&& switchTypeProperties.indexOf(property) % 2 === 0,
+				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 0,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
 					switchType,
 				);
-				const [down] = switchTypeToActions(switchTypeName);
+				const [down] = multilevelSwitchTypeToActions(switchTypeName);
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `Perform a level change (${down})`,
@@ -334,7 +322,9 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				}
 				const duration = Duration.from(options?.transitionDuration);
 				return this.set(value, duration);
-			} else if (switchTypeProperties.includes(property as string)) {
+			} else if (
+				multilevelSwitchTypeProperties.includes(property as string)
+			) {
 				// Since the switch only supports one of the switch types, we would
 				// need to check if the correct one is used. But since the names are
 				// purely cosmetic, we just accept all of them
@@ -349,11 +339,12 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				if (value) {
 					// The property names are organized so that positive motions are
 					// at odd indices and negative motions at even indices
-					const direction =
-						switchTypeProperties.indexOf(property as string) % 2
-								=== 0
-							? "down"
-							: "up";
+					const direction = multilevelSwitchTypeProperties.indexOf(
+									property as string,
+								) % 2
+							=== 0
+						? "down"
+						: "up";
 					// Singlecast only: Try to retrieve the current value to use as the start level,
 					// even if the target node is going to ignore it. There might
 					// be some bugged devices that ignore the ignore start level flag.

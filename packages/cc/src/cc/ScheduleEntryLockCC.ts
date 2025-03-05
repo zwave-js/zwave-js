@@ -90,7 +90,7 @@ export const ScheduleEntryLockCCValues = V.defineCCValues(
 				scheduleKind: ScheduleEntryLockScheduleKind,
 				userId: number,
 				slotId: number,
-			) => toPropertyKey(scheduleKind, userId, slotId),
+			) => (scheduleKind << 16) | (userId << 8) | slotId,
 			({ property, propertyKey }) =>
 				property === "schedule" && typeof propertyKey === "number",
 			undefined,
@@ -98,14 +98,6 @@ export const ScheduleEntryLockCCValues = V.defineCCValues(
 		),
 	},
 );
-
-function toPropertyKey(
-	scheduleKind: ScheduleEntryLockScheduleKind,
-	userId: number,
-	slotId: number,
-): number {
-	return (scheduleKind << 16) | (userId << 8) | slotId;
-}
 
 /** Caches information about a schedule */
 function persistSchedule(

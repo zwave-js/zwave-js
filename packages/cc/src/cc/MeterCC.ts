@@ -78,6 +78,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { MeterCommand, type MeterReading, RateType } from "../lib/_Types.js";
+import { meterTypesToPropertyKey } from "../lib/utils.js";
 
 export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 	...V.staticProperty("type", undefined, { internal: true }),
@@ -100,7 +101,7 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 	...V.dynamicPropertyAndKeyWithName(
 		"resetSingle",
 		"reset",
-		toPropertyKey,
+		meterTypesToPropertyKey,
 		({ property, propertyKey }) =>
 			property === "reset" && typeof propertyKey === "number",
 		(meterType: number, rateType: RateType, scale: number) => ({
@@ -127,7 +128,7 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 	...V.dynamicPropertyAndKeyWithName(
 		"value",
 		"value",
-		toPropertyKey,
+		meterTypesToPropertyKey,
 		({ property, propertyKey }) =>
 			property === "value" && typeof propertyKey === "number",
 		(meterType: number, rateType: RateType, scale: number) => ({
@@ -141,14 +142,6 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 		} as const),
 	),
 });
-
-function toPropertyKey(
-	meterType: number,
-	rateType: RateType,
-	scale: number,
-): number {
-	return (meterType << 16) | (scale << 8) | rateType;
-}
 
 function splitPropertyKey(key: number): {
 	meterType: number;

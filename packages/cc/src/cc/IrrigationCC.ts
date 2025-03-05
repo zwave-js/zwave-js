@@ -57,6 +57,7 @@ import {
 	type ValveTableEntry,
 	ValveType,
 } from "../lib/_Types.js";
+import { irrigationValveIdToMetadataPrefix } from "../lib/utils.js";
 
 export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 	...V.staticProperty("numValves", undefined, { internal: true }),
@@ -240,7 +241,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 			&& propertyKey === "valveConnected",
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
-			label: `${valveIdToMetadataPrefix(valveId)}: Connected`,
+			label: `${irrigationValveIdToMetadataPrefix(valveId)}: Connected`,
 		} as const),
 	),
 	...V.dynamicPropertyAndKeyWithName(
@@ -253,7 +254,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Nominal current`,
@@ -270,7 +271,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.Number,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Nominal current - high threshold`,
@@ -289,7 +290,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.Number,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Nominal current - low threshold`,
@@ -308,7 +309,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Error - Short circuit detected`,
@@ -324,7 +325,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Error - Current above high threshold`,
@@ -340,7 +341,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Error - Current below low threshold`,
@@ -355,7 +356,9 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 			&& propertyKey === "maximumFlow",
 		(valveId: ValveId) => ({
 			...ValueMetadata.Number,
-			label: `${valveIdToMetadataPrefix(valveId)}: Maximum flow`,
+			label: `${
+				irrigationValveIdToMetadataPrefix(valveId)
+			}: Maximum flow`,
 			min: 0,
 			unit: "l/h",
 		} as const),
@@ -370,7 +373,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Error - Maximum flow detected`,
@@ -386,7 +389,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.Number,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: High flow threshold`,
@@ -404,7 +407,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Error - Flow above high threshold`,
@@ -420,7 +423,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.Number,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Low flow threshold`,
@@ -438,7 +441,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.ReadOnlyBoolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Error - Flow below high threshold`,
@@ -454,7 +457,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.Boolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Use rain sensor`,
@@ -470,7 +473,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		(valveId: ValveId) => ({
 			...ValueMetadata.Boolean,
 			label: `${
-				valveIdToMetadataPrefix(
+				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
 			}: Use moisture sensor`,
@@ -485,7 +488,9 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 			&& propertyKey === "duration",
 		(valveId: ValveId) => ({
 			...ValueMetadata.UInt16,
-			label: `${valveIdToMetadataPrefix(valveId)}: Run duration`,
+			label: `${
+				irrigationValveIdToMetadataPrefix(valveId)
+			}: Run duration`,
 			min: 1,
 			unit: "s",
 		} as const),
@@ -499,7 +504,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 			&& propertyKey === "startStop",
 		(valveId: ValveId) => ({
 			...ValueMetadata.Boolean,
-			label: `${valveIdToMetadataPrefix(valveId)}: Start/Stop`,
+			label: `${irrigationValveIdToMetadataPrefix(valveId)}: Start/Stop`,
 			states: {
 				true: "Start",
 				false: "Stop",
@@ -507,11 +512,6 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 		} as const),
 	),
 });
-
-function valveIdToMetadataPrefix(valveId: ValveId): string {
-	if (valveId === "master") return "Master valve";
-	return `Valve ${valveId.toString().padStart(3, "0")}`;
-}
 
 const systemConfigProperties = [
 	"masterValveDelay",

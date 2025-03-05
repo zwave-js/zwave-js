@@ -1,19 +1,28 @@
-import { ValueMetadata } from "@zwave-js/core";
 import { formatWithDprint } from "@zwave-js/maintenance";
 import { getErrorMessage } from "@zwave-js/shared";
+import esMain from "es-main";
 import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
 	type ArrowFunction,
 	type CallExpression,
 	type ElementAccessExpression,
 	type FunctionDeclaration,
+	type ImportSpecifier,
 	type Node,
+	type ObjectLiteralExpression,
 	Project,
 	type PropertyAccessExpression,
 	type StringLiteral,
 	SyntaxKind,
 	type ts,
 } from "ts-morph";
+
+// Define where the CC value definition file is located
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ccDir = path.join(__dirname, "..", "src/cc");
+const valuesFile = path.join(ccDir, "_CCValues.generated.ts");
 
 type CCEnum =
 	| PropertyAccessExpression<ts.PropertyAccessExpression>
@@ -28,13 +37,11 @@ const defaultCCValueOptions = {
 	autoCreate: true,
 } as const;
 
-const defaultMeta = ValueMetadata.Any;
-
 const ignoredImports = ["V", "ValueMetadata"];
 
-async function main() {
+export async function generateCCValueDefinitions(): Promise<void> {
 	const project = new Project({
-		tsConfigFilePath: "packages/cc/tsconfig.json",
+		tsConfigFilePath: path.join(__dirname, "../tsconfig.json"),
 	});
 
 	const sourceFiles = project.getSourceFiles().filter((file) =>
@@ -56,13 +63,19 @@ async function main() {
 		new Map([
 			["CommandClasses", false],
 			["ValueID", true],
-			["enumValuesToMetadataStates", false],
+			["ValueMetadata", false],
 		]),
 	);
 	importsByModule.set(
 		"@zwave-js/shared",
 		new Map([
 			["getEnumMemberName", false],
+		]),
+	);
+	importsByModule.set(
+		"../lib/Values.js",
+		new Map([
+			["CCValueOptions", true],
 		]),
 	);
 	const allImports = new Map<string, boolean>(
@@ -167,8 +180,17 @@ ${getErrorMessage(e, true)}`);
 		result += `
 		});`;
 
-		exported += `
-		[${ccEnum.getText()}]: ${ccValuesDeclaration.getName()},`;
+		const ccName =
+			ccEnum.asKind(SyntaxKind.PropertyAccessExpression)?.getNameNode()
+				.getText()
+				?? ccEnum.asKindOrThrow(SyntaxKind.ElementAccessExpression)
+					.getArgumentExpressionOrThrow().getText();
+		if (ccName.includes(`"`)) {
+			exported += `\n[${ccName}]: `;
+		} else {
+			exported += `\n${ccName}: `;
+		}
+		exported += `${ccValuesDeclaration.getName()},`;
 
 		const importsInDeclaration = ccValuesDeclaration.getDescendantsOfKind(
 			SyntaxKind.Identifier,
@@ -206,9 +228,10 @@ ${getErrorMessage(e, true)}`);
 
 	result += `
 
-export const values = {
+export const CCValues = {
 	${exported}
-}`;
+};
+`;
 
 	result = `/// This file is auto-generated. All manual changes will be lost!
 
@@ -222,15 +245,11 @@ export const values = {
 	try {
 		result = formatWithDprint("index.ts", result);
 	} catch (e) {
-		debugger;
-		throw e;
+		console.error(`Error formatting: ${getErrorMessage(e)}`);
+		process.exit(1);
 	}
 
-	// console.log(result);
-	await fs.writeFile(
-		"/home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/_CCValues.generated.ts",
-		result,
-	);
+	await fs.writeFile(valuesFile, result);
 }
 
 function inferEndpointClosure(
@@ -256,86 +275,6 @@ function inferEndpointClosure(
 			endpoint: 0, // no endpoint support!
 			property: ${escapedProperty},${propertyKeyLine}
 		} as const)`;
-}
-
-function inferMetaType(
-	expr: CallExpression<ts.CallExpression>,
-	metaArgument: Node | undefined,
-	nameOrPropertyLiteral: string,
-	escapedProperty: string,
-) {
-	// We use both the return type and the object literal (if any)
-	// to infer the resulting metadata
-	const returnType = expr.getReturnType();
-	const innerReturnType = returnType
-		.getProperty(nameOrPropertyLiteral)
-		?.getTypeAtLocation(expr);
-	// For static properties, we can simply use the meta property of the
-	// "inner" return type. For dynamic properties, we need to "unwrap"
-	// the call signature first.
-	const returnMeta = innerReturnType
-		?.getProperty("meta")
-		?.getTypeAtLocation(expr)
-		?? innerReturnType?.getCallSignatures()[0]
-			.getReturnType()
-			.getProperty("meta")
-			?.getTypeAtLocation(expr);
-	if (!returnMeta) {
-		throw new Error(
-			`Failed to determine value metadata for property ${escapedProperty}`,
-		);
-	}
-
-	// Support passing the options as an object, with or without `as const`
-	// or as an arrow function
-	const metaLiteral = metaArgument?.asKind(SyntaxKind.ObjectLiteralExpression)
-		?? metaArgument
-			?.asKind(SyntaxKind.AsExpression)
-			?.getExpressionIfKind(SyntaxKind.ObjectLiteralExpression)
-		?? metaArgument
-			?.asKind(SyntaxKind.ArrowFunction)
-			?.getBody()
-			?.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
-
-	// ...and if possible, use it to generate the meta object
-	let metaString: string;
-	if (
-		returnMeta.getAliasSymbol()?.getDeclarations()[0]?.asKind(
-			SyntaxKind.TypeAliasDeclaration,
-		)?.getName() === "ValueMetadata"
-	) {
-		// No meta was defined, fall back to ValueMetadata.Any
-		metaString = JSON.stringify(defaultMeta, null, "\t");
-	} else {
-		metaString = `{`;
-		const returnMetaProperties = returnMeta.getProperties()
-			.map((
-				p,
-			) => ([p.getName(), p.getTypeAtLocation(expr).getText()] as const));
-		const metaLiteralPropertyNames = metaLiteral?.getProperties().map((p) =>
-			p
-		)
-			.filter((p) => p.isKind(SyntaxKind.PropertyAssignment))
-			.map((p) => p.getName()) ?? [];
-		const metaLiteralProperties = metaLiteralPropertyNames.map((
-			p,
-		) => ([
-			p,
-			metaLiteral!
-				.getPropertyOrThrow(p)
-				.asKindOrThrow(SyntaxKind.PropertyAssignment)
-				.getInitializerOrThrow(`expected an initializer for ${p}`)
-				.getText(),
-		] as const));
-		const allProperties = Object.fromEntries(
-			[...returnMetaProperties, ...metaLiteralProperties],
-		);
-		for (const [key, value] of Object.entries(allProperties)) {
-			metaString += `\n\t${key}: ${value},`;
-		}
-		metaString += `\n}`;
-	}
-	return metaString;
 }
 
 function inferOptions(optionsArgument: Node | undefined) {
@@ -374,13 +313,12 @@ function parseStaticProperty(ccEnum: CCEnum, expr: CallExpression): string {
 	);
 	const escapedProperty = propertyLiteral.getText();
 
-	// Determine the inferred "meta" type
-	const metaString: string = inferMetaType(
-		expr,
+	const metaLiteralOrFunction = resolveObjectLiteralOrFunction(
 		expr.getArguments()[1],
-		propertyLiteral.getLiteralText(),
-		escapedProperty,
 	);
+
+	// Determine the inferred "meta" type
+	const metaString: string = inferMetaBody(metaLiteralOrFunction);
 
 	// Use the provided options to overwrite the default ones, where defined
 	const { supportsEndpoints, mergedOptionsString } = inferOptions(
@@ -404,10 +342,12 @@ function parseStaticProperty(ccEnum: CCEnum, expr: CallExpression): string {
 			&& valueId.property === ${escapedProperty}
 			&& valueId.propertyKey == undefined;
 		},
-		meta: ${metaString} as const,
+		get meta() {
+			${metaString}
+		},
 		options: {
 			${mergedOptionsString}
-		} as const,
+		} as const satisfies CCValueOptions,
 	},`;
 }
 
@@ -427,13 +367,12 @@ function parseStaticPropertyWithName(
 	);
 	const escapedProperty = propertyLiteral.getText();
 
-	// Determine the inferred "meta" type
-	const metaString: string = inferMetaType(
-		expr,
+	const metaLiteralOrFunction = resolveObjectLiteralOrFunction(
 		expr.getArguments()[2],
-		nameLiteral.getLiteralText(),
-		escapedProperty,
 	);
+
+	// Determine the inferred "meta" type
+	const metaString: string = inferMetaBody(metaLiteralOrFunction);
 
 	const { supportsEndpoints, mergedOptionsString } = inferOptions(
 		expr.getArguments()[3],
@@ -456,17 +395,53 @@ function parseStaticPropertyWithName(
 			&& valueId.property === ${escapedProperty}
 			&& valueId.propertyKey == undefined;
 		},
-		meta: ${metaString} as const,
+		get meta() {
+			${metaString}
+		},
 		options: {
 			${mergedOptionsString}
-		} as const,
+		} as const satisfies CCValueOptions,
 	},`;
 }
 
-function resolveLiteralOrFunction(
+function resolveStringLiteralOrFunction(
 	node: Node,
-): StringLiteral | ArrowFunction | FunctionDeclaration | undefined {
+):
+	| StringLiteral
+	| ArrowFunction
+	| FunctionDeclaration
+	| ImportSpecifier
+	| undefined
+{
 	return node.asKind(SyntaxKind.StringLiteral)
+		?? node.asKind(SyntaxKind.ArrowFunction)
+		?? node.getSymbol()?.getValueDeclaration()?.asKind(
+			SyntaxKind.FunctionDeclaration,
+		)
+		?? node.getSymbol()?.getValueDeclaration()?.asKind(
+			SyntaxKind.ArrowFunction,
+		)
+		?? node.getSymbol()?.getDeclarations()[0]?.asKind(
+			SyntaxKind.ImportSpecifier,
+		);
+}
+
+function resolveObjectLiteralOrFunction(
+	node: Node,
+):
+	| ObjectLiteralExpression
+	| ArrowFunction
+	| FunctionDeclaration
+	| undefined
+{
+	if (
+		node.isKind(SyntaxKind.AsExpression)
+		&& node.getTypeNode()?.getText() === "const"
+	) {
+		return node.getExpressionIfKind(SyntaxKind.ObjectLiteralExpression);
+	}
+
+	return node.asKind(SyntaxKind.ObjectLiteralExpression)
 		?? node.asKind(SyntaxKind.ArrowFunction)
 		?? node.getSymbol()?.getValueDeclaration()?.asKind(
 			SyntaxKind.FunctionDeclaration,
@@ -476,11 +451,18 @@ function resolveLiteralOrFunction(
 		);
 }
 
-function getLiteralOrFunctionText(
-	node: StringLiteral | ArrowFunction | FunctionDeclaration,
+function getStringLiteralOrFunctionText(
+	node:
+		| StringLiteral
+		| ArrowFunction
+		| FunctionDeclaration
+		| ImportSpecifier,
 ): string {
 	if (node.isKind(SyntaxKind.StringLiteral)) {
 		return node.getText();
+	}
+	if (node.isKind(SyntaxKind.ImportSpecifier)) {
+		return `${node.getName()}(...args)`;
 	}
 	const body = node.getBody();
 	if (!body) {
@@ -506,6 +488,62 @@ function getLiteralOrFunctionText(
 })()`;
 }
 
+function stripAsConstAndParentheses(node: Node): Node {
+	if (node.isKind(SyntaxKind.ParenthesizedExpression)) {
+		return stripAsConstAndParentheses(
+			node.getExpression(),
+		);
+	}
+	if (
+		node.isKind(SyntaxKind.AsExpression)
+		&& node.getTypeNode()?.getText() === "const"
+	) {
+		return stripAsConstAndParentheses(
+			node.getExpression(),
+		);
+	}
+	return node;
+}
+
+function inferMetaBody(
+	node:
+		| ObjectLiteralExpression
+		| ArrowFunction
+		| FunctionDeclaration
+		| undefined,
+): string {
+	if (!node) return "return ValueMetadata.Any";
+
+	if (node.isKind(SyntaxKind.ObjectLiteralExpression)) {
+		return `return ${node.getText()} as const`;
+	}
+	const body = node.getBody();
+	if (!body) {
+		throw new Error(
+			"Cannot determine initializer value from function without body",
+		);
+	}
+
+	// Blocks are special because we need to wrap them. Everything else can be returned as-is
+	if (!body.isKind(SyntaxKind.Block)) {
+		return `return ${stripAsConstAndParentheses(body).getText()} as const`;
+	}
+	// Blocks that only contain a return are simple
+	if (
+		body.getStatements().length === 1
+		&& body.getStatements()[0].isKind(SyntaxKind.ReturnStatement)
+	) {
+		const ret = stripAsConstAndParentheses(
+			body.getStatements()[0].asKindOrThrow(SyntaxKind.ReturnStatement)
+				.getExpressionOrThrow(),
+		).getText();
+		return `return ${ret} as const`;
+	}
+	// The meta is constructed inside a getter, so no need to wrap anything
+	// However, we need to trim off the surrounding braces
+	return stripAsConstAndParentheses(body).getText().trim().slice(1, -1);
+}
+
 function parseDynamicPropertyWithName(
 	ccEnum: CCEnum,
 	expr: CallExpression,
@@ -516,7 +554,7 @@ function parseDynamicPropertyWithName(
 	);
 	const escapedName = nameLiteral.getText();
 
-	const propertyLiteralOrFunction = resolveLiteralOrFunction(
+	const propertyLiteralOrFunction = resolveStringLiteralOrFunction(
 		expr.getArguments()[1],
 	);
 	if (!propertyLiteralOrFunction) {
@@ -524,7 +562,7 @@ function parseDynamicPropertyWithName(
 			"parseDynamicPropertyWithName expects the second argument to be a string literal or an arrow function returning one",
 		);
 	}
-	const propertyInitializer = getLiteralOrFunctionText(
+	const propertyInitializer = getStringLiteralOrFunctionText(
 		propertyLiteralOrFunction,
 	);
 
@@ -537,24 +575,18 @@ function parseDynamicPropertyWithName(
 		);
 	}
 
-	const metaLiteralOrFunction = expr.getArguments()[3].asKind(
-		SyntaxKind.ObjectLiteralExpression,
-	)
-		?? expr.getArguments()[3].asKind(SyntaxKind.AsExpression)
-		?? expr.getArguments()[3].asKind(SyntaxKind.ArrowFunction);
+	const metaLiteralOrFunction = resolveObjectLiteralOrFunction(
+		expr.getArguments()[3],
+	);
 
 	// Determine the inferred "meta" type
-	const metaString: string = inferMetaType(
-		expr,
-		metaLiteralOrFunction,
-		nameLiteral.getLiteralText(),
-		escapedName,
-	);
+	const metaBody: string = inferMetaBody(metaLiteralOrFunction);
 
 	const valueParams = (
 		propertyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
 			?? propertyLiteralOrFunction.asKind(SyntaxKind.FunctionDeclaration)
 			?? metaLiteralOrFunction?.asKind(SyntaxKind.ArrowFunction)
+			?? metaLiteralOrFunction?.asKind(SyntaxKind.FunctionDeclaration)
 	)?.getParameters();
 
 	if (!valueParams) {
@@ -568,6 +600,7 @@ function parseDynamicPropertyWithName(
 	);
 
 	const formattedArgs = valueParams.map((p) => p.getText()).join(", ");
+	const formattedArgNames = valueParams.map((p) => p.getName()).join(", ");
 
 	const endpointClosure = inferEndpointClosure(
 		supportsEndpoints,
@@ -576,18 +609,18 @@ function parseDynamicPropertyWithName(
 	);
 
 	const dynamicPart = `(${formattedArgs}) => {
-	const property = ${propertyInitializer};
+	const property = ${
+		propertyInitializer.replace("...args", formattedArgNames)
+	};
 
 	return {
-		get id() {
-			return {
-				commandClass: ${ccEnum.getText()},
-				property,
-			} as const;
-		},
+		id: {
+			commandClass: ${ccEnum.getText()},
+			property,
+		} as const,
 		endpoint: ${endpointClosure},
 		get meta() {
-			return ${metaString} as const;
+			${metaBody}
 		}
 	};
 }`;
@@ -601,7 +634,7 @@ function parseDynamicPropertyWithName(
 		},
 		options: {
 			${mergedOptionsString}
-		} as const,
+		} as const satisfies CCValueOptions,
 	}
 ),`;
 }
@@ -616,7 +649,7 @@ function parseDynamicPropertyAndKeyWithName(
 	);
 	const escapedName = nameLiteral.getText();
 
-	const propertyLiteralOrFunction = resolveLiteralOrFunction(
+	const propertyLiteralOrFunction = resolveStringLiteralOrFunction(
 		expr.getArguments()[1],
 	);
 	if (!propertyLiteralOrFunction) {
@@ -624,11 +657,11 @@ function parseDynamicPropertyAndKeyWithName(
 			"parseDynamicPropertyAndKeyWithName expects the second argument to be a string literal or an arrow function returning one",
 		);
 	}
-	const propertyInitializer = getLiteralOrFunctionText(
+	const propertyInitializer = getStringLiteralOrFunctionText(
 		propertyLiteralOrFunction,
 	);
 
-	const propertyKeyLiteralOrFunction = resolveLiteralOrFunction(
+	const propertyKeyLiteralOrFunction = resolveStringLiteralOrFunction(
 		expr.getArguments()[2],
 	);
 	if (!propertyKeyLiteralOrFunction) {
@@ -637,7 +670,7 @@ function parseDynamicPropertyAndKeyWithName(
 			"parseDynamicPropertyAndKeyWithName expects the third argument to be a string literal or an arrow function returning one",
 		);
 	}
-	const propertyKeyInitializer = getLiteralOrFunctionText(
+	const propertyKeyInitializer = getStringLiteralOrFunctionText(
 		propertyKeyLiteralOrFunction,
 	);
 
@@ -650,19 +683,11 @@ function parseDynamicPropertyAndKeyWithName(
 		);
 	}
 
-	const metaLiteralOrFunction = expr.getArguments()[4].asKind(
-		SyntaxKind.ObjectLiteralExpression,
-	)
-		?? expr.getArguments()[4].asKind(SyntaxKind.AsExpression)
-		?? expr.getArguments()[4].asKind(SyntaxKind.ArrowFunction);
-
-	// Determine the inferred "meta" type
-	const metaString: string = inferMetaType(
-		expr,
-		metaLiteralOrFunction,
-		nameLiteral.getLiteralText(),
-		escapedName,
+	const metaLiteralOrFunction = resolveObjectLiteralOrFunction(
+		expr.getArguments()[4],
 	);
+
+	const metaBody: string = inferMetaBody(metaLiteralOrFunction);
 
 	const valueParams = (
 		propertyLiteralOrFunction.asKind(SyntaxKind.ArrowFunction)
@@ -672,6 +697,7 @@ function parseDynamicPropertyAndKeyWithName(
 				SyntaxKind.FunctionDeclaration,
 			)
 			?? metaLiteralOrFunction?.asKind(SyntaxKind.ArrowFunction)
+			?? metaLiteralOrFunction?.asKind(SyntaxKind.FunctionDeclaration)
 	)?.getParameters();
 
 	if (!valueParams) {
@@ -685,6 +711,7 @@ function parseDynamicPropertyAndKeyWithName(
 	);
 
 	const formattedArgs = valueParams.map((p) => p.getText()).join(", ");
+	const formattedArgNames = valueParams.map((p) => p.getName()).join(", ");
 
 	const endpointClosure = inferEndpointClosure(
 		supportsEndpoints,
@@ -694,20 +721,22 @@ function parseDynamicPropertyAndKeyWithName(
 	);
 
 	const dynamicPart = `(${formattedArgs}) => {
-	const property = ${propertyInitializer};
-	const propertyKey = ${propertyKeyInitializer};
+	const property = ${
+		propertyInitializer.replace("...args", formattedArgNames)
+	};
+	const propertyKey = ${
+		propertyKeyInitializer.replace("...args", formattedArgNames)
+	};
 
 	return {
-		get id() {
-			return {
-				commandClass: ${ccEnum.getText()},
-				property,
-				propertyKey,
-			} as const;
-		},
+		id: {
+			commandClass: ${ccEnum.getText()},
+			property,
+			propertyKey,
+		} as const,
 		endpoint: ${endpointClosure},
 		get meta() {
-			return ${metaString} as const;
+			${metaBody}
 		}
 	};
 }`;
@@ -721,9 +750,9 @@ function parseDynamicPropertyAndKeyWithName(
 		},
 		options: {
 			${mergedOptionsString}
-		} as const,
+		} as const satisfies CCValueOptions,
 	}
 ),`;
 }
 
-void main();
+if (esMain(import.meta)) void generateCCValueDefinitions();

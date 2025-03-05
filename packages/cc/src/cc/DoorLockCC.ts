@@ -2,7 +2,6 @@ import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
-	type EndpointId,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
@@ -56,6 +55,15 @@ import {
 	DoorLockMode,
 	DoorLockOperationType,
 } from "../lib/_Types.js";
+import {
+	shouldAutoCreateDoorLockAutoRelockConfigValue,
+	shouldAutoCreateDoorLockBlockToBlockConfigValue,
+	shouldAutoCreateDoorLockBoltStatusValue,
+	shouldAutoCreateDoorLockDoorStatusValue,
+	shouldAutoCreateDoorLockHoldAndReleaseConfigValue,
+	shouldAutoCreateDoorLockLatchStatusValue,
+	shouldAutoCreateDoorLockTwistAssistConfigValue,
+} from "../lib/utils.js";
 
 export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 	...V.staticProperty(
@@ -152,7 +160,7 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		} as const,
 		{
 			minVersion: 4,
-			autoCreate: shouldAutoCreateAutoRelockConfigValue,
+			autoCreate: shouldAutoCreateDoorLockAutoRelockConfigValue,
 		} as const,
 	),
 	...V.staticProperty("holdAndReleaseSupported", undefined, {
@@ -167,7 +175,7 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		} as const,
 		{
 			minVersion: 4,
-			autoCreate: shouldAutoCreateHoldAndReleaseConfigValue,
+			autoCreate: shouldAutoCreateDoorLockHoldAndReleaseConfigValue,
 		} as const,
 	),
 	...V.staticProperty("twistAssistSupported", undefined, {
@@ -182,7 +190,7 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		} as const,
 		{
 			minVersion: 4,
-			autoCreate: shouldAutoCreateTwistAssistConfigValue,
+			autoCreate: shouldAutoCreateDoorLockTwistAssistConfigValue,
 		} as const,
 	),
 	...V.staticProperty("blockToBlockSupported", undefined, {
@@ -197,7 +205,7 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		} as const,
 		{
 			minVersion: 4,
-			autoCreate: shouldAutoCreateBlockToBlockConfigValue,
+			autoCreate: shouldAutoCreateDoorLockBlockToBlockConfigValue,
 		} as const,
 	),
 	...V.staticProperty("latchSupported", undefined, { internal: true }),
@@ -208,7 +216,7 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 			label: "Current status of the latch",
 		} as const,
 		{
-			autoCreate: shouldAutoCreateLatchStatusValue,
+			autoCreate: shouldAutoCreateDoorLockLatchStatusValue,
 		} as const,
 	),
 	...V.staticProperty("boltSupported", undefined, { internal: true }),
@@ -219,7 +227,7 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 			label: "Current status of the bolt",
 		} as const,
 		{
-			autoCreate: shouldAutoCreateBoltStatusValue,
+			autoCreate: shouldAutoCreateDoorLockBoltStatusValue,
 		} as const,
 	),
 	...V.staticProperty("doorSupported", undefined, { internal: true }),
@@ -230,87 +238,10 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 			label: "Current status of the door",
 		} as const,
 		{
-			autoCreate: shouldAutoCreateDoorStatusValue,
+			autoCreate: shouldAutoCreateDoorLockDoorStatusValue,
 		} as const,
 	),
 });
-
-function shouldAutoCreateLatchStatusValue(
-	ctx: GetValueDB,
-	endpoint: EndpointId,
-): boolean {
-	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
-	if (!valueDB) return false;
-	return !!valueDB.getValue(
-		DoorLockCCValues.latchSupported.endpoint(endpoint.index),
-	);
-}
-
-function shouldAutoCreateBoltStatusValue(
-	ctx: GetValueDB,
-	endpoint: EndpointId,
-): boolean {
-	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
-	if (!valueDB) return false;
-	return !!valueDB.getValue(
-		DoorLockCCValues.boltSupported.endpoint(endpoint.index),
-	);
-}
-
-function shouldAutoCreateDoorStatusValue(
-	ctx: GetValueDB,
-	endpoint: EndpointId,
-): boolean {
-	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
-	if (!valueDB) return false;
-	return !!valueDB.getValue(
-		DoorLockCCValues.doorSupported.endpoint(endpoint.index),
-	);
-}
-
-function shouldAutoCreateTwistAssistConfigValue(
-	ctx: GetValueDB,
-	endpoint: EndpointId,
-): boolean {
-	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
-	if (!valueDB) return false;
-	return !!valueDB.getValue(
-		DoorLockCCValues.twistAssistSupported.endpoint(endpoint.index),
-	);
-}
-
-function shouldAutoCreateBlockToBlockConfigValue(
-	ctx: GetValueDB,
-	endpoint: EndpointId,
-): boolean {
-	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
-	if (!valueDB) return false;
-	return !!valueDB.getValue(
-		DoorLockCCValues.blockToBlockSupported.endpoint(endpoint.index),
-	);
-}
-
-function shouldAutoCreateAutoRelockConfigValue(
-	ctx: GetValueDB,
-	endpoint: EndpointId,
-): boolean {
-	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
-	if (!valueDB) return false;
-	return !!valueDB.getValue(
-		DoorLockCCValues.autoRelockSupported.endpoint(endpoint.index),
-	);
-}
-
-function shouldAutoCreateHoldAndReleaseConfigValue(
-	ctx: GetValueDB,
-	endpoint: EndpointId,
-): boolean {
-	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
-	if (!valueDB) return false;
-	return !!valueDB.getValue(
-		DoorLockCCValues.holdAndReleaseSupported.endpoint(endpoint.index),
-	);
-}
 
 const configurationSetParameters = [
 	"operationType",

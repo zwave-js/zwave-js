@@ -4,6 +4,7 @@ import { consistentCCClasses } from "./rules/consistent-cc-classes.js";
 import { consistentConfigStringCase } from "./rules/consistent-config-string-case.js";
 import { consistentDeviceConfigPropertyOrder } from "./rules/consistent-device-config-property-order.js";
 import { consistentParamUnits } from "./rules/consistent-param-units.js";
+import { correctCCValueDefinitions } from "./rules/correct-cc-value-definitions.js";
 import { noDebugInTests } from "./rules/no-debug-in-tests.js";
 import { noForbiddenImports } from "./rules/no-forbidden-imports.js";
 import { noInternalCCTypes } from "./rules/no-internal-cc-types.js";
@@ -32,5 +33,6 @@ export default {
 		"no-value-in-option-label": noValueInOptionLabel,
 		"prefer-defaultvalue": preferDefaultValue,
 		"no-internal-cc-types": noInternalCCTypes,
+		"correct-cc-value-definitions": correctCCValueDefinitions,
 	},
 };
