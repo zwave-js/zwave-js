@@ -98,16 +98,15 @@ function colorComponentToTableKey(
 	}
 }
 
-export const ColorSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Color Switch"], {
+export const ColorSwitchCCValues = V.defineCCValues(
+	CommandClasses["Color Switch"],
+	{
 		...V.staticProperty("supportedColorComponents", undefined, {
 			internal: true,
 		}),
 		...V.staticProperty("supportsHexColor", undefined, {
 			internal: true,
 		}),
-
-		// The compound color (static)
 		...V.staticPropertyWithName(
 			"currentColor",
 			"currentColor",
@@ -132,8 +131,6 @@ export const ColorSwitchCCValues = Object.freeze({
 				label: "Remaining duration",
 			} as const,
 		),
-
-		// The compound color as HEX
 		...V.staticProperty(
 			"hexColor",
 			{
@@ -144,10 +141,6 @@ export const ColorSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Color Switch"], {
-		// The individual color channels (dynamic)
 		...V.dynamicPropertyAndKeyWithName(
 			"currentColorChannel",
 			"currentColor",
@@ -181,8 +174,8 @@ export const ColorSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Color Switch"])
 export class ColorSwitchCCAPI extends CCAPI {

@@ -46,8 +46,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SceneActuatorConfigurationCommand } from "../lib/_Types.js";
 
-export const SceneActuatorConfigurationCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses["Scene Actuator Configuration"], {
+export const SceneActuatorConfigurationCCValues = V.defineCCValues(
+	CommandClasses["Scene Actuator Configuration"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"level",
 			"level",
@@ -60,7 +61,6 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
 			"dimmingDuration",
@@ -73,8 +73,8 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 				label: `Dimming duration (${sceneId})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Scene Actuator Configuration"])
 export class SceneActuatorConfigurationCCAPI extends CCAPI {

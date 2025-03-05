@@ -38,24 +38,21 @@ import {
 import { V } from "../lib/Values.js";
 import { LanguageCommand } from "../lib/_Types.js";
 
-export const LanguageCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Language, {
-		...V.staticProperty(
-			"language",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Language code",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"country",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Country code",
-			} as const,
-		),
-	}),
+export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
+	...V.staticProperty(
+		"language",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Language code",
+		} as const,
+	),
+	...V.staticProperty(
+		"country",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Country code",
+		} as const,
+	),
 });
 
 // @noSetValueAPI It doesn't make sense

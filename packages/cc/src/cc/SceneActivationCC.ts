@@ -35,8 +35,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SceneActivationCommand } from "../lib/_Types.js";
 
-export const SceneActivationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Scene Activation"], {
+export const SceneActivationCCValues = V.defineCCValues(
+	CommandClasses["Scene Activation"],
+	{
 		...V.staticProperty(
 			"sceneId",
 			{
@@ -47,7 +48,6 @@ export const SceneActivationCCValues = Object.freeze({
 			} as const,
 			{ stateful: false },
 		),
-
 		...V.staticProperty(
 			"dimmingDuration",
 			{
@@ -55,8 +55,8 @@ export const SceneActivationCCValues = Object.freeze({
 				label: "Dimming duration",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 // @noInterview This CC is write-only
 

@@ -47,8 +47,9 @@ import {
 import { V } from "../lib/Values.js";
 import { NodeNamingAndLocationCommand } from "../lib/_Types.js";
 
-export const NodeNamingAndLocationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Node Naming and Location"], {
+export const NodeNamingAndLocationCCValues = V.defineCCValues(
+	CommandClasses["Node Naming and Location"],
+	{
 		...V.staticProperty(
 			"name",
 			{
@@ -57,7 +58,6 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"location",
 			{
@@ -66,8 +66,8 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-	}),
-});
+	},
+);
 
 function isASCII(str: string): boolean {
 	return /^[\x00-\x7F]*$/.test(str);

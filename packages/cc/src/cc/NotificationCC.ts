@@ -79,8 +79,9 @@ import { NotificationCommand, UserCodeCommand } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 import { AssociationGroupInfoCC } from "./AssociationGroupInfoCC.js";
 
-export const NotificationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Notification, {
+export const NotificationCCValues = V.defineCCValues(
+	CommandClasses.Notification,
+	{
 		...V.staticProperty("supportsV1Alarm", undefined, {
 			internal: true,
 			supportsEndpoints: false,
@@ -96,8 +97,6 @@ export const NotificationCCValues = Object.freeze({
 		...V.staticProperty("lastRefresh", undefined, {
 			internal: true,
 		}),
-
-		// V1 Alarm values
 		...V.staticProperty(
 			"alarmType",
 			{
@@ -112,9 +111,6 @@ export const NotificationCCValues = Object.freeze({
 				label: "Alarm Level",
 			} as const,
 		),
-
-		// Simplification for the Door state variable, where we cannot know
-		// if any of the enum values are supported
 		...V.staticPropertyAndKeyWithName(
 			"doorStateSimple",
 			"Access Control",
@@ -135,8 +131,6 @@ export const NotificationCCValues = Object.freeze({
 				autoCreate: shouldAutoCreateSimpleDoorSensorValue,
 			} as const,
 		),
-
-		// Binary tilt value extracted from the Door state variable.
 		...V.staticPropertyAndKeyWithName(
 			"doorTiltState",
 			"Access Control",
@@ -158,9 +152,6 @@ export const NotificationCCValues = Object.freeze({
 				autoCreate: false,
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Notification, {
 		...V.dynamicPropertyAndKeyWithName(
 			"supportedNotificationEvents",
 			"supportedNotificationEvents",
@@ -171,9 +162,6 @@ export const NotificationCCValues = Object.freeze({
 			undefined,
 			{ internal: true, supportsEndpoints: false },
 		),
-
-		// Different variants of the V2 notification values:
-		// Unknown type
 		...V.dynamicPropertyWithName(
 			"unknownNotificationType",
 			(notificationType: number) =>
@@ -191,8 +179,6 @@ export const NotificationCCValues = Object.freeze({
 				ccSpecific: { notificationType },
 			} as const),
 		),
-
-		// Known type, unknown variable
 		...V.dynamicPropertyAndKeyWithName(
 			"unknownNotificationVariable",
 			(notificationType: number, notificationName: string) =>
@@ -206,8 +192,6 @@ export const NotificationCCValues = Object.freeze({
 				ccSpecific: { notificationType },
 			} as const),
 		),
-
-		// (Stateful) notification variable
 		...V.dynamicPropertyAndKeyWithName(
 			"notificationVariable",
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -219,10 +203,10 @@ export const NotificationCCValues = Object.freeze({
 			// Notification metadata is so dynamic, it does not make sense to define it here
 			undefined,
 		),
-	}),
-});
+	},
+);
 
-function shouldAutoCreateSimpleDoorSensorValue(
+export function shouldAutoCreateSimpleDoorSensorValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {

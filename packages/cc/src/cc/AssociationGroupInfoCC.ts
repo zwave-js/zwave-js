@@ -42,47 +42,40 @@ import {
 import { AssociationCC } from "./AssociationCC.js";
 import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC.js";
 
-export const AssociationGroupInfoCCValues = Object.freeze({
-	// Defines values that do not depend on anything else
-	...V.defineStaticCCValues(CommandClasses["Association Group Information"], {
+export const AssociationGroupInfoCCValues = V.defineCCValues(
+	CommandClasses["Association Group Information"],
+	{
 		...V.staticProperty("hasDynamicInfo", undefined, { internal: true }),
-	}),
-
-	// Defines values that depend on one or more arguments and need to be called as a function
-	...V.defineDynamicCCValues(
-		CommandClasses["Association Group Information"],
-		{
-			...V.dynamicPropertyAndKeyWithName(
-				"groupName",
-				"name",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "name" && typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-			...V.dynamicPropertyAndKeyWithName(
-				"groupInfo",
-				"info",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "info" && typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-			...V.dynamicPropertyAndKeyWithName(
-				"commands",
-				"issuedCommands",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "issuedCommands"
-					&& typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-		},
-	),
-});
+		...V.dynamicPropertyAndKeyWithName(
+			"groupName",
+			"name",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "name" && typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+		...V.dynamicPropertyAndKeyWithName(
+			"groupInfo",
+			"info",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "info" && typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+		...V.dynamicPropertyAndKeyWithName(
+			"commands",
+			"issuedCommands",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "issuedCommands"
+				&& typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+	},
+);
 
 // @noSetValueAPI This CC only has get-type commands
 

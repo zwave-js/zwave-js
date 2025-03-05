@@ -57,6 +57,7 @@ import {
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
 } from "../lib/API.js";
+import { meterTypesToPropertyKey } from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -79,83 +80,68 @@ import {
 import { V } from "../lib/Values.js";
 import { MeterCommand, type MeterReading, RateType } from "../lib/_Types.js";
 
-export const MeterCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Meter, {
-		...V.staticProperty("type", undefined, { internal: true }),
-		...V.staticProperty("supportsReset", undefined, { internal: true }),
-		...V.staticProperty("supportedScales", undefined, { internal: true }),
-		...V.staticProperty("supportedRateTypes", undefined, {
-			internal: true,
-		}),
-
-		...V.staticPropertyWithName(
-			"resetAll",
-			"reset",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: `Reset accumulated values`,
-				states: {
-					true: "Reset",
-				},
-			} as const,
-		),
+export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
+	...V.staticProperty("type", undefined, { internal: true }),
+	...V.staticProperty("supportsReset", undefined, { internal: true }),
+	...V.staticProperty("supportedScales", undefined, { internal: true }),
+	...V.staticProperty("supportedRateTypes", undefined, {
+		internal: true,
 	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Meter, {
-		...V.dynamicPropertyAndKeyWithName(
-			"resetSingle",
-			"reset",
-			toPropertyKey,
-			({ property, propertyKey }) =>
-				property === "reset" && typeof propertyKey === "number",
-			(meterType: number, rateType: RateType, scale: number) => ({
-				...ValueMetadata.WriteOnlyBoolean,
-				// This is only a placeholder label. A config manager is needed to
-				// determine the actual label.
-				label: `Reset (${
-					rateType === RateType.Consumed
-						? "Consumption, "
-						: rateType === RateType.Produced
-						? "Production, "
-						: ""
-				}${num2hex(scale)})`,
-				states: {
-					true: "Reset",
-				},
-				ccSpecific: {
-					meterType,
-					rateType,
-					scale,
-				},
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"value",
-			"value",
-			toPropertyKey,
-			({ property, propertyKey }) =>
-				property === "value" && typeof propertyKey === "number",
-			(meterType: number, rateType: RateType, scale: number) => ({
-				...ValueMetadata.ReadOnlyNumber,
-				// Label and unit can only be determined with a config manager
-				ccSpecific: {
-					meterType,
-					rateType,
-					scale,
-				},
-			} as const),
-		),
-	}),
+	...V.staticPropertyWithName(
+		"resetAll",
+		"reset",
+		{
+			...ValueMetadata.WriteOnlyBoolean,
+			label: `Reset accumulated values`,
+			states: {
+				true: "Reset",
+			},
+		} as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"resetSingle",
+		"reset",
+		meterTypesToPropertyKey,
+		({ property, propertyKey }) =>
+			property === "reset" && typeof propertyKey === "number",
+		(meterType: number, rateType: RateType, scale: number) => ({
+			...ValueMetadata.WriteOnlyBoolean,
+			// This is only a placeholder label. A config manager is needed to
+			// determine the actual label.
+			label: `Reset (${
+				rateType === RateType.Consumed
+					? "Consumption, "
+					: rateType === RateType.Produced
+					? "Production, "
+					: ""
+			}${num2hex(scale)})`,
+			states: {
+				true: "Reset",
+			},
+			ccSpecific: {
+				meterType,
+				rateType,
+				scale,
+			},
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"value",
+		"value",
+		meterTypesToPropertyKey,
+		({ property, propertyKey }) =>
+			property === "value" && typeof propertyKey === "number",
+		(meterType: number, rateType: RateType, scale: number) => ({
+			...ValueMetadata.ReadOnlyNumber,
+			// Label and unit can only be determined with a config manager
+			ccSpecific: {
+				meterType,
+				rateType,
+				scale,
+			},
+		} as const),
+	),
 });
-
-function toPropertyKey(
-	meterType: number,
-	rateType: RateType,
-	scale: number,
-): number {
-	return (meterType << 16) | (scale << 8) | rateType;
-}
 
 function splitPropertyKey(key: number): {
 	meterType: number;

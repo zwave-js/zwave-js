@@ -42,14 +42,13 @@ import {
 import { V } from "../lib/Values.js";
 import { BinarySensorCommand, BinarySensorType } from "../lib/_Types.js";
 
-export const BinarySensorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Binary Sensor"], {
+export const BinarySensorCCValues = V.defineCCValues(
+	CommandClasses["Binary Sensor"],
+	{
 		...V.staticProperty("supportedSensorTypes", undefined, {
 			internal: true,
 		}),
-	}),
 
-	...V.defineDynamicCCValues(CommandClasses["Binary Sensor"], {
 		...V.dynamicPropertyWithName(
 			"state",
 			/* property */ (sensorType: BinarySensorType) =>
@@ -67,8 +66,8 @@ export const BinarySensorCCValues = Object.freeze({
 				ccSpecific: { sensorType },
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 

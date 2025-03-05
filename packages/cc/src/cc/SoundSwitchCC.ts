@@ -46,8 +46,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SoundSwitchCommand, type ToneId } from "../lib/_Types.js";
 
-export const SoundSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Sound Switch"], {
+export const SoundSwitchCCValues = V.defineCCValues(
+	CommandClasses["Sound Switch"],
+	{
 		...V.staticProperty(
 			"volume",
 			{
@@ -62,7 +63,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				},
 			} as const,
 		),
-
 		...V.staticProperty(
 			"toneId",
 			{
@@ -71,7 +71,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["volume"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"defaultVolume",
 			{
@@ -82,7 +81,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				label: "Default volume",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"defaultToneId",
 			{
@@ -92,8 +90,8 @@ export const SoundSwitchCCValues = Object.freeze({
 				label: "Default tone ID",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Sound Switch"])
 export class SoundSwitchCCAPI extends CCAPI {

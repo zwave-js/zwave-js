@@ -37,32 +37,29 @@ import {
 // MUST be identical for the Root Device and all Multi Channel End Points
 // --> We only access endpoint 0
 
-export const ZWavePlusCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Z-Wave Plus Info"], {
+export const ZWavePlusCCValues = V.defineCCValues(
+	CommandClasses["Z-Wave Plus Info"],
+	{
 		...V.staticProperty("zwavePlusVersion", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("nodeType", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("roleType", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("userIcon", undefined, {
 			internal: true,
 		}),
-
 		...V.staticProperty("installerIcon", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
