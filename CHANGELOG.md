@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.0.0-beta.1 (2025-03-05)
 ### Changes under the hood
 * Split documentation generation into separate tasks, fix CCValues types generation (#7644)
 
