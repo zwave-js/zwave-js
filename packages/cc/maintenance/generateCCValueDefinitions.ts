@@ -159,6 +159,13 @@ export async function generateCCValueDefinitions(): Promise<void> {
 						result += parseStaticPropertyWithName(ccEnum, def);
 						break;
 					}
+					case "staticPropertyAndKeyWithName": {
+						result += parseStaticPropertyAndKeyWithName(
+							ccEnum,
+							def,
+						);
+						break;
+					}
 					case "dynamicPropertyWithName": {
 						result += parseDynamicPropertyWithName(ccEnum, def);
 						break;
@@ -180,17 +187,18 @@ ${getErrorMessage(e, true)}`);
 		result += `
 		});`;
 
-		const ccName =
-			ccEnum.asKind(SyntaxKind.PropertyAccessExpression)?.getNameNode()
-				.getText()
-				?? ccEnum.asKindOrThrow(SyntaxKind.ElementAccessExpression)
-					.getArgumentExpressionOrThrow().getText();
-		if (ccName.includes(`"`)) {
-			exported += `\n[${ccName}]: `;
-		} else {
-			exported += `\n${ccName}: `;
-		}
-		exported += `${ccValuesDeclaration.getName()},`;
+		// const ccName =
+		// 	ccEnum.asKind(SyntaxKind.PropertyAccessExpression)?.getNameNode()
+		// 		.getText()
+		// 		?? ccEnum.asKindOrThrow(SyntaxKind.ElementAccessExpression)
+		// 			.getArgumentExpressionOrThrow().getText();
+		// if (ccName.includes(`"`)) {
+		// 	exported += `\n[${ccName}]: `;
+		// } else {
+		// 	exported += `\n${ccName}: `;
+		// }
+		exported +=
+			`\n[${ccEnum.getText()}]: ${ccValuesDeclaration.getName()},`;
 
 		const importsInDeclaration = ccValuesDeclaration.getDescendantsOfKind(
 			SyntaxKind.Identifier,
@@ -363,7 +371,7 @@ function parseStaticPropertyWithName(
 
 	const propertyLiteral = expr.getArguments()[1].asKindOrThrow(
 		SyntaxKind.StringLiteral,
-		"parseStaticProperty expects the value property to be passed as a string literal as the second argument",
+		"parseStaticPropertyWithName expects the value property to be passed as a string literal as the second argument",
 	);
 	const escapedProperty = propertyLiteral.getText();
 
@@ -394,6 +402,67 @@ function parseStaticPropertyWithName(
 			return valueId.commandClass === ${ccEnum.getText()}
 			&& valueId.property === ${escapedProperty}
 			&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			${metaString}
+		},
+		options: {
+			${mergedOptionsString}
+		} as const satisfies CCValueOptions,
+	},`;
+}
+
+function parseStaticPropertyAndKeyWithName(
+	ccEnum: CCEnum,
+	expr: CallExpression,
+): string {
+	const nameLiteral = expr.getArguments()[0].asKindOrThrow(
+		SyntaxKind.StringLiteral,
+		"parseStaticPropertyAndKeyWithName expects the custom property name to be passed as a string literal as the first argument",
+	);
+	const escapedName = nameLiteral.getText();
+
+	const propertyLiteral = expr.getArguments()[1].asKindOrThrow(
+		SyntaxKind.StringLiteral,
+		"parseStaticPropertyAndKeyWithName expects the value property to be passed as a string literal as the second argument",
+	);
+	const escapedProperty = propertyLiteral.getText();
+
+	const propertyKeyLiteral = expr.getArguments()[2].asKindOrThrow(
+		SyntaxKind.StringLiteral,
+		"parseStaticPropertyAndKeyWithName expects the value propertyKey to be passed as a string literal as the third argument",
+	);
+	const escapedPropertyKey = propertyKeyLiteral.getText();
+
+	const metaLiteralOrFunction = resolveObjectLiteralOrFunction(
+		expr.getArguments()[3],
+	);
+
+	// Determine the inferred "meta" type
+	const metaString: string = inferMetaBody(metaLiteralOrFunction);
+
+	const { supportsEndpoints, mergedOptionsString } = inferOptions(
+		expr.getArguments()[4],
+	);
+
+	const endpointClosure = inferEndpointClosure(
+		supportsEndpoints,
+		ccEnum,
+		escapedProperty,
+		escapedPropertyKey,
+	);
+
+	return `${escapedName}: {
+		id: {
+			commandClass: ${ccEnum.getText()},
+			property: ${escapedProperty},
+			propertyKey: ${escapedPropertyKey},
+		} as const,
+		endpoint: ${endpointClosure},
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === ${ccEnum.getText()}
+			&& valueId.property === ${escapedProperty}
+			&& valueId.propertyKey == ${escapedPropertyKey};
 		},
 		get meta() {
 			${metaString}

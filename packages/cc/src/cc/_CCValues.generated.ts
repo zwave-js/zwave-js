@@ -53,6 +53,7 @@ import {
 	shouldAutoCreateDoorLockHoldAndReleaseConfigValue,
 	shouldAutoCreateDoorLockLatchStatusValue,
 	shouldAutoCreateDoorLockTwistAssistConfigValue,
+	shouldAutoCreateSimpleDoorSensorNotificationValue,
 	windowCoveringParameterToLevelChangeLabel,
 	windowCoveringParameterToMetadataStates,
 } from "../lib/utils.js";
@@ -6785,6 +6786,86 @@ export const NotificationCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
+	doorStateSimple: {
+		id: {
+			commandClass: CommandClasses.Notification,
+			property: "Access Control",
+			propertyKey: "Door state (simple)",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses.Notification,
+			endpoint,
+			property: "Access Control",
+			propertyKey: "Door state (simple)",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses.Notification
+				&& valueId.property === "Access Control"
+				&& valueId.propertyKey == "Door state (simple)";
+		},
+		get meta() {
+			return {
+				// Must be a number for compatibility reasons
+				...ValueMetadata.ReadOnlyUInt8,
+				label: "Door state (simple)",
+				states: {
+					[0x16]: "Window/door is open",
+					[0x17]: "Window/door is closed",
+				},
+				ccSpecific: {
+					notificationType: 0x06,
+				},
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: shouldAutoCreateSimpleDoorSensorNotificationValue,
+		} as const satisfies CCValueOptions,
+	},
+	doorTiltState: {
+		id: {
+			commandClass: CommandClasses.Notification,
+			property: "Access Control",
+			propertyKey: "Door tilt state",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses.Notification,
+			endpoint,
+			property: "Access Control",
+			propertyKey: "Door tilt state",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses.Notification
+				&& valueId.property === "Access Control"
+				&& valueId.propertyKey == "Door tilt state";
+		},
+		get meta() {
+			return {
+				// Must be a number for compatibility reasons
+				...ValueMetadata.ReadOnlyUInt8,
+				label: "Door tilt state",
+				states: {
+					[0x00]: "Window/door is not tilted",
+					[0x01]: "Window/door is tilted",
+				},
+				ccSpecific: {
+					notificationType: 0x06,
+				},
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: false,
+		} as const satisfies CCValueOptions,
+	},
 	supportedNotificationEvents: Object.assign(
 		(notificationType: number) => {
 			const property = "supportedNotificationEvents";
@@ -9667,54 +9748,63 @@ export const ZWavePlusCCValues = Object.freeze({
 });
 
 export const CCValues = {
-	["Alarm Sensor"]: AlarmSensorCCValues,
-	Association: AssociationCCValues,
-	["Association Group Information"]: AssociationGroupInfoCCValues,
-	["Barrier Operator"]: BarrierOperatorCCValues,
-	Basic: BasicCCValues,
-	Battery: BatteryCCValues,
-	["Binary Sensor"]: BinarySensorCCValues,
-	["Binary Switch"]: BinarySwitchCCValues,
-	["Central Scene"]: CentralSceneCCValues,
-	["Climate Control Schedule"]: ClimateControlScheduleCCValues,
-	["Color Switch"]: ColorSwitchCCValues,
-	Configuration: ConfigurationCCValues,
-	["Door Lock"]: DoorLockCCValues,
-	["Door Lock Logging"]: DoorLockLoggingCCValues,
-	["Energy Production"]: EnergyProductionCCValues,
-	["Entry Control"]: EntryControlCCValues,
-	["Firmware Update Meta Data"]: FirmwareUpdateMetaDataCCValues,
-	["Humidity Control Mode"]: HumidityControlModeCCValues,
-	["Humidity Control Operating State"]: HumidityControlOperatingStateCCValues,
-	["Humidity Control Setpoint"]: HumidityControlSetpointCCValues,
-	Indicator: IndicatorCCValues,
-	Irrigation: IrrigationCCValues,
-	Language: LanguageCCValues,
-	Lock: LockCCValues,
-	["Manufacturer Specific"]: ManufacturerSpecificCCValues,
-	Meter: MeterCCValues,
-	["Multi Channel Association"]: MultiChannelAssociationCCValues,
-	["Multi Channel"]: MultiChannelCCValues,
-	["Multilevel Sensor"]: MultilevelSensorCCValues,
-	["Multilevel Switch"]: MultilevelSwitchCCValues,
-	["Node Naming and Location"]: NodeNamingAndLocationCCValues,
-	Notification: NotificationCCValues,
-	Protection: ProtectionCCValues,
-	["Scene Activation"]: SceneActivationCCValues,
-	["Scene Actuator Configuration"]: SceneActuatorConfigurationCCValues,
-	["Scene Controller Configuration"]: SceneControllerConfigurationCCValues,
-	["Schedule Entry Lock"]: ScheduleEntryLockCCValues,
-	["Sound Switch"]: SoundSwitchCCValues,
-	Supervision: SupervisionCCValues,
-	["Thermostat Fan Mode"]: ThermostatFanModeCCValues,
-	["Thermostat Fan State"]: ThermostatFanStateCCValues,
-	["Thermostat Mode"]: ThermostatModeCCValues,
-	["Thermostat Operating State"]: ThermostatOperatingStateCCValues,
-	["Thermostat Setpoint"]: ThermostatSetpointCCValues,
-	["Time Parameters"]: TimeParametersCCValues,
-	["User Code"]: UserCodeCCValues,
-	Version: VersionCCValues,
-	["Wake Up"]: WakeUpCCValues,
-	["Window Covering"]: WindowCoveringCCValues,
-	["Z-Wave Plus Info"]: ZWavePlusCCValues,
+	[CommandClasses["Alarm Sensor"]]: AlarmSensorCCValues,
+	[CommandClasses.Association]: AssociationCCValues,
+	[CommandClasses["Association Group Information"]]:
+		AssociationGroupInfoCCValues,
+	[CommandClasses["Barrier Operator"]]: BarrierOperatorCCValues,
+	[CommandClasses.Basic]: BasicCCValues,
+	[CommandClasses.Battery]: BatteryCCValues,
+	[CommandClasses["Binary Sensor"]]: BinarySensorCCValues,
+	[CommandClasses["Binary Switch"]]: BinarySwitchCCValues,
+	[CommandClasses["Central Scene"]]: CentralSceneCCValues,
+	[CommandClasses["Climate Control Schedule"]]:
+		ClimateControlScheduleCCValues,
+	[CommandClasses["Color Switch"]]: ColorSwitchCCValues,
+	[CommandClasses.Configuration]: ConfigurationCCValues,
+	[CommandClasses["Door Lock"]]: DoorLockCCValues,
+	[CommandClasses["Door Lock Logging"]]: DoorLockLoggingCCValues,
+	[CommandClasses["Energy Production"]]: EnergyProductionCCValues,
+	[CommandClasses["Entry Control"]]: EntryControlCCValues,
+	[CommandClasses["Firmware Update Meta Data"]]:
+		FirmwareUpdateMetaDataCCValues,
+	[CommandClasses["Humidity Control Mode"]]: HumidityControlModeCCValues,
+	[CommandClasses["Humidity Control Operating State"]]:
+		HumidityControlOperatingStateCCValues,
+	[CommandClasses["Humidity Control Setpoint"]]:
+		HumidityControlSetpointCCValues,
+	[CommandClasses.Indicator]: IndicatorCCValues,
+	[CommandClasses.Irrigation]: IrrigationCCValues,
+	[CommandClasses.Language]: LanguageCCValues,
+	[CommandClasses.Lock]: LockCCValues,
+	[CommandClasses["Manufacturer Specific"]]: ManufacturerSpecificCCValues,
+	[CommandClasses.Meter]: MeterCCValues,
+	[CommandClasses["Multi Channel Association"]]:
+		MultiChannelAssociationCCValues,
+	[CommandClasses["Multi Channel"]]: MultiChannelCCValues,
+	[CommandClasses["Multilevel Sensor"]]: MultilevelSensorCCValues,
+	[CommandClasses["Multilevel Switch"]]: MultilevelSwitchCCValues,
+	[CommandClasses["Node Naming and Location"]]: NodeNamingAndLocationCCValues,
+	[CommandClasses.Notification]: NotificationCCValues,
+	[CommandClasses.Protection]: ProtectionCCValues,
+	[CommandClasses["Scene Activation"]]: SceneActivationCCValues,
+	[CommandClasses["Scene Actuator Configuration"]]:
+		SceneActuatorConfigurationCCValues,
+	[CommandClasses["Scene Controller Configuration"]]:
+		SceneControllerConfigurationCCValues,
+	[CommandClasses["Schedule Entry Lock"]]: ScheduleEntryLockCCValues,
+	[CommandClasses["Sound Switch"]]: SoundSwitchCCValues,
+	[CommandClasses.Supervision]: SupervisionCCValues,
+	[CommandClasses["Thermostat Fan Mode"]]: ThermostatFanModeCCValues,
+	[CommandClasses["Thermostat Fan State"]]: ThermostatFanStateCCValues,
+	[CommandClasses["Thermostat Mode"]]: ThermostatModeCCValues,
+	[CommandClasses["Thermostat Operating State"]]:
+		ThermostatOperatingStateCCValues,
+	[CommandClasses["Thermostat Setpoint"]]: ThermostatSetpointCCValues,
+	[CommandClasses["Time Parameters"]]: TimeParametersCCValues,
+	[CommandClasses["User Code"]]: UserCodeCCValues,
+	[CommandClasses.Version]: VersionCCValues,
+	[CommandClasses["Wake Up"]]: WakeUpCCValues,
+	[CommandClasses["Window Covering"]]: WindowCoveringCCValues,
+	[CommandClasses["Z-Wave Plus Info"]]: ZWavePlusCCValues,
 };

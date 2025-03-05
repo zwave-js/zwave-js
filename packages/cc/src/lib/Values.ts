@@ -5,7 +5,6 @@ import {
 	type GetValueDB,
 	type ValueID,
 	type ValueMetadata,
-	getCCName,
 } from "@zwave-js/core/safe";
 import {
 	type FnOrStatic,
@@ -15,17 +14,16 @@ import {
 import type { ValueIDProperties } from "./API.js";
 
 import { CCValues } from "../cc/_CCValues.generated.js";
-export type CCValues = typeof CCValues;
 
 function defineCCValues<T extends CommandClasses>(
 	commandClass: T,
 	_: Record<string, CCValueBlueprint | DynamicCCValueBlueprint<any[]>>,
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore I know what I'm doing!
-): typeof import("../cc/_CCValues.generated.js").values[T] {
+): typeof import("../cc/_CCValues.generated.js").CCValues[T] {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore I know what I'm doing!
-	return CCValues[getCCName(commandClass)];
+	return CCValues[commandClass];
 }
 
 // HINT: To fully view types for definitions created by this, open
