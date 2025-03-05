@@ -32,6 +32,7 @@ import {
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
 } from "../lib/API.js";
+import { irrigationValveIdToMetadataPrefix } from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -57,7 +58,6 @@ import {
 	type ValveTableEntry,
 	ValveType,
 } from "../lib/_Types.js";
-import { irrigationValveIdToMetadataPrefix } from "../lib/utils.js";
 
 export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 	...V.staticProperty("numValves", undefined, { internal: true }),

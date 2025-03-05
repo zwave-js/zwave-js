@@ -216,7 +216,6 @@ export default tseslint.config(
 		rules: {
 			"@zwave-js/ccapi-validate-args": "error",
 			"@zwave-js/no-internal-cc-types": "error",
-			"@zwave-js/correct-cc-value-definitions": "error",
 		},
 	},
 	{

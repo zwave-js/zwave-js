@@ -1,6 +1,12 @@
 /// This file is auto-generated. All manual changes will be lost!
 
-import { CommandClasses, type ValueID, ValueMetadata } from "@zwave-js/core";
+import {
+	CommandClasses,
+	type EndpointId,
+	type GetValueDB,
+	type ValueID,
+	ValueMetadata,
+} from "@zwave-js/core";
 import {
 	MAX_NODES,
 	ZWaveLibraryTypes,
@@ -8,6 +14,14 @@ import {
 } from "@zwave-js/core/safe";
 import { getEnumMemberName } from "@zwave-js/shared";
 import { num2hex } from "@zwave-js/shared/safe";
+import {
+	irrigationValveIdToMetadataPrefix,
+	meterTypesToPropertyKey,
+	multilevelSwitchTypeProperties,
+	multilevelSwitchTypeToActions,
+	windowCoveringParameterToLevelChangeLabel,
+	windowCoveringParameterToMetadataStates,
+} from "../lib/CCValueUtils.js";
 import { type CCValueOptions } from "../lib/Values.js";
 import {
 	AlarmSensorType,
@@ -41,22 +55,6 @@ import {
 	Weekday,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
-import {
-	irrigationValveIdToMetadataPrefix,
-	meterTypesToPropertyKey,
-	multilevelSwitchTypeProperties,
-	multilevelSwitchTypeToActions,
-	shouldAutoCreateDoorLockAutoRelockConfigValue,
-	shouldAutoCreateDoorLockBlockToBlockConfigValue,
-	shouldAutoCreateDoorLockBoltStatusValue,
-	shouldAutoCreateDoorLockDoorStatusValue,
-	shouldAutoCreateDoorLockHoldAndReleaseConfigValue,
-	shouldAutoCreateDoorLockLatchStatusValue,
-	shouldAutoCreateDoorLockTwistAssistConfigValue,
-	shouldAutoCreateSimpleDoorSensorNotificationValue,
-	windowCoveringParameterToLevelChangeLabel,
-	windowCoveringParameterToMetadataStates,
-} from "../lib/utils.js";
 
 export const AlarmSensorCCValues = Object.freeze({
 	state: Object.assign(
@@ -2436,7 +2434,7 @@ export const DoorLockCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateDoorLockAutoRelockConfigValue,
+			autoCreate: shouldAutoCreateAutoRelockConfigValue,
 		} as const satisfies CCValueOptions,
 	},
 	holdAndReleaseSupported: {
@@ -2493,7 +2491,7 @@ export const DoorLockCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateDoorLockHoldAndReleaseConfigValue,
+			autoCreate: shouldAutoCreateHoldAndReleaseConfigValue,
 		} as const satisfies CCValueOptions,
 	},
 	twistAssistSupported: {
@@ -2550,7 +2548,7 @@ export const DoorLockCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateDoorLockTwistAssistConfigValue,
+			autoCreate: shouldAutoCreateTwistAssistConfigValue,
 		} as const satisfies CCValueOptions,
 	},
 	blockToBlockSupported: {
@@ -2607,7 +2605,7 @@ export const DoorLockCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateDoorLockBlockToBlockConfigValue,
+			autoCreate: shouldAutoCreateBlockToBlockConfigValue,
 		} as const satisfies CCValueOptions,
 	},
 	latchSupported: {
@@ -2664,7 +2662,7 @@ export const DoorLockCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateDoorLockLatchStatusValue,
+			autoCreate: shouldAutoCreateLatchStatusValue,
 		} as const satisfies CCValueOptions,
 	},
 	boltSupported: {
@@ -2721,7 +2719,7 @@ export const DoorLockCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateDoorLockBoltStatusValue,
+			autoCreate: shouldAutoCreateBoltStatusValue,
 		} as const satisfies CCValueOptions,
 	},
 	doorSupported: {
@@ -2778,10 +2776,87 @@ export const DoorLockCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateDoorLockDoorStatusValue,
+			autoCreate: shouldAutoCreateDoorStatusValue,
 		} as const satisfies CCValueOptions,
 	},
 });
+
+function shouldAutoCreateAutoRelockConfigValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	return !!valueDB.getValue(
+		DoorLockCCValues.autoRelockSupported.endpoint(endpoint.index),
+	);
+}
+
+function shouldAutoCreateHoldAndReleaseConfigValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	return !!valueDB.getValue(
+		DoorLockCCValues.holdAndReleaseSupported.endpoint(endpoint.index),
+	);
+}
+
+function shouldAutoCreateTwistAssistConfigValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	return !!valueDB.getValue(
+		DoorLockCCValues.twistAssistSupported.endpoint(endpoint.index),
+	);
+}
+
+function shouldAutoCreateBlockToBlockConfigValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	return !!valueDB.getValue(
+		DoorLockCCValues.blockToBlockSupported.endpoint(endpoint.index),
+	);
+}
+
+function shouldAutoCreateLatchStatusValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	return !!valueDB.getValue(
+		DoorLockCCValues.latchSupported.endpoint(endpoint.index),
+	);
+}
+
+function shouldAutoCreateBoltStatusValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	return !!valueDB.getValue(
+		DoorLockCCValues.boltSupported.endpoint(endpoint.index),
+	);
+}
+
+function shouldAutoCreateDoorStatusValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	return !!valueDB.getValue(
+		DoorLockCCValues.doorSupported.endpoint(endpoint.index),
+	);
+}
 
 export const DoorLockLoggingCCValues = Object.freeze({
 	recordsCount: {
@@ -6823,7 +6898,7 @@ export const NotificationCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateSimpleDoorSensorNotificationValue,
+			autoCreate: shouldAutoCreateSimpleDoorSensorValue,
 		} as const satisfies CCValueOptions,
 	},
 	doorTiltState: {
@@ -7032,6 +7107,31 @@ export const NotificationCCValues = Object.freeze({
 		},
 	),
 });
+
+function shouldAutoCreateSimpleDoorSensorValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	const supportedACEvents = valueDB.getValue<readonly number[]>(
+		NotificationCCValues.supportedNotificationEvents(
+			// Access Control
+			0x06,
+		).endpoint(endpoint.index),
+	);
+	if (!supportedACEvents) return false;
+	return (
+		supportedACEvents.includes(
+			// Window/door is open
+			0x16,
+		)
+		&& supportedACEvents.includes(
+			// Window/door is closed
+			0x17,
+		)
+	);
+}
 
 export const ProtectionCCValues = Object.freeze({
 	exclusiveControlNodeId: {

@@ -31,6 +31,10 @@ import {
 	throwWrongValueType,
 } from "../lib/API.js";
 import {
+	windowCoveringParameterToLevelChangeLabel,
+	windowCoveringParameterToMetadataStates,
+} from "../lib/CCValueUtils.js";
+import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
@@ -51,10 +55,6 @@ import {
 	WindowCoveringCommand,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
-import {
-	windowCoveringParameterToLevelChangeLabel,
-	windowCoveringParameterToMetadataStates,
-} from "../lib/utils.js";
 
 export const WindowCoveringCCValues = V.defineCCValues(
 	CommandClasses["Window Covering"],

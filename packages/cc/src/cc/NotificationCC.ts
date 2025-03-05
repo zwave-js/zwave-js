@@ -77,7 +77,6 @@ import { isNotificationEventPayload } from "../lib/NotificationEventPayload.js";
 import { V } from "../lib/Values.js";
 import { NotificationCommand, UserCodeCommand } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
-import { shouldAutoCreateSimpleDoorSensorNotificationValue } from "../lib/utils.js";
 import { AssociationGroupInfoCC } from "./AssociationGroupInfoCC.js";
 
 export const NotificationCCValues = V.defineCCValues(
@@ -129,7 +128,7 @@ export const NotificationCCValues = V.defineCCValues(
 				},
 			} as const,
 			{
-				autoCreate: shouldAutoCreateSimpleDoorSensorNotificationValue,
+				autoCreate: shouldAutoCreateSimpleDoorSensorValue,
 			} as const,
 		),
 		...V.staticPropertyAndKeyWithName(
@@ -206,6 +205,31 @@ export const NotificationCCValues = V.defineCCValues(
 		),
 	},
 );
+
+export function shouldAutoCreateSimpleDoorSensorValue(
+	ctx: GetValueDB,
+	endpoint: EndpointId,
+): boolean {
+	const valueDB = ctx.tryGetValueDB(endpoint.nodeId);
+	if (!valueDB) return false;
+	const supportedACEvents = valueDB.getValue<readonly number[]>(
+		NotificationCCValues.supportedNotificationEvents(
+			// Access Control
+			0x06,
+		).endpoint(endpoint.index),
+	);
+	if (!supportedACEvents) return false;
+	return (
+		supportedACEvents.includes(
+			// Window/door is open
+			0x16,
+		)
+		&& supportedACEvents.includes(
+			// Window/door is closed
+			0x17,
+		)
+	);
+}
 
 @API(CommandClasses.Notification)
 export class NotificationCCAPI extends PhysicalCCAPI {

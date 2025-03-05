@@ -14,6 +14,7 @@ import {
 	type ObjectLiteralExpression,
 	Project,
 	type PropertyAccessExpression,
+	type Statement,
 	type StringLiteral,
 	SyntaxKind,
 	type ts,
@@ -64,6 +65,14 @@ export async function generateCCValueDefinitions(): Promise<void> {
 			["CommandClasses", false],
 			["ValueID", true],
 			["ValueMetadata", false],
+			["GetValueDB", true],
+			["EndpointId", true],
+		]),
+	);
+	importsByModule.set(
+		"@zwave-js/config",
+		new Map([
+			["GetDeviceConfig", true],
 		]),
 	);
 	importsByModule.set(
@@ -134,6 +143,40 @@ export async function generateCCValueDefinitions(): Promise<void> {
 		);
 		if (spreads.length === 0) continue;
 
+		const localDeclarationsToCopy = ccValuesDeclaration
+			.getDescendantsOfKind(SyntaxKind.Identifier)
+			.map((ident) => ident.getSymbol()?.getValueDeclaration())
+			.filter((decl): decl is Node =>
+				decl !== ccValuesDeclaration && decl != undefined
+			)
+			.map((decl): Statement | undefined => {
+				// Copy function declarations and top-level variable declarations
+				if (decl.isKind(SyntaxKind.FunctionDeclaration)) return decl;
+				const varStatement = decl.asKind(SyntaxKind.VariableDeclaration)
+					?.getVariableStatement();
+				if (varStatement?.getParent().isKind(SyntaxKind.SourceFile)) {
+					return varStatement;
+				}
+				return undefined;
+			})
+			.filter((decl) => decl != undefined);
+
+		// Functions are hoisted and might need access to the CCValues definition
+		const localFunctionsToCopy = localDeclarationsToCopy.filter(
+			(decl) => decl.isKind(SyntaxKind.FunctionDeclaration),
+		);
+		// consts/vars have to be defined first, so the CCValues definition can access them
+		const localVarsToCopy = localDeclarationsToCopy.filter(
+			(decl) => !decl.isKind(SyntaxKind.FunctionDeclaration),
+		);
+
+		for (const decl of localVarsToCopy) {
+			decl.asKindOrThrow(SyntaxKind.VariableStatement).setIsExported(
+				false,
+			);
+			result += `\n\n` + decl.getText();
+		}
+
 		result += `
 
 		export const ${ccValuesDeclaration.getName()} = Object.freeze({
@@ -186,6 +229,13 @@ ${getErrorMessage(e, true)}`);
 		}
 		result += `
 		});`;
+
+		for (const decl of localFunctionsToCopy) {
+			decl.asKindOrThrow(SyntaxKind.FunctionDeclaration).setIsExported(
+				false,
+			);
+			result += `\n\n` + decl.getText();
+		}
 
 		// const ccName =
 		// 	ccEnum.asKind(SyntaxKind.PropertyAccessExpression)?.getNameNode()

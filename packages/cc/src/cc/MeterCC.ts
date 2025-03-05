@@ -57,6 +57,7 @@ import {
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
 } from "../lib/API.js";
+import { meterTypesToPropertyKey } from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -78,7 +79,6 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { MeterCommand, type MeterReading, RateType } from "../lib/_Types.js";
-import { meterTypesToPropertyKey } from "../lib/utils.js";
 
 export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 	...V.staticProperty("type", undefined, { internal: true }),

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { type PluginConfig, type TransformerExtras } from "ts-patch";
-import ts from "typescript";
+import type ts from "typescript";
 
 /**
  * Transformer to replace the CC value definition `V.defineCCValues(CommandClasses.Basic, { ... })`
@@ -8,7 +8,7 @@ import ts from "typescript";
  */
 export default function transformer(
 	program: ts.Program,
-	pluginConfig: PluginConfig,
+	_pluginConfig: PluginConfig,
 	{ ts: t }: TransformerExtras,
 ): ts.TransformerFactory<ts.SourceFile> {
 	const compilerOptions = program.getCompilerOptions();
@@ -29,10 +29,10 @@ export default function transformer(
 		const ccValuesDeclaration = file.statements.filter((
 			s,
 		): s is ts.VariableStatement =>
-			s.kind === ts.SyntaxKind.VariableStatement
+			s.kind === t.SyntaxKind.VariableStatement
 		)
 			.filter((s) =>
-				s.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
+				s.modifiers?.some((m) => m.kind === t.SyntaxKind.ExportKeyword)
 			)
 			.find((s) =>
 				s.declarationList.declarations.some((d) =>

@@ -31,6 +31,10 @@ import {
 	throwWrongValueType,
 } from "../lib/API.js";
 import {
+	multilevelSwitchTypeProperties,
+	multilevelSwitchTypeToActions,
+} from "../lib/CCValueUtils.js";
+import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
@@ -54,10 +58,6 @@ import {
 	MultilevelSwitchCommand,
 	SwitchType,
 } from "../lib/_Types.js";
-import {
-	multilevelSwitchTypeProperties,
-	multilevelSwitchTypeToActions,
-} from "../lib/utils.js";
 
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],
