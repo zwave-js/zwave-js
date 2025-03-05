@@ -81,7 +81,7 @@ async reset(
 }
 ```
 
-- **label:** `Reset (${string})` | `Reset (Consumption, ${string})` | `Reset (Production, ${string})`
+- **label:** `Reset (Consumption, ${string})` | `Reset (Production, ${string})` | `Reset (${string})`
 - **min. CC version:** 1
 - **readable:** false
 - **writeable:** true
