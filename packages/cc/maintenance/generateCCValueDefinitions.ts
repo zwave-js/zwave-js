@@ -136,7 +136,7 @@ export async function generateCCValueDefinitions(): Promise<void> {
 
 		result += `
 
-		const ${ccValuesDeclaration.getName()} = Object.freeze({
+		export const ${ccValuesDeclaration.getName()} = Object.freeze({
 		`;
 
 		try {

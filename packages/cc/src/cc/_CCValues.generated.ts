@@ -57,7 +57,7 @@ import {
 	windowCoveringParameterToMetadataStates,
 } from "../lib/utils.js";
 
-const AlarmSensorCCValues = Object.freeze({
+export const AlarmSensorCCValues = Object.freeze({
 	state: Object.assign(
 		(sensorType: AlarmSensorType) => {
 			const property = "state";
@@ -234,7 +234,7 @@ const AlarmSensorCCValues = Object.freeze({
 	},
 });
 
-const AssociationCCValues = Object.freeze({
+export const AssociationCCValues = Object.freeze({
 	hasLifeline: {
 		id: {
 			commandClass: CommandClasses.Association,
@@ -369,7 +369,7 @@ const AssociationCCValues = Object.freeze({
 	),
 });
 
-const AssociationGroupInfoCCValues = Object.freeze({
+export const AssociationGroupInfoCCValues = Object.freeze({
 	hasDynamicInfo: {
 		id: {
 			commandClass: CommandClasses["Association Group Information"],
@@ -528,7 +528,7 @@ const AssociationGroupInfoCCValues = Object.freeze({
 	),
 });
 
-const BarrierOperatorCCValues = Object.freeze({
+export const BarrierOperatorCCValues = Object.freeze({
 	supportedSubsystemTypes: {
 		id: {
 			commandClass: CommandClasses["Barrier Operator"],
@@ -704,7 +704,7 @@ const BarrierOperatorCCValues = Object.freeze({
 	),
 });
 
-const BasicCCValues = Object.freeze({
+export const BasicCCValues = Object.freeze({
 	currentValue: {
 		id: {
 			commandClass: CommandClasses.Basic,
@@ -860,7 +860,7 @@ const BasicCCValues = Object.freeze({
 	},
 });
 
-const BatteryCCValues = Object.freeze({
+export const BatteryCCValues = Object.freeze({
 	level: {
 		id: {
 			commandClass: CommandClasses.Battery,
@@ -1229,7 +1229,7 @@ const BatteryCCValues = Object.freeze({
 	},
 });
 
-const BinarySensorCCValues = Object.freeze({
+export const BinarySensorCCValues = Object.freeze({
 	supportedSensorTypes: {
 		id: {
 			commandClass: CommandClasses["Binary Sensor"],
@@ -1304,7 +1304,7 @@ const BinarySensorCCValues = Object.freeze({
 	),
 });
 
-const BinarySwitchCCValues = Object.freeze({
+export const BinarySwitchCCValues = Object.freeze({
 	currentValue: {
 		id: {
 			commandClass: CommandClasses["Binary Switch"],
@@ -1398,7 +1398,7 @@ const BinarySwitchCCValues = Object.freeze({
 	},
 });
 
-const CentralSceneCCValues = Object.freeze({
+export const CentralSceneCCValues = Object.freeze({
 	sceneCount: {
 		id: {
 			commandClass: CommandClasses["Central Scene"],
@@ -1559,7 +1559,7 @@ const CentralSceneCCValues = Object.freeze({
 	),
 });
 
-const ClimateControlScheduleCCValues = Object.freeze({
+export const ClimateControlScheduleCCValues = Object.freeze({
 	overrideType: {
 		id: {
 			commandClass: CommandClasses["Climate Control Schedule"],
@@ -1673,7 +1673,7 @@ const ClimateControlScheduleCCValues = Object.freeze({
 	),
 });
 
-const ColorSwitchCCValues = Object.freeze({
+export const ColorSwitchCCValues = Object.freeze({
 	supportedColorComponents: {
 		id: {
 			commandClass: CommandClasses["Color Switch"],
@@ -1951,7 +1951,7 @@ const ColorSwitchCCValues = Object.freeze({
 	),
 });
 
-const ConfigurationCCValues = Object.freeze({
+export const ConfigurationCCValues = Object.freeze({
 	isParamInformationFromConfig: {
 		id: {
 			commandClass: CommandClasses.Configuration,
@@ -2021,7 +2021,7 @@ const ConfigurationCCValues = Object.freeze({
 	),
 });
 
-const DoorLockCCValues = Object.freeze({
+export const DoorLockCCValues = Object.freeze({
 	targetMode: {
 		id: {
 			commandClass: CommandClasses["Door Lock"],
@@ -2782,7 +2782,7 @@ const DoorLockCCValues = Object.freeze({
 	},
 });
 
-const DoorLockLoggingCCValues = Object.freeze({
+export const DoorLockLoggingCCValues = Object.freeze({
 	recordsCount: {
 		id: {
 			commandClass: CommandClasses["Door Lock Logging"],
@@ -2812,7 +2812,7 @@ const DoorLockLoggingCCValues = Object.freeze({
 	},
 });
 
-const EnergyProductionCCValues = Object.freeze({
+export const EnergyProductionCCValues = Object.freeze({
 	value: Object.assign(
 		(parameter: EnergyProductionParameter) => {
 			const property = "value";
@@ -2862,7 +2862,7 @@ const EnergyProductionCCValues = Object.freeze({
 	),
 });
 
-const EntryControlCCValues = Object.freeze({
+export const EntryControlCCValues = Object.freeze({
 	keyCacheSize: {
 		id: {
 			commandClass: CommandClasses["Entry Control"],
@@ -3015,7 +3015,7 @@ const EntryControlCCValues = Object.freeze({
 	},
 });
 
-const FirmwareUpdateMetaDataCCValues = Object.freeze({
+export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 	supportsActivation: {
 		id: {
 			commandClass: CommandClasses["Firmware Update Meta Data"],
@@ -3186,7 +3186,7 @@ const FirmwareUpdateMetaDataCCValues = Object.freeze({
 	},
 });
 
-const HumidityControlModeCCValues = Object.freeze({
+export const HumidityControlModeCCValues = Object.freeze({
 	mode: {
 		id: {
 			commandClass: CommandClasses["Humidity Control Mode"],
@@ -3249,7 +3249,7 @@ const HumidityControlModeCCValues = Object.freeze({
 	},
 });
 
-const HumidityControlOperatingStateCCValues = Object.freeze({
+export const HumidityControlOperatingStateCCValues = Object.freeze({
 	state: {
 		id: {
 			commandClass: CommandClasses["Humidity Control Operating State"],
@@ -3286,7 +3286,7 @@ const HumidityControlOperatingStateCCValues = Object.freeze({
 	},
 });
 
-const HumidityControlSetpointCCValues = Object.freeze({
+export const HumidityControlSetpointCCValues = Object.freeze({
 	supportedSetpointTypes: {
 		id: {
 			commandClass: CommandClasses["Humidity Control Setpoint"],
@@ -3415,7 +3415,7 @@ const HumidityControlSetpointCCValues = Object.freeze({
 	),
 });
 
-const IndicatorCCValues = Object.freeze({
+export const IndicatorCCValues = Object.freeze({
 	supportedIndicatorIds: {
 		id: {
 			commandClass: CommandClasses.Indicator,
@@ -3661,7 +3661,7 @@ const IndicatorCCValues = Object.freeze({
 	),
 });
 
-const IrrigationCCValues = Object.freeze({
+export const IrrigationCCValues = Object.freeze({
 	numValves: {
 		id: {
 			commandClass: CommandClasses.Irrigation,
@@ -5217,7 +5217,7 @@ const IrrigationCCValues = Object.freeze({
 	),
 });
 
-const LanguageCCValues = Object.freeze({
+export const LanguageCCValues = Object.freeze({
 	language: {
 		id: {
 			commandClass: CommandClasses.Language,
@@ -5280,7 +5280,7 @@ const LanguageCCValues = Object.freeze({
 	},
 });
 
-const LockCCValues = Object.freeze({
+export const LockCCValues = Object.freeze({
 	locked: {
 		id: {
 			commandClass: CommandClasses.Lock,
@@ -5314,7 +5314,7 @@ const LockCCValues = Object.freeze({
 	},
 });
 
-const ManufacturerSpecificCCValues = Object.freeze({
+export const ManufacturerSpecificCCValues = Object.freeze({
 	manufacturerId: {
 		id: {
 			commandClass: CommandClasses["Manufacturer Specific"],
@@ -5456,7 +5456,7 @@ const ManufacturerSpecificCCValues = Object.freeze({
 	),
 });
 
-const MeterCCValues = Object.freeze({
+export const MeterCCValues = Object.freeze({
 	type: {
 		id: {
 			commandClass: CommandClasses.Meter,
@@ -5713,7 +5713,7 @@ const MeterCCValues = Object.freeze({
 	),
 });
 
-const MultiChannelAssociationCCValues = Object.freeze({
+export const MultiChannelAssociationCCValues = Object.freeze({
 	groupCount: {
 		id: {
 			commandClass: CommandClasses["Multi Channel Association"],
@@ -5864,7 +5864,7 @@ const MultiChannelAssociationCCValues = Object.freeze({
 	),
 });
 
-const MultiChannelCCValues = Object.freeze({
+export const MultiChannelCCValues = Object.freeze({
 	endpointIndizes: {
 		id: {
 			commandClass: CommandClasses["Multi Channel"],
@@ -6095,7 +6095,7 @@ const MultiChannelCCValues = Object.freeze({
 	),
 });
 
-const MultilevelSensorCCValues = Object.freeze({
+export const MultilevelSensorCCValues = Object.freeze({
 	supportedSensorTypes: {
 		id: {
 			commandClass: CommandClasses["Multilevel Sensor"],
@@ -6208,7 +6208,7 @@ const MultilevelSensorCCValues = Object.freeze({
 	),
 });
 
-const MultilevelSwitchCCValues = Object.freeze({
+export const MultilevelSwitchCCValues = Object.freeze({
 	currentValue: {
 		id: {
 			commandClass: CommandClasses["Multilevel Switch"],
@@ -6551,7 +6551,7 @@ const MultilevelSwitchCCValues = Object.freeze({
 	),
 });
 
-const NodeNamingAndLocationCCValues = Object.freeze({
+export const NodeNamingAndLocationCCValues = Object.freeze({
 	name: {
 		id: {
 			commandClass: CommandClasses["Node Naming and Location"],
@@ -6616,7 +6616,7 @@ const NodeNamingAndLocationCCValues = Object.freeze({
 	},
 });
 
-const NotificationCCValues = Object.freeze({
+export const NotificationCCValues = Object.freeze({
 	supportsV1Alarm: {
 		id: {
 			commandClass: CommandClasses.Notification,
@@ -6952,7 +6952,7 @@ const NotificationCCValues = Object.freeze({
 	),
 });
 
-const ProtectionCCValues = Object.freeze({
+export const ProtectionCCValues = Object.freeze({
 	exclusiveControlNodeId: {
 		id: {
 			commandClass: CommandClasses.Protection,
@@ -7187,7 +7187,7 @@ const ProtectionCCValues = Object.freeze({
 	},
 });
 
-const SceneActivationCCValues = Object.freeze({
+export const SceneActivationCCValues = Object.freeze({
 	sceneId: {
 		id: {
 			commandClass: CommandClasses["Scene Activation"],
@@ -7252,7 +7252,7 @@ const SceneActivationCCValues = Object.freeze({
 	},
 });
 
-const SceneActuatorConfigurationCCValues = Object.freeze({
+export const SceneActuatorConfigurationCCValues = Object.freeze({
 	level: Object.assign(
 		(sceneId: number) => {
 			const property = "level";
@@ -7346,7 +7346,7 @@ const SceneActuatorConfigurationCCValues = Object.freeze({
 	),
 });
 
-const SceneControllerConfigurationCCValues = Object.freeze({
+export const SceneControllerConfigurationCCValues = Object.freeze({
 	sceneId: Object.assign(
 		(groupId: number) => {
 			const property = "sceneId";
@@ -7440,7 +7440,7 @@ const SceneControllerConfigurationCCValues = Object.freeze({
 	),
 });
 
-const ScheduleEntryLockCCValues = Object.freeze({
+export const ScheduleEntryLockCCValues = Object.freeze({
 	numWeekDaySlots: {
 		id: {
 			commandClass: CommandClasses["Schedule Entry Lock"],
@@ -7651,7 +7651,7 @@ const ScheduleEntryLockCCValues = Object.freeze({
 	),
 });
 
-const SoundSwitchCCValues = Object.freeze({
+export const SoundSwitchCCValues = Object.freeze({
 	volume: {
 		id: {
 			commandClass: CommandClasses["Sound Switch"],
@@ -7787,7 +7787,7 @@ const SoundSwitchCCValues = Object.freeze({
 	},
 });
 
-const SupervisionCCValues = Object.freeze({
+export const SupervisionCCValues = Object.freeze({
 	ccSupported: Object.assign(
 		(ccId: CommandClasses) => {
 			const property = "ccSupported";
@@ -7829,7 +7829,7 @@ const SupervisionCCValues = Object.freeze({
 	),
 });
 
-const ThermostatFanModeCCValues = Object.freeze({
+export const ThermostatFanModeCCValues = Object.freeze({
 	turnedOff: {
 		id: {
 			commandClass: CommandClasses["Thermostat Fan Mode"],
@@ -7923,7 +7923,7 @@ const ThermostatFanModeCCValues = Object.freeze({
 	},
 });
 
-const ThermostatFanStateCCValues = Object.freeze({
+export const ThermostatFanStateCCValues = Object.freeze({
 	fanState: {
 		id: {
 			commandClass: CommandClasses["Thermostat Fan State"],
@@ -7958,7 +7958,7 @@ const ThermostatFanStateCCValues = Object.freeze({
 	},
 });
 
-const ThermostatModeCCValues = Object.freeze({
+export const ThermostatModeCCValues = Object.freeze({
 	thermostatMode: {
 		id: {
 			commandClass: CommandClasses["Thermostat Mode"],
@@ -8049,7 +8049,7 @@ const ThermostatModeCCValues = Object.freeze({
 	},
 });
 
-const ThermostatOperatingStateCCValues = Object.freeze({
+export const ThermostatOperatingStateCCValues = Object.freeze({
 	operatingState: {
 		id: {
 			commandClass: CommandClasses["Thermostat Operating State"],
@@ -8084,7 +8084,7 @@ const ThermostatOperatingStateCCValues = Object.freeze({
 	},
 });
 
-const ThermostatSetpointCCValues = Object.freeze({
+export const ThermostatSetpointCCValues = Object.freeze({
 	supportedSetpointTypes: {
 		id: {
 			commandClass: CommandClasses["Thermostat Setpoint"],
@@ -8204,7 +8204,7 @@ const ThermostatSetpointCCValues = Object.freeze({
 	),
 });
 
-const TimeParametersCCValues = Object.freeze({
+export const TimeParametersCCValues = Object.freeze({
 	dateAndTime: {
 		id: {
 			commandClass: CommandClasses["Time Parameters"],
@@ -8237,7 +8237,7 @@ const TimeParametersCCValues = Object.freeze({
 	},
 });
 
-const UserCodeCCValues = Object.freeze({
+export const UserCodeCCValues = Object.freeze({
 	supportedUsers: {
 		id: {
 			commandClass: CommandClasses["User Code"],
@@ -8707,7 +8707,7 @@ const UserCodeCCValues = Object.freeze({
 	),
 });
 
-const VersionCCValues = Object.freeze({
+export const VersionCCValues = Object.freeze({
 	firmwareVersions: {
 		id: {
 			commandClass: CommandClasses.Version,
@@ -9129,7 +9129,7 @@ const VersionCCValues = Object.freeze({
 	},
 });
 
-const WakeUpCCValues = Object.freeze({
+export const WakeUpCCValues = Object.freeze({
 	controllerNodeId: {
 		id: {
 			commandClass: CommandClasses["Wake Up"],
@@ -9219,7 +9219,7 @@ const WakeUpCCValues = Object.freeze({
 	},
 });
 
-const WindowCoveringCCValues = Object.freeze({
+export const WindowCoveringCCValues = Object.freeze({
 	supportedParameters: {
 		id: {
 			commandClass: CommandClasses["Window Covering"],
@@ -9528,7 +9528,7 @@ const WindowCoveringCCValues = Object.freeze({
 	),
 });
 
-const ZWavePlusCCValues = Object.freeze({
+export const ZWavePlusCCValues = Object.freeze({
 	zwavePlusVersion: {
 		id: {
 			commandClass: CommandClasses["Z-Wave Plus Info"],
