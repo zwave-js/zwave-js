@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Changes under the hood
+* Split documentation generation into separate tasks, fix CCValues types generation (#7644)
+
 ## 15.0.0-beta.0 (2025-02-27)
 Z-Wave JS is now able to run in the browser! This allows for new use-cases like interactive usage examples in the documentation, and building web-based Z-Wave tools.
 
