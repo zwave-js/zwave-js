@@ -51,6 +51,7 @@ integrationTest(
 				"Found Basic CC targetValue although it shouldn't be exposed",
 			).toBe(false);
 			t.expect(
+				// The node supports V1, so no duration value!
 				valueIDs.some((v) => BasicCCValues.duration.is(v)),
 				"Found Basic CC duration although it shouldn't be exposed",
 			).toBe(false);
@@ -111,6 +112,7 @@ integrationTest(
 				"Found Basic CC targetValue although it shouldn't be exposed",
 			).toBe(false);
 			t.expect(
+				// The node supports V1, so no duration value!
 				valueIDs.some((v) => BasicCCValues.duration.is(v)),
 				"Found Basic CC duration although it shouldn't be exposed",
 			).toBe(false);
@@ -151,9 +153,10 @@ integrationTest(
 				"Did not find Basic CC targetValue although it should be exposed",
 			).toBe(true);
 			t.expect(
+				// The node supports V1, so no duration value!
 				valueIDs.some((v) => BasicCCValues.duration.is(v)),
 				"Did not find Basic CC duration although it should be exposed",
-			).toBe(true);
+			).toBe(false);
 			t.expect(
 				valueIDs.some((v) => BasicCCValues.restorePrevious.is(v)),
 				"Did not find Basic CC restorePrevious although it should be exposed",
