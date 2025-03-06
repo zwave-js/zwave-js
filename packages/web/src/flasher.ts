@@ -13,9 +13,9 @@ import {
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 import {
-	ControllerFirmwareUpdateStatus,
 	Driver,
 	DriverMode,
+	OTWFirmwareUpdateStatus,
 	getEnumMemberName,
 } from "zwave-js";
 
@@ -136,20 +136,15 @@ function failed() {
 }
 
 function ready() {
-	try {
-		driver.controller.on("firmware update progress", (progress) => {
-			flashProgress.value = progress.progress;
-		});
-		driver.controller.on("firmware update finished", (_result) => {
-			flashProgress.style.display = "none";
-		});
-		fileInput.disabled = false;
-		recreateWhenInBootloader = false;
-	} catch {
-		recreateWhenInBootloader = true;
-		flashError.innerText =
-			"Firmware update currently not available for devices in CLI mode. Enter bootloader first!";
-	}
+	driver.on("firmware update progress", (progress) => {
+		flashProgress.value = progress.progress;
+	});
+	driver.on("firmware update finished", (_result) => {
+		flashProgress.style.display = "none";
+	});
+	fileInput.disabled = false;
+	recreateWhenInBootloader = false;
+
 	btnEraseNVM.disabled = false;
 	btnBootloaderHw.disabled = false; // This always works
 
@@ -203,7 +198,7 @@ async function flash() {
 	try {
 		flashProgress.style.display = "initial";
 
-		const result = await driver.controller.firmwareUpdateOTW(
+		const result = await driver.firmwareUpdateOTW(
 			new Uint8Array(firmwareFileContent),
 		);
 		if (result.success) {
@@ -218,7 +213,7 @@ async function flash() {
 		alert(
 			`Failed to flash firmware: ${
 				getEnumMemberName(
-					ControllerFirmwareUpdateStatus,
+					OTWFirmwareUpdateStatus,
 					result.status,
 				)
 			}`,
