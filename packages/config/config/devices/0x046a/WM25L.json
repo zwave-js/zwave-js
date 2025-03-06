@@ -2,12 +2,11 @@
 	"manufacturer": "SmartWings",
 	"manufacturerId": "0x046a",
 	"label": "WM25L",
-	"description": "SmartWings Smart Motor",
+	"description": "Smartwings Smart Motor",
 	"devices": [
 		{
 			"productType": "0x0004",
-			"productId": "0x050b",
-            "zwaveAllianceId": 5164
+			"productId": "0x050b"
 		}
 	],
 	"firmwareVersion": {
