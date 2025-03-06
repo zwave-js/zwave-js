@@ -4,6 +4,16 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Breaking changes · [Migration guide](https://zwave-js.github.io/zwave-js/#/getting-started/migrating/v15)
+* Move OTW firmware update functionality to the `Driver` class (#7662)
+
+### Bugfixes
+* Harden end device CLI detection (#7661)
+
+### Config file changes
+* Add fingerprint for ZVIDAR Z-TRV-V01 (#7660)
+
 ## 15.0.0-beta.1 (2025-03-05)
 ### Changes under the hood
 * Split documentation generation into separate tasks, fix CCValues types generation (#7644)
