@@ -137,7 +137,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		}
 
 		// Don't start the process twice
-		if (this.driver.controller.isFirmwareUpdateInProgress()) {
+		if (this.driver.isOTWFirmwareUpdateInProgress()) {
 			throw new ZWaveError(
 				`Failed to start the update: An OTW upgrade of the controller is in progress!`,
 				ZWaveErrorCodes.FirmwareUpdateCC_Busy,

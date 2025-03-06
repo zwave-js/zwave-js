@@ -306,6 +306,39 @@ Updates a subset of the driver options without having to restart the driver. The
 - `preferences`
 - `userAgent` (behaves like `updateUserAgent`)
 
+### Updating the firmware of the Z-Wave module (OTW)
+
+```ts
+firmwareUpdateOTW(data: Buffer): Promise<OTWFirmwareUpdateResult>
+```
+
+> [!WARNING] We don't take any responsibility if devices upgraded using Z-Wave JS don't work after an update. Always double-check that the correct update is about to be installed.
+
+Performs an over-the-wire (OTW) firmware update for the Z-Wave module (controller) using the given firmware image. To do so, the device gets put in bootloader mode where a new firmware image can be uploaded. This method can be called in bootloader mode, while connected to a Serial API controller, or with a CLI based firmware that has an option to return to bootloader.
+
+> [!WARNING] A failure during this process may leave your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded.
+
+To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` driver events](api/driver#quotfirmware-update-progressquot).
+
+The return value indicates whether the update was successful and includes an error code that can be used to determine the reason for a failure. This is the same information that is emitted using the `"firmware update finished"` event:
+
+<!-- #import OTWFirmwareUpdateResult from "zwave-js" -->
+
+```ts
+interface OTWFirmwareUpdateResult {
+	success: boolean;
+	status: OTWFirmwareUpdateStatus;
+}
+```
+
+### `isOTWFirmwareUpdateInProgress`
+
+```ts
+isOTWFirmwareUpdateInProgress(): boolean;
+```
+
+Return whether a firmware update is in progress for the Z-Wave module / controller.
+
 ### `checkForConfigUpdates`
 
 ```ts
@@ -399,6 +432,62 @@ The `Driver` class inherits from the Node.js [EventEmitter](https://nodejs.org/a
 | `"bootloader ready"` | Is emitted when the controller is in recovery mode (e.g. after a failed firmware upgrade) and the bootloader has been entered. This behavior is opt-in using the `allowBootloaderOnly` flag of the [`ZWaveOptions`](#ZWaveOptions). If it is, the driver instance will only be good for interacting with the bootloader, e.g. for flashing a new image. The `"driver ready"` event will not be emitted and commands attempting to talk to the serial API will fail in this mode. |
 
 In addition, the driver forwards events for all nodes, so they don't have to be registered on each node individually. See [`ZWaveNode` events](api/node.md#zwavenode-events) for details.
+
+### `"firmware update progress"`
+
+```ts
+(progress: OTWFirmwareUpdateProgress) => void
+```
+
+An OTW firmware update has made progress. The callback arguments gives information about the progress of the update:
+
+<!-- #import OTWFirmwareUpdateProgress from "zwave-js" -->
+
+```ts
+interface OTWFirmwareUpdateProgress {
+	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
+	sentFragments: number;
+	/** How many fragments the firmware update consists of. */
+	totalFragments: number;
+	/** The total progress of the firmware update in %, rounded to two digits. */
+	progress: number;
+}
+```
+
+### `"firmware update finished"`
+
+```ts
+(result: OTWFirmwareUpdateResult) => void;
+```
+
+The firmware update process is finished. The `result` argument looks like this indicates whether the update was successful:
+
+<!-- #import OTWFirmwareUpdateResult from "zwave-js" -->
+
+```ts
+interface OTWFirmwareUpdateResult {
+	success: boolean;
+	status: OTWFirmwareUpdateStatus;
+}
+```
+
+Its `status` property contains more details on potential errors.
+
+<!-- #import OTWFirmwareUpdateStatus from "zwave-js" -->
+
+```ts
+enum OTWFirmwareUpdateStatus {
+	Error_Timeout = 0,
+	/** The maximum number of retry attempts for a firmware fragments were reached */
+	Error_RetryLimitReached,
+	/** The update was aborted by the bootloader */
+	Error_Aborted,
+	/** This controller does not support firmware updates */
+	Error_NotSupported,
+
+	OK = 0xff,
+}
+```
 
 ## Interfaces
 

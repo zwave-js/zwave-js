@@ -24,4 +24,9 @@ export type {
 	PartialZWaveOptions,
 	ZWaveOptions,
 } from "./lib/driver/ZWaveOptions.js";
+export { OTWFirmwareUpdateStatus } from "./lib/driver/_Types.js";
+export type {
+	OTWFirmwareUpdateProgress,
+	OTWFirmwareUpdateResult,
+} from "./lib/driver/_Types.js";
 export type { DriverLogContext } from "./lib/log/Driver.js";
