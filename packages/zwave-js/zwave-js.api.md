@@ -289,38 +289,6 @@ export { containsSerializedCC }
 // @public (undocumented)
 export type ControllerEvents = Extract<keyof ControllerEventCallbacks, string>;
 
-// Warning: (ae-missing-release-tag) "ControllerFirmwareUpdateProgress" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface ControllerFirmwareUpdateProgress {
-    progress: number;
-    sentFragments: number;
-    totalFragments: number;
-}
-
-// Warning: (ae-missing-release-tag) "ControllerFirmwareUpdateResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface ControllerFirmwareUpdateResult {
-    // (undocumented)
-    status: ControllerFirmwareUpdateStatus;
-    // (undocumented)
-    success: boolean;
-}
-
-// Warning: (ae-missing-release-tag) "ControllerFirmwareUpdateStatus" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export enum ControllerFirmwareUpdateStatus {
-    Error_Aborted = 2,
-    Error_NotSupported = 3,
-    Error_RetryLimitReached = 1,
-    // (undocumented)
-    Error_Timeout = 0,
-    // (undocumented)
-    OK = 255
-}
-
 export { ControllerLogContext }
 
 export { ControllerNodeLogContext }
@@ -452,6 +420,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     }): Promise<string[]>;
     // (undocumented)
     exceedsMaxPayloadLength(msg: SendDataMessage): Promise<boolean>;
+    firmwareUpdateOTW(data: Uint8Array): Promise<OTWFirmwareUpdateResult>;
     getConservativeWaitTimeAfterFirmwareUpdate(advertisedWaitTime: number | undefined): number;
     // (undocumented)
     getDeviceConfig(nodeId: number): DeviceConfig | undefined;
@@ -489,6 +458,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     isCCSecure(ccId: CommandClasses_2, nodeId: number, endpointIndex?: number): boolean;
+    isOTWFirmwareUpdateInProgress(): boolean;
     leaveBootloader(destroy?: boolean): Promise<void>;
     // (undocumented)
     logNode(nodeId: number, message: string, level?: LogNodeOptions["level"]): void;
@@ -1273,6 +1243,38 @@ export { NodeType }
 
 export { num2hex }
 
+// Warning: (ae-missing-release-tag) "OTWFirmwareUpdateProgress" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface OTWFirmwareUpdateProgress {
+    progress: number;
+    sentFragments: number;
+    totalFragments: number;
+}
+
+// Warning: (ae-missing-release-tag) "OTWFirmwareUpdateResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface OTWFirmwareUpdateResult {
+    // (undocumented)
+    status: OTWFirmwareUpdateStatus;
+    // (undocumented)
+    success: boolean;
+}
+
+// Warning: (ae-missing-release-tag) "OTWFirmwareUpdateStatus" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum OTWFirmwareUpdateStatus {
+    Error_Aborted = 2,
+    Error_NotSupported = 3,
+    Error_RetryLimitReached = 1,
+    // (undocumented)
+    Error_Timeout = 0,
+    // (undocumented)
+    OK = 255
+}
+
 // Warning: (ae-missing-release-tag) "parseMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1675,7 +1677,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
     firmwareUpdateOTA(nodeId: number, updateInfo: FirmwareUpdateInfo, options?: FirmwareUpdateOptions): Promise<FirmwareUpdateResult_2>;
-    firmwareUpdateOTW(data: Uint8Array): Promise<ControllerFirmwareUpdateResult>;
     // (undocumented)
     get firmwareVersion(): MaybeNotKnown<string>;
     getAllAssociationGroups(nodeId: number): ReadonlyMap<number, ReadonlyMap<number, AssociationGroup>>;
@@ -1731,7 +1732,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     isAnyOTAFirmwareUpdateInProgress(): boolean;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     isFailedNode(nodeId: number): Promise<boolean>;
-    isFirmwareUpdateInProgress(): boolean;
     isFunctionSupported(functionType: FunctionType): MaybeNotKnown<boolean>;
     get isLearnModePermitted(): boolean;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "role"
@@ -2441,15 +2441,15 @@ export * from "@zwave-js/cc";
 // /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:440:48 - (TS18048) 'header' is possibly 'undefined'.
 // /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:443:11 - (TS18048) 'header' is possibly 'undefined'.
 // /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:444:12 - (TS18048) 'header' is possibly 'undefined'.
-// src/lib/controller/Controller.ts:999:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
-// src/lib/driver/Driver.ts:875:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:4926:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6099:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
-// src/lib/driver/Driver.ts:6577:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6578:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6620:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6621:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6767:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/controller/Controller.ts:985:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// src/lib/driver/Driver.ts:887:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/driver/Driver.ts:4932:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6105:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
+// src/lib/driver/Driver.ts:6583:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6584:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6626:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6627:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6773:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:321:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:556:2 - (ae-missing-getter) The property "cachedDeviceConfigHash" has a setter but no getter.
 // src/lib/node/Node.ts:2260:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
