@@ -1620,15 +1620,19 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			// This is possibly a CLI. It should respond with a prompt after we
 			// send a newline.
 			await this.writeSerial(Bytes.from("\n", "ascii"));
-			// Wait another 500ms, after which the serial parser should have detected the CLI
-			await wait(500);
-			if (this._cli) return DriverMode.CLI;
-		} else {
-			// This is possibly a bootloader. Wait another 500ms to be sure.
-			await wait(500);
-			// If we are in the bootloader, the serial parser should have detected this by now
-			if (this._bootloader) return DriverMode.Bootloader;
 		}
+
+		// If there was no NAK, it may be a bootloader, but it may also be a CLI
+		// on a device that just started. In this case it can happen that the
+		// NAK is not answered, but a CLI prompt is received.
+		// In this case, the CLI is also detected by the serial parsers.
+
+		// In any case, wait another 500ms to give the parsers time to detect
+		// either the booloader or the CLI
+		await wait(500);
+
+		if (this._cli) return DriverMode.CLI;
+		if (this._bootloader) return DriverMode.Bootloader;
 
 		return DriverMode.SerialAPI;
 	}
