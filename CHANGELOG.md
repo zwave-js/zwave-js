@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 14.3.11 (2025-03-10)
 ### Bugfixes
 * Fixes an issue where no firmware updates would show as available when the region is set to EU_LR (#7667)
 
