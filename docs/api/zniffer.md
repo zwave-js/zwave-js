@@ -49,6 +49,13 @@ interface ZnifferOptions {
 	 */
 	defaultFrequency?: number;
 
+	/**
+	 * The LR channel configuration to initialize the Zniffer with. If not specified, the current setting will be kept.
+	 *
+	 * This is only supported for 800 series Zniffers with LR support
+	 */
+	defaultLRChannelConfig?: ZnifferLRChannelConfig;
+
 	/** Limit the number of frames that are kept in memory. */
 	maxCapturedFrames?: number;
 }
