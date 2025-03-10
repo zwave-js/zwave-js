@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixes an issue where no firmware updates would show as available when the region is set to EU_LR (#7667)
+
 ## 14.3.10 (2025-02-27)
 ### Bugfixes
 * Discard S2 frames with both the MPAN and MGRP extension (#7619)
