@@ -221,6 +221,7 @@ import { VirtualEndpointId } from '@zwave-js/core/safe';
 import type { Weekday } from '@zwave-js/cc/safe';
 import { ZnifferDataMessage } from '@zwave-js/serial';
 import { ZnifferFrameInfo } from '@zwave-js/serial';
+import { ZnifferLRChannelConfig } from '@zwave-js/core';
 import { ZnifferProtocolDataRate } from '@zwave-js/core';
 import { ZnifferRegion } from '@zwave-js/core';
 import { ZWaveApiVersion } from '@zwave-js/core/safe';
@@ -1554,19 +1555,24 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
     get capturedFrames(): Readonly<CapturedFrame>[];
     clearCapturedFrames(): void;
     get currentFrequency(): number | undefined;
+    get currentLRChannelConfig(): number | undefined;
     destroy(): Promise<void>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     getCaptureAsZLFBuffer(frameFilter?: (frame: CapturedFrame) => boolean): Uint8Array;
     // (undocumented)
     init(): Promise<void>;
+    get lrRegions(): ReadonlySet<number>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     saveCaptureToFile(filePath: string, frameFilter?: (frame: CapturedFrame) => boolean): Promise<void>;
     // (undocumented)
     setFrequency(frequency: number): Promise<void>;
+    // (undocumented)
+    setLRChannelConfig(channelConfig: number): Promise<void>;
     start(): Promise<void>;
     // (undocumented)
     stop(): Promise<void>;
     get supportedFrequencies(): ReadonlyMap<number, string>;
+    get supportedLRChannelConfigs(): ReadonlyMap<number, string>;
 }
 
 // Warning: (ae-missing-release-tag) "ZnifferOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1576,6 +1582,7 @@ export interface ZnifferOptions {
     convertRSSI?: boolean;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "ZnifferRegion"
     defaultFrequency?: number;
+    defaultLRChannelConfig?: ZnifferLRChannelConfig;
     // (undocumented)
     host?: ZWaveOptions["host"];
     logConfig?: Partial<LogConfig>;
@@ -2453,8 +2460,8 @@ export * from "@zwave-js/cc";
 // src/lib/driver/ZWaveOptions.ts:321:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:556:2 - (ae-missing-getter) The property "cachedDeviceConfigHash" has a setter but no getter.
 // src/lib/node/Node.ts:2260:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:766:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:767:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:865:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:866:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
 

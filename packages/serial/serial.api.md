@@ -5619,11 +5619,19 @@ export enum ZnifferFunctionType {
     // (undocumented)
     GetFrequencyInfo = 19,
     // (undocumented)
+    GetLRChannelConfigInfo = 20,
+    // (undocumented)
+    GetLRChannelConfigs = 7,
+    // (undocumented)
+    GetLRRegions = 8,
+    // (undocumented)
     GetVersion = 1,
     // (undocumented)
     SetBaudRate = 14,
     // (undocumented)
     SetFrequency = 2,
+    // (undocumented)
+    SetLRChannelConfig = 6,
     // (undocumented)
     Start = 4,
     // (undocumented)
@@ -5704,6 +5712,108 @@ export interface ZnifferGetFrequencyInfoResponseOptions {
     frequencyName: string;
     // (undocumented)
     numChannels: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigInfoRequest extends ZnifferMessage {
+    constructor(options: ZnifferGetLRChannelConfigInfoRequestOptions);
+    // (undocumented)
+    channelConfig: number;
+    // (undocumented)
+    serialize(): Bytes_2;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRChannelConfigInfoRequestOptions {
+    // (undocumented)
+    channelConfig: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigInfoResponse extends ZnifferMessage {
+    constructor(options: ZnifferGetLRChannelConfigInfoResponseOptions & ZnifferMessageBaseOptions);
+    // (undocumented)
+    readonly channelConfig: number;
+    // (undocumented)
+    readonly configName: string;
+    // (undocumented)
+    static from(raw: ZnifferMessageRaw): ZnifferGetLRChannelConfigInfoResponse;
+    // (undocumented)
+    readonly numChannels: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRChannelConfigInfoResponseOptions {
+    // (undocumented)
+    channelConfig: number;
+    // (undocumented)
+    configName: string;
+    // (undocumented)
+    numChannels: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigsRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigsRequest extends ZnifferMessage {
+    constructor();
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigsResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigsResponse extends ZnifferMessage {
+    constructor(options: ZnifferGetLRChannelConfigsResponseOptions & ZnifferMessageBaseOptions);
+    // (undocumented)
+    readonly currentConfig: number;
+    // (undocumented)
+    static from(raw: ZnifferMessageRaw): ZnifferGetLRChannelConfigsResponse;
+    // (undocumented)
+    readonly supportedConfigs: readonly number[];
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigsResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRChannelConfigsResponseOptions {
+    // (undocumented)
+    currentConfig: number;
+    // (undocumented)
+    supportedConfigs: number[];
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRRegionsRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRRegionsRequest extends ZnifferMessage {
+    constructor();
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRRegionsResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRRegionsResponse extends ZnifferMessage {
+    constructor(options: ZnifferGetLRRegionsResponseOptions & ZnifferMessageBaseOptions);
+    // (undocumented)
+    static from(raw: ZnifferMessageRaw): ZnifferGetLRRegionsResponse;
+    // (undocumented)
+    readonly regions: number[];
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRRegionsResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRRegionsResponseOptions {
+    // (undocumented)
+    regions: number[];
 }
 
 // Warning: (ae-missing-release-tag) "ZnifferGetVersionRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5918,6 +6028,31 @@ export interface ZnifferSetFrequencyRequestOptions {
 //
 // @public (undocumented)
 export class ZnifferSetFrequencyResponse extends ZnifferMessage {
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferSetLRChannelConfigRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferSetLRChannelConfigRequest extends ZnifferMessage {
+    constructor(options: ZnifferSetLRChannelConfigRequestOptions);
+    // (undocumented)
+    channelConfig: number;
+    // (undocumented)
+    serialize(): Bytes_2;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferSetLRChannelConfigRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferSetLRChannelConfigRequestOptions {
+    // (undocumented)
+    channelConfig: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferSetLRChannelConfigResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferSetLRChannelConfigResponse extends ZnifferMessage {
 }
 
 // Warning: (ae-missing-release-tag) "ZnifferStartRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
