@@ -38,23 +38,21 @@ import {
 	HumidityControlOperatingStateCommand,
 } from "../lib/_Types.js";
 
-export const HumidityControlOperatingStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(
-		CommandClasses["Humidity Control Operating State"],
-		{
-			...V.staticProperty(
-				"state",
-				{
-					...ValueMetadata.ReadOnlyUInt8,
-					states: enumValuesToMetadataStates(
-						HumidityControlOperatingState,
-					),
-					label: "Humidity control operating state",
-				} as const,
-			),
-		},
-	),
-});
+export const HumidityControlOperatingStateCCValues = V.defineCCValues(
+	CommandClasses["Humidity Control Operating State"],
+	{
+		...V.staticProperty(
+			"state",
+			{
+				...ValueMetadata.ReadOnlyUInt8,
+				states: enumValuesToMetadataStates(
+					HumidityControlOperatingState,
+				),
+				label: "Humidity control operating state",
+			} as const,
+		),
+	},
+);
 
 @API(CommandClasses["Humidity Control Operating State"])
 export class HumidityControlOperatingStateCCAPI extends CCAPI {

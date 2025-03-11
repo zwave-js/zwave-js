@@ -276,6 +276,14 @@
 			"label": "Send Status Change Report: Timer",
 			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
 			"defaultValue": 1
+		},
+		{
+			"#": "27",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "LED Indicator (Scene Control)",
+			"description": "When enabled, LED indicator will flash to confirm scene activation.",
+			"defaultValue": 0
 		}
 	],
 	"compat": {

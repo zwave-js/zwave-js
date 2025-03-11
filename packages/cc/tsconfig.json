@@ -9,6 +9,10 @@
 			},
 			{
 				"transform": "@zwave-js/transformers/validateArgs/decorators"
+			},
+			{
+				// This must come last or it breaks the validateArgs transformer
+				"transform": "@zwave-js/transformers/defineCCValues"
 			}
 		]
 	},

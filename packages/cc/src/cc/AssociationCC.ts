@@ -41,16 +41,11 @@ import { V } from "../lib/Values.js";
 import { type AssociationAddress, AssociationCommand } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 
-export const AssociationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Association, {
-		/** Whether the node has a lifeline association */
+export const AssociationCCValues = V.defineCCValues(
+	CommandClasses.Association,
+	{
 		...V.staticProperty("hasLifeline", undefined, { internal: true }),
-		/** How many association groups the node has */
 		...V.staticProperty("groupCount", undefined, { internal: true }),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Association, {
-		/** The maximum number of nodes in an association group */
 		...V.dynamicPropertyAndKeyWithName(
 			"maxNodes",
 			"maxNodes",
@@ -60,7 +55,6 @@ export const AssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-		/** The node IDs currently belonging to an association group */
 		...V.dynamicPropertyAndKeyWithName(
 			"nodeIds",
 			"nodeIds",
@@ -70,8 +64,8 @@ export const AssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI
 
@@ -537,9 +531,8 @@ export class AssociationCCSet extends AssociationCC {
 	public groupId: number;
 	public nodeIds: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.groupId, ...this.nodeIds]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -597,12 +590,11 @@ export class AssociationCCRemove extends AssociationCC {
 	public groupId?: number;
 	public nodeIds?: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.groupId || 0,
 			...(this.nodeIds || []),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -684,18 +676,7 @@ export class AssociationCCReport extends AssociationCC {
 		return this.reportsToFollow > 0;
 	}
 
-	/** @deprecated Use {@link mergePartialCCsAsync} instead */
 	public mergePartialCCs(
-		partials: AssociationCCReport[],
-		_ctx: CCParsingContext,
-	): void {
-		// Concat the list of nodes
-		this.nodeIds = [...partials, this]
-			.map((report) => report.nodeIds)
-			.reduce((prev, cur) => prev.concat(...cur), []);
-	}
-
-	public mergePartialCCsAsync(
 		partials: AssociationCCReport[],
 		_ctx: CCParsingContext,
 	): Promise<void> {
@@ -706,14 +687,13 @@ export class AssociationCCReport extends AssociationCC {
 		return Promise.resolve();
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.groupId,
 			this.maxNodes,
 			this.reportsToFollow,
 			...this.nodeIds,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -763,9 +743,8 @@ export class AssociationCCGet extends AssociationCC {
 
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.groupId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -808,9 +787,8 @@ export class AssociationCCSupportedGroupingsReport extends AssociationCC {
 
 	public groupCount: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.groupCount]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -856,9 +834,8 @@ export class AssociationCCSpecificGroupReport extends AssociationCC {
 
 	public group: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.group]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
