@@ -31,6 +31,10 @@ import {
 	throwWrongValueType,
 } from "../lib/API.js";
 import {
+	windowCoveringParameterToLevelChangeLabel,
+	windowCoveringParameterToMetadataStates,
+} from "../lib/CCValueUtils.js";
+import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
@@ -52,67 +56,14 @@ import {
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
 
-function parameterToMetadataStates(
-	parameter: WindowCoveringParameter,
-): Record<number, string> {
-	switch (parameter) {
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return {
-				0: "Closed (right inside)",
-				50: "Open",
-				99: "Closed (left inside)",
-			};
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			return {
-				0: "Closed (up inside)",
-				50: "Open",
-				99: "Closed (down inside)",
-			};
-	}
-
-	return {
-		0: "Closed",
-		99: "Open",
-	};
-}
-
-function parameterToLevelChangeLabel(
-	parameter: WindowCoveringParameter,
-	direction: "up" | "down",
-): string {
-	switch (parameter) {
-		// For angle control, both directions are closed, so we specify it explicitly
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return `Change tilt (${
-				direction === "up" ? "left inside" : "right inside"
-			})`;
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			// Horizontal slats refer to the position of the inner side of the slats
-			// where a high level (99) actually means they face down
-			return `Change tilt (${
-				direction === "up" ? "down inside" : "up inside"
-			})`;
-	}
-	// For all other parameters, refer to the amount of light that is let in
-	return direction === "up" ? "Open" : "Close";
-}
-
-export const WindowCoveringCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Window Covering"], {
+export const WindowCoveringCCValues = V.defineCCValues(
+	CommandClasses["Window Covering"],
+	{
 		...V.staticProperty(
 			"supportedParameters",
 			undefined, // meta
 			{ internal: true }, // value options
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Window Covering"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"currentValue",
 			"currentValue",
@@ -128,12 +79,11 @@ export const WindowCoveringCCValues = Object.freeze({
 							parameter,
 						)
 					}`,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					ccSpecific: { parameter },
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"targetValue",
 			"targetValue",
@@ -153,14 +103,13 @@ export const WindowCoveringCCValues = Object.freeze({
 					}`,
 					// Only odd-numbered parameters have position support and are writable
 					writeable: parameter % 2 === 1,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					allowManualEntry: writeable,
 					ccSpecific: { parameter },
 					valueChangeOptions: ["transitionDuration"],
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"duration",
 			"duration",
@@ -180,7 +129,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				},
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeUp",
 			// The direction refers to the change in level, not the physical location
@@ -192,7 +140,7 @@ export const WindowCoveringCCValues = Object.freeze({
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"up",
 						)
@@ -211,7 +159,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeDown",
 			// The direction refers to the change in level, not the physical location
@@ -224,7 +171,7 @@ export const WindowCoveringCCValues = Object.freeze({
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"down",
 						)
@@ -243,8 +190,8 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Window Covering"])
 export class WindowCoveringCCAPI extends CCAPI {
@@ -717,7 +664,7 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 
 	public readonly supportedParameters: readonly WindowCoveringParameter[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const bitmask = encodeBitMask(
 			this.supportedParameters,
 			undefined,
@@ -730,7 +677,6 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 			bitmask.subarray(0, numBitmaskBytes),
 		]);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -873,9 +819,8 @@ export class WindowCoveringCCGet extends WindowCoveringCC {
 
 	public parameter: WindowCoveringParameter;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.parameter]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -948,7 +893,7 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 	}[];
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const numEntries = this.targetValues.length & 0b11111;
 		this.payload = new Bytes(2 + numEntries * 2);
 
@@ -963,7 +908,6 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 			this.duration ?? Duration.default()
 		).serializeSet();
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1029,13 +973,12 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 	public direction: keyof typeof LevelChangeDirection;
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.direction === "down" ? 0b0100_0000 : 0b0000_0000,
 			this.parameter,
 			(this.duration ?? Duration.default()).serializeSet(),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1087,9 +1030,8 @@ export class WindowCoveringCCStopLevelChange extends WindowCoveringCC {
 
 	public parameter: WindowCoveringParameter;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.parameter]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
