@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/repo",
-  "version": "14.3.7",
+  "version": "15.0.0-beta.2",
   "private": true,
   "description": "Z-Wave driver written entirely in JavaScript/TypeScript",
   "type": "module",
@@ -14,13 +14,13 @@
     "RoboPhred (https://github.com/RoboPhred)"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/zwave-js/node-zwave-js#readme",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zwave-js/node-zwave-js.git"
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
   },
   "bugs": {
-    "url": "https://github.com/zwave-js/node-zwave-js/issues"
+    "url": "https://github.com/zwave-js/zwave-js/issues"
   },
   "funding": {
     "url": "https://github.com/sponsors/AlCalzone/"
@@ -39,16 +39,17 @@
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.6.0",
     "@dprint/formatter": "^0.4.1",
-    "@dprint/json": "^0.19.4",
-    "@dprint/markdown": "^0.17.8",
-    "@dprint/typescript": "^0.93.3",
+    "@dprint/json": "^0.20.0",
+    "@dprint/markdown": "^0.18.0",
+    "@dprint/typescript": "^0.94.0",
     "@microsoft/api-extractor": "^7.48.0",
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.10.4",
-    "@tsconfig/node18": "^18.2.4",
-    "@types/node": "^18.19.63",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^20.17.16",
     "@types/semver": "^7.5.8",
     "@types/source-map-support": "^0.5.10",
     "@types/xml2js": "^0.4.14",
+    "@zwave-js/bindings-browser": "workspace:*",
     "@zwave-js/cc": "workspace:*",
     "@zwave-js/config": "workspace:*",
     "@zwave-js/core": "workspace:*",
@@ -81,13 +82,13 @@
     "reflect-metadata": "^0.2.2",
     "semver": "^7.6.3",
     "source-map-support": "^0.5.21",
-    "ts-morph": "^25.0.0",
+    "ts-morph": "^25.0.1",
     "ts-patch": "3.3.0",
     "tsx": "^4.19.2",
-    "turbo": "2.3.3",
+    "turbo": "2.4.0",
     "typescript": "5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "vitest": "^2.1.8",
+    "typescript-eslint": "^8.22.0",
+    "vitest": "^2.1.9",
     "xml2js": "^0.6.2",
     "zwave-js": "workspace:*"
   },
@@ -129,7 +130,10 @@
     "bootstrap": "./maintenance/bootstrap.sh",
     "config": "yarn ts packages/config/maintenance/importConfig.ts",
     "docs": "docsify serve docs",
-    "docs:generate": "yarn ts packages/maintenance/src/generateTypedDocs.ts",
+    "docs:generate": "yarn docs:generate-examples && yarn docs:generate-imports && yarn docs:generate-cc-apis",
+    "docs:generate-cc-apis": "yarn ts packages/maintenance/src/docs/generateCCAPIs.ts",
+    "docs:generate-imports": "yarn ts packages/maintenance/src/docs/generateImports.ts",
+    "docs:generate-examples": "yarn ts packages/maintenance/src/docs/generateExamplesSidebar.ts",
     "test:perf": "yarn ts test/valuedb-perf.ts",
     "test:firmware": "yarn ts test/firmware-extraction.ts",
     "nvmedit": "yarn ts packages/nvmedit/src/cli.ts",
