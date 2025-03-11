@@ -1,6 +1,6 @@
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
-// Repro for https://github.com/zwave-js/node-zwave-js/issues/6399
+// Repro for https://github.com/zwave-js/zwave-js/issues/6399
 
 integrationTest(
 	"Accept corrupted ACKs with a random high nibble after Soft Reset",
@@ -15,7 +15,7 @@ integrationTest(
 			mockController.clearReceivedHostMessages();
 
 			mockController.corruptACK = true;
-			await t.notThrowsAsync(driver.softReset());
+			await driver.softReset();
 			mockController.corruptACK = false;
 		},
 	},

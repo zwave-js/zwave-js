@@ -4,6 +4,8 @@ import {
 	type CommandClassInfo,
 	type CommandClasses,
 	type FLiRS,
+	type GetNode,
+	type GetValueDB,
 	type InterviewStage,
 	type MaybeNotKnown,
 	MessagePriority,
@@ -14,12 +16,7 @@ import {
 	ZWaveErrorCodes,
 	securityClassOrder,
 } from "@zwave-js/core";
-import type {
-	BaseTestEndpoint,
-	BaseTestNode,
-	GetNode,
-	GetValueDB,
-} from "@zwave-js/host";
+import type { BaseTestEndpoint, BaseTestNode } from "@zwave-js/host";
 import {
 	type FunctionType,
 	Message,
@@ -30,8 +27,8 @@ import {
 } from "@zwave-js/serial";
 import { SendDataRequest } from "@zwave-js/serial/serialapi";
 import sinon from "sinon";
-import type { ZWaveNode } from "../node/Node";
-import * as nodeUtils from "../node/utils";
+import type { ZWaveNode } from "../node/Node.js";
+import * as nodeUtils from "../node/utils.js";
 
 const MockRequestMessageWithExpectation_FunctionType =
 	0xfa as unknown as FunctionType;

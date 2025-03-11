@@ -8,7 +8,7 @@ import {
 	type FirmwareUpdateOptions,
 	type FirmwareUpdateResult,
 	InclusionControllerCCComplete,
-	InclusionControllerCCInitiate,
+	type InclusionControllerCCInitiate,
 	InclusionControllerStatus,
 	InclusionControllerStep,
 	KEXFailType,
@@ -70,7 +70,6 @@ import {
 	SecurityManager,
 	SecurityManager2,
 	type SerialApiInitData,
-	type SinglecastCC,
 	TransmitStatus,
 	UNKNOWN_STATE,
 	type UnknownZWaveChipType,
@@ -83,14 +82,13 @@ import {
 	authHomeIdFromDSK,
 	averageRSSI,
 	computePRK,
+	deriveSharedECDHSecret,
 	deriveTempKeys,
 	dskFromString,
 	dskToString,
-	extractRawECDHPublicKey,
 	generateECDHKeyPair,
 	getChipTypeAndVersion,
 	getHighestSecurityClass,
-	importRawECDHPublicKey,
 	indexDBsByNode,
 	isEmptyRoute,
 	isLongRangeNodeId,
@@ -115,12 +113,9 @@ import {
 	migrateNVM,
 } from "@zwave-js/nvmedit";
 import {
-	type BootloaderChunk,
-	BootloaderChunkType,
 	FunctionType,
 	type Message,
 	type SuccessIndicator,
-	XModemMessageHeaders,
 } from "@zwave-js/serial";
 import {
 	type ApplicationUpdateRequest,
@@ -355,14 +350,15 @@ import {
 } from "@zwave-js/serial/serialapi";
 import type { TransmitReport } from "@zwave-js/serial/serialapi";
 import {
+	Bytes,
 	Mixin,
 	type ReadonlyObjectKeyMap,
 	type ReadonlyThrowingMap,
 	type ThrowingMap,
-	TypedEventEmitter,
+	TypedEventTarget,
+	areUint8ArraysEqual,
 	cloneDeep,
 	createThrowingMap,
-	flatMap,
 	getEnumMemberName,
 	getErrorMessage,
 	noop,
@@ -370,35 +366,33 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
+import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
-import { roundTo } from "alcalzone-shared/math";
 import { isObject } from "alcalzone-shared/typeguards";
-import crypto from "node:crypto";
-import { setTimeout as wait } from "node:timers/promises";
-import type { Driver } from "../driver/Driver";
-import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache";
-import type { StatisticsEventCallbacks } from "../driver/Statistics";
-import { type TaskBuilder, TaskPriority } from "../driver/Task";
-import { DeviceClass } from "../node/DeviceClass";
-import { ZWaveNode } from "../node/Node";
-import { VirtualNode } from "../node/VirtualNode";
+import type { Driver } from "../driver/Driver.js";
+import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache.js";
+import type { StatisticsEventCallbacks } from "../driver/Statistics.js";
+import { type TaskBuilder, TaskPriority } from "../driver/Task.js";
+import { DeviceClass } from "../node/DeviceClass.js";
+import { ZWaveNode } from "../node/Node.js";
+import { VirtualNode } from "../node/VirtualNode.js";
 import {
 	InterviewStage,
 	type LifelineRoutes,
 	NodeStatus,
-} from "../node/_Types";
+} from "../node/_Types.js";
 import {
 	type ControllerStatistics,
 	ControllerStatisticsHost,
-} from "./ControllerStatistics";
-import { ZWaveFeature, minFeatureVersions } from "./Features";
+} from "./ControllerStatistics.js";
+import { ZWaveFeature, minFeatureVersions } from "./Features.js";
 import {
 	downloadFirmwareUpdate,
 	getAvailableFirmwareUpdates,
-} from "./FirmwareUpdateService";
+} from "./FirmwareUpdateService.js";
 import {
 	type ExclusionOptions,
 	ExclusionStrategy,
@@ -421,22 +415,24 @@ import {
 	type ReplaceNodeOptions,
 	SecurityBootstrapFailure,
 	type SmartStartProvisioningEntry,
-} from "./Inclusion";
-import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO";
-import { determineNIF } from "./NodeInformationFrame";
-import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions";
+} from "./Inclusion.js";
+import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
+import { determineNIF } from "./NodeInformationFrame.js";
 import {
-	type ControllerFirmwareUpdateProgress,
-	type ControllerFirmwareUpdateResult,
-	ControllerFirmwareUpdateStatus,
+	type ProxyInclusionMachine,
+	type ProxyInclusionMachineInput,
+	createProxyInclusionMachine,
+} from "./ProxyInclusionMachine.js";
+import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions.js";
+import {
 	type FirmwareUpdateDeviceID,
 	type FirmwareUpdateInfo,
 	type GetFirmwareUpdatesOptions,
 	type RebuildRoutesOptions,
 	type RebuildRoutesStatus,
 	type SDKVersion,
-} from "./_Types";
-import { assertProvisioningEntry, isRebuildRoutesTask } from "./utils";
+} from "./_Types.js";
+import { assertProvisioningEntry, isRebuildRoutesTask } from "./utils.js";
 
 // Strongly type the event emitter events
 interface ControllerEventCallbacks
@@ -463,12 +459,6 @@ interface ControllerEventCallbacks
 	"rebuild routes done": (
 		result: ReadonlyMap<number, RebuildRoutesStatus>,
 	) => void;
-	"firmware update progress": (
-		progress: ControllerFirmwareUpdateProgress,
-	) => void;
-	"firmware update finished": (
-		result: ControllerFirmwareUpdateResult,
-	) => void;
 	identify: (node: ZWaveNode) => void;
 	"status changed": (status: ControllerStatus) => void;
 }
@@ -480,14 +470,15 @@ export interface ZWaveController extends ControllerStatisticsHost {}
 
 @Mixin([ControllerStatisticsHost])
 export class ZWaveController
-	extends TypedEventEmitter<ControllerEventCallbacks>
+	extends TypedEventTarget<ControllerEventCallbacks>
 {
 	/** @internal */
-	public constructor(
-		private readonly driver: Driver,
-		bootloaderOnly: boolean = false,
-	) {
+	public constructor(driver: Driver) {
 		super();
+
+		debugger;
+
+		this.driver = driver;
 
 		this._nodes = createThrowingMap((nodeId) => {
 			throw new ZWaveError(
@@ -496,9 +487,6 @@ export class ZWaveController
 				nodeId,
 			);
 		});
-
-		// Limit interaction with the controller in bootloader-only mode
-		if (bootloaderOnly) return;
 
 		// register message handlers
 		driver.registerRequestHandler(
@@ -518,6 +506,8 @@ export class ZWaveController
 			this.handleLearnModeCallback.bind(this),
 		);
 	}
+
+	private readonly driver: Driver;
 
 	private _type: MaybeNotKnown<ZWaveLibraryTypes>;
 	public get type(): MaybeNotKnown<ZWaveLibraryTypes> {
@@ -556,14 +546,14 @@ export class ZWaveController
 		return this._ownNodeId;
 	}
 
-	private _dsk: Buffer | undefined;
+	private _dsk: Uint8Array | undefined;
 	/**
 	 * The device specific key (DSK) of the controller in binary format.
 	 */
-	public get dsk(): Buffer {
+	public async getDSK(): Promise<Uint8Array> {
 		if (this._dsk == undefined) {
-			const keyPair = this.driver.getLearnModeAuthenticatedKeyPair();
-			const publicKey = extractRawECDHPublicKey(keyPair.publicKey);
+			const { publicKey } = await this.driver
+				.getLearnModeAuthenticatedKeyPair();
 			this._dsk = publicKey.subarray(0, 16);
 		}
 		return this._dsk;
@@ -847,7 +837,7 @@ export class ZWaveController
 	}
 
 	/** Returns the node with the given DSK */
-	public getNodeByDSK(dsk: Buffer | string): ZWaveNode | undefined {
+	public getNodeByDSK(dsk: Uint8Array | string): ZWaveNode | undefined {
 		try {
 			if (typeof dsk === "string") dsk = dskFromString(dsk);
 		} catch (e) {
@@ -860,7 +850,7 @@ export class ZWaveController
 			throw e;
 		}
 		for (const node of this._nodes.values()) {
-			if (node.dsk?.equals(dsk)) return node;
+			if (node.dsk && Bytes.view(node.dsk).equals(dsk)) return node;
 		}
 	}
 
@@ -2595,6 +2585,177 @@ export class ZWaveController
 		}
 	}
 
+	private _proxyInclusionMachine: ProxyInclusionMachine | undefined;
+	private _proxyInclusionInitiateTimeout: NodeJS.Timeout | undefined;
+
+	private async updateProxyInclusionMachine(
+		input: ProxyInclusionMachineInput,
+	): Promise<void> {
+		// Make sure the machine runs and if not, create a new one
+		this._proxyInclusionMachine ??= createProxyInclusionMachine();
+
+		const newState = this._proxyInclusionMachine.next(input)?.newState;
+		if (!newState) return;
+
+		this._proxyInclusionMachine.transition(newState);
+
+		switch (newState.value) {
+			case "hasNIF": {
+				this.setInclusionState(InclusionState.Busy);
+
+				this.driver.controllerLog.logNode(
+					newState.nodeInfo.nodeId,
+					"Waiting for initiate command to bootstrap node...",
+				);
+
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+				}
+				this._proxyInclusionInitiateTimeout = setTimeout(() => {
+					void this.updateProxyInclusionMachine({
+						value: "INITIATE_TIMEOUT",
+					}).catch(noop);
+				}, 10000).unref();
+
+				return;
+			}
+
+			case "hasInitiate": {
+				this.setInclusionState(InclusionState.Busy);
+
+				// Wait up to 10 seconds for a NIF before giving up
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+				}
+				this._proxyInclusionInitiateTimeout = setTimeout(() => {
+					void this.updateProxyInclusionMachine({
+						value: "NIF_TIMEOUT",
+					}).catch(noop);
+				}, 10000).unref();
+
+				return;
+			}
+
+			case "bootstrapping": {
+				// Avoid triggering timeouts once we're here
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+					this._proxyInclusionInitiateTimeout = undefined;
+				}
+
+				const nodeId = newState.includedNodeId;
+				// We might end up here after only receiving an Initiate command, but no NIF
+				// For this case, just create an empty shell for the node and replace it later
+				let newNode = newState.newNode
+					?? new ZWaveNode(nodeId, this.driver);
+				this._nodes.set(nodeId, newNode);
+
+				const inclCtrlr = this.nodes.getOrThrow(
+					newState.inclusionControllerNodeId,
+				);
+
+				this.driver.controllerLog.logNode(
+					nodeId,
+					`Initiate command received from node ${inclCtrlr.id}`,
+				);
+
+				// Inclusion is handled by the inclusion controller, which (hopefully) sets the SUC return route
+				newNode.hasSUCReturnRoute = true;
+
+				// SIS, A, MUST request a Node Info Frame from Joining Node, B
+				const nodeInfo = await newNode
+					.requestNodeInfo()
+					.catch(() => undefined);
+				if (nodeInfo) {
+					if (newState.newNode) {
+						// We had a proper instance of the node before, just update the node info
+						newNode.updateNodeInfo(nodeInfo);
+					} else {
+						// We now have all the info we need to create a proper node instance
+						const deviceClass = new DeviceClass(
+							nodeInfo.basicDeviceClass,
+							nodeInfo.genericDeviceClass,
+							nodeInfo.specificDeviceClass,
+						);
+
+						newNode = new ZWaveNode(
+							nodeId,
+							this.driver,
+							deviceClass,
+							nodeInfo.supportedCCs,
+							undefined,
+							// Create an empty value DB and specify that it contains no values
+							// to avoid indexing the existing values
+							this.createValueDBForNode(nodeId, new Set()),
+						);
+						this._nodes.set(nodeId, newNode);
+					}
+				}
+
+				// Assume the device is alive
+				// If it is actually a sleeping device, it will be marked as such later
+				newNode.markAsAlive();
+
+				// Perform S0/S2 bootstrapping
+				const bootstrapFailure = await this.proxyBootstrap(
+					newNode,
+					inclCtrlr,
+				);
+
+				// We're done adding this node, notify listeners
+				const result: InclusionResult = bootstrapFailure != undefined
+					? {
+						lowSecurity: true,
+						lowSecurityReason: bootstrapFailure,
+					}
+					: { lowSecurity: false };
+
+				this.setInclusionState(InclusionState.Idle);
+				this.emit("node added", newNode, result);
+				this._proxyInclusionMachine = undefined;
+
+				if (inclCtrlr && newState.step != undefined) {
+					const step = newState.step;
+					newNode.once("ready", () => {
+						this.driver.controllerLog.logNode(
+							inclCtrlr.nodeId,
+							`Notifying inclusion controller of finished inclusion`,
+						);
+						// Create API without checking for support
+						const api = inclCtrlr.createAPI(
+							CommandClasses["Inclusion Controller"],
+							false,
+						);
+						void api
+							.completeStep(step, InclusionControllerStatus.OK)
+							.catch(noop);
+					});
+				}
+
+				return;
+			}
+
+			case "interview": {
+				// We end up here after we received a NIF but no initiate command
+				// Just emit the "node added" event so the interview can start
+				// Clean up
+				this._proxyInclusionMachine = undefined;
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+					this._proxyInclusionInitiateTimeout = undefined;
+				}
+
+				this.setInclusionState(InclusionState.Idle);
+				this.emit("node added", newState.newNode, {
+					lowSecurity: false,
+				});
+				this._proxyInclusionMachine = undefined;
+
+				return;
+			}
+		}
+	}
+
 	/** @internal */
 	public async handleApplicationUpdateRequest(
 		msg: ApplicationUpdateRequest,
@@ -2658,7 +2819,8 @@ export class ZWaveController
 			// Check if the node is on the provisioning list
 			const entry = this.provisioningList.find((entry) => {
 				if (
-					!nwiHomeIdFromDSK(dskFromString(entry.dsk)).equals(
+					!areUint8ArraysEqual(
+						nwiHomeIdFromDSK(dskFromString(entry.dsk)),
 						msg.nwiHomeId,
 					)
 				) {
@@ -2758,7 +2920,7 @@ export class ZWaveController
 			const nodeInfo = msg.nodeInformation;
 
 			// It can happen that this is received for a node that is already part of the network:
-			// https://github.com/zwave-js/node-zwave-js/issues/5781
+			// https://github.com/zwave-js/zwave-js/issues/5781
 			// In this case, ignore this message to prevent chaos.
 
 			if (this._nodes.has(nodeId)) {
@@ -2768,8 +2930,6 @@ export class ZWaveController
 				);
 				return;
 			}
-
-			this.setInclusionState(InclusionState.Busy);
 
 			const deviceClass = new DeviceClass(
 				nodeInfo.basicDeviceClass,
@@ -2818,157 +2978,37 @@ export class ZWaveController
 				}`,
 			);
 
-			this.driver.controllerLog.logNode(
-				nodeId,
-				"Waiting for initiate command to bootstrap node...",
-			);
-
-			// Handle inclusion in the background
-			process.nextTick(async () => {
-				// If an Inclusion Controller that does not support the Inclusion Controller Command Class includes a
-				// new node in a network, the SIS will never receive an Inclusion Controller Initiate Command. If no
-				// Initiate Command has been received approximately 10 seconds after a new node has been added to a
-				// network, the SIS SHOULD start interviewing the newly included node
-
-				const initiate = await this.driver
-					.waitForCommand<
-						SinglecastCC<InclusionControllerCCInitiate>
-					>(
-						(cc) =>
-							cc instanceof InclusionControllerCCInitiate
-							&& cc.isSinglecast()
-							&& cc.includedNodeId === nodeId
-							&& cc.step
-								=== InclusionControllerStep.ProxyInclusion,
-						10000,
-					)
-					.catch(() => undefined);
-
-				// Assume the device is alive
-				// If it is actually a sleeping device, it will be marked as such later
-				newNode.markAsAlive();
-
-				let inclCtrlr: ZWaveNode | undefined;
-				let bootstrapFailure: SecurityBootstrapFailure | undefined;
-
-				if (initiate) {
-					inclCtrlr = this.nodes.getOrThrow(initiate.nodeId);
-
-					this.driver.controllerLog.logNode(
-						nodeId,
-						`Initiate command received from node ${inclCtrlr.id}`,
-					);
-
-					// Inclusion is handled by the inclusion controller, which (hopefully) sets the SUC return route
-					newNode.hasSUCReturnRoute = true;
-
-					// SIS, A, MUST request a Node Info Frame from Joining Node, B
-					const requestedNodeInfo = await newNode
-						.requestNodeInfo()
-						.catch(() => undefined);
-					if (requestedNodeInfo) {
-						newNode.updateNodeInfo(requestedNodeInfo);
-					}
-
-					// Perform S0/S2 bootstrapping
-					bootstrapFailure = await this.proxyBootstrap(
-						newNode,
-						inclCtrlr,
-					);
-				} else {
-					// No command received, bootstrap node by ourselves
-					this.driver.controllerLog.logNode(
-						nodeId,
-						"no initiate command received, bootstrapping node...",
-					);
-
-					if (newNode.protocol == Protocols.ZWave) {
-						// Assign SUC return route to make sure the node knows where to get its routes from
-						newNode.hasSUCReturnRoute = await this
-							.assignSUCReturnRoutes(newNode.id);
-					}
-
-					// Include using the default inclusion strategy:
-					// * Use S2 if possible,
-					// * only use S0 if necessary,
-					// * use no encryption otherwise
-					if (newNode.supportsCC(CommandClasses["Security 2"])) {
-						bootstrapFailure = await this.secureBootstrapS2(
-							newNode,
-						);
-						if (bootstrapFailure == undefined) {
-							const actualSecurityClass = newNode
-								.getHighestSecurityClass();
-							if (
-								actualSecurityClass == undefined
-								|| actualSecurityClass
-									< SecurityClass.S2_Unauthenticated
-							) {
-								bootstrapFailure =
-									SecurityBootstrapFailure.Unknown;
-							}
-						}
-					} else if (
-						newNode.supportsCC(CommandClasses.Security)
-						&& (deviceClass.specific ?? deviceClass.generic)
-							.requiresSecurity
-					) {
-						bootstrapFailure = await this.secureBootstrapS0(
-							newNode,
-						);
-						if (bootstrapFailure == undefined) {
-							const actualSecurityClass = newNode
-								.getHighestSecurityClass();
-							if (
-								actualSecurityClass == undefined
-								|| actualSecurityClass < SecurityClass.S0_Legacy
-							) {
-								bootstrapFailure =
-									SecurityBootstrapFailure.Unknown;
-							}
-						}
-					} else {
-						// Remember that no security classes were granted
-						for (const secClass of securityClassOrder) {
-							newNode.securityClasses.set(secClass, false);
-						}
-					}
-				}
-
-				// We're done adding this node, notify listeners
-				const result: InclusionResult = bootstrapFailure != undefined
-					? {
-						lowSecurity: true,
-						lowSecurityReason: bootstrapFailure,
-					}
-					: { lowSecurity: false };
-
-				this.setInclusionState(InclusionState.Idle);
-				this.emit("node added", newNode, result);
-
-				if (inclCtrlr && initiate) {
-					const inclCtrlrId = inclCtrlr.id;
-					const step = initiate.step;
-					newNode.once("ready", () => {
-						this.driver.controllerLog.logNode(
-							nodeId,
-							`Notifying node ${inclCtrlrId} of finished inclusion`,
-						);
-						// Create API without checking for support
-						const api = inclCtrlr.createAPI(
-							CommandClasses["Inclusion Controller"],
-							false,
-						);
-						void api
-							.completeStep(step, InclusionControllerStatus.OK)
-							.catch(noop);
-					});
-				}
+			await this.updateProxyInclusionMachine({
+				value: "NIF",
+				nodeInfo,
+				newNode,
 			});
 		} else if (msg instanceof ApplicationUpdateRequestSUCIdChanged) {
 			this._sucNodeId = msg.sucNodeID;
 			// TODO: Emit event or what?
 		}
+	}
+
+	/**
+	 * @internal
+	 * Handles proxy inclusion requests from an inclusion controller
+	 */
+	public handleInclusionControllerCCInitiateProxyInclusion(
+		initiate: InclusionControllerCCInitiate,
+	): void {
+		if (initiate.step !== InclusionControllerStep.ProxyInclusion) {
+			throw new ZWaveError(
+				"Expected an inclusion controller proxy inclusion request, but got a different step",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		void this.updateProxyInclusionMachine({
+			value: "INITIATE",
+			step: initiate.step,
+			inclusionControllerNodeId: initiate.nodeId as number,
+			includedNodeId: initiate.includedNodeId,
+		}).catch(noop);
 	}
 
 	/**
@@ -3221,7 +3261,7 @@ export class ZWaveController
 
 			for (const task of tasks) {
 				const result = await Promise.race([
-					wait(S0_TIMEOUT, false as const, { ref: false }),
+					wait(S0_TIMEOUT, true).then(() => false as const),
 					task().catch(() => false as const),
 				]);
 				if (result === false) {
@@ -3500,7 +3540,7 @@ export class ZWaveController
 
 			// TODO: Validate client-side auth if requested
 			const grantResult = await Promise.race([
-				wait(inclusionTimeouts.TAI1, false as const, { ref: false }),
+				wait(inclusionTimeouts.TAI1, true).then(() => false as const),
 				userCallbacks
 					.grantSecurityClasses({
 						securityClasses: supportedKeys,
@@ -3562,16 +3602,15 @@ export class ZWaveController
 				await abort();
 				return SecurityBootstrapFailure.NodeCanceled;
 			}
-			const nodePublicKey = pubKeyResponse.publicKey;
+			const nodePublicKey = Bytes.from(pubKeyResponse.publicKey);
 
 			// This is the starting point of the timer TAI2.
 			const timerStartTAI2 = Date.now();
 
 			// Generate ECDH key pair. We need to immediately send the other node our public key,
 			// so it won't abort bootstrapping
-			const keyPair = generateECDHKeyPair();
-			const publicKey = extractRawECDHPublicKey(keyPair.publicKey);
-			await api.sendPublicKey(publicKey);
+			const keyPair = await generateECDHKeyPair();
+			await api.sendPublicKey(keyPair.publicKey);
 			// After this, the node will start sending us a KEX SET every 10 seconds.
 			// We won't be able to decode it until the DSK was verified
 
@@ -3597,7 +3636,7 @@ export class ZWaveController
 					pinResult = inclusionOptions.dsk.slice(0, 5);
 				} else {
 					pinResult = await Promise.race([
-						wait(tai2RemainingMs, false as const, { ref: false }),
+						wait(tai2RemainingMs, true).then(() => false as const),
 						userCallbacks
 							.validateDSKAndEnterPIN(dsk)
 							// ignore errors in application callbacks
@@ -3623,15 +3662,18 @@ export class ZWaveController
 			}
 
 			// After the user has verified the DSK, we can derive the shared secret
-			// Z-Wave works with the "raw" keys, so this is a tad complicated
-			const sharedSecret = crypto.diffieHellman({
-				publicKey: importRawECDHPublicKey(nodePublicKey),
+			const sharedSecret = await deriveSharedECDHSecret({
+				publicKey: nodePublicKey,
 				privateKey: keyPair.privateKey,
 			});
 
 			// Derive temporary key from ECDH key pair - this will allow us to receive the node's KEX SET commands
-			const tempKeys = deriveTempKeys(
-				computePRK(sharedSecret, publicKey, nodePublicKey),
+			const tempKeys = await deriveTempKeys(
+				await computePRK(
+					sharedSecret,
+					keyPair.publicKey,
+					nodePublicKey,
+				),
 			);
 			securityManager.deleteNonce(node.id);
 			securityManager.tempKeys.set(node.id, {
@@ -5018,13 +5060,11 @@ export class ZWaveController
 				let associatedNodes: number[] = [];
 				try {
 					associatedNodes = distinct(
-						flatMap<number, AssociationAddress[]>(
-							[
-								...(self.getAssociations({ nodeId: node.id })
-									.values() as any),
-							],
-							(assocs: AssociationAddress[]) =>
-								assocs.map((a) => a.nodeId),
+						[
+							...(self.getAssociations({ nodeId: node.id })
+								.values() as any),
+						].flatMap((assocs: AssociationAddress[]) =>
+							assocs.map((a) => a.nodeId)
 						),
 					)
 						// ...except the controller itself, which was handled by step 2
@@ -6522,6 +6562,10 @@ export class ZWaveController
 
 	/** Configure the RF region at the Z-Wave API Module */
 	public async setRFRegion(region: RFRegion): Promise<boolean> {
+		// Setting the "default" region is not possible. Controllers are supposed to
+		// default to the EU region, so we do just that.
+		if (region === RFRegion["Default (EU)"]) region = RFRegion.Europe;
+
 		// Unless auto-upgrade to LR regions is disabled, try to find a suitable LR replacement region
 		if (this.driver.options.rf?.preferLRRegion !== false) {
 			region = this.tryGetLRCapableRegion(region);
@@ -7219,8 +7263,9 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Initialize the Firmware Update functionality and determine if the firmware can be updated.
+	 * @internal
 	 */
-	private async firmwareUpdateNVMInit(): Promise<boolean> {
+	public async firmwareUpdateNVMInit(): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_InitResponse
 		>(
@@ -7233,8 +7278,9 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Set the NEWIMAGE marker in the NVM (to the given value), which is used to signal that a new firmware image is present
+	 * @internal
 	 */
-	private async firmwareUpdateNVMSetNewImage(
+	public async firmwareUpdateNVMSetNewImage(
 		value: boolean = true,
 	): Promise<void> {
 		await this.driver.sendMessage<FirmwareUpdateNVM_SetNewImageResponse>(
@@ -7284,10 +7330,11 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Writes the given data into the firmware update region of the NVM.
+	 * @internal
 	 */
-	private async firmwareUpdateNVMWrite(
+	public async firmwareUpdateNVMWrite(
 		offset: number,
-		buffer: Buffer,
+		buffer: Uint8Array,
 	): Promise<void> {
 		await this.driver.sendMessage<FirmwareUpdateNVM_WriteResponse>(
 			new FirmwareUpdateNVM_WriteRequest({
@@ -7301,8 +7348,9 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Checks if the firmware present in the NVM is valid
+	 * @internal
 	 */
-	private async firmwareUpdateNVMIsValidCRC16(): Promise<boolean> {
+	public async firmwareUpdateNVMIsValidCRC16(): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_IsValidCRC16Response
 		>(
@@ -7362,7 +7410,7 @@ export class ZWaveController
 	public async externalNVMReadBuffer(
 		offset: number,
 		length: number,
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		const ret = await this.driver.sendMessage<ExtNVMReadLongBufferResponse>(
 			new ExtNVMReadLongBufferRequest({
 				offset,
@@ -7382,7 +7430,7 @@ export class ZWaveController
 	public async externalNVMReadBuffer700(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Buffer; endOfFile: boolean }> {
+	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
 			new NVMOperationsReadRequest({
 				offset,
@@ -7420,7 +7468,7 @@ export class ZWaveController
 	public async externalNVMReadBufferExt(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Buffer; endOfFile: boolean }> {
+	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<
 			ExtendedNVMOperationsResponse
 		>(
@@ -7465,7 +7513,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBuffer(
 		offset: number,
-		buffer: Buffer,
+		buffer: Uint8Array,
 	): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			ExtNVMWriteLongBufferResponse
@@ -7490,7 +7538,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBuffer700(
 		offset: number,
-		buffer: Buffer,
+		buffer: Uint8Array,
 	): Promise<{ endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
 			new NVMOperationsWriteRequest({
@@ -7531,7 +7579,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBufferExt(
 		offset: number,
-		buffer: Buffer,
+		buffer: Uint8Array,
 	): Promise<{ endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<
 			ExtendedNVMOperationsResponse
@@ -7671,7 +7719,7 @@ export class ZWaveController
 	 */
 	public async backupNVMRaw(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		this.driver.controllerLog.print("Backing up NVM...");
 
 		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
@@ -7685,7 +7733,7 @@ export class ZWaveController
 		// Disable watchdog to prevent resets during NVM access
 		await this.stopWatchdog();
 
-		let ret: Buffer;
+		let ret: Uint8Array;
 		try {
 			if (this.sdkVersionGte("7.0")) {
 				ret = await this.backupNVMRaw700(onProgress);
@@ -7711,7 +7759,7 @@ export class ZWaveController
 
 	private async backupNVMRaw500(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
 		if (!size) {
 			throw new ZWaveError(
@@ -7720,7 +7768,7 @@ export class ZWaveController
 			);
 		}
 
-		const ret = Buffer.allocUnsafe(size);
+		const ret = new Bytes(size);
 		let offset = 0;
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
@@ -7736,7 +7784,7 @@ export class ZWaveController
 				chunkSize = 48;
 				continue;
 			}
-			chunk.copy(ret, offset);
+			ret.set(chunk, offset);
 			offset += chunk.length;
 			if (chunkSize > chunk.length) chunkSize = chunk.length;
 
@@ -7748,12 +7796,12 @@ export class ZWaveController
 
 	private async backupNVMRaw700(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		let open: () => Promise<number>;
 		let read: (
 			offset: number,
 			length: number,
-		) => Promise<{ buffer: Buffer; endOfFile: boolean }>;
+		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
 		let close: () => Promise<void>;
 
 		if (
@@ -7778,7 +7826,7 @@ export class ZWaveController
 		// Open NVM for reading
 		const size = await open();
 
-		const ret = Buffer.allocUnsafe(size);
+		const ret = new Bytes(size);
 		let offset = 0;
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
@@ -7795,7 +7843,7 @@ export class ZWaveController
 					chunkSize = 48;
 					continue;
 				}
-				chunk.copy(ret, offset);
+				ret.set(chunk, offset);
 				offset += chunk.length;
 				if (chunkSize > chunk.length) chunkSize = chunk.length;
 
@@ -7825,7 +7873,7 @@ export class ZWaveController
 	 * @param restoreProgress Can be used to monitor the progress of the restore operation, which may take several seconds up to a few minutes depending on the NVM size
 	 */
 	public async restoreNVM(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		convertProgress?: (bytesRead: number, total: number) => void,
 		restoreProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
@@ -7849,7 +7897,7 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				"Converting NVM to target format...",
 			);
-			let targetNVM: Buffer;
+			let targetNVM: Uint8Array;
 			if (this.sdkVersionGte("7.0")) {
 				targetNVM = await this.backupNVMRaw700(convertProgress);
 			} else {
@@ -7893,7 +7941,7 @@ export class ZWaveController
 	 * @param onProgress Can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size
 	 */
 	public async restoreNVMRaw(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		this.driver.controllerLog.print("Restoring NVM...");
@@ -7953,7 +8001,7 @@ export class ZWaveController
 	}
 
 	private async restoreNVMRaw500(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
@@ -7965,7 +8013,7 @@ export class ZWaveController
 		} else if (size !== nvmData.length) {
 			// This might be a converted NVM buffer which contains only the first relevant part.
 			// The first two bytes must point to the last byte in the buffer then
-			const actualSize = 1 + nvmData.readUInt16BE(0);
+			const actualSize = 1 + Bytes.view(nvmData).readUInt16BE(0);
 			if (actualSize !== nvmData.length) {
 				throw new ZWaveError(
 					"The given data does not match the NVM size - cannot restore!",
@@ -7974,13 +8022,15 @@ export class ZWaveController
 			}
 
 			// Now we only need to figure out which part of the NVM needs to be overwritten when restoring
-			const oldSize = 1
-				+ (await this.externalNVMReadBuffer(0, 2)).readUInt16BE(0);
+			const firstTwoNVMBytes = Bytes.view(
+				await this.externalNVMReadBuffer(0, 2),
+			);
+			const oldSize = 1 + firstTwoNVMBytes.readUInt16BE(0);
 			if (oldSize > actualSize) {
 				// Pad the rest with 0xff
-				nvmData = Buffer.concat([
+				nvmData = Bytes.concat([
 					nvmData,
-					Buffer.alloc(oldSize - actualSize, 0xff),
+					Bytes.alloc(oldSize - actualSize, 0xff),
 				]);
 			}
 		}
@@ -8004,17 +8054,17 @@ export class ZWaveController
 	}
 
 	private async restoreNVMRaw700(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		let open: () => Promise<number>;
 		let read: (
 			offset: number,
 			length: number,
-		) => Promise<{ buffer: Buffer; endOfFile: boolean }>;
+		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
 		let write: (
 			offset: number,
-			buffer: Buffer,
+			buffer: Uint8Array,
 		) => Promise<{ endOfFile: boolean }>;
 		let close: () => Promise<void>;
 
@@ -8198,7 +8248,7 @@ export class ZWaveController
 					productType,
 					productId,
 					firmwareVersion,
-					rfRegion: this.rfRegion,
+					rfRegion: this.rfRegion ?? options?.rfRegion,
 				},
 				{
 					userAgent: this.driver.getUserAgentStringWithComponents(
@@ -8241,6 +8291,7 @@ export class ZWaveController
 	): Promise<void> {
 		if (
 			deviceId.rfRegion !== undefined
+			&& this.rfRegion !== NOT_KNOWN
 			&& deviceId.rfRegion !== this.rfRegion
 		) {
 			throw new ZWaveError(
@@ -8326,8 +8377,9 @@ export class ZWaveController
 				ZWaveErrorCodes.FirmwareUpdateCC_NetworkBusy,
 			);
 		}
+
 		// Don't allow updating firmware when the controller is currently updating its own firmware
-		if (this.isFirmwareUpdateInProgress()) {
+		if (this.driver.isOTWFirmwareUpdateInProgress()) {
 			const message =
 				`Failed to start the update: The controller is currently being updated!`;
 			this.driver.controllerLog.print(message, "error");
@@ -8422,372 +8474,6 @@ export class ZWaveController
 		}
 
 		return node.updateFirmware(firmwares, options);
-	}
-
-	private _firmwareUpdateInProgress: boolean = false;
-
-	/**
-	 * Returns whether a firmware update is in progress for the controller.
-	 */
-	public isFirmwareUpdateInProgress(): boolean {
-		return this._firmwareUpdateInProgress;
-	}
-
-	/**
-	 * Updates the firmware of the controller using the given firmware file.
-	 *
-	 * The return value indicates whether the update was successful.
-	 * **WARNING:** After a successful update, the Z-Wave driver will destroy itself so it can be restarted.
-	 *
-	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
-	 */
-	public async firmwareUpdateOTW(
-		data: Buffer,
-	): Promise<ControllerFirmwareUpdateResult> {
-		// Don't let two firmware updates happen in parallel
-		if (this.isAnyOTAFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: A firmware update is already in progress on this network!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
-		}
-		// Don't allow updating firmware when the controller is currently updating its own firmware
-		if (this.isFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: The controller is currently being updated!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
-		}
-
-		if (this.driver.isInBootloader() || this.sdkVersionGte("7.0")) {
-			// If the controller is stuck in bootloader mode, always use the 700 series update method
-			return this.firmwareUpdateOTW700(data);
-		} else if (
-			this.sdkVersionGte("6.50.0")
-			&& this.supportedFunctionTypes?.includes(
-				FunctionType.FirmwareUpdateNVM,
-			)
-		) {
-			// This is 500 series
-			const wasUpdated = await this.firmwareUpdateOTW500(data);
-			if (wasUpdated.success) {
-				// After updating the firmware on 500 series sticks, we MUST soft-reset them
-				await this.driver.softResetAndRestart(
-					"Activating new firmware and restarting driver...",
-					"Controller firmware updates require a driver restart!",
-				);
-			}
-			return wasUpdated;
-		} else {
-			throw new ZWaveError(
-				`Firmware updates are not supported on this controller`,
-				ZWaveErrorCodes.Controller_NotSupported,
-			);
-		}
-	}
-
-	private async firmwareUpdateOTW500(
-		data: Buffer,
-	): Promise<ControllerFirmwareUpdateResult> {
-		this._firmwareUpdateInProgress = true;
-		let turnedRadioOff = false;
-		try {
-			this.driver.controllerLog.print("Beginning firmware update");
-
-			const canUpdate = await this.firmwareUpdateNVMInit();
-			if (!canUpdate) {
-				this.driver.controllerLog.print(
-					"OTW update failed: This controller does not support firmware updates",
-					"error",
-				);
-
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_NotSupported,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			// Avoid interruption by incoming messages
-			await this.toggleRF(false);
-			turnedRadioOff = true;
-
-			// Upload the firmware data
-			const BLOCK_SIZE = 64;
-			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
-			for (let fragment = 0; fragment < numFragments; fragment++) {
-				const fragmentData = data.subarray(
-					fragment * BLOCK_SIZE,
-					(fragment + 1) * BLOCK_SIZE,
-				);
-				await this.firmwareUpdateNVMWrite(
-					fragment * BLOCK_SIZE,
-					fragmentData,
-				);
-
-				// This progress is technically too low, but we can keep 100% for after CRC checking this way
-				const progress: ControllerFirmwareUpdateProgress = {
-					sentFragments: fragment,
-					totalFragments: numFragments,
-					progress: roundTo((fragment / numFragments) * 100, 2),
-				};
-				this.emit("firmware update progress", progress);
-			}
-
-			// Check if a valid image was written
-			const isValidCRC = await this.firmwareUpdateNVMIsValidCRC16();
-			if (!isValidCRC) {
-				this.driver.controllerLog.print(
-					"OTW update failed: The firmware image is invalid",
-					"error",
-				);
-
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Aborted,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			this.emit("firmware update progress", {
-				sentFragments: numFragments,
-				totalFragments: numFragments,
-				progress: 100,
-			});
-
-			// Enable the image
-			await this.firmwareUpdateNVMSetNewImage();
-
-			this.driver.controllerLog.print("Firmware update succeeded");
-
-			const result: ControllerFirmwareUpdateResult = {
-				success: true,
-				status: ControllerFirmwareUpdateStatus.OK,
-			};
-			this.emit("firmware update finished", result);
-			return result;
-		} finally {
-			this._firmwareUpdateInProgress = false;
-			if (turnedRadioOff) await this.toggleRF(true);
-		}
-	}
-
-	private async firmwareUpdateOTW700(
-		data: Buffer,
-	): Promise<ControllerFirmwareUpdateResult> {
-		this._firmwareUpdateInProgress = true;
-		let destroy = false;
-
-		try {
-			if (!this.driver.isInBootloader()) {
-				await this.driver.enterBootloader();
-			}
-
-			// Start the update process
-			this.driver.controllerLog.print("Beginning firmware upload");
-			await this.driver.bootloader.beginUpload();
-
-			// Wait for the bootloader to accept fragments
-			try {
-				await this.driver.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.Message
-						&& c.message === "begin upload",
-					5000,
-				);
-				await this.driver.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.FlowControl
-						&& c.command === XModemMessageHeaders.C,
-					1000,
-				);
-			} catch {
-				this.driver.controllerLog.print(
-					"OTW update failed: Expected response not received from the bootloader",
-					"error",
-				);
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Timeout,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			const BLOCK_SIZE = 128;
-			if (data.length % BLOCK_SIZE !== 0) {
-				// Pad the data to a multiple of BLOCK_SIZE
-				data = Buffer.concat([
-					data,
-					Buffer.alloc(BLOCK_SIZE - (data.length % BLOCK_SIZE), 0xff),
-				]);
-			}
-			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
-
-			let aborted = false;
-
-			transfer: for (
-				let fragment = 1;
-				fragment <= numFragments;
-				fragment++
-			) {
-				const fragmentData = data.subarray(
-					(fragment - 1) * BLOCK_SIZE,
-					fragment * BLOCK_SIZE,
-				);
-
-				retry: for (let retry = 0; retry < 3; retry++) {
-					await this.driver.bootloader.uploadFragment(
-						fragment,
-						fragmentData,
-					);
-					let result: BootloaderChunk & {
-						type: BootloaderChunkType.FlowControl;
-					};
-					try {
-						result = await this.driver.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.FlowControl,
-							1000,
-						);
-					} catch {
-						this.driver.controllerLog.print(
-							"OTW update failed: The bootloader did not acknowledge the start of transfer.",
-							"error",
-						);
-
-						const result: ControllerFirmwareUpdateResult = {
-							success: false,
-							status:
-								ControllerFirmwareUpdateStatus.Error_Timeout,
-						};
-						this.emit("firmware update finished", result);
-						return result;
-					}
-
-					switch (result.command) {
-						case XModemMessageHeaders.ACK: {
-							// The fragment was accepted
-							const progress: ControllerFirmwareUpdateProgress = {
-								sentFragments: fragment,
-								totalFragments: numFragments,
-								progress: roundTo(
-									(fragment / numFragments) * 100,
-									2,
-								),
-							};
-							this.emit("firmware update progress", progress);
-
-							// we've transmitted at least one fragment, so we need to destroy the driver afterwards
-							destroy = true;
-
-							continue transfer;
-						}
-						case XModemMessageHeaders.NAK:
-							// The fragment was rejected, try again
-							continue retry;
-						case XModemMessageHeaders.CAN:
-							// The bootloader aborted the update. We'll receive the reason afterwards as a message
-							aborted = true;
-							break transfer;
-					}
-				}
-
-				this.driver.controllerLog.print(
-					"OTW update failed: Maximum retry attempts reached",
-					"error",
-				);
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status:
-						ControllerFirmwareUpdateStatus.Error_RetryLimitReached,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			if (aborted) {
-				// wait for the reason to craft a good error message
-				const error = await this.driver
-					.waitForBootloaderChunk<
-						BootloaderChunk & { type: BootloaderChunkType.Message }
-					>(
-						(c) =>
-							c.type === BootloaderChunkType.Message
-							&& c.message.includes("error 0x"),
-						1000,
-					)
-					.catch(() => undefined);
-
-				// wait for the menu screen so it doesn't show up in logs
-				await this.driver
-					.waitForBootloaderChunk(
-						(c) => c.type === BootloaderChunkType.Menu,
-						1000,
-					)
-					.catch(() => undefined);
-
-				let message = `OTW update was aborted by the bootloader.`;
-				if (error) {
-					message += ` ${error.message}`;
-					// TODO: parse error code
-				}
-				this.driver.controllerLog.print(message, "error");
-
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Aborted,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			} else {
-				// We're done, send EOT and wait for the menu screen
-				await this.driver.bootloader.finishUpload();
-				try {
-					// The bootloader sends the confirmation and the menu screen very quickly.
-					// Waiting for them separately can cause us to miss the menu screen and
-					// incorrectly assume the update timed out.
-
-					await Promise.all([
-						this.driver.waitForBootloaderChunk(
-							(c) =>
-								c.type === BootloaderChunkType.Message
-								&& c.message.includes("upload complete"),
-							1000,
-						),
-
-						this.driver.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.Menu,
-							1000,
-						),
-					]);
-				} catch {
-					this.driver.controllerLog.print(
-						"OTW update failed: The bootloader did not acknowledge the end of transfer.",
-						"error",
-					);
-					const result: ControllerFirmwareUpdateResult = {
-						success: false,
-						status: ControllerFirmwareUpdateStatus.Error_Timeout,
-					};
-					this.emit("firmware update finished", result);
-					return result;
-				}
-			}
-
-			this.driver.controllerLog.print("Firmware update succeeded");
-
-			const result: ControllerFirmwareUpdateResult = {
-				success: true,
-				status: ControllerFirmwareUpdateStatus.OK,
-			};
-			this.emit("firmware update finished", result);
-			return result;
-		} finally {
-			await this.driver.leaveBootloader(destroy);
-			this._firmwareUpdateInProgress = false;
-		}
 	}
 
 	private _currentLearnMode: LearnModeIntent | undefined;
@@ -8942,9 +8628,9 @@ export class ZWaveController
 	 * Is called when a RemoveNode request is received from the controller.
 	 * Handles and controls the exclusion process.
 	 */
-	private handleLearnModeCallback(
+	private async handleLearnModeCallback(
 		msg: SetLearnModeCallback,
-	): boolean {
+	): Promise<boolean> {
 		// not sure what to do with this message, we're not in learn mode
 		if (this._currentLearnMode == undefined) return false;
 
@@ -8991,8 +8677,10 @@ export class ZWaveController
 			if (wasJoining) {
 				this._currentLearnMode = undefined;
 				this.driver["_securityManager"] = undefined;
-				this.driver["_securityManager2"] = new SecurityManager2();
-				this.driver["_securityManagerLR"] = new SecurityManager2();
+				this.driver["_securityManager2"] = await SecurityManager2
+					.create();
+				this.driver["_securityManagerLR"] = await SecurityManager2
+					.create();
 				this._nodes.clear();
 
 				process.nextTick(() => this.afterJoiningNetwork().catch(noop));
@@ -9043,7 +8731,7 @@ export class ZWaveController
 			// For the first part of the bootstrapping, a temporary key needs to be used
 			this.driver["_securityManager"] = new SecurityManager({
 				ownNodeId: this._ownNodeId!,
-				networkKey: Buffer.alloc(16, 0),
+				networkKey: new Uint8Array(16).fill(0),
 				nonceTimeout: this.driver.options.timeouts.nonce,
 			});
 
@@ -9188,7 +8876,7 @@ export class ZWaveController
 			return SecurityBootstrapFailure.NoKeysConfigured;
 		}
 
-		const receivedKeys = new Map<SecurityClass, Buffer>();
+		const receivedKeys = new Map<SecurityClass, Uint8Array>();
 
 		const deleteTempKey = () => {
 			// Whatever happens, no further communication needs the temporary key
@@ -9330,16 +9018,15 @@ export class ZWaveController
 			// If authentication is required, use the (static) authenticated ECDH key pair,
 			// otherwise generate a new one
 			const keyPair = requiresAuthentication
-				? this.driver.getLearnModeAuthenticatedKeyPair()
-				: generateECDHKeyPair();
-			const publicKey = extractRawECDHPublicKey(keyPair.publicKey);
-			const transmittedPublicKey = Buffer.from(publicKey);
+				? await this.driver.getLearnModeAuthenticatedKeyPair()
+				: await generateECDHKeyPair();
+			const transmittedPublicKey = Bytes.from(keyPair.publicKey);
 			if (requiresAuthentication) {
 				// Authentication requires obfuscating the public key
 				transmittedPublicKey.writeUInt16BE(0x0000, 0);
 
 				// Show the DSK to the user
-				const dsk = dskToString(publicKey.subarray(0, 16));
+				const dsk = dskToString(keyPair.publicKey.subarray(0, 16));
 				try {
 					userCallbacks?.showDSK(dsk);
 				} catch {
@@ -9364,14 +9051,18 @@ export class ZWaveController
 			}
 
 			const includingNodePubKey = pubKeyReport.publicKey;
-			const sharedSecret = crypto.diffieHellman({
-				publicKey: importRawECDHPublicKey(includingNodePubKey),
+			const sharedSecret = await deriveSharedECDHSecret({
+				publicKey: includingNodePubKey,
 				privateKey: keyPair.privateKey,
 			});
 
 			// Derive temporary key from ECDH key pair - this will allow us to receive the node's KEX SET commands
-			const tempKeys = deriveTempKeys(
-				computePRK(sharedSecret, includingNodePubKey, publicKey),
+			const tempKeys = await deriveTempKeys(
+				await computePRK(
+					sharedSecret,
+					includingNodePubKey,
+					keyPair.publicKey,
+				),
 			);
 			securityManager.deleteNonce(bootstrappingNode.id);
 			securityManager.tempKeys.set(bootstrappingNode.id, {
@@ -9539,7 +9230,10 @@ export class ZWaveController
 
 				// Store the network key
 				receivedKeys.set(securityClass, keyReport.networkKey);
-				securityManager.setKey(securityClass, keyReport.networkKey);
+				await securityManager.setKey(
+					securityClass,
+					keyReport.networkKey,
+				);
 				if (securityClass === SecurityClass.S0_Legacy) {
 					// TODO: This is awkward to have here
 					this.driver["_securityManager"] = new SecurityManager({
@@ -9833,5 +9527,11 @@ export class ZWaveController
 
 		// Notify applications that joining the network is complete
 		this.emit("network joined");
+	}
+
+	public destroy(): void {
+		this._nodes.forEach((node) => node.destroy());
+		this._nodes.clear();
+		this.removeAllListeners();
 	}
 }

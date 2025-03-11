@@ -1,5 +1,7 @@
+import { type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -9,34 +11,37 @@ import {
 	enumValuesToMetadataStates,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { CCParsingContext, GetValueDB } from "@zwave-js/host/safe";
 import { getEnumMemberName } from "@zwave-js/shared/safe";
 import {
 	CCAPI,
 	POLL_VALUE,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { ThermostatFanState, ThermostatFanStateCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import {
+	ThermostatFanState,
+	ThermostatFanStateCommand,
+} from "../lib/_Types.js";
 
-export const ThermostatFanStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Fan State"], {
+export const ThermostatFanStateCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Fan State"],
+	{
 		...V.staticPropertyWithName(
 			"fanState",
 			"state",
@@ -46,8 +51,8 @@ export const ThermostatFanStateCCValues = Object.freeze({
 				label: "Thermostat fan state",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Fan State"])
 export class ThermostatFanStateCCAPI extends CCAPI {
@@ -156,6 +161,7 @@ export interface ThermostatFanStateCCReportOptions {
 }
 
 @CCCommand(ThermostatFanStateCommand.Report)
+@ccValueProperty("state", ThermostatFanStateCCValues.fanState)
 export class ThermostatFanStateCCReport extends ThermostatFanStateCC {
 	public constructor(
 		options: WithAddress<ThermostatFanStateCCReportOptions>,
@@ -173,13 +179,12 @@ export class ThermostatFanStateCCReport extends ThermostatFanStateCC {
 		validatePayload(raw.payload.length == 1);
 		const state: ThermostatFanState = raw.payload[0] & 0b1111;
 
-		return new ThermostatFanStateCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			state,
 		});
 	}
 
-	@ccValue(ThermostatFanStateCCValues.fanState)
 	public readonly state: ThermostatFanState;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

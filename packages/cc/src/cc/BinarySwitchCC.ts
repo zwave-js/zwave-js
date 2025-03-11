@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
@@ -15,11 +17,7 @@ import {
 	parseMaybeBoolean,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -31,29 +29,30 @@ import {
 	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { BinarySwitchCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { BinarySwitchCommand } from "../lib/_Types.js";
 
-export const BinarySwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Binary Switch"], {
+export const BinarySwitchCCValues = V.defineCCValues(
+	CommandClasses["Binary Switch"],
+	{
 		...V.staticProperty(
 			"currentValue",
 			{
@@ -61,7 +60,6 @@ export const BinarySwitchCCValues = Object.freeze({
 				label: "Current value",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"targetValue",
 			{
@@ -70,7 +68,6 @@ export const BinarySwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"duration",
 			{
@@ -79,8 +76,8 @@ export const BinarySwitchCCValues = Object.freeze({
 			} as const,
 			{ minVersion: 2 } as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Binary Switch"])
 export class BinarySwitchCCAPI extends CCAPI {
@@ -329,7 +326,7 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 			duration = Duration.parseSet(raw.payload[1]);
 		}
 
-		return new BinarySwitchCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			targetValue,
 			duration,
@@ -339,8 +336,8 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 	public targetValue: boolean;
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.targetValue ? 0xff : 0x00,
 			(this.duration ?? Duration.default()).serializeSet(),
 		]);
@@ -380,6 +377,9 @@ export interface BinarySwitchCCReportOptions {
 }
 
 @CCCommand(BinarySwitchCommand.Report)
+@ccValueProperty("currentValue", BinarySwitchCCValues.currentValue)
+@ccValueProperty("targetValue", BinarySwitchCCValues.targetValue)
+@ccValueProperty("duration", BinarySwitchCCValues.duration)
 export class BinarySwitchCCReport extends BinarySwitchCC {
 	public constructor(
 		options: WithAddress<BinarySwitchCCReportOptions>,
@@ -408,7 +408,7 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 			duration = Duration.parseReport(raw.payload[2]);
 		}
 
-		return new BinarySwitchCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			currentValue,
 			targetValue,
@@ -416,23 +416,20 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 		});
 	}
 
-	@ccValue(BinarySwitchCCValues.currentValue)
 	public readonly currentValue: MaybeUnknown<boolean> | undefined;
 
-	@ccValue(BinarySwitchCCValues.targetValue)
 	public readonly targetValue: MaybeUnknown<boolean> | undefined;
 
-	@ccValue(BinarySwitchCCValues.duration)
 	public readonly duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			encodeMaybeBoolean(this.currentValue ?? UNKNOWN_STATE),
 		]);
 		if (this.targetValue !== undefined) {
-			this.payload = Buffer.concat([
+			this.payload = Bytes.concat([
 				this.payload,
-				Buffer.from([
+				Bytes.from([
 					encodeMaybeBoolean(this.targetValue),
 					(this.duration ?? Duration.default()).serializeReport(),
 				]),

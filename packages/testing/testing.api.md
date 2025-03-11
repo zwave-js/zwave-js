@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { CCEncodingContext } from '@zwave-js/host';
+import type { CCEncodingContext } from '@zwave-js/cc';
 import { CCId } from '@zwave-js/core';
 import type { ColorComponent } from '@zwave-js/cc';
 import { CommandClass } from '@zwave-js/cc';
@@ -18,7 +18,7 @@ import type { MaybeUnknown } from '@zwave-js/core';
 import { Message } from '@zwave-js/serial';
 import { MessageEncodingContext } from '@zwave-js/serial';
 import { MessageParsingContext } from '@zwave-js/serial';
-import type { MockPortBinding } from '@zwave-js/serial/mock';
+import { MockPort } from '@zwave-js/serial/mock';
 import { NodeProtocolInfoAndDeviceClass } from '@zwave-js/core';
 import { SecurityManagers } from '@zwave-js/core';
 import type { SwitchType } from '@zwave-js/cc';
@@ -28,6 +28,7 @@ import type { UserIDStatus } from '@zwave-js/cc';
 import type { WindowCoveringParameter } from '@zwave-js/cc';
 import { ZWaveApiVersion } from '@zwave-js/core/safe';
 import { ZWaveLibraryTypes } from '@zwave-js/core/safe';
+import { ZWaveSerialStream } from '@zwave-js/serial';
 
 // Warning: (ae-missing-release-tag) "BinarySensorCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -115,7 +116,7 @@ export function createMockZWaveAckFrame(options?: Partial<Omit<MockZWaveAckFrame
 // Warning: (ae-missing-release-tag) "createMockZWaveRequestFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function createMockZWaveRequestFrame(payload: CommandClass | (() => CommandClass), options?: Partial<Omit<MockZWaveRequestFrame, "direction" | "payload">>): LazyMockZWaveRequestFrame;
+export function createMockZWaveRequestFrame(payload: CommandClass | (() => Promise<CommandClass>), options?: Partial<Omit<MockZWaveRequestFrame, "direction" | "payload">>): LazyMockZWaveRequestFrame;
 
 // Warning: (ae-missing-release-tag) "EnergyProductionCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -142,7 +143,11 @@ export interface EnergyProductionCCCapabilities {
     };
 }
 
-// Warning: (ae-forgotten-export) The symbol "MockEndpointCapabilities" needs to be exported by the entry point index.d.ts
+// Warning: (ae-missing-release-tag) "getDefaultMockControllerCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getDefaultMockControllerCapabilities(): MockControllerCapabilities;
+
 // Warning: (ae-missing-release-tag) "getDefaultMockEndpointCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -151,7 +156,6 @@ export function getDefaultMockEndpointCapabilities(nodeCaps: {
     specificDeviceClass: number;
 }): MockEndpointCapabilities;
 
-// Warning: (ae-forgotten-export) The symbol "MockNodeCapabilities" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "getDefaultMockNodeCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -172,7 +176,7 @@ export type LazyMockZWaveFrame = LazyMockZWaveRequestFrame | MockZWaveAckFrame;
 // @public (undocumented)
 export interface LazyMockZWaveRequestFrame {
     ackRequested: boolean;
-    payload: CommandClass | (() => CommandClass);
+    payload: CommandClass | (() => Promise<CommandClass>);
     repeaters: number[];
     // (undocumented)
     type: MockZWaveFrameType.Request;
@@ -224,8 +228,6 @@ export class MockController {
     }): void;
     autoAckHostMessages: boolean;
     autoAckNodeFrames: boolean;
-    // Warning: (ae-forgotten-export) The symbol "MockControllerCapabilities" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     readonly capabilities: MockControllerCapabilities;
     clearReceivedHostMessages(): void;
@@ -251,6 +253,8 @@ export class MockController {
     // (undocumented)
     homeId: number;
     // (undocumented)
+    readonly mockPort: MockPort;
+    // (undocumented)
     get nodes(): ReadonlyMap<number, MockNode>;
     onNodeFrame(node: MockNode, frame: MockZWaveFrame): Promise<void>;
     // (undocumented)
@@ -264,10 +268,10 @@ export class MockController {
     // (undocumented)
     securityManagers: SecurityManagers;
     sendMessageToHost(msg: Message, fromNode?: MockNode): Promise<void>;
-    sendToHost(data: Buffer): Promise<void>;
+    sendToHost(data: Uint8Array): Promise<void>;
     sendToNode(node: MockNode, frame: LazyMockZWaveFrame): Promise<MockZWaveAckFrame | undefined>;
     // (undocumented)
-    readonly serial: MockPortBinding;
+    readonly serial: ZWaveSerialStream;
     readonly state: Map<string, unknown>;
 }
 
@@ -275,8 +279,56 @@ export class MockController {
 //
 // @public (undocumented)
 export interface MockControllerBehavior {
+    onHostData?: (controller: MockController, data: Uint8Array) => Promise<boolean | undefined> | boolean | undefined;
     onHostMessage?: (controller: MockController, msg: Message) => Promise<boolean | undefined> | boolean | undefined;
     onNodeFrame?: (controller: MockController, node: MockNode, frame: MockZWaveFrame) => Promise<boolean | undefined> | boolean | undefined;
+}
+
+// Warning: (ae-missing-release-tag) "MockControllerCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MockControllerCapabilities {
+    // (undocumented)
+    controllerType: ZWaveLibraryTypes;
+    // (undocumented)
+    firmwareVersion: string;
+    // (undocumented)
+    isSecondary: boolean;
+    // (undocumented)
+    isSISPresent: boolean;
+    // (undocumented)
+    isStaticUpdateController: boolean;
+    // (undocumented)
+    isUsingHomeIdFromOtherNetwork: boolean;
+    // (undocumented)
+    libraryVersion: string;
+    // (undocumented)
+    manufacturerId: number;
+    // (undocumented)
+    noNodesIncluded: boolean;
+    // (undocumented)
+    productId: number;
+    // (undocumented)
+    productType: number;
+    // (undocumented)
+    sucNodeId: number;
+    // (undocumented)
+    supportedFunctionTypes: FunctionType[];
+    // (undocumented)
+    supportsLongRange: boolean;
+    // (undocumented)
+    supportsTimers: boolean;
+    // (undocumented)
+    wasRealPrimary: boolean;
+    // (undocumented)
+    watchdogEnabled: boolean;
+    // (undocumented)
+    zwaveApiVersion: ZWaveApiVersion;
+    // (undocumented)
+    zwaveChipType?: string | {
+        type: number;
+        version: number;
+    };
 }
 
 // Warning: (ae-missing-release-tag) "MockControllerOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -288,9 +340,11 @@ export interface MockControllerOptions {
     // (undocumented)
     homeId?: number;
     // (undocumented)
+    mockPort: MockPort;
+    // (undocumented)
     ownNodeId?: number;
     // (undocumented)
-    serial: MockPortBinding;
+    serial: ZWaveSerialStream;
 }
 
 // Warning: (ae-missing-release-tag) "MockEndpoint" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -308,6 +362,16 @@ export class MockEndpoint {
     // (undocumented)
     readonly node: MockNode;
     removeCC(cc: CommandClasses): void;
+}
+
+// Warning: (ae-missing-release-tag) "MockEndpointCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MockEndpointCapabilities {
+    // (undocumented)
+    genericDeviceClass: number;
+    // (undocumented)
+    specificDeviceClass: number;
 }
 
 // Warning: (ae-missing-release-tag) "MockEndpointOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -377,6 +441,21 @@ export interface MockNodeBehavior {
     handleCC?: (controller: MockController, self: MockNode, receivedCC: CommandClass) => Promise<MockNodeResponse | undefined> | MockNodeResponse | undefined;
     transformIncomingCC?: (controller: MockController, self: MockNode, cc: CommandClass) => Promise<CommandClass> | CommandClass;
     transformResponse?: (controller: MockController, self: MockNode, receivedCC: CommandClass, response: MockNodeResponse) => Promise<MockNodeResponse> | MockNodeResponse;
+}
+
+// Warning: (ae-missing-release-tag) "MockNodeCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MockNodeCapabilities extends NodeProtocolInfoAndDeviceClass {
+    // (undocumented)
+    firmwareVersion: string;
+    // (undocumented)
+    manufacturerId: number;
+    // (undocumented)
+    productId: number;
+    // (undocumented)
+    productType: number;
+    txDelay: number;
 }
 
 // Warning: (ae-missing-release-tag) "MockNodeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -540,7 +619,7 @@ export interface ThermostatSetpointCCCapabilities {
 // Warning: (ae-missing-release-tag) "unlazyMockZWaveFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function unlazyMockZWaveFrame(frame: LazyMockZWaveFrame): MockZWaveFrame;
+export function unlazyMockZWaveFrame(frame: LazyMockZWaveFrame): Promise<MockZWaveFrame>;
 
 // Warning: (ae-missing-release-tag) "UserCodeCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -572,20 +651,22 @@ export interface WindowCoveringCCCapabilities {
 
 // Warnings were encountered during analysis:
 //
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/ColorSwitchCC.ts:480:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ColorSwitchCC.ts:471:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
 //   Type 'string | undefined' is not assignable to type 'string | number | symbol'.
 //     Type 'undefined' is not assignable to type 'string | number | symbol'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1283:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1276:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
 //   Type 'string' is not assignable to type 'number'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1290:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1283:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
 //   Type 'string' is not assignable to type 'number'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1414:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1407:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
 //   Type 'string' is not assignable to type 'number'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/Security2CC.ts:450:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/Security2CC.ts:458:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/Security2CC.ts:1655:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/Security2CC.ts:1658:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
-// /home/dominic/Repositories/node-zwave-js/packages/cc/src/cc/Security2CC.ts:1808:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:549:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:557:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1709:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1712:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1862:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:69:17 - (TS2345) Argument of type 'LogFormat | undefined' is not assignable to parameter of type 'LogFormat'.
+//   Type 'undefined' is not assignable to type 'LogFormat'.
 
 // (No @packageDocumentation comment for this package)
 

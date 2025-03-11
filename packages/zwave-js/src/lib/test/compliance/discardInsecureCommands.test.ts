@@ -16,9 +16,9 @@ import {
 	type MockNodeBehavior,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { setTimeout as wait } from "node:timers/promises";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"Security S2: Completely discard commands that should have been encrypted, but are not",
@@ -30,17 +30,17 @@ integrationTest(
 
 		customSetup: async (driver, controller, mockNode) => {
 			// Create a security manager for the node
-			const smNode = new SecurityManager2();
+			const smNode = await SecurityManager2.create();
 			// Copy keys from the driver
-			smNode.setKey(
+			await smNode.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			smNode.setKey(
+			await smNode.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			smNode.setKey(
+			await smNode.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
@@ -49,17 +49,17 @@ integrationTest(
 				SecurityClass.S2_Unauthenticated;
 
 			// Create a security manager for the controller
-			const smCtrlr = new SecurityManager2();
+			const smCtrlr = await SecurityManager2.create();
 			// Copy keys from the driver
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
@@ -70,9 +70,9 @@ integrationTest(
 
 			// Respond to Nonce Get
 			const respondToNonceGet: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
+				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof Security2CCNonceGet) {
-						const nonce = smNode.generateNonce(
+						const nonce = await smNode.generateNonce(
 							controller.ownNodeId,
 						);
 						const cc = new Security2CCNonceReport({
@@ -89,7 +89,7 @@ integrationTest(
 
 			// Handle decode errors
 			const handleInvalidCC: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
+				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof InvalidCC) {
 						if (
 							receivedCC.reason
@@ -97,7 +97,7 @@ integrationTest(
 							|| receivedCC.reason
 								=== ZWaveErrorCodes.Security2CC_NoSPAN
 						) {
-							const nonce = smNode.generateNonce(
+							const nonce = await smNode.generateNonce(
 								controller.ownNodeId,
 							);
 							const cc = new Security2CCNonceReport({
@@ -141,7 +141,7 @@ integrationTest(
 			await wait(100);
 
 			let currentValue = node.getValue(BasicCCValues.currentValue.id);
-			t.is(currentValue, 99);
+			t.expect(currentValue).toBe(99);
 
 			// Then send an unencypted one that should be discarded
 			nodeToHost = new BasicCCReport({
@@ -159,7 +159,7 @@ integrationTest(
 			await wait(100);
 
 			currentValue = node.getValue(BasicCCValues.currentValue.id);
-			t.is(currentValue, 99); // unchanged
+			t.expect(currentValue).toBe(99); // unchanged
 		},
 	},
 );

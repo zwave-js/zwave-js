@@ -1,19 +1,19 @@
+import { type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type MaybeNotKnown,
 	TransmitOptions,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import { type CCParsingContext } from "@zwave-js/host";
-import { CCAPI } from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { CCAPI } from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
 	commandClass,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { DeviceResetLocallyCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { DeviceResetLocallyCommand } from "../lib/_Types.js";
 
 // @noInterview: There is no interview procedure
 
@@ -79,7 +79,7 @@ export class DeviceResetLocallyCCNotification extends DeviceResetLocallyCC {
 		validatePayload(raw.payload.length === 0);
 		// The driver ensures before handling it that it is only received from the root device
 
-		return new DeviceResetLocallyCCNotification({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 		});
 	}

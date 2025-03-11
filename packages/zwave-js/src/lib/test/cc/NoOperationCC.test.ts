@@ -1,29 +1,32 @@
 import { NoOperationCC } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["No Operation"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the CC should serialize correctly", (t) => {
+test("the CC should serialize correctly", async (t) => {
 	const cc = new NoOperationCC({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([]), // No command!
+		Uint8Array.from([]), // No command!
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
 test("the CC should be deserialized correctly", (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([]), // No command!
+		Uint8Array.from([]), // No command!
 	);
-	t.notThrows(() =>
+	t.expect(() =>
 		new NoOperationCC({ nodeId: 2, data: ccData, context: {} as any })
-	);
+	).not.toThrow();
 });

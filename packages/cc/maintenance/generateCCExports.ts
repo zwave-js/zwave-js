@@ -9,8 +9,9 @@ import {
 	projectRoot,
 } from "@zwave-js/maintenance";
 import { compareStrings } from "@zwave-js/shared";
-import * as fs from "fs-extra";
-import * as path from "path";
+import esMain from "es-main";
+import fs from "node:fs/promises";
+import path from "node:path";
 import ts from "typescript";
 
 // Define where the CC index file is located
@@ -59,7 +60,7 @@ function findExports() {
 	for (const sourceFile of program.getSourceFiles()) {
 		const relativePath = path
 			.relative(projectRoot, sourceFile.fileName)
-			.replace(/\\/g, "/");
+			.replaceAll("\\", "/");
 
 		// Only look at files in this package
 		if (relativePath.startsWith("..")) continue;
@@ -72,6 +73,7 @@ function findExports() {
 		if (
 			relativePath.endsWith(".test.ts")
 			|| relativePath.endsWith("index.ts")
+			|| relativePath.includes(".generated.")
 		) {
 			continue;
 		}
@@ -178,9 +180,9 @@ export async function generateCCExports(): Promise<void> {
 		const relativePath = path
 			.relative(ccIndexFile, filename)
 			// normalize to slashes
-			.replace(/\\/g, "/")
+			.replaceAll("\\", "/")
 			// TS imports may not end with ".ts"
-			.replace(/\.ts$/, "")
+			.replace(/\.ts$/, ".js")
 			// By passing the index file as "from", we get an erraneous "../" at the path start
 			.replace(/^\.\.\//, "./");
 		const typeExports = fileExports.filter((e) => e.typeOnly);
@@ -202,9 +204,9 @@ export async function generateCCExports(): Promise<void> {
 	}
 
 	// And write the file if it changed
-	const originalFileContent = (await fs.pathExists(ccIndexFile))
-		? await fs.readFile(ccIndexFile, "utf8")
-		: "";
+	const originalFileContent = await fs.readFile(ccIndexFile, "utf8").catch(
+		() => undefined,
+	);
 	fileContent = formatWithDprint(ccIndexFile, fileContent);
 	if (fileContent !== originalFileContent) {
 		console.log("CC index file changed");
@@ -212,4 +214,4 @@ export async function generateCCExports(): Promise<void> {
 	}
 }
 
-if (require.main === module) void generateCCExports();
+if (esMain(import.meta)) void generateCCExports();

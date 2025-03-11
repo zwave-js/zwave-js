@@ -1,4 +1,9 @@
 import {
+	ZWaveError,
+	ZWaveErrorCodes,
+	isZWaveError,
+} from "@zwave-js/core/error";
+import {
 	type CommandClasses,
 	ControllerCapabilityFlags,
 	MAX_NODES,
@@ -6,30 +11,41 @@ import {
 	type NodeProtocolInfo,
 	NodeType,
 	RFRegion,
-	ZWaveError,
-	ZWaveErrorCodes,
-	isZWaveError,
 	stripUndefined,
 } from "@zwave-js/core/safe";
-import { cloneDeep, num2hex, pick } from "@zwave-js/shared/safe";
+import {
+	Bytes,
+	buffer2hex,
+	cloneDeep,
+	num2hex,
+	pick,
+} from "@zwave-js/shared/safe";
 import { isObject } from "alcalzone-shared/typeguards";
-import semver from "semver";
-import { MAX_PROTOCOL_FILE_FORMAT, SUC_MAX_UPDATES } from "./consts";
-import { NVM3, type NVM3Meta } from "./lib/NVM3";
-import { NVM500 } from "./lib/NVM500";
+import type { SemVer } from "semver";
+import semverGte from "semver/functions/gte.js";
+import semverLt from "semver/functions/lt.js";
+import semverLte from "semver/functions/lte.js";
+import semverParse from "semver/functions/parse.js";
+import { MAX_PROTOCOL_FILE_FORMAT, SUC_MAX_UPDATES } from "./consts.js";
+import { NVM3, type NVM3Meta } from "./lib/NVM3.js";
+import { NVM500 } from "./lib/NVM500.js";
 import {
 	type Route,
 	type RouteCache,
 	getEmptyRoute,
-} from "./lib/common/routeCache";
-import { type SUCUpdateEntry } from "./lib/common/sucUpdateEntry";
-import { NVMMemoryIO } from "./lib/io/NVMMemoryIO";
-import { NVM3Adapter } from "./lib/nvm3/adapter";
+} from "./lib/common/routeCache.js";
+import { type SUCUpdateEntry } from "./lib/common/sucUpdateEntry.js";
+import { NVMMemoryIO } from "./lib/io/NVMMemoryIO.js";
+import { NVM3Adapter } from "./lib/nvm3/adapter.js";
 import {
 	ZWAVE_APPLICATION_NVM_SIZE,
 	ZWAVE_PROTOCOL_NVM_SIZE,
 	ZWAVE_SHARED_NVM_SIZE,
-} from "./lib/nvm3/consts";
+} from "./lib/nvm3/consts.js";
+import {
+	type ApplicationNameFile,
+	ApplicationNameFileID,
+} from "./lib/nvm3/files/ApplicationNameFile.js";
 import {
 	ApplicationCCsFile,
 	ApplicationCCsFileID,
@@ -84,22 +100,18 @@ import {
 	nodeIdToRouteCacheFileIDV0,
 	nodeIdToRouteCacheFileIDV1,
 	sucUpdateIndexToSUCUpdateEntriesFileIDV5,
-} from "./lib/nvm3/files";
-import {
-	type ApplicationNameFile,
-	ApplicationNameFileID,
-} from "./lib/nvm3/files/ApplicationNameFile";
-import type { NVM3Object } from "./lib/nvm3/object";
-import { dumpNVM, mapToObject } from "./lib/nvm3/utils";
-import { NVM500Adapter } from "./lib/nvm500/adapter";
-import { nvm500Impls } from "./lib/nvm500/impls";
-import { resolveLayout } from "./lib/nvm500/shared";
+} from "./lib/nvm3/files/index.js";
+import type { NVM3Object } from "./lib/nvm3/object.js";
+import { dumpNVM, mapToObject } from "./lib/nvm3/utils.js";
+import { NVM500Adapter } from "./lib/nvm500/adapter.js";
+import { nvm500Impls } from "./lib/nvm500/impls/index.js";
+import { resolveLayout } from "./lib/nvm500/shared.js";
 import {
 	type NVM500JSON,
 	type NVM500JSONController,
 	type NVM500JSONNode,
 	type NVM500Meta,
-} from "./nvm500/NVMParser";
+} from "./nvm500/NVMParser.js";
 
 export interface NVMJSON {
 	format: number; // protocol file format
@@ -554,7 +566,7 @@ export function nvmObjectsToJSON(
 	const controller: NVMJSONController = {
 		protocolVersion,
 		applicationVersion,
-		homeId: `0x${controllerInfoFile.homeId.toString("hex")}`,
+		homeId: buffer2hex(controllerInfoFile.homeId),
 		...pick(controllerInfoFile, controllerProps),
 		...pick(applicationTypeFile, [
 			"isListening",
@@ -664,7 +676,7 @@ function nvmJSONControllerToFileOptions(
 	ctrlr: NVMJSONController,
 ): ControllerInfoFileOptions {
 	const ret = {
-		homeId: Buffer.from(ctrlr.homeId.replace(/^0x/, ""), "hex"),
+		homeId: Bytes.from(ctrlr.homeId.replace(/^0x/, ""), "hex"),
 		nodeId: ctrlr.nodeId,
 		lastNodeId: ctrlr.lastNodeId,
 		staticControllerNodeId: ctrlr.staticControllerNodeId,
@@ -673,7 +685,7 @@ function nvmJSONControllerToFileOptions(
 		maxNodeId: ctrlr.maxNodeId,
 		reservedId: ctrlr.reservedId,
 		systemState: ctrlr.systemState,
-	} as ControllerInfoFileOptions;
+	} as unknown as ControllerInfoFileOptions;
 	if (ctrlr.sucAwarenessPushNeeded != undefined) {
 		// @ts-expect-error We're dealing with a conditional object here
 		// TS doesn't like that.
@@ -698,7 +710,7 @@ function nvmJSONControllerToFileOptions(
 
 /** Reads an NVM buffer of a 700+ series stick and returns its JSON representation */
 export async function nvmToJSON(
-	buffer: Buffer,
+	buffer: Uint8Array,
 	debugLogs: boolean = false,
 ): Promise<NVMJSONWithMeta> {
 	const io = new NVMMemoryIO(buffer);
@@ -900,7 +912,7 @@ export async function nvmToJSON(
 	const controller: NVMJSONController = {
 		protocolVersion,
 		applicationVersion,
-		homeId: `0x${controllerInfoFile.homeId.toString("hex")}`,
+		homeId: buffer2hex(controllerInfoFile.homeId),
 		...pick(controllerInfoFile, [
 			"nodeId",
 			"lastNodeId",
@@ -942,7 +954,9 @@ export async function nvmToJSON(
 			}
 			: {}),
 		sucUpdateEntries,
-		applicationData: applicationData?.toString("hex") ?? null,
+		applicationData:
+			(applicationData && Bytes.view(applicationData).toString("hex"))
+				?? null,
 		applicationName: applicationName ?? null,
 	};
 
@@ -979,7 +993,7 @@ export async function nvmToJSON(
 
 /** Reads an NVM buffer of a 500-series stick and returns its JSON representation */
 export async function nvm500ToJSON(
-	buffer: Buffer,
+	buffer: Uint8Array,
 ): Promise<Required<NVM500JSON>> {
 	const io = new NVMMemoryIO(buffer);
 	const nvm = new NVM500(io);
@@ -1084,7 +1098,7 @@ export async function nvm500ToJSON(
 		domain: "controller",
 		type: "learnedHomeId",
 	});
-	if (learnedHomeId?.equals(Buffer.alloc(4, 0))) {
+	if (learnedHomeId?.length === 4 && learnedHomeId.every((b) => b === 0)) {
 		learnedHomeId = undefined;
 	}
 
@@ -1141,7 +1155,7 @@ export async function nvm500ToJSON(
 	const systemState = await adapter.get({
 		domain: "controller",
 		type: "systemState",
-	}, true);
+	});
 
 	const watchdogStarted = await adapter.get({
 		domain: "controller",
@@ -1151,30 +1165,30 @@ export async function nvm500ToJSON(
 	const powerLevelNormal = await adapter.get({
 		domain: "controller",
 		type: "powerLevelNormal",
-	}, true);
+	});
 	const powerLevelLow = await adapter.get({
 		domain: "controller",
 		type: "powerLevelLow",
-	}, true);
+	});
 	const powerMode = await adapter.get({
 		domain: "controller",
 		type: "powerMode",
-	}, true);
+	});
 	const powerModeExtintEnable = await adapter.get({
 		domain: "controller",
 		type: "powerModeExtintEnable",
-	}, true);
+	});
 	const powerModeWutTimeout = await adapter.get({
 		domain: "controller",
 		type: "powerModeWutTimeout",
-	}, true);
+	});
 
 	const controller: NVM500JSONController = {
 		protocolVersion: info.nvmDescriptor.protocolVersion,
 		applicationVersion: info.nvmDescriptor.firmwareVersion,
-		ownHomeId: `0x${ownHomeId.toString("hex")}`,
+		ownHomeId: buffer2hex(ownHomeId),
 		learnedHomeId: learnedHomeId
-			? `0x${learnedHomeId.toString("hex")}`
+			? buffer2hex(learnedHomeId)
 			: null,
 		nodeId: ownNodeId,
 		lastNodeId,
@@ -1195,7 +1209,9 @@ export async function nvm500ToJSON(
 		},
 		preferredRepeaters,
 		commandClasses,
-		applicationData: applicationData?.toString("hex") ?? null,
+		applicationData:
+			(applicationData && Bytes.view(applicationData).toString("hex"))
+				?? null,
 	};
 
 	return {
@@ -1209,8 +1225,8 @@ export async function nvm500ToJSON(
 export async function jsonToNVM(
 	json: NVMJSON,
 	targetSDKVersion: string,
-): Promise<Buffer> {
-	const parsedVersion = semver.parse(targetSDKVersion);
+): Promise<Uint8Array> {
+	const parsedVersion = semverParse(targetSDKVersion);
 	if (!parsedVersion) {
 		throw new ZWaveError(
 			`Invalid SDK version: ${targetSDKVersion}`,
@@ -1223,7 +1239,7 @@ export async function jsonToNVM(
 	const nvmSize = sharedFileSystem
 		? ZWAVE_SHARED_NVM_SIZE
 		: (ZWAVE_APPLICATION_NVM_SIZE + ZWAVE_PROTOCOL_NVM_SIZE);
-	const ret = Buffer.allocUnsafe(nvmSize);
+	const ret = new Uint8Array(nvmSize);
 	const io = new NVMMemoryIO(ret);
 	const nvm3 = new NVM3(io);
 	await nvm3.erase(json.meta);
@@ -1234,38 +1250,38 @@ export async function jsonToNVM(
 	};
 
 	// Figure out which SDK version we are targeting
-	let targetApplicationVersion: semver.SemVer;
-	let targetProtocolVersion: semver.SemVer;
+	let targetApplicationVersion: SemVer;
+	let targetProtocolVersion: SemVer;
 	let targetProtocolFormat: number;
 
 	// We currently support application version migrations up to:
 	const HIGHEST_SUPPORTED_SDK_VERSION = "7.21.0";
 	// For all higher ones, set the highest version we support and let the controller handle the migration itself
-	if (semver.lte(targetSDKVersion, HIGHEST_SUPPORTED_SDK_VERSION)) {
-		targetApplicationVersion = semver.parse(targetSDKVersion)!;
+	if (semverLte(targetSDKVersion, HIGHEST_SUPPORTED_SDK_VERSION)) {
+		targetApplicationVersion = semverParse(targetSDKVersion)!;
 	} else {
-		targetApplicationVersion = semver.parse(HIGHEST_SUPPORTED_SDK_VERSION)!;
+		targetApplicationVersion = semverParse(HIGHEST_SUPPORTED_SDK_VERSION)!;
 	}
 
 	// The protocol version file only seems to be updated when the format of the protocol file system changes
 	// Once again, we simply set the highest version we support here and let the controller handle any potential migration
-	if (semver.gte(targetSDKVersion, "7.19.0")) {
-		targetProtocolVersion = semver.parse("7.19.0")!;
+	if (semverGte(targetSDKVersion, "7.19.0")) {
+		targetProtocolVersion = semverParse("7.19.0")!;
 		targetProtocolFormat = 5;
-	} else if (semver.gte(targetSDKVersion, "7.17.0")) {
-		targetProtocolVersion = semver.parse("7.17.0")!;
+	} else if (semverGte(targetSDKVersion, "7.17.0")) {
+		targetProtocolVersion = semverParse("7.17.0")!;
 		targetProtocolFormat = 4;
-	} else if (semver.gte(targetSDKVersion, "7.15.3")) {
-		targetProtocolVersion = semver.parse("7.15.3")!;
+	} else if (semverGte(targetSDKVersion, "7.15.3")) {
+		targetProtocolVersion = semverParse("7.15.3")!;
 		targetProtocolFormat = 3;
-	} else if (semver.gte(targetSDKVersion, "7.12.0")) {
-		targetProtocolVersion = semver.parse("7.12.0")!;
+	} else if (semverGte(targetSDKVersion, "7.12.0")) {
+		targetProtocolVersion = semverParse("7.12.0")!;
 		targetProtocolFormat = 2;
-	} else if (semver.gte(targetSDKVersion, "7.11.0")) {
-		targetProtocolVersion = semver.parse("7.11.0")!;
+	} else if (semverGte(targetSDKVersion, "7.11.0")) {
+		targetProtocolVersion = semverParse("7.11.0")!;
 		targetProtocolFormat = 1;
 	} else {
-		targetProtocolVersion = semver.parse("7.0.0")!;
+		targetProtocolVersion = semverParse("7.0.0")!;
 		targetProtocolFormat = 0;
 	}
 
@@ -1341,11 +1357,11 @@ export async function jsonToNVM(
 
 	// Make sure the RF config format matches the application version.
 	// Otherwise, the controller will ignore the file and not accept any changes to the RF config
-	if (semver.gte(targetSDKVersion, "7.15.3")) {
+	if (semverGte(targetSDKVersion, "7.15.3")) {
 		target.controller.rfConfig.enablePTI ??= 0;
 		target.controller.rfConfig.maxTXPower ??= 14.0;
 	}
-	if (semver.gte(targetSDKVersion, "7.21.0")) {
+	if (semverGte(targetSDKVersion, "7.21.0")) {
 		target.controller.rfConfig.nodeIdType ??= NodeIDType.Short;
 	}
 
@@ -1365,7 +1381,7 @@ export async function jsonToNVM(
 	if (target.controller.applicationData) {
 		await adapter.set(
 			{ domain: "controller", type: "applicationData" },
-			Buffer.from(target.controller.applicationData, "hex"),
+			Bytes.from(target.controller.applicationData, "hex"),
 		);
 	}
 
@@ -1505,7 +1521,7 @@ export async function jsonToNVM(
 export async function jsonToNVM500(
 	json: Required<NVM500JSON>,
 	protocolVersion: string,
-): Promise<Buffer> {
+): Promise<Uint8Array> {
 	// Try to find a matching implementation
 	const impl = nvm500Impls.find(
 		(p) =>
@@ -1523,7 +1539,7 @@ export async function jsonToNVM500(
 	const { layout, nvmSize } = resolveLayout(impl.layout);
 
 	// Erase the NVM and set some basic information
-	const ret = Buffer.allocUnsafe(nvmSize);
+	const ret = new Uint8Array(nvmSize);
 	const io = new NVMMemoryIO(ret);
 	const nvm = new NVM500(io);
 	await nvm.erase({
@@ -1550,12 +1566,12 @@ export async function jsonToNVM500(
 
 	await adapter.set(
 		{ domain: "controller", type: "homeId" },
-		Buffer.from(c.ownHomeId.replace(/^0x/, ""), "hex"),
+		Bytes.from(c.ownHomeId.replace(/^0x/, ""), "hex"),
 	);
 	await adapter.set(
 		{ domain: "controller", type: "learnedHomeId" },
 		c.learnedHomeId
-			? Buffer.from(c.learnedHomeId.replace(/^0x/, ""), "hex")
+			? Bytes.from(c.learnedHomeId.replace(/^0x/, ""), "hex")
 			: undefined,
 	);
 
@@ -1595,36 +1611,48 @@ export async function jsonToNVM500(
 		c.sucLastIndex,
 	);
 
-	await adapter.set(
-		{ domain: "controller", type: "systemState" },
-		c.systemState,
-	);
+	if (c.systemState != undefined) {
+		await adapter.set(
+			{ domain: "controller", type: "systemState" },
+			c.systemState,
+		);
+	}
 
 	await adapter.set(
 		{ domain: "controller", type: "watchdogStarted" },
 		c.watchdogStarted,
 	);
 
-	await adapter.set(
-		{ domain: "controller", type: "powerLevelNormal" },
-		c.rfConfig.powerLevelNormal,
-	);
-	await adapter.set(
-		{ domain: "controller", type: "powerLevelLow" },
-		c.rfConfig.powerLevelLow,
-	);
-	await adapter.set(
-		{ domain: "controller", type: "powerMode" },
-		c.rfConfig.powerMode,
-	);
-	await adapter.set(
-		{ domain: "controller", type: "powerModeExtintEnable" },
-		c.rfConfig.powerModeExtintEnable,
-	);
-	await adapter.set(
-		{ domain: "controller", type: "powerModeWutTimeout" },
-		c.rfConfig.powerModeWutTimeout,
-	);
+	if (c.rfConfig.powerLevelNormal != undefined) {
+		await adapter.set(
+			{ domain: "controller", type: "powerLevelNormal" },
+			c.rfConfig.powerLevelNormal,
+		);
+	}
+	if (c.rfConfig.powerLevelLow != undefined) {
+		await adapter.set(
+			{ domain: "controller", type: "powerLevelLow" },
+			c.rfConfig.powerLevelLow,
+		);
+	}
+	if (c.rfConfig.powerMode != undefined) {
+		await adapter.set(
+			{ domain: "controller", type: "powerMode" },
+			c.rfConfig.powerMode,
+		);
+	}
+	if (c.rfConfig.powerModeExtintEnable != undefined) {
+		await adapter.set(
+			{ domain: "controller", type: "powerModeExtintEnable" },
+			c.rfConfig.powerModeExtintEnable,
+		);
+	}
+	if (c.rfConfig.powerModeWutTimeout != undefined) {
+		await adapter.set(
+			{ domain: "controller", type: "powerModeWutTimeout" },
+			c.rfConfig.powerModeWutTimeout,
+		);
+	}
 
 	await adapter.set(
 		{ domain: "controller", type: "preferredRepeaters" },
@@ -1639,7 +1667,7 @@ export async function jsonToNVM500(
 	if (c.applicationData) {
 		await adapter.set(
 			{ domain: "controller", type: "applicationData" },
-			Buffer.from(c.applicationData, "hex"),
+			Bytes.from(c.applicationData, "hex"),
 		);
 	}
 
@@ -1730,7 +1758,7 @@ export function json500To700(
 
 	let applicationData: string | null = null;
 	if (source.controller.applicationData) {
-		let raw = Buffer.from(source.controller.applicationData, "hex");
+		let raw = Bytes.from(source.controller.applicationData, "hex");
 		// Find actual start and end of application data, ignoring zeroes
 		let start = 0;
 		while (start < raw.length && raw[start] === 0) {
@@ -1753,7 +1781,7 @@ export function json500To700(
 		applicationData = raw.toString("hex");
 	}
 
-	// https://github.com/zwave-js/node-zwave-js/issues/6055
+	// https://github.com/zwave-js/zwave-js/issues/6055
 	// On some controllers this byte can be 0xff (effectively not set)
 	let controllerConfiguration = source.controller.controllerConfiguration;
 	if (source.controller.controllerConfiguration === 0xff) {
@@ -1786,7 +1814,7 @@ export function json500To700(
 		}
 	}
 
-	// https://github.com/zwave-js/node-zwave-js/issues/6055
+	// https://github.com/zwave-js/zwave-js/issues/6055
 	// Some controllers have invalid information for the IDs
 	let maxNodeId = source.controller.maxNodeId;
 	if (maxNodeId === 0xff) maxNodeId = source.controller.lastNodeId;
@@ -1809,7 +1837,7 @@ export function json500To700(
 			sucUpdateEntries: source.controller.sucUpdateEntries,
 			maxNodeId,
 			reservedId,
-			systemState: source.controller.systemState,
+			systemState: source.controller.systemState ?? 0,
 			preferredRepeaters: source.controller.preferredRepeaters,
 
 			// RF config exists on both series but isn't compatible
@@ -1899,9 +1927,9 @@ export function json700To500(json: NVMJSON): NVM500JSON {
 
 /** Converts the given source NVM into a format that is compatible with the given target NVM */
 export async function migrateNVM(
-	sourceNVM: Buffer,
-	targetNVM: Buffer,
-): Promise<Buffer> {
+	sourceNVM: Uint8Array,
+	targetNVM: Uint8Array,
+): Promise<Uint8Array> {
 	let source: ParsedNVM;
 	let target: ParsedNVM;
 	let sourceProtocolFileFormat: number | undefined;
@@ -1995,15 +2023,15 @@ export async function migrateNVM(
 		// The 700 series firmware can automatically upgrade backups from a previous protocol version
 		// Not sure when that ability was added. To be on the safe side, allow it for 7.16+ which definitely supports it.
 		if (
-			semver.gte(targetProtocolVersion, "7.16.0")
-			&& semver.gte(targetProtocolVersion, sourceProtocolVersion)
+			semverGte(targetProtocolVersion, "7.16.0")
+			&& semverGte(targetProtocolVersion, sourceProtocolVersion)
 			// the application version is updated on every update, protocol version only when the format changes
 			// so this is a good indicator if the NVMs are in a compatible state
-			&& semver.gte(targetApplicationVersion, targetProtocolVersion)
-			&& semver.gte(sourceApplicationVersion, sourceProtocolVersion)
+			&& semverGte(targetApplicationVersion, targetProtocolVersion)
+			&& semverGte(sourceApplicationVersion, sourceProtocolVersion)
 			// avoid preserving broken 255.x versions which appear on some controllers
-			&& semver.lt(sourceApplicationVersion, "255.0.0")
-			&& semver.lt(targetApplicationVersion, "255.0.0")
+			&& semverLt(sourceApplicationVersion, "255.0.0")
+			&& semverLt(targetApplicationVersion, "255.0.0")
 			// and avoid restoring a backup with a shifted 800 series application version file
 			&& (!hasShiftedAppVersion800File(source.json))
 		) {
@@ -2033,7 +2061,7 @@ export async function migrateNVM(
 	// Some 700 series NVMs have a strange 255.x application version - fix that first
 	if (
 		target.type === 700
-		&& semver.gte(target.json.controller.applicationVersion, "255.0.0")
+		&& semverGte(target.json.controller.applicationVersion, "255.0.0")
 	) {
 		// replace both with the protocol version
 		target.json.controller.applicationVersion =
@@ -2093,11 +2121,11 @@ function hasShiftedAppVersion800File(
 	// We can only detect this on 800 series controllers with the shared FS
 	if (!json.meta.sharedFileSystem) return false;
 
-	const protocolVersion = semver.parse(json.controller.protocolVersion);
+	const protocolVersion = semverParse(json.controller.protocolVersion);
 	// Invalid protocol version, cannot fix anything
 	if (!protocolVersion) return false;
 
-	const applicationVersion = semver.parse(json.controller.applicationVersion);
+	const applicationVersion = semverParse(json.controller.applicationVersion);
 	// Invalid application version, cannot fix anything
 	if (!applicationVersion) return false;
 

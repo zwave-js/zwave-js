@@ -1,4 +1,5 @@
-import type { NVM3Object } from "../object";
+import { Bytes } from "@zwave-js/shared/safe";
+import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -6,7 +7,7 @@ import {
 	gotDeserializationOptions,
 	nvmFileID,
 	nvmSection,
-} from "./NVMFile";
+} from "./NVMFile.js";
 
 export interface ApplicationTypeFileOptions extends NVMFileCreationOptions {
 	isListening: boolean;
@@ -42,8 +43,8 @@ export class ApplicationTypeFile extends NVMFile {
 	public genericDeviceClass: number;
 	public specificDeviceClass: number;
 
-	public serialize(): NVM3Object & { data: Buffer } {
-		this.payload = Buffer.from([
+	public serialize(): NVM3Object & { data: Bytes } {
+		this.payload = Bytes.from([
 			(this.isListening ? 0b1 : 0)
 			| (this.optionalFunctionality ? 0b10 : 0),
 			this.genericDeviceClass,

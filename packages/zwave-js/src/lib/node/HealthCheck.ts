@@ -1,12 +1,11 @@
 import { Powerlevel } from "@zwave-js/cc/safe";
 import { getEnumMemberName } from "@zwave-js/shared/safe";
-import { padStart } from "alcalzone-shared/strings";
 import type {
 	LifelineHealthCheckResult,
 	LifelineHealthCheckSummary,
 	RouteHealthCheckResult,
 	RouteHealthCheckSummary,
-} from "./_Types";
+} from "./_Types.js";
 
 export const healthCheckTestFrameCount = 10;
 
@@ -29,8 +28,7 @@ export function formatLifelineHealthCheckRound(
 ): string {
 	const ret = [
 		`· round ${
-			padStart(
-				round.toString(),
+			round.toString().padStart(
 				Math.floor(Math.log10(numRounds) + 1),
 				" ",
 			)
@@ -101,8 +99,7 @@ export function formatRouteHealthCheckRound(
 ): string {
 	const ret = [
 		`· round ${
-			padStart(
-				round.toString(),
+			round.toString().padStart(
 				Math.floor(Math.log10(numRounds) + 1),
 				" ",
 			)

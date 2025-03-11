@@ -1,4 +1,3 @@
-import type { JsonlDB } from "@alcalzone/jsonl-db";
 import { type AssociationAddress } from "@zwave-js/cc";
 import {
 	type CommandClasses,
@@ -11,16 +10,20 @@ import {
 	dskToString,
 	securityClassOrder,
 } from "@zwave-js/core";
-import type { FileSystem } from "@zwave-js/host";
-import { getEnumMemberName, num2hex, pickDeep } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName, num2hex, pickDeep } from "@zwave-js/shared";
+import type {
+	Database,
+	ReadFile,
+	ReadFileSystemInfo,
+} from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import path from "node:path";
+import path from "pathe";
 import {
 	ProvisioningEntryStatus,
 	type SmartStartProvisioningEntry,
-} from "../controller/Inclusion";
-import { DeviceClass } from "../node/DeviceClass";
-import { InterviewStage } from "../node/_Types";
+} from "../controller/Inclusion.js";
+import { DeviceClass } from "../node/DeviceClass.js";
+import { InterviewStage } from "../node/_Types.js";
 
 /**
  * Defines the keys that are used to store certain properties in the network cache.
@@ -362,10 +365,10 @@ function tryParseAssociationAddress(
 
 function tryParseBuffer(
 	value: unknown,
-): Buffer | undefined {
+): Uint8Array | undefined {
 	if (typeof value === "string") {
 		try {
-			return Buffer.from(value, "hex");
+			return Bytes.from(value, "hex");
 		} catch {
 			// ignore
 		}
@@ -528,7 +531,7 @@ export function serializeNetworkCacheValue(
 			return ret;
 		}
 		case "dsk": {
-			return dskToString(value as Buffer);
+			return dskToString(value as Uint8Array);
 		}
 		case "lastSeen": {
 			// Dates are stored as timestamps
@@ -536,13 +539,13 @@ export function serializeNetworkCacheValue(
 		}
 
 		case "deviceConfigHash": {
-			return (value as Buffer).toString("hex");
+			return Bytes.view(value as Uint8Array).toString("hex");
 		}
 	}
 
 	// Other dynamic properties
 	if (key.startsWith("controller.securityKeys.")) {
-		return (value as Buffer).toString("hex");
+		return Bytes.view(value as Uint8Array).toString("hex");
 	}
 
 	// Other fixed properties
@@ -583,7 +586,7 @@ export function serializeNetworkCacheValue(
 			return ret;
 		}
 		case cacheKeys.controller.privateKey: {
-			return (value as Buffer).toString("hex");
+			return Bytes.view(value as Uint8Array).toString("hex");
 		}
 	}
 
@@ -621,14 +624,22 @@ const legacyPaths = {
 
 export async function migrateLegacyNetworkCache(
 	homeId: number,
-	networkCache: JsonlDB,
-	valueDB: JsonlDB,
-	storageDriver: FileSystem,
+	networkCache: Database<any>,
+	valueDB: Database<unknown>,
+	fs: ReadFileSystemInfo & ReadFile,
 	cacheDir: string,
 ): Promise<void> {
 	const cacheFile = path.join(cacheDir, `${homeId.toString(16)}.json`);
-	if (!(await storageDriver.pathExists(cacheFile))) return;
-	const legacy = JSON.parse(await storageDriver.readFile(cacheFile, "utf8"));
+	try {
+		const stat = await fs.stat(cacheFile);
+		if (!stat.isFile()) return;
+	} catch {
+		// The file does not exist
+		return;
+	}
+
+	const legacyContents = await fs.readFile(cacheFile);
+	const legacy = JSON.parse(Bytes.view(legacyContents).toString("utf8"));
 
 	const jsonl = networkCache;
 	function tryMigrate(

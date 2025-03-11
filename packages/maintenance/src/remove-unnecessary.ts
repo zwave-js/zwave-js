@@ -1,15 +1,21 @@
 // Script to remove unnecessary min/maxValue from config files
 
+import { fs } from "@zwave-js/core/bindings/fs/node";
 import { enumFilesRecursive } from "@zwave-js/shared";
 import * as JSONC from "comment-json";
-import * as fs from "fs-extra";
+import esMain from "es-main";
+import fsp from "node:fs/promises";
 import path from "node:path";
-import { formatWithDprint } from "./dprint";
+import { fileURLToPath } from "node:url";
+import { formatWithDprint } from "./dprint.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
 	const devicesDir = path.join(__dirname, "../../config/config/devices");
 
 	const configFiles = await enumFilesRecursive(
+		fs,
 		devicesDir,
 		(file) =>
 			file.endsWith(".json")
@@ -20,7 +26,7 @@ async function main() {
 
 	for (const filename of configFiles) {
 		const config = JSONC.parse(
-			await fs.readFile(filename, "utf8"),
+			await fsp.readFile(filename, "utf8"),
 		) as JSONC.CommentObject;
 
 		if (!config.paramInformation) continue;
@@ -43,10 +49,10 @@ async function main() {
 
 		let output = JSONC.stringify(config, null, "\t");
 		output = formatWithDprint(filename, output);
-		await fs.writeFile(filename, output, "utf8");
+		await fsp.writeFile(filename, output, "utf8");
 	}
 }
 
-if (require.main === module) {
+if (esMain(import.meta)) {
 	void main();
 }

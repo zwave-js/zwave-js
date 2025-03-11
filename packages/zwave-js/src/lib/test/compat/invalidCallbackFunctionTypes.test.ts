@@ -18,10 +18,10 @@ import {
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
-} from "../../controller/MockControllerState";
-import { integrationTest } from "../integrationTestSuite";
+} from "../../controller/MockControllerState.js";
+import { integrationTest } from "../integrationTestSuite.js";
 
-// Repro for https://github.com/zwave-js/node-zwave-js/issues/6363
+// Repro for https://github.com/zwave-js/zwave-js/issues/6363
 
 integrationTest(
 	"Invalid callback function types don't trigger the unresponsive controller detection",
@@ -222,12 +222,12 @@ integrationTest(
 			let result = await driver.controller.assignSUCReturnRoutes(
 				node.id,
 			);
-			t.false(result);
+			t.expect(result).toBe(false);
 
 			result = await driver.controller.deleteSUCReturnRoutes(
 				node.id,
 			);
-			t.false(result);
+			t.expect(result).toBe(false);
 		},
 	},
 );

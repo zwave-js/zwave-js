@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -14,37 +16,33 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { type EndpointId, type MaybeNotKnown } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host";
 import {
 	type AllOrNone,
+	Bytes,
 	formatDate,
 	formatTime,
 	getEnumMemberName,
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ScheduleEntryLockCommand,
 	type ScheduleEntryLockDailyRepeatingSchedule,
@@ -55,20 +53,18 @@ import {
 	ScheduleEntryLockWeekday,
 	type ScheduleEntryLockYearDaySchedule,
 	type Timezone,
-} from "../lib/_Types";
-import { encodeTimezone, parseTimezone } from "../lib/serializers";
-import { UserCodeCC } from "./UserCodeCC";
+} from "../lib/_Types.js";
+import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import { UserCodeCC } from "./UserCodeCC.js";
 
-export const ScheduleEntryLockCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Schedule Entry Lock"], {
+export const ScheduleEntryLockCCValues = V.defineCCValues(
+	CommandClasses["Schedule Entry Lock"],
+	{
 		...V.staticProperty("numWeekDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numYearDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numDailyRepeatingSlots", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Schedule Entry Lock"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"userEnabled",
 			"userEnabled",
@@ -78,7 +74,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"scheduleKind",
 			"scheduleKind",
@@ -88,7 +83,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
 			"schedule",
@@ -96,22 +90,14 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 				scheduleKind: ScheduleEntryLockScheduleKind,
 				userId: number,
 				slotId: number,
-			) => toPropertyKey(scheduleKind, userId, slotId),
+			) => (scheduleKind << 16) | (userId << 8) | slotId,
 			({ property, propertyKey }) =>
 				property === "schedule" && typeof propertyKey === "number",
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
-
-function toPropertyKey(
-	scheduleKind: ScheduleEntryLockScheduleKind,
-	userId: number,
-	slotId: number,
-): number {
-	return (scheduleKind << 16) | (userId << 8) | slotId;
-}
+	},
+);
 
 /** Caches information about a schedule */
 function persistSchedule(
@@ -946,7 +932,7 @@ export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
 		const userId = raw.payload[0];
 		const enabled: boolean = raw.payload[1] === 0x01;
 
-		return new ScheduleEntryLockCCEnableSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userId,
 			enabled,
@@ -956,8 +942,8 @@ export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
 	public userId: number;
 	public enabled: boolean;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.userId, this.enabled ? 0x01 : 0x00]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.enabled ? 0x01 : 0x00]);
 		return super.serialize(ctx);
 	}
 
@@ -994,7 +980,7 @@ export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
 		validatePayload(raw.payload.length >= 1);
 		const enabled: boolean = raw.payload[0] === 0x01;
 
-		return new ScheduleEntryLockCCEnableAllSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			enabled,
 		});
@@ -1002,8 +988,8 @@ export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
 
 	public enabled: boolean;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.enabled ? 0x01 : 0x00]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.enabled ? 0x01 : 0x00]);
 		return super.serialize(ctx);
 	}
 
@@ -1025,6 +1011,12 @@ export interface ScheduleEntryLockCCSupportedReportOptions {
 }
 
 @CCCommand(ScheduleEntryLockCommand.SupportedReport)
+@ccValueProperty("numWeekDaySlots", ScheduleEntryLockCCValues.numWeekDaySlots)
+@ccValueProperty("numYearDaySlots", ScheduleEntryLockCCValues.numYearDaySlots)
+@ccValueProperty(
+	"numDailyRepeatingSlots",
+	ScheduleEntryLockCCValues.numDailyRepeatingSlots,
+)
 export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 	public constructor(
 		options: WithAddress<ScheduleEntryLockCCSupportedReportOptions>,
@@ -1047,7 +1039,7 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 			numDailyRepeatingSlots = raw.payload[2];
 		}
 
-		return new ScheduleEntryLockCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			numWeekDaySlots,
 			numYearDaySlots,
@@ -1055,15 +1047,14 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 		});
 	}
 
-	@ccValue(ScheduleEntryLockCCValues.numWeekDaySlots)
 	public numWeekDaySlots: number;
-	@ccValue(ScheduleEntryLockCCValues.numYearDaySlots)
+
 	public numYearDaySlots: number;
-	@ccValue(ScheduleEntryLockCCValues.numDailyRepeatingSlots)
+
 	public numDailyRepeatingSlots: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.numWeekDaySlots,
 			this.numYearDaySlots,
 			this.numDailyRepeatingSlots ?? 0,
@@ -1137,7 +1128,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 		const slotId = raw.payload[2];
 
 		if (action !== ScheduleEntryLockSetAction.Set) {
-			return new ScheduleEntryLockCCWeekDayScheduleSet({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				action,
 				userId,
@@ -1152,7 +1143,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 		const stopHour = raw.payload[6];
 		const stopMinute = raw.payload[7];
 
-		return new ScheduleEntryLockCCWeekDayScheduleSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			action,
 			userId,
@@ -1176,8 +1167,8 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.action,
 			this.userId,
 			this.slotId,
@@ -1303,7 +1294,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 			};
 		}
 
-		return new ScheduleEntryLockCCWeekDayScheduleReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			...ccOptions,
 		});
@@ -1340,8 +1331,8 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.userId,
 			this.slotId,
 			this.weekday ?? 0xff,
@@ -1409,7 +1400,7 @@ export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
 		const userId = raw.payload[0];
 		const slotId = raw.payload[1];
 
-		return new ScheduleEntryLockCCWeekDayScheduleGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userId,
 			slotId,
@@ -1419,8 +1410,8 @@ export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
 	public userId: number;
 	public slotId: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
 		return super.serialize(ctx);
 	}
 
@@ -1486,7 +1477,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 		const slotId = raw.payload[2];
 
 		if (action !== ScheduleEntryLockSetAction.Set) {
-			return new ScheduleEntryLockCCYearDayScheduleSet({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				action,
 				userId,
@@ -1506,7 +1497,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 		const stopHour = raw.payload[11];
 		const stopMinute = raw.payload[12];
 
-		return new ScheduleEntryLockCCYearDayScheduleSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			action,
 			userId,
@@ -1540,8 +1531,8 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.action,
 			this.userId,
 			this.slotId,
@@ -1709,7 +1700,7 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 			};
 		}
 
-		return new ScheduleEntryLockCCYearDayScheduleReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			...ccOptions,
 		});
@@ -1756,8 +1747,8 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.userId,
 			this.slotId,
 			this.startYear ?? 0xff,
@@ -1833,7 +1824,7 @@ export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
 		const userId = raw.payload[0];
 		const slotId = raw.payload[1];
 
-		return new ScheduleEntryLockCCYearDayScheduleGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userId,
 			slotId,
@@ -1843,8 +1834,8 @@ export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
 	public userId: number;
 	public slotId: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
 		return super.serialize(ctx);
 	}
 
@@ -1882,7 +1873,7 @@ export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
 	): ScheduleEntryLockCCTimeOffsetSet {
 		const { standardOffset, dstOffset } = parseTimezone(raw.payload);
 
-		return new ScheduleEntryLockCCTimeOffsetSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			standardOffset,
 			dstOffset,
@@ -1892,7 +1883,7 @@ export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
 	public standardOffset: number;
 	public dstOffset: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeTimezone({
 			standardOffset: this.standardOffset,
 			dstOffset: this.dstOffset,
@@ -1933,7 +1924,7 @@ export class ScheduleEntryLockCCTimeOffsetReport extends ScheduleEntryLockCC {
 	): ScheduleEntryLockCCTimeOffsetReport {
 		const { standardOffset, dstOffset } = parseTimezone(raw.payload);
 
-		return new ScheduleEntryLockCCTimeOffsetReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			standardOffset,
 			dstOffset,
@@ -1943,7 +1934,7 @@ export class ScheduleEntryLockCCTimeOffsetReport extends ScheduleEntryLockCC {
 	public standardOffset: number;
 	public dstOffset: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeTimezone({
 			standardOffset: this.standardOffset,
 			dstOffset: this.dstOffset,
@@ -2016,7 +2007,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 		const slotId = raw.payload[2];
 
 		if (action !== ScheduleEntryLockSetAction.Set) {
-			return new ScheduleEntryLockCCDailyRepeatingScheduleSet({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				action,
 				userId,
@@ -2034,7 +2025,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 		const durationHour = raw.payload[6];
 		const durationMinute = raw.payload[7];
 
-		return new ScheduleEntryLockCCDailyRepeatingScheduleSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			action,
 			userId,
@@ -2058,17 +2049,17 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 	public durationHour?: number;
 	public durationMinute?: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.action, this.userId, this.slotId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.action, this.userId, this.slotId]);
 		if (this.action === ScheduleEntryLockSetAction.Set) {
-			this.payload = Buffer.concat([
+			this.payload = Bytes.concat([
 				this.payload,
 				encodeBitMask(
 					this.weekdays!,
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Buffer.from([
+				Bytes.from([
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
@@ -2077,7 +2068,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 			]);
 		} else {
 			// Not sure if this is correct
-			this.payload = Buffer.concat([this.payload, Buffer.alloc(5, 0xff)]);
+			this.payload = Bytes.concat([this.payload, Bytes.alloc(5, 0xff)]);
 		}
 
 		return super.serialize(ctx);
@@ -2159,7 +2150,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 			const durationHour = raw.payload[5];
 			const durationMinute = raw.payload[6];
 
-			return new ScheduleEntryLockCCDailyRepeatingScheduleReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				userId,
 				slotId,
@@ -2170,7 +2161,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 				durationMinute,
 			});
 		} else {
-			return new ScheduleEntryLockCCDailyRepeatingScheduleReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				userId,
 				slotId,
@@ -2210,17 +2201,17 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
 		if (this.weekdays) {
-			this.payload = Buffer.concat([
+			this.payload = Bytes.concat([
 				this.payload,
 				encodeBitMask(
 					this.weekdays,
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Buffer.from([
+				Bytes.from([
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
@@ -2229,7 +2220,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 			]);
 		} else {
 			// Not sure if this is correct, but at least we won't parse it incorrectly ourselves when setting everything to 0
-			this.payload = Buffer.concat([this.payload, Buffer.alloc(5, 0)]);
+			this.payload = Bytes.concat([this.payload, Bytes.alloc(5, 0)]);
 		}
 
 		return super.serialize(ctx);
@@ -2295,7 +2286,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleGet
 		const userId = raw.payload[0];
 		const slotId = raw.payload[1];
 
-		return new ScheduleEntryLockCCDailyRepeatingScheduleGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userId,
 			slotId,
@@ -2305,8 +2296,8 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleGet
 	public userId: number;
 	public slotId: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
 		return super.serialize(ctx);
 	}
 

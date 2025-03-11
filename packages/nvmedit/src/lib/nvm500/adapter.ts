@@ -3,26 +3,27 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
-import { SUC_MAX_UPDATES } from "../../consts";
-import { type NVM500, type NVM500Info } from "../NVM500";
+import { SUC_MAX_UPDATES } from "../../consts.js";
+import { type NVM500, type NVM500Info } from "../NVM500.js";
 import {
 	type ControllerNVMProperty,
 	type NVMAdapter,
 	type NVMProperty,
 	type NVMPropertyToDataType,
 	type NodeNVMProperty,
-} from "../common/definitions";
-import { type Route } from "../common/routeCache";
-import { type SUCUpdateEntry } from "../common/sucUpdateEntry";
-import { type NodeInfo } from "../nvm3/files";
-import { type NVM500NodeInfo } from "./EntryParsers";
+} from "../common/definitions.js";
+import { type Route } from "../common/routeCache.js";
+import { type SUCUpdateEntry } from "../common/sucUpdateEntry.js";
+import { type NodeInfo } from "../nvm3/files/index.js";
+import { type NVM500NodeInfo } from "./EntryParsers.js";
 import {
 	APPL_NODEPARM_MAX,
 	type NVMData,
 	type NVMEntryName,
 	NVM_SERIALAPI_HOST_SIZE,
-} from "./shared";
+} from "./shared.js";
 
 export class NVM500Adapter implements NVMAdapter {
 	public constructor(nvm: NVM500) {
@@ -97,7 +98,9 @@ export class NVM500Adapter implements NVMAdapter {
 				return 500;
 
 			case "applicationData":
-				return this.getOnly<Buffer>("EEOFFSET_HOST_OFFSET_START_far");
+				return this.getOnly<Uint8Array>(
+					"EEOFFSET_HOST_OFFSET_START_far",
+				);
 
 			case "applicationName":
 				// Not supported in 500 series
@@ -109,7 +112,7 @@ export class NVM500Adapter implements NVMAdapter {
 					"EX_NVM_HOME_ID_far",
 				);
 				if (homeId == undefined) return;
-				const ret = Buffer.alloc(4, 0);
+				const ret = new Bytes(4).fill(0);
 				// FIXME: BE? LE?
 				ret.writeUInt32BE(homeId, 0);
 				return ret;
@@ -119,7 +122,7 @@ export class NVM500Adapter implements NVMAdapter {
 				// 500 series stores the home ID as a number
 				const homeId = await this.getOnly<number>("NVM_HOMEID_far");
 				if (homeId == undefined) return;
-				const ret = Buffer.alloc(4, 0);
+				const ret = new Bytes(4).fill(0);
 				// FIXME: BE? LE?
 				ret.writeUInt32BE(homeId, 0);
 				return ret;
@@ -357,7 +360,7 @@ export class NVM500Adapter implements NVMAdapter {
 			case "applicationData":
 				return this.setOnly(
 					"EEOFFSET_HOST_OFFSET_START_far",
-					value ?? Buffer.alloc(NVM_SERIALAPI_HOST_SIZE, 0xff),
+					value ?? new Bytes(NVM_SERIALAPI_HOST_SIZE).fill(0xff),
 				);
 
 			case "applicationName":

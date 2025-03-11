@@ -3,26 +3,23 @@ import {
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
+	digest,
 	extractFirmware,
 	guessFirmwareFileFormat,
 } from "@zwave-js/core";
-import { formatId } from "@zwave-js/shared";
-import crypto from "node:crypto";
+import { Bytes, type Timer, formatId, getenv } from "@zwave-js/shared";
+import { setTimer } from "@zwave-js/shared";
+import type { Options as KyOptions } from "ky";
+import type PQueue from "p-queue";
 import type {
 	FirmwareUpdateDeviceID,
 	FirmwareUpdateFileInfo,
 	FirmwareUpdateInfo,
 	FirmwareUpdateServiceResponse,
-} from "./_Types";
-
-// @ts-expect-error https://github.com/microsoft/TypeScript/issues/52529
-import type { Headers, OptionsOfTextResponseBody } from "got";
-
-// @ts-expect-error https://github.com/microsoft/TypeScript/issues/52529
-import type PQueue from "p-queue";
+} from "./_Types.js";
 
 function serviceURL(): string {
-	return process.env.ZWAVEJS_FW_SERVICE_URL || "https://firmware.zwave-js.io";
+	return getenv("ZWAVEJS_FW_SERVICE_URL") || "https://firmware.zwave-js.io";
 }
 const DOWNLOAD_TIMEOUT = 60000;
 // const MAX_FIRMWARE_SIZE = 10 * 1024 * 1024; // 10MB should be enough for any conceivable Z-Wave chip
@@ -39,12 +36,10 @@ interface CachedRequest<T> {
 // Queue requests to the firmware update service. Only allow few parallel requests so we can make some use of the cache.
 let requestQueue: PQueue | undefined;
 
-let cleanCacheTimeout: NodeJS.Timeout | undefined;
+let cleanCacheTimeout: Timer | undefined;
 function cleanCache() {
-	if (cleanCacheTimeout) {
-		clearTimeout(cleanCacheTimeout);
-		cleanCacheTimeout = undefined;
-	}
+	cleanCacheTimeout?.clear();
+	cleanCacheTimeout = undefined;
 
 	const now = Date.now();
 	for (const [key, cached] of requestCache) {
@@ -54,22 +49,21 @@ function cleanCache() {
 	}
 
 	if (requestCache.size > 0) {
-		cleanCacheTimeout = setTimeout(
+		cleanCacheTimeout = setTimer(
 			cleanCache,
 			CLEAN_CACHE_INTERVAL_MS,
 		).unref();
 	}
 }
 
-async function cachedGot<T>(config: OptionsOfTextResponseBody): Promise<T> {
-	// Replaces got's built-in cache functionality because it uses Keyv internally
-	// which apparently has some issues: https://github.com/zwave-js/node-zwave-js/issues/5404
-
-	const hash = crypto
-		.createHash("sha256")
-		.update(JSON.stringify(config.json))
-		.digest("hex");
-	const cacheKey = `${config.method}:${config.url!.toString()}:${hash}`;
+async function cachedRequest<T>(url: string, config: KyOptions): Promise<T> {
+	const hash = Bytes.view(
+		await digest(
+			"sha-256",
+			Bytes.from(JSON.stringify(config.json)),
+		),
+	).toString("hex");
+	const cacheKey = `${config.method}:${url}:${hash}`;
 
 	// Return cached requests if they are not stale yet
 	if (requestCache.has(cacheKey)) {
@@ -79,13 +73,15 @@ async function cachedGot<T>(config: OptionsOfTextResponseBody): Promise<T> {
 		}
 	}
 
-	const { got } = await import("got");
-	const response = await got(config);
-	const responseJson = JSON.parse(response.body) as T;
+	const { default: ky } = await import("ky");
+	const response = await ky(url, config);
+	const responseJson = await response.json<T>();
 
 	// Check if we can cache the response
-	if (response.statusCode === 200 && response.headers["cache-control"]) {
-		const cacheControl = response.headers["cache-control"];
+	if (response.status === 200 && response.headers.has("cache-control")) {
+		const cacheControl = response.headers.get("cache-control")!;
+		const age = response.headers.get("age");
+		const date = response.headers.get("date");
 
 		let maxAge: number | undefined;
 		const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
@@ -95,10 +91,10 @@ async function cachedGot<T>(config: OptionsOfTextResponseBody): Promise<T> {
 
 		if (maxAge) {
 			let currentAge: number;
-			if (response.headers.age) {
-				currentAge = parseInt(response.headers.age, 10);
-			} else if (response.headers.date) {
-				currentAge = (Date.now() - Date.parse(response.headers.date))
+			if (age) {
+				currentAge = parseInt(age, 10);
+			} else if (date) {
+				currentAge = (Date.now() - Date.parse(date))
 					/ 1000;
 			} else {
 				currentAge = 0;
@@ -118,7 +114,7 @@ async function cachedGot<T>(config: OptionsOfTextResponseBody): Promise<T> {
 
 	// Regularly clean the cache
 	if (!cleanCacheTimeout) {
-		cleanCacheTimeout = setTimeout(
+		cleanCacheTimeout = setTimer(
 			cleanCache,
 			CLEAN_CACHE_INTERVAL_MS,
 		).unref();
@@ -144,6 +140,7 @@ function rfRegionToUpdateServiceRegion(
 	switch (rfRegion) {
 		case RFRegion["Default (EU)"]:
 		case RFRegion.Europe:
+		case RFRegion["Europe (Long Range)"]:
 			return "europe";
 		case RFRegion.USA:
 		case RFRegion["USA (Long Range)"]:
@@ -175,12 +172,12 @@ export async function getAvailableFirmwareUpdates(
 	deviceId: FirmwareUpdateDeviceID,
 	options: GetAvailableFirmwareUpdateOptions,
 ): Promise<FirmwareUpdateInfo[]> {
-	const headers: Headers = {
+	const headers = new Headers({
 		"User-Agent": options.userAgent,
 		"Content-Type": "application/json",
-	};
+	});
 	if (options.apiKey) {
-		headers["X-API-Key"] = options.apiKey;
+		headers.set("X-API-Key", options.apiKey);
 	}
 
 	const body: Record<string, string> = {
@@ -197,9 +194,9 @@ export async function getAvailableFirmwareUpdates(
 	// Prereleases and/or RF region-specific updates are only available in v3
 	const apiVersion = options.includePrereleases || !!rfRegion ? "v3" : "v1";
 
-	const config: OptionsOfTextResponseBody = {
+	const url = `${serviceURL()}/api/${apiVersion}/updates`;
+	const config: KyOptions = {
 		method: "POST",
-		url: `${serviceURL()}/api/${apiVersion}/updates`,
 		json: body,
 		// Consider re-enabling this instead of using cachedGot()
 		// At the moment, the built-in caching has some issues though, so we stick
@@ -218,7 +215,7 @@ export async function getAvailableFirmwareUpdates(
 	}
 	// Weird types...
 	const result = (
-		await requestQueue.add(() => cachedGot(config))
+		await requestQueue.add(() => cachedRequest(url, config))
 	) as FirmwareUpdateServiceResponse[];
 
 	// Remember the device ID in the response, so we can use it later
@@ -244,14 +241,13 @@ export async function downloadFirmwareUpdate(
 	// TODO: Make request abort-able (requires AbortController, Node 14.17+ / Node 16)
 
 	// Download the firmware file
-	const { got } = await import("got");
-	const downloadResponse = await got.get(file.url, {
-		timeout: { request: DOWNLOAD_TIMEOUT },
-		responseType: "buffer",
+	const { default: ky } = await import("ky");
+	const downloadResponse = await ky.get(file.url, {
+		timeout: DOWNLOAD_TIMEOUT,
 		// TODO: figure out how to do maxContentLength: MAX_FIRMWARE_SIZE,
 	});
 
-	const rawData = downloadResponse.body;
+	const rawData = new Uint8Array(await downloadResponse.arrayBuffer());
 
 	const requestedPathname = new URL(file.url).pathname;
 	// The response may be redirected, so the filename information may be different
@@ -265,12 +261,15 @@ export async function downloadFirmwareUpdate(
 
 	// Infer the file type from the content-disposition header or the filename
 	let filename: string;
+	const contentDisposition = downloadResponse.headers.get(
+		"content-disposition",
+	);
 	if (
-		downloadResponse.headers["content-disposition"]?.startsWith(
+		contentDisposition?.startsWith(
 			"attachment; filename=",
 		)
 	) {
-		filename = downloadResponse.headers["content-disposition"]
+		filename = contentDisposition
 			.split("filename=")[1]
 			.replace(/^"/, "")
 			.replace(/[";]$/, "");
@@ -282,12 +281,12 @@ export async function downloadFirmwareUpdate(
 
 	// Extract the raw data
 	const format = guessFirmwareFileFormat(filename, rawData);
-	const firmware = extractFirmware(rawData, format);
+	const firmware = await extractFirmware(rawData, format);
 
 	// Ensure the hash matches
-	const hasher = crypto.createHash("sha256");
-	hasher.update(firmware.data);
-	const actualHash = hasher.digest("hex");
+	const actualHash = Bytes.view(
+		await digest("sha-256", firmware.data),
+	).toString("hex");
 
 	if (actualHash !== expectedHash) {
 		throw new ZWaveError(

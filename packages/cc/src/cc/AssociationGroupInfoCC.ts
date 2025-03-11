@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -12,79 +14,68 @@ import {
 	parseCCId,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	AssociationGroupInfoCommand,
 	AssociationGroupInfoProfile,
-} from "../lib/_Types";
-import { AssociationCC } from "./AssociationCC";
-import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC";
+} from "../lib/_Types.js";
+import { AssociationCC } from "./AssociationCC.js";
+import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC.js";
 
-export const AssociationGroupInfoCCValues = Object.freeze({
-	// Defines values that do not depend on anything else
-	...V.defineStaticCCValues(CommandClasses["Association Group Information"], {
+export const AssociationGroupInfoCCValues = V.defineCCValues(
+	CommandClasses["Association Group Information"],
+	{
 		...V.staticProperty("hasDynamicInfo", undefined, { internal: true }),
-	}),
-
-	// Defines values that depend on one or more arguments and need to be called as a function
-	...V.defineDynamicCCValues(
-		CommandClasses["Association Group Information"],
-		{
-			...V.dynamicPropertyAndKeyWithName(
-				"groupName",
-				"name",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "name" && typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-			...V.dynamicPropertyAndKeyWithName(
-				"groupInfo",
-				"info",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "info" && typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-			...V.dynamicPropertyAndKeyWithName(
-				"commands",
-				"issuedCommands",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "issuedCommands"
-					&& typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-		},
-	),
-});
+		...V.dynamicPropertyAndKeyWithName(
+			"groupName",
+			"name",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "name" && typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+		...V.dynamicPropertyAndKeyWithName(
+			"groupInfo",
+			"info",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "info" && typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+		...V.dynamicPropertyAndKeyWithName(
+			"commands",
+			"issuedCommands",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "issuedCommands"
+				&& typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+	},
+);
 
 // @noSetValueAPI This CC only has get-type commands
 
@@ -496,7 +487,7 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 			raw.payload.subarray(2, 2 + nameLength).toString("utf8"),
 		);
 
-		return new AssociationGroupInfoCCNameReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupId,
 			name,
@@ -520,10 +511,10 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([this.groupId, this.name.length]),
-			Buffer.from(this.name, "utf8"),
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([this.groupId, this.name.length]),
+			Bytes.from(this.name, "utf8"),
 		]);
 		return super.serialize(ctx);
 	}
@@ -561,7 +552,7 @@ export class AssociationGroupInfoCCNameGet extends AssociationGroupInfoCC {
 		validatePayload(raw.payload.length >= 1);
 		const groupId = raw.payload[0];
 
-		return new AssociationGroupInfoCCNameGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupId,
 		});
@@ -569,8 +560,8 @@ export class AssociationGroupInfoCCNameGet extends AssociationGroupInfoCC {
 
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.groupId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.groupId]);
 		return super.serialize(ctx);
 	}
 
@@ -597,6 +588,7 @@ export interface AssociationGroupInfoCCInfoReportOptions {
 }
 
 @CCCommand(AssociationGroupInfoCommand.InfoReport)
+@ccValueProperty("hasDynamicInfo", AssociationGroupInfoCCValues.hasDynamicInfo)
 export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 	public constructor(
 		options: WithAddress<AssociationGroupInfoCCInfoReportOptions>,
@@ -630,7 +622,7 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 			groups.push({ groupId, mode, profile, eventCode });
 		}
 
-		return new AssociationGroupInfoCCInfoReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			isListMode,
 			hasDynamicInfo,
@@ -640,7 +632,6 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 
 	public readonly isListMode: boolean;
 
-	@ccValue(AssociationGroupInfoCCValues.hasDynamicInfo)
 	public readonly hasDynamicInfo: boolean;
 
 	public readonly groups: readonly AssociationGroupInfo[];
@@ -663,8 +654,8 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.alloc(1 + this.groups.length * 7, 0);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(1 + this.groups.length * 7, 0);
 
 		this.payload[0] = (this.isListMode ? 0b1000_0000 : 0)
 			| (this.hasDynamicInfo ? 0b0100_0000 : 0)
@@ -673,7 +664,7 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 		for (let i = 0; i < this.groups.length; i++) {
 			const offset = 1 + i * 7;
 			this.payload[offset] = this.groups[i].groupId;
-			this.payload.writeUint16BE(this.groups[i].profile, offset + 2);
+			this.payload.writeUInt16BE(this.groups[i].profile, offset + 2);
 			// The remaining bytes are zero
 		}
 
@@ -742,7 +733,7 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
 			groupId = raw.payload[1];
 		}
 
-		return new AssociationGroupInfoCCInfoGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			refreshCache,
 			listMode,
@@ -754,11 +745,11 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
 	public listMode?: boolean;
 	public groupId?: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const isListMode = this.listMode === true;
 		const optionByte = (this.refreshCache ? 0b1000_0000 : 0)
 			| (isListMode ? 0b0100_0000 : 0);
-		this.payload = Buffer.from([
+		this.payload = Bytes.from([
 			optionByte,
 			isListMode ? 0 : this.groupId!,
 		]);
@@ -788,6 +779,11 @@ export interface AssociationGroupInfoCCCommandListReportOptions {
 }
 
 @CCCommand(AssociationGroupInfoCommand.CommandListReport)
+@ccValueProperty(
+	"commands",
+	AssociationGroupInfoCCValues.commands,
+	(self) => [self.groupId],
+)
 export class AssociationGroupInfoCCCommandListReport
 	extends AssociationGroupInfoCC
 {
@@ -820,7 +816,7 @@ export class AssociationGroupInfoCCCommandListReport
 			offset += bytesRead + 1;
 		}
 
-		return new AssociationGroupInfoCCCommandListReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupId,
 			commands,
@@ -829,17 +825,12 @@ export class AssociationGroupInfoCCCommandListReport
 
 	public readonly groupId: number;
 
-	@ccValue(
-		AssociationGroupInfoCCValues.commands,
-		(self: AssociationGroupInfoCCCommandListReport) =>
-			[self.groupId] as const,
-	)
 	public readonly commands: ReadonlyMap<CommandClasses, readonly number[]>;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// To make it easier to encode possible extended CCs, we first
 		// allocate as much space as we may need, then trim it again
-		this.payload = Buffer.allocUnsafe(2 + this.commands.size * 3);
+		this.payload = new Bytes(2 + this.commands.size * 3);
 		this.payload[0] = this.groupId;
 		let offset = 2;
 		for (const [ccId, commands] of this.commands) {
@@ -902,7 +893,7 @@ export class AssociationGroupInfoCCCommandListGet
 		const allowCache = !!(raw.payload[0] & 0b1000_0000);
 		const groupId = raw.payload[1];
 
-		return new AssociationGroupInfoCCCommandListGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			allowCache,
 			groupId,
@@ -912,8 +903,8 @@ export class AssociationGroupInfoCCCommandListGet
 	public allowCache: boolean;
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.allowCache ? 0b1000_0000 : 0,
 			this.groupId,
 		]);

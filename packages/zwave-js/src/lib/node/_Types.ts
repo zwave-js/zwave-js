@@ -20,9 +20,9 @@ import type {
 	ValueUpdatedArgs,
 } from "@zwave-js/core/safe";
 import { type AllOrNone } from "@zwave-js/shared";
-import { type Endpoint } from "./Endpoint";
-import type { ZWaveNode } from "./Node";
-import type { RouteStatistics } from "./NodeStatistics";
+import { type Endpoint } from "./Endpoint.js";
+import type { ZWaveNode } from "./Node.js";
+import type { RouteStatistics } from "./NodeStatistics.js";
 
 export {
 	EntryControlDataTypes,
@@ -168,7 +168,7 @@ export interface ZWaveNotificationCallbackArgs_EntryControlCC {
 	dataType: EntryControlDataTypes;
 	/** A human-readable label for the data type */
 	dataTypeLabel: string;
-	eventData?: Buffer | string;
+	eventData?: Uint8Array | string;
 }
 
 /**

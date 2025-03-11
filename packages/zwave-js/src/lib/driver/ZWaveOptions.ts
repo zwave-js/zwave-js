@@ -1,14 +1,19 @@
-import type { LogConfig, LongRangeChannel, RFRegion } from "@zwave-js/core";
-import type { FileSystem, ZWaveHostOptions } from "@zwave-js/host";
-import type { ZWaveSerialPortBase } from "@zwave-js/serial";
+import type {
+	FileSystem as LegacyFileSystemBindings,
+	LogConfig,
+	LogFactory,
+	LongRangeChannel,
+	RFRegion,
+} from "@zwave-js/core";
+import { type Serial, type ZWaveSerialStream } from "@zwave-js/serial";
 import { type DeepPartial, type Expand } from "@zwave-js/shared";
-import type { SerialPort } from "serialport";
+import type { DatabaseFactory, FileSystem } from "@zwave-js/shared/bindings";
 import type {
 	InclusionUserCallbacks,
 	JoinNetworkUserCallbacks,
-} from "../controller/Inclusion";
+} from "../controller/Inclusion.js";
 
-export interface ZWaveOptions extends ZWaveHostOptions {
+export interface ZWaveOptions {
 	/** Specify timeouts in milliseconds */
 	timeouts: {
 		/** how long to wait for an ACK */
@@ -121,9 +126,36 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		disableOnNodeAdded?: boolean;
 	};
 
+	/** Host abstractions allowing Z-Wave JS to run on different platforms */
+	host?: {
+		/**
+		 * Specifies which bindings are used to access the file system when
+		 * reading or writing the cache, or loading device configuration files.
+		 */
+		fs?: FileSystem;
+
+		/**
+		 * Specifies which bindings are used interact with serial ports.
+		 */
+		serial?: Serial;
+
+		/**
+		 * Specifies which bindings are used to interact with the database used to store the cache.
+		 */
+		db?: DatabaseFactory;
+
+		/**
+		 * Specifies the logging implementation to be used
+		 */
+		log?: LogFactory;
+	};
+
 	storage: {
-		/** Allows you to replace the default file system driver used to store and read the cache */
-		driver: FileSystem;
+		/**
+		 * Allows you to replace the default file system driver used to store and read the cache
+		 * @deprecated Use `bindings.fs` instead.
+		 */
+		driver?: LegacyFileSystemBindings;
 		/** Allows you to specify a different cache directory */
 		cacheDir: string;
 		/**
@@ -131,6 +163,15 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		 * Can also be set with the ZWAVEJS_LOCK_DIRECTORY env variable.
 		 */
 		lockDir?: string;
+
+		/**
+		 * Allows you to specify a directory where the embedded device configuration files are stored.
+		 * When set, the configuration files can automatically be updated using `Driver.installConfigUpdate()`
+		 * without having to update the npm packages.
+		 * Can also be set using the ZWAVEJS_EXTERNAL_CONFIG env variable.
+		 */
+		deviceConfigExternalDir?: string;
+
 		/**
 		 * Allows you to specify a directory where device configuration files can be loaded from with higher priority than the included ones.
 		 * This directory does not get indexed and should be used sparingly, e.g. for testing.
@@ -152,18 +193,18 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 	 * Specify the security keys to use for encryption (Z-Wave Classic). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeys?: {
-		S2_AccessControl?: Buffer;
-		S2_Authenticated?: Buffer;
-		S2_Unauthenticated?: Buffer;
-		S0_Legacy?: Buffer;
+		S2_AccessControl?: Uint8Array;
+		S2_Authenticated?: Uint8Array;
+		S2_Unauthenticated?: Uint8Array;
+		S0_Legacy?: Uint8Array;
 	};
 
 	/**
 	 * Specify the security keys to use for encryption (Z-Wave Long Range). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeysLongRange?: {
-		S2_AccessControl?: Buffer;
-		S2_Authenticated?: Buffer;
+		S2_AccessControl?: Uint8Array;
+		S2_Authenticated?: Uint8Array;
 	};
 
 	/**
@@ -310,16 +351,22 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 	};
 
 	/**
-	 * Normally, the driver expects to start in Serial API mode and enter the bootloader on demand. If in bootloader,
-	 * it will try to exit it and enter Serial API mode again.
+	 * Determines how the driver should be have when it encounters a controller that is in bootloader mode
+	 * and when the Serial API is not available (yet).
+	 * This can be useful when a controller may be stuck in bootloader mode, or when the application
+	 * wants to operate in bootloader mode anyways.
 	 *
-	 * However there are situations where a controller may be stuck in bootloader mode and no Serial API is available.
-	 * In this case, the driver startup will fail, unless this option is set to `true`.
+	 * The following options exist:
+	 * - `recover`: Z-Wave JS will attempt to recover the controller from bootloader mode.
+	 *   If this does not succeed, the driver startup will fail.
+	 * - `allow`: Z-Wave JS will attempt to recover the controller from bootloader mode.
+	 *   If this does not succeed, the driver will continue to operate in bootloader mode,
+	 *   e.g. for flashing a new image. Commands attempting to talk to the serial API will fail.
+	 * - `stay`: Z-Wave JS will NOT attempt to recover the controller from bootlaoder mode.
 	 *
-	 * If it is, the driver instance will only be good for interacting with the bootloader, e.g. for flashing a new image.
-	 * Commands attempting to talk to the serial API will fail.
+	 * Default: `recover`
 	 */
-	allowBootloaderOnly?: boolean;
+	bootloaderMode?: "recover" | "allow" | "stay";
 
 	/**
 	 * An object with application/module/component names and their versions.
@@ -346,12 +393,11 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 
 	/** DO NOT USE! Used for testing internally */
 	testingHooks?: {
-		serialPortBinding?: typeof SerialPort;
 		/**
 		 * A hook that allows accessing the serial port instance after opening
 		 * and before interacting with it.
 		 */
-		onSerialPortOpen?: (port: ZWaveSerialPortBase) => Promise<void>;
+		onSerialPortOpen?: (port: ZWaveSerialStream) => Promise<void>;
 
 		/**
 		 * Set this to true to skip the controller identification sequence.
@@ -364,9 +410,10 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		skipNodeInterview?: boolean;
 
 		/**
-		 * Set this to true to skip checking if the controller is in bootloader mode
+		 * Set this to true to skip checking if the Z-Wave is in bootloader mode,
+		 * running a Serial API, or an end device CLI.
 		 */
-		skipBootloaderCheck?: boolean;
+		skipFirmwareIdentification?: boolean;
 
 		/**
 		 * Set this to false to skip loading the configuration files. Default: `true`..
@@ -383,6 +430,7 @@ export type PartialZWaveOptions = Expand<
 			| "joinNetworkUserCallbacks"
 			| "logConfig"
 			| "testingHooks"
+			| "host"
 		>
 	>
 	& Partial<
@@ -390,6 +438,7 @@ export type PartialZWaveOptions = Expand<
 			ZWaveOptions,
 			| "testingHooks"
 			| "vendor"
+			| "host"
 		>
 	>
 	& {

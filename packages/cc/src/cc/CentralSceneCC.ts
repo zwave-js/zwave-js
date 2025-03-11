@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -15,14 +17,9 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { padStart } from "alcalzone-shared/strings";
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -31,29 +28,30 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { CentralSceneCommand, CentralSceneKeys } from "../lib/_Types";
-import * as ccUtils from "../lib/utils";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { CentralSceneCommand, CentralSceneKeys } from "../lib/_Types.js";
+import * as ccUtils from "../lib/utils.js";
 
-export const CentralSceneCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Central Scene"], {
+export const CentralSceneCCValues = V.defineCCValues(
+	CommandClasses["Central Scene"],
+	{
 		...V.staticProperty("sceneCount", undefined, {
 			internal: true,
 		}),
@@ -63,7 +61,6 @@ export const CentralSceneCCValues = Object.freeze({
 		...V.staticProperty("supportedKeyAttributes", undefined, {
 			internal: true,
 		}),
-
 		...V.staticProperty(
 			"slowRefresh",
 			{
@@ -73,25 +70,22 @@ export const CentralSceneCCValues = Object.freeze({
 					"When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Central Scene"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"scene",
 			"scene",
-			(sceneNumber: number) => padStart(sceneNumber.toString(), 3, "0"),
+			(sceneNumber: number) => sceneNumber.toString().padStart(3, "0"),
 			({ property, propertyKey }) =>
 				property === "scene"
 				&& typeof propertyKey === "string"
 				&& /^\d{3}$/.test(propertyKey),
 			(sceneNumber: number) => ({
 				...ValueMetadata.ReadOnlyUInt8,
-				label: `Scene ${padStart(sceneNumber.toString(), 3, "0")}`,
+				label: `Scene ${sceneNumber.toString().padStart(3, "0")}`,
 			} as const),
 			{ stateful: false } as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Central Scene"])
 export class CentralSceneCCAPI extends CCAPI {
@@ -336,7 +330,7 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 			slowRefresh = !!(raw.payload[1] & 0b1000_0000);
 		}
 
-		return new CentralSceneCCNotification({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sequenceNumber,
 			keyAttribute,
@@ -391,6 +385,15 @@ export interface CentralSceneCCSupportedReportOptions {
 }
 
 @CCCommand(CentralSceneCommand.SupportedReport)
+@ccValueProperty("sceneCount", CentralSceneCCValues.sceneCount)
+@ccValueProperty(
+	"supportsSlowRefresh",
+	CentralSceneCCValues.supportsSlowRefresh,
+)
+@ccValueProperty(
+	"supportedKeyAttributes",
+	CentralSceneCCValues.supportedKeyAttributes,
+)
 export class CentralSceneCCSupportedReport extends CentralSceneCC {
 	public constructor(
 		options: WithAddress<CentralSceneCCSupportedReportOptions>,
@@ -446,7 +449,7 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 			}
 		}
 
-		return new CentralSceneCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sceneCount,
 			supportsSlowRefresh,
@@ -472,11 +475,10 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 		return true;
 	}
 
-	@ccValue(CentralSceneCCValues.sceneCount)
 	public readonly sceneCount: number;
 
 	// TODO: Only offer `slowRefresh` if this is true
-	@ccValue(CentralSceneCCValues.supportsSlowRefresh)
+
 	public readonly supportsSlowRefresh: MaybeNotKnown<boolean>;
 
 	private _supportedKeyAttributes = new Map<
@@ -484,7 +486,6 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 		readonly CentralSceneKeys[]
 	>();
 
-	@ccValue(CentralSceneCCValues.supportedKeyAttributes)
 	public get supportedKeyAttributes(): ReadonlyMap<
 		number,
 		readonly CentralSceneKeys[]
@@ -521,6 +522,7 @@ export interface CentralSceneCCConfigurationReportOptions {
 }
 
 @CCCommand(CentralSceneCommand.ConfigurationReport)
+@ccValueProperty("slowRefresh", CentralSceneCCValues.slowRefresh)
 export class CentralSceneCCConfigurationReport extends CentralSceneCC {
 	public constructor(
 		options: WithAddress<CentralSceneCCConfigurationReportOptions>,
@@ -538,13 +540,12 @@ export class CentralSceneCCConfigurationReport extends CentralSceneCC {
 		validatePayload(raw.payload.length >= 1);
 		const slowRefresh = !!(raw.payload[0] & 0b1000_0000);
 
-		return new CentralSceneCCConfigurationReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			slowRefresh,
 		});
 	}
 
-	@ccValue(CentralSceneCCValues.slowRefresh)
 	public readonly slowRefresh: boolean;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -590,8 +591,8 @@ export class CentralSceneCCConfigurationSet extends CentralSceneCC {
 
 	public slowRefresh: boolean;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.slowRefresh ? 0b1000_0000 : 0]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.slowRefresh ? 0b1000_0000 : 0]);
 		return super.serialize(ctx);
 	}
 

@@ -24,6 +24,10 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
+	// Ignore the browser bindings for now
+	{
+		ignores: ["packages/bindings-browser/**/*.ts"],
+	},
 	...tseslint.configs.recommended,
 	...tseslint.configs.recommendedTypeChecked,
 	{
@@ -155,6 +159,17 @@ export default tseslint.config(
 			"unicorn/prefer-string-slice": "error",
 			"unicorn/prefer-string-starts-ends-with": "error",
 			"unicorn/prefer-string-replace-all": "error",
+
+			// Prefer our own Buffer implementation (compatible with native Uint8array)
+			// See https://sindresorhus.com/blog/goodbye-nodejs-buffer for the reason behind this
+			"no-restricted-globals": [
+				"error",
+				{
+					name: "Buffer",
+					message:
+						"Use Uint8Array or the Bytes implementation from @zwave-js/shared instead.",
+				},
+			],
 		},
 	},
 	// Disable unnecessarily strict rules for test files
@@ -184,6 +199,15 @@ export default tseslint.config(
 		files: ["**/*.js"],
 		rules: {
 			"@typescript-eslint/*": "off",
+		},
+	},
+	// Make sure that the browser barrel files are parsed with the correct conditions
+	{
+		files: ["packages/**/*.browser.ts", "packages/**/index_browser.ts"],
+		languageOptions: {
+			parserOptions: {
+				project: "tsconfig.browser.json",
+			},
 		},
 	},
 	// Enable rules from the local plugin for relevant files

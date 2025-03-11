@@ -1,3 +1,4 @@
+import { Bytes } from "@zwave-js/shared";
 import {
 	NVM3_MIN_PAGE_SIZE,
 	NVM3_PAGE_COUNTER_MASK,
@@ -6,9 +7,9 @@ import {
 	NVM3_PAGE_MAGIC,
 	type PageStatus,
 	type PageWriteSize,
-} from "./consts";
-import { type NVM3Object } from "./object";
-import { computeBergerCode } from "./utils";
+} from "./consts.js";
+import { type NVM3Object } from "./object.js";
+import { computeBergerCode } from "./utils.js";
 
 export interface NVM3PageHeader {
 	offset: number;
@@ -38,8 +39,8 @@ export function pageSizeFromBits(bits: number): number {
 
 export function serializePageHeader(
 	header: Omit<NVM3PageHeader, "offset">,
-): Buffer {
-	const ret = Buffer.alloc(NVM3_PAGE_HEADER_SIZE);
+): Uint8Array {
+	const ret = new Bytes(NVM3_PAGE_HEADER_SIZE);
 
 	ret.writeUInt16LE(header.version, 0);
 	ret.writeUInt16LE(NVM3_PAGE_MAGIC, 2);

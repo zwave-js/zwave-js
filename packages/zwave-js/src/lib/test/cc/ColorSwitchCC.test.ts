@@ -14,48 +14,51 @@ import {
 import {
 	CommandClasses,
 	Duration,
+	type GetSupportedCCVersion,
 	ZWaveErrorCodes,
 	assertZWaveError,
 } from "@zwave-js/core";
-import { type GetSupportedCCVersion } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Color Switch"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the SupportedGet command should serialize correctly", (t) => {
+test("the SupportedGet command should serialize correctly", async (t) => {
 	const cc = new ColorSwitchCCSupportedGet({
 		nodeId: 1,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.SupportedGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the SupportedReport command should deserialize correctly", (t) => {
+test("the SupportedReport command should deserialize correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.SupportedReport, // CC Command
 			0b0001_1111,
 			0b0000_0001,
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as ColorSwitchCCSupportedReport;
-	t.is(cc.constructor, ColorSwitchCCSupportedReport);
+	t.expect(cc.constructor).toBe(ColorSwitchCCSupportedReport);
 
-	t.deepEqual(cc.supportedColorComponents, [
+	t.expect(cc.supportedColorComponents).toStrictEqual([
 		ColorComponent["Warm White"],
 		ColorComponent["Cold White"],
 		ColorComponent.Red,
@@ -70,43 +73,45 @@ test("the SupportedReport command should deserialize correctly", (t) => {
 	// ]);
 });
 
-test("the Get command should serialize correctly", (t) => {
+test("the Get command should serialize correctly", async (t) => {
 	const cc = new ColorSwitchCCGet({
 		nodeId: 1,
 		colorComponent: ColorComponent.Red,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.Get, // CC Command
 			2, // Color Component
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command should deserialize correctly (version 1)", (t) => {
+test("the Report command should deserialize correctly (version 1)", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.Report, // CC Command
 			0b0000_0010, // color: red
 			0b1111_1111, // value: 255
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as ColorSwitchCCReport;
-	t.is(cc.constructor, ColorSwitchCCReport);
+	t.expect(cc.constructor).toBe(ColorSwitchCCReport);
 
-	t.is(cc.colorComponent, ColorComponent.Red);
-	t.is(cc.currentValue, 255);
-	t.is(cc.targetValue, undefined);
-	t.is(cc.duration, undefined);
+	t.expect(cc.colorComponent).toBe(ColorComponent.Red);
+	t.expect(cc.currentValue).toBe(255);
+	t.expect(cc.targetValue).toBeUndefined();
+	t.expect(cc.duration).toBeUndefined();
 });
 
-test("the Report command should deserialize correctly (version 3)", (t) => {
+test("the Report command should deserialize correctly (version 3)", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.Report, // CC Command
 			0b0000_0010, // color: red
 			0b1000_0000, // currentValue: 128
@@ -114,20 +119,20 @@ test("the Report command should deserialize correctly (version 3)", (t) => {
 			0b0000_0001, // duration: 1
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as ColorSwitchCCReport;
-	t.is(cc.constructor, ColorSwitchCCReport);
+	t.expect(cc.constructor).toBe(ColorSwitchCCReport);
 
-	t.is(cc.colorComponent, ColorComponent.Red);
-	t.is(cc.currentValue, 128);
-	t.is(cc.targetValue, 255);
-	t.is(cc.duration!.value, 1);
-	t.is(cc.duration!.unit, "seconds");
+	t.expect(cc.colorComponent).toBe(ColorComponent.Red);
+	t.expect(cc.currentValue).toBe(128);
+	t.expect(cc.targetValue).toBe(255);
+	t.expect(cc.duration!.value).toBe(1);
+	t.expect(cc.duration!.unit).toBe("seconds");
 });
 
-test("the Set command should serialize correctly (without duration)", (t) => {
+test("the Set command should serialize correctly (without duration)", async (t) => {
 	const cc = new ColorSwitchCCSet({
 		nodeId: 1,
 		red: 128,
@@ -135,7 +140,7 @@ test("the Set command should serialize correctly (without duration)", (t) => {
 	});
 
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.Set, // CC Command
 			// WARN: This is sensitive to the order in which javascript serializes the colorTable keys.
 			0b0000_0010, // reserved + count
@@ -153,10 +158,10 @@ test("the Set command should serialize correctly (without duration)", (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	t.deepEqual(cc.serialize(ctx), expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
-test("the Set command should serialize correctly (version 2)", (t) => {
+test("the Set command should serialize correctly (version 2)", async (t) => {
 	const cc = new ColorSwitchCCSet({
 		nodeId: 1,
 		red: 128,
@@ -165,7 +170,7 @@ test("the Set command should serialize correctly (version 2)", (t) => {
 	});
 
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.Set, // CC Command
 			// WARN: This is sensitive to the order in which javascript serializes the colorTable keys.
 			0b0000_0010, // reserved + count
@@ -182,10 +187,10 @@ test("the Set command should serialize correctly (version 2)", (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	t.deepEqual(cc.serialize(ctx), expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
-test("the StartLevelChange command should serialize correctly", (t) => {
+test("the StartLevelChange command should serialize correctly", async (t) => {
 	const cc = new ColorSwitchCCStartLevelChange({
 		nodeId: 1,
 		startLevel: 5,
@@ -195,7 +200,7 @@ test("the StartLevelChange command should serialize correctly", (t) => {
 		duration: new Duration(1, "seconds"),
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.StartLevelChange,
 			0b0010_0000, // up/down: 0, ignoreStartLevel: 1
 			0b0000_0010, // color: red
@@ -209,26 +214,28 @@ test("the StartLevelChange command should serialize correctly", (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	t.deepEqual(cc.serialize(ctx), expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
-test("the StopLevelChange command should serialize correctly", (t) => {
+test("the StopLevelChange command should serialize correctly", async (t) => {
 	const cc = new ColorSwitchCCStopLevelChange({
 		nodeId: 1,
 		colorComponent: ColorComponent.Red,
 	});
 
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ColorSwitchCommand.StopLevelChange, // CC Command
 			0b0000_0010, // color: red
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
 test("the setValue API verifies that targetColor isn't set with non-numeric keys", async (t) => {
-	// Repro for https://github.com/zwave-js/node-zwave-js/issues/4811
+	// Repro for https://github.com/zwave-js/zwave-js/issues/4811
 	const API = CCAPI.create(
 		CommandClasses["Color Switch"],
 		undefined as any,
@@ -236,7 +243,7 @@ test("the setValue API verifies that targetColor isn't set with non-numeric keys
 		false,
 	);
 	await assertZWaveError(
-		t,
+		t.expect,
 		() =>
 			API.setValue!(
 				{ property: "targetColor" },

@@ -1,8 +1,12 @@
 import { CommandClass } from "@zwave-js/cc";
 import { type Message } from "@zwave-js/serial";
-import { ApplicationCommandRequest } from "./application/ApplicationCommandRequest";
-import { BridgeApplicationCommandRequest } from "./application/BridgeApplicationCommandRequest";
-import { type SendDataMessage, isSendData } from "./transport/SendDataShared";
+import { isUint8Array } from "@zwave-js/shared";
+import { ApplicationCommandRequest } from "./application/ApplicationCommandRequest.js";
+import { BridgeApplicationCommandRequest } from "./application/BridgeApplicationCommandRequest.js";
+import {
+	type SendDataMessage,
+	isSendData,
+} from "./transport/SendDataShared.js";
 
 export type CommandRequest =
 	| ApplicationCommandRequest
@@ -16,7 +20,7 @@ export function isCommandRequest(
 }
 
 export interface MessageWithCC {
-	serializedCC: Buffer | undefined;
+	serializedCC: Uint8Array | undefined;
 	command: CommandClass | undefined;
 }
 
@@ -30,7 +34,7 @@ export function isMessageWithCC(
 }
 
 export interface ContainsSerializedCC {
-	serializedCC: Buffer;
+	serializedCC: Uint8Array;
 }
 
 export function containsSerializedCC<T extends object>(
@@ -38,7 +42,7 @@ export function containsSerializedCC<T extends object>(
 ): container is T & ContainsSerializedCC {
 	return !!container
 		&& "serializedCC" in container
-		&& Buffer.isBuffer(container.serializedCC);
+		&& isUint8Array(container.serializedCC);
 }
 
 export interface ContainsCC<T extends CommandClass = CommandClass> {

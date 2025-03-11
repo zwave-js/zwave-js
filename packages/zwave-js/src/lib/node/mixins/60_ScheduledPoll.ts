@@ -1,5 +1,5 @@
-import { type CCAPI } from "@zwave-js/cc";
-import { type ValueDB, normalizeValueID } from "@zwave-js/core";
+import { type CCAPI, type SchedulePollOptions } from "@zwave-js/cc";
+import { type ValueDB, normalizeValueID, valueEquals } from "@zwave-js/core";
 import {
 	type CommandClasses,
 	MessagePriority,
@@ -7,20 +7,18 @@ import {
 	type ValueRemovedArgs,
 	type ValueUpdatedArgs,
 } from "@zwave-js/core/safe";
-import { type NodeSchedulePollOptions } from "@zwave-js/host";
-import { ObjectKeyMap } from "@zwave-js/shared";
-import { isDeepStrictEqual } from "node:util";
-import { type Driver } from "../../driver/Driver";
-import { type DeviceClass } from "../DeviceClass";
-import { EndpointsMixin } from "./50_Endpoints";
+import { ObjectKeyMap, type Timer, setTimer } from "@zwave-js/shared";
+import { type Driver } from "../../driver/Driver.js";
+import { type DeviceClass } from "../DeviceClass.js";
+import { EndpointsMixin } from "./50_Endpoints.js";
 
 export interface ScheduledPoll {
-	timeout: NodeJS.Timeout;
+	timeout: Timer;
 	expectedValue?: unknown;
 }
 
 /** Defines functionality of Z-Wave nodes for scheduling polls for a later time and canceling scheduled polls */
-export interface SchedulePoll {
+export interface NodeSchedulePoll {
 	/**
 	 * @internal
 	 * Returns whether a poll is currently scheduled for this node
@@ -34,7 +32,7 @@ export interface SchedulePoll {
 	 */
 	schedulePoll(
 		valueId: ValueID,
-		options: NodeSchedulePollOptions,
+		options: SchedulePollOptions,
 	): boolean;
 
 	/**
@@ -57,7 +55,7 @@ export interface SchedulePoll {
 }
 
 export abstract class SchedulePollMixin extends EndpointsMixin
-	implements SchedulePoll
+	implements NodeSchedulePoll
 {
 	public constructor(
 		nodeId: number,
@@ -112,7 +110,7 @@ export abstract class SchedulePollMixin extends EndpointsMixin
 
 	public schedulePoll(
 		valueId: ValueID,
-		options: NodeSchedulePollOptions = {},
+		options: SchedulePollOptions = {},
 	): boolean {
 		const {
 			timeoutMs = this.driver.options.timeouts.refreshValue,
@@ -142,7 +140,7 @@ export abstract class SchedulePollMixin extends EndpointsMixin
 
 		// make sure there is only one timeout instance per poll
 		this.cancelScheduledPoll(valueId);
-		const timeout = setTimeout(async () => {
+		const timeout = setTimer(async () => {
 			// clean up after the timeout
 			this.cancelScheduledPoll(valueId);
 			try {
@@ -169,12 +167,12 @@ export abstract class SchedulePollMixin extends EndpointsMixin
 		if (
 			actualValue !== undefined
 			&& poll.expectedValue !== undefined
-			&& !isDeepStrictEqual(poll.expectedValue, actualValue)
+			&& !valueEquals(poll.expectedValue, actualValue)
 		) {
 			return false;
 		}
 
-		clearTimeout(poll.timeout);
+		poll.timeout.clear();
 		this._scheduledPolls.delete(valueId);
 
 		return true;

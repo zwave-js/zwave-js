@@ -2,29 +2,27 @@ import {
 	CRC16_CCITT,
 	CommandClasses,
 	EncapsulationFlags,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type WithAddress,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { CCAPI } from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { CCAPI } from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
+} from "../lib/CommandClassDecorators.js";
 
-import { CRC16Command } from "../lib/_Types";
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { Bytes } from "@zwave-js/shared/safe";
+import { CRC16Command } from "../lib/_Types.js";
 
-const headerBuffer = Buffer.from([
+const headerBuffer = Bytes.from([
 	CommandClasses["CRC-16 Encapsulation"],
 	CRC16Command.CommandEncapsulation,
 ]);
@@ -119,10 +117,10 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
 		this.encapsulated.encapsulatingCC = this as any;
 	}
 
-	public static from(
+	public static async from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
-	): CRC16CCCommandEncapsulation {
+	): Promise<CRC16CCCommandEncapsulation> {
 		validatePayload(raw.payload.length >= 3);
 
 		const ccBuffer = raw.payload.subarray(0, -2);
@@ -135,8 +133,8 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
 		);
 		validatePayload(expectedCRC === actualCRC);
 
-		const encapsulated = CommandClass.parse(ccBuffer, ctx);
-		return new CRC16CCCommandEncapsulation({
+		const encapsulated = await CommandClass.parse(ccBuffer, ctx);
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			encapsulated,
 		});
@@ -144,10 +142,10 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
 
 	public encapsulated: CommandClass;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		const commandBuffer = this.encapsulated.serialize(ctx);
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const commandBuffer = await this.encapsulated.serialize(ctx);
 		// Reserve 2 bytes for the CRC
-		this.payload = Buffer.concat([commandBuffer, Buffer.allocUnsafe(2)]);
+		this.payload = Bytes.concat([commandBuffer, new Bytes(2)]);
 
 		// Compute and save the CRC16 in the payload
 		// The CC header is included in the CRC computation

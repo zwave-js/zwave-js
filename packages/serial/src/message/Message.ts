@@ -1,4 +1,8 @@
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
+	type GetNode,
+	type GetSupportedCCVersion,
+	type HostIDs,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessagePriority,
@@ -8,20 +12,18 @@ import {
 	type SecurityManagers,
 	ZWaveError,
 	ZWaveErrorCodes,
-	createReflectionDecorator,
 	getNodeTag,
 	highResTimestamp,
 } from "@zwave-js/core";
-import type {
-	GetDeviceConfig,
-	GetNode,
-	GetSupportedCCVersion,
-	HostIDs,
-} from "@zwave-js/host";
-import type { JSONObject, TypedClassDecorator } from "@zwave-js/shared/safe";
+import { createReflectionDecorator } from "@zwave-js/core/reflection";
+import {
+	Bytes,
+	type JSONObject,
+	type TypedClassDecorator,
+} from "@zwave-js/shared/safe";
 import { num2hex, staticExtends } from "@zwave-js/shared/safe";
-import { FunctionType, MessageType } from "./Constants";
-import { MessageHeaders } from "./MessageHeaders";
+import { FunctionType, MessageType } from "./Constants.js";
+import { MessageHeaders } from "./MessageHeaders.js";
 
 export type MessageConstructor<T extends Message> = typeof Message & {
 	new (options: MessageBaseOptions): T;
@@ -50,7 +52,7 @@ export interface MessageOptions extends MessageBaseOptions {
 	functionType?: FunctionType;
 	expectedResponse?: FunctionType | typeof Message | ResponsePredicate;
 	expectedCallback?: FunctionType | typeof Message | ResponsePredicate;
-	payload?: Buffer;
+	payload?: Bytes;
 }
 
 export interface MessageEncodingContext
@@ -87,7 +89,7 @@ export function hasNodeId<T extends Message>(msg: T): msg is T & HasNodeId {
 }
 
 /** Returns the number of bytes the first message in the buffer occupies */
-function getMessageLength(data: Buffer): number {
+function getMessageLength(data: Uint8Array): number {
 	const remainingLength = data[1];
 	return remainingLength + 2;
 }
@@ -96,10 +98,10 @@ export class MessageRaw {
 	public constructor(
 		public readonly type: MessageType,
 		public readonly functionType: FunctionType,
-		public readonly payload: Buffer,
+		public readonly payload: Bytes,
 	) {}
 
-	public static parse(data: Buffer): MessageRaw {
+	public static parse(data: Uint8Array): MessageRaw {
 		// SOF, length, type, commandId and checksum must be present
 		if (!data.length || data.length < 5) {
 			throw new ZWaveError(
@@ -136,12 +138,12 @@ export class MessageRaw {
 		const type: MessageType = data[2];
 		const functionType: FunctionType = data[3];
 		const payloadLength = messageLength - 5;
-		const payload = data.subarray(4, 4 + payloadLength);
+		const payload = Bytes.view(data.subarray(4, 4 + payloadLength));
 
 		return new MessageRaw(type, functionType, payload);
 	}
 
-	public withPayload(payload: Buffer): MessageRaw {
+	public withPayload(payload: Bytes): MessageRaw {
 		return new MessageRaw(this.type, this.functionType, payload);
 	}
 }
@@ -161,7 +163,7 @@ export class Message {
 			// Fall back to decorated response/callback types if none is given
 			expectedResponse = getExpectedResponse(this),
 			expectedCallback = getExpectedCallback(this),
-			payload = Buffer.allocUnsafe(0),
+			payload = new Bytes(),
 			callbackId,
 		} = options;
 
@@ -187,7 +189,7 @@ export class Message {
 	}
 
 	public static parse(
-		data: Buffer,
+		data: Uint8Array,
 		ctx: MessageParsingContext,
 	): Message {
 		const raw = MessageRaw.parse(data);
@@ -223,7 +225,7 @@ export class Message {
 		| typeof Message
 		| ResponsePredicate
 		| undefined;
-	public payload: Buffer; // TODO: Length limit 255
+	public payload: Bytes; // TODO: Length limit 255
 
 	/** Used to map requests to callbacks */
 	public callbackId: number | undefined;
@@ -263,17 +265,19 @@ export class Message {
 		return;
 	}
 
-	/** Serializes this message into a Buffer */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public serialize(ctx: MessageEncodingContext): Buffer {
-		const ret = Buffer.allocUnsafe(this.payload.length + 5);
+	/**
+	 * Serializes this message into a Buffer
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		const ret = new Bytes(this.payload.length + 5);
 		ret[0] = MessageHeaders.SOF;
 		// length of the following data, including the checksum
 		ret[1] = this.payload.length + 3;
 		// write the remaining data
 		ret[2] = this.type;
 		ret[3] = this.functionType;
-		this.payload.copy(ret, 4);
+		ret.set(this.payload, 4);
 		// followed by the checksum
 		ret[ret.length - 1] = computeChecksum(ret);
 		return ret;
@@ -446,7 +450,7 @@ export class Message {
 }
 
 /** Computes the checksum for a serialized message as defined in the Z-Wave specs */
-function computeChecksum(message: Buffer): number {
+function computeChecksum(message: Uint8Array): number {
 	let ret = 0xff;
 	// exclude SOF and checksum byte from the computation
 	for (let i = 1; i < message.length - 1; i++) {
@@ -481,7 +485,7 @@ function getMessageTypeMapKey(
 }
 
 const messageTypesDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[messageType: MessageType, functionType: FunctionType],
 	{ messageType: MessageType; functionType: FunctionType },
 	MessageConstructor<Message>
@@ -552,7 +556,7 @@ function getMessageConstructor(
 }
 
 const expectedResponseDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[typeOrPredicate: FunctionType | typeof Message | ResponsePredicate],
 	FunctionType | typeof Message | ResponsePredicate,
 	MessageConstructor<Message>
@@ -588,7 +592,7 @@ export function getExpectedResponseStatic<
 }
 
 const expectedCallbackDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[typeOrPredicate: FunctionType | typeof Message | ResponsePredicate],
 	FunctionType | typeof Message | ResponsePredicate,
 	MessageConstructor<Message>
@@ -601,9 +605,12 @@ const expectedCallbackDecorator = createReflectionDecorator<
 /**
  * Defines the expected callback function type or message class for a Z-Wave message
  */
-export function expectedCallback<TSent extends Message>(
-	typeOrPredicate: FunctionType | typeof Message | ResponsePredicate<TSent>,
-): TypedClassDecorator<Message> {
+export function expectedCallback<TSent extends typeof Message>(
+	typeOrPredicate:
+		| FunctionType
+		| typeof Message
+		| ResponsePredicate<InstanceType<TSent>>,
+): TypedClassDecorator<TSent> {
 	return expectedCallbackDecorator.decorator(typeOrPredicate as any);
 }
 
@@ -628,7 +635,7 @@ export function getExpectedCallbackStatic<
 }
 
 const priorityDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[prio: MessagePriority],
 	MessagePriority
 >({

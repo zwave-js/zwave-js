@@ -1,7 +1,9 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	type ApplicationNodeInformation,
 	CommandClasses,
 	type GenericDeviceClass,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -19,46 +21,42 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
+} from "../lib/CommandClassDecorators.js";
 import {
 	isEncapsulatingCommandClass,
 	isMultiEncapsulatingCommandClass,
-} from "../lib/EncapsulatingCommandClass";
-import { V } from "../lib/Values";
-import { MultiChannelCommand } from "../lib/_Types";
+} from "../lib/EncapsulatingCommandClass.js";
+import { V } from "../lib/Values.js";
+import { MultiChannelCommand } from "../lib/_Types.js";
 
 // TODO: Handle removal reports of dynamic endpoints
 
-export const MultiChannelCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multi Channel"], {
+export const MultiChannelCCValues = V.defineCCValues(
+	CommandClasses["Multi Channel"],
+	{
 		...V.staticProperty("endpointIndizes", undefined, {
 			internal: true,
 			supportsEndpoints: false,
 		}),
-
 		...V.staticPropertyWithName(
 			"individualEndpointCount",
 			"individualCount",
@@ -68,7 +66,6 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"aggregatedEndpointCount",
 			"aggregatedCount",
@@ -78,7 +75,6 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"endpointCountIsDynamic",
 			"countIsDynamic",
@@ -88,7 +84,6 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"endpointsHaveIdenticalCapabilities",
 			"identicalCapabilities",
@@ -98,23 +93,18 @@ export const MultiChannelCCValues = Object.freeze({
 				supportsEndpoints: false,
 			},
 		),
-
 		...V.staticPropertyWithName(
 			"endpointCCs",
 			"commandClasses",
 			undefined,
 			{ internal: true },
 		),
-
 		...V.staticPropertyWithName(
 			"endpointDeviceClass",
 			"deviceClass",
 			undefined,
 			{ internal: true },
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multi Channel"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"aggregatedEndpointMembers",
 			"members",
@@ -124,8 +114,8 @@ export const MultiChannelCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI
 
@@ -814,6 +804,19 @@ export interface MultiChannelCCEndPointReportOptions {
 }
 
 @CCCommand(MultiChannelCommand.EndPointReport)
+@ccValueProperty("countIsDynamic", MultiChannelCCValues.endpointCountIsDynamic)
+@ccValueProperty(
+	"identicalCapabilities",
+	MultiChannelCCValues.endpointsHaveIdenticalCapabilities,
+)
+@ccValueProperty(
+	"individualCount",
+	MultiChannelCCValues.individualEndpointCount,
+)
+@ccValueProperty(
+	"aggregatedCount",
+	MultiChannelCCValues.aggregatedEndpointCount,
+)
 export class MultiChannelCCEndPointReport extends MultiChannelCC {
 	public constructor(
 		options: WithAddress<MultiChannelCCEndPointReportOptions>,
@@ -840,7 +843,7 @@ export class MultiChannelCCEndPointReport extends MultiChannelCC {
 			aggregatedCount = raw.payload[2] & 0b01111111;
 		}
 
-		return new MultiChannelCCEndPointReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			countIsDynamic,
 			identicalCapabilities,
@@ -849,20 +852,16 @@ export class MultiChannelCCEndPointReport extends MultiChannelCC {
 		});
 	}
 
-	@ccValue(MultiChannelCCValues.endpointCountIsDynamic)
 	public countIsDynamic: boolean;
 
-	@ccValue(MultiChannelCCValues.endpointsHaveIdenticalCapabilities)
 	public identicalCapabilities: boolean;
 
-	@ccValue(MultiChannelCCValues.individualEndpointCount)
 	public individualCount: number;
 
-	@ccValue(MultiChannelCCValues.aggregatedEndpointCount)
 	public aggregatedCount: MaybeNotKnown<number>;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			(this.countIsDynamic ? 0b10000000 : 0)
 			| (this.identicalCapabilities ? 0b01000000 : 0),
 			this.individualCount & 0b01111111,
@@ -940,7 +939,7 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC
 			&& genericDeviceClass === 0xff // "Non-Interoperable"
 			&& specificDeviceClass === 0x00;
 
-		return new MultiChannelCCCapabilityReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			endpointIndex,
 			isDynamic,
@@ -977,9 +976,9 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC
 	public readonly isDynamic: boolean;
 	public readonly wasRemoved: boolean;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([
 				(this.endpointIndex & 0b01111111)
 				| (this.isDynamic ? 0b10000000 : 0),
 			]),
@@ -1041,7 +1040,7 @@ export class MultiChannelCCCapabilityGet extends MultiChannelCC {
 		validatePayload(raw.payload.length >= 1);
 		const requestedEndpoint = raw.payload[0] & 0b01111111;
 
-		return new MultiChannelCCCapabilityGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			requestedEndpoint,
 		});
@@ -1049,8 +1048,8 @@ export class MultiChannelCCCapabilityGet extends MultiChannelCC {
 
 	public requestedEndpoint: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.requestedEndpoint & 0b01111111]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.requestedEndpoint & 0b01111111]);
 		return super.serialize(ctx);
 	}
 
@@ -1098,7 +1097,7 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
 			.map((e) => e & 0b01111111)
 			.filter((e) => e !== 0);
 
-		return new MultiChannelCCEndPointFindReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			reportsToFollow,
 			genericClass,
@@ -1112,14 +1111,14 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
 	public foundEndpoints: number[];
 	public reportsToFollow: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([
 				this.reportsToFollow,
 				this.genericClass,
 				this.specificClass,
 			]),
-			Buffer.from(this.foundEndpoints.map((e) => e & 0b01111111)),
+			Bytes.from(this.foundEndpoints.map((e) => e & 0b01111111)),
 		]);
 		return super.serialize(ctx);
 	}
@@ -1139,11 +1138,12 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
 	public mergePartialCCs(
 		partials: MultiChannelCCEndPointFindReport[],
 		_ctx: CCParsingContext,
-	): void {
+	): Promise<void> {
 		// Concat the list of end points
 		this.foundEndpoints = [...partials, this]
 			.map((report) => report.foundEndpoints)
 			.reduce((prev, cur) => prev.concat(...cur), []);
+		return Promise.resolve();
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -1189,7 +1189,7 @@ export class MultiChannelCCEndPointFind extends MultiChannelCC {
 		const genericClass = raw.payload[0];
 		const specificClass = raw.payload[1];
 
-		return new MultiChannelCCEndPointFind({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			genericClass,
 			specificClass,
@@ -1199,8 +1199,8 @@ export class MultiChannelCCEndPointFind extends MultiChannelCC {
 	public genericClass: number;
 	public specificClass: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.genericClass, this.specificClass]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.genericClass, this.specificClass]);
 		return super.serialize(ctx);
 	}
 
@@ -1226,6 +1226,11 @@ export interface MultiChannelCCAggregatedMembersReportOptions {
 }
 
 @CCCommand(MultiChannelCommand.AggregatedMembersReport)
+@ccValueProperty(
+	"members",
+	MultiChannelCCValues.aggregatedEndpointMembers,
+	(self) => [self.aggregatedEndpointIndex],
+)
 export class MultiChannelCCAggregatedMembersReport extends MultiChannelCC {
 	public constructor(
 		options: WithAddress<MultiChannelCCAggregatedMembersReportOptions>,
@@ -1248,7 +1253,7 @@ export class MultiChannelCCAggregatedMembersReport extends MultiChannelCC {
 		const bitMask = raw.payload.subarray(2, 2 + bitMaskLength);
 		const members = parseBitMask(bitMask);
 
-		return new MultiChannelCCAggregatedMembersReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			aggregatedEndpointIndex,
 			members,
@@ -1257,11 +1262,6 @@ export class MultiChannelCCAggregatedMembersReport extends MultiChannelCC {
 
 	public readonly aggregatedEndpointIndex: number;
 
-	@ccValue(
-		MultiChannelCCValues.aggregatedEndpointMembers,
-		(self: MultiChannelCCAggregatedMembersReport) =>
-			[self.aggregatedEndpointIndex] as const,
-	)
 	public readonly members: readonly number[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -1307,8 +1307,8 @@ export class MultiChannelCCAggregatedMembersGet extends MultiChannelCC {
 
 	public requestedEndpoint: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.requestedEndpoint & 0b0111_1111]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.requestedEndpoint & 0b0111_1111]);
 		return super.serialize(ctx);
 	}
 
@@ -1395,10 +1395,10 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 		this.destination = options.destination;
 	}
 
-	public static from(
+	public static async from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
-	): MultiChannelCCCommandEncapsulation {
+	): Promise<MultiChannelCCCommandEncapsulation> {
 		validatePayload(raw.payload.length >= 2);
 
 		let endpointIndex: number;
@@ -1418,13 +1418,16 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 			destination = raw.payload[1] & 0b0111_1111;
 			if (isBitMask) {
 				destination = parseBitMask(
-					Buffer.from([destination]),
+					Bytes.from([destination]),
 				) as any;
 			}
 		}
 		// No need to validate further, each CC does it for itself
-		const encapsulated = CommandClass.parse(raw.payload.subarray(2), ctx);
-		return new MultiChannelCCCommandEncapsulation({
+		const encapsulated = await CommandClass.parse(
+			raw.payload.subarray(2),
+			ctx,
+		);
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			endpointIndex,
 			destination,
@@ -1436,7 +1439,7 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 	/** The destination end point (0-127) or an array of destination end points (1-7) */
 	public destination: MultiChannelCCDestination;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
 			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
 				?.treatDestinationEndpointAsSource
@@ -1452,9 +1455,9 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 			? this.destination & 0b0111_1111
 			// The destination is a bit mask
 			: encodeBitMask(this.destination, 7)[0] | 0b1000_0000;
-		this.payload = Buffer.concat([
-			Buffer.from([this.endpointIndex & 0b0111_1111, destination]),
-			this.encapsulated.serialize(ctx),
+		this.payload = Bytes.concat([
+			Bytes.from([this.endpointIndex & 0b0111_1111, destination]),
+			await this.encapsulated.serialize(ctx),
 		]);
 		return super.serialize(ctx);
 	}
@@ -1504,7 +1507,7 @@ export class MultiChannelCCV1Report extends MultiChannelCC {
 		const requestedCC: CommandClasses = raw.payload[0];
 		const endpointCount = raw.payload[1];
 
-		return new MultiChannelCCV1Report({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			requestedCC,
 			endpointCount,
@@ -1564,8 +1567,8 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
 
 	public requestedCC: CommandClasses;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.requestedCC]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.requestedCC]);
 		return super.serialize(ctx);
 	}
 
@@ -1615,10 +1618,10 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 		this.endpointIndex = this.encapsulated.endpointIndex;
 	}
 
-	public static from(
+	public static async from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
-	): MultiChannelCCV1CommandEncapsulation {
+	): Promise<MultiChannelCCV1CommandEncapsulation> {
 		validatePayload(raw.payload.length >= 1);
 		const endpointIndex = raw.payload[0];
 
@@ -1628,12 +1631,12 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 			&& raw.payload[1] === 0x00;
 
 		// No need to validate further, each CC does it for itself
-		const encapsulated = CommandClass.parse(
+		const encapsulated = await CommandClass.parse(
 			raw.payload.subarray(isV2withV1Header ? 2 : 1),
 			ctx,
 		);
 
-		return new MultiChannelCCV1CommandEncapsulation({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			endpointIndex,
 			encapsulated,
@@ -1642,10 +1645,10 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 
 	public encapsulated!: CommandClass;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([this.endpointIndex]),
-			this.encapsulated.serialize(ctx),
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([this.endpointIndex]),
+			await this.encapsulated.serialize(ctx),
 		]);
 		return super.serialize(ctx);
 	}

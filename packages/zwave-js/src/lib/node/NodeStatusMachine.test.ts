@@ -1,47 +1,29 @@
-import { type Interpreter, interpret } from "xstate";
-// import { SimulatedClock } from "xstate/lib/SimulatedClock";
-import test, { type ExecutionContext } from "ava";
+import { test } from "vitest";
 import {
-	type NodeStatusEvent,
-	type NodeStatusMachine,
-	type NodeStatusStateSchema,
+	type NodeStatusMachineInput,
+	type NodeStatusState,
 	createNodeStatusMachine,
-} from "./NodeStatusMachine";
+} from "./NodeStatusMachine.js";
 
 const testNodeNonSleeping = { canSleep: false } as any;
 const testNodeSleeping = { canSleep: true } as any;
 
-function startMachine(
-	t: ExecutionContext,
-	machine: NodeStatusMachine,
-): Interpreter<any, NodeStatusStateSchema, NodeStatusEvent, any> {
-	const service = interpret(machine).start();
-	t.teardown(() => service.stop());
-	return service;
-}
-
 test(`The node should start in the unknown state if it maybe cannot sleep`, (t) => {
-	const testMachine = createNodeStatusMachine({
-		canSleep: false,
-	} as any);
+	const machine = createNodeStatusMachine(testNodeNonSleeping);
 
-	const service = startMachine(t, testMachine);
-	t.is(service.getSnapshot().value, "unknown");
+	t.expect(machine.state.value).toBe("unknown");
 });
 
 test(`The node should start in the unknown state if it can definitely sleep`, (t) => {
-	const testMachine = createNodeStatusMachine({
-		canSleep: true,
-	} as any);
+	const machine = createNodeStatusMachine(testNodeSleeping);
 
-	const service = startMachine(t, testMachine);
-	t.is(service.getSnapshot().value, "unknown");
+	t.expect(machine.state.value).toBe("unknown");
 });
 
 const transitions: {
-	start: keyof NodeStatusStateSchema["states"];
-	event: NodeStatusEvent["type"];
-	target: keyof NodeStatusStateSchema["states"];
+	start: NodeStatusState["value"];
+	event: NodeStatusMachineInput["value"];
+	target: NodeStatusState["value"];
 	canSleep?: boolean;
 }[] = [
 	{
@@ -179,27 +161,24 @@ for (const testCase of transitions) {
 			? testNodeSleeping
 			: testNodeNonSleeping;
 
-		const testMachine = createNodeStatusMachine(testNode);
-		testMachine.initial = testCase.start;
+		const machine = createNodeStatusMachine(testNode);
+		machine["_state"] = { value: testCase.start };
 
-		const service = startMachine(t, testMachine);
-		service.send(testCase.event);
-		t.is(service.getSnapshot().value, testCase.target);
+		machine.transition(machine.next({ value: testCase.event })?.newState);
+		t.expect(machine.state.value).toBe(testCase.target);
 	});
 }
 
 test("A transition from unknown to awake should not happen if the node cannot sleep", (t) => {
-	const testMachine = createNodeStatusMachine(testNodeNonSleeping);
+	const machine = createNodeStatusMachine(testNodeNonSleeping);
 
-	const service = startMachine(t, testMachine);
-	service.send("AWAKE");
-	t.is(service.getSnapshot().value, "unknown");
+	machine.transition(machine.next({ value: "AWAKE" })?.newState);
+	t.expect(machine.state.value).toBe("unknown");
 });
 
 test("A transition from unknown to asleep should not happen if the node cannot sleep", (t) => {
-	const testMachine = createNodeStatusMachine(testNodeNonSleeping);
+	const machine = createNodeStatusMachine(testNodeNonSleeping);
 
-	const service = startMachine(t, testMachine);
-	service.send("ASLEEP");
-	t.is(service.getSnapshot().value, "unknown");
+	machine.transition(machine.next({ value: "ASLEEP" })?.newState);
+	t.expect(machine.state.value).toBe("unknown");
 });

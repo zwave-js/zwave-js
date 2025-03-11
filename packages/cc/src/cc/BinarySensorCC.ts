@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -11,11 +13,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, isEnumMember } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -24,34 +22,33 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { BinarySensorCommand, BinarySensorType } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { BinarySensorCommand, BinarySensorType } from "../lib/_Types.js";
 
-export const BinarySensorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Binary Sensor"], {
+export const BinarySensorCCValues = V.defineCCValues(
+	CommandClasses["Binary Sensor"],
+	{
 		...V.staticProperty("supportedSensorTypes", undefined, {
 			internal: true,
 		}),
-	}),
 
-	...V.defineDynamicCCValues(CommandClasses["Binary Sensor"], {
 		...V.dynamicPropertyWithName(
 			"state",
 			/* property */ (sensorType: BinarySensorType) =>
@@ -69,8 +66,8 @@ export const BinarySensorCCValues = Object.freeze({
 				ccSpecific: { sensorType },
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -367,7 +364,7 @@ export class BinarySensorCCReport extends BinarySensorCC {
 			type = raw.payload[1];
 		}
 
-		return new BinarySensorCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			value,
 			type,
@@ -399,8 +396,8 @@ export class BinarySensorCCReport extends BinarySensorCC {
 	public type: BinarySensorType;
 	public value: boolean;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.value ? 0xff : 0x00, this.type]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.value ? 0xff : 0x00, this.type]);
 		return super.serialize(ctx);
 	}
 
@@ -451,7 +448,7 @@ export class BinarySensorCCGet extends BinarySensorCC {
 			sensorType = raw.payload[0];
 		}
 
-		return new BinarySensorCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sensorType,
 		});
@@ -459,8 +456,8 @@ export class BinarySensorCCGet extends BinarySensorCC {
 
 	public sensorType: BinarySensorType | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.sensorType ?? BinarySensorType.Any]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.sensorType ?? BinarySensorType.Any]);
 		return super.serialize(ctx);
 	}
 
@@ -483,6 +480,10 @@ export interface BinarySensorCCSupportedReportOptions {
 }
 
 @CCCommand(BinarySensorCommand.SupportedReport)
+@ccValueProperty(
+	"supportedSensorTypes",
+	BinarySensorCCValues.supportedSensorTypes,
+)
 export class BinarySensorCCSupportedReport extends BinarySensorCC {
 	public constructor(
 		options: WithAddress<BinarySensorCCSupportedReportOptions>,
@@ -507,16 +508,15 @@ export class BinarySensorCCSupportedReport extends BinarySensorCC {
 				(t) => t !== 0,
 			);
 
-		return new BinarySensorCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedSensorTypes,
 		});
 	}
 
-	@ccValue(BinarySensorCCValues.supportedSensorTypes)
 	public supportedSensorTypes: BinarySensorType[];
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeBitMask(
 			this.supportedSensorTypes.filter((t) => t !== BinarySensorType.Any),
 			undefined,

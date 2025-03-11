@@ -1,7 +1,11 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { getEnumMemberName, num2hex } from "@zwave-js/shared";
-import { type NVM, NVMAccess, type NVMIO } from "./common/definitions";
-import { nvmReadBuffer, nvmReadUInt32LE, nvmWriteBuffer } from "./common/utils";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
+import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared/safe";
+import { type NVM, NVMAccess, type NVMIO } from "./common/definitions.js";
+import {
+	nvmReadBuffer,
+	nvmReadUInt32LE,
+	nvmWriteBuffer,
+} from "./common/utils.js";
 import {
 	FLASH_MAX_PAGE_SIZE_700,
 	FLASH_MAX_PAGE_SIZE_800,
@@ -25,12 +29,12 @@ import {
 	PageStatus,
 	PageWriteSize,
 	ZWAVE_APPLICATION_NVM_SIZE,
-} from "./nvm3/consts";
+} from "./nvm3/consts.js";
 import {
 	ApplicationVersionFile800ID,
 	type NVMSection,
 	getNVMSectionByFileID,
-} from "./nvm3/files";
+} from "./nvm3/files/index.js";
 import {
 	type NVM3Object,
 	type NVM3ObjectHeader,
@@ -39,13 +43,13 @@ import {
 	getObjectHeader,
 	getRequiredSpace,
 	serializeObject,
-} from "./nvm3/object";
+} from "./nvm3/object.js";
 import {
 	type NVM3PageHeader,
 	pageSizeFromBits,
 	serializePageHeader,
-} from "./nvm3/page";
-import { validateBergerCode, validateBergerCodeMulti } from "./nvm3/utils";
+} from "./nvm3/page.js";
+import { validateBergerCode, validateBergerCodeMulti } from "./nvm3/utils.js";
 
 // TODO: Possible optimizations:
 // Investigate if there is a better way to determine whether the NVM
@@ -86,7 +90,7 @@ export interface NVM3Meta {
 
 export type NVM3EraseOptions = Partial<NVM3Meta>;
 
-export class NVM3 implements NVM<number, Buffer> {
+export class NVM3 implements NVM<number, Uint8Array> {
 	public constructor(io: NVMIO) {
 		this._io = io;
 	}
@@ -286,7 +290,7 @@ export class NVM3 implements NVM<number, Buffer> {
 		return section.objectLocations.has(fileId);
 	}
 
-	public readObjectData(object: NVM3ObjectHeader): Promise<Buffer> {
+	public readObjectData(object: NVM3ObjectHeader): Promise<Uint8Array> {
 		return nvmReadBuffer(
 			this._io,
 			object.offset + object.headerSize,
@@ -294,7 +298,7 @@ export class NVM3 implements NVM<number, Buffer> {
 		);
 	}
 
-	public async get(fileId: number): Promise<Buffer | undefined> {
+	public async get(fileId: number): Promise<Uint8Array | undefined> {
 		this._info ??= await this.init();
 
 		// Determine which ring buffer to read in
@@ -305,7 +309,7 @@ export class NVM3 implements NVM<number, Buffer> {
 		// TODO: There should be no need for scanning, since we know the object locations after init().
 
 		// Start scanning backwards through the pages ring buffer, starting with the current page
-		let parts: Buffer[] | undefined;
+		let parts: Uint8Array[] | undefined;
 		let complete = false;
 		let objType: ObjectType | undefined;
 		const resetFragments = () => {
@@ -400,7 +404,7 @@ export class NVM3 implements NVM<number, Buffer> {
 
 		if (!parts?.length || !complete || objType == undefined) return;
 
-		return Buffer.concat(parts);
+		return Bytes.concat(parts);
 	}
 
 	private async writeObjects(objects: NVM3Object[]): Promise<void> {
@@ -449,8 +453,8 @@ export class NVM3 implements NVM<number, Buffer> {
 				page.objects = [];
 
 				const pageHeaderBuffer = serializePageHeader(page);
-				const pageBuffer = Buffer.alloc(page.pageSize, 0xff);
-				pageHeaderBuffer.copy(pageBuffer, 0);
+				const pageBuffer = new Uint8Array(page.pageSize).fill(0xff);
+				pageBuffer.set(pageHeaderBuffer, 0);
 
 				await nvmWriteBuffer(this._io, page.offset, pageBuffer);
 			}
@@ -522,7 +526,7 @@ export class NVM3 implements NVM<number, Buffer> {
 		}
 	}
 
-	public async set(property: number, value: Buffer): Promise<void> {
+	public async set(property: number, value: Uint8Array): Promise<void> {
 		if (!this._info) await this.init();
 		await this.ensureWritable();
 
@@ -539,7 +543,7 @@ export class NVM3 implements NVM<number, Buffer> {
 
 	/** Writes multiple values to the NVM at once. `null` / `undefined` cause the value to be deleted */
 	public async setMany(
-		values: [number, Buffer | null | undefined][],
+		values: [number, Uint8Array | null | undefined][],
 	): Promise<void> {
 		if (!this._info) await this.init();
 		await this.ensureWritable();
@@ -547,7 +551,7 @@ export class NVM3 implements NVM<number, Buffer> {
 		// Group objects by their NVM section
 		const objectsBySection = new Map<
 			number, /* offset */
-			[number, Buffer | null | undefined][]
+			[number, Uint8Array | null | undefined][]
 		>();
 		for (const [key, value] of values) {
 			const sectionOffset =
@@ -642,7 +646,7 @@ export class NVM3 implements NVM<number, Buffer> {
 		const numPages = this._io.size / pageSize;
 		for (let i = 0; i < numPages; i++) {
 			const offset = i * pageSize;
-			const pageBuffer = Buffer.alloc(pageSize, 0xff);
+			const pageBuffer = new Uint8Array(pageSize).fill(0xff);
 			const pageHeader: NVM3PageHeader = {
 				offset,
 				version: 0x01,
@@ -654,7 +658,7 @@ export class NVM3 implements NVM<number, Buffer> {
 				status: PageStatus.OK,
 				writeSize,
 			};
-			serializePageHeader(pageHeader).copy(pageBuffer, 0);
+			pageBuffer.set(serializePageHeader(pageHeader), 0);
 			await nvmWriteBuffer(this._io, offset, pageBuffer);
 
 			if (sharedFileSystem || offset < ZWAVE_APPLICATION_NVM_SIZE) {
@@ -708,7 +712,9 @@ async function readPageHeader(
 		);
 	}
 
-	const buffer = (await io.read(offset, NVM3_PAGE_HEADER_SIZE)).buffer;
+	const buffer = Bytes.view(
+		(await io.read(offset, NVM3_PAGE_HEADER_SIZE)).buffer,
+	);
 
 	const { version, eraseCount } = tryGetVersionAndEraseCount(buffer);
 
@@ -771,10 +777,11 @@ async function readPageHeader(
 }
 
 function tryGetVersionAndEraseCount(
-	header: Buffer,
+	header: Uint8Array,
 ): { version: number; eraseCount: number } {
-	const version = header.readUInt16LE(0);
-	const magic = header.readUInt16LE(2);
+	const buffer = Bytes.view(header);
+	const version = buffer.readUInt16LE(0);
+	const magic = buffer.readUInt16LE(2);
 	if (magic !== NVM3_PAGE_MAGIC) {
 		throw new ZWaveError(
 			"Not a valid NVM3 page!",
@@ -789,12 +796,12 @@ function tryGetVersionAndEraseCount(
 	}
 
 	// The erase counter is saved twice, once normally, once inverted
-	let eraseCount = header.readUInt32LE(4);
+	let eraseCount = buffer.readUInt32LE(4);
 	const eraseCountCode = eraseCount >>> NVM3_PAGE_COUNTER_SIZE;
 	eraseCount &= NVM3_PAGE_COUNTER_MASK;
 	validateBergerCode(eraseCount, eraseCountCode, NVM3_PAGE_COUNTER_SIZE);
 
-	let eraseCountInv = header.readUInt32LE(8);
+	let eraseCountInv = buffer.readUInt32LE(8);
 	const eraseCountInvCode = eraseCountInv >>> NVM3_PAGE_COUNTER_SIZE;
 	eraseCountInv &= NVM3_PAGE_COUNTER_MASK;
 	validateBergerCode(

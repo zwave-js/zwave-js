@@ -1,19 +1,19 @@
 import {
 	type DataDirection,
-	type ZWaveLogContainer,
+	type LogContainer,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 } from "@zwave-js/core";
 import { buffer2hex, getEnumMemberName, num2hex } from "@zwave-js/shared";
-import { MessageHeaders } from "../message/MessageHeaders";
+import { MessageHeaders } from "../message/MessageHeaders.js";
 import {
 	SERIAL_LABEL,
 	SERIAL_LOGLEVEL,
 	type SerialLogContext,
-} from "./Logger_safe";
+} from "./Logger_safe.js";
 
 export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
-	constructor(loggers: ZWaveLogContainer) {
+	constructor(loggers: LogContainer) {
 		super(loggers, SERIAL_LABEL);
 	}
 
@@ -54,7 +54,7 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
 	/**
 	 * Logs receipt of unexpected data while waiting for an ACK, NAK, CAN, or data frame
 	 */
-	public discarded(data: Buffer): void {
+	public discarded(data: Uint8Array): void {
 		if (this.isVisible()) {
 			const direction: DataDirection = "inbound";
 			this.logger.log({
@@ -94,11 +94,11 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
 	 * @param direction The direction the data was sent
 	 * @param data The data that was transmitted or received
 	 */
-	public data(direction: DataDirection, data: Buffer): void {
+	public data(direction: DataDirection, data: Uint8Array): void {
 		if (this.isVisible()) {
 			this.logger.log({
 				level: SERIAL_LOGLEVEL,
-				message: `0x${data.toString("hex")}`,
+				message: buffer2hex(data),
 				secondaryTags: `(${data.length} bytes)`,
 				direction: getDirectionPrefix(direction),
 				context: {
@@ -129,12 +129,12 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
 	 * Logs a message
 	 * @param message The message to output
 	 */
-	public message(message: string): void {
+	public message(message: string, direction: DataDirection = "none"): void {
 		if (this.isVisible()) {
 			this.logger.log({
 				level: SERIAL_LOGLEVEL,
 				message,
-				direction: getDirectionPrefix("none"),
+				direction: getDirectionPrefix(direction),
 				context: {
 					source: "serial",
 					direction: "none",

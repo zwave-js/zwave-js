@@ -1,4 +1,5 @@
 import {
+	type CCEncodingContext,
 	type CommandClass,
 	MGRPExtension,
 	MPANExtension,
@@ -41,7 +42,6 @@ import {
 	ZWaveErrorCodes,
 	mergeSupervisionResults,
 } from "@zwave-js/core";
-import { type CCEncodingContext } from "@zwave-js/host";
 import type { Message } from "@zwave-js/serial";
 import {
 	type SendDataMessage,
@@ -50,13 +50,13 @@ import {
 } from "@zwave-js/serial/serialapi";
 import { type ContainsCC, containsCC } from "@zwave-js/serial/serialapi";
 import { getErrorMessage } from "@zwave-js/shared";
+import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
-import { setTimeout as wait } from "node:timers/promises";
-import type { Driver } from "./Driver";
-import type { MessageGenerator } from "./Transaction";
+import type { Driver } from "./Driver.js";
+import type { MessageGenerator } from "./Transaction.js";
 
 export type MessageGeneratorImplementation<T extends Message> = (
 	/** A reference to the driver */
@@ -137,7 +137,7 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 		additionalCommandTimeoutMs = 0,
 	) {
 		// Make sure we can send this message
-		if (isSendData(msg) && driver.exceedsMaxPayloadLength(msg)) {
+		if (isSendData(msg) && await driver.exceedsMaxPayloadLength(msg)) {
 			// We use explorer frames by default, but this reduces the maximum payload length by 2 bytes compared to AUTO_ROUTE
 			// Try disabling explorer frames for this message and see if it fits now.
 			function fail(): never {
@@ -148,7 +148,7 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 			}
 			if (msg.transmitOptions & TransmitOptions.Explore) {
 				msg.transmitOptions &= ~TransmitOptions.Explore;
-				if (driver.exceedsMaxPayloadLength(msg)) {
+				if (await driver.exceedsMaxPayloadLength(msg)) {
 					// Still too large
 					fail();
 				}
@@ -237,7 +237,9 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 		node?.supportsCC(CommandClasses["Transport Service"])
 		&& node.getCCVersion(CommandClasses["Transport Service"]) >= 2;
 
-	if (!mayUseTransportService || !driver.exceedsMaxPayloadLength(msg)) {
+	if (
+		!mayUseTransportService || !(await driver.exceedsMaxPayloadLength(msg))
+	) {
 		// Transport Service isn't needed for this message
 		return yield* simpleMessageGenerator(
 			driver,
@@ -249,7 +251,7 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 	}
 
 	// Send the command split into multiple segments
-	const payload = msg.serializeCC(ctx);
+	const payload = await msg.serializeCC(ctx);
 	const numSegments = Math.ceil(payload.length / MAX_SEGMENT_SIZE);
 	const segmentDelay = numSegments > RELAXED_TIMING_THRESHOLD
 		? TransportServiceTimeouts.relaxedTimingDelayR2
@@ -332,7 +334,7 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 				if (isFirstTransferredSegment) {
 					isFirstTransferredSegment = false;
 				} else if (segmentDelay) {
-					await wait(segmentDelay, undefined, { ref: false });
+					await wait(segmentDelay, true);
 				}
 				const segment = unsentSegments.shift()!;
 
@@ -409,7 +411,7 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 						level: "debug",
 					});
 
-					await wait(waitTime, undefined, { ref: false });
+					await wait(waitTime, true);
 					continue attempts;
 				}
 
@@ -524,7 +526,7 @@ export const secureMessageGeneratorS0: MessageGeneratorImplementation<
 	let additionalTimeoutMs: number | undefined;
 
 	// Try to get a free nonce before requesting a new one
-	let nonce: Buffer | undefined = secMan.getFreeNonce(nodeId);
+	let nonce: Uint8Array | undefined = secMan.getFreeNonce(nodeId);
 	if (!nonce) {
 		// No free nonce, request a new one
 		const cc = new SecurityCCNonceGet({

@@ -1,8 +1,8 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { num2hex } from "@zwave-js/shared";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
+import { num2hex } from "@zwave-js/shared/safe";
 import { assertNever } from "alcalzone-shared/helpers";
-import { SUC_MAX_UPDATES } from "../../consts";
-import { type NVM3 } from "../NVM3";
+import { SUC_MAX_UPDATES } from "../../consts.js";
+import { type NVM3 } from "../NVM3.js";
 import {
 	type ControllerNVMProperty,
 	type LRNodeNVMProperty,
@@ -10,8 +10,8 @@ import {
 	type NVMProperty,
 	type NVMPropertyToDataType,
 	type NodeNVMProperty,
-} from "../common/definitions";
-import { type RouteCache } from "../common/routeCache";
+} from "../common/definitions.js";
+import { type RouteCache } from "../common/routeCache.js";
 import {
 	type ApplicationCCsFile,
 	ApplicationCCsFileID,
@@ -68,7 +68,7 @@ import {
 	nodeIdToRouteCacheFileIDV0,
 	nodeIdToRouteCacheFileIDV1,
 	sucUpdateIndexToSUCUpdateEntriesFileIDV5,
-} from "./files";
+} from "./files/index.js";
 
 const DEFAULT_FILE_VERSION = "7.0.0";
 
@@ -90,7 +90,7 @@ export class NVM3Adapter implements NVMAdapter {
 	} | undefined;
 
 	/** A list of pending changes that haven't been written to the NVM yet. `null` indicates a deleted entry. */
-	private _pendingChanges: Map<number, Buffer | null> = new Map();
+	private _pendingChanges: Map<number, Uint8Array | null> = new Map();
 
 	private getFileVersion(fileId: number): string {
 		if (
@@ -174,7 +174,7 @@ export class NVM3Adapter implements NVMAdapter {
 		if (!skipInit && !this._initialized) await this.init();
 
 		// Prefer pending changes over the actual NVM, so changes can be composed
-		let data: Buffer | null | undefined;
+		let data: Uint8Array | null | undefined;
 		if (this._pendingChanges.has(fileId)) {
 			data = this._pendingChanges.get(fileId);
 		} else {

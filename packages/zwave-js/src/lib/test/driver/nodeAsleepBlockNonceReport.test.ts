@@ -10,9 +10,9 @@ import {
 	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { setTimeout as wait } from "node:timers/promises";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"when a NonceReport does not get delivered, it does not block further nonce requests",
@@ -61,12 +61,13 @@ integrationTest(
 
 			// Parse Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
 			const parseS0CC: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
+				async handleCC(controller, self, receivedCC) {
 					// We don't support sequenced commands here
 					if (receivedCC instanceof SecurityCCCommandEncapsulation) {
-						receivedCC.mergePartialCCs([], {
+						await receivedCC.mergePartialCCs([], {
 							sourceNodeId: controller.ownNodeId,
 							__internalIsMockNode: true,
+							frameType: "singlecast",
 							...self.encodingContext,
 							...self.securityManagers,
 						});
@@ -139,8 +140,6 @@ integrationTest(
 					errorMessage: "Expected a Nonce Report to be sent",
 				},
 			);
-
-			t.pass();
 		},
 	},
 );

@@ -1,5 +1,3 @@
-import { padStart } from "alcalzone-shared/strings";
-
 /**
  * Used to identify errors from this library without relying on the specific wording of the error message
  */
@@ -24,7 +22,6 @@ export enum ZWaveErrorCodes {
 	Driver_InvalidOptions,
 	/** The driver tried to do something that requires security */
 	Driver_NoSecurity,
-	Driver_NoErrorHandler,
 	Driver_FeatureDisabled,
 
 	/** The task was removed from the task queue */
@@ -215,7 +212,7 @@ export enum ZWaveErrorCodes {
 }
 
 export function getErrorSuffix(code: ZWaveErrorCodes): string {
-	return `ZW${padStart(code.toString(), 4, "0")}`;
+	return `ZW${code.toString().padStart(4, "0")}`;
 }
 
 function appendErrorSuffix(message: string, code: ZWaveErrorCodes): string {

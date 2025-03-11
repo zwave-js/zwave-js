@@ -1,10 +1,15 @@
-import { Transform, type TransformCallback } from "node:stream";
-import type { SerialLogger } from "../log/Logger";
-import { ZnifferFrameType } from "../message/Constants";
-import { ZnifferMessageHeaders } from "../message/MessageHeaders";
+import { Bytes } from "@zwave-js/shared";
+import { type Transformer } from "node:stream/web";
+import type { SerialLogger } from "../log/Logger.js";
+import { ZnifferFrameType } from "../message/Constants.js";
+import { ZnifferMessageHeaders } from "../message/MessageHeaders.js";
+import {
+	type ZnifferSerialFrame,
+	ZnifferSerialFrameType,
+} from "./ZnifferSerialFrame.js";
 
 /** Given a buffer that starts with SOF, this method returns the number of bytes the first message occupies in the buffer */
-function getMessageLength(data: Buffer): number | undefined {
+function getMessageLength(data: Uint8Array): number | undefined {
 	if (!data || data.length === 0) return;
 	if (data[0] === ZnifferMessageHeaders.SOCF) {
 		// Control frame: SOF, CMD, remaining length
@@ -27,26 +32,23 @@ function getMessageLength(data: Buffer): number | undefined {
 	}
 }
 
-export class ZnifferParser extends Transform {
+class ZnifferParserTransformer
+	implements Transformer<Uint8Array, ZnifferSerialFrame>
+{
 	constructor(
 		private logger?: SerialLogger,
-		private onDiscarded?: (data: Buffer) => void,
-	) {
-		// We read byte streams but emit messages
-		super({ readableObjectMode: true });
-	}
+	) {}
 
-	private receiveBuffer = Buffer.allocUnsafe(0);
+	private receiveBuffer = new Bytes();
 
 	// Allow ignoring the high nibble of an ACK once to work around an issue in the 700 series firmware
 	public ignoreAckHighNibble: boolean = false;
 
-	_transform(
-		chunk: any,
-		encoding: string,
-		callback: TransformCallback,
-	): void {
-		this.receiveBuffer = Buffer.concat([this.receiveBuffer, chunk]);
+	transform(
+		chunk: Uint8Array,
+		controller: TransformStreamDefaultController<ZnifferSerialFrame>,
+	) {
+		this.receiveBuffer = Bytes.concat([this.receiveBuffer, chunk]);
 
 		while (this.receiveBuffer.length > 0) {
 			// Scan ahead until the next valid byte and log the invalid bytes, if any
@@ -62,10 +64,13 @@ export class ZnifferParser extends Transform {
 			if (skip > 0) {
 				const discarded = this.receiveBuffer.subarray(0, skip);
 				this.logger?.discarded(discarded);
-				this.onDiscarded?.(discarded);
+				controller.enqueue({
+					type: ZnifferSerialFrameType.Discarded,
+					data: discarded,
+				});
 
 				// Continue with the next valid byte
-				this.receiveBuffer = skipBytes(this.receiveBuffer, skip);
+				this.receiveBuffer = this.receiveBuffer.subarray(skip);
 				continue;
 			}
 
@@ -80,17 +85,24 @@ export class ZnifferParser extends Transform {
 				// We have at least one complete message.
 				// emit it and slice the read bytes from the buffer
 				const msg = this.receiveBuffer.subarray(0, msgLength);
-				this.receiveBuffer = skipBytes(this.receiveBuffer, msgLength);
+				this.receiveBuffer = this.receiveBuffer.subarray(msgLength);
 
 				this.logger?.data("inbound", msg);
-				this.push(msg);
+				controller.enqueue({
+					type: ZnifferSerialFrameType.SerialAPI,
+					data: msg,
+				});
 			}
 		}
-		callback();
 	}
 }
 
-/** Skips the first n bytes of a buffer and returns the rest */
-export function skipBytes(buf: Buffer, n: number): Buffer {
-	return Buffer.from(buf.subarray(n));
+export class ZnifferParser
+	extends TransformStream<Uint8Array, ZnifferSerialFrame>
+{
+	constructor(
+		logger?: SerialLogger,
+	) {
+		super(new ZnifferParserTransformer(logger));
+	}
 }

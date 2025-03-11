@@ -1,3 +1,9 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import {
+	type GetDeviceConfig,
+	type LookupManufacturer,
+} from "@zwave-js/config";
+import { type LogNode } from "@zwave-js/core";
 import {
 	type BroadcastCC,
 	type CCAddress,
@@ -10,6 +16,10 @@ import {
 	type GetAllEndpoints,
 	type GetCCs,
 	type GetEndpoint,
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
+	type HostIDs,
 	type ListenBehavior,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
@@ -33,28 +43,17 @@ import {
 	isZWaveError,
 	parseCCId,
 	valueIdToString,
-} from "@zwave-js/core";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetInterviewOptions,
-	GetNode,
-	GetSupportedCCVersion,
-	GetValueDB,
-	HostIDs,
-	LogNode,
-	LookupManufacturer,
-} from "@zwave-js/host";
+} from "@zwave-js/core/safe";
 import {
+	Bytes,
 	type JSONObject,
 	buffer2hex,
 	getEnumMemberName,
 	num2hex,
 	staticExtends,
-} from "@zwave-js/shared";
+} from "@zwave-js/shared/safe";
 import { isArray } from "alcalzone-shared/typeguards";
-import type { CCAPIHost, CCAPINode, ValueIDProperties } from "./API";
+import type { CCAPIHost, CCAPINode, ValueIDProperties } from "./API.js";
 import {
 	getCCCommand,
 	getCCCommandConstructor,
@@ -65,23 +64,24 @@ import {
 	getCommandClass,
 	getExpectedCCResponse,
 	getImplementedVersion,
-} from "./CommandClassDecorators";
+} from "./CommandClassDecorators.js";
 import {
 	type EncapsulatingCommandClass,
 	isEncapsulatingCommandClass,
 	isMultiEncapsulatingCommandClass,
-} from "./EncapsulatingCommandClass";
+} from "./EncapsulatingCommandClass.js";
 import {
 	type CCValue,
 	type DynamicCCValue,
 	type StaticCCValue,
 	defaultCCValueOptions,
-} from "./Values";
+} from "./Values.js";
+import { type GetInterviewOptions } from "./traits.js";
 
 export interface CommandClassOptions extends CCAddress {
 	ccId?: number; // Used to overwrite the declared CC ID
 	ccCommand?: number; // undefined = NoOp
-	payload?: Buffer;
+	payload?: Uint8Array;
 }
 
 // Defines the necessary traits an endpoint passed to a CC instance must have
@@ -156,30 +156,30 @@ export class CCRaw {
 	public constructor(
 		public ccId: CommandClasses,
 		public ccCommand: number | undefined,
-		public payload: Buffer,
+		public payload: Bytes,
 	) {}
 
-	public static parse(data: Buffer): CCRaw {
+	public static parse(data: Uint8Array): CCRaw {
 		const { ccId, bytesRead: ccIdLength } = parseCCId(data);
 		// There are so few exceptions that we can handle them here manually
 		if (ccId === CommandClasses["No Operation"]) {
-			return new CCRaw(ccId, undefined, Buffer.allocUnsafe(0));
+			return new CCRaw(ccId, undefined, new Bytes());
 		}
 		let ccCommand: number | undefined = data[ccIdLength];
-		let payload = data.subarray(ccIdLength + 1);
+		let payload = Bytes.view(data.subarray(ccIdLength + 1));
 		if (ccId === CommandClasses["Transport Service"]) {
 			// Transport Service only uses the higher 5 bits for the command
 			// and re-uses the lower 3 bits of the ccCommand as payload
-			payload = Buffer.concat([
-				Buffer.from([ccCommand & 0b111]),
+			payload = Bytes.concat([
+				Bytes.from([ccCommand & 0b111]),
 				payload,
 			]);
 			ccCommand = ccCommand & 0b11111_000;
 		} else if (ccId === CommandClasses["Manufacturer Proprietary"]) {
 			// ManufacturerProprietaryCC has no CC command, so the first
 			// payload byte is stored in ccCommand.
-			payload = Buffer.concat([
-				Buffer.from([ccCommand]),
+			payload = Bytes.concat([
+				Bytes.from([ccCommand]),
 				payload,
 			]);
 			ccCommand = undefined;
@@ -188,7 +188,7 @@ export class CCRaw {
 		return new CCRaw(ccId, ccCommand, payload);
 	}
 
-	public withPayload(payload: Buffer): CCRaw {
+	public withPayload(payload: Bytes): CCRaw {
 		return new CCRaw(this.ccId, this.ccCommand, payload);
 	}
 }
@@ -202,27 +202,27 @@ export class CommandClass implements CCId {
 			endpointIndex = 0,
 			ccId = getCommandClass(this),
 			ccCommand = getCCCommand(this),
-			payload = Buffer.allocUnsafe(0),
+			payload = new Uint8Array(),
 		} = options;
 
 		this.nodeId = nodeId;
 		this.endpointIndex = endpointIndex;
 		this.ccId = ccId;
 		this.ccCommand = ccCommand;
-		this.payload = payload;
+		this.payload = Bytes.view(payload);
 	}
 
-	public static parse(
-		data: Buffer,
+	public static async parse(
+		data: Uint8Array,
 		ctx: CCParsingContext,
-	): CommandClass {
+	): Promise<CommandClass> {
 		const raw = CCRaw.parse(data);
 
 		// Find the correct subclass constructor to invoke
 		const CCConstructor = getCCConstructor(raw.ccId);
 		if (!CCConstructor) {
 			// None -> fall back to the default constructor
-			return CommandClass.from(raw, ctx);
+			return await CommandClass.from(raw, ctx);
 		}
 
 		let CommandConstructor: CCConstructor<CommandClass> | undefined;
@@ -235,7 +235,7 @@ export class CommandClass implements CCId {
 		// Not every CC has a constructor for its commands. In that case,
 		// call the CC constructor directly
 		try {
-			return (CommandConstructor ?? CCConstructor).from(raw, ctx);
+			return await (CommandConstructor ?? CCConstructor).from(raw, ctx);
 		} catch (e) {
 			// Indicate invalid payloads with a special CC type
 			if (
@@ -269,7 +269,10 @@ export class CommandClass implements CCId {
 		}
 	}
 
-	public static from(raw: CCRaw, ctx: CCParsingContext): CommandClass {
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): CommandClass | Promise<CommandClass> {
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			ccId: raw.ccId,
@@ -288,8 +291,7 @@ export class CommandClass implements CCId {
 	/** The ID of the target node(s) */
 	public nodeId!: number | MulticastDestination;
 
-	// Work around https://github.com/Microsoft/TypeScript/issues/27555
-	public payload!: Buffer;
+	public payload: Bytes;
 
 	/** Which endpoint of the node this CC belongs to. 0 for the root device. */
 	public endpointIndex: number;
@@ -351,11 +353,11 @@ export class CommandClass implements CCId {
 	/**
 	 * Serializes this CommandClass to be embedded in a message payload or another CC
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public serialize(ctx: CCEncodingContext): Buffer {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// NoOp CCs have no command and no payload
 		if (this.ccId === CommandClasses["No Operation"]) {
-			return Buffer.from([this.ccId]);
+			return Bytes.from([this.ccId]);
 		} else if (this.ccCommand == undefined) {
 			throw new ZWaveError(
 				"Cannot serialize a Command Class without a command",
@@ -365,11 +367,11 @@ export class CommandClass implements CCId {
 
 		const payloadLength = this.payload.length;
 		const ccIdLength = this.isExtended() ? 2 : 1;
-		const data = Buffer.allocUnsafe(ccIdLength + 1 + payloadLength);
+		const data = new Bytes(ccIdLength + 1 + payloadLength);
 		data.writeUIntBE(this.ccId, 0, ccIdLength);
 		data[ccIdLength] = this.ccCommand;
 		if (payloadLength > 0 /* implies payload != undefined */) {
-			this.payload.copy(data, 1 + ccIdLength);
+			data.set(this.payload, 1 + ccIdLength);
 		}
 		return data;
 	}
@@ -435,7 +437,7 @@ export class CommandClass implements CCId {
 			ret.ccCommand = num2hex(this.ccCommand);
 		}
 		if (this.payload.length > 0) {
-			ret.payload = "0x" + this.payload.toString("hex");
+			ret.payload = buffer2hex(this.payload);
 		}
 		return ret;
 	}
@@ -952,10 +954,10 @@ export class CommandClass implements CCId {
 	}
 
 	/** Include previously received partial responses into a final CC */
-	public mergePartialCCs(
+	public async mergePartialCCs(
 		_partials: CommandClass[],
 		_ctx: CCParsingContext,
-	): void {
+	): Promise<void> {
 		// This is highly CC dependent
 		// Overwrite this in derived classes, by default do nothing
 	}

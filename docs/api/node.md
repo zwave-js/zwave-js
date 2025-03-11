@@ -318,23 +318,25 @@ Retrieves the firmware update capabilities of a node to decide which options (e.
 <!-- #import FirmwareUpdateCapabilities from "zwave-js" -->
 
 ```ts
-type FirmwareUpdateCapabilities = {
-	/** Indicates whether the node's firmware can be upgraded */
-	readonly firmwareUpgradable: false;
-} | {
-	/** Indicates whether the node's firmware can be upgraded */
-	readonly firmwareUpgradable: true;
-	/** An array of firmware targets that can be upgraded */
-	readonly firmwareTargets: readonly number[];
-	/** Indicates whether the node continues to function normally during an upgrade */
-	readonly continuesToFunction: MaybeNotKnown<boolean>;
-	/** Indicates whether the node supports delayed activation of the new firmware */
-	readonly supportsActivation: MaybeNotKnown<boolean>;
-	/** Indicates whether the node supports resuming aborted firmware transfers */
-	readonly supportsResuming: MaybeNotKnown<boolean>;
-	/** Indicates whether the node supports non-secure firmware transfers */
-	readonly supportsNonSecureTransfer: MaybeNotKnown<boolean>;
-};
+type FirmwareUpdateCapabilities =
+	| {
+		/** Indicates whether the node's firmware can be upgraded */
+		readonly firmwareUpgradable: false;
+	}
+	| {
+		/** Indicates whether the node's firmware can be upgraded */
+		readonly firmwareUpgradable: true;
+		/** An array of firmware targets that can be upgraded */
+		readonly firmwareTargets: readonly number[];
+		/** Indicates whether the node continues to function normally during an upgrade */
+		readonly continuesToFunction: MaybeNotKnown<boolean>;
+		/** Indicates whether the node supports delayed activation of the new firmware */
+		readonly supportsActivation: MaybeNotKnown<boolean>;
+		/** Indicates whether the node supports resuming aborted firmware transfers */
+		readonly supportsResuming: MaybeNotKnown<boolean>;
+		/** Indicates whether the node supports non-secure firmware transfers */
+		readonly supportsNonSecureTransfer: MaybeNotKnown<boolean>;
+	};
 ```
 
 ### `updateFirmware`
@@ -350,14 +352,16 @@ Performs an OTA firmware update process for this node, applying the provided fir
 This method an array of firmware updates, each of which contains the following properties:
 
 - `data` - A buffer containing the firmware image in a format supported by the device
-- `target` - _(optional)_ The firmware target (i.e. chip) to upgrade. `0` updates the Z-Wave chip, `>=1` updates others if they exist
+- `firmwareTarget` - _(optional)_ The firmware target (i.e. chip) to upgrade. `0` updates the Z-Wave chip, `>=1` updates others if they exist
+- `firmwareId` - _(optional)_ The ID of the new firmware that will be uploaded. This is only necessary if the device checks the firmware ID before starting the update. If not given, the current firmware ID will be reused.
 
 <!-- #import Firmware from "zwave-js" -->
 
 ```ts
 interface Firmware {
-	data: Buffer;
+	data: Uint8Array;
 	firmwareTarget?: number;
+	firmwareId?: number;
 }
 ```
 
@@ -381,7 +385,7 @@ interface FirmwareUpdateResult {
 The library includes helper methods (exported from `zwave-js/Utils`) to prepare the firmware update.
 
 ```ts
-extractFirmware(rawData: Buffer, format: FirmwareFileFormat): Firmware
+async extractFirmwareAsync(rawData: Buffer, format: FirmwareFileFormat): Promise<Firmware>
 ```
 
 `rawData` is a buffer containing the original firmware update file, `format` describes which kind of file that is. The following formats are available:
@@ -391,6 +395,10 @@ extractFirmware(rawData: Buffer, format: FirmwareFileFormat): Firmware
 - `"ota"` or `"hex"` - An uncompressed firmware file in Intel HEX format
 - `"hec"` - An encrypted Intel HEX firmware file
 - `"gecko"` - A binary gecko bootloader firmware file with `.gbl` extension
+
+If successful, `extractFirmwareAsync` returns an `Firmware` object which can be passed to the `updateFirmware` method.
+
+If no firmware data can be extracted, the method will throw.
 
 > [!ATTENTION] At the moment, only some `.exe` files contain `firmwareTarget` information. **All** other formats only contain the firmware `data`.
 > This means that the `firmwareTarget` property usually needs to be provided, unless it is `0`.
@@ -404,10 +412,6 @@ guessFirmwareFileFormat(filename: string, rawData: Buffer): FirmwareFileFormat
 - `filename`: The name of the firmware file (including the extension)
 - `rawData`: A buffer containing the original firmware update file
 
-If successful, `extractFirmware` returns an `Firmware` object which can be passed to the `updateFirmware` method.
-
-If no firmware data can be extracted, the method will throw.
-
 Example usage:
 
 ```ts
@@ -415,7 +419,58 @@ Example usage:
 let actualFirmware: Firmware;
 try {
 	const format = guessFirmwareFileFormat(filename, rawData);
-	actualFirmware = extractFirmware(rawData, format);
+	actualFirmware = await extractFirmwareAsync(rawData, format);
+} catch (e) {
+	// handle the error, then abort the update
+}
+
+if (actualFirmware.firmwareTarget == undefined) {
+	actualFirmware.firmwareTarget = getFirmwareTargetSomehow();
+}
+
+// try the update
+try {
+	const result = await this.driver.controller.nodes
+		.get(nodeId)!
+		.updateFirmware([actualFirmware]);
+	// check result
+} catch (e) {
+	// handle error
+}
+```
+
+In some cases, the firmware update file has to be extracted from a ZIP archive first. Z-Wave JS provides a utility method to do so, which must be used instead of `guessFirmwareFileFormat`:
+
+```ts
+tryUnzipFirmwareFile(zipData: Uint8Array): {
+	filename: string;
+	format: FirmwareFileFormat;
+	rawData: Uint8Array;
+} | undefined;
+```
+
+If the given ZIP archive contains a compatible firmware update file, the method returns an object with the following properties:
+
+- `filename`: The name of the unzipped firmware file.
+- `format`: The guessed format of the unzipped firmware file (see `guessFirmwareFileFormat` above)
+- `rawData`: A buffer containing the unzipped firmware update file.
+
+Otherwise `undefined` is returned.
+
+The unzipped firmware file can then be passed to `extractFirmwareAsync` to get the firmware data. Example usage:
+
+```ts
+// Unzip the firmware archive
+const unzippedFirmware = tryUnzipFirmwareFile(zipData);
+if (!unzippedFirmware) {
+	// No firmware file found in the ZIP archive, abort update
+}
+
+const { filename, format, rawData } = unzippedFirmware;
+// Extract the firmware from a given firmware file
+let actualFirmware: Firmware;
+try {
+	actualFirmware = await extractFirmwareAsync(rawData, format);
 } catch (e) {
 	// handle the error, then abort the update
 }
@@ -856,25 +911,28 @@ This property tracks the current status of the node interview. It contains a val
 ```ts
 enum InterviewStage {
 	/** The interview process hasn't started for this node */
-	None = 0,
+	None,
 	/** The node's protocol information has been queried from the controller */
-	ProtocolInfo = 1,
+	ProtocolInfo,
 	/** The node has been queried for supported and controlled command classes */
-	NodeInfo = 2,
+	NodeInfo,
+
 	/**
 	 * Information for all command classes has been queried.
 	 * This includes static information that is requested once as well as dynamic
 	 * information that is requested on every restart.
 	 */
-	CommandClasses = 3,
+	CommandClasses,
+
 	/**
 	 * Device information for the node has been loaded from a config file.
 	 * If defined, some of the reported information will be overwritten based on the
 	 * config file contents.
 	 */
-	OverwriteConfig = 4,
+	OverwriteConfig,
+
 	/** The interview process has finished */
-	Complete = 5,
+	Complete,
 }
 ```
 
@@ -949,8 +1007,8 @@ If the `Z-Wave+` Command Class is supported, this returns the `Z-Wave+` node typ
 
 ```ts
 enum ZWavePlusNodeType {
-	Node = 0, // ZWave+ Node
-	IPGateway = 2,
+	Node = 0x00, // ZWave+ Node
+	IPGateway = 0x02, // ZWave+ for IP Gateway
 }
 ```
 
@@ -1401,7 +1459,7 @@ interface ZWaveNotificationCallbackArgs_EntryControlCC {
 	dataType: EntryControlDataTypes;
 	/** A human-readable label for the data type */
 	dataTypeLabel: string;
-	eventData?: Buffer | string;
+	eventData?: Uint8Array | string;
 }
 ```
 
@@ -1502,9 +1560,9 @@ with
 
 ```ts
 enum PowerlevelTestStatus {
-	Failed = 0,
-	Success = 1,
-	"In Progress" = 2,
+	Failed = 0x00,
+	Success = 0x01,
+	"In Progress" = 0x02,
 }
 ```
 

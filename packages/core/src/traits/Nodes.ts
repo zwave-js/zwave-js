@@ -1,7 +1,7 @@
-import { type FLiRS } from "../capabilities/NodeInfo";
-import { type NodeStatus } from "../consts/NodeStatus";
-import { type MaybeNotKnown } from "../values/Primitive";
-import { type EndpointId, type VirtualEndpointId } from "./Endpoints";
+import { type FLiRS } from "../definitions/NodeInfo.js";
+import { type NodeStatus } from "../definitions/NodeStatus.js";
+import { type MaybeNotKnown } from "../values/Primitive.js";
+import { type EndpointId, type VirtualEndpointId } from "./Endpoints.js";
 
 /** Identifies a node */
 export interface NodeId extends EndpointId {
@@ -14,16 +14,15 @@ export interface VirtualNodeId extends VirtualEndpointId {
 	readonly id: number | undefined;
 }
 
-/** Allows accessing a specific endpoint */
-export interface GetEndpoint<T extends EndpointId | VirtualEndpointId> {
-	getEndpoint(index: 0): T;
-	getEndpoint(index: number): T | undefined;
-	getEndpointOrThrow(index: number): T;
+/** Allows accessing a specific node */
+export interface GetNode<T extends NodeId> {
+	getNode(nodeId: number): T | undefined;
+	getNodeOrThrow(nodeId: number): T;
 }
 
-/** Allows accessing all endpoints */
-export interface GetAllEndpoints<T extends EndpointId | VirtualEndpointId> {
-	getAllEndpoints(): T[];
+/** Allows accessing all nodes */
+export interface GetAllNodes<T extends NodeId> {
+	getAllNodes(): T[];
 }
 
 /** Allows querying whether a node is a listening, FLiRS or sleeping device */

@@ -8,62 +8,67 @@ import {
 	DoorLockLoggingEventType,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Door Lock Logging"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the RecordsCountGet command should serialize correctly", (t) => {
+test("the RecordsCountGet command should serialize correctly", async (t) => {
 	const cc = new DoorLockLoggingCCRecordsSupportedGet({
 		nodeId: 1,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			DoorLockLoggingCommand.RecordsSupportedGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the RecordsCountReport command should be deserialized correctly", (t) => {
+test("the RecordsCountReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			DoorLockLoggingCommand.RecordsSupportedReport, // CC Command
 			0x14, // max records supported (20)
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as DoorLockLoggingCCRecordsSupportedReport;
-	t.is(cc.constructor, DoorLockLoggingCCRecordsSupportedReport);
+	t.expect(cc.constructor).toBe(DoorLockLoggingCCRecordsSupportedReport);
 
-	t.is(cc.recordsCount, 20);
+	t.expect(cc.recordsCount).toBe(20);
 });
 
-test("the RecordGet command should serialize correctly", (t) => {
+test("the RecordGet command should serialize correctly", async (t) => {
 	const cc = new DoorLockLoggingCCRecordGet({
 		nodeId: 1,
 		recordNumber: 1,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			DoorLockLoggingCommand.RecordGet, // CC Command
 			1, // Record Number
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the RecordReport command should be deserialized correctly", (t) => {
+test("the RecordReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			DoorLockLoggingCommand.RecordReport, // CC Command
 			7, // record number
 			0x07, // year 1/2
@@ -80,21 +85,20 @@ test("the RecordReport command should be deserialized correctly", (t) => {
 		]),
 	);
 
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as DoorLockLoggingCCRecordReport;
-	t.is(cc.constructor, DoorLockLoggingCCRecordReport);
+	t.expect(cc.constructor).toBe(DoorLockLoggingCCRecordReport);
 
-	t.is(cc.recordNumber, 7);
+	t.expect(cc.recordNumber).toBe(7);
 
-	t.is(cc.record!.eventType, 1);
-	t.is(cc.record!.label, "Locked via Access Code");
-	t.is(
+	t.expect(cc.record!.eventType).toBe(1);
+	t.expect(cc.record!.label).toBe("Locked via Access Code");
+	t.expect(
 		cc.record!.timestamp,
-		new Date(1989, 12 - 1, 27, 10, 40, 30).toISOString(),
-	);
-	t.is(cc.record!.userId, 1);
+	).toBe(new Date(1989, 12 - 1, 27, 10, 40, 30).toISOString());
+	t.expect(cc.record!.userId).toBe(1);
 });
 
 // describe.skip(`interview()`, () => {

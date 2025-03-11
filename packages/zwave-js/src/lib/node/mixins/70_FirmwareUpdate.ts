@@ -1,9 +1,12 @@
 import {
+	FirmwareDownloadStatus,
 	type FirmwareUpdateMetaData,
 	FirmwareUpdateMetaDataCC,
 	FirmwareUpdateMetaDataCCGet,
 	type FirmwareUpdateMetaDataCCMetaDataGet,
+	type FirmwareUpdateMetaDataCCPrepareGet,
 	FirmwareUpdateMetaDataCCReport,
+	type FirmwareUpdateMetaDataCCRequestGet,
 	FirmwareUpdateMetaDataCCRequestReport,
 	FirmwareUpdateMetaDataCCStatusReport,
 	type FirmwareUpdateOptions,
@@ -21,22 +24,26 @@ import {
 	SecurityClass,
 	ZWaveError,
 	ZWaveErrorCodes,
+	randomBytes,
 	securityClassIsS2,
 	timespan,
 } from "@zwave-js/core";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName, throttle } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
+import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
-import { randomBytes } from "node:crypto";
-import { setTimeout as wait } from "node:timers/promises";
-import { type Task, type TaskBuilder, TaskPriority } from "../../driver/Task";
-import { type Transaction } from "../../driver/Transaction";
-import { SchedulePollMixin } from "./60_ScheduledPoll";
+import {
+	type Task,
+	type TaskBuilder,
+	TaskPriority,
+} from "../../driver/Task.js";
+import { type Transaction } from "../../driver/Transaction.js";
+import { SchedulePollMixin } from "./60_ScheduledPoll.js";
 
 interface AbortFirmwareUpdateContext {
 	abort: boolean;
@@ -130,7 +137,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		}
 
 		// Don't start the process twice
-		if (this.driver.controller.isFirmwareUpdateInProgress()) {
+		if (this.driver.isOTWFirmwareUpdateInProgress()) {
 			throw new ZWaveError(
 				`Failed to start the update: An OTW upgrade of the controller is in progress!`,
 				ZWaveErrorCodes.FirmwareUpdateCC_Busy,
@@ -218,6 +225,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 				// Prepare the firmware update
 				let fragmentSizeSecure: number;
 				let fragmentSizeNonSecure: number;
+				let hardwareVersion: number | undefined;
 				let meta: FirmwareUpdateMetaData;
 				try {
 					const prepareResult = await self
@@ -246,6 +254,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					({
 						fragmentSizeSecure,
 						fragmentSizeNonSecure,
+						hardwareVersion,
 						...meta
 					} = prepareResult!);
 				} catch {
@@ -313,8 +322,16 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 				let sentBytesOfPreviousFiles = 0;
 
 				for (let i = 0; i < updatesWithChecksum.length; i++) {
-					const { firmwareTarget: target = 0, data, checksum } =
-						updatesWithChecksum[i];
+					const {
+						// If the firmware target is not given, update the Z-Wave chip
+						firmwareTarget: target = 0,
+						// If the firmware ID is not given, use the current one for the given chip
+						firmwareId = target === 0
+							? meta.firmwareId
+							: meta.additionalFirmwareIDs[target - 1],
+						data,
+						checksum,
+					} = updatesWithChecksum[i];
 
 					if (i < skipFinishedFiles) {
 						// If we are resuming, skip this file since it was already done before
@@ -345,10 +362,12 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					const { resume, nonSecureTransfer } = yield* self
 						.beginFirmwareUpdateInternal(
 							data,
+							meta.manufacturerId,
 							target,
-							meta,
+							firmwareId,
 							fragmentSize,
 							checksum,
+							hardwareVersion,
 							shouldResume,
 							options.nonSecureTransfer,
 						);
@@ -465,10 +484,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 						// If we've resumed the previous file, there's no need to resume the next one too
 						shouldResume = false;
 
-						yield () =>
-							wait(conservativeWaitTime * 1000, undefined, {
-								ref: false,
-							});
+						yield () => wait(conservativeWaitTime * 1000, true);
 					}
 				}
 
@@ -640,13 +656,15 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer */
 	private async *beginFirmwareUpdateInternal(
-		data: Buffer,
+		data: Uint8Array,
+		manufacturerId: number,
 		target: number,
-		meta: FirmwareUpdateMetaData,
+		firmwareId: number,
 		fragmentSize: number,
 		checksum: number,
-		resume: boolean | undefined,
-		nonSecureTransfer: boolean | undefined,
+		hardwareVersion?: number,
+		resume?: boolean,
+		nonSecureTransfer?: boolean,
 	) {
 		const api = this.commandClasses["Firmware Update Meta Data"];
 
@@ -659,28 +677,30 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		});
 
 		// Request the node to start the upgrade
-		await api.requestUpdate({
-			// TODO: Should manufacturer id and firmware id be provided externally?
-			manufacturerId: meta.manufacturerId,
-			firmwareId: target == 0
-				? meta.firmwareId
-				: meta.additionalFirmwareIDs[target - 1],
+		let result = await api.requestUpdate({
+			// TODO: Should manufacturer id be provided externally?
+			manufacturerId,
+			firmwareId,
 			firmwareTarget: target,
 			fragmentSize,
 			checksum,
+			hardwareVersion,
 			resume,
 			nonSecureTransfer,
 		});
-		// Pause the task until the response is received, because that can take
-		// up to a minute
-		const result: FirmwareUpdateMetaDataCCRequestReport = yield () =>
-			this.driver
-				.waitForCommand<FirmwareUpdateMetaDataCCRequestReport>(
-					(cc) =>
-						cc instanceof FirmwareUpdateMetaDataCCRequestReport
-						&& cc.nodeId === this.id,
-					60000,
-				);
+
+		// On some devices the response can take a minute or so to be received,
+		// probably because of a manual out-of-band activation.
+		if (!result) {
+			result = (yield () =>
+				this.driver
+					.waitForCommand(
+						(cc) =>
+							cc instanceof FirmwareUpdateMetaDataCCRequestReport
+							&& cc.nodeId === this.id,
+						60000,
+					)) as FirmwareUpdateMetaDataCCRequestReport;
+		}
 
 		switch (result.status) {
 			case FirmwareUpdateRequestStatus.Error_AuthenticationExpected:
@@ -756,12 +776,62 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			firmwareUpgradable: false,
 			hardwareVersion: this.driver.options.vendor?.hardwareVersion
 				?? 0,
+			// We must advertise Z-Wave JS itself as firmware 1
+			// No firmware is upgradable, so we advertise firmware id 0
+			additionalFirmwareIDs: [0],
+		});
+	}
+
+	protected async handleFirmwareUpdateRequestGet(
+		command: FirmwareUpdateMetaDataCCRequestGet,
+	): Promise<void> {
+		const endpoint = this.getEndpoint(command.endpointIndex)
+			?? this;
+
+		// We are being queried, so the device may actually not support the CC, just control it.
+		// Using the commandClasses property would throw in that case
+		const api = endpoint
+			.createAPI(CommandClasses["Firmware Update Meta Data"], false)
+			.withOptions({
+				// Answer with the same encapsulation as asked, but omit
+				// Supervision as it shouldn't be used for Get-Report flows
+				encapsulationFlags: command.encapsulationFlags
+					& ~EncapsulationFlags.Supervision,
+			});
+
+		// We do not support the firmware to be upgraded.
+		await api.respondToUpdateRequest({
+			status: FirmwareUpdateRequestStatus.Error_NotUpgradable,
+		});
+	}
+
+	protected async handleFirmwareUpdatePrepareGet(
+		command: FirmwareUpdateMetaDataCCPrepareGet,
+	): Promise<void> {
+		const endpoint = this.getEndpoint(command.endpointIndex)
+			?? this;
+
+		// We are being queried, so the device may actually not support the CC, just control it.
+		// Using the commandClasses property would throw in that case
+		const api = endpoint
+			.createAPI(CommandClasses["Firmware Update Meta Data"], false)
+			.withOptions({
+				// Answer with the same encapsulation as asked, but omit
+				// Supervision as it shouldn't be used for Get-Report flows
+				encapsulationFlags: command.encapsulationFlags
+					& ~EncapsulationFlags.Supervision,
+			});
+
+		// We do not support the firmware to be downloaded
+		await api.respondToDownloadRequest({
+			status: FirmwareDownloadStatus.Error_NotDownloadable,
+			checksum: 0x0000,
 		});
 	}
 
 	private async sendCorruptedFirmwareUpdateReport(
 		reportNum: number,
-		fragment: Buffer,
+		fragment: Uint8Array,
 		nonSecureTransfer: boolean = false,
 	): Promise<void> {
 		try {
@@ -792,7 +862,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 	}
 
 	private async *doFirmwareUpdateInternal(
-		data: Buffer,
+		data: Uint8Array,
 		fragmentSize: number,
 		nonSecureTransfer: boolean,
 		abortContext: AbortFirmwareUpdateContext,

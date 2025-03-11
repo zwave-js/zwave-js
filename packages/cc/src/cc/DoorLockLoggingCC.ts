@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -9,37 +11,33 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { isPrintableASCII, num2hex } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	DoorLockLoggingCommand,
 	DoorLockLoggingEventType,
 	type DoorLockLoggingRecord,
 	DoorLockLoggingRecordStatus,
-} from "../lib/_Types";
-import { userCodeToLogString } from "./UserCodeCC";
+} from "../lib/_Types.js";
+import { userCodeToLogString } from "./UserCodeCC.js";
 
 interface DateSegments {
 	year: number;
@@ -100,11 +98,12 @@ const eventTypeLabel = {
 
 const LATEST_RECORD_NUMBER_KEY = 0;
 
-export const DoorLockLoggingCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Door Lock Logging"], {
+export const DoorLockLoggingCCValues = V.defineCCValues(
+	CommandClasses["Door Lock Logging"],
+	{
 		...V.staticProperty("recordsCount", undefined, { internal: true }),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Door Lock Logging"])
 export class DoorLockLoggingCCAPI extends PhysicalCCAPI {
@@ -235,6 +234,7 @@ export interface DoorLockLoggingCCRecordsSupportedReportOptions {
 }
 
 @CCCommand(DoorLockLoggingCommand.RecordsSupportedReport)
+@ccValueProperty("recordsCount", DoorLockLoggingCCValues.recordsCount)
 export class DoorLockLoggingCCRecordsSupportedReport extends DoorLockLoggingCC {
 	public constructor(
 		options: WithAddress<DoorLockLoggingCCRecordsSupportedReportOptions>,
@@ -252,13 +252,12 @@ export class DoorLockLoggingCCRecordsSupportedReport extends DoorLockLoggingCC {
 		validatePayload(raw.payload.length >= 1);
 		const recordsCount = raw.payload[0];
 
-		return new DoorLockLoggingCCRecordsSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			recordsCount,
 		});
 	}
 
-	@ccValue(DoorLockLoggingCCValues.recordsCount)
 	public readonly recordsCount: number;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -346,7 +345,7 @@ export class DoorLockLoggingCCRecordReport extends DoorLockLoggingCC {
 			};
 		}
 
-		return new DoorLockLoggingCCRecordReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			recordNumber,
 			record,
@@ -429,8 +428,8 @@ export class DoorLockLoggingCCRecordGet extends DoorLockLoggingCC {
 
 	public recordNumber: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.recordNumber]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.recordNumber]);
 		return super.serialize(ctx);
 	}
 

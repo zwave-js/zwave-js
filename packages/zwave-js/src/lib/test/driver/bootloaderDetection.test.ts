@@ -1,6 +1,8 @@
+import { Bytes } from "@zwave-js/shared";
 import { type MockControllerBehavior } from "@zwave-js/testing";
-import { setTimeout as wait } from "node:timers/promises";
-import { integrationTest } from "../integrationTestSuite";
+import { wait } from "alcalzone-shared/async";
+import { DriverMode } from "../../driver/DriverMode.js";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"The bootloader is detected when received in smaller chunks",
@@ -9,7 +11,7 @@ integrationTest(
 		// debug: true,
 
 		additionalDriverOptions: {
-			allowBootloaderOnly: true,
+			bootloaderMode: "allow",
 		},
 
 		async customSetup(driver, mockController, mockNode) {
@@ -20,11 +22,11 @@ integrationTest(
 					// 	&& (ctrl[0] === MessageHeaders.NAK || ctrl[0] === 0x32)
 					// ) {
 					// I've seen logs with as few as 5 bytes in the first chunk
-					self.serial.emitData(
-						Buffer.from("\0\r\nGeck", "ascii"),
+					self.mockPort.emitData(
+						Bytes.from("\0\r\nGeck", "ascii"),
 					);
 					await wait(20);
-					self.serial.emitData(Buffer.from(
+					self.mockPort.emitData(Bytes.from(
 						`o Bootloader v2.05.01
 1. upload gbl
 2. run
@@ -40,7 +42,7 @@ BL >\0`,
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			t.true(driver.isInBootloader());
+			t.expect(driver.mode).toBe(DriverMode.Bootloader);
 		},
 	},
 );

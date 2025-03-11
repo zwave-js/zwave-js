@@ -1,9 +1,12 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
 	EncapsulationFlags,
 	type EndpointId,
 	type GetEndpoint,
+	type GetNode,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -20,15 +23,10 @@ import {
 	isTransmissionError,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetNode,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName } from "@zwave-js/shared/safe";
-import { PhysicalCCAPI } from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { PhysicalCCAPI } from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -36,13 +34,13 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 	shouldUseSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { SupervisionCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { SupervisionCommand } from "../lib/_Types.js";
 
-export const SupervisionCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses.Supervision, {
-		// Used to remember whether a node supports supervision-encapsulation of the given CC
+export const SupervisionCCValues = V.defineCCValues(
+	CommandClasses.Supervision,
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"ccSupported",
 			"ccSupported",
@@ -53,8 +51,8 @@ export const SupervisionCCValues = Object.freeze({
 			undefined,
 			{ internal: true, supportsEndpoints: false },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI - This CC has no values to set
 // @noInterview - This CC is only used for encapsulation
@@ -313,7 +311,7 @@ export class SupervisionCCReport extends SupervisionCC {
 		if (status === SupervisionStatus.Working) {
 			const duration = Duration.parseReport(raw.payload[2])
 				?? new Duration(0, "seconds");
-			return new SupervisionCCReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				moreUpdatesFollow,
 				requestWakeUpOnDemand,
@@ -322,7 +320,7 @@ export class SupervisionCCReport extends SupervisionCC {
 				duration,
 			});
 		} else {
-			return new SupervisionCCReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				moreUpdatesFollow,
 				requestWakeUpOnDemand,
@@ -338,9 +336,9 @@ export class SupervisionCCReport extends SupervisionCC {
 	public readonly status: SupervisionStatus;
 	public readonly duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([
 				(this.moreUpdatesFollow ? 0b1_0_000000 : 0)
 				| (this.requestWakeUpOnDemand ? 0b0_1_000000 : 0)
 				| (this.sessionId & 0b111111),
@@ -349,9 +347,9 @@ export class SupervisionCCReport extends SupervisionCC {
 		]);
 
 		if (this.duration) {
-			this.payload = Buffer.concat([
+			this.payload = Bytes.concat([
 				this.payload,
-				Buffer.from([this.duration.serializeReport()]),
+				Bytes.from([this.duration.serializeReport()]),
 			]);
 		}
 		return super.serialize(ctx);
@@ -415,13 +413,19 @@ export class SupervisionCCGet extends SupervisionCC {
 		this.encapsulated.encapsulatingCC = this as any;
 	}
 
-	public static from(raw: CCRaw, ctx: CCParsingContext): SupervisionCCGet {
+	public static async from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): Promise<SupervisionCCGet> {
 		validatePayload(raw.payload.length >= 3);
 		const requestStatusUpdates = !!(raw.payload[0] & 0b1_0_000000);
 		const sessionId = raw.payload[0] & 0b111111;
 
-		const encapsulated = CommandClass.parse(raw.payload.subarray(2), ctx);
-		return new SupervisionCCGet({
+		const encapsulated = await CommandClass.parse(
+			raw.payload.subarray(2),
+			ctx,
+		);
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			requestStatusUpdates,
 			sessionId,
@@ -433,10 +437,10 @@ export class SupervisionCCGet extends SupervisionCC {
 	public sessionId: number;
 	public encapsulated: CommandClass;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		const encapCC = this.encapsulated.serialize(ctx);
-		this.payload = Buffer.concat([
-			Buffer.from([
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const encapCC = await this.encapsulated.serialize(ctx);
+		this.payload = Bytes.concat([
+			Bytes.from([
 				(this.requestStatusUpdates ? 0b10_000000 : 0)
 				| (this.sessionId & 0b111111),
 				encapCC.length,

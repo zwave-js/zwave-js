@@ -1,4 +1,12 @@
-import { type WithAddress, timespan } from "@zwave-js/core";
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { type GetDeviceConfig } from "@zwave-js/config";
+import {
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
+	type WithAddress,
+	timespan,
+} from "@zwave-js/core";
 import type {
 	ControlsCC,
 	EndpointId,
@@ -18,14 +26,7 @@ import {
 	parseFloatWithScale,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetNode,
-	GetSupportedCCVersion,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { type AllOrNone, getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import {
 	CCAPI,
@@ -33,165 +34,163 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	BatteryChargingStatus,
 	BatteryCommand,
 	BatteryReplacementStatus,
-} from "../lib/_Types";
-import { NotificationCCValues } from "./NotificationCC";
+} from "../lib/_Types.js";
+import { NotificationCCValues } from "./NotificationCC.js";
 
-export const BatteryCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Battery, {
-		...V.staticProperty(
-			"level",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				max: 100,
-				unit: "%",
-				label: "Battery level",
-			} as const,
-		),
+export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
+	...V.staticProperty(
+		"level",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			max: 100,
+			unit: "%",
+			label: "Battery level",
+		} as const,
+	),
 
-		...V.staticProperty(
-			"isLow",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Low battery level",
-			} as const,
-		),
+	...V.staticProperty(
+		"isLow",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Low battery level",
+		} as const,
+	),
 
-		...V.staticProperty(
-			"maximumCapacity",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				max: 100,
-				unit: "%",
-				label: "Maximum capacity",
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"maximumCapacity",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			max: 100,
+			unit: "%",
+			label: "Maximum capacity",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"temperature",
-			{
-				...ValueMetadata.ReadOnlyInt8,
-				label: "Temperature",
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"temperature",
+		{
+			...ValueMetadata.ReadOnlyInt8,
+			label: "Temperature",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"chargingStatus",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Charging status",
-				states: enumValuesToMetadataStates(BatteryChargingStatus),
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"chargingStatus",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Charging status",
+			states: enumValuesToMetadataStates(BatteryChargingStatus),
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"rechargeable",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Rechargeable",
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"rechargeable",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Rechargeable",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"backup",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Used as backup",
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"backup",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Used as backup",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"overheating",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Overheating",
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"overheating",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Overheating",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"lowFluid",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Fluid is low",
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"lowFluid",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Fluid is low",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"rechargeOrReplace",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Recharge or replace",
-				states: enumValuesToMetadataStates(BatteryReplacementStatus),
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"rechargeOrReplace",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Recharge or replace",
+			states: enumValuesToMetadataStates(BatteryReplacementStatus),
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"disconnected",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Battery is disconnected",
-			} as const,
-			{
-				minVersion: 2,
-			} as const,
-		),
+	...V.staticProperty(
+		"disconnected",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Battery is disconnected",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
 
-		...V.staticProperty(
-			"lowTemperatureStatus",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Battery temperature is low",
-			} as const,
-			{
-				minVersion: 3,
-			} as const,
-		),
-	}),
+	...V.staticProperty(
+		"lowTemperatureStatus",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Battery temperature is low",
+		} as const,
+		{
+			minVersion: 3,
+		} as const,
+	),
 });
 
 // @noSetValueAPI This CC is read-only
@@ -426,6 +425,16 @@ export type BatteryCCReportOptions =
 	}>;
 
 @CCCommand(BatteryCommand.Report)
+@ccValueProperty("level", BatteryCCValues.level)
+@ccValueProperty("isLow", BatteryCCValues.isLow)
+@ccValueProperty("chargingStatus", BatteryCCValues.chargingStatus)
+@ccValueProperty("rechargeable", BatteryCCValues.rechargeable)
+@ccValueProperty("backup", BatteryCCValues.backup)
+@ccValueProperty("overheating", BatteryCCValues.overheating)
+@ccValueProperty("lowFluid", BatteryCCValues.lowFluid)
+@ccValueProperty("rechargeOrReplace", BatteryCCValues.rechargeOrReplace)
+@ccValueProperty("disconnected", BatteryCCValues.disconnected)
+@ccValueProperty("lowTemperatureStatus", BatteryCCValues.lowTemperatureStatus)
 export class BatteryCCReport extends BatteryCC {
 	public constructor(
 		options: WithAddress<BatteryCCReportOptions>,
@@ -490,7 +499,7 @@ export class BatteryCCReport extends BatteryCC {
 			};
 		}
 
-		return new BatteryCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			...ccOptions,
 		});
@@ -534,42 +543,32 @@ export class BatteryCCReport extends BatteryCC {
 		return true;
 	}
 
-	@ccValue(BatteryCCValues.level)
 	public readonly level: number;
 
-	@ccValue(BatteryCCValues.isLow)
 	public readonly isLow: boolean;
 
-	@ccValue(BatteryCCValues.chargingStatus)
 	public readonly chargingStatus: BatteryChargingStatus | undefined;
 
-	@ccValue(BatteryCCValues.rechargeable)
 	public readonly rechargeable: boolean | undefined;
 
-	@ccValue(BatteryCCValues.backup)
 	public readonly backup: boolean | undefined;
 
-	@ccValue(BatteryCCValues.overheating)
 	public readonly overheating: boolean | undefined;
 
-	@ccValue(BatteryCCValues.lowFluid)
 	public readonly lowFluid: boolean | undefined;
 
-	@ccValue(BatteryCCValues.rechargeOrReplace)
 	public readonly rechargeOrReplace: BatteryReplacementStatus | undefined;
 
-	@ccValue(BatteryCCValues.disconnected)
 	public readonly disconnected: boolean | undefined;
 
-	@ccValue(BatteryCCValues.lowTemperatureStatus)
 	public readonly lowTemperatureStatus: boolean | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.isLow ? 0xff : this.level]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.isLow ? 0xff : this.level]);
 		if (this.chargingStatus != undefined) {
-			this.payload = Buffer.concat([
+			this.payload = Bytes.concat([
 				this.payload,
-				Buffer.from([
+				Bytes.from([
 					(this.chargingStatus << 6)
 					+ (this.rechargeable ? 0b0010_0000 : 0)
 					+ (this.backup ? 0b0001_0000 : 0)
@@ -643,6 +642,8 @@ export interface BatteryCCHealthReportOptions {
 }
 
 @CCCommand(BatteryCommand.HealthReport)
+@ccValueProperty("maximumCapacity", BatteryCCValues.maximumCapacity)
+@ccValueProperty("temperature", BatteryCCValues.temperature)
 export class BatteryCCHealthReport extends BatteryCC {
 	public constructor(
 		options: WithAddress<BatteryCCHealthReportOptions>,
@@ -671,7 +672,7 @@ export class BatteryCCHealthReport extends BatteryCC {
 			true, // The temperature field may be omitted
 		);
 
-		return new BatteryCCHealthReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			maximumCapacity,
 			temperature,
@@ -692,10 +693,8 @@ export class BatteryCCHealthReport extends BatteryCC {
 		return true;
 	}
 
-	@ccValue(BatteryCCValues.maximumCapacity)
 	public readonly maximumCapacity: number | undefined;
 
-	@ccValue(BatteryCCValues.temperature)
 	public readonly temperature: number | undefined;
 
 	private readonly temperatureScale: number | undefined;

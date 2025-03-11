@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -10,11 +12,11 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import {
+	Bytes,
+	stringToUint8ArrayUTF16BE,
+	uint8ArrayToStringUTF16BE,
+} from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -25,28 +27,29 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { NodeNamingAndLocationCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { NodeNamingAndLocationCommand } from "../lib/_Types.js";
 
-export const NodeNamingAndLocationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Node Naming and Location"], {
+export const NodeNamingAndLocationCCValues = V.defineCCValues(
+	CommandClasses["Node Naming and Location"],
+	{
 		...V.staticProperty(
 			"name",
 			{
@@ -55,7 +58,6 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"location",
 			{
@@ -64,8 +66,8 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-	}),
-});
+	},
+);
 
 function isASCII(str: string): boolean {
 	return /^[\x00-\x7F]*$/.test(str);
@@ -298,23 +300,22 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 
 	public name: string;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encoding = isASCII(this.name) ? "ascii" : "utf16le";
-		this.payload = Buffer.allocUnsafe(
+		this.payload = new Bytes(
 			1 + this.name.length * (encoding === "ascii" ? 1 : 2),
 		);
 		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let nameAsBuffer = Buffer.from(this.name, encoding);
+		let nameBuffer: Uint8Array;
 		if (encoding === "utf16le") {
-			// Z-Wave expects UTF16 BE
-			nameAsBuffer = nameAsBuffer.swap16();
+			nameBuffer = stringToUint8ArrayUTF16BE(this.name);
+		} else {
+			nameBuffer = Bytes.from(this.name, "ascii");
 		}
-		// Copy at max 16 bytes
-		nameAsBuffer.copy(
-			this.payload,
+		// Copy at most 16 bytes
+		this.payload.set(
+			nameBuffer.subarray(0, Math.min(16, nameBuffer.length)),
 			0,
-			0,
-			Math.min(16, nameAsBuffer.length),
 		);
 		return super.serialize(ctx);
 	}
@@ -333,6 +334,7 @@ export interface NodeNamingAndLocationCCNameReportOptions {
 }
 
 @CCCommand(NodeNamingAndLocationCommand.NameReport)
+@ccValueProperty("name", NodeNamingAndLocationCCValues.name)
 export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
 	public constructor(
 		options: WithAddress<NodeNamingAndLocationCCNameReportOptions>,
@@ -347,20 +349,21 @@ export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
 	): NodeNamingAndLocationCCNameReport {
 		validatePayload(raw.payload.length >= 1);
 		const encoding = raw.payload[0] === 2 ? "utf16le" : "ascii";
-		let nameBuffer = raw.payload.subarray(1);
+		const nameBuffer = raw.payload.subarray(1);
+		let name: string;
 		if (encoding === "utf16le") {
 			validatePayload(nameBuffer.length % 2 === 0);
-			// Z-Wave expects UTF16 BE
-			nameBuffer = nameBuffer.swap16();
+			name = uint8ArrayToStringUTF16BE(nameBuffer);
+		} else {
+			name = nameBuffer.toString("ascii");
 		}
 
-		return new NodeNamingAndLocationCCNameReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
-			name: nameBuffer.toString(encoding),
+			name,
 		});
 	}
 
-	@ccValue(NodeNamingAndLocationCCValues.name)
 	public readonly name: string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -409,23 +412,22 @@ export class NodeNamingAndLocationCCLocationSet
 
 	public location: string;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encoding = isASCII(this.location) ? "ascii" : "utf16le";
-		this.payload = Buffer.allocUnsafe(
+		this.payload = new Bytes(
 			1 + this.location.length * (encoding === "ascii" ? 1 : 2),
 		);
 		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let locationAsBuffer = Buffer.from(this.location, encoding);
+		let locationBuffer: Uint8Array;
 		if (encoding === "utf16le") {
-			// Z-Wave expects UTF16 BE
-			locationAsBuffer = locationAsBuffer.swap16();
+			locationBuffer = stringToUint8ArrayUTF16BE(this.location);
+		} else {
+			locationBuffer = Bytes.from(this.location, "ascii");
 		}
-		// Copy at max 16 bytes
-		locationAsBuffer.copy(
-			this.payload,
+		// Copy at most 16 bytes
+		this.payload.set(
+			locationBuffer.subarray(0, Math.min(16, locationBuffer.length)),
 			0,
-			0,
-			Math.min(16, locationAsBuffer.length),
 		);
 		return super.serialize(ctx);
 	}
@@ -444,6 +446,7 @@ export interface NodeNamingAndLocationCCLocationReportOptions {
 }
 
 @CCCommand(NodeNamingAndLocationCommand.LocationReport)
+@ccValueProperty("location", NodeNamingAndLocationCCValues.location)
 export class NodeNamingAndLocationCCLocationReport
 	extends NodeNamingAndLocationCC
 {
@@ -460,20 +463,21 @@ export class NodeNamingAndLocationCCLocationReport
 	): NodeNamingAndLocationCCLocationReport {
 		validatePayload(raw.payload.length >= 1);
 		const encoding = raw.payload[0] === 2 ? "utf16le" : "ascii";
-		let locationBuffer = raw.payload.subarray(1);
+		const locationBuffer = raw.payload.subarray(1);
+		let location: string;
 		if (encoding === "utf16le") {
 			validatePayload(locationBuffer.length % 2 === 0);
-			// Z-Wave expects UTF16 BE
-			locationBuffer = locationBuffer.swap16();
+			location = uint8ArrayToStringUTF16BE(locationBuffer);
+		} else {
+			location = locationBuffer.toString("ascii");
 		}
 
-		return new NodeNamingAndLocationCCLocationReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
-			location: locationBuffer.toString(encoding),
+			location,
 		});
 	}
 
-	@ccValue(NodeNamingAndLocationCCValues.location)
 	public readonly location: string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

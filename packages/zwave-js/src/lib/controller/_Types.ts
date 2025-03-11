@@ -52,31 +52,14 @@ export interface GetFirmwareUpdatesOptions {
 	additionalUserAgentComponents?: Record<string, string>;
 	/** Whether the returned firmware upgrades should include prereleases from the `"beta"` channel. Default: `false`. */
 	includePrereleases?: boolean;
-}
-
-export interface ControllerFirmwareUpdateProgress {
-	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
-	sentFragments: number;
-	/** How many fragments the firmware update consists of. */
-	totalFragments: number;
-	/** The total progress of the firmware update in %, rounded to two digits. */
-	progress: number;
-}
-
-export enum ControllerFirmwareUpdateStatus {
-	// An expected response was not received from the controller in time
-	Error_Timeout = 0,
-	/** The maximum number of retry attempts for a firmware fragments were reached */
-	Error_RetryLimitReached,
-	/** The update was aborted by the bootloader */
-	Error_Aborted,
-	/** This controller does not support firmware updates */
-	Error_NotSupported,
-
-	OK = 0xff,
-}
-
-export interface ControllerFirmwareUpdateResult {
-	success: boolean;
-	status: ControllerFirmwareUpdateStatus;
+	/**
+	 * Can be used to specify the RF region if the Z-Wave controller
+	 * does not support querying this information.
+	 *
+	 * **WARNING:** Specifying the wrong region may result in bricking the device!
+	 *
+	 * For this reason, the specified value is only used as a fallback
+	 * if the RF region of the controller is not already known.
+	 */
+	rfRegion?: RFRegion;
 }

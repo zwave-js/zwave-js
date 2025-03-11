@@ -12,8 +12,8 @@ import {
 	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import { setTimeout as wait } from "node:timers/promises";
-import { integrationTest } from "../integrationTestSuite";
+import { wait } from "alcalzone-shared/async";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"successful supervised setValue(255) with duration: expect validation GET",
@@ -171,7 +171,7 @@ integrationTest(
 			const currentValue = node.getValue(
 				MultilevelSwitchCCValues.currentValue.id,
 			);
-			t.is(currentValue, 88);
+			t.expect(currentValue).toBe(88);
 		},
 	},
 );

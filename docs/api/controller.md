@@ -402,10 +402,10 @@ interface RouteStatistics {
 
 ```ts
 enum ProtocolDataRate {
-	ZWave_9k6 = 1,
-	ZWave_40k = 2,
-	ZWave_100k = 3,
-	LongRange_100k = 4,
+	ZWave_9k6 = 0x01,
+	ZWave_40k = 0x02,
+	ZWave_100k = 0x03,
+	LongRange_100k = 0x04,
 }
 ```
 
@@ -770,19 +770,19 @@ This tells you whether an association is allowed, and if not, why:
 
 ```ts
 enum AssociationCheckResult {
-	OK = 1,
+	OK = 0x01,
 	/** The association is forbidden, because the destination is a ZWLR node. ZWLR does not support direct communication between end devices. */
-	Forbidden_DestinationIsLongRange = 2,
+	Forbidden_DestinationIsLongRange,
 	/** The association is forbidden, because the source is a ZWLR node. ZWLR does not support direct communication between end devices. */
-	Forbidden_SourceIsLongRange = 3,
+	Forbidden_SourceIsLongRange,
 	/** The association is forbidden, because a node cannot be associated with itself. */
-	Forbidden_SelfAssociation = 4,
+	Forbidden_SelfAssociation,
 	/** The association is forbidden, because the source node's CC versions require the source and destination node to have the same (highest) security class. */
-	Forbidden_SecurityClassMismatch = 5,
+	Forbidden_SecurityClassMismatch,
 	/** The association is forbidden, because the source node's CC versions require the source node to have the key for the destination node's highest security class. */
-	Forbidden_DestinationSecurityClassNotGranted = 6,
+	Forbidden_DestinationSecurityClassNotGranted,
 	/** The association is forbidden, because none of the CCs the source node sends are supported by the destination. */
-	Forbidden_NoSupportedCCs = 7,
+	Forbidden_NoSupportedCCs,
 }
 ```
 
@@ -1176,6 +1176,16 @@ interface GetFirmwareUpdatesOptions {
 	additionalUserAgentComponents?: Record<string, string>;
 	/** Whether the returned firmware upgrades should include prereleases from the `"beta"` channel. Default: `false`. */
 	includePrereleases?: boolean;
+	/**
+	 * Can be used to specify the RF region if the Z-Wave controller
+	 * does not support querying this information.
+	 *
+	 * **WARNING:** Specifying the wrong region may result in bricking the device!
+	 *
+	 * For this reason, the specified value is only used as a fallback
+	 * if the RF region of the controller is not already known.
+	 */
+	rfRegion?: RFRegion;
 }
 ```
 
@@ -1205,36 +1215,7 @@ Returns whether an OTA firmware update is in progress for any node.
 
 ### Updating the firmware of the controller (OTW)
 
-```ts
-firmwareUpdateOTW(data: Buffer): Promise<ControllerFirmwareUpdateResult>
-```
-
-> [!WARNING] We don't take any responsibility if devices upgraded using Z-Wave JS don't work after an update. Always double-check that the correct update is about to be installed.
-
-Performs an over-the-wire (OTW) firmware update for the controller using the given firmware image. To do so, the controller gets put in bootloader mode where a new firmware image can be uploaded.
-
-> [!WARNING] A failure during this process may leave your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded.
-
-To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` events](api/controller#quotfirmware-update-progressquot) of the controller.
-
-The return value indicates whether the update was successful and includes an error code that can be used to determine the reason for a failure. This is the same information that is emitted using the `"firmware update finished"` event:
-
-<!-- #import ControllerFirmwareUpdateResult from "zwave-js" -->
-
-```ts
-interface ControllerFirmwareUpdateResult {
-	success: boolean;
-	status: ControllerFirmwareUpdateStatus;
-}
-```
-
-### `isFirmwareUpdateInProgress`
-
-```ts
-isFirmwareUpdateInProgress(): boolean;
-```
-
-Return whether a firmware update is in progress for the controller.
+See [`driver.firmwareUpdateOTW`](api/driver#updating-the-firmware-of-the-z-wave-module-otw).
 
 ### Joining and leaving a network
 
@@ -1383,18 +1364,18 @@ Returns the type of the Z-Wave library that is supported by the controller hardw
 
 ```ts
 enum ZWaveLibraryTypes {
-	"Unknown" = 0,
-	"Static Controller" = 1,
-	"Controller" = 2,
-	"Enhanced Slave" = 3,
-	"Slave" = 4,
-	"Installer" = 5,
-	"Routing Slave" = 6,
-	"Bridge Controller" = 7,
-	"Device under Test" = 8,
-	"N/A" = 9,
-	"AV Remote" = 10,
-	"AV Device" = 11,
+	"Unknown",
+	"Static Controller",
+	"Controller",
+	"Enhanced Slave",
+	"Slave",
+	"Installer",
+	"Routing Slave",
+	"Bridge Controller",
+	"Device under Test",
+	"N/A",
+	"AV Remote",
+	"AV Device",
 }
 ```
 
@@ -1460,11 +1441,11 @@ This property tracks the status of the controller. Valid values are:
 ```ts
 enum ControllerStatus {
 	/** The controller is ready to accept commands and transmit */
-	Ready = 0,
+	Ready,
 	/** The controller is unresponsive */
-	Unresponsive = 1,
+	Unresponsive,
 	/** The controller is unable to transmit */
-	Jammed = 2,
+	Jammed,
 }
 ```
 
@@ -1774,62 +1755,6 @@ interface ControllerStatistics {
 			current: number;
 		};
 	};
-}
-```
-
-### `"firmware update progress"`
-
-```ts
-(progress: ControllerFirmwareUpdateProgress) => void
-```
-
-Firmware update progress has been made. The callback arguments gives information about the progress of the update:
-
-<!-- #import ControllerFirmwareUpdateProgress from "zwave-js" -->
-
-```ts
-interface ControllerFirmwareUpdateProgress {
-	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
-	sentFragments: number;
-	/** How many fragments the firmware update consists of. */
-	totalFragments: number;
-	/** The total progress of the firmware update in %, rounded to two digits. */
-	progress: number;
-}
-```
-
-### `"firmware update finished"`
-
-```ts
-(result: ControllerFirmwareUpdateResult) => void;
-```
-
-The firmware update process is finished. The `result` argument looks like this indicates whether the update was successful:
-
-<!-- #import ControllerFirmwareUpdateResult from "zwave-js" -->
-
-```ts
-interface ControllerFirmwareUpdateResult {
-	success: boolean;
-	status: ControllerFirmwareUpdateStatus;
-}
-```
-
-Its `status` property contains more details on potential errors.
-
-<!-- #import ControllerFirmwareUpdateStatus from "zwave-js" -->
-
-```ts
-enum ControllerFirmwareUpdateStatus {
-	Error_Timeout = 0,
-	/** The maximum number of retry attempts for a firmware fragments were reached */
-	Error_RetryLimitReached,
-	/** The update was aborted by the bootloader */
-	Error_Aborted,
-	/** This controller does not support firmware updates */
-	Error_NotSupported,
-
-	OK = 0xff,
 }
 ```
 

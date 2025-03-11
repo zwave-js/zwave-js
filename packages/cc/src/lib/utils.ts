@@ -1,10 +1,13 @@
-import type { AssociationConfig } from "@zwave-js/config";
+import type { AssociationConfig, GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type ControlsCC,
 	type EndpointId,
 	type GetAllEndpoints,
 	type GetEndpoint,
+	type GetNode,
+	type GetValueDB,
+	type HostIDs,
 	type MaybeNotKnown,
 	NOT_KNOWN,
 	type NodeId,
@@ -20,28 +23,22 @@ import {
 	isSensorCC,
 } from "@zwave-js/core/safe";
 import {
-	type GetDeviceConfig,
-	type GetNode,
-	type GetValueDB,
-	type HostIDs,
-} from "@zwave-js/host";
-import {
 	ObjectKeyMap,
 	type ReadonlyObjectKeyMap,
 	getEnumMemberName,
 } from "@zwave-js/shared/safe";
 import { distinct } from "alcalzone-shared/arrays";
-import { AssociationCC, AssociationCCValues } from "../cc/AssociationCC";
-import { AssociationGroupInfoCC } from "../cc/AssociationGroupInfoCC";
-import { MultiChannelAssociationCC } from "../cc/MultiChannelAssociationCC";
-import { CCAPI, type CCAPIHost, type CCAPINode } from "./API";
+import { AssociationCC, AssociationCCValues } from "../cc/AssociationCC.js";
+import { AssociationGroupInfoCC } from "../cc/AssociationGroupInfoCC.js";
+import { MultiChannelAssociationCC } from "../cc/MultiChannelAssociationCC.js";
+import { CCAPI, type CCAPIHost, type CCAPINode } from "./API.js";
 import {
 	type AssociationAddress,
 	AssociationCheckResult,
 	type AssociationGroup,
 	AssociationGroupInfoProfile,
 	type EndpointAddress,
-} from "./_Types";
+} from "./_Types.js";
 
 export function getAssociations(
 	ctx: GetValueDB,

@@ -11,7 +11,8 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { SendDataRequest } from "@zwave-js/serial/serialapi";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
 @implementedVersion(7)
 @commandClass(0xffff as any)
@@ -24,82 +25,81 @@ class DummyCCSubClass2 extends DummyCC {
 	private y: any;
 }
 
-test(`creating and serializing should work for unspecified commands`, (t) => {
+test(`creating and serializing should work for unspecified commands`, async (t) => {
 	// Repro for #1219
 	const cc = new CommandClass({
 		nodeId: 2,
 		ccId: 0x5d,
 		ccCommand: 0x02,
-		payload: Buffer.from([1, 2, 3]),
+		payload: Uint8Array.from([1, 2, 3]),
 	});
 	const msg = new SendDataRequest({
 		command: cc,
 		callbackId: 0xfe,
 	});
-	t.deepEqual(
+	await t.expect(
 		msg.serialize({} as any),
-		Buffer.from("010c001302055d0201020325fe63", "hex"),
-	);
+	).resolves.toStrictEqual(Bytes.from("010c001302055d0201020325fe63", "hex"));
 });
 
-test("parse() returns an un-specialized instance when receiving a non-implemented CC", (t) => {
+test("parse() returns an un-specialized instance when receiving a non-implemented CC", async (t) => {
 	// This is a Node Provisioning CC. Change it when that CC is implemented
-	const cc = CommandClass.parse(
-		Buffer.from("78030100", "hex"),
+	const cc = await CommandClass.parse(
+		Bytes.from("78030100", "hex"),
 		{ sourceNodeId: 5 } as any,
 	);
-	t.is(cc.constructor, CommandClass);
-	t.is(cc.nodeId, 5);
-	t.is(cc.ccId, 0x78);
-	t.is(cc.ccCommand, 0x03);
-	t.deepEqual(cc.payload, Buffer.from([0x01, 0x00]));
+	t.expect(cc.constructor).toBe(CommandClass);
+	t.expect(cc.nodeId).toBe(5);
+	t.expect(cc.ccId).toBe(0x78);
+	t.expect(cc.ccCommand).toBe(0x03);
+	t.expect(cc.payload).toStrictEqual(Bytes.from([0x01, 0x00]));
 });
 
 test("parse() does not throw when the CC is implemented", (t) => {
-	t.notThrows(() =>
+	t.expect(async () =>
 		// CRC-16 with BasicCC
-		CommandClass.parse(
-			Buffer.from("560120024d26", "hex"),
+		await CommandClass.parse(
+			Bytes.from("560120024d26", "hex"),
 			{ sourceNodeId: 5 } as any,
 		)
-	);
+	).not.toThrow();
 });
 
 test("getImplementedVersion() should return the implemented version for a CommandClass instance", (t) => {
 	const cc = new BasicCC({ nodeId: 1 });
-	t.is(getImplementedVersion(cc), 2);
+	t.expect(getImplementedVersion(cc)).toBe(2);
 });
 
 test("getImplementedVersion() should return the implemented version for a numeric CommandClass key", (t) => {
 	const cc = CommandClasses.Basic;
-	t.is(getImplementedVersion(cc), 2);
+	t.expect(getImplementedVersion(cc)).toBe(2);
 });
 
 test("getImplementedVersion() should return 0 for a non-existing CC", (t) => {
 	const cc = -1;
-	t.is(getImplementedVersion(cc as any), 0);
+	t.expect(getImplementedVersion(cc as any)).toBe(0);
 });
 
 test("getImplementedVersion() should work with inheritance", (t) => {
 	const cc = new BasicCCGet({ nodeId: 1 });
-	t.is(getImplementedVersion(cc), 2);
+	t.expect(getImplementedVersion(cc)).toBe(2);
 });
 
 test("getImplementedVersionStatic() should return the implemented version for a CommandClass constructor", (t) => {
-	t.is(getImplementedVersionStatic(BasicCC), 2);
+	t.expect(getImplementedVersionStatic(BasicCC)).toBe(2);
 });
 
 test("getImplementedVersionStatic() should work on inherited classes", (t) => {
-	t.is(getImplementedVersionStatic(DummyCCSubClass1), 7);
+	t.expect(getImplementedVersionStatic(DummyCCSubClass1)).toBe(7);
 });
 
 test("expectMoreMessages() returns false by default", (t) => {
 	const cc = new DummyCC({ nodeId: 1 });
-	t.false(cc.expectMoreMessages([]));
+	t.expect(cc.expectMoreMessages([])).toBe(false);
 });
 
 test("getExpectedCCResponse() returns the expected CC response like it was defined", (t) => {
 	const cc = new DummyCCSubClass2({ nodeId: 1 });
 	const actual = getExpectedCCResponse(cc);
-	t.is(actual, DummyCCSubClass1);
+	t.expect(actual).toBe(DummyCCSubClass1);
 });

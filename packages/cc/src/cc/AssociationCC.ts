@@ -1,5 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { type GetDeviceConfig } from "@zwave-js/config";
 import type {
 	EndpointId,
+	GetValueDB,
 	MaybeNotKnown,
 	MessageRecord,
 	SupervisionResult,
@@ -14,45 +17,35 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { type AssociationAddress, AssociationCommand } from "../lib/_Types";
-import * as ccUtils from "../lib/utils";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { type AssociationAddress, AssociationCommand } from "../lib/_Types.js";
+import * as ccUtils from "../lib/utils.js";
 
-export const AssociationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Association, {
-		/** Whether the node has a lifeline association */
+export const AssociationCCValues = V.defineCCValues(
+	CommandClasses.Association,
+	{
 		...V.staticProperty("hasLifeline", undefined, { internal: true }),
-		/** How many association groups the node has */
 		...V.staticProperty("groupCount", undefined, { internal: true }),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Association, {
-		/** The maximum number of nodes in an association group */
 		...V.dynamicPropertyAndKeyWithName(
 			"maxNodes",
 			"maxNodes",
@@ -62,7 +55,6 @@ export const AssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-		/** The node IDs currently belonging to an association group */
 		...V.dynamicPropertyAndKeyWithName(
 			"nodeIds",
 			"nodeIds",
@@ -72,8 +64,8 @@ export const AssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI
 
@@ -529,7 +521,7 @@ export class AssociationCCSet extends AssociationCC {
 		const groupId = raw.payload[0];
 		const nodeIds = [...raw.payload.subarray(1)];
 
-		return new AssociationCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupId,
 			nodeIds,
@@ -539,8 +531,8 @@ export class AssociationCCSet extends AssociationCC {
 	public groupId: number;
 	public nodeIds: number[];
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.groupId, ...this.nodeIds]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.groupId, ...this.nodeIds]);
 		return super.serialize(ctx);
 	}
 
@@ -588,7 +580,7 @@ export class AssociationCCRemove extends AssociationCC {
 		}
 		const nodeIds = [...raw.payload.subarray(1)];
 
-		return new AssociationCCRemove({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupId,
 			nodeIds,
@@ -598,8 +590,8 @@ export class AssociationCCRemove extends AssociationCC {
 	public groupId?: number;
 	public nodeIds?: number[];
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.groupId || 0,
 			...(this.nodeIds || []),
 		]);
@@ -629,6 +621,16 @@ export interface AssociationCCReportOptions {
 }
 
 @CCCommand(AssociationCommand.Report)
+@ccValueProperty(
+	"maxNodes",
+	AssociationCCValues.maxNodes,
+	(self) => [self.groupId],
+)
+@ccValueProperty(
+	"nodeIds",
+	AssociationCCValues.nodeIds,
+	(self) => [self.groupId],
+)
 export class AssociationCCReport extends AssociationCC {
 	public constructor(
 		options: WithAddress<AssociationCCReportOptions>,
@@ -648,7 +650,7 @@ export class AssociationCCReport extends AssociationCC {
 		const reportsToFollow = raw.payload[2];
 		const nodeIds = [...raw.payload.subarray(3)];
 
-		return new AssociationCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupId,
 			maxNodes,
@@ -659,16 +661,8 @@ export class AssociationCCReport extends AssociationCC {
 
 	public groupId: number;
 
-	@ccValue(
-		AssociationCCValues.maxNodes,
-		(self: AssociationCCReport) => [self.groupId] as const,
-	)
 	public maxNodes: number;
 
-	@ccValue(
-		AssociationCCValues.nodeIds,
-		(self: AssociationCCReport) => [self.groupId] as const,
-	)
 	public nodeIds: number[];
 
 	public reportsToFollow: number;
@@ -685,15 +679,16 @@ export class AssociationCCReport extends AssociationCC {
 	public mergePartialCCs(
 		partials: AssociationCCReport[],
 		_ctx: CCParsingContext,
-	): void {
+	): Promise<void> {
 		// Concat the list of nodes
 		this.nodeIds = [...partials, this]
 			.map((report) => report.nodeIds)
 			.reduce((prev, cur) => prev.concat(...cur), []);
+		return Promise.resolve();
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.groupId,
 			this.maxNodes,
 			this.reportsToFollow,
@@ -740,7 +735,7 @@ export class AssociationCCGet extends AssociationCC {
 		validatePayload(raw.payload.length >= 1);
 		const groupId = raw.payload[0];
 
-		return new AssociationCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupId,
 		});
@@ -748,8 +743,8 @@ export class AssociationCCGet extends AssociationCC {
 
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.groupId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.groupId]);
 		return super.serialize(ctx);
 	}
 
@@ -767,6 +762,7 @@ export interface AssociationCCSupportedGroupingsReportOptions {
 }
 
 @CCCommand(AssociationCommand.SupportedGroupingsReport)
+@ccValueProperty("groupCount", AssociationCCValues.groupCount)
 export class AssociationCCSupportedGroupingsReport extends AssociationCC {
 	public constructor(
 		options: WithAddress<AssociationCCSupportedGroupingsReportOptions>,
@@ -783,17 +779,16 @@ export class AssociationCCSupportedGroupingsReport extends AssociationCC {
 		validatePayload(raw.payload.length >= 1);
 		const groupCount = raw.payload[0];
 
-		return new AssociationCCSupportedGroupingsReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			groupCount,
 		});
 	}
 
-	@ccValue(AssociationCCValues.groupCount)
 	public groupCount: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.groupCount]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.groupCount]);
 		return super.serialize(ctx);
 	}
 
@@ -831,7 +826,7 @@ export class AssociationCCSpecificGroupReport extends AssociationCC {
 		validatePayload(raw.payload.length >= 1);
 		const group = raw.payload[0];
 
-		return new AssociationCCSpecificGroupReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			group,
 		});
@@ -839,8 +834,8 @@ export class AssociationCCSpecificGroupReport extends AssociationCC {
 
 	public group: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.group]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.group]);
 		return super.serialize(ctx);
 	}
 

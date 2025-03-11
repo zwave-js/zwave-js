@@ -1,5 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
@@ -11,13 +14,7 @@ import {
 	parseMaybeNumber,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { pick } from "@zwave-js/shared";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { isArray } from "alcalzone-shared/typeguards";
 import {
@@ -29,19 +26,19 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../../lib/API";
+} from "../../lib/API.js";
 import {
 	type CCRaw,
 	type CommandClassOptions,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../../lib/CommandClass";
-import { expectedCCResponse } from "../../lib/CommandClassDecorators";
+} from "../../lib/CommandClass.js";
+import { expectedCCResponse } from "../../lib/CommandClassDecorators.js";
 import {
 	ManufacturerProprietaryCC,
 	ManufacturerProprietaryCCAPI,
-} from "../ManufacturerProprietaryCC";
+} from "../ManufacturerProprietaryCC.js";
 import {
 	fibaroCC,
 	fibaroCCCommand,
@@ -51,7 +48,7 @@ import {
 	getFibaroCCId,
 	manufacturerId,
 	manufacturerProprietaryAPI,
-} from "./Decorators";
+} from "./Decorators.js";
 
 export const MANUFACTURERID_FIBARO = 0x10f;
 
@@ -283,7 +280,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 		}
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (this.fibaroCCId == undefined) {
 			throw new ZWaveError(
 				"Cannot serialize a Fibaro CC without a Fibaro CC ID",
@@ -295,8 +292,8 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 				ZWaveErrorCodes.CC_Invalid,
 			);
 		}
-		this.payload = Buffer.concat([
-			Buffer.from([this.fibaroCCId, this.fibaroCCCommand]),
+		this.payload = Bytes.concat([
+			Bytes.from([this.fibaroCCId, this.fibaroCCCommand]),
 			this.payload,
 		]);
 		return super.serialize(ctx);
@@ -398,10 +395,10 @@ export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
 	public position: number | undefined;
 	public tilt: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const controlByte = (this.position != undefined ? 0b10 : 0)
 			| (this.tilt != undefined ? 0b01 : 0);
-		this.payload = Buffer.from([
+		this.payload = Bytes.from([
 			controlByte,
 			this.position ?? 0,
 			this.tilt ?? 0,
@@ -460,7 +457,7 @@ export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
 			tilt = parseMaybeNumber(raw.payload[2]);
 		}
 
-		return new FibaroVenetianBlindCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			position,
 			tilt,
@@ -527,7 +524,7 @@ export class FibaroVenetianBlindCCGet extends FibaroVenetianBlindCC {
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): FibaroVenetianBlindCCGet {
-		return new FibaroVenetianBlindCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 		});
 	}

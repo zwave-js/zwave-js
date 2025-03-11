@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -19,49 +21,45 @@ import {
 	getCCName,
 	isTransmissionError,
 	parseCCList,
+	randomBytes,
 	validatePayload,
 } from "@zwave-js/core";
 import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { buffer2hex, num2hex, pick } from "@zwave-js/shared/safe";
-import { randomBytes } from "node:crypto";
-import { setTimeout as wait } from "node:timers/promises";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { wait } from "alcalzone-shared/async";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { SecurityCommand } from "../lib/_Types";
-import { CRC16CC } from "./CRC16CC";
-import { Security2CC } from "./Security2CC";
-import { TransportServiceCC } from "./TransportServiceCC";
+} from "../lib/CommandClassDecorators.js";
+import { SecurityCommand } from "../lib/_Types.js";
+import { CRC16CC } from "./CRC16CC.js";
+import { Security2CC } from "./Security2CC.js";
+import { TransportServiceCC } from "./TransportServiceCC.js";
 
 // @noSetValueAPI This is an encapsulation CC
 
 function getAuthenticationData(
-	senderNonce: Buffer,
-	receiverNonce: Buffer,
+	senderNonce: Uint8Array,
+	receiverNonce: Uint8Array,
 	ccCommand: SecurityCommand,
 	sendingNodeId: number,
 	receivingNodeId: number,
-	encryptedPayload: Buffer,
-): Buffer {
-	return Buffer.concat([
+	encryptedPayload: Uint8Array,
+): Uint8Array {
+	return Bytes.concat([
 		senderNonce,
 		receiverNonce,
-		Buffer.from([
+		Bytes.from([
 			ccCommand,
 			sendingNodeId,
 			receivingNodeId,
@@ -158,7 +156,7 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 	/**
 	 * Requests a new nonce for Security CC encapsulation which is not directly linked to a specific command.
 	 */
-	public async getNonce(): Promise<Buffer | undefined> {
+	public async getNonce(): Promise<Uint8Array | undefined> {
 		this.assertSupportsCommand(SecurityCommand, SecurityCommand.NonceGet);
 
 		const cc = new SecurityCCNonceGet({
@@ -289,7 +287,7 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 		// There is only one scheme, so we don't return anything here
 	}
 
-	public async setNetworkKey(networkKey: Buffer): Promise<void> {
+	public async setNetworkKey(networkKey: Uint8Array): Promise<void> {
 		this.assertSupportsCommand(
 			SecurityCommand,
 			SecurityCommand.NetworkKeySet,
@@ -304,7 +302,7 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 			encapsulated: keySet,
-			alternativeNetworkKey: Buffer.alloc(16, 0),
+			alternativeNetworkKey: new Uint8Array(16).fill(0),
 		});
 		await this.host.sendCommand(cc, this.commandOptions);
 	}
@@ -549,7 +547,7 @@ export class SecurityCC extends CommandClass {
 }
 
 interface SecurityCCNonceReportOptions {
-	nonce: Buffer;
+	nonce: Uint8Array;
 }
 
 @CCCommand(SecurityCommand.NonceReport)
@@ -575,16 +573,16 @@ export class SecurityCCNonceReport extends SecurityCC {
 			raw.payload.length === HALF_NONCE_SIZE,
 		);
 
-		return new SecurityCCNonceReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			nonce: raw.payload,
 		});
 	}
 
-	public nonce: Buffer;
+	public nonce: Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = this.nonce;
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.view(this.nonce);
 		return super.serialize(ctx);
 	}
 
@@ -603,12 +601,12 @@ export class SecurityCCNonceGet extends SecurityCC {}
 // @publicAPI
 export type SecurityCCCommandEncapsulationOptions =
 	& {
-		alternativeNetworkKey?: Buffer;
+		alternativeNetworkKey?: Uint8Array;
 	}
 	& ({
 		encapsulated: CommandClass;
 	} | {
-		decryptedCCBytes: Buffer;
+		decryptedCCBytes: Uint8Array;
 		sequenced: boolean;
 		secondFrame: boolean;
 		sequenceCounter: number;
@@ -645,10 +643,10 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		this.alternativeNetworkKey = options.alternativeNetworkKey;
 	}
 
-	public static from(
+	public static async from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
-	): SecurityCCCommandEncapsulation {
+	): Promise<SecurityCCCommandEncapsulation> {
 		assertSecurityRX(ctx);
 
 		// HALF_NONCE_SIZE bytes iv, 1 byte frame control, at least 1 CC byte, 1 byte nonce id, 8 bytes auth code
@@ -684,9 +682,9 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 			ctx.ownNodeId,
 			encryptedPayload,
 		);
-		const expectedAuthCode = computeMAC(
+		const expectedAuthCode = await computeMAC(
 			authData,
-			ctx.securityManager.authKey,
+			await ctx.securityManager.getAuthKey(),
 		);
 		// Only accept messages with a correct auth code
 		validatePayload.withReason(
@@ -694,17 +692,18 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		)(authCode.equals(expectedAuthCode));
 
 		// Decrypt the encapsulated CC
-		const frameControlAndDecryptedCC = decryptAES128OFB(
+		const frameControlAndDecryptedCC = await decryptAES128OFB(
 			encryptedPayload,
-			ctx.securityManager.encryptionKey,
-			Buffer.concat([iv, nonce]),
+			await ctx.securityManager.getEncryptionKey(),
+			Bytes.concat([iv, nonce]),
 		);
 		const frameControl = frameControlAndDecryptedCC[0];
 		const sequenceCounter = frameControl & 0b1111;
 		const sequenced = !!(frameControl & 0b1_0000);
 		const secondFrame = !!(frameControl & 0b10_0000);
-		const decryptedCCBytes: Buffer | undefined = frameControlAndDecryptedCC
-			.subarray(1);
+		const decryptedCCBytes: Uint8Array | undefined =
+			frameControlAndDecryptedCC
+				.subarray(1);
 
 		const ret = new SecurityCCCommandEncapsulation({
 			nodeId: ctx.sourceNodeId,
@@ -725,21 +724,21 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 	private secondFrame: boolean | undefined;
 	private sequenceCounter: number | undefined;
 
-	private decryptedCCBytes: Buffer | undefined;
+	private decryptedCCBytes: Uint8Array | undefined;
 	public encapsulated!: CommandClass;
 
-	private alternativeNetworkKey?: Buffer;
+	private alternativeNetworkKey?: Uint8Array;
 
 	public get nonceId(): number | undefined {
 		return this.nonce?.[0];
 	}
-	public nonce: Buffer | undefined;
+	public nonce: Uint8Array | undefined;
 
 	// Only used testing/for debugging purposes
-	private iv?: Buffer;
-	private authData?: Buffer;
-	private authCode?: Buffer;
-	private ciphertext?: Buffer;
+	private iv?: Uint8Array;
+	private authData?: Uint8Array;
+	private authCode?: Uint8Array;
+	private ciphertext?: Uint8Array;
 
 	public getPartialCCSessionId(): Record<string, any> | undefined {
 		if (this.sequenced) {
@@ -760,49 +759,56 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		return !!this.sequenced && !this.secondFrame;
 	}
 
-	public mergePartialCCs(
+	public async mergePartialCCs(
 		partials: SecurityCCCommandEncapsulation[],
 		ctx: CCParsingContext,
-	): void {
+	): Promise<void> {
 		// Concat the CC buffers
-		this.decryptedCCBytes = Buffer.concat(
+		this.decryptedCCBytes = Bytes.concat(
 			[...partials, this].map((cc) => cc.decryptedCCBytes!),
 		);
 		// make sure this contains a complete CC command that's worth splitting
 		validatePayload(this.decryptedCCBytes.length >= 2);
 		// and deserialize the CC
-		this.encapsulated = CommandClass.parse(this.decryptedCCBytes, ctx);
+		this.encapsulated = await CommandClass.parse(
+			this.decryptedCCBytes,
+			ctx,
+		);
 		this.encapsulated.encapsulatingCC = this as any;
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (!this.nonce) throwNoNonce();
 		if (this.nonce.length !== HALF_NONCE_SIZE) {
 			throwNoNonce("Invalid nonce size");
 		}
 		assertSecurityTX(ctx);
 
-		let authKey: Buffer;
-		let encryptionKey: Buffer;
+		let authKey: Uint8Array;
+		let encryptionKey: Uint8Array;
 		if (this.alternativeNetworkKey) {
-			authKey = generateAuthKey(this.alternativeNetworkKey);
-			encryptionKey = generateEncryptionKey(
+			authKey = await generateAuthKey(this.alternativeNetworkKey);
+			encryptionKey = await generateEncryptionKey(
 				this.alternativeNetworkKey,
 			);
 		} else {
-			authKey = ctx.securityManager.authKey;
-			encryptionKey = ctx.securityManager.encryptionKey;
+			authKey = await ctx.securityManager.getAuthKey();
+			encryptionKey = await ctx.securityManager.getEncryptionKey();
 		}
 
-		const serializedCC = this.encapsulated.serialize(ctx);
-		const plaintext = Buffer.concat([
-			Buffer.from([0]), // TODO: frame control
+		const serializedCC = await this.encapsulated.serialize(ctx);
+		const plaintext = Bytes.concat([
+			Bytes.from([0]), // TODO: frame control
 			serializedCC,
 		]);
 		// Encrypt the payload
 		const senderNonce = randomBytes(HALF_NONCE_SIZE);
-		const iv = Buffer.concat([senderNonce, this.nonce]);
-		const ciphertext = encryptAES128OFB(plaintext, encryptionKey, iv);
+		const iv = Bytes.concat([senderNonce, this.nonce]);
+		const ciphertext = await encryptAES128OFB(
+			plaintext,
+			encryptionKey,
+			iv,
+		);
 		// And generate the auth code
 		const authData = getAuthenticationData(
 			senderNonce,
@@ -812,7 +818,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 			this.nodeId,
 			ciphertext,
 		);
-		const authCode = computeMAC(authData, authKey);
+		const authCode = await computeMAC(authData, authKey);
 
 		// Remember for debugging purposes
 		this.iv = iv;
@@ -820,10 +826,10 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		this.authCode = authCode;
 		this.ciphertext = ciphertext;
 
-		this.payload = Buffer.concat([
+		this.payload = Bytes.concat([
 			senderNonce,
 			ciphertext,
-			Buffer.from([this.nonceId!]),
+			Bytes.from([this.nonceId!]),
 			authCode,
 		]);
 		return super.serialize(ctx);
@@ -891,14 +897,14 @@ export class SecurityCCSchemeReport extends SecurityCC {
 	): SecurityCCSchemeReport {
 		validatePayload(raw.payload.length >= 1);
 		// The including controller MUST NOT perform any validation of the Supported Security Schemes byte
-		return new SecurityCCSchemeReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 		});
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
-		this.payload = Buffer.from([0]);
+		this.payload = Bytes.from([0]);
 		return super.serialize(ctx);
 	}
 
@@ -914,9 +920,9 @@ export class SecurityCCSchemeReport extends SecurityCC {
 @CCCommand(SecurityCommand.SchemeGet)
 @expectedCCResponse(SecurityCCSchemeReport)
 export class SecurityCCSchemeGet extends SecurityCC {
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
-		this.payload = Buffer.from([0]);
+		this.payload = Bytes.from([0]);
 		return super.serialize(ctx);
 	}
 
@@ -932,9 +938,9 @@ export class SecurityCCSchemeGet extends SecurityCC {
 @CCCommand(SecurityCommand.SchemeInherit)
 @expectedCCResponse(SecurityCCSchemeReport)
 export class SecurityCCSchemeInherit extends SecurityCC {
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
-		this.payload = Buffer.from([0]);
+		this.payload = Bytes.from([0]);
 		return super.serialize(ctx);
 	}
 
@@ -952,7 +958,7 @@ export class SecurityCCNetworkKeyVerify extends SecurityCC {}
 
 // @publicAPI
 export interface SecurityCCNetworkKeySetOptions {
-	networkKey: Buffer;
+	networkKey: Uint8Array;
 }
 
 @CCCommand(SecurityCommand.NetworkKeySet)
@@ -976,18 +982,18 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
 		ctx: CCParsingContext,
 	): SecurityCCNetworkKeySet {
 		validatePayload(raw.payload.length >= 16);
-		const networkKey: Buffer = raw.payload.subarray(0, 16);
+		const networkKey: Uint8Array = raw.payload.subarray(0, 16);
 
-		return new SecurityCCNetworkKeySet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			networkKey,
 		});
 	}
 
-	public networkKey: Buffer;
+	public networkKey: Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = this.networkKey;
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.view(this.networkKey);
 		return super.serialize(ctx);
 	}
 
@@ -1028,7 +1034,7 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 		const supportedCCs: CommandClasses[] = list.supportedCCs;
 		const controlledCCs: CommandClasses[] = list.controlledCCs;
 
-		return new SecurityCCCommandsSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			reportsToFollow,
 			supportedCCs,
@@ -1051,7 +1057,7 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 
 	public mergePartialCCs(
 		partials: SecurityCCCommandsSupportedReport[],
-	): void {
+	): Promise<void> {
 		// Concat the lists of CCs
 		this.supportedCCs = [...partials, this]
 			.map((report) => report.supportedCCs)
@@ -1059,11 +1065,12 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 		this.controlledCCs = [...partials, this]
 			.map((report) => report.controlledCCs)
 			.reduce((prev, cur) => prev.concat(...cur), []);
+		return Promise.resolve();
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([this.reportsToFollow]),
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([this.reportsToFollow]),
 			encodeCCList(this.supportedCCs, this.controlledCCs),
 		]);
 		return super.serialize(ctx);

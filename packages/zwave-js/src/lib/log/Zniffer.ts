@@ -5,10 +5,10 @@ import {
 } from "@zwave-js/cc";
 import {
 	type DataDirection,
+	type LogContainer,
 	type LogContext,
 	type MessageOrCCLogEntry,
 	type RSSI,
-	type ZWaveLogContainer,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 	messageRecordToLines,
@@ -18,15 +18,14 @@ import {
 } from "@zwave-js/core";
 import { type ZnifferDataMessage } from "@zwave-js/serial";
 import { buffer2hex, num2hex } from "@zwave-js/shared";
-import { padStart } from "alcalzone-shared/strings";
 import {
 	type BeamStop,
 	type LongRangeBeamStart,
 	type LongRangeMPDU,
 	type ZWaveBeamStart,
 	type ZWaveMPDU,
-} from "../zniffer/MPDU";
-import { type Zniffer } from "../zniffer/Zniffer";
+} from "../zniffer/MPDU.js";
+import { type Zniffer } from "../zniffer/Zniffer.js";
 
 export const ZNIFFER_LABEL = "ZNIFFR";
 const ZNIFFER_LOGLEVEL = "info";
@@ -36,7 +35,10 @@ export interface ZnifferLogContext extends LogContext<"zniffer"> {
 }
 
 export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
-	constructor(private readonly zniffer: Zniffer, loggers: ZWaveLogContainer) {
+	constructor(
+		private readonly zniffer: Zniffer,
+		loggers: LogContainer,
+	) {
 		super(loggers, ZNIFFER_LABEL);
 	}
 
@@ -157,7 +159,7 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 				logCC(payloadCC);
 			}
 
-			const homeId = padStart(mpdu.homeId.toString(16), 8, "0")
+			const homeId = mpdu.homeId.toString(16).padStart(8, "0")
 				.toLowerCase();
 
 			this.logger.log({

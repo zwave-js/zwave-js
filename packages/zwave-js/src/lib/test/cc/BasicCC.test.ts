@@ -10,107 +10,112 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
-import * as nodeUtils from "../../node/utils";
-import { type CreateTestNodeOptions, createTestNode } from "../mocks";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
+import * as nodeUtils from "../../node/utils.js";
+import { type CreateTestNodeOptions, createTestNode } from "../mocks.js";
 
 const host = createTestingHost();
 
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses.Basic, // CC
 		]),
 		payload,
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
+test("the Get command should serialize correctly", async (t) => {
 	const basicCC = new BasicCCGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BasicCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(basicCC.serialize({} as any), expected);
+	await t.expect(basicCC.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Get command should be deserialized correctly", (t) => {
+test("the Get command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BasicCommand.Get, // CC Command
 		]),
 	);
-	const basicCC = CommandClass.parse(
+	const basicCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as BasicCCGet;
-	t.is(basicCC.constructor, BasicCCGet);
-	t.is(basicCC.nodeId, 2);
+	t.expect(basicCC.constructor).toBe(BasicCCGet);
+	t.expect(basicCC.nodeId).toBe(2);
 });
 
-test("the Set command should serialize correctly", (t) => {
+test("the Set command should serialize correctly", async (t) => {
 	const basicCC = new BasicCCSet({
 		nodeId: 2,
 		targetValue: 55,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BasicCommand.Set, // CC Command
 			55, // target value
 		]),
 	);
-	t.deepEqual(basicCC.serialize({} as any), expected);
+	await t.expect(basicCC.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command (v1) should be deserialized correctly", (t) => {
+test("the Report command (v1) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BasicCommand.Report, // CC Command
 			55, // current value
 		]),
 	);
-	const basicCC = CommandClass.parse(
+	const basicCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as BasicCCReport;
-	t.is(basicCC.constructor, BasicCCReport);
+	t.expect(basicCC.constructor).toBe(BasicCCReport);
 
-	t.is(basicCC.currentValue, 55);
-	t.is(basicCC.targetValue, undefined);
-	t.is(basicCC.duration, undefined);
+	t.expect(basicCC.currentValue).toBe(55);
+	t.expect(basicCC.targetValue).toBeUndefined();
+	t.expect(basicCC.duration).toBeUndefined();
 });
 
-test("the Report command (v2) should be deserialized correctly", (t) => {
+test("the Report command (v2) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BasicCommand.Report, // CC Command
 			55, // current value
 			66, // target value
 			1, // duration
 		]),
 	);
-	const basicCC = CommandClass.parse(
+	const basicCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as BasicCCReport;
-	t.is(basicCC.constructor, BasicCCReport);
+	t.expect(basicCC.constructor).toBe(BasicCCReport);
 
-	t.is(basicCC.currentValue, 55);
-	t.is(basicCC.targetValue, 66);
-	t.is(basicCC.duration!.unit, "seconds");
-	t.is(basicCC.duration!.value, 1);
+	t.expect(basicCC.currentValue).toBe(55);
+	t.expect(basicCC.targetValue).toBe(66);
+	t.expect(basicCC.duration!.unit).toBe("seconds");
+	t.expect(basicCC.duration!.value).toBe(1);
 });
 
-test("deserializing an unsupported command should return an unspecified version of BasicCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of BasicCC", async (t) => {
 	const serializedCC = buildCCBuffer(
-		Buffer.from([255]), // not a valid command
+		Uint8Array.from([255]), // not a valid command
 	);
-	const basicCC = CommandClass.parse(
+	const basicCC = await CommandClass.parse(
 		serializedCC,
 		{ sourceNodeId: 2 } as any,
 	) as BasicCCReport;
-	t.is(basicCC.constructor, BasicCC);
+	t.expect(basicCC.constructor).toBe(BasicCC);
 });
 
 test("getDefinedValueIDs() should include the target value for all endpoints except the node itself", (t) => {
@@ -141,7 +146,7 @@ test("getDefinedValueIDs() should include the target value for all endpoints exc
 				&& property === "targetValue",
 		);
 	const endpointIndizes = valueIDs.map(({ endpoint }) => endpoint);
-	t.deepEqual(endpointIndizes, [1, 2]);
+	t.expect(endpointIndizes).toStrictEqual([1, 2]);
 });
 
 test("BasicCCSet should expect no response", (t) => {
@@ -150,7 +155,7 @@ test("BasicCCSet should expect no response", (t) => {
 		endpointIndex: 2,
 		targetValue: 7,
 	});
-	t.false(cc.expectsCCResponse());
+	t.expect(cc.expectsCCResponse()).toBe(false);
 });
 
 test("BasicCCSet => BasicCCReport = unexpected", (t) => {
@@ -164,14 +169,14 @@ test("BasicCCSet => BasicCCReport = unexpected", (t) => {
 		currentValue: 7,
 	});
 
-	t.false(ccRequest.isExpectedCCResponse(ccResponse));
+	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
 });
 
 test("BasicCCGet should expect a response", (t) => {
 	const cc = new BasicCCGet({
 		nodeId: 2,
 	});
-	t.true(cc.expectsCCResponse());
+	t.expect(cc.expectsCCResponse()).toBe(true);
 });
 
 test("BasicCCGet => BasicCCReport = expected", (t) => {
@@ -183,7 +188,7 @@ test("BasicCCGet => BasicCCReport = expected", (t) => {
 		currentValue: 7,
 	});
 
-	t.true(ccRequest.isExpectedCCResponse(ccResponse));
+	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(true);
 });
 
 test("BasicCCGet => BasicCCReport (wrong node) = unexpected", (t) => {
@@ -195,7 +200,7 @@ test("BasicCCGet => BasicCCReport (wrong node) = unexpected", (t) => {
 		currentValue: 7,
 	});
 
-	t.false(ccRequest.isExpectedCCResponse(ccResponse));
+	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
 });
 
 test("BasicCCGet => BasicCCSet = unexpected", (t) => {
@@ -207,7 +212,7 @@ test("BasicCCGet => BasicCCSet = unexpected", (t) => {
 		targetValue: 7,
 	});
 
-	t.false(ccRequest.isExpectedCCResponse(ccResponse));
+	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
 });
 
 test("Looking up CC values for a CC instance should work", (t) => {
@@ -215,7 +220,7 @@ test("Looking up CC values for a CC instance should work", (t) => {
 		nodeId: 2,
 	});
 	const values = getCCValues(cc) as typeof BasicCCValues;
-	t.like(values.currentValue.id, {
+	t.expect(values.currentValue.id).toMatchObject({
 		commandClass: CommandClasses.Basic,
 		property: "currentValue",
 	});

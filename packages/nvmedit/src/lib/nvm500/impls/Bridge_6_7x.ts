@@ -1,6 +1,6 @@
 import { MAX_NODES, NUM_NODEMASK_BYTES } from "@zwave-js/core/safe";
-import { SUC_MAX_UPDATES } from "../../../consts";
-import type { NVM500Impl } from "../shared";
+import { SUC_MAX_UPDATES } from "../../../consts.js";
+import type { NVM500Impl } from "../shared.js";
 import {
 	APPL_NODEPARM_MAX,
 	NVMEntryType,
@@ -10,7 +10,7 @@ import {
 	RTC_TIMER_SIZE,
 	SUC_CONTROLLER_LIST_SIZE,
 	TOTAL_RTC_TIMER_MAX,
-} from "../shared";
+} from "../shared.js";
 
 const NVM_Layout_Bridge_6_7x: NVMLayout = [
 	{ name: "nvmTotalEnd", type: NVMEntryType.Word, count: 1 },
@@ -202,6 +202,15 @@ const NVM_Layout_Bridge_6_7x: NVMLayout = [
 export const Bridge_6_7x: NVM500Impl = {
 	name: "Bridge 6.7x",
 	library: "bridge",
-	protocolVersions: ["4.60", "4.61", "5.02", "5.03"],
+	protocolVersions: [
+		"4.60",
+		"4.61",
+		"5.02",
+		"5.03",
+		// Technically the following is a 6.8x SDK, but according to
+		// https://github.com/zwave-js/zwave-js/issues/7385, it still uses
+		// a 6.7x NVM layout
+		"6.01",
+	],
 	layout: NVM_Layout_Bridge_6_7x,
 };

@@ -1,4 +1,6 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import type {
+	GetValueDB,
 	MessageOrCCLogEntry,
 	MessageRecord,
 	SupervisionResult,
@@ -13,51 +15,44 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { LanguageCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { LanguageCommand } from "../lib/_Types.js";
 
-export const LanguageCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Language, {
-		...V.staticProperty(
-			"language",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Language code",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"country",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Country code",
-			} as const,
-		),
-	}),
+export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
+	...V.staticProperty(
+		"language",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Language code",
+		} as const,
+	),
+	...V.staticProperty(
+		"country",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Country code",
+		} as const,
+	),
 });
 
 // @noSetValueAPI It doesn't make sense
@@ -223,10 +218,14 @@ export class LanguageCCSet extends LanguageCC {
 		this._country = value;
 	}
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.allocUnsafe(!!this._country ? 5 : 3);
-		this.payload.write(this._language, 0, "ascii");
-		if (!!this._country) this.payload.write(this._country, 3, "ascii");
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from(this._language, "ascii");
+		if (this._country) {
+			this.payload = Bytes.concat([
+				this.payload,
+				Bytes.from(this._country, "ascii"),
+			]);
+		}
 		return super.serialize(ctx);
 	}
 
@@ -249,6 +248,8 @@ export interface LanguageCCReportOptions {
 }
 
 @CCCommand(LanguageCommand.Report)
+@ccValueProperty("language", LanguageCCValues.language)
+@ccValueProperty("country", LanguageCCValues.country)
 export class LanguageCCReport extends LanguageCC {
 	public constructor(
 		options: WithAddress<LanguageCCReportOptions>,
@@ -260,23 +261,21 @@ export class LanguageCCReport extends LanguageCC {
 
 	public static from(raw: CCRaw, ctx: CCParsingContext): LanguageCCReport {
 		validatePayload(raw.payload.length >= 3);
-		const language = raw.payload.toString("ascii", 0, 3);
+		const language = raw.payload.subarray(0, 3).toString("ascii");
 		let country: MaybeNotKnown<string>;
 		if (raw.payload.length >= 5) {
-			country = raw.payload.toString("ascii", 3, 5);
+			country = raw.payload.subarray(3, 5).toString("ascii");
 		}
 
-		return new LanguageCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			language,
 			country,
 		});
 	}
 
-	@ccValue(LanguageCCValues.language)
 	public readonly language: string;
 
-	@ccValue(LanguageCCValues.country)
 	public readonly country: MaybeNotKnown<string>;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
@@ -12,11 +14,7 @@ import {
 	getCCName,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -29,13 +27,13 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -44,12 +42,13 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { SceneActuatorConfigurationCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { SceneActuatorConfigurationCommand } from "../lib/_Types.js";
 
-export const SceneActuatorConfigurationCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses["Scene Actuator Configuration"], {
+export const SceneActuatorConfigurationCCValues = V.defineCCValues(
+	CommandClasses["Scene Actuator Configuration"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"level",
 			"level",
@@ -62,7 +61,6 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
 			"dimmingDuration",
@@ -75,8 +73,8 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 				label: `Dimming duration (${sceneId})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Scene Actuator Configuration"])
 export class SceneActuatorConfigurationCCAPI extends CCAPI {
@@ -128,7 +126,7 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 						);
 				return this.set(propertyKey, dimmingDuration, value);
 			} else if (property === "dimmingDuration") {
-				if (typeof value !== "string" && !(value instanceof Duration)) {
+				if (typeof value !== "string" && !Duration.isDuration(value)) {
 					throwWrongValueType(
 						this.ccId,
 						property,
@@ -390,8 +388,8 @@ export class SceneActuatorConfigurationCCSet
 	public dimmingDuration: Duration;
 	public level?: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.sceneId,
 			this.dimmingDuration.serializeSet(),
 			this.level != undefined ? 0b1000_0000 : 0,
@@ -453,7 +451,7 @@ export class SceneActuatorConfigurationCCReport
 				?? Duration.unknown();
 		}
 
-		return new SceneActuatorConfigurationCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sceneId,
 			level,
@@ -556,8 +554,8 @@ export class SceneActuatorConfigurationCCGet
 
 	public sceneId: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.sceneId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.sceneId]);
 		return super.serialize(ctx);
 	}
 

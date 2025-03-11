@@ -75,6 +75,8 @@ import { EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
 import {
 	FirmwareUpdateMetaDataCCGet,
 	FirmwareUpdateMetaDataCCMetaDataGet,
+	FirmwareUpdateMetaDataCCPrepareGet,
+	FirmwareUpdateMetaDataCCRequestGet,
 	FirmwareUpdateMetaDataCCValues,
 } from "@zwave-js/cc/FirmwareUpdateMetaDataCC";
 import { HailCC } from "@zwave-js/cc/HailCC";
@@ -213,48 +215,50 @@ import {
 } from "@zwave-js/serial/serialapi";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import {
+	Bytes,
 	Mixin,
-	type TypedEventEmitter,
+	type Timer,
+	TypedEventTarget,
 	cloneDeep,
 	discreteLinearSearch,
 	formatId,
 	getEnumMemberName,
 	getErrorMessage,
+	isUint8Array,
 	noop,
 	pick,
+	setTimer,
 	stringify,
 } from "@zwave-js/shared";
+import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
-import { padStart } from "alcalzone-shared/strings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { EventEmitter } from "node:events";
-import path from "node:path";
-import { setTimeout as wait } from "node:timers/promises";
-import semver from "semver";
-import { RemoveNodeReason } from "../controller/Inclusion";
-import { determineNIF } from "../controller/NodeInformationFrame";
-import { type Driver, libVersion } from "../driver/Driver";
-import { cacheKeys } from "../driver/NetworkCache";
-import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics";
-import type { Transaction } from "../driver/Transaction";
-import { DeviceClass } from "./DeviceClass";
-import { type NodeDump, type ValueDump } from "./Dump";
-import { type Endpoint } from "./Endpoint";
+import path from "pathe";
+import semverParse from "semver/functions/parse.js";
+import { RemoveNodeReason } from "../controller/Inclusion.js";
+import { determineNIF } from "../controller/NodeInformationFrame.js";
+import { type Driver, libVersion } from "../driver/Driver.js";
+import { cacheKeys } from "../driver/NetworkCache.js";
+import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
+import type { Transaction } from "../driver/Transaction.js";
+import { DeviceClass } from "./DeviceClass.js";
+import { type NodeDump, type ValueDump } from "./Dump.js";
+import { type Endpoint } from "./Endpoint.js";
 import {
 	formatLifelineHealthCheckSummary,
 	formatRouteHealthCheckSummary,
 	healthCheckTestFrameCount,
-} from "./HealthCheck";
+} from "./HealthCheck.js";
 import {
 	type NodeStatistics,
 	NodeStatisticsHost,
 	type RouteStatistics,
 	routeStatisticsEquals,
-} from "./NodeStatistics";
+} from "./NodeStatistics.js";
 import {
 	type DateAndTime,
 	type LifelineHealthCheckResult,
@@ -266,10 +270,10 @@ import {
 	type RouteHealthCheckResult,
 	type RouteHealthCheckSummary,
 	type ZWaveNodeEventCallbacks,
-} from "./_Types";
-import { InterviewStage, NodeStatus } from "./_Types";
-import { ZWaveNodeMixins } from "./mixins";
-import * as nodeUtils from "./utils";
+} from "./_Types.js";
+import { InterviewStage, NodeStatus } from "./_Types.js";
+import { ZWaveNodeMixins } from "./mixins/index.js";
+import * as nodeUtils from "./utils.js";
 
 const MAX_ASSOCIATIONS = 1;
 
@@ -278,14 +282,14 @@ type AllNodeEvents =
 	& StatisticsEventCallbacksWithSelf<ZWaveNode, NodeStatistics>;
 
 export interface ZWaveNode
-	extends TypedEventEmitter<AllNodeEvents>, NodeStatisticsHost
+	extends TypedEventTarget<AllNodeEvents>, NodeStatisticsHost
 {}
 
 /**
  * A ZWaveNode represents a node in a Z-Wave network. It is also an instance
  * of its root endpoint (index 0)
  */
-@Mixin([EventEmitter, NodeStatisticsHost])
+@Mixin([TypedEventTarget, NodeStatisticsHost])
 export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	public constructor(
 		id: number,
@@ -313,10 +317,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * Cleans up all resources used by this node
 	 */
 	public destroy(): void {
-		// Stop all state machines
-		this.statusMachine.stop();
-		this.readyMachine.stop();
-
 		// Remove all timeouts
 		for (
 			const timeout of [
@@ -324,7 +324,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				...this.notificationIdleTimeouts.values(),
 			]
 		) {
-			if (timeout) clearTimeout(timeout);
+			timeout?.clear();
 		}
 
 		// Remove all event handlers
@@ -338,11 +338,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * The device specific key (DSK) of this node in binary format.
 	 * This is only set if included with Security S2.
 	 */
-	public get dsk(): Buffer | undefined {
+	public get dsk(): Uint8Array | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).dsk);
 	}
 	/** @internal */
-	public set dsk(value: Buffer | undefined) {
+	public set dsk(value: Uint8Array | undefined) {
 		const cacheKey = cacheKeys.node(this.id).dsk;
 		this.driver.cacheSet(cacheKey, value);
 	}
@@ -537,7 +537,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	public set defaultTransitionDuration(value: string | Duration | undefined) {
 		// Normalize to strings
 		if (typeof value === "string") value = Duration.from(value);
-		if (value instanceof Duration) value = value.toString();
+		if (Duration.isDuration(value)) value = value.toString();
 
 		this.driver.cacheSet(
 			cacheKeys.node(this.id).defaultTransitionDuration,
@@ -549,12 +549,21 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * @internal
 	 * The hash of the device config that was applied during the last interview.
 	 */
-	public get deviceConfigHash(): Buffer | undefined {
+	public get cachedDeviceConfigHash(): Uint8Array | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).deviceConfigHash);
 	}
 
-	private set deviceConfigHash(value: Buffer | undefined) {
+	private set cachedDeviceConfigHash(value: Uint8Array | undefined) {
 		this.driver.cacheSet(cacheKeys.node(this.id).deviceConfigHash, value);
+	}
+
+	private _currentDeviceConfigHash: Uint8Array | undefined;
+	/**
+	 * @internal
+	 * The hash of the currently used device config
+	 */
+	public get currentDeviceConfigHash(): Uint8Array | undefined {
+		return this._currentDeviceConfigHash;
 	}
 
 	/** Returns a list of all value names that are defined on all endpoints of this node */
@@ -968,7 +977,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		this.supportsSecurity = undefined;
 		this.supportsBeaming = undefined;
 		this._deviceConfig = undefined;
-		this.deviceConfigHash = undefined;
+		this._currentDeviceConfigHash = undefined;
+		this.cachedDeviceConfigHash = undefined;
 		this._hasEmittedNoS0NetworkKeyError = false;
 		this._hasEmittedNoS2NetworkKeyError = false;
 		for (const ep of this.getAllEndpoints()) {
@@ -979,8 +989,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		super.reset();
 
 		// Restart all state machines
-		this.readyMachine.restart();
-		this.statusMachine.restart();
+		this.restartReadyMachine();
+		this.restartStatusMachine();
 
 		// Remove queued polls that would interfere with the interview
 		this.cancelAllScheduledPolls();
@@ -1102,10 +1112,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		}
 
 		// Remember the state of the device config that is used for this node
-		this.deviceConfigHash = this._deviceConfig?.getHash();
+		this.cachedDeviceConfigHash = await this._deviceConfig?.getHash();
 
 		this.setInterviewStage(InterviewStage.Complete);
-		this.readyMachine.send("INTERVIEW_DONE");
+		this.updateReadyMachine({ value: "INTERVIEW_DONE" });
 
 		// Tell listeners that the interview is completed
 		// The driver will then send this node to sleep
@@ -1347,6 +1357,15 @@ protocol version:      ${this.protocolVersion}`;
 				this.firmwareVersion,
 			);
 			if (this._deviceConfig) {
+				// Also remember the current hash of the device config
+				if (this.cachedDeviceConfigHash?.length === 16) {
+					// legacy hash using MD5
+					this._currentDeviceConfigHash = await this._deviceConfig
+						.getHash("md5");
+				} else {
+					this._currentDeviceConfigHash = await this._deviceConfig
+						.getHash();
+				}
 				this.driver.controllerLog.logNode(
 					this.id,
 					`${
@@ -1474,8 +1493,7 @@ protocol version:      ${this.protocolVersion}`;
 							"error",
 							new ZWaveError(
 								`Node ${
-									padStart(
-										this.id.toString(),
+									this.id.toString().padStart(
 										3,
 										"0",
 									)
@@ -1535,8 +1553,7 @@ protocol version:      ${this.protocolVersion}`;
 							"error",
 							new ZWaveError(
 								`Node ${
-									padStart(
-										this.id.toString(),
+									this.id.toString().padStart(
 										3,
 										"0",
 									)
@@ -2429,6 +2446,10 @@ protocol version:      ${this.protocolVersion}`;
 			return this.handleUnexpectedFirmwareUpdateGet(command);
 		} else if (command instanceof FirmwareUpdateMetaDataCCMetaDataGet) {
 			return this.handleFirmwareUpdateMetaDataGet(command);
+		} else if (command instanceof FirmwareUpdateMetaDataCCRequestGet) {
+			return this.handleFirmwareUpdateRequestGet(command);
+		} else if (command instanceof FirmwareUpdateMetaDataCCPrepareGet) {
+			return this.handleFirmwareUpdatePrepareGet(command);
 		} else if (command instanceof EntryControlCCNotification) {
 			return this.handleEntryControlNotification(command);
 		} else if (command instanceof TimeCCTimeGet) {
@@ -2498,6 +2519,13 @@ protocol version:      ${this.protocolVersion}`;
 		} else if (command instanceof InclusionControllerCCInitiate) {
 			// Inclusion controller commands are handled by the controller class
 			if (
+				command.step === InclusionControllerStep.ProxyInclusion
+			) {
+				return this.driver.controller
+					.handleInclusionControllerCCInitiateProxyInclusion(
+						command,
+					);
+			} else if (
 				command.step === InclusionControllerStep.ProxyInclusionReplace
 			) {
 				return this.driver.controller
@@ -2731,7 +2759,7 @@ protocol version:      ${this.protocolVersion}`;
 	/** Stores information about a currently held down key */
 	private centralSceneKeyHeldDownContext:
 		| {
-			timeout: NodeJS.Timeout;
+			timeout: Timer;
 			sceneNumber: number;
 		}
 		| undefined;
@@ -2786,7 +2814,7 @@ protocol version:      ${this.protocolVersion}`;
 				CentralSceneKeys.KeyReleased,
 			);
 			// clear old timer
-			clearTimeout(this.centralSceneKeyHeldDownContext!.timeout);
+			this.centralSceneKeyHeldDownContext?.timeout?.clear();
 			// clear the key down context
 			this.centralSceneKeyHeldDownContext = undefined;
 		};
@@ -2806,9 +2834,7 @@ protocol version:      ${this.protocolVersion}`;
 		if (command.keyAttribute === CentralSceneKeys.KeyHeldDown) {
 			// Set or refresh timer to force a release of the key
 			this.centralSceneForcedKeyUp = false;
-			if (this.centralSceneKeyHeldDownContext) {
-				clearTimeout(this.centralSceneKeyHeldDownContext.timeout);
-			}
+			this.centralSceneKeyHeldDownContext?.timeout?.clear();
 			// If the node does not advertise support for the slow refresh capability, we might still be dealing with a
 			// slow refresh node. We use the stored value for fallback behavior
 			const slowRefresh = command.slowRefresh
@@ -2816,7 +2842,7 @@ protocol version:      ${this.protocolVersion}`;
 			this.centralSceneKeyHeldDownContext = {
 				sceneNumber: command.sceneNumber,
 				// Unref'ing long running timers allows the process to exit mid-timeout
-				timeout: setTimeout(
+				timeout: setTimer(
 					forceKeyUp,
 					slowRefresh ? 60000 : 400,
 				).unref(),
@@ -2824,7 +2850,7 @@ protocol version:      ${this.protocolVersion}`;
 		} else if (command.keyAttribute === CentralSceneKeys.KeyReleased) {
 			// Stop the release timer
 			if (this.centralSceneKeyHeldDownContext) {
-				clearTimeout(this.centralSceneKeyHeldDownContext.timeout);
+				this.centralSceneKeyHeldDownContext.timeout.clear();
 				this.centralSceneKeyHeldDownContext = undefined;
 			} else if (this.centralSceneForcedKeyUp) {
 				// If we timed out and the controller subsequently receives a Key Released Notification,
@@ -3322,7 +3348,7 @@ protocol version:      ${this.protocolVersion}`;
 					& ~EncapsulationFlags.Supervision,
 			});
 
-		const firmwareVersion1 = semver.parse(libVersion, { loose: true })!;
+		const firmwareVersion1 = semverParse(libVersion, { loose: true })!;
 
 		await api.sendReport({
 			libraryType: ZWaveLibraryTypes["Static Controller"],
@@ -4195,7 +4221,7 @@ protocol version:      ${this.protocolVersion}`;
 	/**
 	 * Allows automatically resetting notification values to idle if the node does not do it itself
 	 */
-	private notificationIdleTimeouts = new Map<string, NodeJS.Timeout>();
+	private notificationIdleTimeouts = new Map<string, Timer>();
 	/** Schedules a notification value to be reset */
 	private scheduleNotificationIdleReset(
 		valueId: ValueID,
@@ -4206,7 +4232,7 @@ protocol version:      ${this.protocolVersion}`;
 		this.notificationIdleTimeouts.set(
 			key,
 			// Unref'ing long running timeouts allows to quit the application before the timeout elapses
-			setTimeout(handler, 5 * 60 * 1000 /* 5 minutes */).unref(),
+			setTimer(handler, 5 * 60 * 1000 /* 5 minutes */).unref(),
 		);
 	}
 
@@ -4214,7 +4240,7 @@ protocol version:      ${this.protocolVersion}`;
 	private clearNotificationIdleReset(valueId: ValueID): void {
 		const key = valueIdToString(valueId);
 		if (this.notificationIdleTimeouts.has(key)) {
-			clearTimeout(this.notificationIdleTimeouts.get(key));
+			this.notificationIdleTimeouts.get(key)?.clear();
 			this.notificationIdleTimeouts.delete(key);
 		}
 	}
@@ -4390,7 +4416,7 @@ protocol version:      ${this.protocolVersion}`;
 			if (value === 0) {
 				// Generic idle notification, this contains a value to be reset
 				if (
-					Buffer.isBuffer(command.eventParameters)
+					isUint8Array(command.eventParameters)
 					&& command.eventParameters.length
 				) {
 					// The target value is the first byte of the event parameters
@@ -4607,7 +4633,7 @@ protocol version:      ${this.protocolVersion}`;
 			command.notificationType === 0x06
 			&& doorStatusEvents.includes(command.notificationEvent as number)
 		) {
-			// https://github.com/zwave-js/node-zwave-js/pull/5394 added support for
+			// https://github.com/zwave-js/zwave-js/pull/5394 added support for
 			// notification enums. Unfortunately, there's no way to discover which nodes
 			// actually support them, which makes working with the Door state variable
 			// very cumbersome. Also, this is currently the only notification where the enum values
@@ -4907,7 +4933,7 @@ protocol version:      ${this.protocolVersion}`;
 
 		// Mark already-interviewed nodes as potentially ready
 		if (this.interviewStage === InterviewStage.Complete) {
-			this.readyMachine.send("RESTART_FROM_CACHE");
+			this.updateReadyMachine({ value: "RESTART_FROM_CACHE" });
 		}
 	}
 
@@ -5914,7 +5940,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				options.interval - (Date.now() - lastStart),
 			);
 			await Promise.race([
-				wait(waitDurationMs, undefined, { ref: false }),
+				wait(waitDurationMs, true),
 				this._abortLinkReliabilityCheckPromise,
 			]);
 		}
@@ -6029,7 +6055,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			&& timeAPI.supportsCommand(TimeCommand.DateReport)
 			&& timeAPI.supportsCommand(TimeCommand.TimeReport)
 		) {
-			// According to https://github.com/zwave-js/node-zwave-js/issues/6032#issuecomment-1641945555
+			// According to https://github.com/zwave-js/zwave-js/issues/6032#issuecomment-1641945555
 			// some devices update their date and time when they receive an unsolicited Time CC report.
 			// Even if this isn't intended, we should at least try.
 
@@ -6277,14 +6303,15 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		if (this.isControllerNode) return false;
 
 		// If the hash was never stored, we can only (very likely) know if the config has not changed
-		const actualHash = this.deviceConfig?.getHash();
-		if (this.deviceConfigHash == undefined) {
-			return actualHash == undefined ? false : NOT_KNOWN;
+		if (this.cachedDeviceConfigHash == undefined) {
+			return this.deviceConfig == undefined ? false : NOT_KNOWN;
 		}
 
 		// If it was, a change in hash means the config has changed
-		if (actualHash && this.deviceConfigHash) {
-			return !actualHash.equals(this.deviceConfigHash);
+		if (this._currentDeviceConfigHash) {
+			return !Bytes.view(this._currentDeviceConfigHash).equals(
+				this.cachedDeviceConfigHash,
+			);
 		}
 		return true;
 	}

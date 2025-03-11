@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -12,11 +14,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -31,90 +29,41 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
+import {
+	windowCoveringParameterToLevelChangeLabel,
+	windowCoveringParameterToMetadataStates,
+} from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	type LevelChangeDirection,
 	WindowCoveringCommand,
 	WindowCoveringParameter,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-function parameterToMetadataStates(
-	parameter: WindowCoveringParameter,
-): Record<number, string> {
-	switch (parameter) {
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return {
-				0: "Closed (right inside)",
-				50: "Open",
-				99: "Closed (left inside)",
-			};
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			return {
-				0: "Closed (up inside)",
-				50: "Open",
-				99: "Closed (down inside)",
-			};
-	}
-
-	return {
-		0: "Closed",
-		99: "Open",
-	};
-}
-
-function parameterToLevelChangeLabel(
-	parameter: WindowCoveringParameter,
-	direction: "up" | "down",
-): string {
-	switch (parameter) {
-		// For angle control, both directions are closed, so we specify it explicitly
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return `Change tilt (${
-				direction === "up" ? "left inside" : "right inside"
-			})`;
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			// Horizontal slats refer to the position of the inner side of the slats
-			// where a high level (99) actually means they face down
-			return `Change tilt (${
-				direction === "up" ? "down inside" : "up inside"
-			})`;
-	}
-	// For all other parameters, refer to the amount of light that is let in
-	return direction === "up" ? "Open" : "Close";
-}
-
-export const WindowCoveringCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Window Covering"], {
+export const WindowCoveringCCValues = V.defineCCValues(
+	CommandClasses["Window Covering"],
+	{
 		...V.staticProperty(
 			"supportedParameters",
 			undefined, // meta
 			{ internal: true }, // value options
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Window Covering"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"currentValue",
 			"currentValue",
@@ -130,12 +79,11 @@ export const WindowCoveringCCValues = Object.freeze({
 							parameter,
 						)
 					}`,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					ccSpecific: { parameter },
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"targetValue",
 			"targetValue",
@@ -155,14 +103,13 @@ export const WindowCoveringCCValues = Object.freeze({
 					}`,
 					// Only odd-numbered parameters have position support and are writable
 					writeable: parameter % 2 === 1,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					allowManualEntry: writeable,
 					ccSpecific: { parameter },
 					valueChangeOptions: ["transitionDuration"],
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"duration",
 			"duration",
@@ -182,7 +129,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				},
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeUp",
 			// The direction refers to the change in level, not the physical location
@@ -194,7 +140,7 @@ export const WindowCoveringCCValues = Object.freeze({
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"up",
 						)
@@ -213,7 +159,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeDown",
 			// The direction refers to the change in level, not the physical location
@@ -226,7 +171,7 @@ export const WindowCoveringCCValues = Object.freeze({
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"down",
 						)
@@ -245,8 +190,8 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Window Covering"])
 export class WindowCoveringCCAPI extends CCAPI {
@@ -685,6 +630,10 @@ export interface WindowCoveringCCSupportedReportOptions {
 }
 
 @CCCommand(WindowCoveringCommand.SupportedReport)
+@ccValueProperty(
+	"supportedParameters",
+	WindowCoveringCCValues.supportedParameters,
+)
 export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 	public constructor(
 		options: WithAddress<WindowCoveringCCSupportedReportOptions>,
@@ -707,16 +656,15 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 			WindowCoveringParameter["Outbound Left (no position)"],
 		);
 
-		return new WindowCoveringCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedParameters,
 		});
 	}
 
-	@ccValue(WindowCoveringCCValues.supportedParameters)
 	public readonly supportedParameters: readonly WindowCoveringParameter[];
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const bitmask = encodeBitMask(
 			this.supportedParameters,
 			undefined,
@@ -724,8 +672,8 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 		).subarray(0, 15);
 		const numBitmaskBytes = bitmask.length & 0b1111;
 
-		this.payload = Buffer.concat([
-			Buffer.from([numBitmaskBytes]),
+		this.payload = Bytes.concat([
+			Bytes.from([numBitmaskBytes]),
 			bitmask.subarray(0, numBitmaskBytes),
 		]);
 
@@ -765,6 +713,21 @@ export interface WindowCoveringCCReportOptions {
 }
 
 @CCCommand(WindowCoveringCommand.Report)
+@ccValueProperty(
+	"currentValue",
+	WindowCoveringCCValues.currentValue,
+	(self) => [self.parameter],
+)
+@ccValueProperty(
+	"targetValue",
+	WindowCoveringCCValues.targetValue,
+	(self) => [self.parameter],
+)
+@ccValueProperty(
+	"duration",
+	WindowCoveringCCValues.duration,
+	(self) => [self.parameter],
+)
 export class WindowCoveringCCReport extends WindowCoveringCC {
 	public constructor(
 		options: WithAddress<WindowCoveringCCReportOptions>,
@@ -789,7 +752,7 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 		const duration = Duration.parseReport(raw.payload[3])
 			?? Duration.unknown();
 
-		return new WindowCoveringCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			currentValue,
@@ -800,20 +763,10 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 
 	public readonly parameter: WindowCoveringParameter;
 
-	@ccValue(
-		WindowCoveringCCValues.currentValue,
-		(self: WindowCoveringCCReport) => [self.parameter] as const,
-	)
 	public readonly currentValue: number;
-	@ccValue(
-		WindowCoveringCCValues.targetValue,
-		(self: WindowCoveringCCReport) => [self.parameter] as const,
-	)
+
 	public readonly targetValue: number;
-	@ccValue(
-		WindowCoveringCCValues.duration,
-		(self: WindowCoveringCCReport) => [self.parameter] as const,
-	)
+
 	public readonly duration: Duration;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -858,7 +811,7 @@ export class WindowCoveringCCGet extends WindowCoveringCC {
 		validatePayload(raw.payload.length >= 1);
 		const parameter: WindowCoveringParameter = raw.payload[0];
 
-		return new WindowCoveringCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 		});
@@ -866,8 +819,8 @@ export class WindowCoveringCCGet extends WindowCoveringCC {
 
 	public parameter: WindowCoveringParameter;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.parameter]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.parameter]);
 		return super.serialize(ctx);
 	}
 
@@ -927,7 +880,7 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 			);
 		}
 
-		return new WindowCoveringCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			targetValues,
 			duration,
@@ -940,9 +893,9 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 	}[];
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const numEntries = this.targetValues.length & 0b11111;
-		this.payload = Buffer.allocUnsafe(2 + numEntries * 2);
+		this.payload = new Bytes(2 + numEntries * 2);
 
 		this.payload[0] = numEntries;
 		for (let i = 0; i < numEntries; i++) {
@@ -1008,7 +961,7 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 			duration = Duration.parseSet(raw.payload[2]);
 		}
 
-		return new WindowCoveringCCStartLevelChange({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			direction,
 			parameter,
@@ -1020,8 +973,8 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 	public direction: keyof typeof LevelChangeDirection;
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.direction === "down" ? 0b0100_0000 : 0b0000_0000,
 			this.parameter,
 			(this.duration ?? Duration.default()).serializeSet(),
@@ -1069,7 +1022,7 @@ export class WindowCoveringCCStopLevelChange extends WindowCoveringCC {
 		validatePayload(raw.payload.length >= 1);
 		const parameter: WindowCoveringParameter = raw.payload[0];
 
-		return new WindowCoveringCCStopLevelChange({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 		});
@@ -1077,8 +1030,8 @@ export class WindowCoveringCCStopLevelChange extends WindowCoveringCC {
 
 	public parameter: WindowCoveringParameter;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.parameter]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.parameter]);
 		return super.serialize(ctx);
 	}
 

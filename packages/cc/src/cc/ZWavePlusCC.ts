@@ -1,70 +1,65 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type WithAddress,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, num2hex, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ZWavePlusCommand,
 	ZWavePlusNodeType,
 	ZWavePlusRoleType,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
 // SDS13782 The advertised Z-Wave Plus Version, Role Type and Node Type information values
 // MUST be identical for the Root Device and all Multi Channel End Points
 // --> We only access endpoint 0
 
-export const ZWavePlusCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Z-Wave Plus Info"], {
+export const ZWavePlusCCValues = V.defineCCValues(
+	CommandClasses["Z-Wave Plus Info"],
+	{
 		...V.staticProperty("zwavePlusVersion", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("nodeType", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("roleType", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("userIcon", undefined, {
 			internal: true,
 		}),
-
 		...V.staticProperty("installerIcon", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -176,6 +171,11 @@ export interface ZWavePlusCCReportOptions {
 }
 
 @CCCommand(ZWavePlusCommand.Report)
+@ccValueProperty("zwavePlusVersion", ZWavePlusCCValues.zwavePlusVersion)
+@ccValueProperty("nodeType", ZWavePlusCCValues.nodeType)
+@ccValueProperty("roleType", ZWavePlusCCValues.roleType)
+@ccValueProperty("installerIcon", ZWavePlusCCValues.installerIcon)
+@ccValueProperty("userIcon", ZWavePlusCCValues.userIcon)
 export class ZWavePlusCCReport extends ZWavePlusCC {
 	public constructor(
 		options: WithAddress<ZWavePlusCCReportOptions>,
@@ -196,7 +196,7 @@ export class ZWavePlusCCReport extends ZWavePlusCC {
 		const installerIcon = raw.payload.readUInt16BE(3);
 		const userIcon = raw.payload.readUInt16BE(5);
 
-		return new ZWavePlusCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			zwavePlusVersion,
 			roleType,
@@ -206,23 +206,18 @@ export class ZWavePlusCCReport extends ZWavePlusCC {
 		});
 	}
 
-	@ccValue(ZWavePlusCCValues.zwavePlusVersion)
 	public zwavePlusVersion: number;
 
-	@ccValue(ZWavePlusCCValues.nodeType)
 	public nodeType: ZWavePlusNodeType;
 
-	@ccValue(ZWavePlusCCValues.roleType)
 	public roleType: ZWavePlusRoleType;
 
-	@ccValue(ZWavePlusCCValues.installerIcon)
 	public installerIcon: number;
 
-	@ccValue(ZWavePlusCCValues.userIcon)
 	public userIcon: number;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.zwavePlusVersion,
 			this.roleType,
 			this.nodeType,

@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -12,35 +14,32 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, isEnumMember, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { AlarmSensorCommand, AlarmSensorType } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { AlarmSensorCommand, AlarmSensorType } from "../lib/_Types.js";
 
-export const AlarmSensorCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses["Alarm Sensor"], {
+export const AlarmSensorCCValues = V.defineCCValues(
+	CommandClasses["Alarm Sensor"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"state",
 			"state",
@@ -101,13 +100,11 @@ export const AlarmSensorCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-	...V.defineStaticCCValues(CommandClasses["Alarm Sensor"], {
 		...V.staticProperty("supportedSensorTypes", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -359,7 +356,7 @@ export class AlarmSensorCCReport extends AlarmSensorCC {
 		// ignore zero durations
 		const duration = raw.payload.readUInt16BE(3) || undefined;
 
-		return new AlarmSensorCCReport({
+		return new this({
 			// Alarm Sensor reports may be forwarded by a different node, in this case
 			// (and only then!) the payload contains the original node ID
 			nodeId: sourceNodeId || ctx.sourceNodeId,
@@ -449,8 +446,8 @@ export class AlarmSensorCCGet extends AlarmSensorCC {
 
 	public sensorType: AlarmSensorType;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.sensorType]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.sensorType]);
 		return super.serialize(ctx);
 	}
 
@@ -473,6 +470,10 @@ export interface AlarmSensorCCSupportedReportOptions {
 }
 
 @CCCommand(AlarmSensorCommand.SupportedReport)
+@ccValueProperty(
+	"supportedSensorTypes",
+	AlarmSensorCCValues.supportedSensorTypes,
+)
 export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
 	public constructor(
 		options: WithAddress<AlarmSensorCCSupportedReportOptions>,
@@ -495,13 +496,12 @@ export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
 			AlarmSensorType["General Purpose"],
 		);
 
-		return new AlarmSensorCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedSensorTypes,
 		});
 	}
 
-	@ccValue(AlarmSensorCCValues.supportedSensorTypes)
 	public supportedSensorTypes: AlarmSensorType[];
 
 	public persistValues(ctx: PersistValuesContext): boolean {

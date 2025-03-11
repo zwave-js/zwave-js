@@ -1,8 +1,8 @@
 import { type CommandClasses } from "@zwave-js/core/safe";
-import { type Route } from "../lib/common/routeCache";
-import { type SUCUpdateEntry } from "../lib/common/sucUpdateEntry";
-import { type NVM500NodeInfo } from "../lib/nvm500/EntryParsers";
-import { type NVM500Impl } from "../lib/nvm500/shared";
+import { type Route } from "../lib/common/routeCache.js";
+import { type SUCUpdateEntry } from "../lib/common/sucUpdateEntry.js";
+import { type NVM500NodeInfo } from "../lib/nvm500/EntryParsers.js";
+import { type NVM500Impl } from "../lib/nvm500/shared.js";
 
 export interface NVM500JSON {
 	// To distinguish between 700 and 500 series JSONs better
@@ -33,7 +33,7 @@ export interface NVM500JSONController {
 	sucUpdateEntries: SUCUpdateEntry[];
 	maxNodeId: number;
 	reservedId: number;
-	systemState: number;
+	systemState?: number | null;
 	watchdogStarted: number;
 	rfConfig: NVM500JSONControllerRFConfig;
 	preferredRepeaters: number[];
@@ -44,11 +44,11 @@ export interface NVM500JSONController {
 }
 
 export interface NVM500JSONControllerRFConfig {
-	powerLevelNormal: number[];
-	powerLevelLow: number[];
-	powerMode: number;
-	powerModeExtintEnable: number;
-	powerModeWutTimeout: number;
+	powerLevelNormal?: number[];
+	powerLevelLow?: number[];
+	powerMode?: number | null;
+	powerModeExtintEnable?: number | null;
+	powerModeWutTimeout?: number | null;
 }
 
 export interface NVM500JSONNodeWithInfo extends NVM500NodeInfo {

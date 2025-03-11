@@ -1,29 +1,26 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	type WithAddress,
 	validatePayload,
 } from "@zwave-js/core";
 import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host";
-import { getEnumMemberName } from "@zwave-js/shared";
-import { CCAPI } from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+import { CCAPI } from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
 	commandClass,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
+} from "../lib/CommandClassDecorators.js";
 import {
 	InclusionControllerCommand,
 	InclusionControllerStatus,
 	InclusionControllerStep,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
 // This CC should not be used directly from user code
 /* eslint-disable @zwave-js/ccapi-validate-args */
@@ -114,7 +111,7 @@ export class InclusionControllerCCComplete extends InclusionControllerCC {
 		);
 		const status: InclusionControllerStatus = raw.payload[1];
 
-		return new InclusionControllerCCComplete({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			step,
 			status,
@@ -124,8 +121,8 @@ export class InclusionControllerCCComplete extends InclusionControllerCC {
 	public step: InclusionControllerStep;
 	public status: InclusionControllerStatus;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.step, this.status]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.step, this.status]);
 		return super.serialize(ctx);
 	}
 
@@ -171,7 +168,7 @@ export class InclusionControllerCCInitiate extends InclusionControllerCC {
 			step in InclusionControllerStep,
 		);
 
-		return new InclusionControllerCCInitiate({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			includedNodeId,
 			step,
@@ -181,8 +178,8 @@ export class InclusionControllerCCInitiate extends InclusionControllerCC {
 	public includedNodeId: number;
 	public step: InclusionControllerStep;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
-		this.payload = Buffer.from([this.includedNodeId, this.step]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.includedNodeId, this.step]);
 		return super.serialize(ctx);
 	}
 

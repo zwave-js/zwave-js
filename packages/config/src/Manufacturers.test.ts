@@ -1,88 +1,62 @@
-import test, { type ExecutionContext } from "ava";
-import fsExtra from "fs-extra";
-import sinon from "sinon";
-import { ConfigManager } from "./ConfigManager";
+/* eslint-disable no-restricted-globals */
+import { pathExists } from "@zwave-js/shared";
+import { readFile } from "node:fs/promises";
+import { test, vi } from "vitest";
+import { ConfigManager } from "./ConfigManager.js";
 
-const readFileStub = sinon.stub(fsExtra, "readFile");
-const pathExistsStub = sinon.stub(fsExtra, "pathExists");
+vi.mock("node:fs/promises");
+vi.mock("@zwave-js/shared", async () => {
+	const original = await vi.importActual("@zwave-js/shared");
+	return {
+		...original,
+		pathExists: vi.fn(),
+	};
+});
+
+const readFileStub = vi.mocked(readFile);
+const pathExistsStub = vi.mocked(pathExists);
 
 {
-	async function prepareTest(t: ExecutionContext): Promise<ConfigManager> {
-		// Loading configuration may take a while on CI
-		t.timeout(30000);
-
-		pathExistsStub.reset();
-		readFileStub.reset();
-		pathExistsStub.resolves(false);
-		readFileStub.rejects(new Error("File does not exist"));
+	async function prepareTest(): Promise<ConfigManager> {
+		pathExistsStub.mockClear();
+		readFileStub.mockClear();
+		pathExistsStub.mockResolvedValue(false);
+		readFileStub.mockRejectedValue(new Error("File does not exist"));
 
 		const configManager = new ConfigManager();
 		await configManager.loadManufacturers();
 		return configManager;
 	}
 
-	test.serial(
+	test.sequential(
 		"lookupManufacturer (with missing file) does not throw",
 		async (t) => {
-			const configManager = await prepareTest(t);
-			t.notThrows(() => configManager.lookupManufacturer(0));
+			const configManager = await prepareTest();
+			t.expect(() => configManager.lookupManufacturer(0)).not.toThrow();
 		},
+		// Loading configuration may take a while on CI
+		30000,
 	);
 
-	test.serial(
+	test.sequential(
 		"lookupManufacturer (with missing file) returns undefined",
 		async (t) => {
-			const configManager = await prepareTest(t);
-			t.is(configManager.lookupManufacturer(0x0e), undefined);
-			t.is(configManager.lookupManufacturer(0xff), undefined);
+			const configManager = await prepareTest();
+			t.expect(configManager.lookupManufacturer(0x0e)).toBeUndefined();
+			t.expect(configManager.lookupManufacturer(0xff)).toBeUndefined();
 		},
+		// Loading configuration may take a while on CI
+		30000,
 	);
 }
 
 {
-	async function prepareTest(t: ExecutionContext): Promise<ConfigManager> {
-		// Loading configuration may take a while on CI
-		t.timeout(30000);
-
-		pathExistsStub.reset();
-		readFileStub.reset();
-		pathExistsStub.resolves(true);
-		readFileStub.resolves(`{"0x000e": ` as any);
-
-		const configManager = new ConfigManager();
-		await configManager.loadManufacturers();
-		return configManager;
-	}
-
-	test.serial(
-		"lookupManufacturer (with invalid file) does not throw",
-		async (t) => {
-			const configManager = await prepareTest(t);
-			t.notThrows(() => configManager.lookupManufacturer(0x0e));
-		},
-	);
-
-	test.serial(
-		"lookupManufacturer (with invalid file) returns undefined",
-		async (t) => {
-			const configManager = await prepareTest(t);
-			t.is(configManager.lookupManufacturer(0x0e), undefined);
-		},
-	);
-}
-
-{
-	async function prepareTest(t: ExecutionContext): Promise<ConfigManager> {
-		// Loading configuration may take a while on CI
-		t.timeout(30000);
-
-		readFileStub.reset();
-		pathExistsStub.reset();
-		pathExistsStub.resolves(true);
-		readFileStub.resolves(
-			JSON.stringify({
-				"0x000e": "Test",
-			}) as any,
+	async function prepareTest(): Promise<ConfigManager> {
+		pathExistsStub.mockClear();
+		readFileStub.mockClear();
+		pathExistsStub.mockResolvedValue(true);
+		readFileStub.mockResolvedValue(
+			Buffer.from(`{"0x000e": `, "utf8"),
 		);
 
 		const configManager = new ConfigManager();
@@ -90,12 +64,55 @@ const pathExistsStub = sinon.stub(fsExtra, "pathExists");
 		return configManager;
 	}
 
-	test.serial(
+	test.sequential(
+		"lookupManufacturer (with invalid file) does not throw",
+		async (t) => {
+			const configManager = await prepareTest();
+			t.expect(() => configManager.lookupManufacturer(0x0e)).not
+				.toThrow();
+		},
+		// Loading configuration may take a while on CI
+		30000,
+	);
+
+	test.sequential(
+		"lookupManufacturer (with invalid file) returns undefined",
+		async (t) => {
+			const configManager = await prepareTest();
+			t.expect(configManager.lookupManufacturer(0x0e)).toBeUndefined();
+		},
+		// Loading configuration may take a while on CI
+		30000,
+	);
+}
+
+{
+	async function prepareTest(): Promise<ConfigManager> {
+		readFileStub.mockClear();
+		pathExistsStub.mockClear();
+		pathExistsStub.mockResolvedValue(true);
+		readFileStub.mockResolvedValue(
+			Buffer.from(
+				JSON.stringify({
+					"0x000e": "Test",
+				}),
+				"utf8",
+			),
+		);
+
+		const configManager = new ConfigManager();
+		await configManager.loadManufacturers();
+		return configManager;
+	}
+
+	test.sequential(
 		"lookupManufacturer() returns the name belonging to the manufacturer ID if it is defined",
 		async (t) => {
-			const configManager = await prepareTest(t);
-			t.is(configManager.lookupManufacturer(0x0e), "Test");
-			t.is(configManager.lookupManufacturer(0xff), undefined);
+			const configManager = await prepareTest();
+			t.expect(configManager.lookupManufacturer(0x0e)).toBe("Test");
+			t.expect(configManager.lookupManufacturer(0xff)).toBeUndefined();
 		},
+		// Loading configuration may take a while on CI
+		30000,
 	);
 }

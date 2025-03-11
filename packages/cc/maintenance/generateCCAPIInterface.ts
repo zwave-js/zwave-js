@@ -5,8 +5,12 @@
  */
 
 import { formatWithDprint } from "@zwave-js/maintenance";
-import * as fs from "fs-extra";
-import * as path from "node:path";
+import esMain from "es-main";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const apiRegex = /^@API\(CommandClasses(?:\.|\[)(.+?)(?:\])?\)/m;
 const classNameRegex = /class ([^\s]+) extends (\w+)?CCAPI/;
@@ -27,7 +31,10 @@ process.on("unhandledRejection", (r) => {
 
 export async function generateCCAPIInterface(): Promise<void> {
 	const ccFiles = (await fs.readdir(ccDir)).filter(
-		(file) => file.endsWith(".ts") && !file.endsWith("test.ts"),
+		(file) =>
+			file.endsWith(".ts")
+			&& !file.endsWith("test.ts")
+			&& !file.includes(".generated."),
 	);
 
 	const CCsWithAPI: { name: string; className: string; file: string }[] = [];
@@ -40,7 +47,7 @@ export async function generateCCAPIInterface(): Promise<void> {
 		const classMatch = classNameRegex.exec(fileContent);
 		if (apiMatch && classMatch) {
 			CCsWithAPI.push({
-				file: ccFile.replace(/\.ts$/, ""),
+				file: ccFile.replace(/\.ts$/, ".js"),
 				name: apiMatch[1],
 				className: classMatch[1],
 			});
@@ -110,4 +117,4 @@ export async function generateCCAPIInterface(): Promise<void> {
 	}
 }
 
-if (require.main === module) void generateCCAPIInterface();
+if (esMain(import.meta)) void generateCCAPIInterface();

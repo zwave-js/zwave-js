@@ -1,10 +1,11 @@
-import { SUC_MAX_UPDATES, SUC_UPDATE_ENTRY_SIZE } from "../../../consts";
+import { Bytes } from "@zwave-js/shared/safe";
+import { SUC_MAX_UPDATES, SUC_UPDATE_ENTRY_SIZE } from "../../../consts.js";
 import {
 	type SUCUpdateEntry,
 	encodeSUCUpdateEntry,
 	parseSUCUpdateEntry,
-} from "../../common/sucUpdateEntry";
-import type { NVM3Object } from "../object";
+} from "../../common/sucUpdateEntry.js";
+import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -12,7 +13,7 @@ import {
 	gotDeserializationOptions,
 	nvmFileID,
 	nvmSection,
-} from "./NVMFile";
+} from "./NVMFile.js";
 
 export const SUC_UPDATES_PER_FILE_V5 = 8;
 
@@ -43,12 +44,14 @@ export class SUCUpdateEntriesFileV0 extends NVMFile {
 
 	public updateEntries: SUCUpdateEntry[];
 
-	public serialize(): NVM3Object & { data: Buffer } {
-		this.payload = Buffer.alloc(SUC_MAX_UPDATES * SUC_UPDATE_ENTRY_SIZE, 0);
+	public serialize(): NVM3Object & { data: Bytes } {
+		this.payload = new Bytes(SUC_MAX_UPDATES * SUC_UPDATE_ENTRY_SIZE).fill(
+			0,
+		);
 		for (let i = 0; i < this.updateEntries.length; i++) {
 			const offset = i * SUC_UPDATE_ENTRY_SIZE;
 			const entry = this.updateEntries[i];
-			encodeSUCUpdateEntry(entry).copy(this.payload, offset);
+			this.payload.set(encodeSUCUpdateEntry(entry), offset);
 		}
 		return super.serialize();
 	}
@@ -100,15 +103,14 @@ export class SUCUpdateEntriesFileV5 extends NVMFile {
 
 	public updateEntries: SUCUpdateEntry[];
 
-	public serialize(): NVM3Object & { data: Buffer } {
-		this.payload = Buffer.alloc(
+	public serialize(): NVM3Object & { data: Bytes } {
+		this.payload = new Bytes(
 			SUC_UPDATES_PER_FILE_V5 * SUC_UPDATE_ENTRY_SIZE,
-			0xff,
-		);
+		).fill(0xff);
 		for (let i = 0; i < this.updateEntries.length; i++) {
 			const offset = i * SUC_UPDATE_ENTRY_SIZE;
 			const entry = this.updateEntries[i];
-			encodeSUCUpdateEntry(entry).copy(this.payload, offset);
+			this.payload.set(encodeSUCUpdateEntry(entry), offset);
 		}
 		return super.serialize();
 	}

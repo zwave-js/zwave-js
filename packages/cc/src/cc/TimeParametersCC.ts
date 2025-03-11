@@ -1,5 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type SupervisionResult,
@@ -14,12 +17,7 @@ import {
 	type MaybeNotKnown,
 	type SupportsCC,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -29,28 +27,29 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { TimeParametersCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { TimeParametersCommand } from "../lib/_Types.js";
 
-export const TimeParametersCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Time Parameters"], {
+export const TimeParametersCCValues = V.defineCCValues(
+	CommandClasses["Time Parameters"],
+	{
 		...V.staticProperty(
 			"dateAndTime",
 			{
@@ -58,8 +57,8 @@ export const TimeParametersCCValues = Object.freeze({
 				label: "Date and Time",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 /**
  * Determines if the node expects local time instead of UTC.
@@ -261,6 +260,7 @@ export interface TimeParametersCCReportOptions {
 }
 
 @CCCommand(TimeParametersCommand.Report)
+@ccValueProperty("dateAndTime", TimeParametersCCValues.dateAndTime)
 export class TimeParametersCCReport extends TimeParametersCC {
 	public constructor(
 		options: WithAddress<TimeParametersCCReportOptions>,
@@ -290,7 +290,7 @@ export class TimeParametersCCReport extends TimeParametersCC {
 			false,
 		);
 
-		return new TimeParametersCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			dateAndTime,
 		});
@@ -308,7 +308,6 @@ export class TimeParametersCCReport extends TimeParametersCC {
 		return super.persistValues(ctx);
 	}
 
-	@ccValue(TimeParametersCCValues.dateAndTime)
 	public dateAndTime: Date;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -368,7 +367,7 @@ export class TimeParametersCCSet extends TimeParametersCC {
 			false,
 		);
 
-		return new TimeParametersCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			dateAndTime,
 		});
@@ -391,12 +390,12 @@ export class TimeParametersCCSet extends TimeParametersCC {
 	public dateAndTime: Date;
 	private useLocalTime?: boolean;
 
-	public serialize(ctx: CCEncodingContext): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const dateSegments = dateToSegments(
 			this.dateAndTime,
 			!!this.useLocalTime,
 		);
-		this.payload = Buffer.from([
+		this.payload = Bytes.from([
 			// 2 bytes placeholder for year
 			0,
 			0,
