@@ -1163,6 +1163,15 @@ readonly productType: number
 
 These three properties together identify the actual device this node is.
 
+### `manufacturer`, `label`
+
+```ts
+readonly manufacturer: string | undefined
+readonly label: string | undefined
+```
+
+The human-readable manufacturer/brand name and device label of this node.
+
 ### `deviceConfig`
 
 ```ts

@@ -474,6 +474,20 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		return this._deviceConfig;
 	}
 
+	/**
+	 * Returns the manufacturer/brand name defined in the device configuration,
+	 * or looks it up from the manufacturer database if no config is available
+	 */
+	public get manufacturer(): string | undefined {
+		if (this._deviceConfig) return this._deviceConfig.manufacturer;
+		if (this.manufacturerId != undefined) {
+			return this.driver.lookupManufacturer(this.manufacturerId);
+		}
+	}
+
+	/**
+	 * Returns the device label defined in the device configuration.
+	 */
 	public get label(): string | undefined {
 		return this._deviceConfig?.label;
 	}
