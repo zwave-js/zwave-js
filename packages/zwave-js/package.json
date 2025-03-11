@@ -1,12 +1,13 @@
 {
   "name": "zwave-js",
-  "version": "14.3.7",
+  "version": "15.0.0-beta.2",
   "description": "Z-Wave driver written entirely in JavaScript/TypeScript",
   "keywords": [],
   "type": "module",
   "exports": {
     ".": {
       "@@dev": "./src/index.ts",
+      "browser": "./build/esm/index_browser.js",
       "import": "./build/esm/index.js",
       "require": "./build/cjs/index.js"
     },
@@ -70,19 +71,19 @@
     "email": "d.griesel@gmx.net"
   },
   "license": "MIT",
-  "homepage": "https://github.com/zwave-js/node-zwave-js#readme",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zwave-js/node-zwave-js.git"
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
   },
   "bugs": {
-    "url": "https://github.com/zwave-js/node-zwave-js/issues"
+    "url": "https://github.com/zwave-js/zwave-js/issues"
   },
   "funding": {
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 18"
+    "node": ">= 20"
   },
   "scripts": {
     "ts": "tsx --conditions=@@dev",
@@ -117,14 +118,14 @@
     "pathe": "^2.0.1",
     "reflect-metadata": "^0.2.2",
     "semver": "^7.6.3",
-    "serialport": "^12.0.0",
+    "serialport": "^13.0.0",
     "source-map-support": "^0.5.21",
     "winston": "^3.17.0"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
     "@microsoft/api-extractor": "^7.48.0",
-    "@types/node": "^18.19.63",
+    "@types/node": "^20.17.16",
     "@types/semver": "^7.5.8",
     "@types/sinon": "^17.0.3",
     "@types/source-map-support": "^0.5.10",
@@ -135,6 +136,6 @@
     "sinon": "^19.0.2",
     "tsx": "^4.19.2",
     "typescript": "5.7.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.9"
   }
 }

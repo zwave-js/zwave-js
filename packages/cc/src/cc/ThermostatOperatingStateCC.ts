@@ -41,8 +41,9 @@ import {
 	ThermostatOperatingStateCommand,
 } from "../lib/_Types.js";
 
-export const ThermostatOperatingStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Operating State"], {
+export const ThermostatOperatingStateCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Operating State"],
+	{
 		...V.staticPropertyWithName(
 			"operatingState",
 			"state",
@@ -52,8 +53,8 @@ export const ThermostatOperatingStateCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(ThermostatOperatingState),
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 

@@ -89,6 +89,12 @@ function getZnifferMessageConstructor(
 				return ZnifferStartResponse;
 			case ZnifferFunctionType.Stop:
 				return ZnifferStopResponse;
+			case ZnifferFunctionType.SetLRChannelConfig:
+				return ZnifferSetLRChannelConfigResponse;
+			case ZnifferFunctionType.GetLRChannelConfigs:
+				return ZnifferGetLRChannelConfigsResponse as any;
+			case ZnifferFunctionType.GetLRRegions:
+				return ZnifferGetLRRegionsResponse as any;
 			case ZnifferFunctionType.SetBaudRate:
 				return ZnifferSetBaudRateResponse;
 			case ZnifferFunctionType.GetFrequencyInfo:
@@ -445,6 +451,116 @@ export class ZnifferStopResponse extends ZnifferMessage {
 	// No payload
 }
 
+export interface ZnifferSetLRChannelConfigRequestOptions {
+	channelConfig: number;
+}
+
+export class ZnifferSetLRChannelConfigRequest extends ZnifferMessage {
+	public constructor(options: ZnifferSetLRChannelConfigRequestOptions) {
+		super({
+			type: ZnifferMessageType.Command,
+			functionType: ZnifferFunctionType.SetLRChannelConfig,
+		});
+
+		this.channelConfig = options.channelConfig;
+	}
+
+	public channelConfig: number;
+
+	public serialize(): Bytes {
+		this.payload = Bytes.from([this.channelConfig]);
+		return super.serialize();
+	}
+}
+export class ZnifferSetLRChannelConfigResponse extends ZnifferMessage {
+	// No payload
+}
+
+export class ZnifferGetLRChannelConfigsRequest extends ZnifferMessage {
+	public constructor() {
+		super({
+			type: ZnifferMessageType.Command,
+			functionType: ZnifferFunctionType.GetLRChannelConfigs,
+		});
+	}
+}
+
+export interface ZnifferGetLRChannelConfigsResponseOptions {
+	currentConfig: number;
+	supportedConfigs: number[];
+}
+
+export class ZnifferGetLRChannelConfigsResponse extends ZnifferMessage {
+	public constructor(
+		options:
+			& ZnifferGetLRChannelConfigsResponseOptions
+			& ZnifferMessageBaseOptions,
+	) {
+		super({
+			type: ZnifferMessageType.Command,
+			functionType: ZnifferFunctionType.GetLRChannelConfigs,
+		});
+
+		this.currentConfig = options.currentConfig;
+		this.supportedConfigs = options.supportedConfigs;
+	}
+
+	public static from(
+		raw: ZnifferMessageRaw,
+	): ZnifferGetLRChannelConfigsResponse {
+		const currentConfig = raw.payload[0];
+		const supportedConfigs = [
+			...raw.payload.subarray(1),
+		];
+
+		return new this({
+			currentConfig,
+			supportedConfigs,
+		});
+	}
+
+	public readonly currentConfig: number;
+	public readonly supportedConfigs: readonly number[];
+}
+
+export class ZnifferGetLRRegionsRequest extends ZnifferMessage {
+	public constructor() {
+		super({
+			type: ZnifferMessageType.Command,
+			functionType: ZnifferFunctionType.GetLRRegions,
+		});
+	}
+}
+
+export interface ZnifferGetLRRegionsResponseOptions {
+	regions: number[];
+}
+
+export class ZnifferGetLRRegionsResponse extends ZnifferMessage {
+	public constructor(
+		options:
+			& ZnifferGetLRRegionsResponseOptions
+			& ZnifferMessageBaseOptions,
+	) {
+		super({
+			type: ZnifferMessageType.Command,
+			functionType: ZnifferFunctionType.GetLRRegions,
+		});
+
+		this.regions = options.regions;
+	}
+
+	public static from(
+		raw: ZnifferMessageRaw,
+	): ZnifferGetLRRegionsResponse {
+		return new this({
+			regions: [...raw.payload],
+		});
+	}
+
+	public readonly regions: number[];
+}
+
 export interface ZnifferSetBaudRateRequestOptions {
 	// No clue - the open source firmware only accepts 0
 	baudrate: 0;
@@ -534,4 +650,69 @@ export class ZnifferGetFrequencyInfoResponse extends ZnifferMessage {
 	public readonly frequency: number;
 	public readonly numChannels: number;
 	public readonly frequencyName: string;
+}
+
+export interface ZnifferGetLRChannelConfigInfoRequestOptions {
+	channelConfig: number;
+}
+
+export class ZnifferGetLRChannelConfigInfoRequest extends ZnifferMessage {
+	public constructor(options: ZnifferGetLRChannelConfigInfoRequestOptions) {
+		super({
+			type: ZnifferMessageType.Command,
+			functionType: ZnifferFunctionType.GetLRChannelConfigInfo,
+		});
+
+		this.channelConfig = options.channelConfig;
+	}
+
+	public channelConfig: number;
+
+	public serialize(): Bytes {
+		this.payload = Bytes.from([this.channelConfig]);
+		return super.serialize();
+	}
+}
+
+export interface ZnifferGetLRChannelConfigInfoResponseOptions {
+	channelConfig: number;
+	numChannels: number;
+	configName: string;
+}
+
+export class ZnifferGetLRChannelConfigInfoResponse extends ZnifferMessage {
+	public constructor(
+		options:
+			& ZnifferGetLRChannelConfigInfoResponseOptions
+			& ZnifferMessageBaseOptions,
+	) {
+		super({
+			type: ZnifferMessageType.Command,
+			functionType: ZnifferFunctionType.GetLRChannelConfigInfo,
+		});
+
+		this.channelConfig = options.channelConfig;
+		this.numChannels = options.numChannels;
+		this.configName = options.configName;
+	}
+
+	public static from(
+		raw: ZnifferMessageRaw,
+	): ZnifferGetLRChannelConfigInfoResponse {
+		const channelConfig = raw.payload[0];
+		const numChannels = raw.payload[1];
+		const configName: string = raw.payload
+			.subarray(2)
+			.toString("ascii");
+
+		return new this({
+			channelConfig,
+			numChannels,
+			configName,
+		});
+	}
+
+	public readonly channelConfig: number;
+	public readonly numChannels: number;
+	public readonly configName: string;
 }

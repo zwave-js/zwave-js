@@ -47,8 +47,9 @@ import {
 import { V } from "../lib/Values.js";
 import { TimeParametersCommand } from "../lib/_Types.js";
 
-export const TimeParametersCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Time Parameters"], {
+export const TimeParametersCCValues = V.defineCCValues(
+	CommandClasses["Time Parameters"],
+	{
 		...V.staticProperty(
 			"dateAndTime",
 			{
@@ -56,8 +57,8 @@ export const TimeParametersCCValues = Object.freeze({
 				label: "Date and Time",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 /**
  * Determines if the node expects local time instead of UTC.
@@ -389,7 +390,7 @@ export class TimeParametersCCSet extends TimeParametersCC {
 	public dateAndTime: Date;
 	private useLocalTime?: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const dateSegments = dateToSegments(
 			this.dateAndTime,
 			!!this.useLocalTime,
@@ -405,7 +406,6 @@ export class TimeParametersCCSet extends TimeParametersCC {
 			dateSegments.second,
 		]);
 		this.payload.writeUInt16BE(dateSegments.year, 0);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
