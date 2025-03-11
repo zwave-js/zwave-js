@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -94,6 +94,8 @@ jobs:
 
         npm init -y
         npm i .tarballs/zwave-js.tgz
+        # bindings-browser is not automatically installed
+        npm i .tarballs/zwave-js-bindings-browser.tgz
 
         echo "Testing ESM entry points..."
         # Now all entrypoints should work
@@ -113,6 +115,7 @@ jobs:
         node -e '(async () => { await import("@zwave-js/nvmedit/safe") })()'
         node -e '(async () => { await import("@zwave-js/serial/safe") })()'
         node -e '(async () => { await import("@zwave-js/shared/safe") })()'
+        node -e '(async () => { await import("@zwave-js/bindings-browser/fs") })()'
 
         echo "Testing CJS entry points..."
         # Now all entrypoints should work
@@ -158,7 +161,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -209,7 +212,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -232,7 +235,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
         os: [ubuntu-latest]
         shard: [1/4, 2/4, 3/4, 4/4]
 
@@ -265,7 +268,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
         os: [ubuntu-latest]
 
     steps:
@@ -300,7 +303,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   strategy:
   #     matrix:
-  #       node-version: [18] # This should be LTS
+  #       node-version: [22] # This should be LTS
 
   #   steps:
   #   - name: Checkout code
@@ -340,7 +343,7 @@ jobs:
     name: Update CC implementation status
     # Only run for master branch and don't run in forks
     if: |
-      github.repository == 'zwave-js/node-zwave-js' &&
+      github.repository == 'zwave-js/zwave-js' &&
       github.ref == 'refs/heads/master' &&
       github.event_name == 'push'
 
@@ -348,7 +351,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -375,7 +378,7 @@ jobs:
     name: Update toLogEntry overview
     # Only run for master branch and don't run in forks
     if: |
-      github.repository == 'zwave-js/node-zwave-js' &&
+      github.repository == 'zwave-js/zwave-js' &&
       github.ref == 'refs/heads/master' &&
       github.event_name == 'push'
 
@@ -383,7 +386,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -425,7 +428,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code

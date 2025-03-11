@@ -23,13 +23,34 @@ async reportMetaData(
 ### `requestUpdate`
 
 ```ts
-async requestUpdate(
+requestUpdate(
 	options: FirmwareUpdateMetaDataCCRequestGetOptions,
+): Promise<FirmwareUpdateMetaDataCCRequestReport | undefined>;
+```
+
+Requests the device to start the firmware update process and waits for a response.
+This response may time out on some devices, in which case the caller of this method
+should wait manually.
+
+### `respondToUpdateRequest`
+
+```ts
+async respondToUpdateRequest(
+	options: FirmwareUpdateMetaDataCCRequestReportOptions,
 ): Promise<void>;
 ```
 
-Requests the device to start the firmware update process.
-This does not wait for the reply - that is up to the caller of this method.
+Responds to a firmware update request.
+
+### `respondToDownloadRequest`
+
+```ts
+async respondToDownloadRequest(
+	options: FirmwareUpdateMetaDataCCPrepareReportOptions,
+): Promise<void>;
+```
+
+Responds to a firmware download request.
 
 ### `sendFirmwareFragment`
 

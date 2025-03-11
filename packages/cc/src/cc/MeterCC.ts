@@ -57,6 +57,7 @@ import {
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
 } from "../lib/API.js";
+import { meterTypesToPropertyKey } from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -79,83 +80,68 @@ import {
 import { V } from "../lib/Values.js";
 import { MeterCommand, type MeterReading, RateType } from "../lib/_Types.js";
 
-export const MeterCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Meter, {
-		...V.staticProperty("type", undefined, { internal: true }),
-		...V.staticProperty("supportsReset", undefined, { internal: true }),
-		...V.staticProperty("supportedScales", undefined, { internal: true }),
-		...V.staticProperty("supportedRateTypes", undefined, {
-			internal: true,
-		}),
-
-		...V.staticPropertyWithName(
-			"resetAll",
-			"reset",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: `Reset accumulated values`,
-				states: {
-					true: "Reset",
-				},
-			} as const,
-		),
+export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
+	...V.staticProperty("type", undefined, { internal: true }),
+	...V.staticProperty("supportsReset", undefined, { internal: true }),
+	...V.staticProperty("supportedScales", undefined, { internal: true }),
+	...V.staticProperty("supportedRateTypes", undefined, {
+		internal: true,
 	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Meter, {
-		...V.dynamicPropertyAndKeyWithName(
-			"resetSingle",
-			"reset",
-			toPropertyKey,
-			({ property, propertyKey }) =>
-				property === "reset" && typeof propertyKey === "number",
-			(meterType: number, rateType: RateType, scale: number) => ({
-				...ValueMetadata.WriteOnlyBoolean,
-				// This is only a placeholder label. A config manager is needed to
-				// determine the actual label.
-				label: `Reset (${
-					rateType === RateType.Consumed
-						? "Consumption, "
-						: rateType === RateType.Produced
-						? "Production, "
-						: ""
-				}${num2hex(scale)})`,
-				states: {
-					true: "Reset",
-				},
-				ccSpecific: {
-					meterType,
-					rateType,
-					scale,
-				},
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"value",
-			"value",
-			toPropertyKey,
-			({ property, propertyKey }) =>
-				property === "value" && typeof propertyKey === "number",
-			(meterType: number, rateType: RateType, scale: number) => ({
-				...ValueMetadata.ReadOnlyNumber,
-				// Label and unit can only be determined with a config manager
-				ccSpecific: {
-					meterType,
-					rateType,
-					scale,
-				},
-			} as const),
-		),
-	}),
+	...V.staticPropertyWithName(
+		"resetAll",
+		"reset",
+		{
+			...ValueMetadata.WriteOnlyBoolean,
+			label: `Reset accumulated values`,
+			states: {
+				true: "Reset",
+			},
+		} as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"resetSingle",
+		"reset",
+		meterTypesToPropertyKey,
+		({ property, propertyKey }) =>
+			property === "reset" && typeof propertyKey === "number",
+		(meterType: number, rateType: RateType, scale: number) => ({
+			...ValueMetadata.WriteOnlyBoolean,
+			// This is only a placeholder label. A config manager is needed to
+			// determine the actual label.
+			label: `Reset (${
+				rateType === RateType.Consumed
+					? "Consumption, "
+					: rateType === RateType.Produced
+					? "Production, "
+					: ""
+			}${num2hex(scale)})`,
+			states: {
+				true: "Reset",
+			},
+			ccSpecific: {
+				meterType,
+				rateType,
+				scale,
+			},
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"value",
+		"value",
+		meterTypesToPropertyKey,
+		({ property, propertyKey }) =>
+			property === "value" && typeof propertyKey === "number",
+		(meterType: number, rateType: RateType, scale: number) => ({
+			...ValueMetadata.ReadOnlyNumber,
+			// Label and unit can only be determined with a config manager
+			ccSpecific: {
+				meterType,
+				rateType,
+				scale,
+			},
+		} as const),
+	),
 });
-
-function toPropertyKey(
-	meterType: number,
-	rateType: RateType,
-	scale: number,
-): number {
-	return (meterType << 16) | (scale << 8) | rateType;
-}
 
 function splitPropertyKey(key: number): {
 	meterType: number;
@@ -1043,7 +1029,7 @@ export class MeterCCReport extends MeterCC {
 	public rateType: RateType;
 	public deltaTime: MaybeUnknown<number>;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const { data: typeAndValue, floatParams, scale2 } =
 			encodeMeterValueAndInfo(
 				this.type,
@@ -1082,7 +1068,6 @@ export class MeterCCReport extends MeterCC {
 			]);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1158,7 +1143,7 @@ export class MeterCCGet extends MeterCC {
 	public rateType: RateType | undefined;
 	public scale: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let scale1: number;
 		let scale2: number | undefined;
 		let bufferLength = 0;
@@ -1190,7 +1175,6 @@ export class MeterCCGet extends MeterCC {
 		this.payload[0] = (rateTypeFlags << 6) | (scale1 << 3);
 		if (scale2) this.payload[1] = scale2;
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1333,7 +1317,7 @@ export class MeterCCSupportedReport extends MeterCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const typeByte = (this.type & 0b0_00_11111)
 			| (this.supportedRateTypes.includes(RateType.Consumed)
 				? 0b0_01_00000
@@ -1365,7 +1349,6 @@ export class MeterCCSupportedReport extends MeterCC {
 			]);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1447,7 +1430,7 @@ export class MeterCCReset extends MeterCC {
 	public rateType: RateType | undefined;
 	public targetValue: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
 			this.type != undefined
 			&& this.scale != undefined
@@ -1470,7 +1453,6 @@ export class MeterCCReset extends MeterCC {
 				]);
 			}
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

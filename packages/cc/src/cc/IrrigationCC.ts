@@ -32,6 +32,7 @@ import {
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
 } from "../lib/API.js";
+import { irrigationValveIdToMetadataPrefix } from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -58,501 +59,459 @@ import {
 	ValveType,
 } from "../lib/_Types.js";
 
-export const IrrigationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Irrigation, {
-		...V.staticProperty("numValves", undefined, { internal: true }),
-		...V.staticProperty("numValveTables", undefined, { internal: true }),
-		...V.staticProperty("supportsMasterValve", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("maxValveTableSize", undefined, { internal: true }),
-
-		...V.staticProperty(
-			"systemVoltage",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "System voltage",
-				unit: "V",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"masterValveDelay",
-			{
-				...ValueMetadata.UInt8,
-				label: "Master valve delay",
-				description:
-					"The delay between turning on the master valve and turning on any zone valve",
-				unit: "seconds",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"flowSensorActive",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Flow sensor active",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"pressureSensorActive",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Pressure sensor active",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"rainSensorActive",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Rain sensor attached and active",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"rainSensorPolarity",
-			{
-				...ValueMetadata.Number,
-				label: "Rain sensor polarity",
-				min: 0,
-				max: 1,
-				states: enumValuesToMetadataStates(IrrigationSensorPolarity),
-			} as const,
-		),
-
-		...V.staticProperty(
-			"moistureSensorActive",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Moisture sensor attached and active",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"moistureSensorPolarity",
-			{
-				...ValueMetadata.Number,
-				label: "Moisture sensor polarity",
-				min: 0,
-				max: 1,
-				states: enumValuesToMetadataStates(IrrigationSensorPolarity),
-			} as const,
-		),
-
-		...V.staticProperty(
-			"flow",
-			{
-				...ValueMetadata.ReadOnlyNumber,
-				label: "Flow",
-				unit: "l/h",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"pressure",
-			{
-				...ValueMetadata.ReadOnlyNumber,
-				label: "Pressure",
-				unit: "kPa",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"shutoffDuration",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Remaining shutoff duration",
-				unit: "hours",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"errorNotProgrammed",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Error: device not programmed",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"errorEmergencyShutdown",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Error: emergency shutdown",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"errorHighPressure",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Error: high pressure",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"highPressureThreshold",
-			{
-				...ValueMetadata.Number,
-				label: "High pressure threshold",
-				unit: "kPa",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"errorLowPressure",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Error: low pressure",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"lowPressureThreshold",
-			{
-				...ValueMetadata.Number,
-				label: "Low pressure threshold",
-				unit: "kPa",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"errorValve",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Error: valve reporting error",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"masterValveOpen",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Master valve is open",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"firstOpenZoneId",
-			{
-				...ValueMetadata.ReadOnlyNumber,
-				label: "First open zone valve ID",
-			} as const,
-		),
-
-		...V.staticPropertyWithName(
-			"shutoffSystem",
-			"shutoff",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: `Shutoff system`,
-				states: {
-					true: "Shutoff",
-				},
-			} as const,
-		),
+export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
+	...V.staticProperty("numValves", undefined, { internal: true }),
+	...V.staticProperty("numValveTables", undefined, { internal: true }),
+	...V.staticProperty("supportsMasterValve", undefined, {
+		internal: true,
 	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Irrigation, {
-		...V.dynamicPropertyAndKeyWithName(
-			"valveConnected",
-			(valveId: ValveId) => valveId,
-			"valveConnected",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "valveConnected",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${valveIdToMetadataPrefix(valveId)}: Connected`,
-			} as const),
-		),
-		...V.dynamicPropertyAndKeyWithName(
-			"nominalCurrent",
-			(valveId: ValveId) => valveId,
-			"nominalCurrent",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "nominalCurrent",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Nominal current`,
-				unit: "mA",
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"nominalCurrentHighThreshold",
-			(valveId: ValveId) => valveId,
-			"nominalCurrentHighThreshold",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "nominalCurrentHighThreshold",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Number,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Nominal current - high threshold`,
-				min: 0,
-				max: 2550,
-				unit: "mA",
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"nominalCurrentLowThreshold",
-			(valveId: ValveId) => valveId,
-			"nominalCurrentLowThreshold",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "nominalCurrentLowThreshold",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Number,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Nominal current - low threshold`,
-				min: 0,
-				max: 2550,
-				unit: "mA",
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"errorShortCircuit",
-			(valveId: ValveId) => valveId,
-			"errorShortCircuit",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "errorShortCircuit",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Error - Short circuit detected`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"errorHighCurrent",
-			(valveId: ValveId) => valveId,
-			"errorHighCurrent",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "errorHighCurrent",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Error - Current above high threshold`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"errorLowCurrent",
-			(valveId: ValveId) => valveId,
-			"errorLowCurrent",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "errorLowCurrent",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Error - Current below low threshold`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"maximumFlow",
-			(valveId: ValveId) => valveId,
-			"maximumFlow",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "maximumFlow",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Number,
-				label: `${valveIdToMetadataPrefix(valveId)}: Maximum flow`,
-				min: 0,
-				unit: "l/h",
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"errorMaximumFlow",
-			(valveId: ValveId) => valveId,
-			"errorMaximumFlow",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "errorMaximumFlow",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Error - Maximum flow detected`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"highFlowThreshold",
-			(valveId: ValveId) => valveId,
-			"highFlowThreshold",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "highFlowThreshold",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Number,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: High flow threshold`,
-				min: 0,
-				unit: "l/h",
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"errorHighFlow",
-			(valveId: ValveId) => valveId,
-			"errorHighFlow",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "errorHighFlow",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Error - Flow above high threshold`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"lowFlowThreshold",
-			(valveId: ValveId) => valveId,
-			"lowFlowThreshold",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "lowFlowThreshold",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Number,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Low flow threshold`,
-				min: 0,
-				unit: "l/h",
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"errorLowFlow",
-			(valveId: ValveId) => valveId,
-			"errorLowFlow",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "errorLowFlow",
-			(valveId: ValveId) => ({
-				...ValueMetadata.ReadOnlyBoolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Error - Flow below high threshold`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"useRainSensor",
-			(valveId: ValveId) => valveId,
-			"useRainSensor",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "useRainSensor",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Boolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Use rain sensor`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"useMoistureSensor",
-			(valveId: ValveId) => valveId,
-			"useMoistureSensor",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "useMoistureSensor",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Boolean,
-				label: `${
-					valveIdToMetadataPrefix(
-						valveId,
-					)
-				}: Use moisture sensor`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"valveRunDuration",
-			(valveId: ValveId) => valveId,
-			"duration",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "duration",
-			(valveId: ValveId) => ({
-				...ValueMetadata.UInt16,
-				label: `${valveIdToMetadataPrefix(valveId)}: Run duration`,
-				min: 1,
-				unit: "s",
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"valveRunStartStop",
-			(valveId: ValveId) => valveId,
-			"startStop",
-			({ property, propertyKey }) =>
-				(typeof property === "number" || property === "master")
-				&& propertyKey === "startStop",
-			(valveId: ValveId) => ({
-				...ValueMetadata.Boolean,
-				label: `${valveIdToMetadataPrefix(valveId)}: Start/Stop`,
-				states: {
-					true: "Start",
-					false: "Stop",
-				},
-			} as const),
-		),
-	}),
+	...V.staticProperty("maxValveTableSize", undefined, { internal: true }),
+	...V.staticProperty(
+		"systemVoltage",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "System voltage",
+			unit: "V",
+		} as const,
+	),
+	...V.staticProperty(
+		"masterValveDelay",
+		{
+			...ValueMetadata.UInt8,
+			label: "Master valve delay",
+			description:
+				"The delay between turning on the master valve and turning on any zone valve",
+			unit: "seconds",
+		} as const,
+	),
+	...V.staticProperty(
+		"flowSensorActive",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Flow sensor active",
+		} as const,
+	),
+	...V.staticProperty(
+		"pressureSensorActive",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Pressure sensor active",
+		} as const,
+	),
+	...V.staticProperty(
+		"rainSensorActive",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Rain sensor attached and active",
+		} as const,
+	),
+	...V.staticProperty(
+		"rainSensorPolarity",
+		{
+			...ValueMetadata.Number,
+			label: "Rain sensor polarity",
+			min: 0,
+			max: 1,
+			states: enumValuesToMetadataStates(IrrigationSensorPolarity),
+		} as const,
+	),
+	...V.staticProperty(
+		"moistureSensorActive",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Moisture sensor attached and active",
+		} as const,
+	),
+	...V.staticProperty(
+		"moistureSensorPolarity",
+		{
+			...ValueMetadata.Number,
+			label: "Moisture sensor polarity",
+			min: 0,
+			max: 1,
+			states: enumValuesToMetadataStates(IrrigationSensorPolarity),
+		} as const,
+	),
+	...V.staticProperty(
+		"flow",
+		{
+			...ValueMetadata.ReadOnlyNumber,
+			label: "Flow",
+			unit: "l/h",
+		} as const,
+	),
+	...V.staticProperty(
+		"pressure",
+		{
+			...ValueMetadata.ReadOnlyNumber,
+			label: "Pressure",
+			unit: "kPa",
+		} as const,
+	),
+	...V.staticProperty(
+		"shutoffDuration",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Remaining shutoff duration",
+			unit: "hours",
+		} as const,
+	),
+	...V.staticProperty(
+		"errorNotProgrammed",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Error: device not programmed",
+		} as const,
+	),
+	...V.staticProperty(
+		"errorEmergencyShutdown",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Error: emergency shutdown",
+		} as const,
+	),
+	...V.staticProperty(
+		"errorHighPressure",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Error: high pressure",
+		} as const,
+	),
+	...V.staticProperty(
+		"highPressureThreshold",
+		{
+			...ValueMetadata.Number,
+			label: "High pressure threshold",
+			unit: "kPa",
+		} as const,
+	),
+	...V.staticProperty(
+		"errorLowPressure",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Error: low pressure",
+		} as const,
+	),
+	...V.staticProperty(
+		"lowPressureThreshold",
+		{
+			...ValueMetadata.Number,
+			label: "Low pressure threshold",
+			unit: "kPa",
+		} as const,
+	),
+	...V.staticProperty(
+		"errorValve",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Error: valve reporting error",
+		} as const,
+	),
+	...V.staticProperty(
+		"masterValveOpen",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Master valve is open",
+		} as const,
+	),
+	...V.staticProperty(
+		"firstOpenZoneId",
+		{
+			...ValueMetadata.ReadOnlyNumber,
+			label: "First open zone valve ID",
+		} as const,
+	),
+	...V.staticPropertyWithName(
+		"shutoffSystem",
+		"shutoff",
+		{
+			...ValueMetadata.WriteOnlyBoolean,
+			label: `Shutoff system`,
+			states: {
+				true: "Shutoff",
+			},
+		} as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"valveConnected",
+		(valveId: ValveId) => valveId,
+		"valveConnected",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "valveConnected",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${irrigationValveIdToMetadataPrefix(valveId)}: Connected`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"nominalCurrent",
+		(valveId: ValveId) => valveId,
+		"nominalCurrent",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "nominalCurrent",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Nominal current`,
+			unit: "mA",
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"nominalCurrentHighThreshold",
+		(valveId: ValveId) => valveId,
+		"nominalCurrentHighThreshold",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "nominalCurrentHighThreshold",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Number,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Nominal current - high threshold`,
+			min: 0,
+			max: 2550,
+			unit: "mA",
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"nominalCurrentLowThreshold",
+		(valveId: ValveId) => valveId,
+		"nominalCurrentLowThreshold",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "nominalCurrentLowThreshold",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Number,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Nominal current - low threshold`,
+			min: 0,
+			max: 2550,
+			unit: "mA",
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"errorShortCircuit",
+		(valveId: ValveId) => valveId,
+		"errorShortCircuit",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "errorShortCircuit",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Error - Short circuit detected`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"errorHighCurrent",
+		(valveId: ValveId) => valveId,
+		"errorHighCurrent",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "errorHighCurrent",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Error - Current above high threshold`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"errorLowCurrent",
+		(valveId: ValveId) => valveId,
+		"errorLowCurrent",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "errorLowCurrent",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Error - Current below low threshold`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"maximumFlow",
+		(valveId: ValveId) => valveId,
+		"maximumFlow",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "maximumFlow",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Number,
+			label: `${
+				irrigationValveIdToMetadataPrefix(valveId)
+			}: Maximum flow`,
+			min: 0,
+			unit: "l/h",
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"errorMaximumFlow",
+		(valveId: ValveId) => valveId,
+		"errorMaximumFlow",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "errorMaximumFlow",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Error - Maximum flow detected`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"highFlowThreshold",
+		(valveId: ValveId) => valveId,
+		"highFlowThreshold",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "highFlowThreshold",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Number,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: High flow threshold`,
+			min: 0,
+			unit: "l/h",
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"errorHighFlow",
+		(valveId: ValveId) => valveId,
+		"errorHighFlow",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "errorHighFlow",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Error - Flow above high threshold`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"lowFlowThreshold",
+		(valveId: ValveId) => valveId,
+		"lowFlowThreshold",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "lowFlowThreshold",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Number,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Low flow threshold`,
+			min: 0,
+			unit: "l/h",
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"errorLowFlow",
+		(valveId: ValveId) => valveId,
+		"errorLowFlow",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "errorLowFlow",
+		(valveId: ValveId) => ({
+			...ValueMetadata.ReadOnlyBoolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Error - Flow below high threshold`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"useRainSensor",
+		(valveId: ValveId) => valveId,
+		"useRainSensor",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "useRainSensor",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Boolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Use rain sensor`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"useMoistureSensor",
+		(valveId: ValveId) => valveId,
+		"useMoistureSensor",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "useMoistureSensor",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Boolean,
+			label: `${
+				irrigationValveIdToMetadataPrefix(
+					valveId,
+				)
+			}: Use moisture sensor`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"valveRunDuration",
+		(valveId: ValveId) => valveId,
+		"duration",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "duration",
+		(valveId: ValveId) => ({
+			...ValueMetadata.UInt16,
+			label: `${
+				irrigationValveIdToMetadataPrefix(valveId)
+			}: Run duration`,
+			min: 1,
+			unit: "s",
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"valveRunStartStop",
+		(valveId: ValveId) => valveId,
+		"startStop",
+		({ property, propertyKey }) =>
+			(typeof property === "number" || property === "master")
+			&& propertyKey === "startStop",
+		(valveId: ValveId) => ({
+			...ValueMetadata.Boolean,
+			label: `${irrigationValveIdToMetadataPrefix(valveId)}: Start/Stop`,
+			states: {
+				true: "Start",
+				false: "Stop",
+			},
+		} as const),
+	),
 });
-
-function valveIdToMetadataPrefix(valveId: ValveId): string {
-	if (valveId === "master") return "Master valve";
-	return `Valve ${valveId.toString().padStart(3, "0")}`;
-}
 
 const systemConfigProperties = [
 	"masterValveDelay",
@@ -1669,7 +1628,7 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 	public rainSensorPolarity?: IrrigationSensorPolarity;
 	public moistureSensorPolarity?: IrrigationSensorPolarity;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let polarity = 0;
 		if (this.rainSensorPolarity != undefined) polarity |= 0b1;
 		if (this.moistureSensorPolarity != undefined) polarity |= 0b10;
@@ -1686,7 +1645,6 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 			encodeFloatWithScale(this.lowPressureThreshold, 0 /* kPa */),
 			Bytes.from([polarity]),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2061,12 +2019,11 @@ export class IrrigationCCValveInfoGet extends IrrigationCC {
 
 	public valveId: ValveId;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.valveId === "master" ? 1 : 0,
 			this.valveId === "master" ? 1 : this.valveId || 1,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2133,7 +2090,7 @@ export class IrrigationCCValveConfigSet extends IrrigationCC {
 	public useRainSensor: boolean;
 	public useMoistureSensor: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([
 				this.valveId === "master" ? 1 : 0,
@@ -2149,7 +2106,6 @@ export class IrrigationCCValveConfigSet extends IrrigationCC {
 				| (this.useMoistureSensor ? 0b10 : 0),
 			]),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2386,12 +2342,11 @@ export class IrrigationCCValveConfigGet extends IrrigationCC {
 
 	public valveId: ValveId;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.valveId === "master" ? 1 : 0,
 			this.valveId === "master" ? 1 : this.valveId || 1,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2440,7 +2395,7 @@ export class IrrigationCCValveRun extends IrrigationCC {
 	public valveId: ValveId;
 	public duration: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.valveId === "master" ? 1 : 0,
 			this.valveId === "master" ? 1 : this.valveId || 1,
@@ -2448,7 +2403,6 @@ export class IrrigationCCValveRun extends IrrigationCC {
 			0,
 		]);
 		this.payload.writeUInt16BE(this.duration, 2);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2503,7 +2457,7 @@ export class IrrigationCCValveTableSet extends IrrigationCC {
 	public tableId: number;
 	public entries: ValveTableEntry[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(1 + this.entries.length * 3);
 		this.payload[0] = this.tableId;
 		for (let i = 0; i < this.entries.length; i++) {
@@ -2512,7 +2466,6 @@ export class IrrigationCCValveTableSet extends IrrigationCC {
 			this.payload[offset] = entry.valveId;
 			this.payload.writeUInt16BE(entry.duration, offset + 1);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2640,9 +2593,8 @@ export class IrrigationCCValveTableGet extends IrrigationCC {
 
 	public tableId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.tableId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2694,9 +2646,8 @@ export class IrrigationCCValveTableRun extends IrrigationCC {
 
 	public tableIDs: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from(this.tableIDs);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2748,9 +2699,8 @@ export class IrrigationCCSystemShutoff extends IrrigationCC {
 
 	public duration?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.duration ?? 255]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

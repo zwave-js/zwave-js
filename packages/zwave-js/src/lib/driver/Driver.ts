@@ -60,8 +60,8 @@ import {
 	Duration,
 	EncapsulationFlags,
 	type HostIDs,
-	type KeyPair,
 	type LogConfig,
+	type LogContainer,
 	type LogNodeOptions,
 	MAX_SUPERVISION_SESSION_ID,
 	MAX_TRANSPORT_SERVICE_SESSION_ID,
@@ -92,10 +92,8 @@ import {
 	type ValueMetadata,
 	ZWaveError,
 	ZWaveErrorCodes,
-	ZWaveLogContainer,
 	deserializeCacheValue,
-	extractRawECDHPrivateKeySync,
-	generateECDHKeyPairSync,
+	generateECDHKeyPair,
 	getCCName,
 	isEncapsulationCC,
 	isLongRangeNodeId,
@@ -103,7 +101,7 @@ import {
 	isMissingControllerCallback,
 	isMissingControllerResponse,
 	isZWaveError,
-	keyPairFromRawECDHPrivateKeySync,
+	keyPairFromRawECDHPrivateKey,
 	messageRecordToLines,
 	randomBytes,
 	securityClassIsS2,
@@ -116,6 +114,8 @@ import {
 import {
 	type BootloaderChunk,
 	BootloaderChunkType,
+	type CLIChunk,
+	CLIChunkType,
 	type EnumeratedPort,
 	FunctionType,
 	type HasNodeId,
@@ -178,22 +178,27 @@ import {
 import {
 	AsyncQueue,
 	Bytes,
-	type ThrowingMap,
+	type Interval,
+	type Timer,
 	TypedEventTarget,
 	areUint8ArraysEqual,
 	buffer2hex,
 	cloneDeep,
 	createWrappingCounter,
 	getErrorMessage,
+	getenv,
 	isAbortError,
 	isUint8Array,
 	mergeDeep,
 	noop,
 	num2hex,
 	pick,
+	setTimer,
 } from "@zwave-js/shared";
+import { setInterval } from "@zwave-js/shared";
 import {
 	type Database,
+	type KeyPair,
 	type ReadFile,
 	type ReadFileSystemInfo,
 } from "@zwave-js/shared/bindings";
@@ -203,8 +208,8 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
+import { roundTo } from "alcalzone-shared/math";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import * as util from "node:util";
 import path from "pathe";
 import { PACKAGE_NAME, PACKAGE_VERSION } from "../_version.js";
 import { ZWaveController } from "../controller/Controller.js";
@@ -230,6 +235,8 @@ import {
 	sendStatistics,
 } from "../telemetry/statistics.js";
 import { Bootloader } from "./Bootloader.js";
+import { DriverMode } from "./DriverMode.js";
+import { EndDeviceCLI } from "./EndDeviceCLI.js";
 import { createMessageGenerator } from "./MessageGenerators.js";
 import {
 	cacheKeys,
@@ -263,6 +270,11 @@ import type {
 	PartialZWaveOptions,
 	ZWaveOptions,
 } from "./ZWaveOptions.js";
+import {
+	type OTWFirmwareUpdateProgress,
+	type OTWFirmwareUpdateResult,
+	OTWFirmwareUpdateStatus,
+} from "./_Types.js";
 import { discoverRemoteSerialPorts } from "./mDNSDiscovery.js";
 
 export const libVersion: string = PACKAGE_VERSION;
@@ -305,19 +317,24 @@ const defaultOptions: ZWaveOptions = {
 	disableOptimisticValueUpdate: false,
 	features: {
 		// By default enable soft reset unless the env variable is set
-		softReset: !process.env.ZWAVEJS_DISABLE_SOFT_RESET,
+		softReset: !getenv("ZWAVEJS_DISABLE_SOFT_RESET"),
 		// By default enable the unresponsive controller recovery unless the env variable is set
-		unresponsiveControllerRecovery: !process.env
-			.ZWAVEJS_DISABLE_UNRESPONSIVE_CONTROLLER_RECOVERY,
+		unresponsiveControllerRecovery: !getenv(
+			"ZWAVEJS_DISABLE_UNRESPONSIVE_CONTROLLER_RECOVERY",
+		),
 		// By default enable the watchdog, unless the env variable is set
-		watchdog: !process.env.ZWAVEJS_DISABLE_WATCHDOG,
+		watchdog: !getenv("ZWAVEJS_DISABLE_WATCHDOG"),
 	},
+	// By default, try to recover from bootloader mode
+	bootloaderMode: "recover",
 	interview: {
 		queryAllUserCodes: false,
 	},
 	storage: {
-		cacheDir: path.join(process.cwd(), "cache"),
-		lockDir: process.env.ZWAVEJS_LOCK_DIRECTORY,
+		cacheDir: typeof process !== "undefined"
+			? path.join(process.cwd(), "cache")
+			: "/cache",
+		lockDir: getenv("ZWAVEJS_LOCK_DIRECTORY"),
 		throttle: "normal",
 	},
 	preferences: {
@@ -538,7 +555,7 @@ interface RequestHandlerEntry<T extends Message = Message> {
 
 interface AwaitedThing<T> {
 	handler: (thing: T) => void;
-	timeout?: NodeJS.Timeout;
+	timeout?: Timer;
 	predicate: (msg: T) => boolean;
 	refreshPredicate?: (msg: T) => boolean;
 }
@@ -546,6 +563,7 @@ interface AwaitedThing<T> {
 type AwaitedMessageHeader = AwaitedThing<MessageHeaders>;
 type AwaitedMessageEntry = AwaitedThing<Message>;
 type AwaitedCommandEntry = AwaitedThing<CCId>;
+type AwaitedCLIChunkEntry = AwaitedThing<CLIChunk>;
 export type AwaitedBootloaderChunkEntry = AwaitedThing<BootloaderChunk>;
 
 interface TransportServiceSession {
@@ -642,7 +660,14 @@ function wrapLegacyFSDriverForCacheMigrationOnly(
 export interface DriverEventCallbacks extends PrefixedNodeEvents {
 	"driver ready": () => void;
 	"bootloader ready": () => void;
+	"cli ready": () => void;
 	"all nodes ready": () => void;
+	"firmware update progress": (
+		progress: OTWFirmwareUpdateProgress,
+	) => void;
+	"firmware update finished": (
+		result: OTWFirmwareUpdateResult,
+	) => void;
 	error: (err: Error) => void;
 }
 
@@ -710,22 +735,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this.updateUserAgent(this._options.userAgent);
 		}
 
-		// Initialize logging
-		this._logContainer = new ZWaveLogContainer(this._options.logConfig);
-		this._driverLog = new DriverLogger(this, this._logContainer);
-		this._controllerLog = new ControllerLogger(this._logContainer);
-
 		// Initialize the cache
 		this.cacheDir = this._options.storage.cacheDir;
-
-		// Initialize config manager
-		this.configManager = new ConfigManager({
-			logContainer: this._logContainer,
-			deviceConfigPriorityDir:
-				this._options.storage.deviceConfigPriorityDir,
-			deviceConfigExternalDir:
-				this._options.storage.deviceConfigExternalDir,
-		});
 
 		const self = this;
 		this.messageEncodingContext = {
@@ -870,6 +881,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private awaitedCommands: AwaitedCommandEntry[] = [];
 	/** A list of awaited chunks from the bootloader */
 	private awaitedBootloaderChunks: AwaitedBootloaderChunkEntry[] = [];
+	/** A list of awaited chunks from the end device CLI */
+	private awaitedCLIChunks: AwaitedCLIChunkEntry[] = [];
 
 	/** A map of Node ID -> ongoing sessions */
 	private nodeSessions = new Map<number, Sessions>();
@@ -917,7 +930,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return this._networkCache;
 	}
 
-	public readonly configManager: ConfigManager;
+	// This is set during `start()` and should not be accessed before
+	private _configManager!: ConfigManager;
+	public get configManager(): ConfigManager {
+		return this._configManager;
+	}
+
 	public get configVersion(): string {
 		return (
 			this.configManager?.configVersion
@@ -928,14 +946,17 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		);
 	}
 
-	private _logContainer: ZWaveLogContainer;
-	private _driverLog: DriverLogger;
+	// This is set during `start()` and should not be accessed before
+	private _logContainer!: LogContainer;
+	// This is set during `start()` and should not be accessed before
+	private _driverLog!: DriverLogger;
 	/** @internal */
 	public get driverLog(): DriverLogger {
 		return this._driverLog;
 	}
 
-	private _controllerLog: ControllerLogger;
+	// This is set during `start()` and should not be accessed before
+	private _controllerLog!: ControllerLogger;
 	/** @internal */
 	public get controllerLog(): ControllerLogger {
 		return this._controllerLog;
@@ -966,7 +987,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 	/** While in bootloader mode, this encapsulates information about the bootloader and its state */
 	private _bootloader: Bootloader | undefined;
-	/** @internal */
 	public get bootloader(): Bootloader {
 		if (this._bootloader == undefined) {
 			throw new ZWaveError(
@@ -977,8 +997,24 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return this._bootloader;
 	}
 
-	public isInBootloader(): boolean {
-		return this._bootloader != undefined;
+	private _cli: EndDeviceCLI | undefined;
+	/** While in end device CLI mode, this encapsulates information about the CLI and its state */
+	public get cli(): EndDeviceCLI {
+		if (this._cli == undefined) {
+			throw new ZWaveError(
+				"The Z-Wave module is not in CLI mode!",
+				ZWaveErrorCodes.Driver_NotReady,
+			);
+		}
+		return this._cli;
+	}
+
+	/** Determines which kind of Z-Wave application the driver is currently communicating with */
+	public get mode(): DriverMode {
+		if (this._bootloader) return DriverMode.Bootloader;
+		if (this._cli) return DriverMode.CLI;
+		if (this._controller) return DriverMode.SerialAPI;
+		return DriverMode.Unknown;
 	}
 
 	private _recoveryPhase: ControllerRecoveryPhase =
@@ -1025,7 +1061,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 	private _learnModeAuthenticatedKeyPair: KeyPair | undefined;
 	/** @internal */
-	public getLearnModeAuthenticatedKeyPair(): KeyPair {
+	public async getLearnModeAuthenticatedKeyPair(): Promise<KeyPair> {
 		if (this._learnModeAuthenticatedKeyPair == undefined) {
 			// Try restoring from cache
 			const privateKey = this.cacheGet<Uint8Array>(
@@ -1033,15 +1069,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			);
 			if (privateKey) {
 				this._learnModeAuthenticatedKeyPair =
-					keyPairFromRawECDHPrivateKeySync(privateKey);
+					await keyPairFromRawECDHPrivateKey(privateKey);
 			} else {
 				// Not found in cache, create a new one and cache it
-				this._learnModeAuthenticatedKeyPair = generateECDHKeyPairSync();
+				this._learnModeAuthenticatedKeyPair =
+					await generateECDHKeyPair();
 				this.cacheSet(
 					cacheKeys.controller.privateKey,
-					extractRawECDHPrivateKeySync(
-						this._learnModeAuthenticatedKeyPair.privateKey,
-					),
+					this._learnModeAuthenticatedKeyPair.privateKey,
 				);
 			}
 		}
@@ -1335,7 +1370,24 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				?? (await import("@zwave-js/serial/bindings/node")).serial,
 			db: this._options.host?.db
 				?? (await import("@zwave-js/core/bindings/db/jsonl")).db,
+			log: this._options.host?.log
+				?? (await import("@zwave-js/core/bindings/log/node")).log,
 		};
+
+		// Initialize logging
+		this._logContainer = this.bindings.log(this._options.logConfig);
+		this._driverLog = new DriverLogger(this, this._logContainer);
+		this._controllerLog = new ControllerLogger(this._logContainer);
+
+		// Initialize config manager
+		this._configManager = new ConfigManager({
+			bindings: this.bindings.fs,
+			logContainer: this._logContainer,
+			deviceConfigPriorityDir:
+				this._options.storage.deviceConfigPriorityDir,
+			deviceConfigExternalDir:
+				this._options.storage.deviceConfigExternalDir,
+		});
 
 		const spOpenPromise = createDeferredPromise();
 
@@ -1422,17 +1474,28 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 
 			// Perform initialization sequence
-			await this.writeHeader(MessageHeaders.NAK);
-			// Per the specs, this should be followed by a soft-reset but we need to be able
-			// to handle sticks that don't support the soft reset command. Therefore we do it
-			// after opening the value DBs
-
-			if (!this._options.testingHooks?.skipBootloaderCheck) {
-				// After an incomplete firmware upgrade, we might be stuck in the bootloader
-				// Therefore wait a short amount of time to see if the serialport detects bootloader mode.
-				// If we are, the bootloader will reply with its menu.
+			if (this._options.testingHooks?.skipFirmwareIdentification) {
+				// No identification desired, just send a NAK and assume it's a
+				// Serial API controller
+				await this.writeHeader(MessageHeaders.NAK);
 				await wait(1000);
-				if (this._bootloader) {
+			} else {
+				const mode = await this.detectMode();
+				if (mode === DriverMode.CLI) {
+					this.emit("cli ready");
+					return;
+				}
+
+				if (mode === DriverMode.Bootloader) {
+					if (this._options.bootloaderMode === "stay") {
+						this.driverLog.print(
+							"Controller is in bootloader mode. Staying in bootloader as requested.",
+							"warn",
+						);
+						this.emit("bootloader ready");
+						return;
+					}
+
 					this.driverLog.print(
 						"Controller is in bootloader, attempting to recover...",
 						"warn",
@@ -1441,16 +1504,18 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 					// Wait a short time again. If we're in bootloader mode again, we're stuck
 					await wait(1000);
+
+					// FIXME: Leaving the bootloader may end up in the CLI
+
 					if (this._bootloader) {
-						if (this._options.allowBootloaderOnly) {
+						if (this._options.bootloaderMode === "allow") {
 							this.driverLog.print(
 								"Failed to recover from bootloader. Staying in bootloader mode as requested.",
 								"warn",
 							);
-							// Needed for the OTW feature to be available
-							this._controller = new ZWaveController(this, true);
 							this.emit("bootloader ready");
 						} else {
+							// bootloaderMode === "recover"
 							void this.destroyWithMessage(
 								"Failed to recover from bootloader. Please flash a new firmware to continue...",
 							);
@@ -1536,6 +1601,44 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return spOpenPromise;
 	}
 
+	private async detectMode(): Promise<DriverMode> {
+		// We re-use the NAK that should be used to reset the communication on
+		// Serial API startup to detect which kind of application we are talking to
+
+		const incomingNAK = this.waitForMessageHeader(
+			(h) => h === MessageHeaders.NAK,
+			500,
+		)
+			.then(() => true)
+			.catch(() => false);
+		await this.writeHeader(MessageHeaders.NAK);
+
+		// The response to this NAK helps determine whether the Z-Wave module is...
+		// ...stuck in the bootloader,
+		// ...running a SoC end device firmware with CLI
+		// ...or a "normal" Serial API
+
+		if (await incomingNAK) {
+			// This is possibly a CLI. It should respond with a prompt after we
+			// send a newline.
+			await this.writeSerial(Bytes.from("\n", "ascii"));
+		}
+
+		// If there was no NAK, it may be a bootloader, but it may also be a CLI
+		// on a device that just started. In this case it can happen that the
+		// NAK is not answered, but a CLI prompt is received.
+		// In this case, the CLI is also detected by the serial parsers.
+
+		// In any case, wait another 500ms to give the parsers time to detect
+		// either the booloader or the CLI
+		await wait(500);
+
+		if (this._cli) return DriverMode.CLI;
+		if (this._bootloader) return DriverMode.Bootloader;
+
+		return DriverMode.SerialAPI;
+	}
+
 	private _controllerInterviewed: boolean = false;
 	private _nodesReady = new Set<number>();
 	private _nodesReadyEventEmitted: boolean = false;
@@ -1603,7 +1706,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		});
 		await this._networkCache.open();
 
-		if (process.env.NO_CACHE === "true") {
+		if (getenv("NO_CACHE") === "true") {
 			// Since the network cache is append-only, we need to
 			// clear it if the cache should be ignored
 			this._networkCache.clear();
@@ -1635,7 +1738,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		);
 		await this._metadataDB.open();
 
-		if (process.env.NO_CACHE === "true") {
+		if (getenv("NO_CACHE") === "true") {
 			// Since value/metadata DBs are append-only, we need to
 			// clear them if the cache should be ignored
 			this._valueDB.clear();
@@ -1770,7 +1873,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				lrNodeIds ?? [],
 				async () => {
 					// Try to restore the network information from the cache
-					if (process.env.NO_CACHE !== "true") {
+					if (getenv("NO_CACHE") !== "true") {
 						await this.restoreNetworkStructureFromCache();
 					}
 				},
@@ -1834,7 +1937,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				) {
 					const key = this._options.securityKeys[secClass];
 					if (key) {
-						await this._securityManager2.setKeyAsync(
+						await this._securityManager2.setKey(
 							SecurityClass[secClass],
 							key,
 						);
@@ -1856,13 +1959,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				);
 				this._securityManagerLR = await SecurityManager2.create();
 				if (this._options.securityKeysLongRange?.S2_AccessControl) {
-					await this._securityManagerLR.setKeyAsync(
+					await this._securityManagerLR.setKey(
 						SecurityClass.S2_AccessControl,
 						this._options.securityKeysLongRange.S2_AccessControl,
 					);
 				}
 				if (this._options.securityKeysLongRange?.S2_Authenticated) {
-					await this._securityManagerLR.setKeyAsync(
+					await this._securityManagerLR.setKey(
 						SecurityClass.S2_Authenticated,
 						this._options.securityKeysLongRange.S2_Authenticated,
 					);
@@ -1897,7 +2000,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					);
 					this._securityManagerLR = await SecurityManager2.create();
 					for (const [sc, key] of securityKeysLongRange) {
-						await this._securityManagerLR.setKeyAsync(sc, key);
+						await this._securityManagerLR.setKey(sc, key);
 					}
 				} else if (
 					this._options.securityKeysLongRange?.S2_AccessControl
@@ -1908,14 +2011,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					);
 					this._securityManagerLR = await SecurityManager2.create();
 					if (this._options.securityKeysLongRange?.S2_AccessControl) {
-						await this._securityManagerLR.setKeyAsync(
+						await this._securityManagerLR.setKey(
 							SecurityClass.S2_AccessControl,
 							this._options.securityKeysLongRange
 								.S2_AccessControl,
 						);
 					}
 					if (this._options.securityKeysLongRange?.S2_Authenticated) {
-						await this._securityManagerLR.setKeyAsync(
+						await this._securityManagerLR.setKey(
 							SecurityClass.S2_Authenticated,
 							this._options.securityKeysLongRange
 								.S2_Authenticated,
@@ -1971,7 +2074,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					);
 					this._securityManager2 = await SecurityManager2.create();
 					for (const [sc, key] of securityKeys) {
-						await this._securityManager2.setKeyAsync(sc, key);
+						await this._securityManager2.setKey(sc, key);
 					}
 				} else if (
 					this._options.securityKeys
@@ -1997,7 +2100,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					) {
 						const key = this._options.securityKeys[secClass];
 						if (key) {
-							await this._securityManager2.setKeyAsync(
+							await this._securityManager2.setKey(
 								SecurityClass[secClass],
 								key,
 							);
@@ -2144,9 +2247,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		this.handleQueueIdleChange(this.queueIdle);
 	}
 
-	private autoRefreshNodeValueTimers = new Map<number, NodeJS.Timeout>();
-
-	private retryNodeInterviewTimeouts = new Map<number, NodeJS.Timeout>();
+	private autoRefreshNodeValueTimers = new Map<number, Interval>();
+	private retryNodeInterviewTimeouts = new Map<number, Timer>();
 	/**
 	 * @internal
 	 * Starts or resumes the interview of a Z-Wave node. It is advised to NOT
@@ -2162,7 +2264,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Avoid having multiple restart timeouts active
 		if (this.retryNodeInterviewTimeouts.has(node.id)) {
-			clearTimeout(this.retryNodeInterviewTimeouts.get(node.id));
+			this.retryNodeInterviewTimeouts.get(node.id)?.clear();
 			this.retryNodeInterviewTimeouts.delete(node.id);
 		}
 
@@ -2212,7 +2314,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					// Schedule the retry and remember the timeout instance
 					this.retryNodeInterviewTimeouts.set(
 						node.id,
-						setTimeout(() => {
+						setTimer(() => {
 							this.retryNodeInterviewTimeouts.delete(node.id);
 							void this.interviewNodeInternal(node);
 						}, retryTimeout).unref(),
@@ -2373,7 +2475,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Regularly check if values of non-sleeping nodes need to be refreshed per the specs
 		// For sleeping nodes this is done on wakeup
 		if (this.autoRefreshNodeValueTimers.has(node.id)) {
-			clearInterval(this.autoRefreshNodeValueTimers.get(node.id));
+			this.autoRefreshNodeValueTimers.get(node.id)?.clear();
 			this.autoRefreshNodeValueTimers.delete(node.id);
 		}
 		if (!node.canSleep) {
@@ -2457,6 +2559,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			effectiveComponents.size === 1
 			&& this.statisticsAppInfo
 			&& this.statisticsAppInfo.applicationName !== "node-zwave-js"
+			// node-zwave-js was renamed to just zwave-js in v15
+			&& this.statisticsAppInfo.applicationName !== "zwave-js"
 		) {
 			effectiveComponents.set(
 				this.statisticsAppInfo.applicationName,
@@ -2466,7 +2570,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return userAgentComponentsToString(effectiveComponents);
 	}
 
-	private _userAgent: string = `node-zwave-js/${libVersion}`;
+	private _userAgent: string = `zwave-js/${libVersion}`;
 	/** Returns the user agent string used for service requests */
 	public get userAgent(): string {
 		return this._userAgent;
@@ -2535,10 +2639,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public disableStatistics(): void {
 		this._statisticsEnabled = false;
 		this.statisticsAppInfo = undefined;
-		if (this.statisticsTimeout) {
-			clearTimeout(this.statisticsTimeout);
-			this.statisticsTimeout = undefined;
-		}
+		this.statisticsTimeout?.clear();
+		this.statisticsTimeout = undefined;
 	}
 
 	/** @internal */
@@ -2555,15 +2657,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return ret;
 	}
 
-	private statisticsTimeout: NodeJS.Timeout | undefined;
+	private statisticsTimeout: Timer | undefined;
 	private async compileAndSendStatistics(): Promise<void> {
 		// Don't send anything if statistics are not enabled
 		if (!this.statisticsEnabled || !this.statisticsAppInfo) return;
 
-		if (this.statisticsTimeout) {
-			clearTimeout(this.statisticsTimeout);
-			this.statisticsTimeout = undefined;
-		}
+		this.statisticsTimeout?.clear();
+		this.statisticsTimeout = undefined;
 
 		let success: number | boolean = false;
 		try {
@@ -2589,7 +2689,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					timespan.minutes(1),
 					Math.min(success * 1000, timespan.hours(6)),
 				);
-				this.statisticsTimeout = setTimeout(() => {
+				this.statisticsTimeout = setTimer(() => {
 					void this.compileAndSendStatistics();
 				}, retryMs).unref();
 			} else {
@@ -2599,7 +2699,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						: `Failed to send usage statistics - next transmission scheduled in 6 hours.`,
 					"verbose",
 				);
-				this.statisticsTimeout = setTimeout(() => {
+				this.statisticsTimeout = setTimer(() => {
 					void this.compileAndSendStatistics();
 				}, timespan.hours(success ? 23 : 6)).unref();
 			}
@@ -2629,15 +2729,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Remove all listeners and timers
 		this.removeNodeEventHandlers(node);
 		if (this.sendNodeToSleepTimers.has(node.id)) {
-			clearTimeout(this.sendNodeToSleepTimers.get(node.id));
+			this.sendNodeToSleepTimers.get(node.id)?.clear();
 			this.sendNodeToSleepTimers.delete(node.id);
 		}
 		if (this.retryNodeInterviewTimeouts.has(node.id)) {
-			clearTimeout(this.retryNodeInterviewTimeouts.get(node.id));
+			this.retryNodeInterviewTimeouts.get(node.id)?.clear();
 			this.retryNodeInterviewTimeouts.delete(node.id);
 		}
 		if (this.autoRefreshNodeValueTimers.has(node.id)) {
-			clearTimeout(this.autoRefreshNodeValueTimers.get(node.id));
+			this.autoRefreshNodeValueTimers.get(node.id)?.clear();
 			this.autoRefreshNodeValueTimers.delete(node.id);
 		}
 
@@ -2785,7 +2885,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			// We reuse the retryNodeInterviewTimeouts here because they serve a similar purpose
 			this.retryNodeInterviewTimeouts.set(
 				node.id,
-				setTimeout(() => {
+				setTimer(() => {
 					this.retryNodeInterviewTimeouts.delete(node.id);
 					void node.refreshInfo({
 						// After a firmware update, we need to refresh the node info
@@ -3308,6 +3408,43 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return false;
 	}
 
+	private _ensureCLIReadyPromise: DeferredPromise<boolean> | undefined;
+	private async ensureCLIReady(): Promise<boolean> {
+		// Ensure this is only called once and all subsequent calls block
+		if (this._ensureCLIReadyPromise) return this._ensureCLIReadyPromise;
+		this._ensureCLIReadyPromise = createDeferredPromise();
+
+		// Try to detect the available CLI commands and wait long enough for the communication to succeed
+		// Wait 1.5 seconds after reset to ensure that the module is ready for communication again
+		// Z-Wave 700 sticks are relatively fast, so we also wait for the Serial API started command
+		// to bail early
+		this.controllerLog.print("Waiting for the CLI to be ready...");
+
+		// After booting, the CLI can take a while to respond to commands
+		// Try up to 3 times to detect the available commands
+		await wait(250);
+		for (let i = 0;; i++) {
+			try {
+				await this.cli.detectCommands();
+				this.controllerLog.print("CLI started");
+				this._ensureCLIReadyPromise?.resolve(true);
+				this._ensureCLIReadyPromise = undefined;
+				return true;
+			} catch {
+				if (i === 2) {
+					this.controllerLog.print(
+						"CLI did not respond, giving up",
+						"error",
+					);
+					this._ensureCLIReadyPromise?.resolve(false);
+					this._ensureCLIReadyPromise = undefined;
+					return false;
+				}
+				await wait(1000);
+			}
+		}
+	}
+
 	/**
 	 * Performs a hard reset on the controller. This wipes out all configuration!
 	 *
@@ -3347,20 +3484,21 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Clean up
 		this.rejectTransactions(() => true, `The controller was hard-reset`);
-		this.sendNodeToSleepTimers.forEach((timeout) => clearTimeout(timeout));
+		this.sendNodeToSleepTimers.forEach((timeout) => timeout.clear());
 		this.sendNodeToSleepTimers.clear();
-		this.retryNodeInterviewTimeouts.forEach((timeout) =>
-			clearTimeout(timeout)
-		);
-		this.retryNodeInterviewTimeouts.clear();
-		this.autoRefreshNodeValueTimers.forEach((timeout) =>
-			clearTimeout(timeout)
-		);
-		this.autoRefreshNodeValueTimers.clear();
-		if (this.pollBackgroundRSSITimer) {
-			clearTimeout(this.pollBackgroundRSSITimer);
-			this.pollBackgroundRSSITimer = undefined;
+
+		for (const timer of this.retryNodeInterviewTimeouts.values()) {
+			timer.clear();
 		}
+		this.retryNodeInterviewTimeouts.clear();
+
+		for (const timer of this.autoRefreshNodeValueTimers.values()) {
+			timer.clear();
+		}
+		this.autoRefreshNodeValueTimers.clear();
+
+		this.pollBackgroundRSSITimer?.clear();
+		this.pollBackgroundRSSITimer = undefined;
 
 		this._controllerInterviewed = false;
 		void this.initializeControllerAndNodes();
@@ -3505,27 +3643,31 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Remove all timeouts
 		for (
 			const timeout of [
-				...this.sendNodeToSleepTimers.values(),
-				...this.retryNodeInterviewTimeouts.values(),
-				...this.autoRefreshNodeValueTimers.values(),
-				this.statisticsTimeout,
-				this.pollBackgroundRSSITimer,
-				...this.awaitedCommands.map((c) => c.timeout),
-				...this.awaitedMessages.map((m) => m.timeout),
-				...this.awaitedMessageHeaders.map((h) => h.timeout),
-				...this.awaitedBootloaderChunks.map((b) => b.timeout),
 				this._powerlevelTestNodeContext?.timeout,
 			]
 		) {
 			if (timeout) clearTimeout(timeout);
 		}
+		for (
+			const timeout of [
+				...this.retryNodeInterviewTimeouts.values(),
+				...this.autoRefreshNodeValueTimers.values(),
+				this.statisticsTimeout,
+				this.pollBackgroundRSSITimer,
+				...this.sendNodeToSleepTimers.values(),
+				...this.awaitedCommands.map((c) => c.timeout),
+				...this.awaitedMessages.map((m) => m.timeout),
+				...this.awaitedMessageHeaders.map((h) => h.timeout),
+				...this.awaitedBootloaderChunks.map((b) => b.timeout),
+				...this.awaitedCLIChunks.map((c) => c.timeout),
+			]
+		) {
+			timeout?.clear();
+		}
 
 		// Destroy all nodes and the controller
 		if (this._controller) {
-			this._controller.nodes.forEach((n) => n.destroy());
-			(this._controller.nodes as ThrowingMap<any, any>).clear();
-
-			this._controller.removeAllListeners();
+			this._controller.destroy();
 			this._controller = undefined;
 		}
 
@@ -3545,6 +3687,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						void this.serialport_onData(frame.data);
 					} else if (frame.type === ZWaveSerialFrameType.Bootloader) {
 						void this.serialport_onBootloaderData(frame.data);
+					} else if (frame.type === ZWaveSerialFrameType.CLI) {
+						void this.serialport_onCLIData(frame.data);
 					} else {
 						// Handle discarded data?
 					}
@@ -3591,39 +3735,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					}
 					return;
 				}
-
-					// // single-byte messages - just forward them to the send thread
-					// case MessageHeaders.ACK: {
-					// 	if (
-					// 		this.serialAPIInterpreter?.status
-					// 			=== InterpreterStatus.Running
-					// 	) {
-					// 		this.serialAPIInterpreter.send("ACK");
-					// 	}
-					// 	return;
-					// }
-					// case MessageHeaders.NAK: {
-					// 	if (
-					// 		this.serialAPIInterpreter?.status
-					// 			=== InterpreterStatus.Running
-					// 	) {
-					// 		this.serialAPIInterpreter.send("NAK");
-					// 	}
-					// 	this._controller?.incrementStatistics("NAK");
-					// 	return;
-					// }
-					// case MessageHeaders.CAN: {
-					// 	if (
-					// 		this.serialAPIInterpreter?.status
-					// 			=== InterpreterStatus.Running
-					// 	) {
-					// 		this.serialAPIInterpreter.send("CAN");
-					// 	}
-					// 	this._controller?.incrementStatistics("CAN");
-					// 	return;
-					// }
 			}
 		}
+
+		this._cli = undefined;
+		this._bootloader = undefined;
 
 		let msg: Message | undefined;
 		try {
@@ -3636,7 +3752,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 			// Parse embedded CCs
 			if (isCommandRequest(msg) && containsSerializedCC(msg)) {
-				msg.command = await CommandClass.parseAsync(
+				msg.command = await CommandClass.parse(
 					msg.serializedCC,
 					{
 						...this.getCCParsingContext(),
@@ -4604,7 +4720,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					// this is the final one, merge the previous responses
 					this.partialCCSessions.delete(partialSessionKey!);
 					try {
-						await command.mergePartialCCsAsync(session, {
+						await command.mergePartialCCs(session, {
 							...this.getCCParsingContext(),
 							sourceNodeId: msg.command.nodeId as number,
 							frameType: msg.frameType,
@@ -5119,7 +5235,7 @@ ${handlers.length} left`,
 		}
 
 		// Do not accept Meter CC and/or Multilevel Sensor CC if the node does not support them
-		// https://github.com/zwave-js/node-zwave-js/issues/5510
+		// https://github.com/zwave-js/zwave-js/issues/5510
 		// TODO: Consider expanding this to all CCs and not only reports
 		if (
 			cc.ccId === CommandClasses.Meter
@@ -5725,7 +5841,7 @@ ${handlers.length} left`,
 		// 1. Pings may be used to determine whether a node is really asleep.
 		// 2. Responses to nonce requests must be sent independent of the node status, because some sleeping nodes may try to send us encrypted messages.
 		//    If we don't send them, they block the send queue
-		// 3. Nodes that can sleep but do not support wakeup: https://github.com/zwave-js/node-zwave-js/discussions/1537
+		// 3. Nodes that can sleep but do not support wakeup: https://github.com/zwave-js/zwave-js/discussions/1537
 		//    We need to try and send messages to them even if they are asleep, because we might never hear from them
 
 		// 2. is handled by putting the message into the immediate queue
@@ -5808,7 +5924,7 @@ ${handlers.length} left`,
 					);
 					if (isTransmitReport(prevResult)) {
 						// Figure out if the controller is jammed. If it is, wait a second and try again.
-						// https://github.com/zwave-js/node-zwave-js/issues/6199
+						// https://github.com/zwave-js/zwave-js/issues/6199
 						// In some cases, the transmit status can be Fail, even after transmitting for a couple of seconds.
 						// Not sure what causes this, but it doesn't mean that the controller is jammed.
 						if (
@@ -6049,7 +6165,7 @@ ${handlers.length} left`,
 
 						// Mark the message as sent immediately before actually sending
 						msg.markAsSent();
-						const data = await msg.serializeAsync(
+						const data = await msg.serialize(
 							this.getEncodingContext(),
 						);
 						await this.writeSerial(data);
@@ -6116,10 +6232,10 @@ ${handlers.length} left`,
 					}
 
 					case "waitingForCallback": {
-						let sendDataAbortTimeout: NodeJS.Timeout | undefined;
+						let sendDataAbortTimeout: Timer | undefined;
 						if (isSendData(msg)) {
 							// We abort timed out SendData commands before the callback times out
-							sendDataAbortTimeout = setTimeout(() => {
+							sendDataAbortTimeout = setTimer(() => {
 								void this.abortSendData();
 							}, this.options.timeouts.sendDataAbort).unref();
 						}
@@ -6137,9 +6253,7 @@ ${handlers.length} left`,
 							).catch(() => "timeout" as const),
 						]);
 
-						if (sendDataAbortTimeout) {
-							clearTimeout(sendDataAbortTimeout);
-						}
+						sendDataAbortTimeout?.clear();
 
 						if (callback instanceof Error) {
 							// The command was aborted from the outside
@@ -6304,9 +6418,9 @@ ${handlers.length} left`,
 		transaction.setProgress({ state: TransactionState.Queued });
 
 		// If the transaction should expire, start the timeout
-		let expirationTimeout: NodeJS.Timeout | undefined;
+		let expirationTimeout: Timer | undefined;
 		if (options.expire) {
-			expirationTimeout = setTimeout(() => {
+			expirationTimeout = setTimer(() => {
 				this.reduceQueues((t, _source) => {
 					if (t === transaction) {
 						return {
@@ -6387,7 +6501,7 @@ ${handlers.length} left`,
 			throw e;
 		} finally {
 			// The transaction was handled, so it can no longer expire
-			if (expirationTimeout) clearTimeout(expirationTimeout);
+			expirationTimeout?.clear();
 		}
 	}
 
@@ -6640,7 +6754,7 @@ ${handlers.length} left`,
 		try {
 			const abort = new SendDataAbort();
 			await this.writeSerial(
-				await abort.serializeAsync(this.getEncodingContext()),
+				await abort.serialize(this.getEncodingContext()),
 			);
 			this.driverLog.logMessage(abort, {
 				direction: "outbound",
@@ -6687,12 +6801,12 @@ ${handlers.length} left`,
 			};
 			this.awaitedMessageHeaders.push(entry);
 			const removeEntry = () => {
-				if (entry.timeout) clearTimeout(entry.timeout);
+				entry.timeout?.clear();
 				const index = this.awaitedMessageHeaders.indexOf(entry);
 				if (index !== -1) this.awaitedMessageHeaders.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimeout(() => {
+			entry.timeout = setTimer(() => {
 				removeEntry();
 				reject(
 					new ZWaveError(
@@ -6733,12 +6847,12 @@ ${handlers.length} left`,
 			};
 			this.awaitedMessages.push(entry);
 			const removeEntry = () => {
-				if (entry.timeout) clearTimeout(entry.timeout);
+				entry.timeout?.clear();
 				const index = this.awaitedMessages.indexOf(entry);
 				if (index !== -1) this.awaitedMessages.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimeout(() => {
+			entry.timeout = setTimer(() => {
 				removeEntry();
 				reject(
 					new ZWaveError(
@@ -6778,12 +6892,12 @@ ${handlers.length} left`,
 			};
 			this.awaitedCommands.push(entry);
 			const removeEntry = () => {
-				if (entry.timeout) clearTimeout(entry.timeout);
+				entry.timeout?.clear();
 				const index = this.awaitedCommands.indexOf(entry);
 				if (index !== -1) this.awaitedCommands.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimeout(() => {
+			entry.timeout = setTimer(() => {
 				removeEntry();
 				reject(
 					new ZWaveError(
@@ -6821,7 +6935,7 @@ ${handlers.length} left`,
 		};
 		this.awaitedCommands.push(entry);
 		const removeEntry = () => {
-			if (entry.timeout) clearTimeout(entry.timeout);
+			entry.timeout?.clear();
 			const index = this.awaitedCommands.indexOf(entry);
 			if (index !== -1) this.awaitedCommands.splice(index, 1);
 		};
@@ -7225,7 +7339,7 @@ ${handlers.length} left`,
 		}
 	}
 
-	private sendNodeToSleepTimers = new Map<number, NodeJS.Timeout>();
+	private sendNodeToSleepTimers = new Map<number, Timer>();
 	/**
 	 * @internal
 	 * Marks a node for a later sleep command. Every call refreshes the period until the node actually goes to sleep
@@ -7236,7 +7350,7 @@ ${handlers.length} left`,
 		// TODO: This should be a single command to the send thread
 		// Delete old timers if any exist
 		if (this.sendNodeToSleepTimers.has(node.id)) {
-			clearTimeout(this.sendNodeToSleepTimers.get(node.id));
+			this.sendNodeToSleepTimers.get(node.id)?.clear();
 		}
 
 		// Sends a node to sleep if it has no more messages.
@@ -7265,7 +7379,7 @@ ${handlers.length} left`,
 			if (wakeUpInterval !== 0) {
 				this.sendNodeToSleepTimers.set(
 					node.id,
-					setTimeout(
+					setTimer(
 						() => sendNodeToSleep(node),
 						this.options.timeouts.sendToSleep,
 					).unref(),
@@ -7346,7 +7460,7 @@ ${handlers.length} left`,
 	public async exceedsMaxPayloadLength(
 		msg: SendDataMessage,
 	): Promise<boolean> {
-		const serializedCC = await msg.serializeCCAsync(
+		const serializedCC = await msg.serializeCC(
 			this.getEncodingContext(),
 		);
 		return serializedCC.length > this.getMaxPayloadLength(msg);
@@ -7388,11 +7502,6 @@ ${handlers.length} left`,
 			)
 			? SendDataMulticastBridgeRequest
 			: SendDataMulticastRequest;
-	}
-
-	// This does not all need to be printed to the console
-	public [util.inspect.custom](): string {
-		return "[Driver]";
 	}
 
 	/**
@@ -7494,43 +7603,396 @@ ${handlers.length} left`,
 		return true;
 	}
 
+	// region OTW Firmware Updates
+
+	private _otwFirmwareUpdateInProgress: boolean = false;
+
+	/**
+	 * Returns whether a firmware update is in progress for the Z-Wave module.
+	 */
+	public isOTWFirmwareUpdateInProgress(): boolean {
+		return this._otwFirmwareUpdateInProgress;
+	}
+
+	/**
+	 * Updates the firmware of the controller using the given firmware file.
+	 *
+	 * The return value indicates whether the update was successful.
+	 * **WARNING:** After a successful update, the Z-Wave driver will destroy itself so it can be restarted.
+	 *
+	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
+	 */
+	public async firmwareUpdateOTW(
+		data: Uint8Array,
+	): Promise<OTWFirmwareUpdateResult> {
+		// Don't interrupt ongoing OTA firmware updates
+		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
+			const message =
+				`Failed to start the update: A firmware update is already in progress on this network!`;
+			this.controllerLog.print(message, "error");
+			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
+		}
+
+		// Don't allow updating firmware when the controller is currently updating its own firmware
+		if (this.isOTWFirmwareUpdateInProgress()) {
+			const message =
+				`Failed to start the update: The controller is currently being updated!`;
+			this.controllerLog.print(message, "error");
+			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
+		}
+
+		// When in bootloader mode, we can use the 700 series update method
+		if (this.mode === DriverMode.Bootloader) {
+			return this.firmwareUpdateOTW700(data);
+		} else if (this.mode === DriverMode.SerialAPI) {
+			if (this.controller.sdkVersionGte("7.0")) {
+				// This is at least a 700 series controller, so we can use the 700 series update method
+				return this.firmwareUpdateOTW700(data);
+			} else if (
+				this.controller.sdkVersionGte("6.50.0")
+				&& this.controller.supportedFunctionTypes
+					?.includes(FunctionType.FirmwareUpdateNVM)
+			) {
+				// This is a 500 series controller, use the 500 series update method
+				const wasUpdated = await this.firmwareUpdateOTW500(data);
+				if (wasUpdated.success) {
+					// After updating the firmware on 500 series sticks, we MUST soft-reset them
+					await this.softResetAndRestart(
+						"Activating new firmware and restarting driver...",
+						"Controller firmware updates require a driver restart!",
+					);
+				}
+				return wasUpdated;
+			}
+		} else if (this.mode === DriverMode.CLI) {
+			// If the CLI has an option to enter bootloader, we can use the 700 series update method,
+			// since it tries to execute that.
+			return this.firmwareUpdateOTW700(data);
+		}
+
+		throw new ZWaveError(
+			`Firmware updates are not supported on this Z-Wave module`,
+			ZWaveErrorCodes.Controller_NotSupported,
+		);
+	}
+
+	private async firmwareUpdateOTW500(
+		data: Uint8Array,
+	): Promise<OTWFirmwareUpdateResult> {
+		this._otwFirmwareUpdateInProgress = true;
+		let turnedRadioOff = false;
+		try {
+			this.controllerLog.print("Beginning firmware update");
+
+			const canUpdate = await this.controller.firmwareUpdateNVMInit();
+			if (!canUpdate) {
+				this.controllerLog.print(
+					"OTW update failed: This controller does not support firmware updates",
+					"error",
+				);
+
+				const result: OTWFirmwareUpdateResult = {
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_NotSupported,
+				};
+				this.emit("firmware update finished", result);
+				return result;
+			}
+
+			// Avoid interruption by incoming messages
+			await this.controller.toggleRF(false);
+			turnedRadioOff = true;
+
+			// Upload the firmware data
+			const BLOCK_SIZE = 64;
+			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
+			for (let fragment = 0; fragment < numFragments; fragment++) {
+				const fragmentData = data.subarray(
+					fragment * BLOCK_SIZE,
+					(fragment + 1) * BLOCK_SIZE,
+				);
+				await this.controller.firmwareUpdateNVMWrite(
+					fragment * BLOCK_SIZE,
+					fragmentData,
+				);
+
+				// This progress is technically too low, but we can keep 100% for after CRC checking this way
+				const progress: OTWFirmwareUpdateProgress = {
+					sentFragments: fragment,
+					totalFragments: numFragments,
+					progress: roundTo((fragment / numFragments) * 100, 2),
+				};
+				this.emit("firmware update progress", progress);
+			}
+
+			// Check if a valid image was written
+			const isValidCRC = await this.controller
+				.firmwareUpdateNVMIsValidCRC16();
+			if (!isValidCRC) {
+				this.controllerLog.print(
+					"OTW update failed: The firmware image is invalid",
+					"error",
+				);
+
+				const result: OTWFirmwareUpdateResult = {
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Aborted,
+				};
+				this.emit("firmware update finished", result);
+				return result;
+			}
+
+			this.emit("firmware update progress", {
+				sentFragments: numFragments,
+				totalFragments: numFragments,
+				progress: 100,
+			});
+
+			// Enable the image
+			await this.controller.firmwareUpdateNVMSetNewImage();
+
+			this.controllerLog.print("Firmware update succeeded");
+
+			const result: OTWFirmwareUpdateResult = {
+				success: true,
+				status: OTWFirmwareUpdateStatus.OK,
+			};
+			this.emit("firmware update finished", result);
+			return result;
+		} finally {
+			this._otwFirmwareUpdateInProgress = false;
+			if (turnedRadioOff) await this.controller.toggleRF(true);
+		}
+	}
+
+	private async firmwareUpdateOTW700(
+		data: Uint8Array,
+	): Promise<OTWFirmwareUpdateResult> {
+		this._otwFirmwareUpdateInProgress = true;
+		let destroy = false;
+
+		try {
+			await this.enterBootloader();
+
+			// Start the update process
+			this.controllerLog.print("Beginning firmware upload");
+			await this.bootloader.beginUpload();
+
+			// Wait for the bootloader to accept fragments
+			try {
+				await this.waitForBootloaderChunk(
+					(c) =>
+						c.type === BootloaderChunkType.Message
+						&& c.message === "begin upload",
+					5000,
+				);
+				await this.waitForBootloaderChunk(
+					(c) =>
+						c.type === BootloaderChunkType.FlowControl
+						&& c.command === XModemMessageHeaders.C,
+					1000,
+				);
+			} catch {
+				this.controllerLog.print(
+					"OTW update failed: Expected response not received from the bootloader",
+					"error",
+				);
+				const result: OTWFirmwareUpdateResult = {
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Timeout,
+				};
+				this.emit("firmware update finished", result);
+				return result;
+			}
+
+			const BLOCK_SIZE = 128;
+			if (data.length % BLOCK_SIZE !== 0) {
+				// Pad the data to a multiple of BLOCK_SIZE
+				data = Bytes.concat([
+					data,
+					new Bytes(BLOCK_SIZE - (data.length % BLOCK_SIZE)).fill(
+						0xff,
+					),
+				]);
+			}
+			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
+
+			let aborted = false;
+
+			transfer: for (
+				let fragment = 1;
+				fragment <= numFragments;
+				fragment++
+			) {
+				const fragmentData = data.subarray(
+					(fragment - 1) * BLOCK_SIZE,
+					fragment * BLOCK_SIZE,
+				);
+
+				retry: for (let retry = 0; retry < 3; retry++) {
+					await this.bootloader.uploadFragment(
+						fragment,
+						fragmentData,
+					);
+					let result: BootloaderChunk & {
+						type: BootloaderChunkType.FlowControl;
+					};
+					try {
+						result = await this.waitForBootloaderChunk(
+							(c) => c.type === BootloaderChunkType.FlowControl,
+							1000,
+						);
+					} catch {
+						this.controllerLog.print(
+							"OTW update failed: The bootloader did not acknowledge the start of transfer.",
+							"error",
+						);
+
+						const result: OTWFirmwareUpdateResult = {
+							success: false,
+							status: OTWFirmwareUpdateStatus.Error_Timeout,
+						};
+						this.emit("firmware update finished", result);
+						return result;
+					}
+
+					switch (result.command) {
+						case XModemMessageHeaders.ACK: {
+							// The fragment was accepted
+							const progress: OTWFirmwareUpdateProgress = {
+								sentFragments: fragment,
+								totalFragments: numFragments,
+								progress: roundTo(
+									(fragment / numFragments) * 100,
+									2,
+								),
+							};
+							this.emit("firmware update progress", progress);
+
+							// we've transmitted at least one fragment, so we need to destroy the driver afterwards
+							destroy = true;
+
+							continue transfer;
+						}
+						case XModemMessageHeaders.NAK:
+							// The fragment was rejected, try again
+							continue retry;
+						case XModemMessageHeaders.CAN:
+							// The bootloader aborted the update. We'll receive the reason afterwards as a message
+							aborted = true;
+							break transfer;
+					}
+				}
+
+				this.controllerLog.print(
+					"OTW update failed: Maximum retry attempts reached",
+					"error",
+				);
+				const result: OTWFirmwareUpdateResult = {
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_RetryLimitReached,
+				};
+				this.emit("firmware update finished", result);
+				return result;
+			}
+
+			if (aborted) {
+				// wait for the reason to craft a good error message
+				const error = await this.waitForBootloaderChunk<
+					BootloaderChunk & { type: BootloaderChunkType.Message }
+				>(
+					(c) =>
+						c.type === BootloaderChunkType.Message
+						&& c.message.includes("error 0x"),
+					1000,
+				)
+					.catch(() => undefined);
+
+				// wait for the menu screen so it doesn't show up in logs
+				await this.waitForBootloaderChunk(
+					(c) => c.type === BootloaderChunkType.Menu,
+					1000,
+				)
+					.catch(() => undefined);
+
+				let message = `OTW update was aborted by the bootloader.`;
+				if (error) {
+					message += ` ${error.message}`;
+					// TODO: parse error code
+				}
+				this.controllerLog.print(message, "error");
+
+				const result: OTWFirmwareUpdateResult = {
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Aborted,
+				};
+				this.emit("firmware update finished", result);
+				return result;
+			} else {
+				// We're done, send EOT and wait for the menu screen
+				await this.bootloader.finishUpload();
+				try {
+					// The bootloader sends the confirmation and the menu screen very quickly.
+					// Waiting for them separately can cause us to miss the menu screen and
+					// incorrectly assume the update timed out.
+
+					await Promise.all([
+						this.waitForBootloaderChunk(
+							(c) =>
+								c.type === BootloaderChunkType.Message
+								&& c.message.includes("upload complete"),
+							1000,
+						),
+
+						this.waitForBootloaderChunk(
+							(c) => c.type === BootloaderChunkType.Menu,
+							1000,
+						),
+					]);
+				} catch {
+					this.controllerLog.print(
+						"OTW update failed: The bootloader did not acknowledge the end of transfer.",
+						"error",
+					);
+					const result: OTWFirmwareUpdateResult = {
+						success: false,
+						status: OTWFirmwareUpdateStatus.Error_Timeout,
+					};
+					this.emit("firmware update finished", result);
+					return result;
+				}
+			}
+
+			this.controllerLog.print("Firmware update succeeded");
+
+			const result: OTWFirmwareUpdateResult = {
+				success: true,
+				status: OTWFirmwareUpdateStatus.OK,
+			};
+			this.emit("firmware update finished", result);
+			return result;
+		} finally {
+			await this.leaveBootloader(destroy);
+			this._otwFirmwareUpdateInProgress = false;
+		}
+	}
+
+	// region Bootloader
+
 	private _enteringBootloader: boolean = false;
 	private _enterBootloaderPromise: DeferredPromise<void> | undefined;
 
-	/** @internal */
 	public async enterBootloader(): Promise<void> {
+		if (this._bootloader) return;
+
 		this.controllerLog.print("Entering bootloader...");
 		this._enteringBootloader = true;
 		try {
-			// await this.controller.toggleRF(false);
-			// Avoid re-transmissions etc. communicating with the bootloader
-			await this.scheduler.removeTasks(
-				() => true,
-				new ZWaveError(
-					"The controller is entering bootloader mode.",
-					ZWaveErrorCodes.Driver_TaskRemoved,
-				),
-			);
-
-			this.rejectTransactions(
-				(_t) => true,
-				"The controller is entering bootloader mode.",
-			);
-
-			await this.trySoftReset();
-			this.pauseSendQueue();
-
-			// Again, just to be very sure
-			this.rejectTransactions(
-				(_t) => true,
-				"The controller is entering bootloader mode.",
-			);
-
-			// It would be nicer to not hardcode the command here, but since we're switching stream parsers
-			// mid-command - thus ignoring the ACK, we can't really use the existing communication machinery
-			const promise = this.writeSerial(Bytes.from("01030027db", "hex"));
-			this.serial!.mode = ZWaveSerialMode.Bootloader;
-			await promise;
+			if (this.mode === DriverMode.SerialAPI) {
+				await this.enterBootloaderFromSerialAPI();
+			} else if (this.mode === DriverMode.CLI) {
+				await this.enterBootloaderFromCLI();
+			}
 
 			// Wait if the menu shows up
 			this._enterBootloaderPromise = createDeferredPromise();
@@ -7551,24 +8013,68 @@ ${handlers.length} left`,
 		}
 	}
 
+	private async enterBootloaderFromSerialAPI(): Promise<void> {
+		// Avoid re-transmissions etc. communicating with the bootloader
+		await this.scheduler.removeTasks(
+			() => true,
+			new ZWaveError(
+				"The controller is entering bootloader mode.",
+				ZWaveErrorCodes.Driver_TaskRemoved,
+			),
+		);
+
+		this.rejectTransactions(
+			(_t) => true,
+			"The controller is entering bootloader mode.",
+		);
+
+		await this.trySoftReset();
+		this.pauseSendQueue();
+
+		// Again, just to be very sure
+		this.rejectTransactions(
+			(_t) => true,
+			"The controller is entering bootloader mode.",
+		);
+
+		// It would be nicer to not hardcode the command here, but since we're switching stream parsers
+		// mid-command - thus ignoring the ACK, we can't really use the existing communication machinery
+		const promise = this.writeSerial(Bytes.from("01030027db", "hex"));
+		this.serial!.mode = ZWaveSerialMode.Bootloader;
+		await promise;
+	}
+
+	private async enterBootloaderFromCLI(): Promise<void> {
+		// The CLI first responds with a success message, so we have to reset the
+		await this.cli.executeCommand("bootloader");
+		// serial mode after the command is complete
+		this.serial!.mode = undefined;
+	}
+
 	private leaveBootloaderInternal(): Promise<void> {
 		const promise = this.bootloader.runApplication();
-		// Reset the known serial mode. We might end up in serial or bootloader mode afterwards.
+		// Reset the known serial mode.
+		// We might end up in serial API, CLI or bootloader mode afterwards.
 		this.serial!.mode = undefined;
 		this._bootloader = undefined;
 		return promise;
 	}
 
 	/**
-	 * @internal
 	 * Leaves the bootloader and destroys the driver instance if desired
 	 */
 	public async leaveBootloader(destroy: boolean = false): Promise<void> {
 		this.controllerLog.print("Leaving bootloader...");
 		await this.leaveBootloaderInternal();
 
-		// TODO: do we need to wait here?
+		// Wait a second so we can detect if we end up in a CLI application
+		await wait(1000);
+		if (this.mode === DriverMode.CLI) {
+			await this.ensureCLIReady();
+			return;
+		}
 
+		// We're most likely talking to a Serial API application
 		if (destroy) {
 			const restartReason = "Restarting driver after OTW update...";
 			this.controllerLog.print(restartReason);
@@ -7576,7 +8082,7 @@ ${handlers.length} left`,
 			await this.destroy();
 
 			// Let the async calling context finish before emitting the error
-			process.nextTick(() => {
+			setImmediate(() => {
 				this.emit(
 					"error",
 					new ZWaveError(
@@ -7622,6 +8128,10 @@ ${handlers.length} left`,
 
 		if (!this._bootloader && data.type === BootloaderChunkType.Menu) {
 			// We just entered the bootloader
+			this._controller?.destroy();
+			this._controller = undefined;
+			this._cli = undefined;
+
 			this.controllerLog.print(
 				`[BOOTLOADER] version ${data.version}`,
 				"verbose",
@@ -7657,12 +8167,12 @@ ${handlers.length} left`,
 			};
 			this.awaitedBootloaderChunks.push(entry);
 			const removeEntry = () => {
-				if (entry.timeout) clearTimeout(entry.timeout);
+				entry.timeout?.clear();
 				const index = this.awaitedBootloaderChunks.indexOf(entry);
 				if (index !== -1) this.awaitedBootloaderChunks.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimeout(() => {
+			entry.timeout = setTimer(() => {
 				removeEntry();
 				reject(
 					new ZWaveError(
@@ -7679,7 +8189,86 @@ ${handlers.length} left`,
 		});
 	}
 
-	private pollBackgroundRSSITimer: NodeJS.Timeout | undefined;
+	/**
+	 * Waits until a specific chunk is received from the end device CLI or a timeout has elapsed. Returns the received chunk.
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param predicate A predicate function to test all incoming chunks
+	 */
+	public waitForCLIChunk<T extends CLIChunk>(
+		predicate: (chunk: CLIChunk) => boolean,
+		timeout: number,
+	): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			const promise = createDeferredPromise<CLIChunk>();
+			const entry: AwaitedCLIChunkEntry = {
+				predicate,
+				handler: (chunk) => promise.resolve(chunk),
+				timeout: undefined,
+			};
+			this.awaitedCLIChunks.push(entry);
+			const removeEntry = () => {
+				entry.timeout?.clear();
+				const index = this.awaitedCLIChunks.indexOf(entry);
+				if (index !== -1) this.awaitedCLIChunks.splice(index, 1);
+			};
+			// When the timeout elapses, remove the wait entry and reject the returned Promise
+			entry.timeout = setTimer(() => {
+				removeEntry();
+				reject(
+					new ZWaveError(
+						`Received no matching chunk within the provided timeout!`,
+						ZWaveErrorCodes.Controller_Timeout,
+					),
+				);
+			}, timeout);
+			// When the promise is resolved, remove the wait entry and resolve the returned Promise
+			void promise.then((chunk) => {
+				removeEntry();
+				resolve(chunk as T);
+			});
+		});
+	}
+
+	private async serialport_onCLIData(data: CLIChunk): Promise<void> {
+		// Check if there is a handler waiting for this chunk
+		for (const entry of this.awaitedCLIChunks) {
+			if (entry.predicate(data)) {
+				// there is!
+				entry.handler(data);
+				return;
+			}
+		}
+
+		if (!this._cli && data.type === CLIChunkType.Prompt) {
+			// We just detected the CLI
+			this._controller?.destroy();
+			this._controller = undefined;
+			this._bootloader = undefined;
+
+			this._cli = new EndDeviceCLI(
+				this.writeSerial.bind(this),
+				(timeout) =>
+					this.waitForCLIChunk(
+						(c) => c.type === CLIChunkType.Message,
+						timeout ?? 1000,
+					)
+						.then((c) =>
+							(c as CLIChunk & { type: CLIChunkType.Message })
+								.message
+						)
+						.catch(() => undefined),
+			);
+
+			if (!(await this.ensureCLIReady())) {
+				throw new ZWaveError(
+					"Failed to detect available CLI commands",
+					ZWaveErrorCodes.Driver_Failed,
+				);
+			}
+		}
+	}
+
+	private pollBackgroundRSSITimer: Timer | undefined;
 	private lastBackgroundRSSITimestamp = 0;
 
 	private handleQueueIdleChange(idle: boolean): void {
@@ -7695,7 +8284,7 @@ ${handlers.length} left`,
 					// and up to 30s if we recently queried the RSSI
 					30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
 				);
-				this.pollBackgroundRSSITimer = setTimeout(async () => {
+				this.pollBackgroundRSSITimer = setTimer(async () => {
 					// Due to the timeout, the driver might have been destroyed in the meantime
 					if (!this.ready) return;
 
@@ -7707,7 +8296,7 @@ ${handlers.length} left`,
 					}
 				}, timeout).unref();
 			} else {
-				clearTimeout(this.pollBackgroundRSSITimer);
+				this.pollBackgroundRSSITimer?.clear();
 				this.pollBackgroundRSSITimer = undefined;
 			}
 		}

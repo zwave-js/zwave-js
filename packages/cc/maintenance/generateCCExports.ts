@@ -73,6 +73,7 @@ function findExports() {
 		if (
 			relativePath.endsWith(".test.ts")
 			|| relativePath.endsWith("index.ts")
+			|| relativePath.includes(".generated.")
 		) {
 			continue;
 		}
