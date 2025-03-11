@@ -71,7 +71,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion < 2.30",
-			"label": "Power (W) Reporting Threshold",
+			"label": "Power (W) Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
 			"minValue": 5,
@@ -81,7 +81,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion >= 2.30",
-			"label": "Power (W) Reporting Threshold",
+			"label": "Power (W) Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
 			"minValue": 0,
@@ -96,7 +96,7 @@
 		},
 		{
 			"#": "6",
-			"label": "Power (W) Reporting Interval",
+			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "minutes",
 			"minValue": 1,
@@ -113,7 +113,7 @@
 		{
 			"#": "7",
 			"$if": "firmwareVersion < 2.30",
-			"label": "Current (A) Reporting Threshold",
+			"label": "Current (A) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
 			"minValue": 1,
@@ -123,7 +123,7 @@
 		{
 			"#": "7",
 			"$if": "firmwareVersion >= 2.30",
-			"label": "Current (A) Reporting Threshold",
+			"label": "Current (A) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
 			"minValue": 0,
@@ -139,7 +139,7 @@
 		{
 			"#": "12",
 			"$if": "firmwareVersion >= 1.30",
-			"label": "Current (A) Reporting Interval",
+			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "minutes",
 			"minValue": 1,
@@ -147,9 +147,17 @@
 			"defaultValue": 60
 		},
 		{
+			"#": "15",
+			"$if": "firmwareVersion >= 2.30",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Energy (kWh) Reports",
+			"description": "When disabled, no kWh reports are sent, regardless of the threshold and interval settings.",
+			"defaultValue": 0
+		},
+		{
 			"#": "8",
 			"$if": "firmwareVersion < 2.30",
-			"label": "Energy (kWh) Reporting Threshold",
+			"label": "Energy (kWh) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.01 kWh",
 			"minValue": 1,
@@ -159,7 +167,7 @@
 		{
 			"#": "8",
 			"$if": "firmwareVersion >= 2.30",
-			"label": "Energy (kWh) Reporting Threshold",
+			"label": "Energy (kWh) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.01 kWh",
 			"minValue": 0,
@@ -174,6 +182,16 @@
 			]
 		},
 		{
+			"#": "14",
+			"$if": "firmwareVersion >= 2.30",
+			"label": "Energy (kWh) Report Interval",
+			"valueSize": 4,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 65535,
+			"defaultValue": 60
+		},
+		{
 			"#": "13",
 			"$if": "firmwareVersion >= 1.30",
 			"label": "Voltage Report (V) Interval",
@@ -186,34 +204,6 @@
 				{
 					"label": "Disabled",
 					"value": 0
-				}
-			]
-		},
-		{
-			"#": "14",
-			"$if": "firmwareVersion >= 2.30",
-			"label": "kWh Report Frequency",
-			"valueSize": 4,
-			"unit": "minutes",
-			"minValue": 1,
-			"maxValue": 65535,
-			"defaultValue": 60
-		},
-		{
-			"#": "15",
-			"$if": "firmwareVersion >= 2.30",
-			"label": "Disable kWh Reports",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "kWh reports enabled",
-					"value": 0
-				},
-				{
-					"label": "kWh reports disabled",
-					"value": 1
 				}
 			]
 		}
