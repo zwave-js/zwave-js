@@ -37,35 +37,32 @@
 		}
 	},
 	"paramInformation": [
+		// Parameter 1 was removed in firmware 1.20 and re-added in firmware 1.30
+		// and had its limit/default changed back to pre-1.20 settings in firmware 2.0
 		{
 			"#": "1",
-			"$if": "firmwareVersion < 2.0.0",
+			"$if": "firmwareVersion === 1.30",
 			"$import": "templates/zooz_template.json#battery_report_threshold",
-			"label": "Battery Report Threshold",
 			"minValue": 10,
-			"maxValue": 50,
 			"defaultValue": 20
 		},
 		{
 			"#": "1",
-			"$if": "firmwareVersion >= 2.0.0",
+			"$if": "firmwareVersion < 1.20 || firmwareVersion >= 2.0",
 			"$import": "templates/zooz_template.json#battery_report_threshold",
-			"label": "Battery Report Threshold",
-			"minValue": 1,
 			"maxValue": 10,
 			"defaultValue": 5
 		},
 		{
 			"#": "2",
 			"$import": "templates/zooz_template.json#low_battery_alarm_threshold",
-			"label": "Low Battery Alarm Threshold",
 			"minValue": 5,
 			"maxValue": 20,
 			"defaultValue": 10
 		},
 		{
 			"#": "3",
-			"$if": "firmwareVersion < 2.0.0",
+			"$if": "firmwareVersion < 2.0",
 			"label": "Temperature Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °F/C",
@@ -75,7 +72,7 @@
 		},
 		{
 			"#": "3",
-			"$if": "firmwareVersion >= 2.0.0",
+			"$if": "firmwareVersion >= 2.0",
 			"label": "Temperature Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °F/C",
@@ -91,7 +88,7 @@
 		},
 		{
 			"#": "4",
-			"$if": "firmwareVersion < 2.0.0",
+			"$if": "firmwareVersion < 2.0",
 			"label": "Humidity Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -101,7 +98,7 @@
 		},
 		{
 			"#": "4",
-			"$if": "firmwareVersion >= 2.0.0",
+			"$if": "firmwareVersion >= 2.0",
 			"label": "Humidity Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -117,7 +114,7 @@
 		},
 		{
 			"#": "5",
-			"$if": "firmwareVersion < 2.0.0",
+			"$if": "firmwareVersion < 2.0",
 			"label": "High Temperature Alert Threshold",
 			"valueSize": 1,
 			"unit": "°F/C",
@@ -127,11 +124,11 @@
 		},
 		{
 			"#": "5",
-			"$if": "firmwareVersion >= 2.0.0",
+			"$if": "firmwareVersion >= 2.0",
 			"label": "High Temperature Alert Threshold",
 			"valueSize": 1,
 			"unit": "°F/C",
-			"minValue": 0,
+			"minValue": 50,
 			"maxValue": 200,
 			"defaultValue": 200,
 			"unsigned": true
@@ -179,7 +176,7 @@
 		},
 		{
 			"#": "7",
-			"$if": "firmwareVersion < 2.0.0",
+			"$if": "firmwareVersion < 2.0",
 			"label": "Low Temperature Alert Threshold",
 			"valueSize": 1,
 			"unit": "°F/C",
@@ -189,7 +186,7 @@
 		},
 		{
 			"#": "7",
-			"$if": "firmwareVersion >= 2.0.0",
+			"$if": "firmwareVersion >= 2.0",
 			"label": "Low Temperature Alert Threshold",
 			"valueSize": 1,
 			"unit": "°F/C",
