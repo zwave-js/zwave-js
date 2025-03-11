@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 14.3.12 (2025-03-11)
 ### Config file changes
 * Add Shelly Door/Window Sensor, Wave Plug S, Wave PRO Dimmer 1PM/2PM  (#7641)
 * Add SmartWings WB04V (#7659)
