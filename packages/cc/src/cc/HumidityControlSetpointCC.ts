@@ -57,14 +57,12 @@ import {
 	type HumidityControlSetpointValue,
 } from "../lib/_Types.js";
 
-export const HumidityControlSetpointCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Humidity Control Setpoint"], {
+export const HumidityControlSetpointCCValues = V.defineCCValues(
+	CommandClasses["Humidity Control Setpoint"],
+	{
 		...V.staticProperty("supportedSetpointTypes", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Humidity Control Setpoint"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"setpoint",
 			"setpoint",
@@ -83,7 +81,6 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 				ccSpecific: { setpointType },
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
 			"setpointScale",
@@ -100,8 +97,8 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 				})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 function getScale(scale: number): Scale {
 	return getNamedScale("humidity", scale as any) ?? getUnknownScale(scale);
@@ -549,12 +546,11 @@ export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
 	public value: number;
 	public scale: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.setpointType & 0b1111]),
 			encodeFloatWithScale(this.value, this.scale),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -715,9 +711,8 @@ export class HumidityControlSetpointCCGet extends HumidityControlSetpointCC {
 
 	public setpointType: HumidityControlSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -889,9 +884,8 @@ export class HumidityControlSetpointCCScaleSupportedGet
 
 	public setpointType: HumidityControlSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1037,9 +1031,8 @@ export class HumidityControlSetpointCCCapabilitiesGet
 
 	public setpointType: HumidityControlSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

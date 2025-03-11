@@ -69,3 +69,9 @@ export enum ZnifferRegionLegacy {
 	TF_840_3CH = 16,
 	TF_850_3CH = 17,
 }
+
+export enum ZnifferLRChannelConfig {
+	"Classic & LR A" = 1,
+	"Classic & LR B" = 2,
+	"LR A & B" = 3,
+}

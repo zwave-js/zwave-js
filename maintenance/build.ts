@@ -1,4 +1,4 @@
-import execa from "execa";
+import { type Options as ExecaOptions, execa } from "execa";
 
 const project = process.argv[2] ?? "all";
 const buildArgs = process.argv
@@ -26,10 +26,12 @@ const dependsOnZwaveJs = [
 	"@zwave-js/flash",
 	// The eslint plugin doesn't actually depend on zwave-js, but it needs to be built too
 	"@zwave-js/eslint-plugin",
+	// The bindings-browser package doesn't actually depend on zwave-js, but it needs to be built too
+	"@zwave-js/bindings-browser",
 	// And CLI in the future
 ];
 
-const execOptions: execa.Options<string> = {
+const execOptions: ExecaOptions = {
 	stdio: "inherit",
 };
 

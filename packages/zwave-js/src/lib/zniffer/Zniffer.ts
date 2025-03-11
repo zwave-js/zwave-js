@@ -12,6 +12,7 @@ import {
 	type FrameType,
 	type HostIDs,
 	type LogConfig,
+	type LogContainer,
 	MPDUHeaderType,
 	type MaybeNotKnown,
 	NODE_ID_BROADCAST,
@@ -25,7 +26,7 @@ import {
 	type UnknownZWaveChipType,
 	ZWaveError,
 	ZWaveErrorCodes,
-	ZWaveLogContainer,
+	ZnifferLRChannelConfig,
 	ZnifferRegion,
 	ZnifferRegionLegacy,
 	getChipTypeAndVersion,
@@ -43,6 +44,12 @@ import {
 	ZnifferGetFrequenciesResponse,
 	ZnifferGetFrequencyInfoRequest,
 	ZnifferGetFrequencyInfoResponse,
+	ZnifferGetLRChannelConfigInfoRequest,
+	ZnifferGetLRChannelConfigInfoResponse,
+	ZnifferGetLRChannelConfigsRequest,
+	ZnifferGetLRChannelConfigsResponse,
+	ZnifferGetLRRegionsRequest,
+	ZnifferGetLRRegionsResponse,
 	ZnifferGetVersionRequest,
 	ZnifferGetVersionResponse,
 	ZnifferMessage,
@@ -54,6 +61,8 @@ import {
 	ZnifferSetBaudRateResponse,
 	ZnifferSetFrequencyRequest,
 	ZnifferSetFrequencyResponse,
+	ZnifferSetLRChannelConfigRequest,
+	ZnifferSetLRChannelConfigResponse,
 	ZnifferStartRequest,
 	ZnifferStartResponse,
 	ZnifferStopRequest,
@@ -144,6 +153,13 @@ export interface ZnifferOptions {
 	 */
 	defaultFrequency?: number;
 
+	/**
+	 * The LR channel configuration to initialize the Zniffer with. If not specified, the current setting will be kept.
+	 *
+	 * This is only supported for 800 series Zniffers with LR support
+	 */
+	defaultLRChannelConfig?: ZnifferLRChannelConfig;
+
 	/** Limit the number of frames that are kept in memory. */
 	maxCapturedFrames?: number;
 }
@@ -211,10 +227,6 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 				ZWaveErrorCodes.Driver_InvalidOptions,
 			);
 		}
-
-		// Initialize logging
-		this._logContainer = new ZWaveLogContainer(options.logConfig);
-		this.znifferLog = new ZnifferLogger(this, this._logContainer);
 
 		this._options = options;
 
@@ -314,8 +326,28 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		return this._supportedFrequencies;
 	}
 
-	private _logContainer: ZWaveLogContainer;
-	private znifferLog: ZnifferLogger;
+	private _lrRegions: Set<number> = new Set();
+	/** A list regions that are Long Range capable */
+	public get lrRegions(): ReadonlySet<number> {
+		return this._lrRegions;
+	}
+
+	private _currentLRChannelConfig: number | undefined;
+	/** The currently configured Long Range channel configuration */
+	public get currentLRChannelConfig(): number | undefined {
+		return this._currentLRChannelConfig;
+	}
+
+	private _supportedLRChannelConfigs: Map<number, string> = new Map();
+	/** A map of supported Long Range channel configurations and their names */
+	public get supportedLRChannelConfigs(): ReadonlyMap<number, string> {
+		return this._supportedLRChannelConfigs;
+	}
+
+	// This is set during `start()` and should not be accessed before
+	private _logContainer!: LogContainer;
+	// This is set during `start()` and should not be accessed before
+	private znifferLog!: ZnifferLogger;
 
 	/** The security managers for each node */
 	private securityManagers: Map<number, {
@@ -360,7 +392,13 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 				?? (await import("@zwave-js/core/bindings/fs/node")).fs,
 			serial: this._options.host?.serial
 				?? (await import("@zwave-js/serial/bindings/node")).serial,
+			log: this._options.host?.log
+				?? (await import("@zwave-js/core/bindings/log/node")).log,
 		};
+
+		// Initialize logging
+		this._logContainer = this.bindings.log(this._options.logConfig);
+		this.znifferLog = new ZnifferLogger(this, this._logContainer);
 
 		// Open the serial port
 		let binding: ZWaveSerialBindingFactory;
@@ -464,7 +502,7 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 
 		this.znifferLog.print(
 			`received frequency info:
-current frequency:     ${
+current frequency: ${
 				this._supportedFrequencies.get(freqs.currentFrequency)
 					?? `unknown (${num2hex(freqs.currentFrequency)})`
 			}
@@ -482,6 +520,71 @@ supported frequencies: ${
 			&& this._supportedFrequencies.has(this._options.defaultFrequency)
 		) {
 			await this.setFrequency(this._options.defaultFrequency);
+		}
+
+		if (
+			sdkVersionGte(
+				`${versionInfo.majorVersion}.${versionInfo.minorVersion}`,
+				"10.22",
+			)
+		) {
+			// Simplicity SDK 2024.6  added commands to query and configure LR channels
+			for (const region of await this.getLRRegions()) {
+				this._lrRegions.add(region);
+			}
+
+			const channels = await this.getLRChannelConfigs();
+			this._currentLRChannelConfig = channels.currentConfig;
+			// The channel configs match the ZnifferLRChannelConfig enum
+			for (const channel of channels.supportedConfigs) {
+				this._supportedLRChannelConfigs.set(
+					channel,
+					getEnumMemberName(ZnifferLRChannelConfig, channel),
+				);
+			}
+			// ... but there might be unknown configurations. Query those from the Zniffer
+			const unknownConfigs = channels.supportedConfigs.filter((f) =>
+				!isEnumMember(ZnifferLRChannelConfig, f)
+			);
+			for (const channel of unknownConfigs) {
+				const channelInfo = await this.getLRChannelConfigInfo(
+					channel,
+				);
+				this._supportedLRChannelConfigs.set(
+					channel,
+					channelInfo.configName,
+				);
+			}
+
+			this.znifferLog.print(
+				`received LR channel info:
+	current channel: ${
+					this._supportedLRChannelConfigs.get(
+						this._currentLRChannelConfig,
+					)
+						?? `unknown (${num2hex(this._currentLRChannelConfig)})`
+				}
+	supported channels: ${
+					[...this._supportedLRChannelConfigs].map((
+						[channel, name],
+					) => `\n  · ${channel.toString()}: ${name}`).join("")
+				}`,
+				"info",
+			);
+
+			if (
+				this._lrRegions.has(this._currentFrequency)
+				&& typeof this._options.defaultLRChannelConfig === "number"
+				&& this._currentLRChannelConfig
+					!== this._options.defaultLRChannelConfig
+				&& this._supportedLRChannelConfigs.has(
+					this._options.defaultLRChannelConfig,
+				)
+			) {
+				await this.setLRChannelConfig(
+					this._options.defaultLRChannelConfig,
+				);
+			}
 		}
 
 		this.emit("ready");
@@ -636,7 +739,7 @@ supported frequencies: ${
 						? "broadcast"
 						: "singlecast";
 				try {
-					cc = await CommandClass.parseAsync(
+					cc = await CommandClass.parse(
 						mpdu.payload,
 						{
 							homeId: mpdu.homeId,
@@ -845,6 +948,68 @@ supported frequencies: ${
 		return pick(res, ["numChannels", "frequencyName"]);
 	}
 
+	private async getLRRegions() {
+		const req = new ZnifferGetLRRegionsRequest();
+		await this.serial?.writeAsync(req.serialize());
+		const res = await this.waitForMessage<ZnifferGetLRRegionsResponse>(
+			(msg) => msg instanceof ZnifferGetLRRegionsResponse,
+			1000,
+		);
+
+		return res.regions;
+	}
+
+	private async getLRChannelConfigs() {
+		const req = new ZnifferGetLRChannelConfigsRequest();
+		await this.serial?.writeAsync(req.serialize());
+		const res = await this.waitForMessage<
+			ZnifferGetLRChannelConfigsResponse
+		>(
+			(msg) => msg instanceof ZnifferGetLRChannelConfigsResponse,
+			1000,
+		);
+
+		return pick(res, [
+			"currentConfig",
+			"supportedConfigs",
+		]);
+	}
+
+	public async setLRChannelConfig(channelConfig: number): Promise<void> {
+		if (
+			this._currentFrequency == undefined
+			|| !this._lrRegions.has(this._currentFrequency)
+		) {
+			throw new ZWaveError(
+				`The LR channel configuration can only be set for LR regions!`,
+				ZWaveErrorCodes.Controller_NotSupported,
+			);
+		}
+
+		const req = new ZnifferSetLRChannelConfigRequest({ channelConfig });
+		await this.serial?.writeAsync(req.serialize());
+		await this.waitForMessage<ZnifferSetLRChannelConfigResponse>(
+			(msg) => msg instanceof ZnifferSetLRChannelConfigResponse,
+			1000,
+		);
+		this._currentLRChannelConfig = channelConfig;
+	}
+
+	private async getLRChannelConfigInfo(channelConfig: number) {
+		const req = new ZnifferGetLRChannelConfigInfoRequest({ channelConfig });
+		await this.serial?.writeAsync(req.serialize());
+		const res = await this.waitForMessage<
+			ZnifferGetLRChannelConfigInfoResponse
+		>(
+			(msg) =>
+				msg instanceof ZnifferGetLRChannelConfigInfoResponse
+				&& msg.channelConfig === channelConfig,
+			1000,
+		);
+
+		return pick(res, ["numChannels", "configName"]);
+	}
+
 	/** Starts the capture and discards all previously captured frames */
 	public async start(): Promise<void> {
 		if (this.wasDestroyed) {
@@ -946,7 +1111,7 @@ supported frequencies: ${
 			) {
 				const key = this._options.securityKeys[secClass];
 				if (key) {
-					await securityManager2.setKeyAsync(
+					await securityManager2.setKey(
 						SecurityClass[secClass],
 						key,
 					);
@@ -973,13 +1138,13 @@ supported frequencies: ${
 
 			// Set up all keys
 			if (this._options.securityKeysLongRange?.S2_AccessControl) {
-				await securityManagerLR.setKeyAsync(
+				await securityManagerLR.setKey(
 					SecurityClass.S2_AccessControl,
 					this._options.securityKeysLongRange.S2_AccessControl,
 				);
 			}
 			if (this._options.securityKeysLongRange?.S2_Authenticated) {
-				await securityManagerLR.setKeyAsync(
+				await securityManagerLR.setKey(
 					SecurityClass.S2_Authenticated,
 					this._options.securityKeysLongRange.S2_Authenticated,
 				);
