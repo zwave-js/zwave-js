@@ -4372,6 +4372,18 @@ export function wasControllerReset(e: unknown): e is ZWaveError & {
 // @public (undocumented)
 export type WithAddress<T extends object> = T & CCAddress;
 
+// Warning: (ae-missing-release-tag) "ZnifferLRChannelConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ZnifferLRChannelConfig {
+    // (undocumented)
+    "Classic & LR A" = 1,
+    // (undocumented)
+    "Classic & LR B" = 2,
+    // (undocumented)
+    "LR A & B" = 3
+}
+
 // Warning: (ae-missing-release-tag) "ZnifferProtocolDataRate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
