@@ -133,7 +133,7 @@ WARNING: On nodes implementing V2, all parameters after 255 will be ignored.
 
 ## Configuration CC values
 
-### `paramInformation(parameter: number, bitMask?: number | undefined)`
+### `paramInformation(parameter: number, bitMask?: number)`
 
 ```ts
 {

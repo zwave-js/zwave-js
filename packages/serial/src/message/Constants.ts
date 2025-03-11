@@ -221,8 +221,12 @@ export enum ZnifferFunctionType {
 	GetFrequencies = 0x03,
 	Start = 0x04,
 	Stop = 0x05,
+	SetLRChannelConfig = 0x06,
+	GetLRChannelConfigs = 0x07,
+	GetLRRegions = 0x08,
 	SetBaudRate = 0x0e,
 	GetFrequencyInfo = 0x13,
+	GetLRChannelConfigInfo = 0x14,
 }
 
 export enum ZnifferMessageType {

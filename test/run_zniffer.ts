@@ -1,3 +1,5 @@
+import { RFRegion, ZnifferLRChannelConfig } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { wait as _wait } from "alcalzone-shared/async";
 import "reflect-metadata";
 import { Zniffer } from "zwave-js";
@@ -8,42 +10,33 @@ process.on("unhandledRejection", (_r) => {
 	debugger;
 });
 
-// const port = "tcp://Z-Net-R2v2.local:2001";
-// 500/700 series
-// const port = require("node:os").platform() === "win32"
-// 	? "COM5"
-// 	: "/dev/ttyACM0";
-// const port = require("os").platform() === "win32" ? "COM5" : "/dev/ttyUSB0";
-// 800 series
-const port = require("node:os").platform() === "win32"
-	? "COM5"
-	: "/dev/serial/by-id/usb-Silicon_Labs_J-Link_OB_000440300307-if00";
-// const port = "/dev/serial/by-id/usb-0658_0200-if00";
+const port = "/dev/ttyACM0";
 
 const zniffer = new Zniffer(port, {
 	convertRSSI: true,
-	defaultFrequency: 0, // EU
+	defaultFrequency: RFRegion["Europe (Long Range)"],
+	defaultLRChannelConfig: ZnifferLRChannelConfig["Classic & LR B"],
 	securityKeys: {
-		S2_AccessControl: Buffer.from(
+		S2_AccessControl: Bytes.from(
 			"31132050077310B6F7032F91C79C2EB8",
 			"hex",
 		),
-		S2_Authenticated: Buffer.from(
+		S2_Authenticated: Bytes.from(
 			"656EF5C0F020F3C14238C04A1748B7E1",
 			"hex",
 		),
-		S2_Unauthenticated: Buffer.from(
+		S2_Unauthenticated: Bytes.from(
 			"5369389EFA18EE2A4894C7FB48347FEA",
 			"hex",
 		),
-		S0_Legacy: Buffer.from("0102030405060708090a0b0c0d0e0f10", "hex"),
+		S0_Legacy: Bytes.from("0102030405060708090a0b0c0d0e0f10", "hex"),
 	},
 	securityKeysLongRange: {
-		S2_AccessControl: Buffer.from(
+		S2_AccessControl: Bytes.from(
 			"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 			"hex",
 		),
-		S2_Authenticated: Buffer.from(
+		S2_Authenticated: Bytes.from(
 			"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 			"hex",
 		),

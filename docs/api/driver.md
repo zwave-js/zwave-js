@@ -306,6 +306,39 @@ Updates a subset of the driver options without having to restart the driver. The
 - `preferences`
 - `userAgent` (behaves like `updateUserAgent`)
 
+### Updating the firmware of the Z-Wave module (OTW)
+
+```ts
+firmwareUpdateOTW(data: Buffer): Promise<OTWFirmwareUpdateResult>
+```
+
+> [!WARNING] We don't take any responsibility if devices upgraded using Z-Wave JS don't work after an update. Always double-check that the correct update is about to be installed.
+
+Performs an over-the-wire (OTW) firmware update for the Z-Wave module (controller) using the given firmware image. To do so, the device gets put in bootloader mode where a new firmware image can be uploaded. This method can be called in bootloader mode, while connected to a Serial API controller, or with a CLI based firmware that has an option to return to bootloader.
+
+> [!WARNING] A failure during this process may leave your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded.
+
+To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` driver events](api/driver#quotfirmware-update-progressquot).
+
+The return value indicates whether the update was successful and includes an error code that can be used to determine the reason for a failure. This is the same information that is emitted using the `"firmware update finished"` event:
+
+<!-- #import OTWFirmwareUpdateResult from "zwave-js" -->
+
+```ts
+interface OTWFirmwareUpdateResult {
+	success: boolean;
+	status: OTWFirmwareUpdateStatus;
+}
+```
+
+### `isOTWFirmwareUpdateInProgress`
+
+```ts
+isOTWFirmwareUpdateInProgress(): boolean;
+```
+
+Return whether a firmware update is in progress for the Z-Wave module / controller.
+
 ### `checkForConfigUpdates`
 
 ```ts
@@ -400,6 +433,62 @@ The `Driver` class inherits from the Node.js [EventEmitter](https://nodejs.org/a
 
 In addition, the driver forwards events for all nodes, so they don't have to be registered on each node individually. See [`ZWaveNode` events](api/node.md#zwavenode-events) for details.
 
+### `"firmware update progress"`
+
+```ts
+(progress: OTWFirmwareUpdateProgress) => void
+```
+
+An OTW firmware update has made progress. The callback arguments gives information about the progress of the update:
+
+<!-- #import OTWFirmwareUpdateProgress from "zwave-js" -->
+
+```ts
+interface OTWFirmwareUpdateProgress {
+	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
+	sentFragments: number;
+	/** How many fragments the firmware update consists of. */
+	totalFragments: number;
+	/** The total progress of the firmware update in %, rounded to two digits. */
+	progress: number;
+}
+```
+
+### `"firmware update finished"`
+
+```ts
+(result: OTWFirmwareUpdateResult) => void;
+```
+
+The firmware update process is finished. The `result` argument looks like this indicates whether the update was successful:
+
+<!-- #import OTWFirmwareUpdateResult from "zwave-js" -->
+
+```ts
+interface OTWFirmwareUpdateResult {
+	success: boolean;
+	status: OTWFirmwareUpdateStatus;
+}
+```
+
+Its `status` property contains more details on potential errors.
+
+<!-- #import OTWFirmwareUpdateStatus from "zwave-js" -->
+
+```ts
+enum OTWFirmwareUpdateStatus {
+	Error_Timeout = 0,
+	/** The maximum number of retry attempts for a firmware fragments were reached */
+	Error_RetryLimitReached,
+	/** The update was aborted by the bootloader */
+	Error_Aborted,
+	/** This controller does not support firmware updates */
+	Error_NotSupported,
+
+	OK = 0xff,
+}
+```
+
 ## Interfaces
 
 ### `FileSystem`
@@ -415,9 +504,7 @@ interface FileSystem {
 		file: string,
 		data: string | Uint8Array,
 		options?:
-			| {
-				encoding: BufferEncoding;
-			}
+			| { encoding: BufferEncoding }
 			| BufferEncoding,
 	): Promise<void>;
 	readFile(file: string, encoding: BufferEncoding): Promise<string>;
@@ -695,7 +782,7 @@ This interface specifies the optional options object that is passed to the `Driv
 <!-- #import ZWaveOptions from "zwave-js" with comments -->
 
 ````ts
-interface ZWaveOptions extends ZWaveHostOptions {
+interface ZWaveOptions {
 	/** Specify timeouts in milliseconds */
 	timeouts: {
 		/** how long to wait for an ACK */
@@ -802,9 +889,31 @@ interface ZWaveOptions extends ZWaveHostOptions {
 		disableOnNodeAdded?: boolean;
 	};
 
+	/** Host abstractions allowing Z-Wave JS to run on different platforms */
+	host?: {
+		/**
+		 * Specifies which bindings are used to access the file system when
+		 * reading or writing the cache, or loading device configuration files.
+		 */
+		fs?: FileSystem;
+
+		/**
+		 * Specifies which bindings are used interact with serial ports.
+		 */
+		serial?: Serial;
+
+		/**
+		 * Specifies which bindings are used to interact with the database used to store the cache.
+		 */
+		db?: DatabaseFactory;
+
+		/**
+		 * Specifies the logging implementation to be used
+		 */
+		log?: LogFactory;
+	};
+
 	storage: {
-		/** Allows you to replace the default file system driver used to store and read the cache */
-		driver: FileSystem;
 		/** Allows you to specify a different cache directory */
 		cacheDir: string;
 		/**
@@ -1000,16 +1109,22 @@ interface ZWaveOptions extends ZWaveHostOptions {
 	};
 
 	/**
-	 * Normally, the driver expects to start in Serial API mode and enter the bootloader on demand. If in bootloader,
-	 * it will try to exit it and enter Serial API mode again.
+	 * Determines how the driver should be have when it encounters a controller that is in bootloader mode
+	 * and when the Serial API is not available (yet).
+	 * This can be useful when a controller may be stuck in bootloader mode, or when the application
+	 * wants to operate in bootloader mode anyways.
 	 *
-	 * However there are situations where a controller may be stuck in bootloader mode and no Serial API is available.
-	 * In this case, the driver startup will fail, unless this option is set to `true`.
+	 * The following options exist:
+	 * - `recover`: Z-Wave JS will attempt to recover the controller from bootloader mode.
+	 *   If this does not succeed, the driver startup will fail.
+	 * - `allow`: Z-Wave JS will attempt to recover the controller from bootloader mode.
+	 *   If this does not succeed, the driver will continue to operate in bootloader mode,
+	 *   e.g. for flashing a new image. Commands attempting to talk to the serial API will fail.
+	 * - `stay`: Z-Wave JS will NOT attempt to recover the controller from bootlaoder mode.
 	 *
-	 * If it is, the driver instance will only be good for interacting with the bootloader, e.g. for flashing a new image.
-	 * Commands attempting to talk to the serial API will fail.
+	 * Default: `recover`
 	 */
-	allowBootloaderOnly?: boolean;
+	bootloaderMode?: "recover" | "allow" | "stay";
 
 	/**
 	 * An object with application/module/component names and their versions.
@@ -1036,12 +1151,11 @@ interface ZWaveOptions extends ZWaveHostOptions {
 
 	/** DO NOT USE! Used for testing internally */
 	testingHooks?: {
-		serialPortBinding?: typeof SerialPort;
 		/**
 		 * A hook that allows accessing the serial port instance after opening
 		 * and before interacting with it.
 		 */
-		onSerialPortOpen?: (port: ZWaveSerialPortBase) => Promise<void>;
+		onSerialPortOpen?: (port: ZWaveSerialStream) => Promise<void>;
 
 		/**
 		 * Set this to true to skip the controller identification sequence.
@@ -1054,9 +1168,10 @@ interface ZWaveOptions extends ZWaveHostOptions {
 		skipNodeInterview?: boolean;
 
 		/**
-		 * Set this to true to skip checking if the controller is in bootloader mode
+		 * Set this to true to skip checking if the Z-Wave is in bootloader mode,
+		 * running a Serial API, or an end device CLI.
 		 */
-		skipBootloaderCheck?: boolean;
+		skipFirmwareIdentification?: boolean;
 
 		/**
 		 * Set this to false to skip loading the configuration files. Default: `true`..

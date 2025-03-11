@@ -57,202 +57,185 @@ import {
 	DoorLockOperationType,
 } from "../lib/_Types.js";
 
-export const DoorLockCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Door Lock"], {
-		...V.staticProperty(
-			"targetMode",
-			{
-				...ValueMetadata.UInt8,
-				label: "Target lock mode",
-				states: enumValuesToMetadataStates(DoorLockMode),
-			} as const,
-		),
-
-		...V.staticProperty(
-			"currentMode",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Current lock mode",
-				states: enumValuesToMetadataStates(DoorLockMode),
-			} as const,
-		),
-
-		...V.staticProperty(
-			"duration",
-			{
-				...ValueMetadata.ReadOnlyDuration,
-				label: "Remaining duration until target lock mode",
-			} as const,
-			{ minVersion: 3 } as const,
-		),
-
-		...V.staticProperty("supportedOutsideHandles", undefined, {
-			internal: true,
-			minVersion: 4,
-		}),
-		...V.staticProperty(
-			"outsideHandlesCanOpenDoorConfiguration",
-			{
-				...ValueMetadata.Any,
-				label:
-					"Which outside handles can open the door (configuration)",
-			} as const,
-		),
-		...V.staticProperty(
-			"outsideHandlesCanOpenDoor",
-			{
-				...ValueMetadata.ReadOnly,
-				label:
-					"Which outside handles can open the door (actual status)",
-			} as const,
-		),
-
-		...V.staticProperty("supportedInsideHandles", undefined, {
-			internal: true,
-			minVersion: 4,
-		}),
-		...V.staticProperty(
-			"insideHandlesCanOpenDoorConfiguration",
-			{
-				...ValueMetadata.Any,
-				label: "Which inside handles can open the door (configuration)",
-			} as const,
-		),
-		...V.staticProperty(
-			"insideHandlesCanOpenDoor",
-			{
-				...ValueMetadata.ReadOnly,
-				label: "Which inside handles can open the door (actual status)",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"operationType",
-			{
-				...ValueMetadata.UInt8,
-				label: "Lock operation type",
-				states: enumValuesToMetadataStates(DoorLockOperationType),
-			} as const,
-		),
-
-		...V.staticProperty(
-			"lockTimeoutConfiguration",
-			{
-				...ValueMetadata.UInt16,
-				label: "Duration of timed mode in seconds",
-			} as const,
-		),
-		...V.staticProperty(
-			"lockTimeout",
-			{
-				...ValueMetadata.ReadOnlyUInt16,
-				label: "Seconds until lock mode times out",
-			} as const,
-		),
-
-		...V.staticProperty("autoRelockSupported", undefined, {
-			internal: true,
-			minVersion: 4,
-		}),
-		...V.staticProperty(
-			"autoRelockTime",
-			{
-				...ValueMetadata.UInt16,
-				label: "Duration in seconds until lock returns to secure state",
-			} as const,
-			{
-				minVersion: 4,
-				autoCreate: shouldAutoCreateAutoRelockConfigValue,
-			} as const,
-		),
-
-		...V.staticProperty("holdAndReleaseSupported", undefined, {
-			internal: true,
-			minVersion: 4,
-		}),
-		...V.staticProperty(
-			"holdAndReleaseTime",
-			{
-				...ValueMetadata.UInt16,
-				label: "Duration in seconds the latch stays retracted",
-			} as const,
-			{
-				minVersion: 4,
-				autoCreate: shouldAutoCreateHoldAndReleaseConfigValue,
-			} as const,
-		),
-
-		...V.staticProperty("twistAssistSupported", undefined, {
-			internal: true,
-			minVersion: 4,
-		}),
-		...V.staticProperty(
-			"twistAssist",
-			{
-				...ValueMetadata.Boolean,
-				label: "Twist Assist enabled",
-			} as const,
-			{
-				minVersion: 4,
-				autoCreate: shouldAutoCreateTwistAssistConfigValue,
-			} as const,
-		),
-
-		...V.staticProperty("blockToBlockSupported", undefined, {
-			internal: true,
-			minVersion: 4,
-		}),
-		...V.staticProperty(
-			"blockToBlock",
-			{
-				...ValueMetadata.Boolean,
-				label: "Block-to-block functionality enabled",
-			} as const,
-			{
-				minVersion: 4,
-				autoCreate: shouldAutoCreateBlockToBlockConfigValue,
-			} as const,
-		),
-
-		...V.staticProperty("latchSupported", undefined, { internal: true }),
-		...V.staticProperty(
-			"latchStatus",
-			{
-				...ValueMetadata.ReadOnly,
-				label: "Current status of the latch",
-			} as const,
-			{
-				autoCreate: shouldAutoCreateLatchStatusValue,
-			} as const,
-		),
-
-		...V.staticProperty("boltSupported", undefined, { internal: true }),
-		...V.staticProperty(
-			"boltStatus",
-			{
-				...ValueMetadata.ReadOnly,
-				label: "Current status of the bolt",
-			} as const,
-			{
-				autoCreate: shouldAutoCreateBoltStatusValue,
-			} as const,
-		),
-
-		...V.staticProperty("doorSupported", undefined, { internal: true }),
-		...V.staticProperty(
-			"doorStatus",
-			{
-				...ValueMetadata.ReadOnly,
-				label: "Current status of the door",
-			} as const,
-			{
-				autoCreate: shouldAutoCreateDoorStatusValue,
-			} as const,
-		),
+export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
+	...V.staticProperty(
+		"targetMode",
+		{
+			...ValueMetadata.UInt8,
+			label: "Target lock mode",
+			states: enumValuesToMetadataStates(DoorLockMode),
+		} as const,
+	),
+	...V.staticProperty(
+		"currentMode",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Current lock mode",
+			states: enumValuesToMetadataStates(DoorLockMode),
+		} as const,
+	),
+	...V.staticProperty(
+		"duration",
+		{
+			...ValueMetadata.ReadOnlyDuration,
+			label: "Remaining duration until target lock mode",
+		} as const,
+		{ minVersion: 3 } as const,
+	),
+	...V.staticProperty("supportedOutsideHandles", undefined, {
+		internal: true,
+		minVersion: 4,
 	}),
+	...V.staticProperty(
+		"outsideHandlesCanOpenDoorConfiguration",
+		{
+			...ValueMetadata.Any,
+			label: "Which outside handles can open the door (configuration)",
+		} as const,
+	),
+	...V.staticProperty(
+		"outsideHandlesCanOpenDoor",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Which outside handles can open the door (actual status)",
+		} as const,
+	),
+	...V.staticProperty("supportedInsideHandles", undefined, {
+		internal: true,
+		minVersion: 4,
+	}),
+	...V.staticProperty(
+		"insideHandlesCanOpenDoorConfiguration",
+		{
+			...ValueMetadata.Any,
+			label: "Which inside handles can open the door (configuration)",
+		} as const,
+	),
+	...V.staticProperty(
+		"insideHandlesCanOpenDoor",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Which inside handles can open the door (actual status)",
+		} as const,
+	),
+	...V.staticProperty(
+		"operationType",
+		{
+			...ValueMetadata.UInt8,
+			label: "Lock operation type",
+			states: enumValuesToMetadataStates(DoorLockOperationType),
+		} as const,
+	),
+	...V.staticProperty(
+		"lockTimeoutConfiguration",
+		{
+			...ValueMetadata.UInt16,
+			label: "Duration of timed mode in seconds",
+		} as const,
+	),
+	...V.staticProperty(
+		"lockTimeout",
+		{
+			...ValueMetadata.ReadOnlyUInt16,
+			label: "Seconds until lock mode times out",
+		} as const,
+	),
+	...V.staticProperty("autoRelockSupported", undefined, {
+		internal: true,
+		minVersion: 4,
+	}),
+	...V.staticProperty(
+		"autoRelockTime",
+		{
+			...ValueMetadata.UInt16,
+			label: "Duration in seconds until lock returns to secure state",
+		} as const,
+		{
+			minVersion: 4,
+			autoCreate: shouldAutoCreateAutoRelockConfigValue,
+		} as const,
+	),
+	...V.staticProperty("holdAndReleaseSupported", undefined, {
+		internal: true,
+		minVersion: 4,
+	}),
+	...V.staticProperty(
+		"holdAndReleaseTime",
+		{
+			...ValueMetadata.UInt16,
+			label: "Duration in seconds the latch stays retracted",
+		} as const,
+		{
+			minVersion: 4,
+			autoCreate: shouldAutoCreateHoldAndReleaseConfigValue,
+		} as const,
+	),
+	...V.staticProperty("twistAssistSupported", undefined, {
+		internal: true,
+		minVersion: 4,
+	}),
+	...V.staticProperty(
+		"twistAssist",
+		{
+			...ValueMetadata.Boolean,
+			label: "Twist Assist enabled",
+		} as const,
+		{
+			minVersion: 4,
+			autoCreate: shouldAutoCreateTwistAssistConfigValue,
+		} as const,
+	),
+	...V.staticProperty("blockToBlockSupported", undefined, {
+		internal: true,
+		minVersion: 4,
+	}),
+	...V.staticProperty(
+		"blockToBlock",
+		{
+			...ValueMetadata.Boolean,
+			label: "Block-to-block functionality enabled",
+		} as const,
+		{
+			minVersion: 4,
+			autoCreate: shouldAutoCreateBlockToBlockConfigValue,
+		} as const,
+	),
+	...V.staticProperty("latchSupported", undefined, { internal: true }),
+	...V.staticProperty(
+		"latchStatus",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Current status of the latch",
+		} as const,
+		{
+			autoCreate: shouldAutoCreateLatchStatusValue,
+		} as const,
+	),
+	...V.staticProperty("boltSupported", undefined, { internal: true }),
+	...V.staticProperty(
+		"boltStatus",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Current status of the bolt",
+		} as const,
+		{
+			autoCreate: shouldAutoCreateBoltStatusValue,
+		} as const,
+	),
+	...V.staticProperty("doorSupported", undefined, { internal: true }),
+	...V.staticProperty(
+		"doorStatus",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Current status of the door",
+		} as const,
+		{
+			autoCreate: shouldAutoCreateDoorStatusValue,
+		} as const,
+	),
 });
 
-function shouldAutoCreateLatchStatusValue(
+export function shouldAutoCreateLatchStatusValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -263,7 +246,7 @@ function shouldAutoCreateLatchStatusValue(
 	);
 }
 
-function shouldAutoCreateBoltStatusValue(
+export function shouldAutoCreateBoltStatusValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -274,7 +257,7 @@ function shouldAutoCreateBoltStatusValue(
 	);
 }
 
-function shouldAutoCreateDoorStatusValue(
+export function shouldAutoCreateDoorStatusValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -285,7 +268,7 @@ function shouldAutoCreateDoorStatusValue(
 	);
 }
 
-function shouldAutoCreateTwistAssistConfigValue(
+export function shouldAutoCreateTwistAssistConfigValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -296,7 +279,7 @@ function shouldAutoCreateTwistAssistConfigValue(
 	);
 }
 
-function shouldAutoCreateBlockToBlockConfigValue(
+export function shouldAutoCreateBlockToBlockConfigValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -307,7 +290,7 @@ function shouldAutoCreateBlockToBlockConfigValue(
 	);
 }
 
-function shouldAutoCreateAutoRelockConfigValue(
+export function shouldAutoCreateAutoRelockConfigValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -318,7 +301,7 @@ function shouldAutoCreateAutoRelockConfigValue(
 	);
 }
 
-function shouldAutoCreateHoldAndReleaseConfigValue(
+export function shouldAutoCreateHoldAndReleaseConfigValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -856,9 +839,8 @@ export class DoorLockCCOperationSet extends DoorLockCC {
 
 	public mode: DoorLockMode;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.mode]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1342,7 +1324,7 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
 	public twistAssist?: boolean;
 	public blockToBlock?: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const insideHandles = isArray(
 				this.insideHandlesCanOpenDoorConfiguration,
 			)
@@ -1392,7 +1374,6 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
 			6,
 		);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
