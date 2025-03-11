@@ -78,29 +78,28 @@
 		},
 		{
 			"#": "121",
-			"$import": "~/templates/master_template.json#maximum_dim_level_1-99",
-			"label": "Max Dimming O1"
+			"$import": "templates/wave_template.json#max_dimming_value",
+			"label": "O1: Maximum Dim Level"
 		},
 		{
 			"#": "123",
 			"$import": "templates/wave_template.json#min_dimming_value",
-			"label": "Min Dimming O1"
+			"label": "O1: Minimum Dim Level"
 		},
 		{
 			"#": "125",
-			"$import": "~/templates/master_template.json#base_1-10_nounit",
-			"label": "Dimming Time O1",
-			"defaultValue": 3
+			"$import": "templates/wave_template.json#dimming_time",
+			"label": "O1: Dimming Time (Short Press)"
 		},
 		{
 			"#": "127",
 			"$import": "templates/wave_template.json#fade_rate",
-			"label": "Fade Rate O1"
+			"label": "O1: Fade Rate (Long Press)"
 		},
 		{
 			"#": "129",
 			"$import": "~/templates/master_template.json#base_1-99_nounit",
-			"label": "Min Brightness Toggle O1",
+			"label": "O1: Minimum Turn-On Brightness",
 			"defaultValue": 15
 		},
 		{
