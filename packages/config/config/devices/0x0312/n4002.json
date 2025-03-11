@@ -37,16 +37,20 @@
 		},
 		{
 			"#": "9",
-			"$import": "~/templates/master_template.json#base_0-10_nounit",
-			"label": "Ramp Rate",
+			"label": "Ramp Rate (On/Off Control)",
+			"valueSize": 1,
 			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 10,
 			"defaultValue": 2
 		},
 		{
 			"#": "10",
-			"$import": "~/templates/master_template.json#base_0-10_nounit",
-			"label": "Dimming Rate",
+			"label": "Ramp Rate (Dimmer/Z-Wave Control)",
+			"valueSize": 1,
 			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 10,
 			"defaultValue": 4
 		},
 		{
