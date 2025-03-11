@@ -1,6 +1,6 @@
 import {
 	type DataDirection,
-	type ZWaveLogContainer,
+	type LogContainer,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 } from "@zwave-js/core";
@@ -13,7 +13,7 @@ import {
 } from "./Logger_safe.js";
 
 export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
-	constructor(loggers: ZWaveLogContainer) {
+	constructor(loggers: LogContainer) {
 		super(loggers, SERIAL_LABEL);
 	}
 
@@ -129,12 +129,12 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
 	 * Logs a message
 	 * @param message The message to output
 	 */
-	public message(message: string): void {
+	public message(message: string, direction: DataDirection = "none"): void {
 		if (this.isVisible()) {
 			this.logger.log({
 				level: SERIAL_LOGLEVEL,
 				message,
-				direction: getDirectionPrefix("none"),
+				direction: getDirectionPrefix(direction),
 				context: {
 					source: "serial",
 					direction: "none",

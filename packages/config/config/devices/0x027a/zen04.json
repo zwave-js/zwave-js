@@ -7,13 +7,7 @@
 {
 	"manufacturer": "Zooz",
 	"manufacturerId": "0x027a",
-	"label": [
-		{
-			"$if": "firmwareVersion >= 2.10",
-			"value": "ZEN04 800LR"
-		},
-		"ZEN04"
-	],
+	"label": "ZEN04",
 	"description": "Indoor Smart Plug",
 	"devices": [
 		{
@@ -76,7 +70,8 @@
 		},
 		{
 			"#": "5",
-			"label": "Power (W) Reporting Threshold",
+			"$if": "firmwareVersion < 2.30",
+			"label": "Power (W) Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
 			"minValue": 5,
@@ -84,8 +79,24 @@
 			"defaultValue": 5
 		},
 		{
+			"#": "5",
+			"$if": "firmwareVersion >= 2.30",
+			"label": "Power (W) Report Threshold",
+			"valueSize": 1,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
 			"#": "6",
-			"label": "Power (W) Reporting Interval",
+			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "minutes",
 			"minValue": 1,
@@ -101,7 +112,8 @@
 		},
 		{
 			"#": "7",
-			"label": "Current (A) Reporting Threshold",
+			"$if": "firmwareVersion < 2.30",
+			"label": "Current (A) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
 			"minValue": 1,
@@ -109,9 +121,25 @@
 			"defaultValue": 1
 		},
 		{
+			"#": "7",
+			"$if": "firmwareVersion >= 2.30",
+			"label": "Current (A) Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 A",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
 			"#": "12",
 			"$if": "firmwareVersion >= 1.30",
-			"label": "Current (A) Reporting Interval",
+			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "minutes",
 			"minValue": 1,
@@ -119,13 +147,49 @@
 			"defaultValue": 60
 		},
 		{
+			"#": "15",
+			"$if": "firmwareVersion >= 2.30",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Energy (kWh) Reports",
+			"description": "When disabled, no kWh reports are sent, regardless of the threshold and interval settings.",
+			"defaultValue": 0
+		},
+		{
 			"#": "8",
-			"label": "Energy (kWh) Reporting Threshold",
+			"$if": "firmwareVersion < 2.30",
+			"label": "Energy (kWh) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.01 kWh",
 			"minValue": 1,
 			"maxValue": 100,
 			"defaultValue": 1
+		},
+		{
+			"#": "8",
+			"$if": "firmwareVersion >= 2.30",
+			"label": "Energy (kWh) Report Threshold",
+			"valueSize": 1,
+			"unit": "0.01 kWh",
+			"minValue": 0,
+			"maxValue": 200,
+			"defaultValue": 1,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion >= 2.30",
+			"label": "Energy (kWh) Report Interval",
+			"valueSize": 4,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 65535,
+			"defaultValue": 60
 		},
 		{
 			"#": "13",

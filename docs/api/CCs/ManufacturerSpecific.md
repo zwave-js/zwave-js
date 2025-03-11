@@ -39,7 +39,7 @@ async sendReport(
 }
 ```
 
-- **label:** _(dynamic)_
+- **label:** `Device ID (${string})`
 - **min. CC version:** 2
 - **readable:** true
 - **writeable:** false
@@ -52,7 +52,7 @@ async sendReport(
 ```ts
 {
 	commandClass: CommandClasses["Manufacturer Specific"],
-	endpoint: number,
+	endpoint: 0,
 	property: "manufacturerId",
 }
 ```
@@ -72,7 +72,7 @@ async sendReport(
 ```ts
 {
 	commandClass: CommandClasses["Manufacturer Specific"],
-	endpoint: number,
+	endpoint: 0,
 	property: "productId",
 }
 ```
@@ -92,7 +92,7 @@ async sendReport(
 ```ts
 {
 	commandClass: CommandClasses["Manufacturer Specific"],
-	endpoint: number,
+	endpoint: 0,
 	property: "productType",
 }
 ```

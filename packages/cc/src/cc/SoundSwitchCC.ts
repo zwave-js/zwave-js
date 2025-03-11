@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -12,11 +14,6 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -49,8 +46,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SoundSwitchCommand, type ToneId } from "../lib/_Types.js";
 
-export const SoundSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Sound Switch"], {
+export const SoundSwitchCCValues = V.defineCCValues(
+	CommandClasses["Sound Switch"],
+	{
 		...V.staticProperty(
 			"volume",
 			{
@@ -65,7 +63,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				},
 			} as const,
 		),
-
 		...V.staticProperty(
 			"toneId",
 			{
@@ -74,7 +71,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["volume"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"defaultVolume",
 			{
@@ -85,7 +81,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				label: "Default volume",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"defaultToneId",
 			{
@@ -95,8 +90,8 @@ export const SoundSwitchCCValues = Object.freeze({
 				label: "Default tone ID",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Sound Switch"])
 export class SoundSwitchCCAPI extends CCAPI {
@@ -499,9 +494,8 @@ export class SoundSwitchCCTonesNumberReport extends SoundSwitchCC {
 
 	public toneCount: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneCount]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -561,13 +555,12 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
 	public readonly duration: number;
 	public readonly name: string;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.toneId, 0, 0, this.name.length]),
 			Bytes.from(this.name, "utf8"),
 		]);
 		this.payload.writeUInt16BE(this.duration, 1);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -623,9 +616,8 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 
 	public toneId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -672,9 +664,8 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 	public defaultVolume: number;
 	public defaultToneId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.defaultVolume, this.defaultToneId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -726,9 +717,8 @@ export class SoundSwitchCCConfigurationReport extends SoundSwitchCC {
 
 	public defaultToneId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.defaultVolume, this.defaultToneId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -786,9 +776,8 @@ export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
 	public toneId: ToneId | number;
 	public volume?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneId, this.volume ?? 0]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -848,9 +837,8 @@ export class SoundSwitchCCTonePlayReport extends SoundSwitchCC {
 
 	public volume?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneId, this.volume ?? 0]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

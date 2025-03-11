@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type SupervisionResult,
@@ -10,11 +12,6 @@ import {
 	enumValuesToMetadataStates,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -45,8 +42,9 @@ import {
 	encodeSwitchpoint,
 } from "../lib/serializers.js";
 
-export const ClimateControlScheduleCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Climate Control Schedule"], {
+export const ClimateControlScheduleCCValues = V.defineCCValues(
+	CommandClasses["Climate Control Schedule"],
+	{
 		...V.staticProperty(
 			"overrideType",
 			{
@@ -63,9 +61,6 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 				min: -12.8,
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Climate Control Schedule"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
 			"schedule",
@@ -80,8 +75,8 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 				label: `Schedule (${getEnumMemberName(Weekday, weekday)})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Climate Control Schedule"])
 export class ClimateControlScheduleCCAPI extends CCAPI {
@@ -247,7 +242,7 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 	public switchPoints: Switchpoint[];
 	public weekday: Weekday;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Make sure we have exactly 9 entries
 		const allSwitchPoints = this.switchPoints.slice(0, 9); // maximum 9
 		while (allSwitchPoints.length < 9) {
@@ -261,7 +256,6 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 			Bytes.from([this.weekday & 0b111]),
 			...allSwitchPoints.map((sp) => encodeSwitchpoint(sp)),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -393,9 +387,8 @@ export class ClimateControlScheduleCCGet extends ClimateControlScheduleCC {
 
 	public weekday: Weekday;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.weekday & 0b111]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -553,12 +546,11 @@ export class ClimateControlScheduleCCOverrideSet
 	public overrideType: ScheduleOverrideType;
 	public overrideState: SetbackState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			[this.overrideType & 0b11],
 			encodeSetbackState(this.overrideState),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

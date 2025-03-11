@@ -1,4 +1,5 @@
 import {
+	type CCParsingContext,
 	CommandClass,
 	Security2CCMessageEncapsulation,
 	Security2CCNonceGet,
@@ -9,7 +10,9 @@ import { DeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type FrameType,
+	type HostIDs,
 	type LogConfig,
+	type LogContainer,
 	MPDUHeaderType,
 	type MaybeNotKnown,
 	NODE_ID_BROADCAST,
@@ -23,16 +26,17 @@ import {
 	type UnknownZWaveChipType,
 	ZWaveError,
 	ZWaveErrorCodes,
-	ZWaveLogContainer,
+	ZnifferLRChannelConfig,
 	ZnifferRegion,
 	ZnifferRegionLegacy,
 	getChipTypeAndVersion,
 	isLongRangeNodeId,
+	isZWaveError,
 	securityClassIsS2,
 } from "@zwave-js/core";
 import { sdkVersionGte } from "@zwave-js/core";
-import { type CCParsingContext, type HostIDs } from "@zwave-js/host";
 import {
+	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
 	type ZnifferDataMessage,
 	ZnifferFrameType,
@@ -40,27 +44,37 @@ import {
 	ZnifferGetFrequenciesResponse,
 	ZnifferGetFrequencyInfoRequest,
 	ZnifferGetFrequencyInfoResponse,
+	ZnifferGetLRChannelConfigInfoRequest,
+	ZnifferGetLRChannelConfigInfoResponse,
+	ZnifferGetLRChannelConfigsRequest,
+	ZnifferGetLRChannelConfigsResponse,
+	ZnifferGetLRRegionsRequest,
+	ZnifferGetLRRegionsResponse,
 	ZnifferGetVersionRequest,
 	ZnifferGetVersionResponse,
 	ZnifferMessage,
 	ZnifferMessageType,
-	ZnifferSerialPort,
-	ZnifferSerialPortBase,
+	ZnifferSerialFrameType,
+	type ZnifferSerialStream,
+	ZnifferSerialStreamFactory,
 	ZnifferSetBaudRateRequest,
 	ZnifferSetBaudRateResponse,
 	ZnifferSetFrequencyRequest,
 	ZnifferSetFrequencyResponse,
-	ZnifferSocket,
+	ZnifferSetLRChannelConfigRequest,
+	ZnifferSetLRChannelConfigResponse,
 	ZnifferStartRequest,
 	ZnifferStartResponse,
 	ZnifferStopRequest,
 	ZnifferStopResponse,
 	isZWaveSerialPortImplementation,
+	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
 	Bytes,
 	TypedEventTarget,
 	getEnumMemberName,
+	isAbortError,
 	isEnumMember,
 	noop,
 	num2hex,
@@ -70,7 +84,6 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
-import fs from "node:fs/promises";
 import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ZnifferLogger } from "../log/Zniffer.js";
 import {
@@ -120,6 +133,8 @@ export interface ZnifferOptions {
 	/** Security keys for decrypting Z-Wave Long Range traffic */
 	securityKeysLongRange?: ZWaveOptions["securityKeysLongRange"];
 
+	host?: ZWaveOptions["host"];
+
 	/**
 	 * The RSSI values reported by the Zniffer are not actual RSSI values.
 	 * They can be converted to dBm, but the conversion is chip dependent and not documented for 700/800 series Zniffers.
@@ -137,6 +152,13 @@ export interface ZnifferOptions {
 	 * Supported regions and their names have to be queried using the `getFrequencies` and `getFrequencyInfo(frequency)` commands.
 	 */
 	defaultFrequency?: number;
+
+	/**
+	 * The LR channel configuration to initialize the Zniffer with. If not specified, the current setting will be kept.
+	 *
+	 * This is only supported for 800 series Zniffers with LR support
+	 */
+	defaultLRChannelConfig?: ZnifferLRChannelConfig;
 
 	/** Limit the number of frames that are kept in memory. */
 	maxCapturedFrames?: number;
@@ -186,7 +208,11 @@ export interface CapturedFrame {
 
 export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 	public constructor(
-		private port: string | ZWaveSerialPortImplementation,
+		private port:
+			| string
+			// eslint-disable-next-line @typescript-eslint/no-deprecated
+			| ZWaveSerialPortImplementation
+			| ZWaveSerialBindingFactory,
 		options: ZnifferOptions = {},
 	) {
 		super();
@@ -201,10 +227,6 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 				ZWaveErrorCodes.Driver_InvalidOptions,
 			);
 		}
-
-		// Initialize logging
-		this._logContainer = new ZWaveLogContainer(options.logConfig);
-		this.znifferLog = new ZnifferLogger(this, this._logContainer);
 
 		this._options = options;
 
@@ -265,8 +287,21 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 
 	private _options: ZnifferOptions;
 
+	/**
+	 * The host bindings used to access file system etc.
+	 */
+	// This is set during `init()` and should not be accessed before
+	private bindings!: Omit<
+		Required<
+			NonNullable<ZWaveOptions["host"]>
+		>,
+		"db"
+	>;
+
+	private serialFactory: ZnifferSerialStreamFactory | undefined;
 	/** The serial port instance */
-	private serial: ZnifferSerialPortBase | undefined;
+	private serial: ZnifferSerialStream | undefined;
+
 	private parsingContext: Omit<
 		CCParsingContext,
 		keyof HostIDs | "sourceNodeId" | "frameType" | keyof SecurityManagers
@@ -291,8 +326,28 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		return this._supportedFrequencies;
 	}
 
-	private _logContainer: ZWaveLogContainer;
-	private znifferLog: ZnifferLogger;
+	private _lrRegions: Set<number> = new Set();
+	/** A list regions that are Long Range capable */
+	public get lrRegions(): ReadonlySet<number> {
+		return this._lrRegions;
+	}
+
+	private _currentLRChannelConfig: number | undefined;
+	/** The currently configured Long Range channel configuration */
+	public get currentLRChannelConfig(): number | undefined {
+		return this._currentLRChannelConfig;
+	}
+
+	private _supportedLRChannelConfigs: Map<number, string> = new Map();
+	/** A map of supported Long Range channel configurations and their names */
+	public get supportedLRChannelConfigs(): ReadonlyMap<number, string> {
+		return this._supportedLRChannelConfigs;
+	}
+
+	// This is set during `start()` and should not be accessed before
+	private _logContainer!: LogContainer;
+	// This is set during `start()` and should not be accessed before
+	private znifferLog!: ZnifferLogger;
 
 	/** The security managers for each node */
 	private securityManagers: Map<number, {
@@ -330,41 +385,59 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 			);
 		}
 
+		// Populate default bindings. This has to happen asynchronously, so the driver does not have a hard dependency
+		// on Node.js internals
+		this.bindings = {
+			fs: this._options.host?.fs
+				?? (await import("@zwave-js/core/bindings/fs/node")).fs,
+			serial: this._options.host?.serial
+				?? (await import("@zwave-js/serial/bindings/node")).serial,
+			log: this._options.host?.log
+				?? (await import("@zwave-js/core/bindings/log/node")).log,
+		};
+
+		// Initialize logging
+		this._logContainer = this.bindings.log(this._options.logConfig);
+		this.znifferLog = new ZnifferLogger(this, this._logContainer);
+
 		// Open the serial port
+		let binding: ZWaveSerialBindingFactory;
 		if (typeof this.port === "string") {
-			if (this.port.startsWith("tcp://")) {
-				const url = new URL(this.port);
-				// this.znifferLog.print(`opening serial port ${this.port}`);
-				this.serial = new ZnifferSocket(
-					{
-						host: url.hostname,
-						port: parseInt(url.port),
-					},
-					this._logContainer,
+			if (
+				typeof this.bindings.serial.createFactoryByPath === "function"
+			) {
+				this.znifferLog.print(`opening serial port ${this.port}`);
+				binding = await this.bindings.serial.createFactoryByPath(
+					this.port,
 				);
 			} else {
-				// this.znifferLog.print(`opening serial port ${this.port}`);
-				this.serial = new ZnifferSerialPort(
-					this.port,
-					this._logContainer,
+				throw new ZWaveError(
+					"This platform does not support creating a serial connection by path",
+					ZWaveErrorCodes.Driver_Failed,
 				);
 			}
-		} else {
-			// this.znifferLog.print(
-			// 	"opening serial port using the provided custom implementation",
-			// );
-			this.serial = new ZnifferSerialPortBase(
-				this.port,
-				this._logContainer,
+		} else if (isZWaveSerialPortImplementation(this.port)) {
+			this.znifferLog.print(
+				"opening serial port using the provided custom implementation",
 			);
+			this.znifferLog.print(
+				"This is deprecated! Switch to the factory pattern instead.",
+				"warn",
+			);
+			binding = wrapLegacySerialBinding(this.port);
+		} else {
+			this.znifferLog.print(
+				"opening serial port using the provided custom factory",
+			);
+			binding = this.port;
 		}
-		this.serial
-			.on("data", this.serialport_onData.bind(this))
-			.on("error", (err) => {
-				this.emit("error", err);
-			});
+		this.serialFactory = new ZnifferSerialStreamFactory(
+			binding,
+			this._logContainer,
+		);
 
-		await this.serial.open();
+		this.serial = await this.serialFactory.createStream();
+		void this.handleSerialData(this.serial);
 
 		this.znifferLog.print(logo, "info");
 
@@ -429,7 +502,7 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 
 		this.znifferLog.print(
 			`received frequency info:
-current frequency:     ${
+current frequency: ${
 				this._supportedFrequencies.get(freqs.currentFrequency)
 					?? `unknown (${num2hex(freqs.currentFrequency)})`
 			}
@@ -449,7 +522,96 @@ supported frequencies: ${
 			await this.setFrequency(this._options.defaultFrequency);
 		}
 
+		if (
+			sdkVersionGte(
+				`${versionInfo.majorVersion}.${versionInfo.minorVersion}`,
+				"10.22",
+			)
+		) {
+			// Simplicity SDK 2024.6  added commands to query and configure LR channels
+			for (const region of await this.getLRRegions()) {
+				this._lrRegions.add(region);
+			}
+
+			const channels = await this.getLRChannelConfigs();
+			this._currentLRChannelConfig = channels.currentConfig;
+			// The channel configs match the ZnifferLRChannelConfig enum
+			for (const channel of channels.supportedConfigs) {
+				this._supportedLRChannelConfigs.set(
+					channel,
+					getEnumMemberName(ZnifferLRChannelConfig, channel),
+				);
+			}
+			// ... but there might be unknown configurations. Query those from the Zniffer
+			const unknownConfigs = channels.supportedConfigs.filter((f) =>
+				!isEnumMember(ZnifferLRChannelConfig, f)
+			);
+			for (const channel of unknownConfigs) {
+				const channelInfo = await this.getLRChannelConfigInfo(
+					channel,
+				);
+				this._supportedLRChannelConfigs.set(
+					channel,
+					channelInfo.configName,
+				);
+			}
+
+			this.znifferLog.print(
+				`received LR channel info:
+	current channel: ${
+					this._supportedLRChannelConfigs.get(
+						this._currentLRChannelConfig,
+					)
+						?? `unknown (${num2hex(this._currentLRChannelConfig)})`
+				}
+	supported channels: ${
+					[...this._supportedLRChannelConfigs].map((
+						[channel, name],
+					) => `\n  · ${channel.toString()}: ${name}`).join("")
+				}`,
+				"info",
+			);
+
+			if (
+				this._lrRegions.has(this._currentFrequency)
+				&& typeof this._options.defaultLRChannelConfig === "number"
+				&& this._currentLRChannelConfig
+					!== this._options.defaultLRChannelConfig
+				&& this._supportedLRChannelConfigs.has(
+					this._options.defaultLRChannelConfig,
+				)
+			) {
+				await this.setLRChannelConfig(
+					this._options.defaultLRChannelConfig,
+				);
+			}
+		}
+
 		this.emit("ready");
+	}
+
+	private async handleSerialData(serial: ZnifferSerialStream): Promise<void> {
+		try {
+			for await (const frame of serial.readable) {
+				setImmediate(() => {
+					if (frame.type === ZnifferSerialFrameType.SerialAPI) {
+						void this.serialport_onData(frame.data);
+					} else {
+						// Handle discarded data?
+					}
+				});
+			}
+		} catch (e) {
+			if (isAbortError(e)) {
+				return;
+			} else if (
+				isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_Failed
+			) {
+				this.emit("error", e);
+				return this.destroy();
+			}
+			throw e;
+		}
 	}
 
 	/**
@@ -577,7 +739,7 @@ supported frequencies: ${
 						? "broadcast"
 						: "singlecast";
 				try {
-					cc = await CommandClass.parseAsync(
+					cc = await CommandClass.parse(
 						mpdu.payload,
 						{
 							homeId: mpdu.homeId,
@@ -786,6 +948,68 @@ supported frequencies: ${
 		return pick(res, ["numChannels", "frequencyName"]);
 	}
 
+	private async getLRRegions() {
+		const req = new ZnifferGetLRRegionsRequest();
+		await this.serial?.writeAsync(req.serialize());
+		const res = await this.waitForMessage<ZnifferGetLRRegionsResponse>(
+			(msg) => msg instanceof ZnifferGetLRRegionsResponse,
+			1000,
+		);
+
+		return res.regions;
+	}
+
+	private async getLRChannelConfigs() {
+		const req = new ZnifferGetLRChannelConfigsRequest();
+		await this.serial?.writeAsync(req.serialize());
+		const res = await this.waitForMessage<
+			ZnifferGetLRChannelConfigsResponse
+		>(
+			(msg) => msg instanceof ZnifferGetLRChannelConfigsResponse,
+			1000,
+		);
+
+		return pick(res, [
+			"currentConfig",
+			"supportedConfigs",
+		]);
+	}
+
+	public async setLRChannelConfig(channelConfig: number): Promise<void> {
+		if (
+			this._currentFrequency == undefined
+			|| !this._lrRegions.has(this._currentFrequency)
+		) {
+			throw new ZWaveError(
+				`The LR channel configuration can only be set for LR regions!`,
+				ZWaveErrorCodes.Controller_NotSupported,
+			);
+		}
+
+		const req = new ZnifferSetLRChannelConfigRequest({ channelConfig });
+		await this.serial?.writeAsync(req.serialize());
+		await this.waitForMessage<ZnifferSetLRChannelConfigResponse>(
+			(msg) => msg instanceof ZnifferSetLRChannelConfigResponse,
+			1000,
+		);
+		this._currentLRChannelConfig = channelConfig;
+	}
+
+	private async getLRChannelConfigInfo(channelConfig: number) {
+		const req = new ZnifferGetLRChannelConfigInfoRequest({ channelConfig });
+		await this.serial?.writeAsync(req.serialize());
+		const res = await this.waitForMessage<
+			ZnifferGetLRChannelConfigInfoResponse
+		>(
+			(msg) =>
+				msg instanceof ZnifferGetLRChannelConfigInfoResponse
+				&& msg.channelConfig === channelConfig,
+			1000,
+		);
+
+		return pick(res, ["numChannels", "configName"]);
+	}
+
 	/** Starts the capture and discards all previously captured frames */
 	public async start(): Promise<void> {
 		if (this.wasDestroyed) {
@@ -887,7 +1111,7 @@ supported frequencies: ${
 			) {
 				const key = this._options.securityKeys[secClass];
 				if (key) {
-					await securityManager2.setKeyAsync(
+					await securityManager2.setKey(
 						SecurityClass[secClass],
 						key,
 					);
@@ -914,13 +1138,13 @@ supported frequencies: ${
 
 			// Set up all keys
 			if (this._options.securityKeysLongRange?.S2_AccessControl) {
-				await securityManagerLR.setKeyAsync(
+				await securityManagerLR.setKey(
 					SecurityClass.S2_AccessControl,
 					this._options.securityKeysLongRange.S2_AccessControl,
 				);
 			}
 			if (this._options.securityKeysLongRange?.S2_Authenticated) {
-				await securityManagerLR.setKeyAsync(
+				await securityManagerLR.setKey(
 					SecurityClass.S2_Authenticated,
 					this._options.securityKeysLongRange.S2_Authenticated,
 				);
@@ -984,7 +1208,10 @@ supported frequencies: ${
 		filePath: string,
 		frameFilter?: (frame: CapturedFrame) => boolean,
 	): Promise<void> {
-		await fs.writeFile(filePath, this.getCaptureAsZLFBuffer(frameFilter));
+		await this.bindings.fs.writeFile(
+			filePath,
+			this.getCaptureAsZLFBuffer(frameFilter),
+		);
 	}
 
 	/**
@@ -1004,7 +1231,6 @@ supported frequencies: ${
 
 		if (this.serial != undefined) {
 			// Avoid spewing errors if the port was in the middle of receiving something
-			this.serial.removeAllListeners();
 			if (this.serial.isOpen) await this.serial.close();
 			this.serial = undefined;
 		}

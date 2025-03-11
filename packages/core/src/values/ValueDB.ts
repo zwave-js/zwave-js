@@ -1,5 +1,10 @@
-import type { JsonlDB } from "@alcalzone/jsonl-db";
-import { TypedEventTarget } from "@zwave-js/shared";
+import { type Database } from "@zwave-js/shared/bindings";
+import {
+	TypedEventTarget,
+	areUint8ArraysEqual,
+	isUint8Array,
+} from "@zwave-js/shared/safe";
+import { isArray, isObject } from "alcalzone-shared/typeguards";
 import type { CommandClasses } from "../definitions/CommandClasses.js";
 import {
 	ZWaveError,
@@ -93,6 +98,49 @@ export function valueIdToString(valueID: ValueID): string {
 }
 
 /**
+ * Compares two values and checks if they are equal.
+ * This is a portable, but weak version of isDeepStrictEqual, limited to the types of values
+ * that can be stored in the Value DB.
+ */
+export function valueEquals(a: unknown, b: unknown): boolean {
+	switch (typeof a) {
+		case "bigint":
+		case "boolean":
+		case "number":
+		case "string":
+		case "undefined":
+			return a === b;
+
+		case "function":
+		case "symbol":
+			// These cannot be stored in the value DB
+			return false;
+	}
+
+	if (a === null) return b === null;
+
+	if (isUint8Array(a)) {
+		return isUint8Array(b) && areUint8ArraysEqual(a, b);
+	}
+
+	if (isArray(a)) {
+		return isArray(b)
+			&& a.length === b.length
+			&& a.every((v, i) => valueEquals(v, b[i]));
+	}
+
+	if (isObject(a)) {
+		if (!isObject(b)) return false;
+		const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+		return [...allKeys].every((k) =>
+			valueEquals((a as any)[k], (b as any)[k])
+		);
+	}
+
+	return false;
+}
+
+/**
  * The value store for a single node
  */
 export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
@@ -106,8 +154,8 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 	 */
 	public constructor(
 		nodeId: number,
-		valueDB: JsonlDB,
-		metadataDB: JsonlDB<ValueMetadata>,
+		valueDB: Database<unknown>,
+		metadataDB: Database<ValueMetadata>,
 		ownKeys?: Set<string>,
 	) {
 		super();
@@ -119,8 +167,8 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 	}
 
 	private nodeId: number;
-	private _db: JsonlDB<unknown>;
-	private _metadata: JsonlDB<ValueMetadata>;
+	private _db: Database<unknown>;
+	private _metadata: Database<ValueMetadata>;
 	private _index: Set<string>;
 
 	private buildIndex(): Set<string> {
@@ -603,7 +651,9 @@ function compareDBKeyFast(
 }
 
 /** Extracts an index for each node from one or more JSONL DBs */
-export function indexDBsByNode(databases: JsonlDB[]): Map<number, Set<string>> {
+export function indexDBsByNode(
+	databases: Database<unknown>[],
+): Map<number, Set<string>> {
 	const indexes = new Map<number, Set<string>>();
 	for (const db of databases) {
 		for (const key of db.keys()) {

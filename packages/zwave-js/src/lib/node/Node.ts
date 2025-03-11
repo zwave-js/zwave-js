@@ -75,6 +75,8 @@ import { EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
 import {
 	FirmwareUpdateMetaDataCCGet,
 	FirmwareUpdateMetaDataCCMetaDataGet,
+	FirmwareUpdateMetaDataCCPrepareGet,
+	FirmwareUpdateMetaDataCCRequestGet,
 	FirmwareUpdateMetaDataCCValues,
 } from "@zwave-js/cc/FirmwareUpdateMetaDataCC";
 import { HailCC } from "@zwave-js/cc/HailCC";
@@ -215,6 +217,7 @@ import { containsCC } from "@zwave-js/serial/serialapi";
 import {
 	Bytes,
 	Mixin,
+	type Timer,
 	TypedEventTarget,
 	cloneDeep,
 	discreteLinearSearch,
@@ -224,6 +227,7 @@ import {
 	isUint8Array,
 	noop,
 	pick,
+	setTimer,
 	stringify,
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
@@ -233,7 +237,7 @@ import {
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import path from "node:path";
+import path from "pathe";
 import semverParse from "semver/functions/parse.js";
 import { RemoveNodeReason } from "../controller/Inclusion.js";
 import { determineNIF } from "../controller/NodeInformationFrame.js";
@@ -313,10 +317,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * Cleans up all resources used by this node
 	 */
 	public destroy(): void {
-		// Stop all state machines
-		this.statusMachine.stop();
-		this.readyMachine.stop();
-
 		// Remove all timeouts
 		for (
 			const timeout of [
@@ -324,7 +324,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				...this.notificationIdleTimeouts.values(),
 			]
 		) {
-			if (timeout) clearTimeout(timeout);
+			timeout?.clear();
 		}
 
 		// Remove all event handlers
@@ -989,8 +989,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		super.reset();
 
 		// Restart all state machines
-		this.readyMachine.restart();
-		this.statusMachine.restart();
+		this.restartReadyMachine();
+		this.restartStatusMachine();
 
 		// Remove queued polls that would interfere with the interview
 		this.cancelAllScheduledPolls();
@@ -1115,7 +1115,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		this.cachedDeviceConfigHash = await this._deviceConfig?.getHash();
 
 		this.setInterviewStage(InterviewStage.Complete);
-		this.readyMachine.send("INTERVIEW_DONE");
+		this.updateReadyMachine({ value: "INTERVIEW_DONE" });
 
 		// Tell listeners that the interview is completed
 		// The driver will then send this node to sleep
@@ -2446,6 +2446,10 @@ protocol version:      ${this.protocolVersion}`;
 			return this.handleUnexpectedFirmwareUpdateGet(command);
 		} else if (command instanceof FirmwareUpdateMetaDataCCMetaDataGet) {
 			return this.handleFirmwareUpdateMetaDataGet(command);
+		} else if (command instanceof FirmwareUpdateMetaDataCCRequestGet) {
+			return this.handleFirmwareUpdateRequestGet(command);
+		} else if (command instanceof FirmwareUpdateMetaDataCCPrepareGet) {
+			return this.handleFirmwareUpdatePrepareGet(command);
 		} else if (command instanceof EntryControlCCNotification) {
 			return this.handleEntryControlNotification(command);
 		} else if (command instanceof TimeCCTimeGet) {
@@ -2515,6 +2519,13 @@ protocol version:      ${this.protocolVersion}`;
 		} else if (command instanceof InclusionControllerCCInitiate) {
 			// Inclusion controller commands are handled by the controller class
 			if (
+				command.step === InclusionControllerStep.ProxyInclusion
+			) {
+				return this.driver.controller
+					.handleInclusionControllerCCInitiateProxyInclusion(
+						command,
+					);
+			} else if (
 				command.step === InclusionControllerStep.ProxyInclusionReplace
 			) {
 				return this.driver.controller
@@ -2748,7 +2759,7 @@ protocol version:      ${this.protocolVersion}`;
 	/** Stores information about a currently held down key */
 	private centralSceneKeyHeldDownContext:
 		| {
-			timeout: NodeJS.Timeout;
+			timeout: Timer;
 			sceneNumber: number;
 		}
 		| undefined;
@@ -2803,7 +2814,7 @@ protocol version:      ${this.protocolVersion}`;
 				CentralSceneKeys.KeyReleased,
 			);
 			// clear old timer
-			clearTimeout(this.centralSceneKeyHeldDownContext!.timeout);
+			this.centralSceneKeyHeldDownContext?.timeout?.clear();
 			// clear the key down context
 			this.centralSceneKeyHeldDownContext = undefined;
 		};
@@ -2823,9 +2834,7 @@ protocol version:      ${this.protocolVersion}`;
 		if (command.keyAttribute === CentralSceneKeys.KeyHeldDown) {
 			// Set or refresh timer to force a release of the key
 			this.centralSceneForcedKeyUp = false;
-			if (this.centralSceneKeyHeldDownContext) {
-				clearTimeout(this.centralSceneKeyHeldDownContext.timeout);
-			}
+			this.centralSceneKeyHeldDownContext?.timeout?.clear();
 			// If the node does not advertise support for the slow refresh capability, we might still be dealing with a
 			// slow refresh node. We use the stored value for fallback behavior
 			const slowRefresh = command.slowRefresh
@@ -2833,7 +2842,7 @@ protocol version:      ${this.protocolVersion}`;
 			this.centralSceneKeyHeldDownContext = {
 				sceneNumber: command.sceneNumber,
 				// Unref'ing long running timers allows the process to exit mid-timeout
-				timeout: setTimeout(
+				timeout: setTimer(
 					forceKeyUp,
 					slowRefresh ? 60000 : 400,
 				).unref(),
@@ -2841,7 +2850,7 @@ protocol version:      ${this.protocolVersion}`;
 		} else if (command.keyAttribute === CentralSceneKeys.KeyReleased) {
 			// Stop the release timer
 			if (this.centralSceneKeyHeldDownContext) {
-				clearTimeout(this.centralSceneKeyHeldDownContext.timeout);
+				this.centralSceneKeyHeldDownContext.timeout.clear();
 				this.centralSceneKeyHeldDownContext = undefined;
 			} else if (this.centralSceneForcedKeyUp) {
 				// If we timed out and the controller subsequently receives a Key Released Notification,
@@ -4212,7 +4221,7 @@ protocol version:      ${this.protocolVersion}`;
 	/**
 	 * Allows automatically resetting notification values to idle if the node does not do it itself
 	 */
-	private notificationIdleTimeouts = new Map<string, NodeJS.Timeout>();
+	private notificationIdleTimeouts = new Map<string, Timer>();
 	/** Schedules a notification value to be reset */
 	private scheduleNotificationIdleReset(
 		valueId: ValueID,
@@ -4223,7 +4232,7 @@ protocol version:      ${this.protocolVersion}`;
 		this.notificationIdleTimeouts.set(
 			key,
 			// Unref'ing long running timeouts allows to quit the application before the timeout elapses
-			setTimeout(handler, 5 * 60 * 1000 /* 5 minutes */).unref(),
+			setTimer(handler, 5 * 60 * 1000 /* 5 minutes */).unref(),
 		);
 	}
 
@@ -4231,7 +4240,7 @@ protocol version:      ${this.protocolVersion}`;
 	private clearNotificationIdleReset(valueId: ValueID): void {
 		const key = valueIdToString(valueId);
 		if (this.notificationIdleTimeouts.has(key)) {
-			clearTimeout(this.notificationIdleTimeouts.get(key));
+			this.notificationIdleTimeouts.get(key)?.clear();
 			this.notificationIdleTimeouts.delete(key);
 		}
 	}
@@ -4624,7 +4633,7 @@ protocol version:      ${this.protocolVersion}`;
 			command.notificationType === 0x06
 			&& doorStatusEvents.includes(command.notificationEvent as number)
 		) {
-			// https://github.com/zwave-js/node-zwave-js/pull/5394 added support for
+			// https://github.com/zwave-js/zwave-js/pull/5394 added support for
 			// notification enums. Unfortunately, there's no way to discover which nodes
 			// actually support them, which makes working with the Door state variable
 			// very cumbersome. Also, this is currently the only notification where the enum values
@@ -4924,7 +4933,7 @@ protocol version:      ${this.protocolVersion}`;
 
 		// Mark already-interviewed nodes as potentially ready
 		if (this.interviewStage === InterviewStage.Complete) {
-			this.readyMachine.send("RESTART_FROM_CACHE");
+			this.updateReadyMachine({ value: "RESTART_FROM_CACHE" });
 		}
 	}
 
@@ -6046,7 +6055,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			&& timeAPI.supportsCommand(TimeCommand.DateReport)
 			&& timeAPI.supportsCommand(TimeCommand.TimeReport)
 		) {
-			// According to https://github.com/zwave-js/node-zwave-js/issues/6032#issuecomment-1641945555
+			// According to https://github.com/zwave-js/zwave-js/issues/6032#issuecomment-1641945555
 			// some devices update their date and time when they receive an unsolicited Time CC report.
 			// Even if this isn't intended, we should at least try.
 

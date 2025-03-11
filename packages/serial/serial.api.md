@@ -8,7 +8,7 @@ import { AllOrNone } from '@zwave-js/shared';
 import { BasicDeviceClass } from '@zwave-js/core';
 import { Bytes } from '@zwave-js/shared/safe';
 import { Bytes as Bytes_2 } from '@zwave-js/shared';
-import { CCEncodingContext } from '@zwave-js/host';
+import { CCEncodingContext } from '@zwave-js/cc';
 import { CommandClass } from '@zwave-js/cc';
 import { CommandClasses } from '@zwave-js/core';
 import type { DataDirection } from '@zwave-js/core/safe';
@@ -19,13 +19,14 @@ import { EventEmitter } from 'node:events';
 import { FLiRS } from '@zwave-js/core';
 import { FrameType } from '@zwave-js/core';
 import { FunctionType as FunctionType_2 } from '@zwave-js/serial';
-import type { GetAllNodes } from '@zwave-js/host';
-import type { GetDeviceConfig } from '@zwave-js/host';
-import type { GetNode } from '@zwave-js/host';
-import type { GetSupportedCCVersion } from '@zwave-js/host';
-import type { HostIDs } from '@zwave-js/host';
+import { GetAllNodes } from '@zwave-js/core';
+import { GetDeviceConfig } from '@zwave-js/config';
+import { GetNode } from '@zwave-js/core';
+import { GetSupportedCCVersion } from '@zwave-js/core';
+import { HostIDs } from '@zwave-js/core';
 import { JSONObject } from '@zwave-js/shared/safe';
 import { ListenBehavior } from '@zwave-js/core';
+import { LogContainer } from '@zwave-js/core';
 import type { LogContext } from '@zwave-js/core/safe';
 import { LongRangeChannel } from '@zwave-js/core';
 import { MaybeNotKnown } from '@zwave-js/core';
@@ -46,11 +47,11 @@ import { NodeIDType } from '@zwave-js/core';
 import { NodeProtocolInfoAndDeviceClass } from '@zwave-js/core';
 import { NodeType } from '@zwave-js/core';
 import { NodeUpdatePayload } from '@zwave-js/core';
-import { PassThrough } from 'node:stream';
 import { Powerlevel } from '@zwave-js/cc';
 import { Protocols } from '@zwave-js/core';
 import type { ProtocolType } from '@zwave-js/core';
 import { ProtocolVersion } from '@zwave-js/core';
+import type { ReadableWritablePair } from 'node:stream/web';
 import { RFRegion } from '@zwave-js/core';
 import { RouteKind } from '@zwave-js/core';
 import { RSSI } from '@zwave-js/core';
@@ -60,22 +61,20 @@ import { SecurityManagers } from '@zwave-js/core';
 import { SerialApiInitData } from '@zwave-js/core';
 import { SerializableTXReport } from '@zwave-js/core';
 import { SerializableTXReport as SerializableTXReport_2 } from '@zwave-js/core/safe';
-import { SerialPort } from 'serialport';
 import { SinglecastCC } from '@zwave-js/core';
 import { SuccessIndicator as SuccessIndicator_2 } from '@zwave-js/serial';
-import { Transform } from 'node:stream';
-import { TransformCallback } from 'node:stream';
 import { TransmitOptions } from '@zwave-js/core';
 import { TransmitStatus } from '@zwave-js/core';
 import { TXReport } from '@zwave-js/core';
 import { TXReport as TXReport_2 } from '@zwave-js/core/safe';
 import { TypedClassDecorator } from '@zwave-js/shared/safe';
+import type { UnderlyingSink } from 'node:stream/web';
+import type { UnderlyingSource } from 'node:stream/web';
 import { UnknownZWaveChipType } from '@zwave-js/core';
 import { ZnifferProtocolDataRate } from '@zwave-js/core';
 import { ZWaveApiVersion } from '@zwave-js/core';
 import { ZWaveDataRate } from '@zwave-js/core';
 import { ZWaveLibraryTypes } from '@zwave-js/core';
-import { ZWaveLogContainer } from '@zwave-js/core';
 import { ZWaveLoggerBase } from '@zwave-js/core';
 
 // Warning: (ae-missing-release-tag) "AddNodeDSKToNetworkRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -90,7 +89,7 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
     nwiHomeId: Uint8Array;
     protocol: Protocols;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -160,7 +159,7 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
     highPower: boolean;
     networkWide: boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -195,7 +194,7 @@ export class AddNodeToNetworkRequestStatusReport extends AddNodeToNetworkRequest
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     readonly status: AddNodeStatus;
     // (undocumented)
@@ -261,9 +260,9 @@ export class ApplicationCommandRequest extends Message_2 implements MessageWithC
     // (undocumented)
     readonly routedBusy: boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Uint8Array;
+    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
     // (undocumented)
     serializedCC: Uint8Array | undefined;
     // (undocumented)
@@ -318,7 +317,7 @@ export class ApplicationUpdateRequest extends Message_2 {
     // (undocumented)
     static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): ApplicationUpdateRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     readonly updateType: ApplicationUpdateTypes;
 }
@@ -434,7 +433,7 @@ export class ApplicationUpdateRequestWithNodeInfo extends ApplicationUpdateReque
     // (undocumented)
     nodeInformation: NodeUpdatePayload;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "ApplicationUpdateRequestWithNodeInfoOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -487,7 +486,7 @@ export class AssignPriorityReturnRouteRequest extends AssignPriorityReturnRouteR
     // (undocumented)
     routeSpeed: ZWaveDataRate;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -574,7 +573,7 @@ export class AssignPrioritySUCReturnRouteRequest extends AssignPrioritySUCReturn
     // (undocumented)
     routeSpeed: ZWaveDataRate;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -657,7 +656,7 @@ export class AssignReturnRouteRequest extends AssignReturnRouteRequestBase {
     // (undocumented)
     nodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "AssignReturnRouteRequestBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -736,7 +735,7 @@ export class AssignSUCReturnRouteRequest extends AssignSUCReturnRouteRequestBase
     // (undocumented)
     nodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "AssignSUCReturnRouteRequestBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -767,7 +766,7 @@ export class AssignSUCReturnRouteRequestTransmitReport extends AssignSUCReturnRo
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -792,7 +791,7 @@ export class AssignSUCReturnRouteResponse extends Message_2 implements SuccessIn
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -853,19 +852,17 @@ export const bootloaderMenuPreamble = "Gecko Boo";
 // Warning: (ae-missing-release-tag) "BootloaderParser" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export class BootloaderParser extends Transform {
+export class BootloaderParser extends TransformStream<number | string, ZWaveSerialFrame & {
+    type: ZWaveSerialFrameType.Bootloader;
+}> {
     constructor();
-    // (undocumented)
-    _transform(chunk: any, encoding: string, callback: TransformCallback): void;
 }
 
 // Warning: (ae-missing-release-tag) "BootloaderScreenParser" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export class BootloaderScreenParser extends Transform {
-    constructor(logger?: SerialLogger | undefined);
-    // (undocumented)
-    _transform(chunk: any, encoding: string, callback: TransformCallback): void;
+export class BootloaderScreenParser extends TransformStream<Uint8Array, number | string> {
+    constructor(logger?: SerialLogger);
 }
 
 // Warning: (ae-missing-release-tag) "BridgeApplicationCommandRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -894,9 +891,9 @@ export class BridgeApplicationCommandRequest extends Message_2 implements Messag
     // (undocumented)
     readonly rssi?: RSSI;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Uint8Array;
+    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
     // (undocumented)
     serializedCC: Uint8Array | undefined;
     // (undocumented)
@@ -923,6 +920,31 @@ export type BridgeApplicationCommandRequestOptions = ({
     targetNodeId: number | number[];
     rssi?: number;
 };
+
+// Warning: (ae-missing-release-tag) "CLIChunk" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type CLIChunk = {
+    type: CLIChunkType.Prompt;
+} | {
+    type: CLIChunkType.Message;
+    message: string;
+} | {
+    type: CLIChunkType.FlowControl;
+    command: XModemMessageHeaders.ACK | XModemMessageHeaders.NAK | XModemMessageHeaders.CAN | XModemMessageHeaders.C;
+};
+
+// Warning: (ae-missing-release-tag) "CLIChunkType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum CLIChunkType {
+    // (undocumented)
+    FlowControl = 2,// >
+    // (undocumented)
+    Message = 1,
+    // (undocumented)
+    Prompt = 0
+}
 
 // Warning: (ae-missing-release-tag) "CommandRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -970,7 +992,7 @@ export class DeleteReturnRouteRequest extends DeleteReturnRouteRequestBase {
     // (undocumented)
     nodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "DeleteReturnRouteRequestBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1047,7 +1069,7 @@ export class DeleteSUCReturnRouteRequest extends DeleteSUCReturnRouteRequestBase
     // (undocumented)
     nodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "DeleteSUCReturnRouteRequestBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1078,7 +1100,7 @@ export class DeleteSUCReturnRouteRequestTransmitReport extends DeleteSUCReturnRo
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -1103,7 +1125,7 @@ export class DeleteSUCReturnRouteResponse extends Message_2 implements SuccessIn
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -1123,7 +1145,7 @@ export interface DeleteSUCReturnRouteResponseOptions {
 // @public (undocumented)
 export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1132,6 +1154,23 @@ export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
 //
 // @public (undocumented)
 export function encodeTXReport(report: SerializableTXReport_2): Uint8Array;
+
+// Warning: (ae-missing-release-tag) "EnumeratedPort" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type EnumeratedPort = {
+    type: "link";
+    path: string;
+} | {
+    type: "tty";
+    path: string;
+} | {
+    type: "socket";
+    path: string;
+} | {
+    type: "custom";
+    factory: ZWaveSerialBindingFactory;
+};
 
 // Warning: (ae-missing-release-tag) "expectedCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1183,7 +1222,7 @@ export class ExtendedNVMOperationsReadRequest extends ExtendedNVMOperationsReque
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1205,7 +1244,7 @@ export class ExtendedNVMOperationsRequest extends Message_2 {
     // (undocumented)
     command: ExtendedNVMOperationsCommand;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1271,7 +1310,7 @@ export class ExtendedNVMOperationsWriteRequest extends ExtendedNVMOperationsRequ
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1298,7 +1337,7 @@ export class ExtNVMReadLongBufferRequest extends Message_2 {
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1344,7 +1383,7 @@ export class ExtNVMReadLongByteRequest extends Message_2 {
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1390,7 +1429,7 @@ export class ExtNVMWriteLongBufferRequest extends Message_2 {
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1440,7 +1479,7 @@ export class ExtNVMWriteLongByteRequest extends Message_2 {
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1476,6 +1515,16 @@ export class ExtNVMWriteLongByteResponse extends Message_2 {
 export interface ExtNVMWriteLongByteResponseOptions {
     // (undocumented)
     success: boolean;
+}
+
+// Warning: (ae-missing-release-tag) "Faucet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class Faucet<T> {
+    constructor(readable: ReadableStream<T>, writable?: WritableStream<T>);
+    close(): void;
+    connect(writable: WritableStream<T>): void;
+    disconnect(): void;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateNVM_GetNewImageRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1571,7 +1620,7 @@ export class FirmwareUpdateNVM_SetNewImageRequest extends FirmwareUpdateNVMReque
     // (undocumented)
     newImage: boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1621,7 +1670,7 @@ export class FirmwareUpdateNVM_UpdateCRC16Request extends FirmwareUpdateNVMReque
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1671,7 +1720,7 @@ export class FirmwareUpdateNVM_WriteRequest extends FirmwareUpdateNVMRequest {
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -1735,7 +1784,7 @@ export class FirmwareUpdateNVMRequest extends Message_2 {
     // (undocumented)
     static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): FirmwareUpdateNVMRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -2132,7 +2181,7 @@ export class GetControllerCapabilitiesResponse extends Message_2 {
     // (undocumented)
     noNodesIncluded: boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     wasRealPrimary: boolean;
 }
@@ -2173,7 +2222,7 @@ export class GetControllerIdResponse extends Message_2 {
     // (undocumented)
     ownNodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -2206,7 +2255,7 @@ export class GetControllerVersionResponse extends Message_2 {
     // (undocumented)
     libraryVersion: string;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "GetControllerVersionResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2302,7 +2351,7 @@ export class GetLongRangeNodesRequest extends Message_2 {
     // (undocumented)
     segmentNumber: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "GetLongRangeNodesRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2327,7 +2376,7 @@ export class GetLongRangeNodesResponse extends Message_2 {
     // (undocumented)
     segmentNumber: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "GetLongRangeNodesResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2362,7 +2411,7 @@ export class GetNodeProtocolInfoRequest extends Message_2 {
     // (undocumented)
     requestedNodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "GetNodeProtocolInfoRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2392,7 +2441,7 @@ export class GetNodeProtocolInfoResponse extends Message_2 {
     // (undocumented)
     protocolVersion: ProtocolVersion;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     specificDeviceClass: number;
     // (undocumented)
@@ -2452,7 +2501,7 @@ export class GetPriorityRouteRequest extends Message_2 {
     // (undocumented)
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): GetPriorityRouteRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -2545,7 +2594,7 @@ export class GetRoutingInfoRequest extends Message_2 {
     // (undocumented)
     removeNonRepeaters: boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     sourceNodeId: number;
     // (undocumented)
@@ -2607,7 +2656,7 @@ export class GetSerialApiCapabilitiesResponse extends Message_2 {
     // (undocumented)
     productType: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportedFunctionTypes: FunctionType_2[];
 }
@@ -2650,7 +2699,7 @@ export class GetSerialApiInitDataResponse extends Message_2 {
     // (undocumented)
     nodeType: NodeType;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportsTimers: boolean;
     // (undocumented)
@@ -2679,7 +2728,7 @@ export class GetSUCNodeIdResponse extends Message_2 {
     // (undocumented)
     static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): GetSUCNodeIdResponse;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     sucNodeId: number;
 }
 
@@ -2706,7 +2755,7 @@ export class HardResetCallback extends HardResetRequestBase {
 // @public (undocumented)
 export class HardResetRequest extends HardResetRequestBase {
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -2752,7 +2801,7 @@ export class IsFailedNodeRequest extends Message_2 {
     // (undocumented)
     failedNodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "IsFailedNodeRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2821,6 +2870,11 @@ export function isSuccessIndicator<T extends Message>(msg: T): msg is T & Succes
 //
 // @public (undocumented)
 export function isTransmitReport(msg: unknown): msg is TransmitReport;
+
+// Warning: (ae-missing-release-tag) "isZWaveSerialBindingFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function isZWaveSerialBindingFactory(obj: unknown): obj is ZWaveSerialBindingFactory;
 
 // Warning: (ae-missing-release-tag) "isZWaveSerialPortImplementation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2920,7 +2974,7 @@ export class Message {
     payload: Bytes;
     prematureNodeUpdate: Message | undefined;
     get rtt(): number | undefined;
-    serialize(ctx: MessageEncodingContext): Bytes;
+    serialize(ctx: MessageEncodingContext): Promise<Bytes>;
     toJSON(): JSONObject;
     toLogEntry(): MessageOrCCLogEntry;
     get transmissionTimestamp(): number | undefined;
@@ -3116,7 +3170,7 @@ export class NVMOperationsReadRequest extends NVMOperationsRequest {
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -3138,7 +3192,7 @@ export class NVMOperationsRequest extends Message_2 {
     // (undocumented)
     command: NVMOperationsCommand;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -3202,7 +3256,7 @@ export class NVMOperationsWriteRequest extends NVMOperationsRequest {
     // (undocumented)
     offset: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -3287,7 +3341,7 @@ export class RemoveFailedNodeRequest extends RemoveFailedNodeRequestBase {
     constructor(options: RemoveFailedNodeRequestOptions & MessageBaseOptions_2);
     failedNodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "RemoveFailedNodeRequestBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3381,7 +3435,7 @@ export class RemoveNodeFromNetworkRequest extends RemoveNodeFromNetworkRequestBa
     networkWide: boolean;
     removeNodeType: RemoveNodeType | undefined;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "RemoveNodeFromNetworkRequestBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3414,7 +3468,7 @@ export class RemoveNodeFromNetworkRequestStatusReport extends RemoveNodeFromNetw
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     readonly status: RemoveNodeStatus;
     // Warning: (ae-forgotten-export) The symbol "RemoveNodeStatusContext" needs to be exported by the entry point index.d.ts
@@ -3474,7 +3528,7 @@ export class ReplaceFailedNodeRequest extends ReplaceFailedNodeRequestBase {
     constructor(options: ReplaceFailedNodeRequestOptions & MessageBaseOptions_2);
     failedNodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (ae-missing-release-tag) "ReplaceFailedNodeRequestBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3571,7 +3625,7 @@ export class RequestNodeInfoRequest extends Message_2 {
     // (undocumented)
     nodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -3594,7 +3648,7 @@ export class RequestNodeInfoResponse extends Message_2 implements SuccessIndicat
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -3646,7 +3700,7 @@ export class RequestNodeNeighborUpdateRequest extends RequestNodeNeighborUpdateR
     // (undocumented)
     nodeId: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -3703,9 +3757,9 @@ export class SendDataBridgeRequest<CCType extends CommandClass = CommandClass> e
     // (undocumented)
     prepareRetransmission(): void;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Uint8Array;
+    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
     // (undocumented)
     serializedCC: Uint8Array | undefined;
     sourceNodeId: number;
@@ -3746,7 +3800,7 @@ export class SendDataBridgeRequestTransmitReport extends SendDataBridgeRequestBa
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -3810,9 +3864,9 @@ export class SendDataMulticastBridgeRequest<CCType extends CommandClass = Comman
     // (undocumented)
     prepareRetransmission(): void;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Uint8Array;
+    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
     // (undocumented)
     serializedCC: Uint8Array | undefined;
     sourceNodeId: number;
@@ -3906,9 +3960,9 @@ export class SendDataMulticastRequest<CCType extends CommandClass = CommandClass
     // (undocumented)
     prepareRetransmission(): void;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Uint8Array;
+    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
     // (undocumented)
     serializedCC: Uint8Array | undefined;
     // (undocumented)
@@ -3947,7 +4001,7 @@ export class SendDataMulticastRequestTransmitReport extends SendDataMulticastReq
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -3972,7 +4026,7 @@ export class SendDataMulticastResponse extends Message_2 implements SuccessIndic
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -4006,9 +4060,9 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass> extends
     // (undocumented)
     prepareRetransmission(): void;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Uint8Array;
+    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
     // (undocumented)
     serializedCC: Uint8Array | undefined;
     // (undocumented)
@@ -4047,7 +4101,7 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase implement
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -4076,7 +4130,7 @@ export class SendDataResponse extends Message_2 implements SuccessIndicator_2 {
     // (undocumented)
     isOK(): boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
@@ -4106,7 +4160,7 @@ export class SendTestFrameRequest extends SendTestFrameRequestBase {
     // (undocumented)
     powerlevel: Powerlevel;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     testNodeId: number;
     // (undocumented)
@@ -4175,15 +4229,27 @@ export interface SendTestFrameTransmitReportOptions {
     transmitStatus: TransmitStatus;
 }
 
+// Warning: (ae-missing-release-tag) "Serial" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface Serial {
+    createFactoryByPath?: (path: string) => Promise<ZWaveSerialBindingFactory>;
+    list?: () => Promise<EnumeratedPort[]>;
+}
+
+// Warning: (ae-missing-release-tag) "SerialAPIChunk" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type SerialAPIChunk = Bytes_2 | MessageHeaders.ACK | MessageHeaders.NAK | MessageHeaders.CAN;
+
 // Warning: (ae-missing-release-tag) "SerialAPIParser" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export class SerialAPIParser extends Transform {
-    constructor(logger?: SerialLogger | undefined, onDiscarded?: ((data: Uint8Array) => void) | undefined);
+export class SerialAPIParser extends TransformStream {
+    constructor(logger?: SerialLogger);
     // (undocumented)
-    ignoreAckHighNibble: boolean;
-    // (undocumented)
-    _transform(chunk: any, encoding: string, callback: TransformCallback): void;
+    get ignoreAckHighNibble(): boolean;
+    set ignoreAckHighNibble(value: boolean);
 }
 
 // Warning: (ae-missing-release-tag) "SerialAPISetup_CommandUnsupportedResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4361,7 +4427,7 @@ export class SerialAPISetup_GetRegionInfoRequest extends SerialAPISetupRequest {
     // (undocumented)
     region: RFRegion;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4493,7 +4559,7 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerRequest extends SerialAPIS
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): SerialAPISetup_SetLongRangeMaximumTxPowerRequest;
     limit: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4539,7 +4605,7 @@ export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
     // (undocumented)
     nodeIdType: NodeIDType;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4589,7 +4655,7 @@ export class SerialAPISetup_SetPowerlevel16BitRequest extends SerialAPISetupRequ
     // (undocumented)
     powerlevel: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4639,7 +4705,7 @@ export class SerialAPISetup_SetPowerlevelRequest extends SerialAPISetupRequest {
     // (undocumented)
     powerlevel: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4685,7 +4751,7 @@ export class SerialAPISetup_SetRFRegionRequest extends SerialAPISetupRequest {
     // (undocumented)
     region: RFRegion;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4731,7 +4797,7 @@ export class SerialAPISetup_SetTXStatusReportRequest extends SerialAPISetupReque
     // (undocumented)
     static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): SerialAPISetup_SetTXStatusReportRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4807,7 +4873,7 @@ export class SerialAPISetupRequest extends Message_2 {
     // (undocumented)
     static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): SerialAPISetupRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -4854,7 +4920,7 @@ export class SerialAPIStartedRequest extends Message_2 {
     genericDeviceClass: number;
     isListening: boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     specificDeviceClass: number;
     // (undocumented)
@@ -4927,7 +4993,7 @@ export interface SerialLogContext extends LogContext<"serial"> {
 //
 // @public (undocumented)
 export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
-    constructor(loggers: ZWaveLogContainer);
+    constructor(loggers: LogContainer);
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     ACK(direction: DataDirection_2): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
@@ -4939,7 +5005,7 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
     data(direction: DataDirection_2, data: Uint8Array): void;
     discarded(data: Uint8Array): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    message(message: string): void;
+    message(message: string, direction?: DataDirection_2): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     NAK(direction: DataDirection_2): void;
 }
@@ -4956,7 +5022,7 @@ export class SetApplicationNodeInformationRequest extends Message_2 {
     // (undocumented)
     isListening: boolean;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     specificDeviceClass: number;
     // (undocumented)
@@ -5022,7 +5088,7 @@ export class SetLearnModeRequest extends SetLearnModeRequestBase {
     // (undocumented)
     intent: LearnModeIntent;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -5076,7 +5142,7 @@ export class SetLongRangeChannelRequest extends Message_2 {
     // (undocumented)
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): SetLongRangeChannelRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -5120,7 +5186,7 @@ export class SetLongRangeShadowNodeIDsRequest extends Message_2 {
     // (undocumented)
     static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): SetLongRangeShadowNodeIDsRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     shadowNodeIds: number[];
 }
@@ -5139,7 +5205,7 @@ export class SetPriorityRouteRequest extends Message_2 {
     // (undocumented)
     routeSpeed: ZWaveDataRate | undefined;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -5187,7 +5253,7 @@ export class SetRFReceiveModeRequest extends Message_2 {
     // (undocumented)
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): SetRFReceiveModeRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -5232,7 +5298,7 @@ export class SetSerialApiTimeoutsRequest extends Message_2 {
     // (undocumented)
     byteTimeout: number;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "SetSerialApiTimeoutsRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5282,7 +5348,7 @@ export class SetSUCNodeIdRequest extends SetSUCNodeIdRequestBase {
     // (undocumented)
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): SetSUCNodeIdRequest;
     // (undocumented)
-    serialize(ctx: MessageEncodingContext_2): Bytes_2;
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     sucNodeId: number;
     // (undocumented)
@@ -5445,6 +5511,11 @@ export function tryParseRSSI(payload: Uint8Array, offset?: number): RSSI_2 | und
 //
 // @public (undocumented)
 export function txReportToMessageRecord(report: TXReport_2): MessageRecord;
+
+// Warning: (ae-missing-release-tag) "wrapLegacySerialBinding" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function wrapLegacySerialBinding(legacy: ZWaveSerialPortImplementation): ZWaveSerialBindingFactory;
 
 // Warning: (ae-missing-release-tag) "XModemMessageHeaders" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5748,41 +5819,32 @@ export enum ZnifferMessageType {
     Data = 33
 }
 
-// Warning: (ae-missing-release-tag) "ZnifferSerialPort" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+// Warning: (ae-missing-release-tag) "ZnifferSerialFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ZnifferSerialFrame = {
+    type: ZnifferSerialFrameType.SerialAPI;
+    data: Bytes_2;
+} | {
+    type: ZnifferSerialFrameType.Discarded;
+    data: Uint8Array;
+};
+
+// Warning: (ae-missing-release-tag) "ZnifferSerialFrameType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ZnifferSerialFrameType {
+    // (undocumented)
+    Discarded = 255,
+    // (undocumented)
+    SerialAPI = 0
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferSerialStream" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export class ZnifferSerialPort extends ZnifferSerialPortBase {
-    constructor(port: string, loggers: ZWaveLogContainer, Binding?: typeof SerialPort);
-    // (undocumented)
-    get isOpen(): boolean;
-}
-
-// Warning: (ae-missing-release-tag) "ZnifferSerialPortBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-// Warning: (ae-missing-release-tag) "ZnifferSerialPortBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface ZnifferSerialPortBase {
-    // (undocumented)
-    addListener<TEvent extends ZnifferSerialPortEvents>(event: TEvent, callback: ZnifferSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    emit<TEvent extends ZnifferSerialPortEvents>(event: TEvent, ...args: Parameters<ZnifferSerialPortEventCallbacks[TEvent]>): boolean;
-    // (undocumented)
-    off<TEvent extends ZnifferSerialPortEvents>(event: TEvent, callback: ZnifferSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    on<TEvent extends ZnifferSerialPortEvents>(event: TEvent, callback: ZnifferSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    once<TEvent extends ZnifferSerialPortEvents>(event: TEvent, callback: ZnifferSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    removeAllListeners(event?: ZnifferSerialPortEvents): this;
-    // (undocumented)
-    removeListener<TEvent extends ZnifferSerialPortEvents>(event: TEvent, callback: ZnifferSerialPortEventCallbacks[TEvent]): this;
-}
-
-// @public (undocumented)
-export class ZnifferSerialPortBase extends PassThrough {
-    // (undocumented)
-    [Symbol.asyncIterator]: () => AsyncIterableIterator<Uint8Array>;
-    constructor(implementation: ZWaveSerialPortImplementation, loggers: ZWaveLogContainer);
+export class ZnifferSerialStream implements ReadableWritablePair<ZnifferSerialFrame, Uint8Array> {
+    constructor(source: UnderlyingSource<Uint8Array>, sink: UnderlyingSink<Uint8Array>, logger: SerialLogger);
     // (undocumented)
     close(): Promise<void>;
     // (undocumented)
@@ -5790,29 +5852,23 @@ export class ZnifferSerialPortBase extends PassThrough {
     // (undocumented)
     protected logger: SerialLogger;
     // (undocumented)
-    open(): Promise<void>;
+    readonly readable: ReadableStream<ZnifferSerialFrame>;
     // (undocumented)
-    protected serial: ReturnType<ZWaveSerialPortImplementation["create"]>;
+    readonly writable: WritableStream<Uint8Array>;
     // (undocumented)
     writeAsync(data: Uint8Array): Promise<void>;
 }
 
-// Warning: (ae-missing-release-tag) "ZnifferSerialPortEventCallbacks" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+// Warning: (ae-missing-release-tag) "ZnifferSerialStreamFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public (undocumented)
-export interface ZnifferSerialPortEventCallbacks {
+// @public
+export class ZnifferSerialStreamFactory {
+    constructor(binding: ZWaveSerialBindingFactory, loggers: LogContainer);
     // (undocumented)
-    data: (data: Uint8Array) => void;
+    createStream(): Promise<ZnifferSerialStream>;
     // (undocumented)
-    discardedData: (data: Uint8Array) => void;
-    // (undocumented)
-    error: (e: Error) => void;
+    protected logger: SerialLogger;
 }
-
-// Warning: (ae-missing-release-tag) "ZnifferSerialPortEvents" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export type ZnifferSerialPortEvents = Extract<keyof ZnifferSerialPortEventCallbacks, string>;
 
 // Warning: (ae-missing-release-tag) "ZnifferSetBaudRateRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5864,13 +5920,6 @@ export interface ZnifferSetFrequencyRequestOptions {
 export class ZnifferSetFrequencyResponse extends ZnifferMessage {
 }
 
-// Warning: (ae-missing-release-tag) "ZnifferSocket" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public
-export class ZnifferSocket extends ZnifferSerialPortBase {
-    constructor(socketOptions: ZWaveSocketOptions, loggers: ZWaveLogContainer);
-}
-
 // Warning: (ae-missing-release-tag) "ZnifferStartRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -5897,10 +5946,56 @@ export class ZnifferStopRequest extends ZnifferMessage {
 export class ZnifferStopResponse extends ZnifferMessage {
 }
 
+// Warning: (ae-missing-release-tag) "ZWaveSerialBinding" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface ZWaveSerialBinding {
+    // (undocumented)
+    sink: UnderlyingSink<Uint8Array>;
+    // (undocumented)
+    source: UnderlyingSource<Uint8Array>;
+}
+
+// Warning: (ae-missing-release-tag) "ZWaveSerialBindingFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ZWaveSerialBindingFactory = () => Promise<ZWaveSerialBinding>;
+
 // Warning: (ae-missing-release-tag) "ZWaveSerialChunk" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export type ZWaveSerialChunk = MessageHeaders.ACK | MessageHeaders.NAK | MessageHeaders.CAN | Uint8Array;
+
+// Warning: (ae-missing-release-tag) "ZWaveSerialFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ZWaveSerialFrame = {
+    type: ZWaveSerialFrameType.SerialAPI;
+    data: SerialAPIChunk;
+} | {
+    type: ZWaveSerialFrameType.Bootloader;
+    data: BootloaderChunk;
+} | {
+    type: ZWaveSerialFrameType.CLI;
+    data: CLIChunk;
+} | {
+    type: ZWaveSerialFrameType.Discarded;
+    data: Uint8Array;
+};
+
+// Warning: (ae-missing-release-tag) "ZWaveSerialFrameType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ZWaveSerialFrameType {
+    // (undocumented)
+    Bootloader = 1,
+    // (undocumented)
+    CLI = 2,
+    // (undocumented)
+    Discarded = 255,
+    // (undocumented)
+    SerialAPI = 0
+}
 
 // Warning: (ae-missing-release-tag) "ZWaveSerialMode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5909,84 +6004,14 @@ export enum ZWaveSerialMode {
     // (undocumented)
     Bootloader = 1,
     // (undocumented)
+    CLI = 2,
+    // (undocumented)
     SerialAPI = 0
 }
 
-// Warning: (ae-missing-release-tag) "ZWaveSerialPort" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public
-export class ZWaveSerialPort extends ZWaveSerialPortBase {
-    constructor(port: string, loggers: ZWaveLogContainer, Binding?: typeof SerialPort);
-    // (undocumented)
-    get isOpen(): boolean;
-}
-
-// Warning: (ae-missing-release-tag) "ZWaveSerialPortBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-// Warning: (ae-missing-release-tag) "ZWaveSerialPortBase" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface ZWaveSerialPortBase {
-    // (undocumented)
-    addListener<TEvent extends ZWaveSerialPortEvents>(event: TEvent, callback: ZWaveSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    emit<TEvent extends ZWaveSerialPortEvents>(event: TEvent, ...args: Parameters<ZWaveSerialPortEventCallbacks[TEvent]>): boolean;
-    // (undocumented)
-    off<TEvent extends ZWaveSerialPortEvents>(event: TEvent, callback: ZWaveSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    on<TEvent extends ZWaveSerialPortEvents>(event: TEvent, callback: ZWaveSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    once<TEvent extends ZWaveSerialPortEvents>(event: TEvent, callback: ZWaveSerialPortEventCallbacks[TEvent]): this;
-    // (undocumented)
-    removeAllListeners(event?: ZWaveSerialPortEvents): this;
-    // (undocumented)
-    removeListener<TEvent extends ZWaveSerialPortEvents>(event: TEvent, callback: ZWaveSerialPortEventCallbacks[TEvent]): this;
-}
-
-// @public (undocumented)
-export class ZWaveSerialPortBase extends PassThrough {
-    // (undocumented)
-    [Symbol.asyncIterator]: () => AsyncIterableIterator<ZWaveSerialChunk>;
-    constructor(implementation: ZWaveSerialPortImplementation, loggers: ZWaveLogContainer);
-    // (undocumented)
-    close(): Promise<void>;
-    // (undocumented)
-    ignoreAckHighNibbleOnce(): void;
-    // (undocumented)
-    get isOpen(): boolean;
-    // (undocumented)
-    protected logger: SerialLogger;
-    // (undocumented)
-    mode: ZWaveSerialMode | undefined;
-    // (undocumented)
-    open(): Promise<void>;
-    // (undocumented)
-    protected serial: ReturnType<ZWaveSerialPortImplementation["create"]>;
-    // (undocumented)
-    writeAsync(data: Uint8Array): Promise<void>;
-}
-
-// Warning: (ae-missing-release-tag) "ZWaveSerialPortEventCallbacks" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface ZWaveSerialPortEventCallbacks {
-    // (undocumented)
-    bootloaderData: (data: BootloaderChunk) => void;
-    // (undocumented)
-    data: (data: ZWaveSerialChunk) => void;
-    // (undocumented)
-    discardedData: (data: Uint8Array) => void;
-    // (undocumented)
-    error: (e: Error) => void;
-}
-
-// Warning: (ae-missing-release-tag) "ZWaveSerialPortEvents" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export type ZWaveSerialPortEvents = Extract<keyof ZWaveSerialPortEventCallbacks, string>;
-
 // Warning: (ae-missing-release-tag) "ZWaveSerialPortImplementation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface ZWaveSerialPortImplementation {
     // (undocumented)
     close(port: ReturnType<ZWaveSerialPortImplementation["create"]>): Promise<void>;
@@ -5996,11 +6021,39 @@ export interface ZWaveSerialPortImplementation {
     open(port: ReturnType<ZWaveSerialPortImplementation["create"]>): Promise<void>;
 }
 
-// Warning: (ae-missing-release-tag) "ZWaveSocket" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+// Warning: (ae-missing-release-tag) "ZWaveSerialStream" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export class ZWaveSocket extends ZWaveSerialPortBase {
-    constructor(socketOptions: ZWaveSocketOptions, loggers: ZWaveLogContainer);
+export class ZWaveSerialStream implements ReadableWritablePair<ZWaveSerialFrame, Uint8Array> {
+    constructor(source: UnderlyingSource<Uint8Array>, sink: UnderlyingSink<Uint8Array>, logger: SerialLogger);
+    // (undocumented)
+    close(): Promise<void>;
+    // (undocumented)
+    ignoreAckHighNibbleOnce(): void;
+    // (undocumented)
+    get isOpen(): boolean;
+    // (undocumented)
+    protected logger: SerialLogger;
+    // (undocumented)
+    get mode(): ZWaveSerialMode | undefined;
+    set mode(mode: ZWaveSerialMode | undefined);
+    // (undocumented)
+    readonly readable: ReadableStream<ZWaveSerialFrame>;
+    // (undocumented)
+    readonly writable: WritableStream<Uint8Array>;
+    // (undocumented)
+    writeAsync(data: Uint8Array): Promise<void>;
+}
+
+// Warning: (ae-missing-release-tag) "ZWaveSerialStreamFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class ZWaveSerialStreamFactory {
+    constructor(binding: ZWaveSerialBindingFactory, loggers: LogContainer);
+    // (undocumented)
+    createStream(): Promise<ZWaveSerialStream>;
+    // (undocumented)
+    protected logger: SerialLogger;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveSocketOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6010,24 +6063,22 @@ export type ZWaveSocketOptions = Omit<net.TcpSocketConnectOpts, "onread"> | Omit
 
 // Warnings were encountered during analysis:
 //
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/ColorSwitchCC.ts:481:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ColorSwitchCC.ts:471:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
 //   Type 'string | undefined' is not assignable to type 'string | number | symbol'.
 //     Type 'undefined' is not assignable to type 'string | number | symbol'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1284:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1276:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
 //   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1291:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1283:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
 //   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1415:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1407:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
 //   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/Security2CC.ts:458:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/Security2CC.ts:466:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/Security2CC.ts:1663:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/Security2CC.ts:1666:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
-// /home/runner/work/node-zwave-js/node-zwave-js/packages/cc/src/cc/Security2CC.ts:1816:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// src/serialport/ZWaveSerialPortBase.ts:78:2 - (TS1238) Unable to resolve signature of class decorator when called as an expression.
-//   The runtime will invoke the decorator with 2 arguments, but the decorator expects 1.
-// src/zniffer/ZnifferSerialPortBase.ts:59:2 - (TS1238) Unable to resolve signature of class decorator when called as an expression.
-//   The runtime will invoke the decorator with 2 arguments, but the decorator expects 1.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:549:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:557:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1709:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1712:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1862:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
+// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:69:17 - (TS2345) Argument of type 'LogFormat | undefined' is not assignable to parameter of type 'LogFormat'.
+//   Type 'undefined' is not assignable to type 'LogFormat'.
 
 // (No @packageDocumentation comment for this package)
 
