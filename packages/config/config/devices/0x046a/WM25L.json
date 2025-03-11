@@ -179,7 +179,7 @@
 		},
 		{
 			"#": "9",
-			"label": "Battery Auto Report Interval Time",
+			"label": "Battery Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
 			"minValue": 0,
@@ -197,7 +197,7 @@
 		},
 		{
 			"#": "11",
-			"label": "Curtain Status Report Command Setting",
+			"label": "Curtain Status Reports",
 			"valueSize": 1,
 			"defaultValue": 6,
 			"allowManualEntry": false,
