@@ -184,7 +184,8 @@
 		},
 		{
 			"#": "18",
-			"$import": "templates/zooz_template.json#custom_brightness"
+			"$import": "templates/zooz_template.json#custom_brightness",
+			"label": "Custom Brightness Level (Manual Control)"
 		},
 		{
 			"#": "22",
@@ -208,7 +209,8 @@
 		{
 			"#": "34",
 			"$if": "firmwareVersion >= 3.50 && firmwareVersion < 10.0",
-			"$import": "templates/zooz_template.json#basic_set_custom_brightness_on"
+			"$import": "templates/zooz_template.json#custom_brightness",
+			"label": "Custom Brightness Level (Z-Wave Control)"
 		}
 	],
 	"compat": {
