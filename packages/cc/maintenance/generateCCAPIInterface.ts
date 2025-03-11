@@ -31,7 +31,10 @@ process.on("unhandledRejection", (r) => {
 
 export async function generateCCAPIInterface(): Promise<void> {
 	const ccFiles = (await fs.readdir(ccDir)).filter(
-		(file) => file.endsWith(".ts") && !file.endsWith("test.ts"),
+		(file) =>
+			file.endsWith(".ts")
+			&& !file.endsWith("test.ts")
+			&& !file.includes(".generated."),
 	);
 
 	const CCsWithAPI: { name: string; className: string; file: string }[] = [];
