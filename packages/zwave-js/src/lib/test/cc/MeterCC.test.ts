@@ -11,10 +11,11 @@ import {
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetSupportedCCVersion,
 	ZWaveErrorCodes,
 	assertZWaveError,
 } from "@zwave-js/core";
-import { type GetSupportedCCVersion, createTestingHost } from "@zwave-js/host";
+import { createTestingHost } from "@zwave-js/host";
 import { Bytes } from "@zwave-js/shared/safe";
 import { test } from "vitest";
 import * as nodeUtils from "../../node/utils.js";
@@ -45,7 +46,7 @@ test("the Get command (V1) should serialize correctly", async (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	await t.expect(cc.serializeAsync(ctx)).resolves.toStrictEqual(expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
 test("the Get command (V2) should serialize correctly", async (t) => {
@@ -62,7 +63,7 @@ test("the Get command (V2) should serialize correctly", async (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	await t.expect(cc.serializeAsync(ctx)).resolves.toStrictEqual(expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
 test("the Get command (V3) should serialize correctly", async (t) => {
@@ -79,7 +80,7 @@ test("the Get command (V3) should serialize correctly", async (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	await t.expect(cc.serializeAsync(ctx)).resolves.toStrictEqual(expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
 test("the Get command (V4) should serialize correctly", async (t) => {
@@ -97,7 +98,7 @@ test("the Get command (V4) should serialize correctly", async (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	await t.expect(cc.serializeAsync(ctx)).resolves.toStrictEqual(expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
 test("the SupportedGet command should serialize correctly", async (t) => {
@@ -107,7 +108,7 @@ test("the SupportedGet command should serialize correctly", async (t) => {
 			MeterCommand.SupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -119,7 +120,7 @@ test("the Reset command (V2) should serialize correctly", async (t) => {
 			MeterCommand.Reset, // CC Command
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -140,7 +141,7 @@ test("the Reset command (V6) should serialize correctly", async (t) => {
 			123, // 12.3
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -154,7 +155,7 @@ test("the Report command (V1) should be deserialized correctly", async (t) => {
 			55, // value
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCReport;
@@ -179,7 +180,7 @@ test("the Report command (V2) should be deserialized correctly (no time delta)",
 			0,
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCReport;
@@ -205,7 +206,7 @@ test("the Report command (V2) should be deserialized correctly (with time delta)
 			54, // previous value
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCReport;
@@ -231,7 +232,7 @@ test("the Report command (V3) should be deserialized correctly", async (t) => {
 			54, // previous value
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCReport;
@@ -253,7 +254,7 @@ test("the Report command (V4) should be deserialized correctly", async (t) => {
 			0b01, // Scale2
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCReport;
@@ -276,7 +277,7 @@ test("the Report command should validate that a known meter type is given", asyn
 		]),
 	);
 
-	const report = await CommandClass.parseAsync(
+	const report = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCReport;
@@ -302,7 +303,7 @@ test("the Report command should validate that a known meter scale is given", asy
 		]),
 	);
 
-	const report = await CommandClass.parseAsync(
+	const report = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCReport;
@@ -334,7 +335,7 @@ test("the SupportedReport command (V2/V3) should be deserialized correctly", asy
 			0b01101110, // supported scales
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCSupportedReport;
@@ -357,7 +358,7 @@ test("the SupportedReport command (V4/V5) should be deserialized correctly", asy
 			1,
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCCSupportedReport;
@@ -395,7 +396,7 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		serializedCC,
 		{ sourceNodeId: 1 } as any,
 	) as MeterCC;

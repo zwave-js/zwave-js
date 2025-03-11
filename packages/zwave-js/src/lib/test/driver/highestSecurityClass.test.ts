@@ -6,7 +6,7 @@ import {
 } from "@zwave-js/core";
 import { integrationTest } from "../integrationTestSuite.js";
 
-// Repro for https://github.com/zwave-js/node-zwave-js/issues/6098
+// Repro for https://github.com/zwave-js/zwave-js/issues/6098
 
 integrationTest(`An insecurely-included node has security class None`, {
 	// debug: true,
@@ -81,15 +81,15 @@ integrationTest(
 			// Create a security manager for the node
 			const smNode = await SecurityManager2.create();
 			// Copy keys from the driver
-			await smNode.setKeyAsync(
+			await smNode.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			await smNode.setKeyAsync(
+			await smNode.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			await smNode.setKeyAsync(
+			await smNode.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
@@ -100,15 +100,15 @@ integrationTest(
 			// Create a security manager for the controller
 			const smCtrlr = await SecurityManager2.create();
 			// Copy keys from the driver
-			await smCtrlr.setKeyAsync(
+			await smCtrlr.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			await smCtrlr.setKeyAsync(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			await smCtrlr.setKeyAsync(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);

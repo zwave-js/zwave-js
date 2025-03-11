@@ -1,4 +1,5 @@
 import {
+	type CCEncodingContext,
 	type CommandClass,
 	MGRPExtension,
 	MPANExtension,
@@ -41,7 +42,6 @@ import {
 	ZWaveErrorCodes,
 	mergeSupervisionResults,
 } from "@zwave-js/core";
-import { type CCEncodingContext } from "@zwave-js/host";
 import type { Message } from "@zwave-js/serial";
 import {
 	type SendDataMessage,
@@ -251,7 +251,7 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 	}
 
 	// Send the command split into multiple segments
-	const payload = await msg.serializeCCAsync(ctx);
+	const payload = await msg.serializeCC(ctx);
 	const numSegments = Math.ceil(payload.length / MAX_SEGMENT_SIZE);
 	const segmentDelay = numSegments > RELAXED_TIMING_THRESHOLD
 		? TransportServiceTimeouts.relaxedTimingDelayR2

@@ -1,4 +1,5 @@
-import { type MockPortBinding } from "@zwave-js/serial/mock";
+import { type ZWaveSerialStream } from "@zwave-js/serial";
+import { type MockPort } from "@zwave-js/serial/mock";
 import { Bytes } from "@zwave-js/shared/safe";
 import {
 	MockController,
@@ -11,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import {
 	createDefaultMockControllerBehaviors,
 	createDefaultMockNodeBehaviors,
-} from "../../Utils.js";
+} from "../../Testing.js";
 import {
 	type CreateAndStartDriverWithMockPortResult,
 	createAndStartDriverWithMockPort,
@@ -27,8 +28,9 @@ export function prepareDriver(
 ): Promise<CreateAndStartDriverWithMockPortResult> {
 	// Skipping the bootloader check speeds up tests a lot
 	additionalOptions.testingHooks ??= {};
-	additionalOptions.testingHooks.skipBootloaderCheck = !additionalOptions
-		.allowBootloaderOnly;
+	additionalOptions.testingHooks.skipFirmwareIdentification =
+		additionalOptions.bootloaderMode === "recover"
+		|| additionalOptions.bootloaderMode == undefined;
 
 	const logConfig = additionalOptions.logConfig ?? {};
 	if (logToFile) {
@@ -44,7 +46,6 @@ export function prepareDriver(
 
 	return createAndStartDriverWithMockPort({
 		...additionalOptions,
-		portAddress: "/tty/FAKE",
 		logConfig,
 		securityKeys: {
 			S0_Legacy: Bytes.from("0102030405060708090a0b0c0d0e0f10", "hex"),
@@ -70,7 +71,8 @@ export function prepareDriver(
 }
 
 export function prepareMocks(
-	mockPort: MockPortBinding,
+	mockPort: MockPort,
+	serial: ZWaveSerialStream,
 	controller: Pick<
 		MockControllerOptions,
 		"ownNodeId" | "homeId" | "capabilities"
@@ -84,7 +86,8 @@ export function prepareMocks(
 		homeId: 0x7e570001,
 		ownNodeId: 1,
 		...controller,
-		serial: mockPort,
+		mockPort,
+		serial,
 	});
 	// Apply default behaviors that are required for interacting with the driver correctly
 	mockController.defineBehavior(...createDefaultMockControllerBehaviors());
