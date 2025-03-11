@@ -18,10 +18,7 @@ export type { ControllerEvents } from "./lib/controller/Controller.js";
 export type { ControllerStatistics } from "./lib/controller/ControllerStatistics.js";
 export { ZWaveFeature } from "./lib/controller/Features.js";
 export * from "./lib/controller/Inclusion.js";
-export { ControllerFirmwareUpdateStatus } from "./lib/controller/_Types.js";
 export type {
-	ControllerFirmwareUpdateProgress,
-	ControllerFirmwareUpdateResult,
 	FirmwareUpdateDeviceID,
 	FirmwareUpdateFileInfo,
 	FirmwareUpdateInfo,

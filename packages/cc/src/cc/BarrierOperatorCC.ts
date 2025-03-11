@@ -63,8 +63,9 @@ import {
 	SubsystemType,
 } from "../lib/_Types.js";
 
-export const BarrierOperatorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Barrier Operator"], {
+export const BarrierOperatorCCValues = V.defineCCValues(
+	CommandClasses["Barrier Operator"],
+	{
 		...V.staticProperty("supportedSubsystemTypes", undefined, {
 			internal: true,
 		}),
@@ -99,9 +100,7 @@ export const BarrierOperatorCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(BarrierState),
 			} as const,
 		),
-	}),
 
-	...V.defineDynamicCCValues(CommandClasses["Barrier Operator"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"signalingState",
 			"signalingState",
@@ -120,8 +119,8 @@ export const BarrierOperatorCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(SubsystemState),
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Barrier Operator"])
 export class BarrierOperatorCCAPI extends CCAPI {
@@ -569,9 +568,8 @@ export class BarrierOperatorCCSet extends BarrierOperatorCC {
 
 	public targetState: BarrierState.Open | BarrierState.Closed;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.targetState]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -759,9 +757,8 @@ export class BarrierOperatorCCEventSignalingSet extends BarrierOperatorCC {
 	public subsystemType: SubsystemType;
 	public subsystemState: SubsystemState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.subsystemType, this.subsystemState]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -880,9 +877,8 @@ export class BarrierOperatorCCEventSignalingGet extends BarrierOperatorCC {
 
 	public subsystemType: SubsystemType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.subsystemType]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

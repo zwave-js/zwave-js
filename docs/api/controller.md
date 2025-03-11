@@ -1176,6 +1176,16 @@ interface GetFirmwareUpdatesOptions {
 	additionalUserAgentComponents?: Record<string, string>;
 	/** Whether the returned firmware upgrades should include prereleases from the `"beta"` channel. Default: `false`. */
 	includePrereleases?: boolean;
+	/**
+	 * Can be used to specify the RF region if the Z-Wave controller
+	 * does not support querying this information.
+	 *
+	 * **WARNING:** Specifying the wrong region may result in bricking the device!
+	 *
+	 * For this reason, the specified value is only used as a fallback
+	 * if the RF region of the controller is not already known.
+	 */
+	rfRegion?: RFRegion;
 }
 ```
 
@@ -1205,36 +1215,7 @@ Returns whether an OTA firmware update is in progress for any node.
 
 ### Updating the firmware of the controller (OTW)
 
-```ts
-firmwareUpdateOTW(data: Buffer): Promise<ControllerFirmwareUpdateResult>
-```
-
-> [!WARNING] We don't take any responsibility if devices upgraded using Z-Wave JS don't work after an update. Always double-check that the correct update is about to be installed.
-
-Performs an over-the-wire (OTW) firmware update for the controller using the given firmware image. To do so, the controller gets put in bootloader mode where a new firmware image can be uploaded.
-
-> [!WARNING] A failure during this process may leave your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded.
-
-To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` events](api/controller#quotfirmware-update-progressquot) of the controller.
-
-The return value indicates whether the update was successful and includes an error code that can be used to determine the reason for a failure. This is the same information that is emitted using the `"firmware update finished"` event:
-
-<!-- #import ControllerFirmwareUpdateResult from "zwave-js" -->
-
-```ts
-interface ControllerFirmwareUpdateResult {
-	success: boolean;
-	status: ControllerFirmwareUpdateStatus;
-}
-```
-
-### `isFirmwareUpdateInProgress`
-
-```ts
-isFirmwareUpdateInProgress(): boolean;
-```
-
-Return whether a firmware update is in progress for the controller.
+See [`driver.firmwareUpdateOTW`](api/driver#updating-the-firmware-of-the-z-wave-module-otw).
 
 ### Joining and leaving a network
 
@@ -1774,62 +1755,6 @@ interface ControllerStatistics {
 			current: number;
 		};
 	};
-}
-```
-
-### `"firmware update progress"`
-
-```ts
-(progress: ControllerFirmwareUpdateProgress) => void
-```
-
-Firmware update progress has been made. The callback arguments gives information about the progress of the update:
-
-<!-- #import ControllerFirmwareUpdateProgress from "zwave-js" -->
-
-```ts
-interface ControllerFirmwareUpdateProgress {
-	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
-	sentFragments: number;
-	/** How many fragments the firmware update consists of. */
-	totalFragments: number;
-	/** The total progress of the firmware update in %, rounded to two digits. */
-	progress: number;
-}
-```
-
-### `"firmware update finished"`
-
-```ts
-(result: ControllerFirmwareUpdateResult) => void;
-```
-
-The firmware update process is finished. The `result` argument looks like this indicates whether the update was successful:
-
-<!-- #import ControllerFirmwareUpdateResult from "zwave-js" -->
-
-```ts
-interface ControllerFirmwareUpdateResult {
-	success: boolean;
-	status: ControllerFirmwareUpdateStatus;
-}
-```
-
-Its `status` property contains more details on potential errors.
-
-<!-- #import ControllerFirmwareUpdateStatus from "zwave-js" -->
-
-```ts
-enum ControllerFirmwareUpdateStatus {
-	Error_Timeout = 0,
-	/** The maximum number of retry attempts for a firmware fragments were reached */
-	Error_RetryLimitReached,
-	/** The update was aborted by the bootloader */
-	Error_Aborted,
-	/** This controller does not support firmware updates */
-	Error_NotSupported,
-
-	OK = 0xff,
 }
 ```
 

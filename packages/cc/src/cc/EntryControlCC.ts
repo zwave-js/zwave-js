@@ -53,8 +53,9 @@ import {
 } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 
-export const EntryControlCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Entry Control"], {
+export const EntryControlCCValues = V.defineCCValues(
+	CommandClasses["Entry Control"],
+	{
 		...V.staticProperty(
 			"keyCacheSize",
 			{
@@ -66,7 +67,6 @@ export const EntryControlCCValues = Object.freeze({
 				max: 32,
 			} as const,
 		),
-
 		...V.staticProperty(
 			"keyCacheTimeout",
 			{
@@ -79,7 +79,6 @@ export const EntryControlCCValues = Object.freeze({
 				max: 10,
 			} as const,
 		),
-
 		...V.staticProperty("supportedDataTypes", undefined, {
 			internal: true,
 		}),
@@ -89,8 +88,8 @@ export const EntryControlCCValues = Object.freeze({
 		...V.staticProperty("supportedKeys", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Entry Control"])
 export class EntryControlCCAPI extends CCAPI {
@@ -793,9 +792,8 @@ export class EntryControlCCConfigurationSet extends EntryControlCC {
 	public readonly keyCacheSize: number;
 	public readonly keyCacheTimeout: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.keyCacheSize, this.keyCacheTimeout]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
