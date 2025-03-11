@@ -523,10 +523,9 @@
 		},
 		{
 			"#": "28",
-			"$if": "firmwareVersion >= 2.00",
+			"$if": "firmwareVersion >= 2.0",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Simultaneous On/Off Operation of R1/R2",
-			"defaultValue": 0
+			"label": "Simultaneous On/Off Operation of R1/R2"
 		}
 	],
 	"compat": {
@@ -542,7 +541,7 @@
 		"reset": "If your primary controller is missing or inoperable, you may need to reset the device to factory settings. To complete the reset process manually, click the Z-Wave button 4 times quickly, the LED indicator will light up,\nthen quickly click the Z-Wave button 4 times again. The LED indicator will flash 3 times to confirm successful reset and will then turn off",
 		"manual": [
 			{
-				"$if": "firmwareVersion >= 2.00",
+				"$if": "firmwareVersion >= 2.0",
 				"value": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/1177/zooz-800-series-z-wave-long-range-universal-relay-zen17-800lr-full-manual_1.pdf"
 			},
 			"https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4132/zooz-700-series-z-wave-plus-universal-relay-zen17-ver1.0-manual.pdf"
