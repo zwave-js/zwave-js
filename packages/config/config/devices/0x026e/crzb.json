@@ -2,7 +2,7 @@
 	"manufacturer": "Springs Window Fashions",
 	"manufacturerId": "0x026e",
 	"label": "CRZB",
-	"description": "Cellular Shade Radio Z-Wave",
+	"description": "Motorized Blinds",
 	"devices": [
 		{
 			"productType": "0x4254",
