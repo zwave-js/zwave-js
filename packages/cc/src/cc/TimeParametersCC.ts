@@ -47,8 +47,9 @@ import {
 import { V } from "../lib/Values.js";
 import { TimeParametersCommand } from "../lib/_Types.js";
 
-export const TimeParametersCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Time Parameters"], {
+export const TimeParametersCCValues = V.defineCCValues(
+	CommandClasses["Time Parameters"],
+	{
 		...V.staticProperty(
 			"dateAndTime",
 			{
@@ -56,8 +57,8 @@ export const TimeParametersCCValues = Object.freeze({
 				label: "Date and Time",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 /**
  * Determines if the node expects local time instead of UTC.

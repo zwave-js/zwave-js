@@ -44,35 +44,31 @@ import {
 import { V } from "../lib/Values.js";
 import { WakeUpCommand } from "../lib/_Types.js";
 
-export const WakeUpCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Wake Up"], {
-		...V.staticProperty(
-			"controllerNodeId",
-			{
-				...ValueMetadata.ReadOnly,
-				label: "Node ID of the controller",
-			} as const,
-			{
-				supportsEndpoints: false,
-			},
-		),
-
-		...V.staticProperty(
-			"wakeUpInterval",
-			{
-				...ValueMetadata.UInt24,
-				label: "Wake Up interval",
-			} as const,
-			{
-				supportsEndpoints: false,
-			},
-		),
-
-		...V.staticProperty("wakeUpOnDemandSupported", undefined, {
-			internal: true,
+export const WakeUpCCValues = V.defineCCValues(CommandClasses["Wake Up"], {
+	...V.staticProperty(
+		"controllerNodeId",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Node ID of the controller",
+		} as const,
+		{
 			supportsEndpoints: false,
-			minVersion: 3,
-		}),
+		},
+	),
+	...V.staticProperty(
+		"wakeUpInterval",
+		{
+			...ValueMetadata.UInt24,
+			label: "Wake Up interval",
+		} as const,
+		{
+			supportsEndpoints: false,
+		},
+	),
+	...V.staticProperty("wakeUpOnDemandSupported", undefined, {
+		internal: true,
+		supportsEndpoints: false,
+		minVersion: 3,
 	}),
 });
 

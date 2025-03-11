@@ -5,8 +5,8 @@ import path from "pathe";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
-	ControllerFirmwareUpdateStatus,
 	Driver,
+	OTWFirmwareUpdateStatus,
 	extractFirmware,
 	getEnumMemberName,
 	guessFirmwareFileFormat,
@@ -62,7 +62,7 @@ function clearLastLine() {
 async function flash() {
 	console.log("Flashing firmware...");
 	let lastProgress = 0;
-	driver.controller.on("firmware update progress", (p) => {
+	driver.on("firmware update progress", (p) => {
 		const rounded = Math.round(p.progress);
 		if (rounded > lastProgress) {
 			lastProgress = rounded;
@@ -72,7 +72,7 @@ async function flash() {
 			);
 		}
 	});
-	driver.controller.on("firmware update finished", async (r) => {
+	driver.on("firmware update finished", async (r) => {
 		if (r.success) {
 			console.log("Firmware update successful");
 			await wait(1000);
@@ -81,7 +81,7 @@ async function flash() {
 			console.log(
 				`Firmware update failed: ${
 					getEnumMemberName(
-						ControllerFirmwareUpdateStatus,
+						OTWFirmwareUpdateStatus,
 						r.status,
 					)
 				}`,
@@ -92,7 +92,7 @@ async function flash() {
 	});
 
 	try {
-		await driver.controller.firmwareUpdateOTW(firmware);
+		await driver.firmwareUpdateOTW(firmware);
 	} catch (e: any) {
 		console.error("Failed to update firmware:", e.message);
 		process.exit(1);

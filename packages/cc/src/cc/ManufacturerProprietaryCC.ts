@@ -156,7 +156,6 @@ export class ManufacturerProprietaryCC extends CommandClass {
 			manufacturerId,
 		);
 		if (PCConstructor) {
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			return PCConstructor.from(
 				raw.withPayload(raw.payload.subarray(2)),
 				ctx,

@@ -49,8 +49,9 @@ import {
 import { V } from "../lib/Values.js";
 import { ThermostatMode, ThermostatModeCommand } from "../lib/_Types.js";
 
-export const ThermostatModeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Mode"], {
+export const ThermostatModeCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Mode"],
+	{
 		...V.staticPropertyWithName(
 			"thermostatMode",
 			"mode",
@@ -60,7 +61,6 @@ export const ThermostatModeCCValues = Object.freeze({
 				label: "Thermostat mode",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"manufacturerData",
 			{
@@ -68,10 +68,9 @@ export const ThermostatModeCCValues = Object.freeze({
 				label: "Manufacturer data",
 			} as const,
 		),
-
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Mode"])
 export class ThermostatModeCCAPI extends CCAPI {

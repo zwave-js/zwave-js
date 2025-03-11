@@ -42,13 +42,9 @@ import {
 	getEnergyProductionScale,
 } from "../lib/_Types.js";
 
-export const EnergyProductionCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Energy Production"], {
-		// Static CC values go here
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Energy Production"], {
-		// Dynamic CC values go here
+export const EnergyProductionCCValues = V.defineCCValues(
+	CommandClasses["Energy Production"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"value",
 			"value",
@@ -64,8 +60,8 @@ export const EnergyProductionCCValues = Object.freeze({
 				// unit and ccSpecific are set dynamically
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Energy Production"])
 export class EnergyProductionCCAPI extends CCAPI {

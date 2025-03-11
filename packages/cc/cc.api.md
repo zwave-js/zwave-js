@@ -16,15 +16,14 @@ import { BasicDeviceClass } from '@zwave-js/core';
 import { BatteryCCAPI } from '../cc/BatteryCC.js';
 import { BinarySensorCCAPI } from '../cc/BinarySensorCC.js';
 import { BinarySwitchCCAPI } from '../cc/BinarySwitchCC.js';
-import { BroadcastCC } from '@zwave-js/core';
+import { BroadcastCC } from '@zwave-js/core/safe';
 import { Bytes } from '@zwave-js/shared/safe';
 import { Bytes as Bytes_2 } from '@zwave-js/shared';
-import { CCAddress } from '@zwave-js/core';
-import type { CCEncodingContext } from '@zwave-js/host';
-import type { CCEncodingContext as CCEncodingContext_2 } from '@zwave-js/host/safe';
-import { CCId } from '@zwave-js/core';
-import { CCParsingContext } from '@zwave-js/host';
-import type { CCParsingContext as CCParsingContext_2 } from '@zwave-js/host/safe';
+import { CCAddress } from '@zwave-js/core/safe';
+import { CCEncodingContext as CCEncodingContext_2 } from '@zwave-js/cc';
+import { CCId } from '@zwave-js/core/safe';
+import { CCId as CCId_2 } from '@zwave-js/core';
+import { CCParsingContext as CCParsingContext_2 } from '@zwave-js/cc';
 import { CentralSceneCCAPI } from '../cc/CentralSceneCC.js';
 import { ClimateControlScheduleCCAPI } from '../cc/ClimateControlScheduleCC.js';
 import { ClockCCAPI } from '../cc/ClockCC.js';
@@ -45,58 +44,56 @@ import { DoorLockCCAPI } from '../cc/DoorLockCC.js';
 import { DoorLockLoggingCCAPI } from '../cc/DoorLockLoggingCC.js';
 import { Duration } from '@zwave-js/core/safe';
 import { Duration as Duration_2 } from '@zwave-js/core';
-import { EncapsulationFlags } from '@zwave-js/core';
-import { EndpointId } from '@zwave-js/core';
-import { EndpointId as EndpointId_2 } from '@zwave-js/core/safe';
+import { EncapsulationFlags } from '@zwave-js/core/safe';
+import { EndpointId } from '@zwave-js/core/safe';
+import { EndpointId as EndpointId_2 } from '@zwave-js/core';
 import { EnergyProductionCCAPI } from '../cc/EnergyProductionCC.js';
 import { EntryControlCCAPI } from '../cc/EntryControlCC.js';
 import { FirmwareUpdateMetaDataCCAPI } from '../cc/FirmwareUpdateMetaDataCC.js';
 import { FLiRS } from '@zwave-js/core';
 import { FLiRS as FLiRS_2 } from '@zwave-js/core/safe';
-import { FrameType } from '@zwave-js/core';
+import { FrameType } from '@zwave-js/core/safe';
+import { FrameType as FrameType_2 } from '@zwave-js/core';
 import { GetAllEndpoints } from '@zwave-js/core/safe';
-import { GetAllEndpoints as GetAllEndpoints_2 } from '@zwave-js/core';
-import { GetCCs } from '@zwave-js/core';
-import type { GetCommunicationTimeouts } from '@zwave-js/host';
-import { GetDeviceConfig } from '@zwave-js/host';
-import { GetDeviceConfig as GetDeviceConfig_2 } from '@zwave-js/host/safe';
+import { GetCCs } from '@zwave-js/core/safe';
+import { GetDeviceConfig } from '@zwave-js/config';
 import { GetEndpoint } from '@zwave-js/core/safe';
 import { GetEndpoint as GetEndpoint_2 } from '@zwave-js/core';
-import type { GetInterviewOptions } from '@zwave-js/host';
-import { GetNode } from '@zwave-js/host';
-import type { GetNode as GetNode_2 } from '@zwave-js/host/safe';
-import type { GetSafeCCVersion } from '@zwave-js/host';
-import type { GetSupportedCCVersion } from '@zwave-js/host';
-import type { GetSupportedCCVersion as GetSupportedCCVersion_2 } from '@zwave-js/host/safe';
-import type { GetUserPreferences } from '@zwave-js/host';
-import { GetValueDB } from '@zwave-js/host';
-import type { GetValueDB as GetValueDB_2 } from '@zwave-js/host/safe';
-import { HostIDs } from '@zwave-js/host';
+import { GetNode } from '@zwave-js/core/safe';
+import { GetNode as GetNode_2 } from '@zwave-js/core';
+import { GetSafeCCVersion } from '@zwave-js/core';
+import { GetSupportedCCVersion } from '@zwave-js/core';
+import { GetSupportedCCVersion as GetSupportedCCVersion_2 } from '@zwave-js/core/safe';
+import { GetValueDB } from '@zwave-js/core/safe';
+import { GetValueDB as GetValueDB_2 } from '@zwave-js/core';
+import { HostIDs } from '@zwave-js/core/safe';
+import { HostIDs as HostIDs_2 } from '@zwave-js/core';
 import { HumidityControlModeCCAPI } from '../cc/HumidityControlModeCC.js';
 import { HumidityControlOperatingStateCCAPI } from '../cc/HumidityControlOperatingStateCC.js';
 import { HumidityControlSetpointCCAPI } from '../cc/HumidityControlSetpointCC.js';
 import { InclusionControllerCCAPI } from '../cc/InclusionControllerCC.js';
 import { IndicatorCCAPI } from '../cc/IndicatorCC.js';
 import { IrrigationCCAPI } from '../cc/IrrigationCC.js';
-import { JSONObject } from '@zwave-js/shared';
+import { JSONObject } from '@zwave-js/shared/safe';
 import { LanguageCCAPI } from '../cc/LanguageCC.js';
 import { ListenBehavior } from '@zwave-js/core';
+import { ListenBehavior as ListenBehavior_2 } from '@zwave-js/core/safe';
 import { LockCCAPI } from '../cc/LockCC.js';
-import type { LogNode } from '@zwave-js/host';
-import type { LookupManufacturer } from '@zwave-js/host';
+import { LogNode } from '@zwave-js/core';
+import { LookupManufacturer } from '@zwave-js/config';
 import { ManufacturerProprietaryCCAPI } from '../cc/ManufacturerProprietaryCC.js';
 import { ManufacturerSpecificCCAPI } from '../cc/ManufacturerSpecificCC.js';
 import { MaybeNotKnown } from '@zwave-js/core/safe';
 import { MaybeNotKnown as MaybeNotKnown_2 } from '@zwave-js/core';
 import { MaybeUnknown } from '@zwave-js/core/safe';
 import { MaybeUnknown as MaybeUnknown_2 } from '@zwave-js/core';
-import { MessageOrCCLogEntry } from '@zwave-js/core';
-import { MessageOrCCLogEntry as MessageOrCCLogEntry_2 } from '@zwave-js/core/safe';
+import { MessageOrCCLogEntry } from '@zwave-js/core/safe';
+import { MessageOrCCLogEntry as MessageOrCCLogEntry_2 } from '@zwave-js/core';
 import { MeterCCAPI } from '../cc/MeterCC.js';
 import { MeterScale } from '@zwave-js/core/safe';
-import { ModifyCCs } from '@zwave-js/core';
-import { MulticastCC } from '@zwave-js/core';
-import { MulticastDestination } from '@zwave-js/core';
+import { ModifyCCs } from '@zwave-js/core/safe';
+import { MulticastCC } from '@zwave-js/core/safe';
+import { MulticastDestination } from '@zwave-js/core/safe';
 import { MultiChannelAssociationCCAPI } from '../cc/MultiChannelAssociationCC.js';
 import { MultiChannelCCAPI } from '../cc/MultiChannelCC.js';
 import { MultiCommandCCAPI } from '../cc/MultiCommandCC.js';
@@ -119,26 +116,25 @@ import { PowerlevelCCAPI } from '../cc/PowerlevelCC.js';
 import { ProtectionCCAPI } from '../cc/ProtectionCC.js';
 import { ProtocolVersion } from '@zwave-js/core';
 import { QueryNodeStatus } from '@zwave-js/core';
+import { QueryNodeStatus as QueryNodeStatus_2 } from '@zwave-js/core/safe';
 import { QuerySecurityClasses } from '@zwave-js/core/safe';
-import { QuerySecurityClasses as QuerySecurityClasses_2 } from '@zwave-js/core';
 import { ReadonlyObjectKeyMap } from '@zwave-js/shared/safe';
 import { Scale } from '@zwave-js/core/safe';
 import { SceneActivationCCAPI } from '../cc/SceneActivationCC.js';
 import { SceneActuatorConfigurationCCAPI } from '../cc/SceneActuatorConfigurationCC.js';
 import { SceneControllerConfigurationCCAPI } from '../cc/SceneControllerConfigurationCC.js';
 import { ScheduleEntryLockCCAPI } from '../cc/ScheduleEntryLockCC.js';
-import type { SchedulePoll } from '@zwave-js/host';
 import { Security2CCAPI } from '../cc/Security2CC.js';
 import { SecurityCCAPI } from '../cc/SecurityCC.js';
 import { SecurityClass } from '@zwave-js/core';
 import { SecurityManager } from '@zwave-js/core';
 import { SecurityManagers } from '@zwave-js/core';
 import { SecurityManagers as SecurityManagers_2 } from '@zwave-js/core/safe';
-import type { SendCommand } from '@zwave-js/host';
+import { SendCommand as SendCommand_2 } from '@zwave-js/cc';
 import { SendCommandOptions } from '@zwave-js/core';
-import { SetSecurityClass } from '@zwave-js/core';
-import { SinglecastCC } from '@zwave-js/core';
-import { SinglecastCC as SinglecastCC_2 } from '@zwave-js/core/safe';
+import { SendCommandReturnType } from '@zwave-js/core';
+import { SetSecurityClass } from '@zwave-js/core/safe';
+import { SinglecastCC } from '@zwave-js/core/safe';
 import { SoundSwitchCCAPI } from '../cc/SoundSwitchCC.js';
 import { SupervisionCCAPI } from '../cc/SupervisionCC.js';
 import { SupervisionResult } from '@zwave-js/core/safe';
@@ -160,11 +156,11 @@ import { TypedClassDecorator } from '@zwave-js/shared/safe';
 import { TypedClassDecorator as TypedClassDecorator_2 } from '@zwave-js/shared';
 import { UserCodeCCAPI } from '../cc/UserCodeCC.js';
 import { ValueChangeOptions } from '@zwave-js/core';
-import { ValueDB } from '@zwave-js/core';
-import { ValueID } from '@zwave-js/core';
-import { ValueID as ValueID_2 } from '@zwave-js/core/safe';
-import { ValueMetadata } from '@zwave-js/core';
-import { ValueMetadata as ValueMetadata_2 } from '@zwave-js/core/safe';
+import { ValueDB } from '@zwave-js/core/safe';
+import { ValueDB as ValueDB_2 } from '@zwave-js/core';
+import { ValueID } from '@zwave-js/core/safe';
+import { ValueID as ValueID_2 } from '@zwave-js/core';
+import { ValueMetadata } from '@zwave-js/core/safe';
 import { VersionCCAPI } from '../cc/VersionCC.js';
 import { VirtualEndpointId } from '@zwave-js/core';
 import { WakeUpCCAPI } from '../cc/WakeUpCC.js';
@@ -173,14 +169,14 @@ import { WithAddress } from '@zwave-js/core/safe';
 import { WithAddress as WithAddress_2 } from '@zwave-js/core';
 import { ZWaveDataRate } from '@zwave-js/core';
 import { ZWaveDataRate as ZWaveDataRate_2 } from '@zwave-js/core/safe';
-import { ZWaveErrorCodes } from '@zwave-js/core';
+import { ZWaveErrorCodes } from '@zwave-js/core/safe';
 import { ZWaveLibraryTypes } from '@zwave-js/core/safe';
 import { ZWavePlusCCAPI } from '../cc/ZWavePlusCC.js';
 
 // Warning: (ae-missing-release-tag) "addAssociations" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function addAssociations(ctx: CCAPIHost<CCAPINode & SupportsCC & GetEndpoint<EndpointId_2 & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId_2 & SupportsCC & ControlsCC, group: number, destinations: AssociationAddress[]): Promise<void>;
+function addAssociations(ctx: CCAPIHost<CCAPINode & SupportsCC & GetEndpoint<EndpointId & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId & SupportsCC & ControlsCC, group: number, destinations: AssociationAddress[]): Promise<void>;
 
 // Warning: (ae-missing-release-tag) "AlarmSensorCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -189,8 +185,8 @@ export class AlarmSensorCC extends CommandClass {
     // (undocumented)
     ccCommand: AlarmSensorCommand;
     // (undocumented)
-    protected createMetadataForSensorType(ctx: GetValueDB_2, sensorType: AlarmSensorType): void;
-    static getSupportedSensorTypesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<AlarmSensorType[]>;
+    protected createMetadataForSensorType(ctx: GetValueDB, sensorType: AlarmSensorType): void;
+    static getSupportedSensorTypesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<AlarmSensorType[]>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
@@ -207,9 +203,9 @@ export class AlarmSensorCCGet extends AlarmSensorCC {
     // (undocumented)
     sensorType: AlarmSensorType;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AlarmSensorCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -238,7 +234,7 @@ export class AlarmSensorCCReport extends AlarmSensorCC {
     // (undocumented)
     readonly state: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AlarmSensorCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -273,7 +269,7 @@ export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
     // (undocumented)
     supportedSensorTypes: AlarmSensorType[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AlarmSensorCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -288,57 +284,31 @@ export interface AlarmSensorCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const AlarmSensorCCValues: Readonly<{
-    supportedSensorTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Alarm Sensor"];
-            property: "supportedSensorTypes";
+    state: ((sensorType: AlarmSensorType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
+            readonly property: "state";
+            readonly propertyKey: AlarmSensorType;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
             readonly endpoint: number;
-            readonly property: "supportedSensorTypes";
+            readonly property: "state";
+            readonly propertyKey: AlarmSensorType;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
         readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    duration: ((sensorType: AlarmSensorType) => {
-        readonly meta: {
-            readonly unit: "s";
-            readonly label: `${string} duration`;
-            readonly description: "For how long the alarm should be active";
+            readonly label: `${string} state`;
+            readonly description: "Whether the alarm is active";
             readonly ccSpecific: {
                 readonly sensorType: AlarmSensorType;
             };
             readonly writeable: false;
-            readonly type: "number";
+            readonly type: "boolean";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Alarm Sensor"];
-            property: "duration";
-            propertyKey: AlarmSensorType;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
-            readonly endpoint: number;
-            readonly property: "duration";
-            readonly propertyKey: AlarmSensorType;
-        };
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -348,6 +318,17 @@ export const AlarmSensorCCValues: Readonly<{
         };
     };
     severity: ((sensorType: AlarmSensorType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
+            readonly property: "severity";
+            readonly propertyKey: AlarmSensorType;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
+            readonly endpoint: number;
+            readonly property: "severity";
+            readonly propertyKey: AlarmSensorType;
+        };
         readonly meta: {
             readonly min: 1;
             readonly max: 100;
@@ -360,20 +341,9 @@ export const AlarmSensorCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Alarm Sensor"];
-            property: "severity";
-            propertyKey: AlarmSensorType;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
-            readonly endpoint: number;
-            readonly property: "severity";
-            readonly propertyKey: AlarmSensorType;
-        };
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -382,32 +352,58 @@ export const AlarmSensorCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    state: ((sensorType: AlarmSensorType) => {
+    duration: ((sensorType: AlarmSensorType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
+            readonly property: "duration";
+            readonly propertyKey: AlarmSensorType;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
+            readonly endpoint: number;
+            readonly property: "duration";
+            readonly propertyKey: AlarmSensorType;
+        };
         readonly meta: {
-            readonly label: `${string} state`;
-            readonly description: "Whether the alarm is active";
+            readonly unit: "s";
+            readonly label: `${string} duration`;
+            readonly description: "For how long the alarm should be active";
             readonly ccSpecific: {
                 readonly sensorType: AlarmSensorType;
             };
             readonly writeable: false;
-            readonly type: "boolean";
+            readonly type: "number";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Alarm Sensor"];
-            property: "state";
-            propertyKey: AlarmSensorType;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    };
+    supportedSensorTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
+            readonly property: "supportedSensorTypes";
+        };
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Alarm Sensor"];
             readonly endpoint: number;
-            readonly property: "state";
-            readonly propertyKey: AlarmSensorType;
+            readonly property: "supportedSensorTypes";
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -454,7 +450,7 @@ export enum AlarmSensorType {
 // Warning: (ae-missing-release-tag) "AlarmSensorValueMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type AlarmSensorValueMetadata = ValueMetadata_2 & {
+export type AlarmSensorValueMetadata = ValueMetadata & {
     ccSpecific: {
         sensorType: AlarmSensorType;
     };
@@ -464,7 +460,7 @@ export type AlarmSensorValueMetadata = ValueMetadata_2 & {
 // Warning: (ae-missing-release-tag) "API" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export const API: <TTarget extends typeof CCAPI>(cc: CommandClasses_2) => TypedClassDecorator_2<TTarget>;
+export const API: <TTarget extends typeof CCAPI>(cc: CommandClasses) => TypedClassDecorator_2<TTarget>;
 
 // Warning: (ae-missing-release-tag) "APIConstructor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -479,7 +475,7 @@ export type APIMethodsOf<CC extends CCNameOrId> = Omit<OnlyMethods<CCToAPI<CC>>,
 // Warning: (ae-missing-release-tag) "assignLifelineIssueingCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function assignLifelineIssueingCommand(ctx: CCAPIHost<CCAPINode & SupportsCC & ControlsCC & GetEndpoint<EndpointId_2 & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId_2, ccId: CommandClasses, ccCommand: number): Promise<void>;
+function assignLifelineIssueingCommand(ctx: CCAPIHost<CCAPINode & SupportsCC & ControlsCC & GetEndpoint<EndpointId & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId, ccId: CommandClasses, ccCommand: number): Promise<void>;
 
 // Warning: (ae-missing-release-tag) "AssociationAddress" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -499,9 +495,9 @@ export class AssociationCC extends CommandClass {
     ccCommand: AssociationCommand;
     // (undocumented)
     determineRequiredCCInterviews(): readonly CommandClasses[];
-    static getAllDestinationsCached(ctx: GetValueDB_2, endpoint: EndpointId_2): ReadonlyMap<number, readonly AssociationAddress[]>;
-    static getGroupCountCached(ctx: GetValueDB_2, endpoint: EndpointId_2): number;
-    static getMaxNodesCached(ctx: GetValueDB_2 & GetDeviceConfig_2, endpoint: EndpointId_2, groupId: number): number;
+    static getAllDestinationsCached(ctx: GetValueDB, endpoint: EndpointId): ReadonlyMap<number, readonly AssociationAddress[]>;
+    static getGroupCountCached(ctx: GetValueDB, endpoint: EndpointId): number;
+    static getMaxNodesCached(ctx: GetValueDB & GetDeviceConfig, endpoint: EndpointId, groupId: number): number;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
@@ -518,9 +514,9 @@ export class AssociationCCGet extends AssociationCC {
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -543,9 +539,9 @@ export class AssociationCCRemove extends AssociationCC {
     // (undocumented)
     nodeIds?: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationCCRemoveOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -572,15 +568,15 @@ export class AssociationCCReport extends AssociationCC {
     // (undocumented)
     maxNodes: number;
     // (undocumented)
-    mergePartialCCs(partials: AssociationCCReport[], _ctx: CCParsingContext_2): void;
+    mergePartialCCs(partials: AssociationCCReport[], _ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -609,9 +605,9 @@ export class AssociationCCSet extends AssociationCC {
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -640,9 +636,9 @@ export class AssociationCCSpecificGroupReport extends AssociationCC {
     // (undocumented)
     group: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationCCSpecificGroupReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -669,9 +665,9 @@ export class AssociationCCSupportedGroupingsReport extends AssociationCC {
     // (undocumented)
     groupCount: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationCCSupportedGroupingsReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -686,110 +682,110 @@ export interface AssociationCCSupportedGroupingsReportOptions {
 //
 // @public (undocumented)
 export const AssociationCCValues: Readonly<{
-    nodeIds: ((groupId: number) => {
-        readonly meta: {
+    hasLifeline: {
+        id: {
+            readonly commandClass: CommandClasses.Association;
+            readonly property: "hasLifeline";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Association;
+            readonly endpoint: number;
+            readonly property: "hasLifeline";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Association;
-            property: "nodeIds";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Association;
-            readonly endpoint: number;
-            readonly property: "nodeIds";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    groupCount: {
+        id: {
+            readonly commandClass: CommandClasses.Association;
+            readonly property: "groupCount";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Association;
+            readonly endpoint: number;
+            readonly property: "groupCount";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
     maxNodes: ((groupId: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
+        id: {
+            readonly commandClass: CommandClasses.Association;
+            readonly property: "maxNodes";
+            readonly propertyKey: number;
         };
-        readonly id: {
-            commandClass: CommandClasses.Association;
-            property: "maxNodes";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Association;
             readonly endpoint: number;
             readonly property: "maxNodes";
             readonly propertyKey: number;
         };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    groupCount: {
-        readonly id: {
-            commandClass: CommandClasses.Association;
-            property: "groupCount";
+    nodeIds: ((groupId: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Association;
+            readonly property: "nodeIds";
+            readonly propertyKey: number;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Association;
             readonly endpoint: number;
-            readonly property: "groupCount";
+            readonly property: "nodeIds";
+            readonly propertyKey: number;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    hasLifeline: {
-        readonly id: {
-            commandClass: CommandClasses.Association;
-            property: "hasLifeline";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Association;
-            readonly endpoint: number;
-            readonly property: "hasLifeline";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -851,10 +847,10 @@ export class AssociationGroupInfoCC extends CommandClass {
     // (undocumented)
     determineRequiredCCInterviews(): readonly CommandClasses[];
     // (undocumented)
-    static findGroupsForIssuedCommand(ctx: GetValueDB_2, endpoint: EndpointId_2 & SupportsCC, ccId: CommandClasses, command: number): number[];
-    static getGroupNameCached(ctx: GetValueDB_2, endpoint: EndpointId_2, groupId: number): MaybeNotKnown<string>;
-    static getGroupProfileCached(ctx: GetValueDB_2, endpoint: EndpointId_2, groupId: number): MaybeNotKnown<AssociationGroupInfoProfile>;
-    static getIssuedCommandsCached(ctx: GetValueDB_2, endpoint: EndpointId_2, groupId: number): MaybeNotKnown<ReadonlyMap<CommandClasses, readonly number[]>>;
+    static findGroupsForIssuedCommand(ctx: GetValueDB, endpoint: EndpointId & SupportsCC, ccId: CommandClasses, command: number): number[];
+    static getGroupNameCached(ctx: GetValueDB, endpoint: EndpointId, groupId: number): MaybeNotKnown<string>;
+    static getGroupProfileCached(ctx: GetValueDB, endpoint: EndpointId, groupId: number): MaybeNotKnown<AssociationGroupInfoProfile>;
+    static getIssuedCommandsCached(ctx: GetValueDB, endpoint: EndpointId, groupId: number): MaybeNotKnown<ReadonlyMap<CommandClasses, readonly number[]>>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
@@ -873,9 +869,9 @@ export class AssociationGroupInfoCCCommandListGet extends AssociationGroupInfoCC
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationGroupInfoCCCommandListGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -900,9 +896,9 @@ export class AssociationGroupInfoCCCommandListReport extends AssociationGroupInf
     // (undocumented)
     readonly groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationGroupInfoCCCommandListReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -929,9 +925,9 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
     // (undocumented)
     refreshCache: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationGroupInfoCCInfoGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -963,9 +959,9 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationGroupInfoCCInfoReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -990,9 +986,9 @@ export class AssociationGroupInfoCCNameGet extends AssociationGroupInfoCC {
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationGroupInfoCCNameGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1017,9 +1013,9 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "AssociationGroupInfoCCNameReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1036,113 +1032,113 @@ export interface AssociationGroupInfoCCNameReportOptions {
 //
 // @public (undocumented)
 export const AssociationGroupInfoCCValues: Readonly<{
-    commands: ((groupId: number) => {
-        readonly meta: {
+    hasDynamicInfo: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
+            readonly property: "hasDynamicInfo";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
+            readonly endpoint: number;
+            readonly property: "hasDynamicInfo";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Association Group Information"];
-            property: "issuedCommands";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
-            readonly endpoint: number;
-            readonly property: "issuedCommands";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    groupInfo: ((groupId: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Association Group Information"];
-            property: "info";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
-            readonly endpoint: number;
-            readonly property: "info";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
     groupName: ((groupId: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
+            readonly property: "name";
+            readonly propertyKey: number;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Association Group Information"];
-            property: "name";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Association Group Information"];
             readonly endpoint: number;
             readonly property: "name";
             readonly propertyKey: number;
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    hasDynamicInfo: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Association Group Information"];
-            property: "hasDynamicInfo";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
-            readonly endpoint: number;
-            readonly property: "hasDynamicInfo";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    groupInfo: ((groupId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
+            readonly property: "info";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
+            readonly endpoint: number;
+            readonly property: "info";
+            readonly propertyKey: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    commands: ((groupId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
+            readonly property: "issuedCommands";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Association Group Information"];
+            readonly endpoint: number;
+            readonly property: "issuedCommands";
+            readonly propertyKey: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -1537,11 +1533,11 @@ export class BarrierOperatorCCEventSignalingGet extends BarrierOperatorCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): BarrierOperatorCCEventSignalingGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     subsystemType: SubsystemType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BarrierOperatorCCEventSignalingGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1566,7 +1562,7 @@ export class BarrierOperatorCCEventSignalingReport extends BarrierOperatorCC {
     // (undocumented)
     readonly subsystemType: SubsystemType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BarrierOperatorCCEventSignalingReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1587,13 +1583,13 @@ export class BarrierOperatorCCEventSignalingSet extends BarrierOperatorCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): BarrierOperatorCCEventSignalingSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     subsystemState: SubsystemState;
     // (undocumented)
     subsystemType: SubsystemType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BarrierOperatorCCEventSignalingSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1624,7 +1620,7 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
     // (undocumented)
     readonly position: MaybeUnknown<number>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BarrierOperatorCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1645,11 +1641,11 @@ export class BarrierOperatorCCSet extends BarrierOperatorCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): BarrierOperatorCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetState: BarrierState.Open | BarrierState.Closed;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BarrierOperatorCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1676,7 +1672,7 @@ export class BarrierOperatorCCSignalingCapabilitiesReport extends BarrierOperato
     // (undocumented)
     readonly supportedSubsystemTypes: readonly SubsystemType[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BarrierOperatorCCSignalingCapabilitiesReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1691,95 +1687,24 @@ export interface BarrierOperatorCCSignalingCapabilitiesReportOptions {
 //
 // @public (undocumented)
 export const BarrierOperatorCCValues: Readonly<{
-    signalingState: ((subsystemType: SubsystemType) => {
-        readonly meta: {
-            readonly label: `Signaling State (${string})`;
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
+    supportedSubsystemTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly property: "supportedSubsystemTypes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly endpoint: number;
+            readonly property: "supportedSubsystemTypes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Barrier Operator"];
-            property: "signalingState";
-            propertyKey: SubsystemType;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
-            readonly endpoint: number;
-            readonly property: "signalingState";
-            readonly propertyKey: SubsystemType;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    currentState: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Barrier Operator"];
-            property: "currentState";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
-            readonly endpoint: number;
-            readonly property: "currentState";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Current Barrier State";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    targetState: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Barrier Operator"];
-            property: "targetState";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
-            readonly endpoint: number;
-            readonly property: "targetState";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Target Barrier State";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -1788,16 +1713,16 @@ export const BarrierOperatorCCValues: Readonly<{
         };
     };
     position: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Barrier Operator"];
-            property: "position";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly property: "position";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
             readonly endpoint: number;
             readonly property: "position";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Barrier Position";
             readonly unit: "%";
@@ -1807,7 +1732,7 @@ export const BarrierOperatorCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -1816,29 +1741,94 @@ export const BarrierOperatorCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    supportedSubsystemTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Barrier Operator"];
-            property: "supportedSubsystemTypes";
+    targetState: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly property: "targetState";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
             readonly endpoint: number;
-            readonly property: "supportedSubsystemTypes";
+            readonly property: "targetState";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "Target Barrier State";
+            readonly states: Record<number, string>;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
+        };
+    };
+    currentState: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly property: "currentState";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly endpoint: number;
+            readonly property: "currentState";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Current Barrier State";
+            readonly states: Record<number, string>;
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    signalingState: ((subsystemType: SubsystemType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly property: "signalingState";
+            readonly propertyKey: SubsystemType;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Barrier Operator"];
+            readonly endpoint: number;
+            readonly property: "signalingState";
+            readonly propertyKey: SubsystemType;
+        };
+        readonly meta: {
+            readonly label: `Signaling State (${string})`;
+            readonly states: Record<number, string>;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -1888,7 +1878,7 @@ export class BasicCC extends CommandClass {
     // (undocumented)
     ccCommand: BasicCommand;
     // (undocumented)
-    getDefinedValueIDs(ctx: GetValueDB_2 & GetSupportedCCVersion_2 & GetDeviceConfig_2 & GetNode_2<NodeId & GetEndpoint<EndpointId_2 & SupportsCC & ControlsCC>>): ValueID_2[];
+    getDefinedValueIDs(ctx: GetValueDB & GetSupportedCCVersion_2 & GetDeviceConfig & GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>): ValueID[];
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
@@ -1915,11 +1905,11 @@ export class BasicCCReport extends BasicCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: MaybeUnknown<number> | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BasicCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1942,11 +1932,11 @@ export class BasicCCSet extends BasicCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): BasicCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetValue: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BasicCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1961,82 +1951,26 @@ export interface BasicCCSetOptions {
 //
 // @public (undocumented)
 export const BasicCCValues: Readonly<{
-    compatEvent: {
-        readonly id: {
-            commandClass: CommandClasses.Basic;
-            property: "event";
+    currentValue: {
+        id: {
+            readonly commandClass: CommandClasses.Basic;
+            readonly property: "currentValue";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Basic;
             readonly endpoint: number;
-            readonly property: "event";
+            readonly property: "currentValue";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Event value";
+            readonly label: "Current value";
             readonly writeable: false;
+            readonly max: 99;
             readonly min: 0;
-            readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly stateful: false;
-            readonly autoCreate: false;
-        };
-    };
-    restorePrevious: {
-        readonly id: {
-            commandClass: CommandClasses.Basic;
-            property: "restorePrevious";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Basic;
-            readonly endpoint: number;
-            readonly property: "restorePrevious";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Restore previous value";
-            readonly states: {
-                true: string;
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    duration: {
-        readonly id: {
-            commandClass: CommandClasses.Basic;
-            property: "duration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Basic;
-            readonly endpoint: number;
-            readonly property: "duration";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Remaining duration";
-            readonly minVersion: number;
-            readonly writeable: false;
-            readonly type: "duration";
-            readonly readable: true;
-        };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -2046,26 +1980,25 @@ export const BasicCCValues: Readonly<{
         };
     };
     targetValue: {
-        readonly id: {
-            commandClass: CommandClasses.Basic;
-            property: "targetValue";
+        id: {
+            readonly commandClass: CommandClasses.Basic;
+            readonly property: "targetValue";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Basic;
             readonly endpoint: number;
             readonly property: "targetValue";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Target value";
-            readonly forceCreation: boolean;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -2074,32 +2007,87 @@ export const BasicCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    currentValue: {
-        readonly id: {
-            commandClass: CommandClasses.Basic;
-            property: "currentValue";
+    duration: {
+        id: {
+            readonly commandClass: CommandClasses.Basic;
+            readonly property: "duration";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Basic;
             readonly endpoint: number;
-            readonly property: "currentValue";
+            readonly property: "duration";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Current value";
+            readonly label: "Remaining duration";
             readonly writeable: false;
-            readonly max: 99;
-            readonly min: 0;
-            readonly type: "number";
+            readonly type: "duration";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    restorePrevious: {
+        id: {
+            readonly commandClass: CommandClasses.Basic;
+            readonly property: "restorePrevious";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Basic;
+            readonly endpoint: number;
+            readonly property: "restorePrevious";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Restore previous value";
+            readonly states: {
+                readonly true: "Restore";
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    compatEvent: {
+        id: {
+            readonly commandClass: CommandClasses.Basic;
+            readonly property: "event";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Basic;
+            readonly endpoint: number;
+            readonly property: "event";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Event value";
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: false;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: false;
         };
     };
 }>;
@@ -2127,7 +2115,7 @@ export class BatteryCC extends CommandClass {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    shouldRefreshValues(this: SinglecastCC_2<this>, ctx: GetValueDB_2 & GetSupportedCCVersion_2 & GetDeviceConfig_2 & GetNode_2<NodeId & GetEndpoint<EndpointId_2 & SupportsCC & ControlsCC>>): boolean;
+    shouldRefreshValues(this: SinglecastCC<this>, ctx: GetValueDB_2 & GetSupportedCCVersion & GetDeviceConfig & GetNode_2<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>): boolean;
 }
 
 // Warning: (ae-missing-release-tag) "BatteryCCGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2156,7 +2144,7 @@ export class BatteryCCHealthReport extends BatteryCC {
     // (undocumented)
     readonly temperature: number | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BatteryCCHealthReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2201,9 +2189,9 @@ export class BatteryCCReport extends BatteryCC {
     // (undocumented)
     readonly rechargeOrReplace: BatteryReplacementStatus | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BatteryCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2231,318 +2219,17 @@ export type BatteryCCReportOptions = ({
 //
 // @public (undocumented)
 export const BatteryCCValues: Readonly<{
-    lowTemperatureStatus: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "lowTemperatureStatus";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "lowTemperatureStatus";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Battery temperature is low";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-        };
-    };
-    disconnected: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "disconnected";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "disconnected";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Battery is disconnected";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    rechargeOrReplace: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "rechargeOrReplace";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "rechargeOrReplace";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Recharge or replace";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    lowFluid: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "lowFluid";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "lowFluid";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Fluid is low";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    overheating: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "overheating";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "overheating";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Overheating";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    backup: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "backup";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "backup";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Used as backup";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    rechargeable: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "rechargeable";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "rechargeable";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Rechargeable";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    chargingStatus: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "chargingStatus";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "chargingStatus";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Charging status";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    temperature: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "temperature";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "temperature";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Temperature";
-            readonly writeable: false;
-            readonly min: -128;
-            readonly max: 127;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    maximumCapacity: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "maximumCapacity";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "maximumCapacity";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly max: 100;
-            readonly unit: "%";
-            readonly label: "Maximum capacity";
-            readonly writeable: false;
-            readonly min: 0;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    isLow: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "isLow";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "isLow";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Low battery level";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
     level: {
-        readonly id: {
-            commandClass: CommandClasses.Battery;
-            property: "level";
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "level";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Battery;
             readonly endpoint: number;
             readonly property: "level";
         };
-        readonly is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly max: 100;
             readonly unit: "%";
@@ -2552,9 +2239,306 @@ export const BatteryCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    isLow: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "isLow";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "isLow";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Low battery level";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    maximumCapacity: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "maximumCapacity";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "maximumCapacity";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly max: 100;
+            readonly unit: "%";
+            readonly label: "Maximum capacity";
+            readonly writeable: false;
+            readonly min: 0;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    temperature: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "temperature";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "temperature";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Temperature";
+            readonly writeable: false;
+            readonly min: -128;
+            readonly max: 127;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    chargingStatus: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "chargingStatus";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "chargingStatus";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Charging status";
+            readonly states: Record<number, string>;
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    rechargeable: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "rechargeable";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "rechargeable";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Rechargeable";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    backup: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "backup";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "backup";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Used as backup";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    overheating: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "overheating";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "overheating";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Overheating";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    lowFluid: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "lowFluid";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "lowFluid";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Fluid is low";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    rechargeOrReplace: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "rechargeOrReplace";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "rechargeOrReplace";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Recharge or replace";
+            readonly states: Record<number, string>;
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    disconnected: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "disconnected";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "disconnected";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Battery is disconnected";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    lowTemperatureStatus: {
+        id: {
+            readonly commandClass: CommandClasses.Battery;
+            readonly property: "lowTemperatureStatus";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Battery;
+            readonly endpoint: number;
+            readonly property: "lowTemperatureStatus";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Battery temperature is low";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
@@ -2607,13 +2591,13 @@ export enum BatteryReplacementStatus {
 export class BinarySensorCC extends CommandClass {
     // (undocumented)
     ccCommand: BinarySensorCommand;
-    static getSupportedSensorTypesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<BinarySensorType[]>;
+    static getSupportedSensorTypesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<BinarySensorType[]>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    setMappedBasicValue(ctx: GetValueDB_2, value: number): boolean;
+    setMappedBasicValue(ctx: GetValueDB, value: number): boolean;
 }
 
 // Warning: (ae-missing-release-tag) "BinarySensorCCGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2626,9 +2610,9 @@ export class BinarySensorCCGet extends BinarySensorCC {
     // (undocumented)
     sensorType: BinarySensorType | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BinarySensorCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2649,9 +2633,9 @@ export class BinarySensorCCReport extends BinarySensorCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     type: BinarySensorType;
     // (undocumented)
@@ -2682,11 +2666,11 @@ export class BinarySensorCCSupportedReport extends BinarySensorCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySensorCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportedSensorTypes: BinarySensorType[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BinarySensorCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2701,7 +2685,41 @@ export interface BinarySensorCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const BinarySensorCCValues: Readonly<{
+    supportedSensorTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Binary Sensor"];
+            readonly property: "supportedSensorTypes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Binary Sensor"];
+            readonly endpoint: number;
+            readonly property: "supportedSensorTypes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
     state: ((sensorType: BinarySensorType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Binary Sensor"];
+            readonly property: string;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Binary Sensor"];
+            readonly endpoint: number;
+            readonly property: string;
+        };
         readonly meta: {
             readonly label: `Sensor state (${string})`;
             readonly ccSpecific: {
@@ -2711,49 +2729,15 @@ export const BinarySensorCCValues: Readonly<{
             readonly type: "boolean";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Binary Sensor"];
-            property: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Binary Sensor"];
-            readonly endpoint: number;
-            readonly property: string;
-        };
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-        };
-    };
-    supportedSensorTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Binary Sensor"];
-            property: "supportedSensorTypes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Binary Sensor"];
-            readonly endpoint: number;
-            readonly property: "supportedSensorTypes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -2809,7 +2793,7 @@ export enum BinarySensorType {
 // Warning: (ae-missing-release-tag) "BinarySensorValueMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type BinarySensorValueMetadata = ValueMetadata_2 & {
+export type BinarySensorValueMetadata = ValueMetadata & {
     ccSpecific: {
         sensorType: BinarySensorType;
     };
@@ -2826,7 +2810,7 @@ export class BinarySwitchCC extends CommandClass {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    setMappedBasicValue(ctx: GetValueDB_2, value: number): boolean;
+    setMappedBasicValue(ctx: GetValueDB, value: number): boolean;
 }
 
 // Warning: (ae-missing-release-tag) "BinarySwitchCCGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2847,11 +2831,11 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySwitchCCReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: MaybeUnknown<boolean> | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BinarySwitchCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2876,11 +2860,11 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySwitchCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetValue: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "BinarySwitchCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2897,43 +2881,43 @@ export interface BinarySwitchCCSetOptions {
 //
 // @public (undocumented)
 export const BinarySwitchCCValues: Readonly<{
-    duration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Binary Switch"];
-            property: "duration";
+    currentValue: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Binary Switch"];
+            readonly property: "currentValue";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Binary Switch"];
             readonly endpoint: number;
-            readonly property: "duration";
+            readonly property: "currentValue";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Remaining duration";
+            readonly label: "Current value";
             readonly writeable: false;
-            readonly type: "duration";
+            readonly type: "boolean";
             readonly readable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly minVersion: 2;
         };
     };
     targetValue: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Binary Switch"];
-            property: "targetValue";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Binary Switch"];
+            readonly property: "targetValue";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Binary Switch"];
             readonly endpoint: number;
             readonly property: "targetValue";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Target value";
             readonly valueChangeOptions: readonly ["transitionDuration"];
@@ -2941,7 +2925,7 @@ export const BinarySwitchCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -2950,26 +2934,26 @@ export const BinarySwitchCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    currentValue: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Binary Switch"];
-            property: "currentValue";
+    duration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Binary Switch"];
+            readonly property: "duration";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Binary Switch"];
             readonly endpoint: number;
-            readonly property: "currentValue";
+            readonly property: "duration";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Current value";
+            readonly label: "Remaining duration";
             readonly writeable: false;
-            readonly type: "boolean";
+            readonly type: "duration";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
-            readonly minVersion: 1;
+            readonly minVersion: 2;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
@@ -3003,7 +2987,7 @@ export class CCAPI {
     protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory | undefined;
     constructor(host: CCAPIHost, endpoint: CCAPIEndpoint);
     // (undocumented)
-    protected assertPhysicalEndpoint(endpoint: EndpointId | VirtualEndpointId): asserts endpoint is EndpointId;
+    protected assertPhysicalEndpoint(endpoint: EndpointId_2 | VirtualEndpointId): asserts endpoint is EndpointId_2;
     // (undocumented)
     protected assertSupportsCommand(commandEnum: unknown, command: number): void;
     readonly ccId: CommandClasses_2;
@@ -3012,7 +2996,7 @@ export class CCAPI {
     static create<T extends CommandClasses_2>(ccId: T, host: CCAPIHost, endpoint: CCAPIEndpoint, requireSupport?: boolean): CommandClasses_2 extends T ? CCAPI : CCToAPI<T>;
     // (undocumented)
     protected readonly endpoint: CCAPIEndpoint;
-    protected getValueDB(): ValueDB;
+    protected getValueDB(): ValueDB_2;
     // (undocumented)
     protected readonly host: CCAPIHost;
     // (undocumented)
@@ -3027,19 +3011,19 @@ export class CCAPI {
             nodeId: number[];
         };
     };
-    isSetValueOptimistic(valueId: ValueID): boolean;
+    isSetValueOptimistic(valueId: ValueID_2): boolean;
     // (undocumented)
     protected isSinglecast(): this is this & {
         endpoint: PhysicalCCAPIEndpoint;
     };
     isSupported(): boolean;
     get pollValue(): PollValueImplementation | undefined;
-    protected schedulePoll({ property, propertyKey }: ValueIDProperties, expectedValue: unknown, { duration, transition }?: SchedulePollOptions): boolean;
+    protected schedulePoll({ property, propertyKey }: ValueIDProperties, expectedValue: unknown, { duration, transition }?: CCAPISchedulePollOptions): boolean;
     get setValue(): SetValueImplementation | undefined;
     get setValueHooks(): SetValueImplementationHooksFactory | undefined;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "NOT_KNOWN"
     supportsCommand(command: number): MaybeNotKnown_2<boolean>;
-    protected tryGetValueDB(): ValueDB | undefined;
+    protected tryGetValueDB(): ValueDB_2 | undefined;
     get version(): number;
     withOptions(options: SendCommandOptions): this;
     withTXReport<T extends this>(): WithTXReport<T>;
@@ -3048,14 +3032,14 @@ export class CCAPI {
 // Warning: (ae-missing-release-tag) "CCAPIEndpoint" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type CCAPIEndpoint = ((EndpointId & ControlsCC_2) | (VirtualEndpointId & {
-    node: PhysicalNodes<NodeId_2 & SupportsCC_2 & ControlsCC_2 & GetEndpoint_2<EndpointId & SupportsCC_2 & ControlsCC_2>>;
+export type CCAPIEndpoint = ((EndpointId_2 & ControlsCC_2) | (VirtualEndpointId & {
+    node: PhysicalNodes<NodeId_2 & SupportsCC_2 & ControlsCC_2 & GetEndpoint_2<EndpointId_2 & SupportsCC_2 & ControlsCC_2>>;
 })) & SupportsCC_2;
 
 // Warning: (ae-missing-release-tag) "CCAPIHost" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type CCAPIHost<TNode extends CCAPINode = CCAPINode> = HostIDs & GetNode<TNode> & GetValueDB & GetSupportedCCVersion & GetSafeCCVersion & SecurityManagers & GetDeviceConfig & SendCommand & GetCommunicationTimeouts & GetUserPreferences & SchedulePoll & LogNode;
+export type CCAPIHost<TNode extends CCAPINode = CCAPINode> = HostIDs_2 & GetNode_2<TNode> & GetValueDB_2 & GetSupportedCCVersion & GetSafeCCVersion & SecurityManagers & GetDeviceConfig & SendCommand_2 & GetRefreshValueTimeouts & GetUserPreferences & SchedulePoll & LogNode;
 
 // Warning: (ae-missing-release-tag) "CCAPINode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3194,6 +3178,16 @@ export interface CCAPIs {
     Version: VersionCCAPI;
 }
 
+// Warning: (ae-missing-release-tag) "CCAPISchedulePollOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CCAPISchedulePollOptions {
+    // (undocumented)
+    duration?: Duration_2;
+    // (undocumented)
+    transition?: "fast" | "slow";
+}
+
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "CCCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3207,10 +3201,22 @@ export type CCConstructor<T extends CommandClass> = typeof CommandClass & {
     new (options: any): T;
 };
 
+// Warning: (ae-missing-release-tag) "CCEncodingContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface CCEncodingContext extends Readonly<SecurityManagers>, GetDeviceConfig, HostIDs_2, GetSupportedCCVersion {
+    // (undocumented)
+    getHighestSecurityClass(nodeId: number): MaybeNotKnown_2<SecurityClass>;
+    // (undocumented)
+    hasSecurityClass(nodeId: number, securityClass: SecurityClass): MaybeNotKnown_2<boolean>;
+    // (undocumented)
+    setSecurityClass(nodeId: number, securityClass: SecurityClass, granted: boolean): void;
+}
+
 // Warning: (ae-missing-release-tag) "CCEndpoint" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type CCEndpoint = EndpointId & SupportsCC_2 & ControlsCC_2 & GetCCs & ModifyCCs;
+export type CCEndpoint = EndpointId & SupportsCC & ControlsCC & GetCCs & ModifyCCs;
 
 // Warning: (ae-missing-release-tag) "CCNameOrId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3220,23 +3226,40 @@ export type CCNameOrId = CommandClasses_2 | Extract<keyof CCAPIs, string>;
 // Warning: (ae-missing-release-tag) "CCNode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type CCNode = NodeId_2 & SupportsCC_2 & ControlsCC_2 & GetCCs & GetEndpoint_2<CCEndpoint> & GetAllEndpoints_2<CCEndpoint> & QuerySecurityClasses_2 & SetSecurityClass & ListenBehavior & QueryNodeStatus;
+export type CCNode = NodeId & SupportsCC & ControlsCC & GetCCs & GetEndpoint<CCEndpoint> & GetAllEndpoints<CCEndpoint> & QuerySecurityClasses & SetSecurityClass & ListenBehavior_2 & QueryNodeStatus_2;
+
+// Warning: (ae-missing-release-tag) "CCParsingContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface CCParsingContext extends Readonly<SecurityManagers>, GetDeviceConfig, HostIDs_2 {
+    // (undocumented)
+    __internalIsMockNode?: boolean;
+    frameType: FrameType_2;
+    // (undocumented)
+    getHighestSecurityClass(nodeId: number): MaybeNotKnown_2<SecurityClass>;
+    // (undocumented)
+    hasSecurityClass(nodeId: number, securityClass: SecurityClass): MaybeNotKnown_2<boolean>;
+    // (undocumented)
+    setSecurityClass(nodeId: number, securityClass: SecurityClass, granted: boolean): void;
+    // (undocumented)
+    sourceNodeId: number;
+}
 
 // Warning: (ae-missing-release-tag) "CCRaw" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export class CCRaw {
-    constructor(ccId: CommandClasses_2, ccCommand: number | undefined, payload: Bytes_2);
+    constructor(ccId: CommandClasses, ccCommand: number | undefined, payload: Bytes);
     // (undocumented)
     ccCommand: number | undefined;
     // (undocumented)
-    ccId: CommandClasses_2;
+    ccId: CommandClasses;
     // (undocumented)
     static parse(data: Uint8Array): CCRaw;
     // (undocumented)
-    payload: Bytes_2;
+    payload: Bytes;
     // (undocumented)
-    withPayload(payload: Bytes_2): CCRaw;
+    withPayload(payload: Bytes): CCRaw;
 }
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
@@ -3329,7 +3352,7 @@ export class CentralSceneCCConfigurationReport extends CentralSceneCC {
     // (undocumented)
     readonly slowRefresh: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "CentralSceneCCConfigurationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3348,11 +3371,11 @@ export class CentralSceneCCConfigurationSet extends CentralSceneCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): CentralSceneCCConfigurationSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     slowRefresh: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "CentralSceneCCConfigurationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3381,7 +3404,7 @@ export class CentralSceneCCNotification extends CentralSceneCC {
     // (undocumented)
     readonly slowRefresh: boolean | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "CentralSceneCCNotificationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3420,7 +3443,7 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
     // (undocumented)
     readonly supportsSlowRefresh: MaybeNotKnown<boolean>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "CentralSceneCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3439,57 +3462,49 @@ export interface CentralSceneCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const CentralSceneCCValues: Readonly<{
-    scene: ((sceneNumber: number) => {
-        readonly meta: {
-            readonly label: `Scene ${string}`;
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
+    sceneCount: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Central Scene"];
+            readonly property: "sceneCount";
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Central Scene"];
-            property: "scene";
-            propertyKey: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Central Scene"];
             readonly endpoint: number;
-            readonly property: "scene";
-            readonly propertyKey: string;
+            readonly property: "sceneCount";
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly stateful: false;
-        };
-    };
-    slowRefresh: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Central Scene"];
-            property: "slowRefresh";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Central Scene"];
-            readonly endpoint: number;
-            readonly property: "slowRefresh";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Send held down notifications at a slow rate";
-            readonly description: "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.";
-            readonly type: "boolean";
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
-        readonly options: {
-            readonly internal: false;
+    };
+    supportsSlowRefresh: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Central Scene"];
+            readonly property: "supportsSlowRefresh";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Central Scene"];
+            readonly endpoint: number;
+            readonly property: "supportsSlowRefresh";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -3498,78 +3513,86 @@ export const CentralSceneCCValues: Readonly<{
         };
     };
     supportedKeyAttributes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Central Scene"];
-            property: "supportedKeyAttributes";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Central Scene"];
+            readonly property: "supportedKeyAttributes";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Central Scene"];
             readonly endpoint: number;
             readonly property: "supportedKeyAttributes";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    supportsSlowRefresh: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Central Scene"];
-            property: "supportsSlowRefresh";
+    slowRefresh: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Central Scene"];
+            readonly property: "slowRefresh";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Central Scene"];
             readonly endpoint: number;
-            readonly property: "supportsSlowRefresh";
+            readonly property: "slowRefresh";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "Send held down notifications at a slow rate";
+            readonly description: "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.";
+            readonly type: "boolean";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    sceneCount: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Central Scene"];
-            property: "sceneCount";
+    scene: ((sceneNumber: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Central Scene"];
+            readonly property: "scene";
+            readonly propertyKey: string;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Central Scene"];
             readonly endpoint: number;
-            readonly property: "sceneCount";
+            readonly property: "scene";
+            readonly propertyKey: string;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: `Scene ${string}`;
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: false;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -3615,7 +3638,7 @@ export enum CentralSceneKeys {
 // Warning: (ae-missing-release-tag) "checkAssociation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function checkAssociation(ctx: HostIDs & GetValueDB & GetNode<NodeId & SupportsCC & GetEndpoint<EndpointId_2 & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId_2 & SupportsCC & ControlsCC, group: number, destination: AssociationAddress): AssociationCheckResult;
+function checkAssociation(ctx: HostIDs & GetValueDB & GetNode<NodeId & SupportsCC & GetEndpoint<EndpointId & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId & SupportsCC & ControlsCC, group: number, destination: AssociationAddress): AssociationCheckResult;
 
 // Warning: (ae-missing-release-tag) "ClimateControlScheduleCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3641,7 +3664,7 @@ export class ClimateControlScheduleCCChangedReport extends ClimateControlSchedul
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ClimateControlScheduleCCChangedReport;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ClimateControlScheduleCCChangedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3660,9 +3683,9 @@ export class ClimateControlScheduleCCGet extends ClimateControlScheduleCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): ClimateControlScheduleCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     weekday: Weekday;
 }
@@ -3693,7 +3716,7 @@ export class ClimateControlScheduleCCOverrideReport extends ClimateControlSchedu
     // (undocumented)
     readonly overrideType: ScheduleOverrideType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ClimateControlScheduleCCOverrideReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3718,9 +3741,9 @@ export class ClimateControlScheduleCCOverrideSet extends ClimateControlScheduleC
     // (undocumented)
     overrideType: ScheduleOverrideType;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ClimateControlScheduleCCOverrideSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3743,7 +3766,7 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
     // (undocumented)
     readonly schedule: readonly Switchpoint[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly weekday: Weekday;
 }
@@ -3766,11 +3789,11 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): ClimateControlScheduleCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     switchPoints: Switchpoint[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     weekday: Weekday;
 }
@@ -3789,27 +3812,25 @@ export interface ClimateControlScheduleCCSetOptions {
 //
 // @public (undocumented)
 export const ClimateControlScheduleCCValues: Readonly<{
-    schedule: ((weekday: Weekday) => {
+    overrideType: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Climate Control Schedule"];
+            readonly property: "overrideType";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Climate Control Schedule"];
+            readonly endpoint: number;
+            readonly property: "overrideType";
+        };
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: `Schedule (${string})`;
-            readonly type: "any";
+            readonly label: "Override type";
+            readonly states: Record<number, string>;
+            readonly type: "number";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Climate Control Schedule"];
-            property: "schedule";
-            propertyKey: Weekday;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Climate Control Schedule"];
-            readonly endpoint: number;
-            readonly property: "schedule";
-            readonly propertyKey: Weekday;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -3819,16 +3840,16 @@ export const ClimateControlScheduleCCValues: Readonly<{
         };
     };
     overrideState: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Climate Control Schedule"];
-            property: "overrideState";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Climate Control Schedule"];
+            readonly property: "overrideState";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Climate Control Schedule"];
             readonly endpoint: number;
             readonly property: "overrideState";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Override state";
             readonly min: -12.8;
@@ -3836,7 +3857,7 @@ export const ClimateControlScheduleCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -3845,27 +3866,27 @@ export const ClimateControlScheduleCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    overrideType: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Climate Control Schedule"];
-            property: "overrideType";
+    schedule: ((weekday: Weekday) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Climate Control Schedule"];
+            readonly property: "schedule";
+            readonly propertyKey: Weekday;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Climate Control Schedule"];
             readonly endpoint: number;
-            readonly property: "overrideType";
+            readonly property: "schedule";
+            readonly propertyKey: Weekday;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
         readonly meta: {
-            readonly label: "Override type";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly type: "number";
+            readonly label: `Schedule (${string})`;
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -3928,7 +3949,7 @@ export class ClockCCReport extends ClockCC {
     // (undocumented)
     readonly minute: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly weekday: Weekday;
 }
@@ -3957,9 +3978,9 @@ export class ClockCCSet extends ClockCC {
     // (undocumented)
     minute: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     weekday: Weekday;
 }
@@ -4057,9 +4078,9 @@ export class ColorSwitchCCGet extends ColorSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ColorSwitchCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4086,11 +4107,11 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: number | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ColorSwitchCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4119,9 +4140,9 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ColorSwitchCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4149,11 +4170,11 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
     // (undocumented)
     ignoreStartLevel: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     startLevel: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ColorSwitchCCStartLevelChangeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4182,9 +4203,9 @@ export class ColorSwitchCCStopLevelChange extends ColorSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCStopLevelChange;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ColorSwitchCCStopLevelChangeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4209,11 +4230,11 @@ export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedColorComponents: readonly ColorComponent[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ColorSwitchCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4228,7 +4249,208 @@ export interface ColorSwitchCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const ColorSwitchCCValues: Readonly<{
+    supportedColorComponents: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "supportedColorComponents";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "supportedColorComponents";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsHexColor: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "supportsHexColor";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "supportsHexColor";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    currentColor: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "currentColor";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "currentColor";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Current color";
+            readonly writeable: false;
+            readonly type: "any";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    targetColor: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "targetColor";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "targetColor";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Target color";
+            readonly valueChangeOptions: readonly ["transitionDuration"];
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    duration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "duration";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "duration";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Remaining duration";
+            readonly writeable: false;
+            readonly type: "duration";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    hexColor: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "hexColor";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "hexColor";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly minLength: 6;
+            readonly maxLength: 7;
+            readonly label: "RGB Color";
+            readonly valueChangeOptions: readonly ["transitionDuration"];
+            readonly type: "color";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    currentColorChannel: ((component: ColorComponent) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "currentColor";
+            readonly propertyKey: ColorComponent;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "currentColor";
+            readonly propertyKey: ColorComponent;
+        };
+        readonly meta: {
+            readonly label: `Current value (${string})`;
+            readonly description: `The current value of the ${string} channel.`;
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
     targetColorChannel: ((component: ColorComponent) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly property: "targetColor";
+            readonly propertyKey: ColorComponent;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
+            readonly endpoint: number;
+            readonly property: "targetColor";
+            readonly propertyKey: ColorComponent;
+        };
         readonly meta: {
             readonly label: `Target value (${string})`;
             readonly description: `The target value of the ${string} channel.`;
@@ -4239,216 +4461,15 @@ export const ColorSwitchCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "targetColor";
-            propertyKey: ColorComponent;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "targetColor";
-            readonly propertyKey: ColorComponent;
-        };
     }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-        };
-    };
-    currentColorChannel: ((component: ColorComponent) => {
-        readonly meta: {
-            readonly label: `Current value (${string})`;
-            readonly description: `The current value of the ${string} channel.`;
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "currentColor";
-            propertyKey: ColorComponent;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "currentColor";
-            readonly propertyKey: ColorComponent;
-        };
-    }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    hexColor: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "hexColor";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "hexColor";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly minLength: 6;
-            readonly maxLength: 7;
-            readonly label: "RGB Color";
-            readonly valueChangeOptions: readonly ["transitionDuration"];
-            readonly type: "color";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    duration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "duration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "duration";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Remaining duration";
-            readonly writeable: false;
-            readonly type: "duration";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    targetColor: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "targetColor";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "targetColor";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Target color";
-            readonly valueChangeOptions: readonly ["transitionDuration"];
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    currentColor: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "currentColor";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "currentColor";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Current color";
-            readonly writeable: false;
-            readonly type: "any";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    supportsHexColor: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "supportsHexColor";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "supportsHexColor";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedColorComponents: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Color Switch"];
-            property: "supportedColorComponents";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Color Switch"];
-            readonly endpoint: number;
-            readonly property: "supportedColorComponents";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -4485,12 +4506,12 @@ export class CommandClass implements CCId {
     constructor(options: CommandClassOptions);
     // (undocumented)
     ccCommand?: number;
-    ccId: CommandClasses_2;
+    ccId: CommandClasses;
     // (undocumented)
     get ccName(): string;
     protected computeEncapsulationOverhead(): number;
-    static createInstanceUnchecked<T extends CommandClass>(endpoint: EndpointId, cc: CommandClasses_2 | CCConstructor<T>): T | undefined;
-    determineRequiredCCInterviews(): readonly CommandClasses_2[];
+    static createInstanceUnchecked<T extends CommandClass>(endpoint: EndpointId, cc: CommandClasses | CCConstructor<T>): T | undefined;
+    determineRequiredCCInterviews(): readonly CommandClasses[];
     encapsulatingCC?: EncapsulatingCommandClass;
     encapsulationFlags: EncapsulationFlags;
     endpointIndex: number;
@@ -4502,16 +4523,16 @@ export class CommandClass implements CCId {
     expectsCCResponse(): boolean;
     readonly frameType?: FrameType;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): CommandClass;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): CommandClass | Promise<CommandClass>;
     protected getCCValue(valueId: ValueID): StaticCCValue | DynamicCCValue | undefined;
-    getDefinedValueIDs(ctx: GetValueDB & GetSupportedCCVersion & GetDeviceConfig & GetNode<NodeId_2 & GetEndpoint_2<EndpointId & SupportsCC_2 & ControlsCC_2>>, includeInternal?: boolean): ValueID[];
-    getEncapsulatedCC(ccId: CommandClasses_2, ccCommand?: number): CommandClass | undefined;
-    getEncapsulatingCC(ccId: CommandClasses_2, ccCommand?: number): CommandClass | undefined;
+    getDefinedValueIDs(ctx: GetValueDB & GetSupportedCCVersion_2 & GetDeviceConfig & GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>, includeInternal?: boolean): ValueID[];
+    getEncapsulatedCC(ccId: CommandClasses, ccCommand?: number): CommandClass | undefined;
+    getEncapsulatingCC(ccId: CommandClasses, ccCommand?: number): CommandClass | undefined;
     // (undocumented)
-    getEndpoint<T extends EndpointId>(ctx: GetNode<NodeId_2 & GetEndpoint_2<T>>): T | undefined;
+    getEndpoint<T extends EndpointId>(ctx: GetNode<NodeId & GetEndpoint<T>>): T | undefined;
     getMaxPayloadLength(baseLength: number): number;
     protected getMetadata<T extends ValueMetadata>(ctx: GetValueDB, ccValue: CCValue): T | undefined;
-    getNode<T extends NodeId_2>(ctx: GetNode<T>): T | undefined;
+    getNode<T extends NodeId>(ctx: GetNode<T>): T | undefined;
     getPartialCCSessionId(): Record<string, any> | undefined;
     protected getValue<T>(ctx: GetValueDB, ccValue: CCValue): T | undefined;
     protected getValueDB(ctx: GetValueDB): ValueDB;
@@ -4519,7 +4540,7 @@ export class CommandClass implements CCId {
     interview(_ctx: InterviewContext): Promise<void>;
     // (undocumented)
     isBroadcast(): this is BroadcastCC<this>;
-    isEncapsulatedWith(ccId: CommandClasses_2, ccCommand?: number): boolean;
+    isEncapsulatedWith(ccId: CommandClasses, ccCommand?: number): boolean;
     // (undocumented)
     isExpectedCCResponse(received: CommandClass): boolean;
     isExtended(): boolean;
@@ -4531,12 +4552,12 @@ export class CommandClass implements CCId {
     // (undocumented)
     isSinglecast(): this is SinglecastCC<this>;
     isStatefulValue(properties: ValueIDProperties): boolean;
-    mergePartialCCs(_partials: CommandClass[], _ctx: CCParsingContext): void;
+    mergePartialCCs(_partials: CommandClass[], _ctx: CCParsingContext_2): Promise<void>;
     nodeId: number | MulticastDestination;
     // (undocumented)
-    static parse(data: Uint8Array, ctx: CCParsingContext): CommandClass;
+    static parse(data: Uint8Array, ctx: CCParsingContext_2): Promise<CommandClass>;
     // (undocumented)
-    payload: Bytes_2;
+    payload: Bytes;
     // Warning: (tsdoc-characters-after-block-tag) The token "@ccValue" looks like a TSDoc tag but contains an invalid character "."; if it is not a tag, use a backslash to escape the "@"
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -4544,14 +4565,14 @@ export class CommandClass implements CCId {
     refreshValues(_ctx: RefreshValuesContext): Promise<void>;
     protected removeMetadata(ctx: GetValueDB, ccValue: CCValue): void;
     protected removeValue(ctx: GetValueDB, ccValue: CCValue): void;
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     setInterviewComplete(host: GetValueDB, complete: boolean): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     setMappedBasicValue(_ctx: GetValueDB, _value: number): boolean;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     protected setMetadata(ctx: GetValueDB, ccValue: CCValue, meta?: ValueMetadata): void;
     protected setValue(ctx: GetValueDB, ccValue: CCValue, value: unknown): void;
-    shouldRefreshValues(this: SinglecastCC<this>, _ctx: GetValueDB & GetSupportedCCVersion & GetDeviceConfig & GetNode<NodeId_2 & GetEndpoint_2<EndpointId & SupportsCC_2 & ControlsCC_2>>): boolean;
+    shouldRefreshValues(this: SinglecastCC<this>, _ctx: GetValueDB & GetSupportedCCVersion_2 & GetDeviceConfig & GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>): boolean;
     skipEndpointInterview(): boolean;
     // (undocumented)
     protected throwMissingCriticalInterviewResponse(): never;
@@ -4570,7 +4591,7 @@ export class CommandClass implements CCId {
 // Warning: (ae-missing-release-tag) "commandClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export const commandClass: <TTarget extends typeof CommandClass>(ccId: CommandClasses_2) => TypedClassDecorator_2<TTarget>;
+export const commandClass: <TTarget extends typeof CommandClass>(ccId: CommandClasses) => TypedClassDecorator_2<TTarget>;
 
 // Warning: (ae-missing-release-tag) "CommandClassOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4590,25 +4611,25 @@ export interface CommandClassOptions extends CCAddress {
 export class ConfigurationCC extends CommandClass {
     // (undocumented)
     ccCommand: ConfigurationCommand;
-    composePartialParamValue(ctx: GetValueDB_2, parameter: number, bitMask: number, partialValue: number): number;
-    composePartialParamValues(ctx: GetValueDB_2, parameter: number, partials: {
+    composePartialParamValue(ctx: GetValueDB, parameter: number, bitMask: number, partialValue: number): number;
+    composePartialParamValues(ctx: GetValueDB, parameter: number, partials: {
         bitMask: number;
         partialValue: number;
     }[]): number;
-    deserializeParamInformationFromConfig(ctx: GetValueDB_2 & GetDeviceConfig_2, config: ParamInfoMap): void;
-    getPartialParamInfos(ctx: GetValueDB_2, parameter: number): (ValueID_2 & {
+    deserializeParamInformationFromConfig(ctx: GetValueDB & GetDeviceConfig, config: ParamInfoMap): void;
+    getPartialParamInfos(ctx: GetValueDB, parameter: number): (ValueID & {
         metadata: ConfigurationMetadata;
     })[];
-    getQueriedParamInfos(ctx: GetValueDB_2 & GetSupportedCCVersion_2 & GetDeviceConfig_2 & GetNode_2<NodeId & GetEndpoint<EndpointId_2 & SupportsCC & ControlsCC>>): Record<number, ConfigurationMetadata>;
+    getQueriedParamInfos(ctx: GetValueDB & GetSupportedCCVersion_2 & GetDeviceConfig & GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>): Record<number, ConfigurationMetadata>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
-    protected paramExistsInConfigFile(ctx: GetValueDB_2 & GetDeviceConfig_2, parameter: number, valueBitMask?: number): boolean;
+    protected paramExistsInConfigFile(ctx: GetValueDB & GetDeviceConfig, parameter: number, valueBitMask?: number): boolean;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    translateProperty(ctx: GetValueDB_2, property: string | number, propertyKey?: string | number): string;
+    translateProperty(ctx: GetValueDB, property: string | number, propertyKey?: string | number): string;
     // (undocumented)
-    translatePropertyKey(ctx: GetValueDB_2, property: string | number, propertyKey?: string | number): string | undefined;
+    translatePropertyKey(ctx: GetValueDB, property: string | number, propertyKey?: string | number): string | undefined;
 }
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
@@ -4640,9 +4661,9 @@ export class ConfigurationCCBulkGet extends ConfigurationCC {
     // (undocumented)
     get parameters(): number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCCBulkGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4673,7 +4694,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     get values(): ReadonlyMap<number, ConfigValue>;
     // (undocumented)
@@ -4710,9 +4731,9 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
     // (undocumented)
     get resetToDefault(): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     get valueFormat(): ConfigValueFormat;
     // (undocumented)
@@ -4754,9 +4775,9 @@ export class ConfigurationCCGet extends ConfigurationCC {
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4778,9 +4799,9 @@ export class ConfigurationCCInfoGet extends ConfigurationCC {
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCCInfoReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4797,7 +4818,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
     // (undocumented)
     info: string;
     // (undocumented)
-    mergePartialCCs(partials: ConfigurationCCInfoReport[], _ctx: CCParsingContext_2): void;
+    mergePartialCCs(partials: ConfigurationCCInfoReport[], _ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
     readonly parameter: number;
     // (undocumented)
@@ -4805,9 +4826,9 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
     // (undocumented)
     readonly reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
@@ -4833,9 +4854,9 @@ export class ConfigurationCCNameGet extends ConfigurationCC {
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCCNameReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4850,7 +4871,7 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    mergePartialCCs(partials: ConfigurationCCNameReport[], _ctx: CCParsingContext_2): void;
+    mergePartialCCs(partials: ConfigurationCCNameReport[], _ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
     name: string;
     // (undocumented)
@@ -4860,9 +4881,9 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
     // (undocumented)
     readonly reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
@@ -4888,9 +4909,9 @@ export class ConfigurationCCPropertiesGet extends ConfigurationCC {
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCCPropertiesReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4921,9 +4942,9 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     valueFormat: ConfigValueFormat;
     // (undocumented)
@@ -4971,9 +4992,9 @@ export class ConfigurationCCReport extends ConfigurationCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     value: ConfigValue;
     // (undocumented)
@@ -5007,9 +5028,9 @@ export class ConfigurationCCSet extends ConfigurationCC {
     // (undocumented)
     resetToDefault: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     value: ConfigValue | undefined;
     // (undocumented)
@@ -5036,57 +5057,57 @@ export type ConfigurationCCSetOptions = {
 //
 // @public (undocumented)
 export const ConfigurationCCValues: Readonly<{
-    paramInformation: ((parameter: number, bitMask?: number | undefined) => {
-        readonly meta: {
+    isParamInformationFromConfig: {
+        id: {
+            readonly commandClass: CommandClasses.Configuration;
+            readonly property: "isParamInformationFromConfig";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Configuration;
+            readonly endpoint: 0;
+            readonly property: "isParamInformationFromConfig";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
-        readonly id: {
-            commandClass: CommandClasses.Configuration;
-            property: number;
-            propertyKey: number | undefined;
+    };
+    paramInformation: ((parameter: number, bitMask?: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Configuration;
+            readonly property: number;
+            readonly propertyKey: number | undefined;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Configuration;
             readonly endpoint: number;
             readonly property: number;
             readonly propertyKey: number | undefined;
         };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-        };
-    };
-    isParamInformationFromConfig: {
-        readonly id: {
-            commandClass: CommandClasses.Configuration;
-            property: "isParamInformationFromConfig";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Configuration;
-            readonly endpoint: number;
-            readonly property: "isParamInformationFromConfig";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
         };
     };
 }>;
@@ -5126,7 +5147,7 @@ export enum ConfigurationCommand {
 // Warning: (ae-missing-release-tag) "configureLifelineAssociations" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function configureLifelineAssociations(ctx: CCAPIHost<CCAPINode & SupportsCC & ControlsCC & GetAllEndpoints<EndpointId_2 & SupportsCC & ControlsCC>>, endpoint: EndpointId_2 & SupportsCC & ControlsCC): Promise<void>;
+function configureLifelineAssociations(ctx: CCAPIHost<CCAPINode & SupportsCC & ControlsCC & GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>>, endpoint: EndpointId & SupportsCC & ControlsCC): Promise<void>;
 
 export { ConfigValue }
 
@@ -5150,11 +5171,11 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): CRC16CCCommandEncapsulation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<CRC16CCCommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "CRC16CCCommandEncapsulationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5233,7 +5254,7 @@ export class DeviceResetLocallyCC extends CommandClass {
 // @public (undocumented)
 export class DeviceResetLocallyCCNotification extends DeviceResetLocallyCC {
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): DeviceResetLocallyCCNotification;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): DeviceResetLocallyCCNotification;
 }
 
 // Warning: (ae-missing-release-tag) "DeviceResetLocallyCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5300,7 +5321,7 @@ export class DoorLockCCCapabilitiesReport extends DoorLockCC {
     // (undocumented)
     readonly supportedOutsideHandles: DoorHandleStatus;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly twistAssistSupported: boolean;
 }
@@ -5363,7 +5384,7 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly twistAssist?: boolean;
 }
@@ -5412,9 +5433,9 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
     // (undocumented)
     outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     twistAssist?: boolean;
 }
@@ -5471,7 +5492,7 @@ export class DoorLockCCOperationReport extends DoorLockCC {
     // (undocumented)
     readonly targetMode?: DoorLockMode;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "DoorLockCCOperationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5508,9 +5529,9 @@ export class DoorLockCCOperationSet extends DoorLockCC {
     // (undocumented)
     mode: DoorLockMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "DoorLockCCOperationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5525,446 +5546,27 @@ export interface DoorLockCCOperationSetOptions {
 //
 // @public (undocumented)
 export const DoorLockCCValues: Readonly<{
-    doorStatus: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "doorStatus";
+    targetMode: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "targetMode";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock"];
             readonly endpoint: number;
-            readonly property: "doorStatus";
+            readonly property: "targetMode";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Current status of the door";
-            readonly writeable: false;
-            readonly type: "any";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    doorSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "doorSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "doorSupported";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    boltStatus: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "boltStatus";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "boltStatus";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Current status of the bolt";
-            readonly writeable: false;
-            readonly type: "any";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    boltSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "boltSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "boltSupported";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    latchStatus: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "latchStatus";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "latchStatus";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Current status of the latch";
-            readonly writeable: false;
-            readonly type: "any";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    latchSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "latchSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "latchSupported";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    blockToBlock: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "blockToBlock";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "blockToBlock";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Block-to-block functionality enabled";
-            readonly type: "boolean";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly minVersion: 4;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    blockToBlockSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "blockToBlockSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "blockToBlockSupported";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly minVersion: number;
-        };
-    };
-    twistAssist: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "twistAssist";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "twistAssist";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Twist Assist enabled";
-            readonly type: "boolean";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly minVersion: 4;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    twistAssistSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "twistAssistSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "twistAssistSupported";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly minVersion: number;
-        };
-    };
-    holdAndReleaseTime: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "holdAndReleaseTime";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "holdAndReleaseTime";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Duration in seconds the latch stays retracted";
-            readonly min: 0;
-            readonly max: 65535;
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly minVersion: 4;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    holdAndReleaseSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "holdAndReleaseSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "holdAndReleaseSupported";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly minVersion: number;
-        };
-    };
-    autoRelockTime: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "autoRelockTime";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "autoRelockTime";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Duration in seconds until lock returns to secure state";
-            readonly min: 0;
-            readonly max: 65535;
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly minVersion: 4;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    autoRelockSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "autoRelockSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "autoRelockSupported";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly minVersion: number;
-        };
-    };
-    lockTimeout: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "lockTimeout";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "lockTimeout";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Seconds until lock mode times out";
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 65535;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    lockTimeoutConfiguration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "lockTimeoutConfiguration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "lockTimeoutConfiguration";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Duration of timed mode in seconds";
-            readonly min: 0;
-            readonly max: 65535;
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    operationType: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "operationType";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "operationType";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Lock operation type";
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly label: "Target lock mode";
+            readonly states: Record<number, string>;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -5973,24 +5575,27 @@ export const DoorLockCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    insideHandlesCanOpenDoor: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "insideHandlesCanOpenDoor";
+    currentMode: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "currentMode";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock"];
             readonly endpoint: number;
-            readonly property: "insideHandlesCanOpenDoor";
+            readonly property: "currentMode";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Which inside handles can open the door (actual status)";
+            readonly label: "Current lock mode";
+            readonly states: Record<number, string>;
             readonly writeable: false;
-            readonly type: "any";
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -5999,24 +5604,101 @@ export const DoorLockCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    insideHandlesCanOpenDoorConfiguration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "insideHandlesCanOpenDoorConfiguration";
+    duration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "duration";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock"];
             readonly endpoint: number;
-            readonly property: "insideHandlesCanOpenDoorConfiguration";
+            readonly property: "duration";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Which inside handles can open the door (configuration)";
+            readonly label: "Remaining duration until target lock mode";
+            readonly writeable: false;
+            readonly type: "duration";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedOutsideHandles: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "supportedOutsideHandles";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "supportedOutsideHandles";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    outsideHandlesCanOpenDoorConfiguration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "outsideHandlesCanOpenDoorConfiguration";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "outsideHandlesCanOpenDoorConfiguration";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Which outside handles can open the door (configuration)";
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    outsideHandlesCanOpenDoor: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "outsideHandlesCanOpenDoor";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "outsideHandlesCanOpenDoor";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Which outside handles can open the door (actual status)";
+            readonly writeable: false;
+            readonly type: "any";
+            readonly readable: true;
+        };
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -6026,74 +5708,48 @@ export const DoorLockCCValues: Readonly<{
         };
     };
     supportedInsideHandles: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "supportedInsideHandles";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "supportedInsideHandles";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock"];
             readonly endpoint: number;
             readonly property: "supportedInsideHandles";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
+        }>;
+        options: {
             readonly internal: true;
-            readonly minVersion: number;
-        };
-    };
-    outsideHandlesCanOpenDoor: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "outsideHandlesCanOpenDoor";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "outsideHandlesCanOpenDoor";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Which outside handles can open the door (actual status)";
-            readonly writeable: false;
-            readonly type: "any";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
+            readonly minVersion: 4;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
         };
     };
-    outsideHandlesCanOpenDoorConfiguration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "outsideHandlesCanOpenDoorConfiguration";
+    insideHandlesCanOpenDoorConfiguration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "insideHandlesCanOpenDoorConfiguration";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock"];
             readonly endpoint: number;
-            readonly property: "outsideHandlesCanOpenDoorConfiguration";
+            readonly property: "insideHandlesCanOpenDoorConfiguration";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Which outside handles can open the door (configuration)";
+            readonly label: "Which inside handles can open the door (configuration)";
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -6102,80 +5758,24 @@ export const DoorLockCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    supportedOutsideHandles: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "supportedOutsideHandles";
+    insideHandlesCanOpenDoor: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "insideHandlesCanOpenDoor";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock"];
             readonly endpoint: number;
-            readonly property: "supportedOutsideHandles";
+            readonly property: "insideHandlesCanOpenDoor";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
+            readonly label: "Which inside handles can open the door (actual status)";
+            readonly writeable: false;
             readonly type: "any";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly minVersion: number;
-        };
-    };
-    duration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "duration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "duration";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Remaining duration until target lock mode";
-            readonly writeable: false;
-            readonly type: "duration";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-        };
-    };
-    currentMode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "currentMode";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Door Lock"];
-            readonly endpoint: number;
-            readonly property: "currentMode";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Current lock mode";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -6184,35 +5784,450 @@ export const DoorLockCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    targetMode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock"];
-            property: "targetMode";
+    operationType: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "operationType";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock"];
             readonly endpoint: number;
-            readonly property: "targetMode";
+            readonly property: "operationType";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Target lock mode";
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly label: "Lock operation type";
+            readonly states: Record<number, string>;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    lockTimeoutConfiguration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "lockTimeoutConfiguration";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "lockTimeoutConfiguration";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Duration of timed mode in seconds";
+            readonly min: 0;
+            readonly max: 65535;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    lockTimeout: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "lockTimeout";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "lockTimeout";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Seconds until lock mode times out";
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 65535;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    autoRelockSupported: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "autoRelockSupported";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "autoRelockSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    autoRelockTime: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "autoRelockTime";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "autoRelockTime";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Duration in seconds until lock returns to secure state";
+            readonly min: 0;
+            readonly max: 65535;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+        };
+    };
+    holdAndReleaseSupported: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "holdAndReleaseSupported";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "holdAndReleaseSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    holdAndReleaseTime: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "holdAndReleaseTime";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "holdAndReleaseTime";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Duration in seconds the latch stays retracted";
+            readonly min: 0;
+            readonly max: 65535;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+        };
+    };
+    twistAssistSupported: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "twistAssistSupported";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "twistAssistSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    twistAssist: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "twistAssist";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "twistAssist";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Twist Assist enabled";
+            readonly type: "boolean";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+        };
+    };
+    blockToBlockSupported: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "blockToBlockSupported";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "blockToBlockSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    blockToBlock: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "blockToBlock";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "blockToBlock";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Block-to-block functionality enabled";
+            readonly type: "boolean";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+        };
+    };
+    latchSupported: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "latchSupported";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "latchSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    latchStatus: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "latchStatus";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "latchStatus";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Current status of the latch";
+            readonly writeable: false;
+            readonly type: "any";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+        };
+    };
+    boltSupported: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "boltSupported";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "boltSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    boltStatus: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "boltStatus";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "boltStatus";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Current status of the bolt";
+            readonly writeable: false;
+            readonly type: "any";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+        };
+    };
+    doorSupported: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "doorSupported";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "doorSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    doorStatus: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly property: "doorStatus";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Door Lock"];
+            readonly endpoint: number;
+            readonly property: "doorStatus";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Current status of the door";
+            readonly writeable: false;
+            readonly type: "any";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
         };
     };
 }>;
@@ -6261,9 +6276,9 @@ export class DoorLockLoggingCCRecordGet extends DoorLockLoggingCC {
     // (undocumented)
     recordNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "DoorLockLoggingCCRecordGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6286,7 +6301,7 @@ export class DoorLockLoggingCCRecordReport extends DoorLockLoggingCC {
     // (undocumented)
     readonly recordNumber: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "DoorLockLoggingCCRecordReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6315,7 +6330,7 @@ export class DoorLockLoggingCCRecordsSupportedReport extends DoorLockLoggingCC {
     // (undocumented)
     readonly recordsCount: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "DoorLockLoggingCCRecordsSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6331,28 +6346,28 @@ export interface DoorLockLoggingCCRecordsSupportedReportOptions {
 // @public (undocumented)
 export const DoorLockLoggingCCValues: Readonly<{
     recordsCount: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Door Lock Logging"];
-            property: "recordsCount";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Door Lock Logging"];
+            readonly property: "recordsCount";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Door Lock Logging"];
             readonly endpoint: number;
             readonly property: "recordsCount";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -6556,13 +6571,13 @@ export class EnergyProductionCC extends CommandClass {
 export class EnergyProductionCCGet extends EnergyProductionCC {
     constructor(options: WithAddress_2<EnergyProductionCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): EnergyProductionCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): EnergyProductionCCGet;
     // (undocumented)
     parameter: EnergyProductionParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "EnergyProductionCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6579,7 +6594,7 @@ export interface EnergyProductionCCGetOptions {
 export class EnergyProductionCCReport extends EnergyProductionCC {
     constructor(options: WithAddress_2<EnergyProductionCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): EnergyProductionCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): EnergyProductionCCReport;
     // (undocumented)
     readonly parameter: EnergyProductionParameter;
     // (undocumented)
@@ -6587,9 +6602,9 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
     // (undocumented)
     readonly scale: EnergyProductionScale;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     readonly value: number;
 }
@@ -6611,26 +6626,26 @@ export interface EnergyProductionCCReportOptions {
 // @public (undocumented)
 export const EnergyProductionCCValues: Readonly<{
     value: ((parameter: EnergyProductionParameter) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Energy Production"];
+            readonly property: "value";
+            readonly propertyKey: EnergyProductionParameter;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Energy Production"];
+            readonly endpoint: number;
+            readonly property: "value";
+            readonly propertyKey: EnergyProductionParameter;
+        };
         readonly meta: {
             readonly label: string;
             readonly writeable: false;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Energy Production"];
-            property: "value";
-            propertyKey: EnergyProductionParameter;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Energy Production"];
-            readonly endpoint: number;
-            readonly property: "value";
-            readonly propertyKey: EnergyProductionParameter;
-        };
     }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -6707,7 +6722,7 @@ export class EntryControlCCConfigurationReport extends EntryControlCC {
     // (undocumented)
     readonly keyCacheTimeout: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "EntryControlCCConfigurationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6732,9 +6747,9 @@ export class EntryControlCCConfigurationSet extends EntryControlCC {
     // (undocumented)
     readonly keyCacheTimeout: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "EntryControlCCConfigurationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6775,7 +6790,7 @@ export class EntryControlCCEventSupportedReport extends EntryControlCC {
     // (undocumented)
     readonly supportedEventTypes: readonly EntryControlEventTypes[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "EntryControlCCEventSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6812,7 +6827,7 @@ export class EntryControlCCKeySupportedReport extends EntryControlCC {
     // (undocumented)
     readonly supportedKeys: readonly number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "EntryControlCCKeySupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6839,7 +6854,7 @@ export class EntryControlCCNotification extends EntryControlCC {
     // (undocumented)
     readonly sequenceNumber: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "EntryControlCCNotificationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6860,92 +6875,46 @@ export interface EntryControlCCNotificationOptions {
 //
 // @public (undocumented)
 export const EntryControlCCValues: Readonly<{
-    supportedKeys: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Entry Control"];
-            property: "supportedKeys";
+    keyCacheSize: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Entry Control"];
+            readonly property: "keyCacheSize";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Entry Control"];
             readonly endpoint: number;
-            readonly property: "supportedKeys";
+            readonly property: "keyCacheSize";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "Key cache size";
+            readonly description: "Number of character that must be stored before sending";
+            readonly min: 1;
+            readonly max: 32;
+            readonly type: "number";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedEventTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Entry Control"];
-            property: "supportedEventTypes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Entry Control"];
-            readonly endpoint: number;
-            readonly property: "supportedEventTypes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedDataTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Entry Control"];
-            property: "supportedDataTypes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Entry Control"];
-            readonly endpoint: number;
-            readonly property: "supportedDataTypes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
     keyCacheTimeout: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Entry Control"];
-            property: "keyCacheTimeout";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Entry Control"];
+            readonly property: "keyCacheTimeout";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Entry Control"];
             readonly endpoint: number;
             readonly property: "keyCacheTimeout";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Key cache timeout";
             readonly unit: "seconds";
@@ -6956,7 +6925,7 @@ export const EntryControlCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -6965,28 +6934,74 @@ export const EntryControlCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    keyCacheSize: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Entry Control"];
-            property: "keyCacheSize";
+    supportedDataTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Entry Control"];
+            readonly property: "supportedDataTypes";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Entry Control"];
             readonly endpoint: number;
-            readonly property: "keyCacheSize";
+            readonly property: "supportedDataTypes";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Key cache size";
-            readonly description: "Number of character that must be stored before sending";
-            readonly min: 1;
-            readonly max: 32;
-            readonly type: "number";
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
-        readonly options: {
-            readonly internal: false;
+    };
+    supportedEventTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Entry Control"];
+            readonly property: "supportedEventTypes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Entry Control"];
+            readonly endpoint: number;
+            readonly property: "supportedEventTypes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedKeys: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Entry Control"];
+            readonly property: "supportedKeys";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Entry Control"];
+            readonly endpoint: number;
+            readonly property: "supportedKeys";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -7123,7 +7138,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
 }
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
@@ -7180,7 +7195,7 @@ export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
     // (undocumented)
     tilt: MaybeUnknown<number> | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FibaroVenetianBlindCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7203,11 +7218,11 @@ export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
     // (undocumented)
     position: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     tilt: number | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FibaroVenetianBlindCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7336,7 +7351,9 @@ export class FirmwareUpdateMetaDataCCActivationReport extends FirmwareUpdateMeta
     // (undocumented)
     readonly manufacturerId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCActivationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7369,15 +7386,15 @@ export class FirmwareUpdateMetaDataCCActivationSet extends FirmwareUpdateMetaDat
     // (undocumented)
     firmwareTarget: number;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCActivationSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCActivationSet;
     // (undocumented)
     hardwareVersion?: number;
     // (undocumented)
     manufacturerId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCActivationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7408,7 +7425,9 @@ export class FirmwareUpdateMetaDataCCGet extends FirmwareUpdateMetaDataCC {
     // (undocumented)
     readonly reportNumber: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7451,7 +7470,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport extends FirmwareUpdateMetaDa
     // (undocumented)
     readonly maxFragmentSize?: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportsActivation: MaybeNotKnown<boolean>;
     // (undocumented)
@@ -7459,7 +7478,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport extends FirmwareUpdateMetaDa
     // (undocumented)
     readonly supportsResuming?: MaybeNotKnown<boolean>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCMetaDataReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7502,15 +7521,15 @@ export class FirmwareUpdateMetaDataCCPrepareGet extends FirmwareUpdateMetaDataCC
     // (undocumented)
     fragmentSize: number;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCPrepareGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCPrepareGet;
     // (undocumented)
     hardwareVersion: number;
     // (undocumented)
     manufacturerId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCPrepareGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7539,9 +7558,11 @@ export class FirmwareUpdateMetaDataCCPrepareReport extends FirmwareUpdateMetaDat
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCPrepareReport;
     // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
     readonly status: FirmwareDownloadStatus;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCPrepareReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7568,9 +7589,9 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
     // (undocumented)
     reportNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7601,7 +7622,7 @@ export class FirmwareUpdateMetaDataCCRequestGet extends FirmwareUpdateMetaDataCC
     // (undocumented)
     fragmentSize?: number;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCRequestGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCRequestGet;
     // (undocumented)
     hardwareVersion?: number;
     // (undocumented)
@@ -7611,9 +7632,9 @@ export class FirmwareUpdateMetaDataCCRequestGet extends FirmwareUpdateMetaDataCC
     // (undocumented)
     resume?: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCRequestGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7644,9 +7665,11 @@ export class FirmwareUpdateMetaDataCCRequestReport extends FirmwareUpdateMetaDat
     // (undocumented)
     resume?: boolean;
     // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
     readonly status: FirmwareUpdateRequestStatus;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "FirmwareUpdateMetaDataCCRequestReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7669,9 +7692,11 @@ export class FirmwareUpdateMetaDataCCStatusReport extends FirmwareUpdateMetaData
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCStatusReport;
     // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
     readonly status: FirmwareUpdateStatus;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     readonly waitTime?: number;
 }
 
@@ -7689,154 +7714,154 @@ export interface FirmwareUpdateMetaDataCCStatusReportOptions {
 //
 // @public (undocumented)
 export const FirmwareUpdateMetaDataCCValues: Readonly<{
-    supportsNonSecureTransfer: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            property: "supportsNonSecureTransfer";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            readonly endpoint: number;
-            readonly property: "supportsNonSecureTransfer";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsResuming: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            property: "supportsResuming";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            readonly endpoint: number;
-            readonly property: "supportsResuming";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    continuesToFunction: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            property: "continuesToFunction";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            readonly endpoint: number;
-            readonly property: "continuesToFunction";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    additionalFirmwareIDs: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            property: "additionalFirmwareIDs";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            readonly endpoint: number;
-            readonly property: "additionalFirmwareIDs";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    firmwareUpgradable: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            property: "firmwareUpgradable";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            readonly endpoint: number;
-            readonly property: "firmwareUpgradable";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
     supportsActivation: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
-            property: "supportsActivation";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly property: "supportsActivation";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
             readonly endpoint: number;
             readonly property: "supportsActivation";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    firmwareUpgradable: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly property: "firmwareUpgradable";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly endpoint: number;
+            readonly property: "firmwareUpgradable";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    additionalFirmwareIDs: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly property: "additionalFirmwareIDs";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly endpoint: number;
+            readonly property: "additionalFirmwareIDs";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    continuesToFunction: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly property: "continuesToFunction";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly endpoint: number;
+            readonly property: "continuesToFunction";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsResuming: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly property: "supportsResuming";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly endpoint: number;
+            readonly property: "supportsResuming";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsNonSecureTransfer: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly property: "supportsNonSecureTransfer";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Firmware Update Meta Data"];
+            readonly endpoint: number;
+            readonly property: "supportsNonSecureTransfer";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -7959,28 +7984,28 @@ export function FLiRS2WakeUpTime(value: FLiRS_2): WakeUpTime;
 // Warning: (ae-missing-release-tag) "getAllAssociationGroups" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function getAllAssociationGroups(ctx: GetValueDB & GetDeviceConfig, node: NodeId & GetAllEndpoints<EndpointId_2 & SupportsCC>): ReadonlyMap<number, ReadonlyMap<number, AssociationGroup>>;
+function getAllAssociationGroups(ctx: GetValueDB & GetDeviceConfig, node: NodeId & GetAllEndpoints<EndpointId & SupportsCC>): ReadonlyMap<number, ReadonlyMap<number, AssociationGroup>>;
 
 // Warning: (ae-missing-release-tag) "getAllAssociations" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function getAllAssociations(ctx: GetValueDB, node: NodeId & GetAllEndpoints<EndpointId_2 & SupportsCC>): ReadonlyObjectKeyMap<AssociationAddress, ReadonlyMap<number, readonly AssociationAddress[]>>;
+function getAllAssociations(ctx: GetValueDB, node: NodeId & GetAllEndpoints<EndpointId & SupportsCC>): ReadonlyObjectKeyMap<AssociationAddress, ReadonlyMap<number, readonly AssociationAddress[]>>;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getAPI(cc: CommandClasses_2): APIConstructor | undefined;
+export function getAPI(cc: CommandClasses): APIConstructor | undefined;
 
 // Warning: (ae-missing-release-tag) "getAssociationGroups" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function getAssociationGroups(ctx: GetValueDB & GetDeviceConfig, endpoint: EndpointId_2 & SupportsCC): ReadonlyMap<number, AssociationGroup>;
+function getAssociationGroups(ctx: GetValueDB & GetDeviceConfig, endpoint: EndpointId & SupportsCC): ReadonlyMap<number, AssociationGroup>;
 
 // Warning: (ae-missing-release-tag) "getAssociations" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function getAssociations(ctx: GetValueDB, endpoint: EndpointId_2 & SupportsCC): ReadonlyMap<number, readonly AssociationAddress[]>;
+function getAssociations(ctx: GetValueDB, endpoint: EndpointId & SupportsCC): ReadonlyMap<number, readonly AssociationAddress[]>;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getCCCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7992,13 +8017,13 @@ export const getCCCommand: (target: CommandClass) => number | undefined;
 // Warning: (ae-missing-release-tag) "getCCCommandConstructor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export const getCCCommandConstructor: (ccId: CommandClasses_2, ccCommand: number) => CCConstructor<CommandClass> | undefined;
+export const getCCCommandConstructor: (ccId: CommandClasses, ccCommand: number) => CCConstructor<CommandClass> | undefined;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getCCConstructor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export const getCCConstructor: (ccId: CommandClasses_2) => CCConstructor<CommandClass> | undefined;
+export const getCCConstructor: (ccId: CommandClasses) => CCConstructor<CommandClass> | undefined;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getCCResponsePredicate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8017,24 +8042,24 @@ export function getCCValueProperties<TTarget extends CommandClass>(target: TTarg
 // Warning: (ae-missing-release-tag) "getCCValues" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getCCValues<T extends CommandClass>(cc: T | CommandClasses_2): Record<string, StaticCCValue | DynamicCCValue | undefined> | undefined;
+export function getCCValues<T extends CommandClass>(cc: T | CommandClasses): Record<string, StaticCCValue | DynamicCCValue | undefined> | undefined;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getCommandClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getCommandClass(cc: CommandClass | CCAPI): CommandClasses_2;
+export function getCommandClass(cc: CommandClass | CCAPI): CommandClasses;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getCommandClassStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getCommandClassStatic<T extends CCConstructor<CommandClass>>(classConstructor: T): CommandClasses_2;
+export function getCommandClassStatic<T extends CCConstructor<CommandClass>>(classConstructor: T): CommandClasses;
 
 // Warning: (ae-missing-release-tag) "getEffectiveCCVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function getEffectiveCCVersion(ctx: GetSupportedCCVersion, cc: CCId, defaultVersion?: number): number;
+export function getEffectiveCCVersion(ctx: GetSupportedCCVersion_2, cc: CCId, defaultVersion?: number): number;
 
 // Warning: (ae-missing-release-tag) "getEnergyProductionScale" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -8081,7 +8106,7 @@ export const getFibaroCCId: (target: FibaroCC) => number | undefined;
 // Warning: (ae-missing-release-tag) "getImplementedVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getImplementedVersion<T extends CommandClass>(cc: T | CommandClasses_2): number;
+export function getImplementedVersion<T extends CommandClass>(cc: T | CommandClasses): number;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getImplementedVersionStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8094,10 +8119,18 @@ export function getImplementedVersionStatic<T extends CCConstructor<CommandClass
 // @public (undocumented)
 export function getInnermostCommandClass(cc: CommandClass): CommandClass;
 
+// Warning: (ae-missing-release-tag) "GetInterviewOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface GetInterviewOptions {
+    // (undocumented)
+    getInterviewOptions(): InterviewOptions;
+}
+
 // Warning: (ae-missing-release-tag) "getLifelineGroupIds" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function getLifelineGroupIds(ctx: GetValueDB & GetDeviceConfig, endpoint: EndpointId_2 & SupportsCC): number[];
+function getLifelineGroupIds(ctx: GetValueDB & GetDeviceConfig, endpoint: EndpointId & SupportsCC): number[];
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getManufacturerId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8124,11 +8157,27 @@ export const getManufacturerProprietaryAPI: (manufacturerId: number) => APIConst
 // @public
 export const getManufacturerProprietaryCCConstructor: (manufacturerId: number) => ManufacturerProprietaryCCConstructor | undefined;
 
+// Warning: (ae-missing-release-tag) "GetRefreshValueTimeouts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface GetRefreshValueTimeouts {
+    // (undocumented)
+    getRefreshValueTimeouts(): RefreshValueTimeouts;
+}
+
 // Warning: (ae-forgotten-export) The symbol "Security2ExtensionConstructor" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "getS2ExtensionConstructor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
 export const getS2ExtensionConstructor: (type: S2ExtensionType) => Security2ExtensionConstructor<Security2Extension> | undefined;
+
+// Warning: (ae-missing-release-tag) "GetUserPreferences" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface GetUserPreferences {
+    // (undocumented)
+    getUserPreferences(): UserPreferences;
+}
 
 // Warning: (ae-missing-release-tag) "HailCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -8188,7 +8237,7 @@ export class HumidityControlModeCCReport extends HumidityControlModeCC {
     // (undocumented)
     readonly mode: HumidityControlMode;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlModeCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8209,9 +8258,9 @@ export class HumidityControlModeCCSet extends HumidityControlModeCC {
     // (undocumented)
     mode: HumidityControlMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlModeCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8240,7 +8289,7 @@ export class HumidityControlModeCCSupportedReport extends HumidityControlModeCC 
     // (undocumented)
     supportedModes: HumidityControlMode[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlModeCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8255,46 +8304,19 @@ export interface HumidityControlModeCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const HumidityControlModeCCValues: Readonly<{
-    supportedModes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Humidity Control Mode"];
-            property: "supportedModes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Humidity Control Mode"];
-            readonly endpoint: number;
-            readonly property: "supportedModes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
     mode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Humidity Control Mode"];
-            property: "mode";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Mode"];
+            readonly property: "mode";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Humidity Control Mode"];
             readonly endpoint: number;
             readonly property: "mode";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly states: Record<number, string>;
             readonly label: "Humidity control mode";
             readonly min: 0;
             readonly max: 255;
@@ -8302,8 +8324,33 @@ export const HumidityControlModeCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedModes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Mode"];
+            readonly property: "supportedModes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Mode"];
+            readonly endpoint: number;
+            readonly property: "supportedModes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -8369,7 +8416,7 @@ export class HumidityControlOperatingStateCCReport extends HumidityControlOperat
     // (undocumented)
     readonly state: HumidityControlOperatingState;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlOperatingStateCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8385,20 +8432,18 @@ export interface HumidityControlOperatingStateCCReportOptions {
 // @public (undocumented)
 export const HumidityControlOperatingStateCCValues: Readonly<{
     state: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Humidity Control Operating State"];
-            property: "state";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Operating State"];
+            readonly property: "state";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Humidity Control Operating State"];
             readonly endpoint: number;
             readonly property: "state";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly states: Record<number, string>;
             readonly label: "Humidity control operating state";
             readonly writeable: false;
             readonly min: 0;
@@ -8406,7 +8451,7 @@ export const HumidityControlOperatingStateCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -8452,7 +8497,7 @@ export class HumidityControlSetpointCC extends CommandClass {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    translatePropertyKey(ctx: GetValueDB_2, property: string | number, propertyKey: string | number): string | undefined;
+    translatePropertyKey(ctx: GetValueDB, property: string | number, propertyKey: string | number): string | undefined;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlSetpointCCCapabilitiesGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8463,11 +8508,11 @@ export class HumidityControlSetpointCCCapabilitiesGet extends HumidityControlSet
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlSetpointCCCapabilitiesGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlSetpointCCCapabilitiesGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8496,7 +8541,7 @@ export class HumidityControlSetpointCCCapabilitiesReport extends HumidityControl
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     type: HumidityControlSetpointType;
 }
@@ -8525,11 +8570,11 @@ export class HumidityControlSetpointCCGet extends HumidityControlSetpointCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlSetpointCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlSetpointCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8552,7 +8597,7 @@ export class HumidityControlSetpointCCReport extends HumidityControlSetpointCC {
     // (undocumented)
     scale: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     type: HumidityControlSetpointType;
     // (undocumented)
@@ -8579,11 +8624,11 @@ export class HumidityControlSetpointCCScaleSupportedGet extends HumidityControlS
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlSetpointCCScaleSupportedGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlSetpointCCScaleSupportedGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8604,7 +8649,7 @@ export class HumidityControlSetpointCCScaleSupportedReport extends HumidityContr
     // (undocumented)
     readonly supportedScales: readonly number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlSetpointCCScaleSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8625,11 +8670,11 @@ export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     value: number;
 }
@@ -8662,7 +8707,7 @@ export class HumidityControlSetpointCCSupportedReport extends HumidityControlSet
     // (undocumented)
     readonly supportedSetpointTypes: readonly HumidityControlSetpointType[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "HumidityControlSetpointCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8677,30 +8722,24 @@ export interface HumidityControlSetpointCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const HumidityControlSetpointCCValues: Readonly<{
-    setpointScale: ((setpointType: number) => {
-        readonly meta: {
-            readonly label: `Setpoint scale (${string})`;
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
+    supportedSetpointTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
+            readonly property: "supportedSetpointTypes";
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
-            property: "setpointScale";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
             readonly endpoint: number;
-            readonly property: "setpointScale";
-            readonly propertyKey: number;
+            readonly property: "supportedSetpointTypes";
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -8709,6 +8748,17 @@ export const HumidityControlSetpointCCValues: Readonly<{
         };
     };
     setpoint: ((setpointType: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
+            readonly property: "setpoint";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
+            readonly endpoint: number;
+            readonly property: "setpoint";
+            readonly propertyKey: number;
+        };
         readonly meta: {
             readonly label: `Setpoint (${string})`;
             readonly ccSpecific: {
@@ -8718,20 +8768,9 @@ export const HumidityControlSetpointCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
-            property: "setpoint";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
-            readonly endpoint: number;
-            readonly property: "setpoint";
-            readonly propertyKey: number;
-        };
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -8740,29 +8779,35 @@ export const HumidityControlSetpointCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    supportedSetpointTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
-            property: "supportedSetpointTypes";
+    setpointScale: ((setpointType: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
+            readonly property: "setpointScale";
+            readonly propertyKey: number;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Humidity Control Setpoint"];
             readonly endpoint: number;
-            readonly property: "supportedSetpointTypes";
+            readonly property: "setpointScale";
+            readonly propertyKey: number;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: `Setpoint scale (${string})`;
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -8794,7 +8839,7 @@ export enum HumidityControlSetpointCommand {
 // Warning: (ae-missing-release-tag) "HumidityControlSetpointMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type HumidityControlSetpointMetadata = ValueMetadata_2 & {
+export type HumidityControlSetpointMetadata = ValueMetadata & {
     ccSpecific: {
         setpointType: HumidityControlSetpointType;
     };
@@ -8844,15 +8889,15 @@ export class InclusionControllerCC extends CommandClass {
 export class InclusionControllerCCComplete extends InclusionControllerCC {
     constructor(options: WithAddress_2<InclusionControllerCCCompleteOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): InclusionControllerCCComplete;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): InclusionControllerCCComplete;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     status: InclusionControllerStatus;
     // (undocumented)
     step: InclusionControllerStep;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "InclusionControllerCCCompleteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8871,15 +8916,15 @@ export interface InclusionControllerCCCompleteOptions {
 export class InclusionControllerCCInitiate extends InclusionControllerCC {
     constructor(options: WithAddress_2<InclusionControllerCCInitiateOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): InclusionControllerCCInitiate;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): InclusionControllerCCInitiate;
     // (undocumented)
     includedNodeId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     step: InclusionControllerStep;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "InclusionControllerCCInitiateOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8955,17 +9000,17 @@ export class IndicatorCC extends CommandClass {
     // (undocumented)
     ccCommand: IndicatorCommand;
     // (undocumented)
-    static getSupportedPropertyIDsCached(ctx: GetValueDB_2, endpoint: EndpointId_2, indicatorId: number): MaybeNotKnown<number[]>;
+    static getSupportedPropertyIDsCached(ctx: GetValueDB, endpoint: EndpointId, indicatorId: number): MaybeNotKnown<number[]>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    protected supportsV2Indicators(ctx: GetValueDB_2): boolean;
+    protected supportsV2Indicators(ctx: GetValueDB): boolean;
     // (undocumented)
-    translateProperty(ctx: GetValueDB_2, property: string | number, propertyKey?: string | number): string;
+    translateProperty(ctx: GetValueDB, property: string | number, propertyKey?: string | number): string;
     // (undocumented)
-    translatePropertyKey(ctx: GetValueDB_2, property: string | number, propertyKey: string | number): string | undefined;
+    translatePropertyKey(ctx: GetValueDB, property: string | number, propertyKey: string | number): string | undefined;
 }
 
 // Warning: (ae-missing-release-tag) "IndicatorCCDescriptionGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8978,9 +9023,9 @@ export class IndicatorCCDescriptionGet extends IndicatorCC {
     // (undocumented)
     indicatorId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IndicatorCCDescriptionGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9005,9 +9050,9 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IndicatorCCDescriptionReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9030,9 +9075,9 @@ export class IndicatorCCGet extends IndicatorCC {
     // (undocumented)
     indicatorId: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IndicatorCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9055,9 +9100,9 @@ export class IndicatorCCReport extends IndicatorCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly values: IndicatorObject[] | undefined;
 }
@@ -9081,9 +9126,9 @@ export class IndicatorCCSet extends IndicatorCC {
     // (undocumented)
     indicator0Value: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     values: IndicatorObject[] | undefined;
 }
@@ -9107,9 +9152,9 @@ export class IndicatorCCSupportedGet extends IndicatorCC {
     // (undocumented)
     indicatorId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IndicatorCCSupportedGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9134,11 +9179,11 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedProperties: readonly number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IndicatorCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9157,158 +9202,42 @@ export interface IndicatorCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const IndicatorCCValues: Readonly<{
-    indicatorDescription: ((indicatorId: number) => {
-        readonly meta: {
+    supportedIndicatorIds: {
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: "supportedIndicatorIds";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly endpoint: number;
+            readonly property: "supportedIndicatorIds";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Indicator;
-            property: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Indicator;
-            readonly endpoint: number;
-            readonly property: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
+        }>;
+        options: {
             readonly internal: true;
-            readonly minVersion: 4;
-        };
-    };
-    valueV2: ((indicatorId: number, propertyId: number) => {
-        readonly meta: {
-            readonly ccSpecific: {
-                indicatorId: number;
-                propertyId: number;
-            };
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Indicator;
-            property: number;
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Indicator;
-            readonly endpoint: number;
-            readonly property: number;
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    supportedPropertyIDs: ((indicatorId: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Indicator;
-            property: "supportedPropertyIDs";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Indicator;
-            readonly endpoint: number;
-            readonly property: "supportedPropertyIDs";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
             readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    timeout: {
-        readonly id: {
-            commandClass: CommandClasses.Indicator;
-            property: "timeout";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Indicator;
-            readonly endpoint: number;
-            readonly property: "timeout";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Timeout";
-            readonly type: "string";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
             readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-        };
-    };
-    identify: {
-        readonly id: {
-            commandClass: CommandClasses.Indicator;
-            property: "identify";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Indicator;
-            readonly endpoint: number;
-            readonly property: "identify";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Identify";
-            readonly states: {
-                readonly true: "Identify";
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly options: {
             readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly minVersion: 3;
         };
     };
     valueV1: {
-        readonly id: {
-            commandClass: CommandClasses.Indicator;
-            property: "value";
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: "value";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Indicator;
             readonly endpoint: number;
             readonly property: "value";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Indicator value";
             readonly ccSpecific: {
@@ -9320,7 +9249,7 @@ export const IndicatorCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -9329,29 +9258,145 @@ export const IndicatorCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    supportedIndicatorIds: {
-        readonly id: {
-            commandClass: CommandClasses.Indicator;
-            property: "supportedIndicatorIds";
+    identify: {
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: "identify";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Indicator;
             readonly endpoint: number;
-            readonly property: "supportedIndicatorIds";
+            readonly property: "identify";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
+            readonly label: "Identify";
+            readonly states: {
+                readonly true: "Identify";
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    timeout: {
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: "timeout";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly endpoint: number;
+            readonly property: "timeout";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Timeout";
+            readonly type: "string";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedPropertyIDs: ((indicatorId: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: "supportedPropertyIDs";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly endpoint: number;
+            readonly property: "supportedPropertyIDs";
+            readonly propertyKey: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    valueV2: ((indicatorId: number, propertyId: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: number;
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly endpoint: number;
+            readonly property: number;
+            readonly propertyKey: number;
+        };
+        readonly meta: {
+            readonly ccSpecific: {
+                readonly indicatorId: number;
+                readonly propertyId: number;
+            };
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
             readonly secret: false;
-            readonly minVersion: 1;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    indicatorDescription: ((indicatorId: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly endpoint: number;
+            readonly property: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: true;
+            readonly minVersion: 4;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -9379,7 +9424,7 @@ export enum IndicatorCommand {
 // Warning: (ae-missing-release-tag) "IndicatorMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type IndicatorMetadata = ValueMetadata_2 & {
+export type IndicatorMetadata = ValueMetadata & {
     ccSpecific: {
         indicatorId: number;
         propertyId?: number;
@@ -9410,7 +9455,14 @@ export interface IndicatorTimeout {
 // Warning: (ae-missing-release-tag) "InterviewContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type InterviewContext = CCAPIHost<CCAPINode & GetCCs & SupportsCC_2 & ControlsCC_2 & QuerySecurityClasses_2 & SetSecurityClass & GetEndpoint_2<EndpointId & GetCCs & SupportsCC_2 & ControlsCC_2 & ModifyCCs> & GetAllEndpoints_2<EndpointId & SupportsCC_2 & ControlsCC_2>> & GetInterviewOptions & LookupManufacturer;
+export type InterviewContext = CCAPIHost<CCAPINode & GetCCs & SupportsCC & ControlsCC & QuerySecurityClasses & SetSecurityClass & GetEndpoint<EndpointId & GetCCs & SupportsCC & ControlsCC & ModifyCCs> & GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>> & GetInterviewOptions & LookupManufacturer;
+
+// Warning: (ae-missing-release-tag) "InterviewOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface InterviewOptions {
+    queryAllUserCodes?: boolean;
+}
 
 // Warning: (ae-missing-release-tag) "InvalidCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -9441,15 +9493,15 @@ export interface InvalidCCOptions extends CommandClassOptions {
 export class IrrigationCC extends CommandClass {
     // (undocumented)
     ccCommand: IrrigationCommand;
-    static getMaxValveTableSizeCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<number>;
-    static getNumValvesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<number>;
+    static getMaxValveTableSizeCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<number>;
+    static getNumValvesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<number>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
-    static supportsMasterValveCached(ctx: GetValueDB_2, endpoint: EndpointId_2): boolean;
+    static supportsMasterValveCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
     // (undocumented)
-    translateProperty(ctx: GetValueDB_2, property: string | number, propertyKey?: string | number): string;
+    translateProperty(ctx: GetValueDB, property: string | number, propertyKey?: string | number): string;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCSystemConfigGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9476,7 +9528,7 @@ export class IrrigationCCSystemConfigReport extends IrrigationCC {
     // (undocumented)
     readonly rainSensorPolarity?: IrrigationSensorPolarity;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCSystemConfigReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9513,9 +9565,9 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
     // (undocumented)
     rainSensorPolarity?: IrrigationSensorPolarity;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCSystemConfigSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9551,7 +9603,7 @@ export class IrrigationCCSystemInfoReport extends IrrigationCC {
     // (undocumented)
     readonly supportsMasterValve: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCSystemInfoReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9578,9 +9630,9 @@ export class IrrigationCCSystemShutoff extends IrrigationCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCSystemShutoff;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCSystemShutoffOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9634,7 +9686,7 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
     // (undocumented)
     systemVoltage: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCSystemStatusReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9677,32 +9729,24 @@ export interface IrrigationCCSystemStatusReportOptions {
 //
 // @public (undocumented)
 export const IrrigationCCValues: Readonly<{
-    valveRunStartStop: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Start/Stop`;
-            readonly states: {
-                readonly true: "Start";
-                readonly false: "Stop";
-            };
-            readonly type: "boolean";
+    numValves: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "numValves";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "numValves";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "startStop";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "startStop";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -9710,31 +9754,24 @@ export const IrrigationCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    valveRunDuration: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Run duration`;
-            readonly min: 1;
-            readonly unit: "s";
-            readonly max: 65535;
-            readonly type: "number";
+    numValveTables: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "numValveTables";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "numValveTables";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "duration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "duration";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -9742,28 +9779,24 @@ export const IrrigationCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    useMoistureSensor: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Use moisture sensor`;
-            readonly type: "boolean";
+    supportsMasterValve: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "supportsMasterValve";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "supportsMasterValve";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "useMoistureSensor";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "useMoistureSensor";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -9771,28 +9804,24 @@ export const IrrigationCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    useRainSensor: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Use rain sensor`;
-            readonly type: "boolean";
+    maxValveTableSize: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "maxValveTableSize";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "maxValveTableSize";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "useRainSensor";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "useRainSensor";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -9800,902 +9829,27 @@ export const IrrigationCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    errorLowFlow: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Error - Flow below high threshold`;
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
+    systemVoltage: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "systemVoltage";
         };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "errorLowFlow";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Irrigation;
             readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "errorLowFlow";
+            readonly property: "systemVoltage";
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    lowFlowThreshold: ((valveId: ValveId) => {
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: `${string}: Low flow threshold`;
-            readonly min: 0;
-            readonly unit: "l/h";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "lowFlowThreshold";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "lowFlowThreshold";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorHighFlow: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Error - Flow above high threshold`;
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "errorHighFlow";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "errorHighFlow";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    highFlowThreshold: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: High flow threshold`;
-            readonly min: 0;
-            readonly unit: "l/h";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "highFlowThreshold";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "highFlowThreshold";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorMaximumFlow: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Error - Maximum flow detected`;
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "errorMaximumFlow";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "errorMaximumFlow";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    maximumFlow: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Maximum flow`;
-            readonly min: 0;
-            readonly unit: "l/h";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "maximumFlow";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "maximumFlow";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorLowCurrent: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Error - Current below low threshold`;
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "errorLowCurrent";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "errorLowCurrent";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorHighCurrent: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Error - Current above high threshold`;
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "errorHighCurrent";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "errorHighCurrent";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorShortCircuit: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Error - Short circuit detected`;
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "errorShortCircuit";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "errorShortCircuit";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    nominalCurrentLowThreshold: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Nominal current - low threshold`;
-            readonly min: 0;
-            readonly max: 2550;
-            readonly unit: "mA";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "nominalCurrentLowThreshold";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "nominalCurrentLowThreshold";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    nominalCurrentHighThreshold: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Nominal current - high threshold`;
-            readonly min: 0;
-            readonly max: 2550;
-            readonly unit: "mA";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "nominalCurrentHighThreshold";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "nominalCurrentHighThreshold";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    nominalCurrent: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Nominal current`;
-            readonly unit: "mA";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "nominalCurrent";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "nominalCurrent";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    valveConnected: ((valveId: ValveId) => {
-        readonly meta: {
-            readonly label: `${string}: Connected`;
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: ValveId;
-            propertyKey: "valveConnected";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: ValveId;
-            readonly propertyKey: "valveConnected";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    shutoffSystem: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "shutoff";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "shutoff";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Shutoff system";
-            readonly states: {
-                readonly true: "Shutoff";
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    firstOpenZoneId: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "firstOpenZoneId";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "firstOpenZoneId";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "First open zone valve ID";
-            readonly writeable: false;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    masterValveOpen: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "masterValveOpen";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "masterValveOpen";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Master valve is open";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorValve: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "errorValve";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "errorValve";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Error: valve reporting error";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    lowPressureThreshold: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "lowPressureThreshold";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "lowPressureThreshold";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Low pressure threshold";
-            readonly unit: "kPa";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorLowPressure: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "errorLowPressure";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "errorLowPressure";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Error: low pressure";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    highPressureThreshold: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "highPressureThreshold";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "highPressureThreshold";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "High pressure threshold";
-            readonly unit: "kPa";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorHighPressure: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "errorHighPressure";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "errorHighPressure";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Error: high pressure";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorEmergencyShutdown: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "errorEmergencyShutdown";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "errorEmergencyShutdown";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Error: emergency shutdown";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    errorNotProgrammed: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "errorNotProgrammed";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "errorNotProgrammed";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Error: device not programmed";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    shutoffDuration: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "shutoffDuration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "shutoffDuration";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Remaining shutoff duration";
-            readonly unit: "hours";
+            readonly label: "System voltage";
+            readonly unit: "V";
             readonly writeable: false;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    pressure: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "pressure";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "pressure";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Pressure";
-            readonly unit: "kPa";
-            readonly writeable: false;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    flow: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "flow";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "flow";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Flow";
-            readonly unit: "l/h";
-            readonly writeable: false;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    moistureSensorPolarity: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "moistureSensorPolarity";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "moistureSensorPolarity";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Moisture sensor polarity";
-            readonly min: 0;
-            readonly max: 1;
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    moistureSensorActive: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "moistureSensorActive";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "moistureSensorActive";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Moisture sensor attached and active";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    rainSensorPolarity: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "rainSensorPolarity";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "rainSensorPolarity";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Rain sensor polarity";
-            readonly min: 0;
-            readonly max: 1;
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    rainSensorActive: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "rainSensorActive";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "rainSensorActive";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Rain sensor attached and active";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    pressureSensorActive: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "pressureSensorActive";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "pressureSensorActive";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Pressure sensor active";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    flowSensorActive: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "flowSensorActive";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Irrigation;
-            readonly endpoint: number;
-            readonly property: "flowSensorActive";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Flow sensor active";
-            readonly writeable: false;
-            readonly type: "boolean";
-            readonly readable: true;
-        };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -10705,16 +9859,16 @@ export const IrrigationCCValues: Readonly<{
         };
     };
     masterValveDelay: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "masterValveDelay";
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "masterValveDelay";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Irrigation;
             readonly endpoint: number;
             readonly property: "masterValveDelay";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Master valve delay";
             readonly description: "The delay between turning on the master valve and turning on any zone valve";
@@ -10725,7 +9879,7 @@ export const IrrigationCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -10734,27 +9888,243 @@ export const IrrigationCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    systemVoltage: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "systemVoltage";
+    flowSensorActive: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "flowSensorActive";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Irrigation;
             readonly endpoint: number;
-            readonly property: "systemVoltage";
+            readonly property: "flowSensorActive";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "System voltage";
-            readonly unit: "V";
+            readonly label: "Flow sensor active";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    pressureSensorActive: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "pressureSensorActive";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "pressureSensorActive";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Pressure sensor active";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    rainSensorActive: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "rainSensorActive";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "rainSensorActive";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Rain sensor attached and active";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    rainSensorPolarity: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "rainSensorPolarity";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "rainSensorPolarity";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Rain sensor polarity";
+            readonly min: 0;
+            readonly max: 1;
+            readonly states: Record<number, string>;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    moistureSensorActive: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "moistureSensorActive";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "moistureSensorActive";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Moisture sensor attached and active";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    moistureSensorPolarity: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "moistureSensorPolarity";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "moistureSensorPolarity";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Moisture sensor polarity";
+            readonly min: 0;
+            readonly max: 1;
+            readonly states: Record<number, string>;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    flow: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "flow";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "flow";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Flow";
+            readonly unit: "l/h";
+            readonly writeable: false;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    pressure: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "pressure";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "pressure";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Pressure";
+            readonly unit: "kPa";
+            readonly writeable: false;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    shutoffDuration: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "shutoffDuration";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "shutoffDuration";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Remaining shutoff duration";
+            readonly unit: "hours";
             readonly writeable: false;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -10763,104 +10133,782 @@ export const IrrigationCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    maxValveTableSize: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "maxValveTableSize";
+    errorNotProgrammed: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "errorNotProgrammed";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Irrigation;
             readonly endpoint: number;
-            readonly property: "maxValveTableSize";
+            readonly property: "errorNotProgrammed";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "Error: device not programmed";
+            readonly writeable: false;
+            readonly type: "boolean";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    supportsMasterValve: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "supportsMasterValve";
+    errorEmergencyShutdown: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "errorEmergencyShutdown";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Irrigation;
             readonly endpoint: number;
-            readonly property: "supportsMasterValve";
+            readonly property: "errorEmergencyShutdown";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "Error: emergency shutdown";
+            readonly writeable: false;
+            readonly type: "boolean";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    numValveTables: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "numValveTables";
+    errorHighPressure: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "errorHighPressure";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Irrigation;
             readonly endpoint: number;
-            readonly property: "numValveTables";
+            readonly property: "errorHighPressure";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "Error: high pressure";
+            readonly writeable: false;
+            readonly type: "boolean";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    numValves: {
-        readonly id: {
-            commandClass: CommandClasses.Irrigation;
-            property: "numValves";
+    highPressureThreshold: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "highPressureThreshold";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Irrigation;
             readonly endpoint: number;
-            readonly property: "numValves";
+            readonly property: "highPressureThreshold";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "High pressure threshold";
+            readonly unit: "kPa";
+            readonly type: "number";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
+        };
+    };
+    errorLowPressure: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "errorLowPressure";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "errorLowPressure";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Error: low pressure";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    lowPressureThreshold: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "lowPressureThreshold";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "lowPressureThreshold";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Low pressure threshold";
+            readonly unit: "kPa";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    errorValve: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "errorValve";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "errorValve";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Error: valve reporting error";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    masterValveOpen: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "masterValveOpen";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "masterValveOpen";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Master valve is open";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    firstOpenZoneId: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "firstOpenZoneId";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "firstOpenZoneId";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "First open zone valve ID";
+            readonly writeable: false;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    shutoffSystem: {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: "shutoff";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: "shutoff";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Shutoff system";
+            readonly states: {
+                readonly true: "Shutoff";
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    valveConnected: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "valveConnected";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "valveConnected";
+        };
+        readonly meta: {
+            readonly label: `${string}: Connected`;
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    nominalCurrent: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "nominalCurrent";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "nominalCurrent";
+        };
+        readonly meta: {
+            readonly label: `${string}: Nominal current`;
+            readonly unit: "mA";
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    nominalCurrentHighThreshold: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "nominalCurrentHighThreshold";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "nominalCurrentHighThreshold";
+        };
+        readonly meta: {
+            readonly label: `${string}: Nominal current - high threshold`;
+            readonly min: 0;
+            readonly max: 2550;
+            readonly unit: "mA";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    nominalCurrentLowThreshold: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "nominalCurrentLowThreshold";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "nominalCurrentLowThreshold";
+        };
+        readonly meta: {
+            readonly label: `${string}: Nominal current - low threshold`;
+            readonly min: 0;
+            readonly max: 2550;
+            readonly unit: "mA";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    errorShortCircuit: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "errorShortCircuit";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "errorShortCircuit";
+        };
+        readonly meta: {
+            readonly label: `${string}: Error - Short circuit detected`;
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    errorHighCurrent: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "errorHighCurrent";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "errorHighCurrent";
+        };
+        readonly meta: {
+            readonly label: `${string}: Error - Current above high threshold`;
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    errorLowCurrent: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "errorLowCurrent";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "errorLowCurrent";
+        };
+        readonly meta: {
+            readonly label: `${string}: Error - Current below low threshold`;
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    maximumFlow: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "maximumFlow";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "maximumFlow";
+        };
+        readonly meta: {
+            readonly label: `${string}: Maximum flow`;
+            readonly min: 0;
+            readonly unit: "l/h";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    errorMaximumFlow: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "errorMaximumFlow";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "errorMaximumFlow";
+        };
+        readonly meta: {
+            readonly label: `${string}: Error - Maximum flow detected`;
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    highFlowThreshold: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "highFlowThreshold";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "highFlowThreshold";
+        };
+        readonly meta: {
+            readonly label: `${string}: High flow threshold`;
+            readonly min: 0;
+            readonly unit: "l/h";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    errorHighFlow: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "errorHighFlow";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "errorHighFlow";
+        };
+        readonly meta: {
+            readonly label: `${string}: Error - Flow above high threshold`;
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    lowFlowThreshold: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "lowFlowThreshold";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "lowFlowThreshold";
+        };
+        readonly meta: {
+            readonly label: `${string}: Low flow threshold`;
+            readonly min: 0;
+            readonly unit: "l/h";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    errorLowFlow: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "errorLowFlow";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "errorLowFlow";
+        };
+        readonly meta: {
+            readonly label: `${string}: Error - Flow below high threshold`;
+            readonly writeable: false;
+            readonly type: "boolean";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    useRainSensor: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "useRainSensor";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "useRainSensor";
+        };
+        readonly meta: {
+            readonly label: `${string}: Use rain sensor`;
+            readonly type: "boolean";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    useMoistureSensor: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "useMoistureSensor";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "useMoistureSensor";
+        };
+        readonly meta: {
+            readonly label: `${string}: Use moisture sensor`;
+            readonly type: "boolean";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    valveRunDuration: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "duration";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "duration";
+        };
+        readonly meta: {
+            readonly label: `${string}: Run duration`;
+            readonly min: 1;
+            readonly unit: "s";
+            readonly max: 65535;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    valveRunStartStop: ((valveId: ValveId) => {
+        id: {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly property: ValveId;
+            readonly propertyKey: "startStop";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Irrigation;
+            readonly endpoint: number;
+            readonly property: ValveId;
+            readonly propertyKey: "startStop";
+        };
+        readonly meta: {
+            readonly label: `${string}: Start/Stop`;
+            readonly states: {
+                readonly true: "Start";
+                readonly false: "Stop";
+            };
+            readonly type: "boolean";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -10873,9 +10921,9 @@ export class IrrigationCCValveConfigGet extends IrrigationCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveConfigGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     valveId: ValveId;
 }
@@ -10908,7 +10956,7 @@ export class IrrigationCCValveConfigReport extends IrrigationCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     useMoistureSensor: boolean;
     // (undocumented)
@@ -10957,9 +11005,9 @@ export class IrrigationCCValveConfigSet extends IrrigationCC {
     // (undocumented)
     nominalCurrentLowThreshold: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     useMoistureSensor: boolean;
     // (undocumented)
@@ -10990,9 +11038,9 @@ export class IrrigationCCValveInfoGet extends IrrigationCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveInfoGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     valveId: ValveId;
 }
@@ -11031,7 +11079,7 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly valveId: ValveId;
 }
@@ -11070,9 +11118,9 @@ export class IrrigationCCValveRun extends IrrigationCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveRun;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     valveId: ValveId;
 }
@@ -11095,11 +11143,11 @@ export class IrrigationCCValveTableGet extends IrrigationCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveTableGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     tableId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCValveTableGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11122,7 +11170,7 @@ export class IrrigationCCValveTableReport extends IrrigationCC {
     // (undocumented)
     readonly tableId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCValveTableReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11143,11 +11191,11 @@ export class IrrigationCCValveTableRun extends IrrigationCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveTableRun;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     tableIDs: number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCValveTableRunOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11168,11 +11216,11 @@ export class IrrigationCCValveTableSet extends IrrigationCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveTableSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     tableId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "IrrigationCCValveTableSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11333,7 +11381,7 @@ export class LanguageCCReport extends LanguageCC {
     // (undocumented)
     readonly language: string;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "LanguageCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11360,9 +11408,9 @@ export class LanguageCCSet extends LanguageCC {
     get language(): string;
     set language(value: string);
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "LanguageCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11379,24 +11427,24 @@ export interface LanguageCCSetOptions {
 //
 // @public (undocumented)
 export const LanguageCCValues: Readonly<{
-    country: {
-        readonly id: {
-            commandClass: CommandClasses.Language;
-            property: "country";
+    language: {
+        id: {
+            readonly commandClass: CommandClasses.Language;
+            readonly property: "language";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Language;
             readonly endpoint: number;
-            readonly property: "country";
+            readonly property: "language";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Country code";
+            readonly label: "Language code";
             readonly writeable: false;
             readonly type: "string";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -11405,24 +11453,24 @@ export const LanguageCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    language: {
-        readonly id: {
-            commandClass: CommandClasses.Language;
-            property: "language";
+    country: {
+        id: {
+            readonly commandClass: CommandClasses.Language;
+            readonly property: "country";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Language;
             readonly endpoint: number;
-            readonly property: "language";
+            readonly property: "country";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Language code";
+            readonly label: "Country code";
             readonly writeable: false;
             readonly type: "string";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -11495,7 +11543,7 @@ export class LockCCReport extends LockCC {
     // (undocumented)
     readonly locked: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "LockCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11516,9 +11564,9 @@ export class LockCCSet extends LockCC {
     // (undocumented)
     locked: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "LockCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11534,16 +11582,16 @@ export interface LockCCSetOptions {
 // @public (undocumented)
 export const LockCCValues: Readonly<{
     locked: {
-        readonly id: {
-            commandClass: CommandClasses.Lock;
-            property: "locked";
+        id: {
+            readonly commandClass: CommandClasses.Lock;
+            readonly property: "locked";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Lock;
             readonly endpoint: number;
             readonly property: "locked";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Locked";
             readonly description: "Whether the lock is locked";
@@ -11551,7 +11599,7 @@ export const LockCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -11604,7 +11652,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ManufacturerProprietaryCCOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11639,9 +11687,9 @@ export class ManufacturerSpecificCCDeviceSpecificGet extends ManufacturerSpecifi
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): ManufacturerSpecificCCDeviceSpecificGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ManufacturerSpecificCCDeviceSpecificGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11662,7 +11710,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpec
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ManufacturerSpecificCCDeviceSpecificReport;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly type: DeviceIdType;
 }
@@ -11697,9 +11745,9 @@ export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
     // (undocumented)
     readonly productType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ManufacturerSpecificCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11718,102 +11766,17 @@ export interface ManufacturerSpecificCCReportOptions {
 //
 // @public (undocumented)
 export const ManufacturerSpecificCCValues: Readonly<{
-    deviceId: ((type: DeviceIdType) => {
-        readonly meta: {
-            readonly label: string;
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            property: "deviceId";
-            propertyKey: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            readonly endpoint: number;
-            readonly property: "deviceId";
-            readonly propertyKey: string;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    productId: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            property: "productId";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            readonly endpoint: number;
-            readonly property: "productId";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Product ID";
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 65535;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    productType: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            property: "productType";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            readonly endpoint: number;
-            readonly property: "productType";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Product type";
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 65535;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly supportsEndpoints: false;
-        };
-    };
     manufacturerId: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            property: "manufacturerId";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
-            readonly endpoint: number;
             readonly property: "manufacturerId";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
+            readonly endpoint: 0;
+            readonly property: "manufacturerId";
+        };
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Manufacturer ID";
             readonly writeable: false;
@@ -11822,13 +11785,98 @@ export const ManufacturerSpecificCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
-            readonly autoCreate: true;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    productType: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
+            readonly property: "productType";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
+            readonly endpoint: 0;
+            readonly property: "productType";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Product type";
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 65535;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    productId: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
+            readonly property: "productId";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
+            readonly endpoint: 0;
+            readonly property: "productId";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Product ID";
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 65535;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    deviceId: ((type: DeviceIdType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
+            readonly property: "deviceId";
+            readonly propertyKey: string;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Manufacturer Specific"];
+            readonly endpoint: number;
+            readonly property: "deviceId";
+            readonly propertyKey: string;
+        };
+        readonly meta: {
+            readonly label: `Device ID (${string})`;
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -11853,16 +11901,16 @@ export enum ManufacturerSpecificCommand {
 export class MeterCC extends CommandClass {
     // (undocumented)
     ccCommand: MeterCommand;
-    static getMeterTypeCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<number>;
-    static getSupportedRateTypesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<RateType[]>;
-    static getSupportedScalesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<number[]>;
+    static getMeterTypeCached(ctx: GetValueDB_2, endpoint: EndpointId): MaybeNotKnown<number>;
+    static getSupportedRateTypesCached(ctx: GetValueDB_2, endpoint: EndpointId): MaybeNotKnown<RateType[]>;
+    static getSupportedScalesCached(ctx: GetValueDB_2, endpoint: EndpointId): MaybeNotKnown<number[]>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    shouldRefreshValues(this: SinglecastCC_2<this>, ctx: GetValueDB_2 & GetSupportedCCVersion_2 & GetDeviceConfig_2 & GetNode_2<NodeId & GetEndpoint<EndpointId_2 & SupportsCC & ControlsCC>>): boolean;
-    static supportsResetCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<boolean>;
+    shouldRefreshValues(this: SinglecastCC<this>, ctx: GetValueDB_2 & GetSupportedCCVersion & GetDeviceConfig & GetNode_2<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>): boolean;
+    static supportsResetCached(ctx: GetValueDB_2, endpoint: EndpointId): MaybeNotKnown<boolean>;
     // (undocumented)
     translatePropertyKey(ctx: GetValueDB_2, property: string | number, propertyKey: string | number): string | undefined;
 }
@@ -11879,9 +11927,9 @@ export class MeterCCGet extends MeterCC {
     // (undocumented)
     scale: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MeterCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11912,9 +11960,9 @@ export class MeterCCReport extends MeterCC {
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
     // (undocumented)
     type: number;
     // (undocumented)
@@ -11951,11 +11999,11 @@ export class MeterCCReset extends MeterCC {
     // (undocumented)
     scale: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetValue: number | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
     // (undocumented)
     type: number | undefined;
 }
@@ -11986,7 +12034,7 @@ export class MeterCCSupportedReport extends MeterCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedRateTypes: readonly RateType[];
     // (undocumented)
@@ -11994,7 +12042,7 @@ export class MeterCCSupportedReport extends MeterCC {
     // (undocumented)
     readonly supportsReset: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
     // (undocumented)
     readonly type: number;
 }
@@ -12017,7 +12065,184 @@ export interface MeterCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const MeterCCValues: Readonly<{
+    type: {
+        id: {
+            readonly commandClass: CommandClasses.Meter;
+            readonly property: "type";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Meter;
+            readonly endpoint: number;
+            readonly property: "type";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsReset: {
+        id: {
+            readonly commandClass: CommandClasses.Meter;
+            readonly property: "supportsReset";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Meter;
+            readonly endpoint: number;
+            readonly property: "supportsReset";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedScales: {
+        id: {
+            readonly commandClass: CommandClasses.Meter;
+            readonly property: "supportedScales";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Meter;
+            readonly endpoint: number;
+            readonly property: "supportedScales";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedRateTypes: {
+        id: {
+            readonly commandClass: CommandClasses.Meter;
+            readonly property: "supportedRateTypes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Meter;
+            readonly endpoint: number;
+            readonly property: "supportedRateTypes";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    resetAll: {
+        id: {
+            readonly commandClass: CommandClasses.Meter;
+            readonly property: "reset";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Meter;
+            readonly endpoint: number;
+            readonly property: "reset";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: {
+            readonly label: "Reset accumulated values";
+            readonly states: {
+                readonly true: "Reset";
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    resetSingle: ((meterType: number, rateType: RateType, scale: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Meter;
+            readonly property: "reset";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Meter;
+            readonly endpoint: number;
+            readonly property: "reset";
+            readonly propertyKey: number;
+        };
+        readonly meta: {
+            readonly label: `Reset (Consumption, ${string})` | `Reset (Production, ${string})` | `Reset (${string})`;
+            readonly states: {
+                readonly true: "Reset";
+            };
+            readonly ccSpecific: {
+                readonly meterType: number;
+                readonly rateType: RateType;
+                readonly scale: number;
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
     value: ((meterType: number, rateType: RateType, scale: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Meter;
+            readonly property: "value";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Meter;
+            readonly endpoint: number;
+            readonly property: "value";
+            readonly propertyKey: number;
+        };
         readonly meta: {
             readonly ccSpecific: {
                 readonly meterType: number;
@@ -12028,192 +12253,15 @@ export const MeterCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: CommandClasses.Meter;
-            property: "value";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Meter;
-            readonly endpoint: number;
-            readonly property: "value";
-            readonly propertyKey: number;
-        };
     }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-        };
-    };
-    resetSingle: ((meterType: number, rateType: RateType, scale: number) => {
-        readonly meta: {
-            readonly label: `Reset (${string})` | `Reset (Consumption, ${string})` | `Reset (Production, ${string})`;
-            readonly states: {
-                readonly true: "Reset";
-            };
-            readonly ccSpecific: {
-                readonly meterType: number;
-                readonly rateType: RateType;
-                readonly scale: number;
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Meter;
-            property: "reset";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Meter;
-            readonly endpoint: number;
-            readonly property: "reset";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    resetAll: {
-        readonly id: {
-            commandClass: CommandClasses.Meter;
-            property: "reset";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Meter;
-            readonly endpoint: number;
-            readonly property: "reset";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Reset accumulated values";
-            readonly states: {
-                readonly true: "Reset";
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    supportedRateTypes: {
-        readonly id: {
-            commandClass: CommandClasses.Meter;
-            property: "supportedRateTypes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Meter;
-            readonly endpoint: number;
-            readonly property: "supportedRateTypes";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedScales: {
-        readonly id: {
-            commandClass: CommandClasses.Meter;
-            property: "supportedScales";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Meter;
-            readonly endpoint: number;
-            readonly property: "supportedScales";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsReset: {
-        readonly id: {
-            commandClass: CommandClasses.Meter;
-            property: "supportsReset";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Meter;
-            readonly endpoint: number;
-            readonly property: "supportsReset";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    type: {
-        readonly id: {
-            commandClass: CommandClasses.Meter;
-            property: "type";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Meter;
-            readonly endpoint: number;
-            readonly property: "type";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -12237,7 +12285,7 @@ export enum MeterCommand {
 // Warning: (ae-missing-release-tag) "MeterMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type MeterMetadata = ValueMetadata_2 & {
+export type MeterMetadata = ValueMetadata & {
     ccSpecific: {
         meterType: number;
         rateType?: RateType;
@@ -12334,9 +12382,9 @@ export class MultiChannelAssociationCC extends CommandClass {
     ccCommand: MultiChannelAssociationCommand;
     // (undocumented)
     determineRequiredCCInterviews(): readonly CommandClasses[];
-    static getAllDestinationsCached(ctx: GetValueDB_2, endpoint: EndpointId_2): ReadonlyMap<number, readonly AssociationAddress[]>;
-    static getGroupCountCached(ctx: GetValueDB_2, endpoint: EndpointId_2): number;
-    static getMaxNodesCached(ctx: GetValueDB_2, endpoint: EndpointId_2, groupId: number): number;
+    static getAllDestinationsCached(ctx: GetValueDB, endpoint: EndpointId): ReadonlyMap<number, readonly AssociationAddress[]>;
+    static getGroupCountCached(ctx: GetValueDB, endpoint: EndpointId): number;
+    static getMaxNodesCached(ctx: GetValueDB, endpoint: EndpointId, groupId: number): number;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
@@ -12353,9 +12401,9 @@ export class MultiChannelAssociationCCGet extends MultiChannelAssociationCC {
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelAssociationCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12380,9 +12428,9 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
     // (undocumented)
     nodeIds?: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelAssociationCCRemoveOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12412,15 +12460,15 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
     // (undocumented)
     maxNodes: number;
     // (undocumented)
-    mergePartialCCs(partials: MultiChannelAssociationCCReport[], _ctx: CCParsingContext_2): void;
+    mergePartialCCs(partials: MultiChannelAssociationCCReport[], _ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelAssociationCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12453,9 +12501,9 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelAssociationCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12488,9 +12536,9 @@ export class MultiChannelAssociationCCSupportedGroupingsReport extends MultiChan
     // (undocumented)
     readonly groupCount: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelAssociationCCSupportedGroupingsReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12505,113 +12553,113 @@ export interface MultiChannelAssociationCCSupportedGroupingsReportOptions {
 //
 // @public (undocumented)
 export const MultiChannelAssociationCCValues: Readonly<{
-    endpoints: ((groupId: number) => {
-        readonly meta: {
+    groupCount: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
+            readonly property: "groupCount";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
+            readonly endpoint: number;
+            readonly property: "groupCount";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel Association"];
-            property: "endpoints";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
-            readonly endpoint: number;
-            readonly property: "endpoints";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    nodeIds: ((groupId: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel Association"];
-            property: "nodeIds";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
-            readonly endpoint: number;
-            readonly property: "nodeIds";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
     maxNodes: ((groupId: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
+            readonly property: "maxNodes";
+            readonly propertyKey: number;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel Association"];
-            property: "maxNodes";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
             readonly endpoint: number;
             readonly property: "maxNodes";
             readonly propertyKey: number;
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    groupCount: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel Association"];
-            property: "groupCount";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
-            readonly endpoint: number;
-            readonly property: "groupCount";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    nodeIds: ((groupId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
+            readonly property: "nodeIds";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
+            readonly endpoint: number;
+            readonly property: "nodeIds";
+            readonly propertyKey: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    endpoints: ((groupId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
+            readonly property: "endpoints";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel Association"];
+            readonly endpoint: number;
+            readonly property: "endpoints";
+            readonly propertyKey: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -12659,9 +12707,9 @@ export class MultiChannelCCAggregatedMembersGet extends MultiChannelCC {
     // (undocumented)
     requestedEndpoint: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCAggregatedMembersGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12684,7 +12732,7 @@ export class MultiChannelCCAggregatedMembersReport extends MultiChannelCC {
     // (undocumented)
     readonly members: readonly number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCAggregatedMembersReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12707,9 +12755,9 @@ export class MultiChannelCCCapabilityGet extends MultiChannelCC {
     // (undocumented)
     requestedEndpoint: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCCapabilityGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12734,13 +12782,13 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC implements Ap
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly specificDeviceClass: number;
     // (undocumented)
     readonly supportedCCs: CommandClasses[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly wasRemoved: boolean;
 }
@@ -12775,11 +12823,11 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCCommandEncapsulation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<MultiChannelCCCommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCCommandEncapsulationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12802,11 +12850,11 @@ export class MultiChannelCCEndPointFind extends MultiChannelCC {
     // (undocumented)
     genericClass: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     specificClass: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCEndPointFindOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12835,15 +12883,15 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    mergePartialCCs(partials: MultiChannelCCEndPointFindReport[], _ctx: CCParsingContext_2): void;
+    mergePartialCCs(partials: MultiChannelCCEndPointFindReport[], _ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     specificClass: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCEndPointFindReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12882,9 +12930,9 @@ export class MultiChannelCCEndPointReport extends MultiChannelCC {
     // (undocumented)
     individualCount: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCEndPointReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12911,11 +12959,11 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCV1CommandEncapsulation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<MultiChannelCCV1CommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCV1CommandEncapsulationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12936,9 +12984,9 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
     // (undocumented)
     requestedCC: CommandClasses;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCV1GetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12961,7 +13009,7 @@ export class MultiChannelCCV1Report extends MultiChannelCC {
     // (undocumented)
     readonly requestedCC: CommandClasses;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiChannelCCV1ReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -12978,207 +13026,207 @@ export interface MultiChannelCCV1ReportOptions {
 //
 // @public (undocumented)
 export const MultiChannelCCValues: Readonly<{
-    aggregatedEndpointMembers: ((endpointIndex: number) => {
-        readonly meta: {
+    endpointIndizes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "endpointIndizes";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly endpoint: 0;
+            readonly property: "endpointIndizes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "members";
-            propertyKey: number;
+    };
+    individualEndpointCount: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "individualCount";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly endpoint: 0;
+            readonly property: "individualCount";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    aggregatedEndpointCount: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "aggregatedCount";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly endpoint: 0;
+            readonly property: "aggregatedCount";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    endpointCountIsDynamic: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "countIsDynamic";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly endpoint: 0;
+            readonly property: "countIsDynamic";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    endpointsHaveIdenticalCapabilities: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "identicalCapabilities";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly endpoint: 0;
+            readonly property: "identicalCapabilities";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    endpointCCs: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "commandClasses";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly endpoint: number;
+            readonly property: "commandClasses";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    endpointDeviceClass: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "deviceClass";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly endpoint: number;
+            readonly property: "deviceClass";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    aggregatedEndpointMembers: ((endpointIndex: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
+            readonly property: "members";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Multi Channel"];
             readonly endpoint: number;
             readonly property: "members";
             readonly propertyKey: number;
         };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    endpointDeviceClass: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "deviceClass";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
-            readonly endpoint: number;
-            readonly property: "deviceClass";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    endpointCCs: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "commandClasses";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
-            readonly endpoint: number;
-            readonly property: "commandClasses";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    endpointsHaveIdenticalCapabilities: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "identicalCapabilities";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
-            readonly endpoint: number;
-            readonly property: "identicalCapabilities";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    endpointCountIsDynamic: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "countIsDynamic";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
-            readonly endpoint: number;
-            readonly property: "countIsDynamic";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    aggregatedEndpointCount: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "aggregatedCount";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
-            readonly endpoint: number;
-            readonly property: "aggregatedCount";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    individualEndpointCount: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "individualCount";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
-            readonly endpoint: number;
-            readonly property: "individualCount";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    endpointIndizes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multi Channel"];
-            property: "endpointIndizes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multi Channel"];
-            readonly endpoint: number;
-            readonly property: "endpointIndizes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
         };
     };
 }>;
@@ -13232,11 +13280,11 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
     // (undocumented)
     encapsulated: CommandClass[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiCommandCCCommandEncapsulation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<MultiCommandCCCommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultiCommandCCCommandEncapsulationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13269,14 +13317,14 @@ export interface MultiEncapsulatingCommandClass {
 export class MultilevelSensorCC extends CommandClass {
     // (undocumented)
     ccCommand: MultilevelSensorCommand;
-    static getSupportedScalesCached(ctx: GetValueDB_2, endpoint: EndpointId_2, sensorType: number): MaybeNotKnown<number[]>;
-    static getSupportedSensorTypesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<number[]>;
+    static getSupportedScalesCached(ctx: GetValueDB_2, endpoint: EndpointId, sensorType: number): MaybeNotKnown<number[]>;
+    static getSupportedSensorTypesCached(ctx: GetValueDB_2, endpoint: EndpointId): MaybeNotKnown<number[]>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    shouldRefreshValues(this: SinglecastCC_2<this>, ctx: GetValueDB_2 & GetSupportedCCVersion_2 & GetDeviceConfig_2 & GetNode_2<NodeId & GetEndpoint<EndpointId_2 & SupportsCC & ControlsCC>>): boolean;
+    shouldRefreshValues(this: SinglecastCC<this>, ctx: GetValueDB_2 & GetSupportedCCVersion & GetDeviceConfig & GetNode_2<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>): boolean;
     // (undocumented)
     translatePropertyKey(ctx: GetValueDB_2, property: string | number, propertyKey: string | number): string | undefined;
 }
@@ -13293,9 +13341,9 @@ export class MultilevelSensorCCGet extends MultilevelSensorCC {
     // (undocumented)
     sensorType: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSensorCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13316,9 +13364,9 @@ export class MultilevelSensorCCGetSupportedScale extends MultilevelSensorCC {
     // (undocumented)
     sensorType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSensorCCGetSupportedScaleOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13347,9 +13395,9 @@ export class MultilevelSensorCCReport extends MultilevelSensorCC {
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
     // (undocumented)
     type: number;
     // (undocumented)
@@ -13378,11 +13426,11 @@ export class MultilevelSensorCCSupportedScaleReport extends MultilevelSensorCC {
     // (undocumented)
     readonly sensorType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedScales: readonly number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSensorCCSupportedScaleReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13403,11 +13451,11 @@ export class MultilevelSensorCCSupportedSensorReport extends MultilevelSensorCC 
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSensorCCSupportedSensorReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportedSensorTypes: readonly number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSensorCCSupportedSensorReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13422,26 +13470,24 @@ export interface MultilevelSensorCCSupportedSensorReportOptions {
 //
 // @public (undocumented)
 export const MultilevelSensorCCValues: Readonly<{
-    value: ((sensorTypeName: string) => {
-        readonly meta: {
-            readonly label: string;
-            readonly writeable: false;
-            readonly type: "number";
-            readonly readable: true;
+    supportedSensorTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Sensor"];
+            readonly property: "supportedSensorTypes";
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Sensor"];
-            property: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Multilevel Sensor"];
             readonly endpoint: number;
-            readonly property: string;
+            readonly property: "supportedSensorTypes";
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -13450,56 +13496,58 @@ export const MultilevelSensorCCValues: Readonly<{
         };
     };
     supportedScales: ((sensorType: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Sensor"];
+            readonly property: "supportedScales";
+            readonly propertyKey: number;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Sensor"];
-            property: "supportedScales";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Multilevel Sensor"];
             readonly endpoint: number;
             readonly property: "supportedScales";
             readonly propertyKey: number;
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedSensorTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Sensor"];
-            property: "supportedSensorTypes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multilevel Sensor"];
-            readonly endpoint: number;
-            readonly property: "supportedSensorTypes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
+        };
+    };
+    value: ((sensorTypeName: string) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Sensor"];
+            readonly property: string;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Sensor"];
+            readonly endpoint: number;
+            readonly property: string;
+        };
+        readonly meta: {
+            readonly label: string;
+            readonly writeable: false;
+            readonly type: "number";
+            readonly readable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -13535,7 +13583,7 @@ export interface MultilevelSensorValue {
 // Warning: (ae-missing-release-tag) "MultilevelSensorValueMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type MultilevelSensorValueMetadata = ValueMetadata_2 & {
+export type MultilevelSensorValueMetadata = ValueMetadata & {
     ccSpecific: {
         sensorType: number;
         scale: number;
@@ -13549,13 +13597,13 @@ export class MultilevelSwitchCC extends CommandClass {
     // (undocumented)
     ccCommand: MultilevelSwitchCommand;
     // (undocumented)
-    protected createMetadataForLevelChangeActions(ctx: GetValueDB_2, switchType?: SwitchType): void;
+    protected createMetadataForLevelChangeActions(ctx: GetValueDB, switchType?: SwitchType): void;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    setMappedBasicValue(ctx: GetValueDB_2, value: number): boolean;
+    setMappedBasicValue(ctx: GetValueDB, value: number): boolean;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSwitchCCGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13576,11 +13624,11 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSwitchCCReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetValue: MaybeUnknown<number> | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSwitchCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13605,11 +13653,11 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSwitchCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetValue: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSwitchCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13636,11 +13684,11 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
     // (undocumented)
     ignoreStartLevel: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     startLevel: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSwitchCCStartLevelChangeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13680,11 +13728,11 @@ export class MultilevelSwitchCCSupportedReport extends MultilevelSwitchCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly switchType: SwitchType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSwitchCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13699,201 +13747,26 @@ export interface MultilevelSwitchCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const MultilevelSwitchCCValues: Readonly<{
-    levelChangeDown: ((switchType: SwitchType) => {
-        readonly meta: {
-            readonly label: `Perform a level change (${string})`;
-            readonly valueChangeOptions: readonly ["transitionDuration"];
-            readonly states: {
-                readonly true: "Start";
-                readonly false: "Stop";
-            };
-            readonly ccSpecific: {
-                readonly switchType: SwitchType;
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
+    currentValue: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: "currentValue";
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
             readonly endpoint: number;
-            readonly property: string;
+            readonly property: "currentValue";
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    levelChangeUp: ((switchType: SwitchType) => {
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: `Perform a level change (${string})`;
-            readonly valueChangeOptions: readonly ["transitionDuration"];
-            readonly states: {
-                readonly true: "Start";
-                readonly false: "Stop";
-            };
-            readonly ccSpecific: {
-                readonly switchType: SwitchType;
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            readonly endpoint: number;
-            readonly property: string;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    superviseStartStopLevelChange: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: "superviseStartStopLevelChange";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            readonly endpoint: number;
-            readonly property: "superviseStartStopLevelChange";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    switchType: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: "switchType";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            readonly endpoint: number;
-            readonly property: "switchType";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    compatEvent: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: "event";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            readonly endpoint: number;
-            readonly property: "event";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Event value";
+            readonly label: "Current value";
             readonly writeable: false;
+            readonly max: 99;
             readonly min: 0;
-            readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly stateful: false;
-            readonly autoCreate: (applHost: GetValueDB_2 & GetDeviceConfig_2, endpoint: EndpointId_2) => boolean;
-        };
-    };
-    restorePrevious: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: "restorePrevious";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            readonly endpoint: number;
-            readonly property: "restorePrevious";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Restore previous value";
-            readonly states: {
-                readonly true: "Restore";
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    duration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: "duration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            readonly endpoint: number;
-            readonly property: "duration";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Remaining duration";
-            readonly writeable: false;
-            readonly type: "duration";
-            readonly readable: true;
-        };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -13903,16 +13776,16 @@ export const MultilevelSwitchCCValues: Readonly<{
         };
     };
     targetValue: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: "targetValue";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: "targetValue";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
             readonly endpoint: number;
             readonly property: "targetValue";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Target value";
             readonly valueChangeOptions: readonly ["transitionDuration"];
@@ -13922,7 +13795,7 @@ export const MultilevelSwitchCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -13931,26 +13804,201 @@ export const MultilevelSwitchCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    currentValue: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Multilevel Switch"];
-            property: "currentValue";
+    duration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: "duration";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
             readonly endpoint: number;
-            readonly property: "currentValue";
+            readonly property: "duration";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Current value";
+            readonly label: "Remaining duration";
             readonly writeable: false;
-            readonly max: 99;
+            readonly type: "duration";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    restorePrevious: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: "restorePrevious";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly endpoint: number;
+            readonly property: "restorePrevious";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Restore previous value";
+            readonly states: {
+                readonly true: "Restore";
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    compatEvent: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: "event";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly endpoint: number;
+            readonly property: "event";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Event value";
+            readonly writeable: false;
             readonly min: 0;
+            readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: false;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: (applHost: GetValueDB & GetDeviceConfig, endpoint: EndpointId) => boolean;
+        };
+    };
+    switchType: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: "switchType";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly endpoint: number;
+            readonly property: "switchType";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    superviseStartStopLevelChange: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: "superviseStartStopLevelChange";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly endpoint: 0;
+            readonly property: "superviseStartStopLevelChange";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    levelChangeUp: ((switchType: SwitchType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: string;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly endpoint: number;
+            readonly property: string;
+        };
+        readonly meta: {
+            readonly label: `Perform a level change (${string})`;
+            readonly valueChangeOptions: readonly ["transitionDuration"];
+            readonly states: {
+                readonly true: "Start";
+                readonly false: "Stop";
+            };
+            readonly ccSpecific: {
+                readonly switchType: SwitchType;
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    levelChangeDown: ((switchType: SwitchType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly property: string;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Multilevel Switch"];
+            readonly endpoint: number;
+            readonly property: string;
+        };
+        readonly meta: {
+            readonly label: `Perform a level change (${string})`;
+            readonly valueChangeOptions: readonly ["transitionDuration"];
+            readonly states: {
+                readonly true: "Start";
+                readonly false: "Stop";
+            };
+            readonly ccSpecific: {
+                readonly switchType: SwitchType;
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -13984,7 +14032,7 @@ export enum MultilevelSwitchCommand {
 // Warning: (ae-missing-release-tag) "MultilevelSwitchLevelChangeMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type MultilevelSwitchLevelChangeMetadata = ValueMetadata_2 & {
+export type MultilevelSwitchLevelChangeMetadata = ValueMetadata & {
     ccSpecific: {
         switchType: SwitchType;
     };
@@ -14040,7 +14088,7 @@ export class NodeNamingAndLocationCCLocationReport extends NodeNamingAndLocation
     // (undocumented)
     readonly location: string;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NodeNamingAndLocationCCLocationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14061,9 +14109,9 @@ export class NodeNamingAndLocationCCLocationSet extends NodeNamingAndLocationCC 
     // (undocumented)
     location: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NodeNamingAndLocationCCLocationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14090,7 +14138,7 @@ export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
     // (undocumented)
     readonly name: string;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NodeNamingAndLocationCCNameReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14111,9 +14159,9 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
     // (undocumented)
     name: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NodeNamingAndLocationCCNameSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14128,56 +14176,56 @@ export interface NodeNamingAndLocationCCNameSetOptions {
 //
 // @public (undocumented)
 export const NodeNamingAndLocationCCValues: Readonly<{
-    location: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Node Naming and Location"];
-            property: "location";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Node Naming and Location"];
-            readonly endpoint: number;
-            readonly property: "location";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Node location";
-            readonly type: "string";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly supportsEndpoints: false;
-        };
-    };
     name: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Node Naming and Location"];
-            property: "name";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Node Naming and Location"];
-            readonly endpoint: number;
             readonly property: "name";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Node Naming and Location"];
+            readonly endpoint: 0;
+            readonly property: "name";
+        };
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Node name";
             readonly type: "string";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
-            readonly autoCreate: true;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    location: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Node Naming and Location"];
+            readonly property: "location";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Node Naming and Location"];
+            readonly endpoint: 0;
+            readonly property: "location";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Node location";
+            readonly type: "string";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -14227,7 +14275,7 @@ export class NotificationCC extends CommandClass {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    shouldRefreshValues(this: SinglecastCC_2<this>, ctx: GetValueDB_2 & GetSupportedCCVersion_2 & GetDeviceConfig_2 & GetNode_2<NodeId & GetEndpoint<EndpointId_2 & SupportsCC & ControlsCC>>): boolean;
+    shouldRefreshValues(this: SinglecastCC<this>, ctx: GetValueDB_2 & GetSupportedCCVersion & GetDeviceConfig & GetNode_2<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>): boolean;
 }
 
 // Warning: (ae-missing-release-tag) "NotificationCCEventSupportedGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14240,9 +14288,9 @@ export class NotificationCCEventSupportedGet extends NotificationCC {
     // (undocumented)
     notificationType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NotificationCCEventSupportedGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14265,11 +14313,11 @@ export class NotificationCCEventSupportedReport extends NotificationCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportedEvents: number[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NotificationCCEventSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14294,9 +14342,9 @@ export class NotificationCCGet extends NotificationCC {
     notificationEvent: number | undefined;
     notificationType: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NotificationCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14333,9 +14381,9 @@ export class NotificationCCReport extends NotificationCC {
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NotificationCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14363,9 +14411,9 @@ export class NotificationCCSet extends NotificationCC {
     // (undocumented)
     notificationType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NotificationCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14392,13 +14440,13 @@ export class NotificationCCSupportedReport extends NotificationCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportedNotificationTypes: number[];
     // (undocumented)
     supportsV1Alarm: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "NotificationCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14415,178 +14463,175 @@ export interface NotificationCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const NotificationCCValues: Readonly<{
-    notificationVariable: ((notificationName: string, variableName: string) => {
-        readonly meta: {
+    supportsV1Alarm: {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "supportsV1Alarm";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Notification;
+            readonly endpoint: 0;
+            readonly property: "supportsV1Alarm";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: string;
-            propertyKey: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Notification;
-            readonly endpoint: number;
-            readonly property: string;
-            readonly propertyKey: string;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    unknownNotificationVariable: ((notificationType: number, notificationName: string) => {
-        readonly meta: {
-            readonly label: `${string}: Unknown value`;
-            readonly ccSpecific: {
-                readonly notificationType: number;
-            };
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: string;
-            propertyKey: "unknown";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Notification;
-            readonly endpoint: number;
-            readonly property: string;
-            readonly propertyKey: "unknown";
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    unknownNotificationType: ((notificationType: number) => {
-        readonly meta: {
-            readonly label: `Unknown notification (${string})`;
-            readonly ccSpecific: {
-                readonly notificationType: number;
-            };
-            readonly writeable: false;
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: string;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Notification;
-            readonly endpoint: number;
-            readonly property: string;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    supportedNotificationEvents: ((notificationType: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "supportedNotificationEvents";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Notification;
-            readonly endpoint: number;
-            readonly property: "supportedNotificationEvents";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
+        }>;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
     };
-    doorTiltState: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "Access Control";
-            propertyKey: "Door tilt state";
+    supportedNotificationTypes: {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "supportedNotificationTypes";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Notification;
+            readonly endpoint: 0;
+            readonly property: "supportedNotificationTypes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    notificationMode: {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "notificationMode";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Notification;
+            readonly endpoint: 0;
+            readonly property: "notificationMode";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    lastRefresh: {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "lastRefresh";
+        };
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Notification;
             readonly endpoint: number;
-            readonly property: "Access Control";
-            readonly propertyKey: "Door tilt state";
+            readonly property: "lastRefresh";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    alarmType: {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "alarmType";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Notification;
+            readonly endpoint: number;
+            readonly property: "alarmType";
+        };
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Door tilt state";
-            readonly states: {
-                readonly 0: "Window/door is not tilted";
-                readonly 1: "Window/door is tilted";
-            };
-            readonly ccSpecific: {
-                readonly notificationType: 6;
-            };
+            readonly label: "Alarm Type";
             readonly writeable: false;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: false;
+            readonly autoCreate: true;
+        };
+    };
+    alarmLevel: {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "alarmLevel";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Notification;
+            readonly endpoint: number;
+            readonly property: "alarmLevel";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Alarm Level";
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
     doorStateSimple: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "Access Control";
-            propertyKey: "Door state (simple)";
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "Access Control";
+            readonly propertyKey: "Door state (simple)";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Notification;
             readonly endpoint: number;
             readonly property: "Access Control";
             readonly propertyKey: "Door state (simple)";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Door state (simple)";
             readonly states: {
@@ -14602,63 +14647,104 @@ export const NotificationCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId_2) => boolean;
+            readonly autoCreate: (ctx: GetValueDB_2, endpoint: EndpointId) => boolean;
         };
     };
-    alarmLevel: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "alarmLevel";
+    doorTiltState: {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "Access Control";
+            readonly propertyKey: "Door tilt state";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Notification;
             readonly endpoint: number;
-            readonly property: "alarmLevel";
+            readonly property: "Access Control";
+            readonly propertyKey: "Door tilt state";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly label: "Alarm Level";
+            readonly label: "Door tilt state";
+            readonly states: {
+                readonly 0: "Window/door is not tilted";
+                readonly 1: "Window/door is tilted";
+            };
+            readonly ccSpecific: {
+                readonly notificationType: 6;
+            };
             readonly writeable: false;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
+            readonly autoCreate: false;
+        };
+    };
+    supportedNotificationEvents: ((notificationType: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: "supportedNotificationEvents";
+            readonly propertyKey: number;
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Notification;
+            readonly endpoint: 0;
+            readonly property: "supportedNotificationEvents";
+            readonly propertyKey: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
             readonly autoCreate: true;
         };
     };
-    alarmType: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "alarmType";
+    unknownNotificationType: ((notificationType: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: string;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Notification;
             readonly endpoint: number;
-            readonly property: "alarmType";
+            readonly property: string;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
         readonly meta: {
-            readonly label: "Alarm Type";
+            readonly label: `Unknown notification (${string})`;
+            readonly ccSpecific: {
+                readonly notificationType: number;
+            };
             readonly writeable: false;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -14667,104 +14753,66 @@ export const NotificationCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    lastRefresh: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "lastRefresh";
+    unknownNotificationVariable: ((notificationType: number, notificationName: string) => {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: string;
+            readonly propertyKey: "unknown";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Notification;
             readonly endpoint: number;
-            readonly property: "lastRefresh";
+            readonly property: string;
+            readonly propertyKey: "unknown";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: `${string}: Unknown value`;
+            readonly ccSpecific: {
+                readonly notificationType: number;
+            };
+            readonly writeable: false;
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    notificationMode: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "notificationMode";
+    notificationVariable: ((notificationName: string, variableName: string) => {
+        id: {
+            readonly commandClass: CommandClasses.Notification;
+            readonly property: string;
+            readonly propertyKey: string;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Notification;
             readonly endpoint: number;
-            readonly property: "notificationMode";
+            readonly property: string;
+            readonly propertyKey: string;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    supportedNotificationTypes: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "supportedNotificationTypes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Notification;
-            readonly endpoint: number;
-            readonly property: "supportedNotificationTypes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
             readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    supportsV1Alarm: {
-        readonly id: {
-            commandClass: CommandClasses.Notification;
-            property: "supportsV1Alarm";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Notification;
-            readonly endpoint: number;
-            readonly property: "supportsV1Alarm";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
             readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
+            readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-            readonly supportsEndpoints: false;
         };
     };
 }>;
@@ -14792,7 +14840,7 @@ export enum NotificationCommand {
 // Warning: (ae-missing-release-tag) "NotificationMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type NotificationMetadata = ValueMetadata_2 & {
+export type NotificationMetadata = ValueMetadata & {
     ccSpecific: {
         notificationType: number;
     };
@@ -14816,7 +14864,7 @@ export type PartialCCValuePredicate = (properties: ValueIDProperties) => boolean
 // Warning: (ae-missing-release-tag) "PersistValuesContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type PersistValuesContext = HostIDs & GetValueDB & GetSupportedCCVersion & GetDeviceConfig & GetNode<NodeId_2 & GetEndpoint_2<EndpointId & SupportsCC_2 & ControlsCC_2>> & LogNode;
+export type PersistValuesContext = HostIDs & GetValueDB & GetSupportedCCVersion_2 & GetDeviceConfig & GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>> & LogNode;
 
 // Warning: (ae-missing-release-tag) "PhysicalCCAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -14830,7 +14878,7 @@ export class PhysicalCCAPI extends CCAPI {
 // Warning: (ae-missing-release-tag) "PhysicalCCAPIEndpoint" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type PhysicalCCAPIEndpoint = CCAPIEndpoint & EndpointId;
+export type PhysicalCCAPIEndpoint = CCAPIEndpoint & EndpointId_2;
 
 // Warning: (ae-missing-release-tag) "POLL_VALUE" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -14892,11 +14940,11 @@ export class PowerlevelCCReport extends PowerlevelCC {
     // (undocumented)
     readonly powerlevel: Powerlevel;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly timeout?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "PowerlevelCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14920,11 +14968,11 @@ export class PowerlevelCCSet extends PowerlevelCC {
     // (undocumented)
     powerlevel: Powerlevel;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     timeout?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "PowerlevelCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14954,13 +15002,13 @@ export class PowerlevelCCTestNodeReport extends PowerlevelCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): PowerlevelCCTestNodeReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     status: PowerlevelTestStatus;
     // (undocumented)
     testNodeId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "PowerlevelCCTestNodeReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -14985,13 +15033,13 @@ export class PowerlevelCCTestNodeSet extends PowerlevelCC {
     // (undocumented)
     powerlevel: Powerlevel;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     testFrameCount: number;
     // (undocumented)
     testNodeId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "PowerlevelCCTestNodeSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15064,7 +15112,7 @@ export class ProtectionCCExclusiveControlReport extends ProtectionCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ProtectionCCExclusiveControlReport;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ProtectionCCExclusiveControlReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15085,9 +15133,9 @@ export class ProtectionCCExclusiveControlSet extends ProtectionCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): ProtectionCCExclusiveControlSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ProtectionCCExclusiveControlSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15116,7 +15164,7 @@ export class ProtectionCCReport extends ProtectionCC {
     // (undocumented)
     readonly rf?: RFProtectionState;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ProtectionCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15141,9 +15189,9 @@ export class ProtectionCCSet extends ProtectionCC {
     // (undocumented)
     rf?: RFProtectionState;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ProtectionCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15180,7 +15228,7 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
     // (undocumented)
     readonly supportsTimeout: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ProtectionCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15213,7 +15261,7 @@ export class ProtectionCCTimeoutReport extends ProtectionCC {
     // (undocumented)
     readonly timeout: Timeout;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ProtectionCCTimeoutReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15232,11 +15280,11 @@ export class ProtectionCCTimeoutSet extends ProtectionCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): ProtectionCCTimeoutSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     timeout: Timeout;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ProtectionCCTimeoutSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15251,203 +15299,17 @@ export interface ProtectionCCTimeoutSetOptions {
 //
 // @public (undocumented)
 export const ProtectionCCValues: Readonly<{
-    supportedRFStates: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "supportedRFStates";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Protection;
-            readonly endpoint: number;
-            readonly property: "supportedRFStates";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedLocalStates: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "supportedLocalStates";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Protection;
-            readonly endpoint: number;
-            readonly property: "supportedLocalStates";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsTimeout: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "supportsTimeout";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Protection;
-            readonly endpoint: number;
-            readonly property: "supportsTimeout";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsExclusiveControl: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "supportsExclusiveControl";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Protection;
-            readonly endpoint: number;
-            readonly property: "supportsExclusiveControl";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    timeout: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "timeout";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Protection;
-            readonly endpoint: number;
-            readonly property: "timeout";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "RF protection timeout";
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    rfProtectionState: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "rf";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Protection;
-            readonly endpoint: number;
-            readonly property: "rf";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "RF protection state";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-        };
-    };
-    localProtectionState: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "local";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Protection;
-            readonly endpoint: number;
-            readonly property: "local";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Local protection state";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
     exclusiveControlNodeId: {
-        readonly id: {
-            commandClass: CommandClasses.Protection;
-            property: "exclusiveControlNodeId";
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "exclusiveControlNodeId";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: CommandClasses.Protection;
             readonly endpoint: number;
             readonly property: "exclusiveControlNodeId";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly min: 1;
             readonly max: 232;
@@ -15456,13 +15318,195 @@ export const ProtectionCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    localProtectionState: {
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "local";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Protection;
+            readonly endpoint: number;
+            readonly property: "local";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Local protection state";
+            readonly states: Record<number, string>;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    rfProtectionState: {
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "rf";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Protection;
+            readonly endpoint: number;
+            readonly property: "rf";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "RF protection state";
+            readonly states: Record<number, string>;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
             readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    timeout: {
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "timeout";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Protection;
+            readonly endpoint: number;
+            readonly property: "timeout";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "RF protection timeout";
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsExclusiveControl: {
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "supportsExclusiveControl";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Protection;
+            readonly endpoint: number;
+            readonly property: "supportsExclusiveControl";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsTimeout: {
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "supportsTimeout";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Protection;
+            readonly endpoint: number;
+            readonly property: "supportsTimeout";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedLocalStates: {
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "supportedLocalStates";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Protection;
+            readonly endpoint: number;
+            readonly property: "supportedLocalStates";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedRFStates: {
+        id: {
+            readonly commandClass: CommandClasses.Protection;
+            readonly property: "supportedRFStates";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Protection;
+            readonly endpoint: number;
+            readonly property: "supportedRFStates";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -15510,12 +15554,20 @@ export enum RateType {
 // Warning: (ae-missing-release-tag) "RefreshValuesContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type RefreshValuesContext = CCAPIHost<CCAPINode & GetEndpoint_2<EndpointId & SupportsCC_2 & ControlsCC_2>>;
+export type RefreshValuesContext = CCAPIHost<CCAPINode & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>;
+
+// Warning: (ae-missing-release-tag) "RefreshValueTimeouts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RefreshValueTimeouts {
+    refreshValue: number;
+    refreshValueAfterTransition: number;
+}
 
 // Warning: (ae-missing-release-tag) "removeAssociations" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function removeAssociations(ctx: CCAPIHost, endpoint: EndpointId_2 & SupportsCC & ControlsCC, group: number, destinations: AssociationAddress[]): Promise<void>;
+function removeAssociations(ctx: CCAPIHost, endpoint: EndpointId & SupportsCC & ControlsCC, group: number, destinations: AssociationAddress[]): Promise<void>;
 
 // Warning: (ae-missing-release-tag) "ReturnWithTXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -15554,9 +15606,9 @@ export class SceneActivationCCSet extends SceneActivationCC {
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SceneActivationCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15573,43 +15625,17 @@ export interface SceneActivationCCSetOptions {
 //
 // @public (undocumented)
 export const SceneActivationCCValues: Readonly<{
-    dimmingDuration: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Scene Activation"];
-            property: "dimmingDuration";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Scene Activation"];
-            readonly endpoint: number;
-            readonly property: "dimmingDuration";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Dimming duration";
-            readonly type: "duration";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
     sceneId: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Scene Activation"];
-            property: "sceneId";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Scene Activation"];
+            readonly property: "sceneId";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Scene Activation"];
             readonly endpoint: number;
             readonly property: "sceneId";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly min: 1;
             readonly label: "Scene ID";
@@ -15619,13 +15645,39 @@ export const SceneActivationCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly secret: false;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: false;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly stateful: false;
+        };
+    };
+    dimmingDuration: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Scene Activation"];
+            readonly property: "dimmingDuration";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Scene Activation"];
+            readonly endpoint: number;
+            readonly property: "dimmingDuration";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Dimming duration";
+            readonly type: "duration";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -15658,9 +15710,9 @@ export class SceneActuatorConfigurationCCGet extends SceneActuatorConfigurationC
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SceneActuatorConfigurationCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15687,7 +15739,7 @@ export class SceneActuatorConfigurationCCReport extends SceneActuatorConfigurati
     // (undocumented)
     readonly sceneId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SceneActuatorConfigurationCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15716,9 +15768,9 @@ export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationC
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SceneActuatorConfigurationCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15737,36 +15789,18 @@ export interface SceneActuatorConfigurationCCSetOptions {
 //
 // @public (undocumented)
 export const SceneActuatorConfigurationCCValues: Readonly<{
-    dimmingDuration: ((sceneId: number) => {
-        readonly meta: {
-            readonly label: `Dimming duration (${number})`;
-            readonly type: "duration";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Scene Actuator Configuration"];
-            property: "dimmingDuration";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    level: ((sceneId: number) => {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Scene Actuator Configuration"];
-            readonly endpoint: number;
-            readonly property: "dimmingDuration";
+            readonly property: "level";
             readonly propertyKey: number;
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Scene Actuator Configuration"];
+            readonly endpoint: number;
+            readonly property: "level";
+            readonly propertyKey: number;
         };
-    };
-    level: ((sceneId: number) => {
         readonly meta: {
             readonly label: `Level (${number})`;
             readonly valueChangeOptions: readonly ["transitionDuration"];
@@ -15776,20 +15810,38 @@ export const SceneActuatorConfigurationCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Scene Actuator Configuration"];
-            property: "level";
-            propertyKey: number;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    };
+    dimmingDuration: ((sceneId: number) => {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Scene Actuator Configuration"];
-            readonly endpoint: number;
-            readonly property: "level";
+            readonly property: "dimmingDuration";
             readonly propertyKey: number;
         };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Scene Actuator Configuration"];
+            readonly endpoint: number;
+            readonly property: "dimmingDuration";
+            readonly propertyKey: number;
+        };
+        readonly meta: {
+            readonly label: `Dimming duration (${number})`;
+            readonly type: "duration";
+            readonly readable: true;
+            readonly writeable: true;
+        };
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -15820,7 +15872,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
     ccCommand: SceneControllerConfigurationCommand;
     // (undocumented)
     determineRequiredCCInterviews(): readonly CommandClasses[];
-    static getGroupCountCached(ctx: GetValueDB_2 & GetDeviceConfig_2, endpoint: EndpointId_2): number;
+    static getGroupCountCached(ctx: GetValueDB & GetDeviceConfig, endpoint: EndpointId): number;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
@@ -15837,9 +15889,9 @@ export class SceneControllerConfigurationCCGet extends SceneControllerConfigurat
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SceneControllerConfigurationCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15866,7 +15918,7 @@ export class SceneControllerConfigurationCCReport extends SceneControllerConfigu
     // (undocumented)
     readonly sceneId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SceneControllerConfigurationCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15895,9 +15947,9 @@ export class SceneControllerConfigurationCCSet extends SceneControllerConfigurat
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SceneControllerConfigurationCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -15916,36 +15968,18 @@ export interface SceneControllerConfigurationCCSetOptions {
 //
 // @public (undocumented)
 export const SceneControllerConfigurationCCValues: Readonly<{
-    dimmingDuration: ((groupId: number) => {
-        readonly meta: {
-            readonly label: `Dimming duration (${number})`;
-            readonly type: "duration";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Scene Controller Configuration"];
-            property: "dimmingDuration";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    sceneId: ((groupId: number) => {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Scene Controller Configuration"];
-            readonly endpoint: number;
-            readonly property: "dimmingDuration";
+            readonly property: "sceneId";
             readonly propertyKey: number;
         };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Scene Controller Configuration"];
+            readonly endpoint: number;
+            readonly property: "sceneId";
+            readonly propertyKey: number;
         };
-    };
-    sceneId: ((groupId: number) => {
         readonly meta: {
             readonly label: `Associated Scene ID (${number})`;
             readonly valueChangeOptions: readonly ["transitionDuration"];
@@ -15955,20 +15989,38 @@ export const SceneControllerConfigurationCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Scene Controller Configuration"];
-            property: "sceneId";
-            propertyKey: number;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    };
+    dimmingDuration: ((groupId: number) => {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Scene Controller Configuration"];
-            readonly endpoint: number;
-            readonly property: "sceneId";
+            readonly property: "dimmingDuration";
             readonly propertyKey: number;
         };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Scene Controller Configuration"];
+            readonly endpoint: number;
+            readonly property: "dimmingDuration";
+            readonly propertyKey: number;
+        };
+        readonly meta: {
+            readonly label: `Dimming duration (${number})`;
+            readonly type: "duration";
+            readonly readable: true;
+            readonly writeable: true;
+        };
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -15997,19 +16049,19 @@ export enum SceneControllerConfigurationCommand {
 export class ScheduleEntryLockCC extends CommandClass {
     // (undocumented)
     ccCommand: ScheduleEntryLockCommand;
-    static getNumDailyRepeatingSlotsCached(ctx: GetValueDB, endpoint: EndpointId_2): number;
-    static getNumWeekDaySlotsCached(ctx: GetValueDB, endpoint: EndpointId_2): number;
-    static getNumYearDaySlotsCached(ctx: GetValueDB, endpoint: EndpointId_2): number;
+    static getNumDailyRepeatingSlotsCached(ctx: GetValueDB_2, endpoint: EndpointId): number;
+    static getNumWeekDaySlotsCached(ctx: GetValueDB_2, endpoint: EndpointId): number;
+    static getNumYearDaySlotsCached(ctx: GetValueDB_2, endpoint: EndpointId): number;
     // (undocumented)
-    static getScheduleCached(ctx: GetValueDB, endpoint: EndpointId_2, scheduleKind: ScheduleEntryLockScheduleKind.WeekDay, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockWeekDaySchedule | false>;
+    static getScheduleCached(ctx: GetValueDB_2, endpoint: EndpointId, scheduleKind: ScheduleEntryLockScheduleKind.WeekDay, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockWeekDaySchedule | false>;
     // (undocumented)
-    static getScheduleCached(ctx: GetValueDB, endpoint: EndpointId_2, scheduleKind: ScheduleEntryLockScheduleKind.YearDay, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockYearDaySchedule | false>;
+    static getScheduleCached(ctx: GetValueDB_2, endpoint: EndpointId, scheduleKind: ScheduleEntryLockScheduleKind.YearDay, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockYearDaySchedule | false>;
     // (undocumented)
-    static getScheduleCached(ctx: GetValueDB, endpoint: EndpointId_2, scheduleKind: ScheduleEntryLockScheduleKind.DailyRepeating, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockDailyRepeatingSchedule | false>;
+    static getScheduleCached(ctx: GetValueDB_2, endpoint: EndpointId, scheduleKind: ScheduleEntryLockScheduleKind.DailyRepeating, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockDailyRepeatingSchedule | false>;
     // (undocumented)
-    static getScheduleCached(ctx: GetValueDB, endpoint: EndpointId_2, scheduleKind: ScheduleEntryLockScheduleKind, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockWeekDaySchedule | ScheduleEntryLockYearDaySchedule | ScheduleEntryLockDailyRepeatingSchedule | false>;
-    static getUserCodeScheduleEnabledCached(ctx: GetValueDB, endpoint: EndpointId_2, userId: number): boolean;
-    static getUserCodeScheduleKindCached(ctx: GetValueDB, endpoint: EndpointId_2, userId: number): MaybeNotKnown<ScheduleEntryLockScheduleKind>;
+    static getScheduleCached(ctx: GetValueDB_2, endpoint: EndpointId, scheduleKind: ScheduleEntryLockScheduleKind, userId: number, slotId: number): MaybeNotKnown<ScheduleEntryLockWeekDaySchedule | ScheduleEntryLockYearDaySchedule | ScheduleEntryLockDailyRepeatingSchedule | false>;
+    static getUserCodeScheduleEnabledCached(ctx: GetValueDB_2, endpoint: EndpointId, userId: number): boolean;
+    static getUserCodeScheduleKindCached(ctx: GetValueDB_2, endpoint: EndpointId, userId: number): MaybeNotKnown<ScheduleEntryLockScheduleKind>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
 }
@@ -16020,13 +16072,13 @@ export class ScheduleEntryLockCC extends CommandClass {
 export class ScheduleEntryLockCCDailyRepeatingScheduleGet extends ScheduleEntryLockCC {
     constructor(options: WithAddress_2<ScheduleEntryLockCCDailyRepeatingScheduleGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCDailyRepeatingScheduleGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCDailyRepeatingScheduleGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
 }
@@ -16046,11 +16098,11 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport extends ScheduleEnt
     // (undocumented)
     durationMinute?: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCDailyRepeatingScheduleReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCDailyRepeatingScheduleReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16058,7 +16110,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport extends ScheduleEnt
     // (undocumented)
     startMinute?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
     // (undocumented)
@@ -16082,9 +16134,9 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet extends ScheduleEntryL
     // (undocumented)
     durationMinute?: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCDailyRepeatingScheduleSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCDailyRepeatingScheduleSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16092,7 +16144,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet extends ScheduleEntryL
     // (undocumented)
     startMinute?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
     // (undocumented)
@@ -16117,11 +16169,11 @@ export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
     // (undocumented)
     enabled: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCEnableAllSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCEnableAllSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ScheduleEntryLockCCEnableAllSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16140,11 +16192,11 @@ export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
     // (undocumented)
     enabled: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCEnableSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCEnableSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
 }
@@ -16171,7 +16223,7 @@ export class ScheduleEntryLockCCSupportedGet extends ScheduleEntryLockCC {
 export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
     constructor(options: WithAddress_2<ScheduleEntryLockCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCSupportedReport;
     // (undocumented)
     numDailyRepeatingSlots: number | undefined;
     // (undocumented)
@@ -16179,9 +16231,9 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
     // (undocumented)
     numYearDaySlots: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ScheduleEntryLockCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16210,13 +16262,13 @@ export class ScheduleEntryLockCCTimeOffsetReport extends ScheduleEntryLockCC {
     // (undocumented)
     dstOffset: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCTimeOffsetReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCTimeOffsetReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ScheduleEntryLockCCTimeOffsetReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16237,13 +16289,13 @@ export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
     // (undocumented)
     dstOffset: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCTimeOffsetSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCTimeOffsetSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "ScheduleEntryLockCCTimeOffsetSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16260,163 +16312,163 @@ export interface ScheduleEntryLockCCTimeOffsetSetOptions {
 //
 // @public (undocumented)
 export const ScheduleEntryLockCCValues: Readonly<{
-    schedule: ((scheduleKind: ScheduleEntryLockScheduleKind, userId: number, slotId: number) => {
-        readonly meta: {
+    numWeekDaySlots: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly property: "numWeekDaySlots";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly endpoint: number;
+            readonly property: "numWeekDaySlots";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            property: "schedule";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            readonly endpoint: number;
-            readonly property: "schedule";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    scheduleKind: ((userId: number) => {
-        readonly meta: {
+    numYearDaySlots: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly property: "numYearDaySlots";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly endpoint: number;
+            readonly property: "numYearDaySlots";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            property: "scheduleKind";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            readonly endpoint: number;
-            readonly property: "scheduleKind";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
+        };
+    };
+    numDailyRepeatingSlots: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly property: "numDailyRepeatingSlots";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly endpoint: number;
+            readonly property: "numDailyRepeatingSlots";
+        };
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
     userEnabled: ((userId: number) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly property: "userEnabled";
+            readonly propertyKey: number;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            property: "userEnabled";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
             readonly endpoint: number;
             readonly property: "userEnabled";
             readonly propertyKey: number;
         };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
     }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        is: (valueId: ValueID_2) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    numDailyRepeatingSlots: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            property: "numDailyRepeatingSlots";
+    scheduleKind: ((userId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly property: "scheduleKind";
+            readonly propertyKey: number;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
             readonly endpoint: number;
-            readonly property: "numDailyRepeatingSlots";
+            readonly property: "scheduleKind";
+            readonly propertyKey: number;
         };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    numYearDaySlots: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            property: "numYearDaySlots";
+    schedule: ((scheduleKind: ScheduleEntryLockScheduleKind, userId: number, slotId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
+            readonly property: "schedule";
+            readonly propertyKey: number;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
             readonly endpoint: number;
-            readonly property: "numYearDaySlots";
+            readonly property: "schedule";
+            readonly propertyKey: number;
         };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    numWeekDaySlots: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            property: "numWeekDaySlots";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Schedule Entry Lock"];
-            readonly endpoint: number;
-            readonly property: "numWeekDaySlots";
-        };
-        readonly is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -16427,13 +16479,13 @@ export const ScheduleEntryLockCCValues: Readonly<{
 export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
     constructor(options: WithAddress_2<ScheduleEntryLockCCWeekDayScheduleGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCWeekDayScheduleGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCWeekDayScheduleGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
 }
@@ -16449,11 +16501,11 @@ export type ScheduleEntryLockCCWeekDayScheduleGetOptions = ScheduleEntryLockSlot
 export class ScheduleEntryLockCCWeekDayScheduleReport extends ScheduleEntryLockCC {
     constructor(options: WithAddress_2<ScheduleEntryLockCCWeekDayScheduleReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCWeekDayScheduleReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCWeekDayScheduleReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16465,7 +16517,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport extends ScheduleEntryLockC
     // (undocumented)
     stopMinute?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
     // (undocumented)
@@ -16485,9 +16537,9 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
     // (undocumented)
     action: ScheduleEntryLockSetAction;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCWeekDayScheduleSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCWeekDayScheduleSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16499,7 +16551,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
     // (undocumented)
     stopMinute?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
     // (undocumented)
@@ -16522,13 +16574,13 @@ export type ScheduleEntryLockCCWeekDayScheduleSetOptions = ScheduleEntryLockSlot
 export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
     constructor(options: WithAddress_2<ScheduleEntryLockCCYearDayScheduleGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCYearDayScheduleGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCYearDayScheduleGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
 }
@@ -16544,11 +16596,11 @@ export type ScheduleEntryLockCCYearDayScheduleGetOptions = ScheduleEntryLockSlot
 export class ScheduleEntryLockCCYearDayScheduleReport extends ScheduleEntryLockCC {
     constructor(options: WithAddress_2<ScheduleEntryLockCCYearDayScheduleReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCYearDayScheduleReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCYearDayScheduleReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16572,7 +16624,7 @@ export class ScheduleEntryLockCCYearDayScheduleReport extends ScheduleEntryLockC
     // (undocumented)
     stopYear?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
 }
@@ -16590,9 +16642,9 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
     // (undocumented)
     action: ScheduleEntryLockSetAction;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCYearDayScheduleSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCYearDayScheduleSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes_2;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes_2>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16616,7 +16668,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
     // (undocumented)
     stopYear?: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     userId: number;
 }
@@ -16791,14 +16843,20 @@ export enum ScheduleOverrideType {
     Temporary = 1
 }
 
+// Warning: (ae-missing-release-tag) "SchedulePoll" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface SchedulePoll {
+    // (undocumented)
+    schedulePoll(nodeId: number, valueId: ValueID_2, options: SchedulePollOptions): boolean;
+}
+
 // Warning: (ae-missing-release-tag) "SchedulePollOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export interface SchedulePollOptions {
-    // (undocumented)
-    duration?: Duration_2;
-    // (undocumented)
-    transition?: "fast" | "slow";
+    expectedValue?: unknown;
+    timeoutMs?: number;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16832,11 +16890,11 @@ export class Security2CCCommandsSupportedReport extends Security2CC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCCommandsSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedCCs: CommandClasses_2[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCCommandsSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16857,9 +16915,9 @@ export class Security2CCKEXFail extends Security2CC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCKEXFail;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCKEXFailOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16892,13 +16950,13 @@ export class Security2CCKEXReport extends Security2CC {
     // (undocumented)
     readonly _reserved: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedECDHProfiles: readonly ECDHProfiles[];
     // (undocumented)
     readonly supportedKEXSchemes: readonly KEXSchemes[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCKEXReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16939,9 +16997,9 @@ export class Security2CCKEXSet extends Security2CC {
     // (undocumented)
     selectedKEXScheme: KEXSchemes;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCKEXSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -16974,7 +17032,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
     // (undocumented)
     extensions: Security2Extension[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCMessageEncapsulation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<Security2CCMessageEncapsulation>;
     getMulticastGroupId(): number | undefined;
     getSenderEI(): Uint8Array | undefined;
     // (undocumented)
@@ -16986,9 +17044,9 @@ export class Security2CCMessageEncapsulation extends Security2CC {
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     readonly verifyDelivery: boolean;
 }
@@ -17018,9 +17076,9 @@ export class Security2CCNetworkKeyGet extends Security2CC {
     // (undocumented)
     requestedKey: SecurityClass;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCNetworkKeyGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17043,9 +17101,9 @@ export class Security2CCNetworkKeyReport extends Security2CC {
     // (undocumented)
     networkKey: Uint8Array;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCNetworkKeyReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17074,9 +17132,9 @@ export class Security2CCNonceGet extends Security2CC {
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCNonceGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17101,11 +17159,11 @@ export class Security2CCNonceReport extends Security2CC {
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly SOS: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCNonceReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17135,9 +17193,9 @@ export class Security2CCPublicKeyReport extends Security2CC {
     // (undocumented)
     publicKey: Uint8Array;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCPublicKeyReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17162,9 +17220,9 @@ export class Security2CCTransferEnd extends Security2CC {
     // (undocumented)
     keyVerified: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCTransferEndOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17267,19 +17325,19 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCCommandEncapsulation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<SecurityCCCommandEncapsulation>;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    mergePartialCCs(partials: SecurityCCCommandEncapsulation[], ctx: CCParsingContext_2): void;
+    mergePartialCCs(partials: SecurityCCCommandEncapsulation[], ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
     nonce: Uint8Array | undefined;
     // (undocumented)
     get nonceId(): number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCCommandEncapsulationNonceGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17322,15 +17380,15 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    mergePartialCCs(partials: SecurityCCCommandsSupportedReport[]): void;
+    mergePartialCCs(partials: SecurityCCCommandsSupportedReport[]): Promise<void>;
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportedCCs: CommandClasses_2[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCCommandsSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17355,9 +17413,9 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
     // (undocumented)
     networkKey: Uint8Array;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCNetworkKeySetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17391,9 +17449,9 @@ export class SecurityCCNonceReport extends SecurityCC {
     // (undocumented)
     nonce: Uint8Array;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCSchemeGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17401,9 +17459,9 @@ export class SecurityCCNonceReport extends SecurityCC {
 // @public (undocumented)
 export class SecurityCCSchemeGet extends SecurityCC {
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCSchemeInherit" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17411,9 +17469,9 @@ export class SecurityCCSchemeGet extends SecurityCC {
 // @public (undocumented)
 export class SecurityCCSchemeInherit extends SecurityCC {
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCSchemeReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17423,9 +17481,9 @@ export class SecurityCCSchemeReport extends SecurityCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17454,6 +17512,14 @@ export enum SecurityCommand {
     SchemeInherit = 8,
     // (undocumented)
     SchemeReport = 5
+}
+
+// Warning: (ae-missing-release-tag) "SendCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface SendCommand {
+    // (undocumented)
+    sendCommand<TResponse extends CCId_2 | undefined = undefined>(command: CCId_2, options?: SendCommandOptions): Promise<SendCommandReturnType<TResponse>>;
 }
 
 // Warning: (ae-missing-release-tag) "SET_VALUE" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17607,9 +17673,9 @@ export class SoundSwitchCCConfigurationReport extends SoundSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCConfigurationReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SoundSwitchCCConfigurationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17634,9 +17700,9 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCConfigurationSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SoundSwitchCCConfigurationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17657,9 +17723,9 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCToneInfoGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     toneId: number;
 }
@@ -17684,9 +17750,9 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
     // (undocumented)
     readonly name: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly toneId: number;
 }
@@ -17717,9 +17783,9 @@ export class SoundSwitchCCTonePlayReport extends SoundSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCTonePlayReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly toneId: ToneId | number;
     // (undocumented)
@@ -17744,9 +17810,9 @@ export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCTonePlaySet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     toneId: ToneId | number;
     // (undocumented)
@@ -17777,9 +17843,9 @@ export class SoundSwitchCCTonesNumberReport extends SoundSwitchCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCTonesNumberReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     toneCount: number;
 }
@@ -17796,103 +17862,17 @@ export interface SoundSwitchCCTonesNumberReportOptions {
 //
 // @public (undocumented)
 export const SoundSwitchCCValues: Readonly<{
-    defaultToneId: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Sound Switch"];
-            property: "defaultToneId";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
-            readonly endpoint: number;
-            readonly property: "defaultToneId";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly min: 1;
-            readonly max: 254;
-            readonly label: "Default tone ID";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    defaultVolume: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Sound Switch"];
-            property: "defaultVolume";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
-            readonly endpoint: number;
-            readonly property: "defaultVolume";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly min: 0;
-            readonly max: 100;
-            readonly unit: "%";
-            readonly label: "Default volume";
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    toneId: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Sound Switch"];
-            property: "toneId";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
-            readonly endpoint: number;
-            readonly property: "toneId";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Play Tone";
-            readonly valueChangeOptions: readonly ["volume"];
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
     volume: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Sound Switch"];
-            property: "volume";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
+            readonly property: "volume";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Sound Switch"];
             readonly endpoint: number;
             readonly property: "volume";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly min: 0;
             readonly max: 100;
@@ -17906,7 +17886,93 @@ export const SoundSwitchCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    toneId: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
+            readonly property: "toneId";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
+            readonly endpoint: number;
+            readonly property: "toneId";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Play Tone";
+            readonly valueChangeOptions: readonly ["volume"];
+            readonly min: 0;
+            readonly max: 255;
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    defaultVolume: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
+            readonly property: "defaultVolume";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
+            readonly endpoint: number;
+            readonly property: "defaultVolume";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly min: 0;
+            readonly max: 100;
+            readonly unit: "%";
+            readonly label: "Default volume";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    defaultToneId: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
+            readonly property: "defaultToneId";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Sound Switch"];
+            readonly endpoint: number;
+            readonly property: "defaultToneId";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly min: 1;
+            readonly max: 254;
+            readonly label: "Default tone ID";
+            readonly type: "number";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -17988,13 +18054,13 @@ export class SupervisionCC extends CommandClass {
     // (undocumented)
     ccCommand: SupervisionCommand;
     static encapsulate(cc: CommandClass, sessionId: number, requestStatusUpdates?: boolean): SupervisionCCGet;
-    static getCCSupportedWithSupervision(ctx: GetValueDB_2, endpoint: EndpointId_2, ccId: CommandClasses): boolean;
+    static getCCSupportedWithSupervision(ctx: GetValueDB, endpoint: EndpointId, ccId: CommandClasses): boolean;
     static getSessionId(command: CommandClass): number | undefined;
-    static mayUseSupervision<T extends CommandClass>(ctx: GetValueDB_2 & GetNode_2<NodeId & SupportsCC & GetEndpoint<EndpointId_2>>, command: T): command is SinglecastCC_2<T>;
+    static mayUseSupervision<T extends CommandClass>(ctx: GetValueDB & GetNode<NodeId & SupportsCC & GetEndpoint<EndpointId>>, command: T): command is SinglecastCC<T>;
     // (undocumented)
     nodeId: number;
     static requiresEncapsulation(cc: CommandClass): boolean;
-    static setCCSupportedWithSupervision(ctx: GetValueDB_2, endpoint: EndpointId_2, ccId: CommandClasses, supported: boolean): void;
+    static setCCSupportedWithSupervision(ctx: GetValueDB, endpoint: EndpointId, ccId: CommandClasses, supported: boolean): void;
 }
 
 // Warning: (ae-missing-release-tag) "SupervisionCCGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18007,15 +18073,15 @@ export class SupervisionCCGet extends SupervisionCC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SupervisionCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<SupervisionCCGet>;
     // (undocumented)
     requestStatusUpdates: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "SupervisionCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18044,13 +18110,13 @@ export class SupervisionCCReport extends SupervisionCC {
     // (undocumented)
     readonly requestWakeUpOnDemand: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly sessionId: number;
     // (undocumented)
     readonly status: SupervisionStatus;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     toSupervisionResult(): SupervisionResult;
 }
@@ -18074,31 +18140,31 @@ export type SupervisionCCReportOptions = {
 // @public (undocumented)
 export const SupervisionCCValues: Readonly<{
     ccSupported: ((ccId: CommandClasses) => {
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: CommandClasses.Supervision;
-            property: "ccSupported";
-            propertyKey: CommandClasses;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        id: {
             readonly commandClass: CommandClasses.Supervision;
-            readonly endpoint: number;
             readonly property: "ccSupported";
             readonly propertyKey: CommandClasses;
         };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Supervision;
+            readonly endpoint: 0;
+            readonly property: "ccSupported";
+            readonly propertyKey: CommandClasses;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -18212,7 +18278,7 @@ export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
     // (undocumented)
     readonly off: boolean | undefined;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatFanModeCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18237,9 +18303,9 @@ export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
     // (undocumented)
     off: boolean | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatFanModeCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18270,7 +18336,7 @@ export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
     // (undocumented)
     readonly supportedModes: ThermostatFanMode[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatFanModeCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18285,46 +18351,45 @@ export interface ThermostatFanModeCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const ThermostatFanModeCCValues: Readonly<{
-    supportedFanModes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
-            property: "supportedModes";
+    turnedOff: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
+            readonly property: "off";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
             readonly endpoint: number;
-            readonly property: "supportedModes";
+            readonly property: "off";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
+            readonly label: "Thermostat fan turned off";
+            readonly type: "boolean";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
             readonly secret: false;
-            readonly minVersion: 1;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
     fanMode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
-            property: "mode";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
+            readonly property: "mode";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
             readonly endpoint: number;
             readonly property: "mode";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly states: Record<number, string>;
             readonly label: "Thermostat fan mode";
             readonly min: 0;
             readonly max: 255;
@@ -18332,7 +18397,7 @@ export const ThermostatFanModeCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -18341,30 +18406,29 @@ export const ThermostatFanModeCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    turnedOff: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
-            property: "off";
+    supportedFanModes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
+            readonly property: "supportedModes";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Thermostat Fan Mode"];
             readonly endpoint: number;
-            readonly property: "off";
+            readonly property: "supportedModes";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Thermostat fan turned off";
-            readonly type: "boolean";
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
             readonly secret: false;
-            readonly internal: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly minVersion: 3;
         };
     };
 }>;
@@ -18437,7 +18501,7 @@ export class ThermostatFanStateCCReport extends ThermostatFanStateCC {
     // (undocumented)
     readonly state: ThermostatFanState;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatFanStateCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18453,20 +18517,18 @@ export interface ThermostatFanStateCCReportOptions {
 // @public (undocumented)
 export const ThermostatFanStateCCValues: Readonly<{
     fanState: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Fan State"];
-            property: "state";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Fan State"];
+            readonly property: "state";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Thermostat Fan State"];
             readonly endpoint: number;
             readonly property: "state";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly states: Record<number, string>;
             readonly label: "Thermostat fan state";
             readonly writeable: false;
             readonly min: 0;
@@ -18474,7 +18536,7 @@ export const ThermostatFanStateCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -18565,9 +18627,9 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatModeCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18593,9 +18655,9 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
     // (undocumented)
     mode: ThermostatMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatModeCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18624,11 +18686,11 @@ export class ThermostatModeCCSupportedReport extends ThermostatModeCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedModes: ThermostatMode[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatModeCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18643,72 +18705,19 @@ export interface ThermostatModeCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const ThermostatModeCCValues: Readonly<{
-    supportedModes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Mode"];
-            property: "supportedModes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
-            readonly endpoint: number;
-            readonly property: "supportedModes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    manufacturerData: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Mode"];
-            property: "manufacturerData";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
-            readonly endpoint: number;
-            readonly property: "manufacturerData";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Manufacturer data";
-            readonly writeable: false;
-            readonly type: "buffer";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
     thermostatMode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Mode"];
-            property: "mode";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
+            readonly property: "mode";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
             readonly endpoint: number;
             readonly property: "mode";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly states: Record<number, string>;
             readonly label: "Thermostat mode";
             readonly min: 0;
             readonly max: 255;
@@ -18716,8 +18725,59 @@ export const ThermostatModeCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    manufacturerData: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
+            readonly property: "manufacturerData";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
+            readonly endpoint: number;
+            readonly property: "manufacturerData";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Manufacturer data";
+            readonly writeable: false;
+            readonly type: "buffer";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedModes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
+            readonly property: "supportedModes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Mode"];
+            readonly endpoint: number;
+            readonly property: "supportedModes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -18801,7 +18861,7 @@ export class ThermostatOperatingStateCCReport extends ThermostatOperatingStateCC
     // (undocumented)
     readonly state: ThermostatOperatingState;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatOperatingStateCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18817,28 +18877,26 @@ export interface ThermostatOperatingStateCCReportOptions {
 // @public (undocumented)
 export const ThermostatOperatingStateCCValues: Readonly<{
     operatingState: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Operating State"];
-            property: "state";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Operating State"];
+            readonly property: "state";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Thermostat Operating State"];
             readonly endpoint: number;
             readonly property: "state";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Operating state";
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly states: Record<number, string>;
             readonly writeable: false;
             readonly min: 0;
             readonly max: 255;
             readonly type: "number";
             readonly readable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -18885,12 +18943,12 @@ export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetbackCCReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     readonly setbackState: SetbackState;
     // (undocumented)
     readonly setbackType: SetbackType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatSetbackCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18911,12 +18969,12 @@ export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetbackCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     setbackState: SetbackState;
     // (undocumented)
     setbackType: SetbackType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatSetbackCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18966,7 +19024,7 @@ export class ThermostatSetpointCC extends CommandClass {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    translatePropertyKey(ctx: GetValueDB_2, property: string | number, propertyKey: string | number): string | undefined;
+    translatePropertyKey(ctx: GetValueDB, property: string | number, propertyKey: string | number): string | undefined;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatSetpointCCCapabilitiesGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18977,11 +19035,11 @@ export class ThermostatSetpointCCCapabilitiesGet extends ThermostatSetpointCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCCapabilitiesGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     setpointType: ThermostatSetpointType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatSetpointCCCapabilitiesGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19010,9 +19068,9 @@ export class ThermostatSetpointCCCapabilitiesReport extends ThermostatSetpointCC
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     type: ThermostatSetpointType;
 }
@@ -19041,11 +19099,11 @@ export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     setpointType: ThermostatSetpointType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatSetpointCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19068,9 +19126,9 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     type: ThermostatSetpointType;
     // (undocumented)
@@ -19099,11 +19157,11 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     setpointType: ThermostatSetpointType;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     value: number;
 }
@@ -19134,11 +19192,11 @@ export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedSetpointTypes: readonly ThermostatSetpointType[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "ThermostatSetpointCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19153,35 +19211,43 @@ export interface ThermostatSetpointCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const ThermostatSetpointCCValues: Readonly<{
-    setpointScale: ((setpointType: ThermostatSetpointType) => {
-        readonly meta: {
+    supportedSetpointTypes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
+            readonly property: "supportedSetpointTypes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
+            readonly endpoint: number;
+            readonly property: "supportedSetpointTypes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
-            property: "setpointScale";
-            propertyKey: ThermostatSetpointType;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
-            readonly endpoint: number;
-            readonly property: "setpointScale";
-            readonly propertyKey: ThermostatSetpointType;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
     setpoint: ((setpointType: ThermostatSetpointType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
+            readonly property: "setpoint";
+            readonly propertyKey: ThermostatSetpointType;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
+            readonly endpoint: number;
+            readonly property: "setpoint";
+            readonly propertyKey: ThermostatSetpointType;
+        };
         readonly meta: {
             readonly label: `Setpoint (${string})`;
             readonly ccSpecific: {
@@ -19191,20 +19257,9 @@ export const ThermostatSetpointCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
-            property: "setpoint";
-            propertyKey: ThermostatSetpointType;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
-            readonly endpoint: number;
-            readonly property: "setpoint";
-            readonly propertyKey: ThermostatSetpointType;
-        };
     }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -19213,29 +19268,32 @@ export const ThermostatSetpointCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    supportedSetpointTypes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
-            property: "supportedSetpointTypes";
+    setpointScale: ((setpointType: ThermostatSetpointType) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
+            readonly property: "setpointScale";
+            readonly propertyKey: ThermostatSetpointType;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Thermostat Setpoint"];
             readonly endpoint: number;
-            readonly property: "supportedSetpointTypes";
+            readonly property: "setpointScale";
+            readonly propertyKey: ThermostatSetpointType;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -19263,7 +19321,7 @@ export enum ThermostatSetpointCommand {
 // Warning: (ae-missing-release-tag) "ThermostatSetpointMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ThermostatSetpointMetadata = ValueMetadata_2 & {
+export type ThermostatSetpointMetadata = ValueMetadata & {
     ccSpecific: {
         setpointType: ThermostatSetpointType;
     };
@@ -19357,9 +19415,9 @@ export class TimeCCDateReport extends TimeCC {
     // (undocumented)
     month: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
     // (undocumented)
     year: number;
 }
@@ -19402,11 +19460,11 @@ export class TimeCCTimeOffsetReport extends TimeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): TimeCCTimeOffsetReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "TimeCCTimeOffsetReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19437,11 +19495,11 @@ export class TimeCCTimeOffsetSet extends TimeCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): TimeCCTimeOffsetSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "TimeCCTimeOffsetSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19472,9 +19530,9 @@ export class TimeCCTimeReport extends TimeCC {
     // (undocumented)
     second: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "TimeCCTimeReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19537,7 +19595,7 @@ export class TimeParametersCCReport extends TimeParametersCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "TimeParametersCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19560,9 +19618,9 @@ export class TimeParametersCCSet extends TimeParametersCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "TimeParametersCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19580,23 +19638,23 @@ export interface TimeParametersCCSetOptions {
 // @public (undocumented)
 export const TimeParametersCCValues: Readonly<{
     dateAndTime: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Time Parameters"];
-            property: "dateAndTime";
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Time Parameters"];
+            readonly property: "dateAndTime";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses_2)["Time Parameters"];
             readonly endpoint: number;
             readonly property: "dateAndTime";
         };
-        readonly is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Date and Time";
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -19642,7 +19700,7 @@ export enum ToneId {
 // Warning: (ae-missing-release-tag) "TransportServiceCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export class TransportServiceCC extends CommandClass implements SinglecastCC_2<TransportServiceCC> {
+export class TransportServiceCC extends CommandClass implements SinglecastCC<TransportServiceCC> {
     // (undocumented)
     ccCommand: TransportServiceCommand;
     // (undocumented)
@@ -19671,11 +19729,11 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
     // (undocumented)
     partialDatagram: Uint8Array;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "TransportServiceCCFirstSegmentOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19700,11 +19758,11 @@ export class TransportServiceCCSegmentComplete extends TransportServiceCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): TransportServiceCCSegmentComplete;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "TransportServiceCCSegmentCompleteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19725,11 +19783,11 @@ export class TransportServiceCCSegmentRequest extends TransportServiceCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): TransportServiceCCSegmentRequest;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "TransportServiceCCSegmentRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19752,9 +19810,9 @@ export class TransportServiceCCSegmentWait extends TransportServiceCC {
     // (undocumented)
     pendingSegments: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "TransportServiceCCSegmentWaitOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19793,15 +19851,15 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
     mergePartialCCs(partials: [
     TransportServiceCCFirstSegment,
     ...TransportServiceCCSubsequentSegment[]
-    ], ctx: CCParsingContext_2): void;
+    ], ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
     partialDatagram: Uint8Array;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "TransportServiceCCSubsequentSegmentOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19847,19 +19905,19 @@ export const TransportServiceTimeouts: {
 export class UserCodeCC extends CommandClass {
     // (undocumented)
     ccCommand: UserCodeCommand;
-    static getSupportedASCIICharsCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<string>;
-    static getSupportedKeypadModesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<KeypadMode[]>;
-    static getSupportedUserIDStatusesCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<UserIDStatus[]>;
-    static getSupportedUsersCached(ctx: GetValueDB_2, endpoint: EndpointId_2): MaybeNotKnown<number>;
-    static getUserCodeCached(ctx: GetValueDB_2, endpoint: EndpointId_2, userId: number): MaybeNotKnown<string | Uint8Array>;
-    static getUserIdStatusCached(ctx: GetValueDB_2, endpoint: EndpointId_2, userId: number): MaybeNotKnown<UserIDStatus>;
+    static getSupportedASCIICharsCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<string>;
+    static getSupportedKeypadModesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<KeypadMode[]>;
+    static getSupportedUserIDStatusesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<UserIDStatus[]>;
+    static getSupportedUsersCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<number>;
+    static getUserCodeCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<string | Uint8Array>;
+    static getUserIdStatusCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<UserIDStatus>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
-    static supportsAdminCodeCached(ctx: GetValueDB_2, endpoint: EndpointId_2): boolean;
-    static supportsAdminCodeDeactivationCached(ctx: GetValueDB_2, endpoint: EndpointId_2): boolean;
-    static supportsMultipleUserCodeSetCached(ctx: GetValueDB_2, endpoint: EndpointId_2): boolean;
+    static supportsAdminCodeCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
+    static supportsAdminCodeDeactivationCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
+    static supportsMultipleUserCodeSetCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
 }
 
 // Warning: (ae-missing-release-tag) "UserCodeCCAdminCodeGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19878,9 +19936,9 @@ export class UserCodeCCAdminCodeReport extends UserCodeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCAdminCodeReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "UserCodeCCAdminCodeReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19901,9 +19959,9 @@ export class UserCodeCCAdminCodeSet extends UserCodeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCAdminCodeSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "UserCodeCCAdminCodeSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19928,7 +19986,7 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCCapabilitiesReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedASCIIChars: string;
     // (undocumented)
@@ -19946,7 +20004,7 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
     // (undocumented)
     readonly supportsUserCodeChecksum: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "UserCodeCCCapabilitiesReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19981,9 +20039,9 @@ export class UserCodeCCExtendedUserCodeGet extends UserCodeCC {
     // (undocumented)
     reportMore: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     userId: number;
 }
@@ -20010,7 +20068,7 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // Warning: (ae-forgotten-export) The symbol "UserCode" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -20035,9 +20093,9 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): UserCodeCCExtendedUserCodeSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     userCodes: UserCodeCCSetOptions[];
 }
@@ -20058,9 +20116,9 @@ export class UserCodeCCGet extends UserCodeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     userId: number;
 }
@@ -20091,9 +20149,9 @@ export class UserCodeCCKeypadModeReport extends UserCodeCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "UserCodeCCKeypadModeReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20114,9 +20172,9 @@ export class UserCodeCCKeypadModeSet extends UserCodeCC {
     // (undocumented)
     keypadMode: KeypadMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "UserCodeCCKeypadModeSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20138,9 +20196,9 @@ export class UserCodeCCReport extends UserCodeCC implements NotificationEventPay
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     toNotificationEventParameters(): {
         userId: number;
@@ -20173,9 +20231,9 @@ export class UserCodeCCSet extends UserCodeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     userCode: string | Uint8Array;
     // (undocumented)
@@ -20215,9 +20273,9 @@ export class UserCodeCCUserCodeChecksumReport extends UserCodeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCUserCodeChecksumReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly userCodeChecksum: number;
 }
@@ -20244,11 +20302,11 @@ export class UserCodeCCUsersNumberReport extends UserCodeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCUsersNumberReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedUsers: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "UserCodeCCUsersNumberReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20263,56 +20321,24 @@ export interface UserCodeCCUsersNumberReportOptions {
 //
 // @public (undocumented)
 export const UserCodeCCValues: Readonly<{
-    userCode: ((userId: number) => {
-        readonly meta: {
+    supportedUsers: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportedUsers";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportedUsers";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "userCode";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "userCode";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly stateful: true;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly secret: true;
-        };
-    };
-    userIdStatus: ((userId: number) => {
-        readonly meta: {
-            readonly label: `User ID status (${number})`;
-            readonly type: "number";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "userIdStatus";
-            propertyKey: number;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "userIdStatus";
-            readonly propertyKey: number;
-        };
-    }) & {
-        is: (valueId: ValueID_2) => boolean;
-        readonly options: {
-            readonly internal: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -20320,17 +20346,318 @@ export const UserCodeCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    adminCode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "adminCode";
+    supportsAdminCode: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportsAdminCode";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportsAdminCode";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsAdminCodeDeactivation: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportsAdminCodeDeactivation";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportsAdminCodeDeactivation";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    _deprecated_supportsMasterCode: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportsMasterCode";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportsMasterCode";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    _deprecated_supportsMasterCodeDeactivation: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportsMasterCodeDeactivation";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportsMasterCodeDeactivation";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsUserCodeChecksum: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportsUserCodeChecksum";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportsUserCodeChecksum";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsMultipleUserCodeReport: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportsMultipleUserCodeReport";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportsMultipleUserCodeReport";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportsMultipleUserCodeSet: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportsMultipleUserCodeSet";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportsMultipleUserCodeSet";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedUserIDStatuses: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportedUserIDStatuses";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportedUserIDStatuses";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedKeypadModes: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportedKeypadModes";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportedKeypadModes";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    supportedASCIIChars: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "supportedASCIIChars";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "supportedASCIIChars";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    userCodeChecksum: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "userCodeChecksum";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "userCodeChecksum";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    keypadMode: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "keypadMode";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly endpoint: number;
+            readonly property: "keypadMode";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Keypad Mode";
+            readonly writeable: false;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    adminCode: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "adminCode";
+        };
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["User Code"];
             readonly endpoint: number;
             readonly property: "adminCode";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Admin Code";
             readonly minLength: 4;
@@ -20339,339 +20666,70 @@ export const UserCodeCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
+        options: {
             readonly internal: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
             readonly minVersion: 2;
             readonly secret: true;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
-    keypadMode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "keypadMode";
+    userIdStatus: ((userId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "userIdStatus";
+            readonly propertyKey: number;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["User Code"];
             readonly endpoint: number;
-            readonly property: "keypadMode";
+            readonly property: "userIdStatus";
+            readonly propertyKey: number;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
         readonly meta: {
-            readonly label: "Keypad Mode";
-            readonly writeable: false;
+            readonly label: `User ID status (${number})`;
             readonly type: "number";
             readonly readable: true;
+            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
             readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly minVersion: 2;
         };
     };
-    userCodeChecksum: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "userCodeChecksum";
+    userCode: ((userId: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Code"];
+            readonly property: "userCode";
+            readonly propertyKey: number;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["User Code"];
             readonly endpoint: number;
-            readonly property: "userCodeChecksum";
+            readonly property: "userCode";
+            readonly propertyKey: number;
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: true;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedASCIIChars: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportedASCIIChars";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportedASCIIChars";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedKeypadModes: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportedKeypadModes";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportedKeypadModes";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedUserIDStatuses: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportedUserIDStatuses";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportedUserIDStatuses";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsMultipleUserCodeSet: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportsMultipleUserCodeSet";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportsMultipleUserCodeSet";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsMultipleUserCodeReport: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportsMultipleUserCodeReport";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportsMultipleUserCodeReport";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsUserCodeChecksum: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportsUserCodeChecksum";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportsUserCodeChecksum";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    _deprecated_supportsMasterCodeDeactivation: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportsMasterCodeDeactivation";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportsMasterCodeDeactivation";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    _deprecated_supportsMasterCode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportsMasterCode";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportsMasterCode";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsAdminCodeDeactivation: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportsAdminCodeDeactivation";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportsAdminCodeDeactivation";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportsAdminCode: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportsAdminCode";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportsAdminCode";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
-        };
-    };
-    supportedUsers: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["User Code"];
-            property: "supportedUsers";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["User Code"];
-            readonly endpoint: number;
-            readonly property: "supportedUsers";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly internal: true;
         };
     };
 }>;
@@ -20736,6 +20794,13 @@ export enum UserIDStatus {
     StatusNotAvailable = 254
 }
 
+// Warning: (ae-missing-release-tag) "UserPreferences" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UserPreferences {
+    scales: Partial<Record<string | number, string | number>>;
+}
+
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "useSupervision" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -20762,7 +20827,7 @@ export { utils }
 // Warning: (ae-missing-release-tag) "ValueIDProperties" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ValueIDProperties = Pick<ValueID, "property" | "propertyKey">;
+export type ValueIDProperties = Pick<ValueID_2, "property" | "propertyKey">;
 
 // Warning: (ae-missing-release-tag) "ValveId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -20815,11 +20880,11 @@ export class VersionCCCapabilitiesReport extends VersionCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): VersionCCCapabilitiesReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportsZWaveSoftwareGet: boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "VersionCCCapabilitiesReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20840,9 +20905,9 @@ export class VersionCCCommandClassGet extends VersionCC {
     // (undocumented)
     requestedCC: CommandClasses;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "VersionCCCommandClassGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20865,9 +20930,9 @@ export class VersionCCCommandClassReport extends VersionCC {
     // (undocumented)
     requestedCC: CommandClasses;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "VersionCCCommandClassReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20902,9 +20967,9 @@ export class VersionCCReport extends VersionCC {
     // (undocumented)
     readonly protocolVersion: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
 // Warning: (ae-missing-release-tag) "VersionCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20925,370 +20990,368 @@ export interface VersionCCReportOptions {
 //
 // @public (undocumented)
 export const VersionCCValues: Readonly<{
-    applicationBuildNumber: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "applicationBuildNumber";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "applicationBuildNumber";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Application build number";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    applicationVersion: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "applicationVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "applicationVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Application version";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    zWaveProtocolBuildNumber: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "zWaveProtocolBuildNumber";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "zWaveProtocolBuildNumber";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Z-Wave protocol build number";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    zWaveProtocolVersion: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "zWaveProtocolVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "zWaveProtocolVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Z-Wave protocol version";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    serialAPIBuildNumber: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "hostInterfaceBuildNumber";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "hostInterfaceBuildNumber";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Serial API build number";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    serialAPIVersion: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "hostInterfaceVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "hostInterfaceVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Serial API version";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    applicationFrameworkBuildNumber: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "applicationFrameworkBuildNumber";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "applicationFrameworkBuildNumber";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Z-Wave application framework API build number";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    applicationFrameworkAPIVersion: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "applicationFrameworkAPIVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "applicationFrameworkAPIVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Z-Wave application framework API version";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    sdkVersion: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "sdkVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "sdkVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "SDK version";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly supportsEndpoints: false;
-        };
-    };
-    supportsZWaveSoftwareGet: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "supportsZWaveSoftwareGet";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "supportsZWaveSoftwareGet";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-            readonly minVersion: 3;
-            readonly internal: true;
-        };
-    };
-    hardwareVersion: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "hardwareVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "hardwareVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Z-Wave chip hardware version";
-            readonly writeable: false;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly autoCreate: true;
-            readonly minVersion: 2;
-            readonly supportsEndpoints: false;
-        };
-    };
-    protocolVersion: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "protocolVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "protocolVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Z-Wave protocol version";
-            readonly writeable: false;
-            readonly type: "string";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly supportsEndpoints: false;
-        };
-    };
-    libraryType: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "libraryType";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
-            readonly property: "libraryType";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Library type";
-            readonly states: {
-                [x: number]: string;
-            };
-            readonly writeable: false;
-            readonly type: "number";
-            readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly supportsEndpoints: false;
-        };
-    };
     firmwareVersions: {
-        readonly id: {
-            commandClass: CommandClasses.Version;
-            property: "firmwareVersions";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        id: {
             readonly commandClass: CommandClasses.Version;
-            readonly endpoint: number;
             readonly property: "firmwareVersions";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "firmwareVersions";
+        };
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly type: "string[]";
             readonly label: "Z-Wave chip firmware versions";
             readonly writeable: false;
             readonly readable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
-            readonly autoCreate: true;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    libraryType: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "libraryType";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "libraryType";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Library type";
+            readonly states: Record<number, string>;
+            readonly writeable: false;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    protocolVersion: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "protocolVersion";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "protocolVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Z-Wave protocol version";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    hardwareVersion: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "hardwareVersion";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "hardwareVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Z-Wave chip hardware version";
+            readonly writeable: false;
+            readonly type: "number";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    supportsZWaveSoftwareGet: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "supportsZWaveSoftwareGet";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: number;
+            readonly property: "supportsZWaveSoftwareGet";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    sdkVersion: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "sdkVersion";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "sdkVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "SDK version";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    applicationFrameworkAPIVersion: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "applicationFrameworkAPIVersion";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "applicationFrameworkAPIVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Z-Wave application framework API version";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    applicationFrameworkBuildNumber: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "applicationFrameworkBuildNumber";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "applicationFrameworkBuildNumber";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Z-Wave application framework API build number";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    serialAPIVersion: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "hostInterfaceVersion";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "hostInterfaceVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Serial API version";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    serialAPIBuildNumber: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "hostInterfaceBuildNumber";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "hostInterfaceBuildNumber";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Serial API build number";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    zWaveProtocolVersion: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "zWaveProtocolVersion";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "zWaveProtocolVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Z-Wave protocol version";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    zWaveProtocolBuildNumber: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "zWaveProtocolBuildNumber";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "zWaveProtocolBuildNumber";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Z-Wave protocol build number";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    applicationVersion: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "applicationVersion";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "applicationVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Application version";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    applicationBuildNumber: {
+        id: {
+            readonly commandClass: CommandClasses.Version;
+            readonly property: "applicationBuildNumber";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: CommandClasses.Version;
+            readonly endpoint: 0;
+            readonly property: "applicationBuildNumber";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: {
+            readonly label: "Application build number";
+            readonly writeable: false;
+            readonly type: "string";
+            readonly readable: true;
+        };
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -21321,7 +21384,7 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
     // (undocumented)
     readonly sdkVersion: string;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly zWaveProtocolBuildNumber: number;
     // (undocumented)
@@ -21411,7 +21474,7 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly wakeUpIntervalSteps: number;
     // (undocumented)
@@ -21450,7 +21513,7 @@ export class WakeUpCCIntervalReport extends WakeUpCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): WakeUpCCIntervalReport;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     readonly wakeUpInterval: number;
 }
@@ -21475,9 +21538,9 @@ export class WakeUpCCIntervalSet extends WakeUpCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): WakeUpCCIntervalSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     wakeUpInterval: number;
 }
@@ -21502,42 +21565,43 @@ export class WakeUpCCNoMoreInformation extends WakeUpCC {
 //
 // @public (undocumented)
 export const WakeUpCCValues: Readonly<{
-    wakeUpOnDemandSupported: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Wake Up"];
-            property: "wakeUpOnDemandSupported";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    controllerNodeId: {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Wake Up"];
-            readonly endpoint: number;
-            readonly property: "wakeUpOnDemandSupported";
+            readonly property: "controllerNodeId";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Wake Up"];
+            readonly endpoint: 0;
+            readonly property: "controllerNodeId";
+        };
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
+            readonly label: "Node ID of the controller";
+            readonly writeable: false;
             readonly type: "any";
             readonly readable: true;
-            readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
             readonly secret: false;
-            readonly autoCreate: true;
-            readonly internal: true;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
-            readonly minVersion: number;
+            readonly autoCreate: true;
         };
     };
     wakeUpInterval: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Wake Up"];
-            property: "wakeUpInterval";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Wake Up"];
-            readonly endpoint: number;
             readonly property: "wakeUpInterval";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Wake Up"];
+            readonly endpoint: 0;
+            readonly property: "wakeUpInterval";
+        };
+        is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "Wake Up interval";
             readonly min: 0;
@@ -21546,39 +21610,38 @@ export const WakeUpCCValues: Readonly<{
             readonly readable: true;
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
-            readonly autoCreate: true;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
     };
-    controllerNodeId: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Wake Up"];
-            property: "controllerNodeId";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    wakeUpOnDemandSupported: {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Wake Up"];
-            readonly endpoint: number;
-            readonly property: "controllerNodeId";
+            readonly property: "wakeUpOnDemandSupported";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly label: "Node ID of the controller";
-            readonly writeable: false;
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Wake Up"];
+            readonly endpoint: 0;
+            readonly property: "wakeUpOnDemandSupported";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 3;
             readonly secret: false;
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
+            readonly stateful: true;
             readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -21657,7 +21720,7 @@ export class WindowCoveringCC extends CommandClass {
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
-    translatePropertyKey(ctx: GetValueDB, property: string | number, propertyKey: string | number): string | undefined;
+    translatePropertyKey(ctx: GetValueDB_2, property: string | number, propertyKey: string | number): string | undefined;
 }
 
 // Warning: (ae-missing-release-tag) "WindowCoveringCCGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21666,13 +21729,13 @@ export class WindowCoveringCC extends CommandClass {
 export class WindowCoveringCCGet extends WindowCoveringCC {
     constructor(options: WithAddress_2<WindowCoveringCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCGet;
     // (undocumented)
     parameter: WindowCoveringParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "WindowCoveringCCGetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21693,13 +21756,13 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
     // (undocumented)
     readonly duration: Duration_2;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCReport;
     // (undocumented)
     readonly parameter: WindowCoveringParameter;
     // (undocumented)
     readonly targetValue: number;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "WindowCoveringCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21724,16 +21787,16 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
     // (undocumented)
     duration: Duration_2 | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetValues: {
         parameter: WindowCoveringParameter;
         value: number;
     }[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "WindowCoveringCCSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21759,13 +21822,13 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
     // (undocumented)
     duration: Duration_2 | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCStartLevelChange;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCStartLevelChange;
     // (undocumented)
     parameter: WindowCoveringParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "WindowCoveringCCStartLevelChangeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21786,13 +21849,13 @@ export interface WindowCoveringCCStartLevelChangeOptions {
 export class WindowCoveringCCStopLevelChange extends WindowCoveringCC {
     constructor(options: WithAddress_2<WindowCoveringCCStopLevelChangeOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCStopLevelChange;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCStopLevelChange;
     // (undocumented)
     parameter: WindowCoveringParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "WindowCoveringCCStopLevelChangeOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21815,13 +21878,13 @@ export class WindowCoveringCCSupportedGet extends WindowCoveringCC {
 export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
     constructor(options: WithAddress_2<WindowCoveringCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly supportedParameters: readonly WindowCoveringParameter[];
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
 }
 
 // Warning: (ae-missing-release-tag) "WindowCoveringCCSupportedReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21836,36 +21899,24 @@ export interface WindowCoveringCCSupportedReportOptions {
 //
 // @public (undocumented)
 export const WindowCoveringCCValues: Readonly<{
-    levelChangeDown: ((parameter: WindowCoveringParameter) => {
-        readonly meta: {
-            readonly label: `${string} - ${string}`;
-            readonly valueChangeOptions: readonly ["transitionDuration"];
-            readonly states: {
-                readonly true: "Start";
-                readonly false: "Stop";
-            };
-            readonly ccSpecific: {
-                readonly parameter: WindowCoveringParameter;
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
+    supportedParameters: {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly property: "supportedParameters";
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Window Covering"];
-            property: "levelChangeDown";
-            propertyKey: WindowCoveringParameter;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
             readonly endpoint: number;
-            readonly property: "levelChangeDown";
-            readonly propertyKey: WindowCoveringParameter;
+            readonly property: "supportedParameters";
         };
-    }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
-            readonly internal: false;
+        is: (valueId: ValueID_2) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
             readonly secret: false;
             readonly stateful: true;
@@ -21873,67 +21924,33 @@ export const WindowCoveringCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    levelChangeUp: ((parameter: WindowCoveringParameter) => {
-        readonly meta: {
-            readonly label: `${string} - ${string}`;
-            readonly valueChangeOptions: readonly ["transitionDuration"];
-            readonly states: {
-                readonly true: "Start";
-                readonly false: "Stop";
-            };
-            readonly ccSpecific: {
-                readonly parameter: WindowCoveringParameter;
-            };
-            readonly readable: false;
-            readonly type: "boolean";
-            readonly writeable: true;
-        };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Window Covering"];
-            property: "levelChangeUp";
-            propertyKey: WindowCoveringParameter;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    currentValue: ((parameter: WindowCoveringParameter) => {
+        id: {
             readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
-            readonly endpoint: number;
-            readonly property: "levelChangeUp";
+            readonly property: "currentValue";
             readonly propertyKey: WindowCoveringParameter;
         };
-    }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly endpoint: number;
+            readonly property: "currentValue";
+            readonly propertyKey: WindowCoveringParameter;
         };
-    };
-    duration: ((parameter: WindowCoveringParameter) => {
         readonly meta: {
-            readonly label: `Remaining duration - ${string}`;
+            readonly label: `Current value - ${string}`;
+            readonly states: Record<number, string>;
             readonly ccSpecific: {
                 readonly parameter: WindowCoveringParameter;
             };
             readonly writeable: false;
-            readonly type: "duration";
+            readonly max: 99;
+            readonly min: 0;
+            readonly type: "number";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Window Covering"];
-            property: "duration";
-            propertyKey: WindowCoveringParameter;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
-            readonly endpoint: number;
-            readonly property: "duration";
-            readonly propertyKey: WindowCoveringParameter;
-        };
     }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -21943,12 +21960,21 @@ export const WindowCoveringCCValues: Readonly<{
         };
     };
     targetValue: ((parameter: WindowCoveringParameter) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly property: "targetValue";
+            readonly propertyKey: WindowCoveringParameter;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly endpoint: number;
+            readonly property: "targetValue";
+            readonly propertyKey: WindowCoveringParameter;
+        };
         readonly meta: {
             readonly label: `Target value - ${string}`;
             readonly writeable: boolean;
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly states: Record<number, string>;
             readonly allowManualEntry: boolean;
             readonly ccSpecific: {
                 readonly parameter: WindowCoveringParameter;
@@ -21959,20 +21985,9 @@ export const WindowCoveringCCValues: Readonly<{
             readonly type: "number";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Window Covering"];
-            property: "targetValue";
-            propertyKey: WindowCoveringParameter;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
-            readonly endpoint: number;
-            readonly property: "targetValue";
-            readonly propertyKey: WindowCoveringParameter;
-        };
     }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -21981,35 +21996,30 @@ export const WindowCoveringCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    currentValue: ((parameter: WindowCoveringParameter) => {
+    duration: ((parameter: WindowCoveringParameter) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly property: "duration";
+            readonly propertyKey: WindowCoveringParameter;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly endpoint: number;
+            readonly property: "duration";
+            readonly propertyKey: WindowCoveringParameter;
+        };
         readonly meta: {
-            readonly label: `Current value - ${string}`;
-            readonly states: {
-                [x: number]: string;
-            };
+            readonly label: `Remaining duration - ${string}`;
             readonly ccSpecific: {
                 readonly parameter: WindowCoveringParameter;
             };
             readonly writeable: false;
-            readonly max: 99;
-            readonly min: 0;
-            readonly type: "number";
+            readonly type: "duration";
             readonly readable: true;
         };
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Window Covering"];
-            property: "currentValue";
-            propertyKey: WindowCoveringParameter;
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
-            readonly endpoint: number;
-            readonly property: "currentValue";
-            readonly propertyKey: WindowCoveringParameter;
-        };
     }) & {
-        is: (valueId: ValueID) => boolean;
-        readonly options: {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
             readonly internal: false;
             readonly minVersion: 1;
             readonly secret: false;
@@ -22018,29 +22028,78 @@ export const WindowCoveringCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    supportedParameters: {
-        readonly id: {
-            commandClass: (typeof CommandClasses_2)["Window Covering"];
-            property: "supportedParameters";
+    levelChangeUp: ((parameter: WindowCoveringParameter) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly property: "levelChangeUp";
+            readonly propertyKey: WindowCoveringParameter;
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
             readonly endpoint: number;
-            readonly property: "supportedParameters";
+            readonly property: "levelChangeUp";
+            readonly propertyKey: WindowCoveringParameter;
         };
-        readonly is: (valueId: ValueID) => boolean;
         readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
+            readonly label: `${string} - ${string}`;
+            readonly valueChangeOptions: readonly ["transitionDuration"];
+            readonly states: {
+                readonly true: "Start";
+                readonly false: "Stop";
+            };
+            readonly ccSpecific: {
+                readonly parameter: WindowCoveringParameter;
+            };
+            readonly readable: false;
+            readonly type: "boolean";
             readonly writeable: true;
         };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+    }) & {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
+            readonly internal: false;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
+        };
+    };
+    levelChangeDown: ((parameter: WindowCoveringParameter) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly property: "levelChangeDown";
+            readonly propertyKey: WindowCoveringParameter;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses_2)["Window Covering"];
+            readonly endpoint: number;
+            readonly property: "levelChangeDown";
+            readonly propertyKey: WindowCoveringParameter;
+        };
+        readonly meta: {
+            readonly label: `${string} - ${string}`;
+            readonly valueChangeOptions: readonly ["transitionDuration"];
+            readonly states: {
+                readonly true: "Start";
+                readonly false: "Stop";
+            };
+            readonly ccSpecific: {
+                readonly parameter: WindowCoveringParameter;
+            };
+            readonly readable: false;
+            readonly type: "boolean";
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID_2) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
         };
     };
 }>;
@@ -22177,9 +22236,9 @@ export class ZWavePlusCCReport extends ZWavePlusCC {
     // (undocumented)
     roleType: ZWavePlusRoleType;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    toLogEntry(ctx?: GetValueDB_2): MessageOrCCLogEntry_2;
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
     userIcon: number;
     // (undocumented)
@@ -22206,129 +22265,129 @@ export interface ZWavePlusCCReportOptions {
 //
 // @public (undocumented)
 export const ZWavePlusCCValues: Readonly<{
-    installerIcon: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            property: "installerIcon";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
+    zwavePlusVersion: {
+        id: {
             readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            readonly endpoint: number;
-            readonly property: "installerIcon";
+            readonly property: "zwavePlusVersion";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
+            readonly endpoint: 0;
+            readonly property: "zwavePlusVersion";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
+        }>;
+        options: {
             readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    nodeType: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
+            readonly property: "nodeType";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
+            readonly endpoint: 0;
+            readonly property: "nodeType";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
+        };
+    };
+    roleType: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
+            readonly property: "roleType";
+        };
+        endpoint: (_endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
+            readonly endpoint: 0;
+            readonly property: "roleType";
+        };
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: false;
+            readonly autoCreate: true;
         };
     };
     userIcon: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            property: "userIcon";
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
+            readonly property: "userIcon";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
             readonly endpoint: number;
             readonly property: "userIcon";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
+        }>;
+        options: {
+            readonly internal: true;
             readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
             readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly internal: true;
         };
     };
-    roleType: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            property: "roleType";
+    installerIcon: {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
+            readonly property: "installerIcon";
         };
-        readonly endpoint: (endpoint?: number | undefined) => {
+        endpoint: (endpoint?: number) => {
             readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
             readonly endpoint: number;
-            readonly property: "roleType";
+            readonly property: "installerIcon";
         };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
+        is: (valueId: ValueID) => boolean;
+        readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
             readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
-            readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly supportsEndpoints: false;
+        }>;
+        options: {
             readonly internal: true;
-        };
-    };
-    nodeType: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            property: "nodeType";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            readonly endpoint: number;
-            readonly property: "nodeType";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
-            readonly secret: false;
             readonly minVersion: 1;
-            readonly autoCreate: true;
-            readonly supportsEndpoints: false;
-            readonly internal: true;
-        };
-    };
-    zwavePlusVersion: {
-        readonly id: {
-            commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            property: "zwavePlusVersion";
-        };
-        readonly endpoint: (endpoint?: number | undefined) => {
-            readonly commandClass: (typeof CommandClasses)["Z-Wave Plus Info"];
-            readonly endpoint: number;
-            readonly property: "zwavePlusVersion";
-        };
-        readonly is: (valueId: ValueID_2) => boolean;
-        readonly meta: {
-            readonly type: "any";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        readonly options: {
-            readonly stateful: true;
             readonly secret: false;
-            readonly minVersion: 1;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
             readonly autoCreate: true;
-            readonly supportsEndpoints: false;
-            readonly internal: true;
         };
     };
 }>;
@@ -22393,9 +22452,9 @@ export class ZWaveProtocolCCAcceptLost extends ZWaveProtocolCC {
     // (undocumented)
     accepted: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAcceptLost;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAcceptLost;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCAcceptLostOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22414,11 +22473,11 @@ export class ZWaveProtocolCCAssignIDs extends ZWaveProtocolCC {
     // (undocumented)
     assignedNodeId: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAssignIDs;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAssignIDs;
     // (undocumented)
     homeId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCAssignIDsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22443,13 +22502,13 @@ export class ZWaveProtocolCCAssignReturnRoute extends ZWaveProtocolCC {
     // (undocumented)
     destinationWakeUp: WakeUpTime;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAssignReturnRoute;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAssignReturnRoute;
     // (undocumented)
     repeaters: number[];
     // (undocumented)
     routeIndex: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCAssignReturnRouteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22474,11 +22533,11 @@ export interface ZWaveProtocolCCAssignReturnRouteOptions {
 export class ZWaveProtocolCCAssignReturnRoutePriority extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCAssignReturnRoutePriorityOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAssignReturnRoutePriority;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAssignReturnRoutePriority;
     // (undocumented)
     routeNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     targetNodeId: number;
 }
@@ -22517,11 +22576,11 @@ export class ZWaveProtocolCCAutomaticControllerUpdateStart extends ZWaveProtocol
 export class ZWaveProtocolCCCommandComplete extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCCommandCompleteOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCCommandComplete;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCCommandComplete;
     // (undocumented)
     sequenceNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCCommandCompleteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22548,9 +22607,9 @@ export class ZWaveProtocolCCFindNodesInRange extends ZWaveProtocolCC {
     // (undocumented)
     dataRate: ZWaveDataRate;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCFindNodesInRange;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCFindNodesInRange;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     wakeUpTime: WakeUpTime;
 }
@@ -22579,11 +22638,11 @@ export class ZWaveProtocolCCGetNodesInRange extends ZWaveProtocolCC {
 export class ZWaveProtocolCCLost extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCLostOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCLost;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCLost;
     // (undocumented)
     lostNodeId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCLostOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22602,7 +22661,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC implements
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNewNodeRegistered;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNewNodeRegistered;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
@@ -22620,7 +22679,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC implements
     // (undocumented)
     protocolVersion: ProtocolVersion;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     specificDeviceClass: number;
     // (undocumented)
@@ -22647,11 +22706,11 @@ export interface ZWaveProtocolCCNewNodeRegisteredOptions extends NodeInformation
 export class ZWaveProtocolCCNewRangeRegistered extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCNewRangeRegisteredOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNewRangeRegistered;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNewRangeRegistered;
     // (undocumented)
     neighborNodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     testedNodeId: number;
 }
@@ -22674,7 +22733,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC impleme
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNodeInformationFrame;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNodeInformationFrame;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
@@ -22690,7 +22749,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC impleme
     // (undocumented)
     protocolVersion: ProtocolVersion;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     specificDeviceClass: number;
     // (undocumented)
@@ -22715,13 +22774,13 @@ export interface ZWaveProtocolCCNodeInformationFrameOptions extends NodeInformat
 export class ZWaveProtocolCCNodesExist extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCNodesExistOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNodesExist;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNodesExist;
     // (undocumented)
     nodeIDs: number[];
     // (undocumented)
     nodeMaskType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCNodesExistOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22740,13 +22799,13 @@ export interface ZWaveProtocolCCNodesExistOptions {
 export class ZWaveProtocolCCNodesExistReply extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCNodesExistReplyOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNodesExistReply;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNodesExistReply;
     // (undocumented)
     nodeListUpdated: boolean;
     // (undocumented)
     nodeMaskType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCNodesExistReplyOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22765,11 +22824,11 @@ export interface ZWaveProtocolCCNodesExistReplyOptions {
 export class ZWaveProtocolCCNOPPower extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCNOPPowerOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNOPPower;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNOPPower;
     // (undocumented)
     powerDampening: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCNOPPowerOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22786,11 +22845,11 @@ export interface ZWaveProtocolCCNOPPowerOptions {
 export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCRangeInfoOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCRangeInfo;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCRangeInfo;
     // (undocumented)
     neighborNodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     wakeUpTime?: WakeUpTime;
 }
@@ -22817,11 +22876,11 @@ export class ZWaveProtocolCCRequestNodeInformationFrame extends ZWaveProtocolCC 
 export class ZWaveProtocolCCReservedIDs extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCReservedIDsOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCReservedIDs;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCReservedIDs;
     // (undocumented)
     reservedNodeIDs: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCReservedIDsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22838,11 +22897,11 @@ export interface ZWaveProtocolCCReservedIDsOptions {
 export class ZWaveProtocolCCReserveNodeIDs extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCReserveNodeIDsOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCReserveNodeIDs;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCReserveNodeIDs;
     // (undocumented)
     numNodeIDs: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCReserveNodeIDsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22861,9 +22920,9 @@ export class ZWaveProtocolCCSetNWIMode extends ZWaveProtocolCC {
     // (undocumented)
     enabled: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSetNWIMode;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSetNWIMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     timeoutMinutes?: number;
 }
@@ -22886,9 +22945,9 @@ export class ZWaveProtocolCCSetSUC extends ZWaveProtocolCC {
     // (undocumented)
     enableSIS: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSetSUC;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSetSUC;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSetSUCAck" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22899,11 +22958,11 @@ export class ZWaveProtocolCCSetSUCAck extends ZWaveProtocolCC {
     // (undocumented)
     accepted: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSetSUCAck;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSetSUCAck;
     // (undocumented)
     isSIS: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSetSUCAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22930,11 +22989,11 @@ export interface ZWaveProtocolCCSetSUCOptions {
 export class ZWaveProtocolCCSmartStartIncludedNodeInformation extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCSmartStartIncludedNodeInformationOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSmartStartIncludedNodeInformation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSmartStartIncludedNodeInformation;
     // (undocumented)
     nwiHomeId: Uint8Array;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSmartStartIncludedNodeInformationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22963,11 +23022,11 @@ export class ZWaveProtocolCCSmartStartPrime extends ZWaveProtocolCCNodeInformati
 export class ZWaveProtocolCCStaticRouteRequest extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCStaticRouteRequestOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCStaticRouteRequest;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCStaticRouteRequest;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCStaticRouteRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22984,11 +23043,11 @@ export interface ZWaveProtocolCCStaticRouteRequestOptions {
 export class ZWaveProtocolCCSUCNodeID extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCSUCNodeIDOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSUCNodeID;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSUCNodeID;
     // (undocumented)
     isSIS: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     sucNodeId: number;
 }
@@ -23009,9 +23068,9 @@ export interface ZWaveProtocolCCSUCNodeIDOptions {
 export class ZWaveProtocolCCTransferEnd extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCTransferEndOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferEnd;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferEnd;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     status: NetworkTransferStatus;
 }
@@ -23030,11 +23089,11 @@ export interface ZWaveProtocolCCTransferEndOptions {
 export class ZWaveProtocolCCTransferNewPrimaryControllerComplete extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCTransferNewPrimaryControllerCompleteOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferNewPrimaryControllerComplete;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferNewPrimaryControllerComplete;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCTransferNewPrimaryControllerCompleteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23053,7 +23112,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC impl
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferNodeInformation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferNodeInformation;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
@@ -23071,7 +23130,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC impl
     // (undocumented)
     sequenceNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     sourceNodeId: number;
     // (undocumented)
@@ -23102,11 +23161,11 @@ export class ZWaveProtocolCCTransferPresentation extends ZWaveProtocolCC {
     // (undocumented)
     excludeNode: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferPresentation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferPresentation;
     // (undocumented)
     includeNode: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     supportsNWI: boolean;
 }
@@ -23129,13 +23188,13 @@ export interface ZWaveProtocolCCTransferPresentationOptions {
 export class ZWaveProtocolCCTransferRangeInformation extends ZWaveProtocolCC {
     constructor(options: WithAddress_2<ZWaveProtocolCCTransferRangeInformationOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferRangeInformation;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferRangeInformation;
     // (undocumented)
     neighborNodeIds: number[];
     // (undocumented)
     sequenceNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext): Bytes;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     testedNodeId: number;
 }
@@ -23230,8 +23289,24 @@ export enum ZWaveProtocolCommand {
 
 // Warnings were encountered during analysis:
 //
-// src/cc/TransportServiceCC.ts:47:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
-// src/cc/TransportServiceCC.ts:49:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
+// src/cc/ColorSwitchCC.ts:471:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
+//   Type 'string | undefined' is not assignable to type 'string | number | symbol'.
+//     Type 'undefined' is not assignable to type 'string | number | symbol'.
+// src/cc/ConfigurationCC.ts:1276:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+//   Type 'string' is not assignable to type 'number'.
+// src/cc/ConfigurationCC.ts:1283:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+//   Type 'string' is not assignable to type 'number'.
+// src/cc/ConfigurationCC.ts:1407:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
+//   Type 'string' is not assignable to type 'number'.
+// src/cc/Security2CC.ts:549:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
+// src/cc/Security2CC.ts:557:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
+// src/cc/Security2CC.ts:1709:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
+// src/cc/Security2CC.ts:1712:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
+// src/cc/Security2CC.ts:1862:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
+// src/cc/TransportServiceCC.ts:39:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
+// src/cc/TransportServiceCC.ts:41:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
+// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:69:17 - (TS2345) Argument of type 'LogFormat | undefined' is not assignable to parameter of type 'LogFormat'.
+//   Type 'undefined' is not assignable to type 'LogFormat'.
 
 // (No @packageDocumentation comment for this package)
 

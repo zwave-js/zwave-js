@@ -42,8 +42,9 @@ import {
 	encodeSwitchpoint,
 } from "../lib/serializers.js";
 
-export const ClimateControlScheduleCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Climate Control Schedule"], {
+export const ClimateControlScheduleCCValues = V.defineCCValues(
+	CommandClasses["Climate Control Schedule"],
+	{
 		...V.staticProperty(
 			"overrideType",
 			{
@@ -60,9 +61,6 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 				min: -12.8,
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Climate Control Schedule"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
 			"schedule",
@@ -77,8 +75,8 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 				label: `Schedule (${getEnumMemberName(Weekday, weekday)})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Climate Control Schedule"])
 export class ClimateControlScheduleCCAPI extends CCAPI {

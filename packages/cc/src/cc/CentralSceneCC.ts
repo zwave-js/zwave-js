@@ -49,8 +49,9 @@ import { V } from "../lib/Values.js";
 import { CentralSceneCommand, CentralSceneKeys } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 
-export const CentralSceneCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Central Scene"], {
+export const CentralSceneCCValues = V.defineCCValues(
+	CommandClasses["Central Scene"],
+	{
 		...V.staticProperty("sceneCount", undefined, {
 			internal: true,
 		}),
@@ -60,7 +61,6 @@ export const CentralSceneCCValues = Object.freeze({
 		...V.staticProperty("supportedKeyAttributes", undefined, {
 			internal: true,
 		}),
-
 		...V.staticProperty(
 			"slowRefresh",
 			{
@@ -70,9 +70,6 @@ export const CentralSceneCCValues = Object.freeze({
 					"When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Central Scene"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"scene",
 			"scene",
@@ -87,8 +84,8 @@ export const CentralSceneCCValues = Object.freeze({
 			} as const),
 			{ stateful: false } as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Central Scene"])
 export class CentralSceneCCAPI extends CCAPI {

@@ -37,8 +37,9 @@ import {
 import { V } from "../lib/Values.js";
 import { AlarmSensorCommand, AlarmSensorType } from "../lib/_Types.js";
 
-export const AlarmSensorCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses["Alarm Sensor"], {
+export const AlarmSensorCCValues = V.defineCCValues(
+	CommandClasses["Alarm Sensor"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"state",
 			"state",
@@ -99,13 +100,11 @@ export const AlarmSensorCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-	...V.defineStaticCCValues(CommandClasses["Alarm Sensor"], {
 		...V.staticProperty("supportedSensorTypes", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 

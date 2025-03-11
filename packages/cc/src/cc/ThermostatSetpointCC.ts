@@ -81,14 +81,12 @@ function getSetpointUnit(scale: number): string {
 	return getScale(scale).unit ?? "";
 }
 
-export const ThermostatSetpointCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Setpoint"], {
+export const ThermostatSetpointCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Setpoint"],
+	{
 		...V.staticProperty("supportedSetpointTypes", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Thermostat Setpoint"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"setpoint",
 			"setpoint",
@@ -106,8 +104,6 @@ export const ThermostatSetpointCCValues = Object.freeze({
 				ccSpecific: { setpointType },
 			} as const),
 		),
-
-		// The setpoint scale is only used internally
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
 			"setpointScale",
@@ -117,8 +113,8 @@ export const ThermostatSetpointCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Setpoint"])
 export class ThermostatSetpointCCAPI extends CCAPI {

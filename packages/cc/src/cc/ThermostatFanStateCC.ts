@@ -39,8 +39,9 @@ import {
 	ThermostatFanStateCommand,
 } from "../lib/_Types.js";
 
-export const ThermostatFanStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Fan State"], {
+export const ThermostatFanStateCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Fan State"],
+	{
 		...V.staticPropertyWithName(
 			"fanState",
 			"state",
@@ -50,8 +51,8 @@ export const ThermostatFanStateCCValues = Object.freeze({
 				label: "Thermostat fan state",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Fan State"])
 export class ThermostatFanStateCCAPI extends CCAPI {

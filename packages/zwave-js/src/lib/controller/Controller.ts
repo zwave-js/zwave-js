@@ -113,12 +113,9 @@ import {
 	migrateNVM,
 } from "@zwave-js/nvmedit";
 import {
-	type BootloaderChunk,
-	BootloaderChunkType,
 	FunctionType,
 	type Message,
 	type SuccessIndicator,
-	XModemMessageHeaders,
 } from "@zwave-js/serial";
 import {
 	type ApplicationUpdateRequest,
@@ -374,10 +371,8 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
-import { roundTo } from "alcalzone-shared/math";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { Driver } from "../driver/Driver.js";
-import { DriverMode } from "../driver/DriverMode.js";
 import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacks } from "../driver/Statistics.js";
 import { type TaskBuilder, TaskPriority } from "../driver/Task.js";
@@ -430,9 +425,6 @@ import {
 } from "./ProxyInclusionMachine.js";
 import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions.js";
 import {
-	type ControllerFirmwareUpdateProgress,
-	type ControllerFirmwareUpdateResult,
-	ControllerFirmwareUpdateStatus,
 	type FirmwareUpdateDeviceID,
 	type FirmwareUpdateInfo,
 	type GetFirmwareUpdatesOptions,
@@ -467,12 +459,6 @@ interface ControllerEventCallbacks
 	"rebuild routes done": (
 		result: ReadonlyMap<number, RebuildRoutesStatus>,
 	) => void;
-	"firmware update progress": (
-		progress: ControllerFirmwareUpdateProgress,
-	) => void;
-	"firmware update finished": (
-		result: ControllerFirmwareUpdateResult,
-	) => void;
 	identify: (node: ZWaveNode) => void;
 	"status changed": (status: ControllerStatus) => void;
 }
@@ -487,11 +473,12 @@ export class ZWaveController
 	extends TypedEventTarget<ControllerEventCallbacks>
 {
 	/** @internal */
-	public constructor(
-		private readonly driver: Driver,
-		bootloaderOnly: boolean = false,
-	) {
+	public constructor(driver: Driver) {
 		super();
+
+		debugger;
+
+		this.driver = driver;
 
 		this._nodes = createThrowingMap((nodeId) => {
 			throw new ZWaveError(
@@ -500,9 +487,6 @@ export class ZWaveController
 				nodeId,
 			);
 		});
-
-		// Limit interaction with the controller in bootloader-only mode
-		if (bootloaderOnly) return;
 
 		// register message handlers
 		driver.registerRequestHandler(
@@ -522,6 +506,8 @@ export class ZWaveController
 			this.handleLearnModeCallback.bind(this),
 		);
 	}
+
+	private readonly driver: Driver;
 
 	private _type: MaybeNotKnown<ZWaveLibraryTypes>;
 	public get type(): MaybeNotKnown<ZWaveLibraryTypes> {
@@ -7277,8 +7263,9 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Initialize the Firmware Update functionality and determine if the firmware can be updated.
+	 * @internal
 	 */
-	private async firmwareUpdateNVMInit(): Promise<boolean> {
+	public async firmwareUpdateNVMInit(): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_InitResponse
 		>(
@@ -7291,8 +7278,9 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Set the NEWIMAGE marker in the NVM (to the given value), which is used to signal that a new firmware image is present
+	 * @internal
 	 */
-	private async firmwareUpdateNVMSetNewImage(
+	public async firmwareUpdateNVMSetNewImage(
 		value: boolean = true,
 	): Promise<void> {
 		await this.driver.sendMessage<FirmwareUpdateNVM_SetNewImageResponse>(
@@ -7342,8 +7330,9 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Writes the given data into the firmware update region of the NVM.
+	 * @internal
 	 */
-	private async firmwareUpdateNVMWrite(
+	public async firmwareUpdateNVMWrite(
 		offset: number,
 		buffer: Uint8Array,
 	): Promise<void> {
@@ -7359,8 +7348,9 @@ export class ZWaveController
 	 * **Z-Wave 500 series only**
 	 *
 	 * Checks if the firmware present in the NVM is valid
+	 * @internal
 	 */
-	private async firmwareUpdateNVMIsValidCRC16(): Promise<boolean> {
+	public async firmwareUpdateNVMIsValidCRC16(): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_IsValidCRC16Response
 		>(
@@ -8387,8 +8377,9 @@ export class ZWaveController
 				ZWaveErrorCodes.FirmwareUpdateCC_NetworkBusy,
 			);
 		}
+
 		// Don't allow updating firmware when the controller is currently updating its own firmware
-		if (this.isFirmwareUpdateInProgress()) {
+		if (this.driver.isOTWFirmwareUpdateInProgress()) {
 			const message =
 				`Failed to start the update: The controller is currently being updated!`;
 			this.driver.controllerLog.print(message, "error");
@@ -8483,375 +8474,6 @@ export class ZWaveController
 		}
 
 		return node.updateFirmware(firmwares, options);
-	}
-
-	private _firmwareUpdateInProgress: boolean = false;
-
-	/**
-	 * Returns whether a firmware update is in progress for the controller.
-	 */
-	public isFirmwareUpdateInProgress(): boolean {
-		return this._firmwareUpdateInProgress;
-	}
-
-	/**
-	 * Updates the firmware of the controller using the given firmware file.
-	 *
-	 * The return value indicates whether the update was successful.
-	 * **WARNING:** After a successful update, the Z-Wave driver will destroy itself so it can be restarted.
-	 *
-	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
-	 */
-	public async firmwareUpdateOTW(
-		data: Uint8Array,
-	): Promise<ControllerFirmwareUpdateResult> {
-		// Don't let two firmware updates happen in parallel
-		if (this.isAnyOTAFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: A firmware update is already in progress on this network!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
-		}
-		// Don't allow updating firmware when the controller is currently updating its own firmware
-		if (this.isFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: The controller is currently being updated!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
-		}
-
-		if (
-			this.driver.mode === DriverMode.Bootloader
-			|| this.sdkVersionGte("7.0")
-		) {
-			// If the controller is stuck in bootloader mode, always use the 700 series update method
-			return this.firmwareUpdateOTW700(data);
-		} else if (
-			this.sdkVersionGte("6.50.0")
-			&& this.supportedFunctionTypes?.includes(
-				FunctionType.FirmwareUpdateNVM,
-			)
-		) {
-			// This is 500 series
-			const wasUpdated = await this.firmwareUpdateOTW500(data);
-			if (wasUpdated.success) {
-				// After updating the firmware on 500 series sticks, we MUST soft-reset them
-				await this.driver.softResetAndRestart(
-					"Activating new firmware and restarting driver...",
-					"Controller firmware updates require a driver restart!",
-				);
-			}
-			return wasUpdated;
-		} else {
-			throw new ZWaveError(
-				`Firmware updates are not supported on this controller`,
-				ZWaveErrorCodes.Controller_NotSupported,
-			);
-		}
-	}
-
-	private async firmwareUpdateOTW500(
-		data: Uint8Array,
-	): Promise<ControllerFirmwareUpdateResult> {
-		this._firmwareUpdateInProgress = true;
-		let turnedRadioOff = false;
-		try {
-			this.driver.controllerLog.print("Beginning firmware update");
-
-			const canUpdate = await this.firmwareUpdateNVMInit();
-			if (!canUpdate) {
-				this.driver.controllerLog.print(
-					"OTW update failed: This controller does not support firmware updates",
-					"error",
-				);
-
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_NotSupported,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			// Avoid interruption by incoming messages
-			await this.toggleRF(false);
-			turnedRadioOff = true;
-
-			// Upload the firmware data
-			const BLOCK_SIZE = 64;
-			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
-			for (let fragment = 0; fragment < numFragments; fragment++) {
-				const fragmentData = data.subarray(
-					fragment * BLOCK_SIZE,
-					(fragment + 1) * BLOCK_SIZE,
-				);
-				await this.firmwareUpdateNVMWrite(
-					fragment * BLOCK_SIZE,
-					fragmentData,
-				);
-
-				// This progress is technically too low, but we can keep 100% for after CRC checking this way
-				const progress: ControllerFirmwareUpdateProgress = {
-					sentFragments: fragment,
-					totalFragments: numFragments,
-					progress: roundTo((fragment / numFragments) * 100, 2),
-				};
-				this.emit("firmware update progress", progress);
-			}
-
-			// Check if a valid image was written
-			const isValidCRC = await this.firmwareUpdateNVMIsValidCRC16();
-			if (!isValidCRC) {
-				this.driver.controllerLog.print(
-					"OTW update failed: The firmware image is invalid",
-					"error",
-				);
-
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Aborted,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			this.emit("firmware update progress", {
-				sentFragments: numFragments,
-				totalFragments: numFragments,
-				progress: 100,
-			});
-
-			// Enable the image
-			await this.firmwareUpdateNVMSetNewImage();
-
-			this.driver.controllerLog.print("Firmware update succeeded");
-
-			const result: ControllerFirmwareUpdateResult = {
-				success: true,
-				status: ControllerFirmwareUpdateStatus.OK,
-			};
-			this.emit("firmware update finished", result);
-			return result;
-		} finally {
-			this._firmwareUpdateInProgress = false;
-			if (turnedRadioOff) await this.toggleRF(true);
-		}
-	}
-
-	private async firmwareUpdateOTW700(
-		data: Uint8Array,
-	): Promise<ControllerFirmwareUpdateResult> {
-		this._firmwareUpdateInProgress = true;
-		let destroy = false;
-
-		try {
-			await this.driver.enterBootloader();
-
-			// Start the update process
-			this.driver.controllerLog.print("Beginning firmware upload");
-			await this.driver.bootloader.beginUpload();
-
-			// Wait for the bootloader to accept fragments
-			try {
-				await this.driver.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.Message
-						&& c.message === "begin upload",
-					5000,
-				);
-				await this.driver.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.FlowControl
-						&& c.command === XModemMessageHeaders.C,
-					1000,
-				);
-			} catch {
-				this.driver.controllerLog.print(
-					"OTW update failed: Expected response not received from the bootloader",
-					"error",
-				);
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Timeout,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			const BLOCK_SIZE = 128;
-			if (data.length % BLOCK_SIZE !== 0) {
-				// Pad the data to a multiple of BLOCK_SIZE
-				data = Bytes.concat([
-					data,
-					new Bytes(BLOCK_SIZE - (data.length % BLOCK_SIZE)).fill(
-						0xff,
-					),
-				]);
-			}
-			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
-
-			let aborted = false;
-
-			transfer: for (
-				let fragment = 1;
-				fragment <= numFragments;
-				fragment++
-			) {
-				const fragmentData = data.subarray(
-					(fragment - 1) * BLOCK_SIZE,
-					fragment * BLOCK_SIZE,
-				);
-
-				retry: for (let retry = 0; retry < 3; retry++) {
-					await this.driver.bootloader.uploadFragment(
-						fragment,
-						fragmentData,
-					);
-					let result: BootloaderChunk & {
-						type: BootloaderChunkType.FlowControl;
-					};
-					try {
-						result = await this.driver.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.FlowControl,
-							1000,
-						);
-					} catch {
-						this.driver.controllerLog.print(
-							"OTW update failed: The bootloader did not acknowledge the start of transfer.",
-							"error",
-						);
-
-						const result: ControllerFirmwareUpdateResult = {
-							success: false,
-							status:
-								ControllerFirmwareUpdateStatus.Error_Timeout,
-						};
-						this.emit("firmware update finished", result);
-						return result;
-					}
-
-					switch (result.command) {
-						case XModemMessageHeaders.ACK: {
-							// The fragment was accepted
-							const progress: ControllerFirmwareUpdateProgress = {
-								sentFragments: fragment,
-								totalFragments: numFragments,
-								progress: roundTo(
-									(fragment / numFragments) * 100,
-									2,
-								),
-							};
-							this.emit("firmware update progress", progress);
-
-							// we've transmitted at least one fragment, so we need to destroy the driver afterwards
-							destroy = true;
-
-							continue transfer;
-						}
-						case XModemMessageHeaders.NAK:
-							// The fragment was rejected, try again
-							continue retry;
-						case XModemMessageHeaders.CAN:
-							// The bootloader aborted the update. We'll receive the reason afterwards as a message
-							aborted = true;
-							break transfer;
-					}
-				}
-
-				this.driver.controllerLog.print(
-					"OTW update failed: Maximum retry attempts reached",
-					"error",
-				);
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status:
-						ControllerFirmwareUpdateStatus.Error_RetryLimitReached,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			if (aborted) {
-				// wait for the reason to craft a good error message
-				const error = await this.driver
-					.waitForBootloaderChunk<
-						BootloaderChunk & { type: BootloaderChunkType.Message }
-					>(
-						(c) =>
-							c.type === BootloaderChunkType.Message
-							&& c.message.includes("error 0x"),
-						1000,
-					)
-					.catch(() => undefined);
-
-				// wait for the menu screen so it doesn't show up in logs
-				await this.driver
-					.waitForBootloaderChunk(
-						(c) => c.type === BootloaderChunkType.Menu,
-						1000,
-					)
-					.catch(() => undefined);
-
-				let message = `OTW update was aborted by the bootloader.`;
-				if (error) {
-					message += ` ${error.message}`;
-					// TODO: parse error code
-				}
-				this.driver.controllerLog.print(message, "error");
-
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Aborted,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			} else {
-				// We're done, send EOT and wait for the menu screen
-				await this.driver.bootloader.finishUpload();
-				try {
-					// The bootloader sends the confirmation and the menu screen very quickly.
-					// Waiting for them separately can cause us to miss the menu screen and
-					// incorrectly assume the update timed out.
-
-					await Promise.all([
-						this.driver.waitForBootloaderChunk(
-							(c) =>
-								c.type === BootloaderChunkType.Message
-								&& c.message.includes("upload complete"),
-							1000,
-						),
-
-						this.driver.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.Menu,
-							1000,
-						),
-					]);
-				} catch {
-					this.driver.controllerLog.print(
-						"OTW update failed: The bootloader did not acknowledge the end of transfer.",
-						"error",
-					);
-					const result: ControllerFirmwareUpdateResult = {
-						success: false,
-						status: ControllerFirmwareUpdateStatus.Error_Timeout,
-					};
-					this.emit("firmware update finished", result);
-					return result;
-				}
-			}
-
-			this.driver.controllerLog.print("Firmware update succeeded");
-
-			const result: ControllerFirmwareUpdateResult = {
-				success: true,
-				status: ControllerFirmwareUpdateStatus.OK,
-			};
-			this.emit("firmware update finished", result);
-			return result;
-		} finally {
-			await this.driver.leaveBootloader(destroy);
-			this._firmwareUpdateInProgress = false;
-		}
 	}
 
 	private _currentLearnMode: LearnModeIntent | undefined;

@@ -38,9 +38,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SupervisionCommand } from "../lib/_Types.js";
 
-export const SupervisionCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses.Supervision, {
-		// Used to remember whether a node supports supervision-encapsulation of the given CC
+export const SupervisionCCValues = V.defineCCValues(
+	CommandClasses.Supervision,
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"ccSupported",
 			"ccSupported",
@@ -51,8 +51,8 @@ export const SupervisionCCValues = Object.freeze({
 			undefined,
 			{ internal: true, supportsEndpoints: false },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI - This CC has no values to set
 // @noInterview - This CC is only used for encapsulation

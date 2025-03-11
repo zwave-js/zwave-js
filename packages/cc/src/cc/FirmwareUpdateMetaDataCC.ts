@@ -48,8 +48,9 @@ import {
 
 // @noSetValueAPI There are no values to set here
 
-export const FirmwareUpdateMetaDataCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Firmware Update Meta Data"], {
+export const FirmwareUpdateMetaDataCCValues = V.defineCCValues(
+	CommandClasses["Firmware Update Meta Data"],
+	{
 		...V.staticProperty("supportsActivation", undefined, {
 			internal: true,
 		}),
@@ -68,8 +69,8 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 		...V.staticProperty("supportsNonSecureTransfer", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Firmware Update Meta Data"])
 export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {

@@ -115,86 +115,75 @@ function indicatorObjectsToTimeout(
 	};
 }
 
-export const IndicatorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Indicator, {
-		...V.staticProperty("supportedIndicatorIds", undefined, {
-			internal: true,
+export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
+	...V.staticProperty("supportedIndicatorIds", undefined, {
+		internal: true,
+	}),
+	...V.staticPropertyWithName(
+		"valueV1",
+		"value",
+		{
+			...ValueMetadata.UInt8,
+			label: "Indicator value",
+			ccSpecific: {
+				indicatorId: 0,
+			},
+		} as const,
+	),
+	...V.staticProperty(
+		"identify",
+		{
+			...ValueMetadata.WriteOnlyBoolean,
+			label: "Identify",
+			states: {
+				true: "Identify",
+			},
+		} as const,
+		{ minVersion: 3 } as const,
+	),
+	...V.staticProperty(
+		"timeout",
+		{
+			...ValueMetadata.String,
+			label: "Timeout",
+		} as const,
+		{ minVersion: 3 } as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"supportedPropertyIDs",
+		"supportedPropertyIDs",
+		(indicatorId: number) => indicatorId,
+		({ property, propertyKey }) =>
+			property === "supportedPropertyIDs"
+			&& typeof propertyKey === "number",
+		undefined,
+		{ internal: true },
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"valueV2",
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		(indicatorId: number, propertyId: number) => indicatorId,
+		(indicatorId: number, propertyId: number) => propertyId,
+		({ property, propertyKey }) =>
+			typeof property === "number" && typeof propertyKey === "number",
+		// The metadata is highly dependent on the indicator and property
+		// so this is just a baseline
+		(indicatorId: number, propertyId: number) => ({
+			...ValueMetadata.Any,
+			ccSpecific: {
+				indicatorId,
+				propertyId,
+			},
 		}),
-
-		...V.staticPropertyWithName(
-			"valueV1",
-			"value",
-			{
-				...ValueMetadata.UInt8,
-				label: "Indicator value",
-				ccSpecific: {
-					indicatorId: 0,
-				},
-			} as const,
-		),
-
-		// Convenience values for indicators that are split across multiple properties
-		...V.staticProperty(
-			"identify",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: "Identify",
-				states: {
-					true: "Identify",
-				},
-			} as const,
-			{ minVersion: 3 } as const,
-		),
-
-		...V.staticProperty(
-			"timeout",
-			{
-				...ValueMetadata.String,
-				label: "Timeout",
-			} as const,
-			{ minVersion: 3 } as const,
-		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Indicator, {
-		...V.dynamicPropertyAndKeyWithName(
-			"supportedPropertyIDs",
-			"supportedPropertyIDs",
-			(indicatorId: number) => indicatorId,
-			({ property, propertyKey }) =>
-				property === "supportedPropertyIDs"
-				&& typeof propertyKey === "number",
-			undefined,
-			{ internal: true },
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"valueV2",
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			(indicatorId: number, propertyId: number) => indicatorId,
-			(indicatorId: number, propertyId: number) => propertyId,
-			({ property, propertyKey }) =>
-				typeof property === "number" && typeof propertyKey === "number",
-			// The metadata is highly dependent on the indicator and property
-			// so this is just a baseline
-			(indicatorId: number, propertyId: number) => ({
-				...ValueMetadata.Any,
-				ccSpecific: {
-					indicatorId,
-					propertyId,
-				},
-			}),
-			{ minVersion: 2 } as const,
-		),
-
-		...V.dynamicPropertyWithName(
-			"indicatorDescription",
-			(indicatorId: number) => indicatorId,
-			({ property }) => typeof property === "number",
-			undefined,
-			{ internal: true, minVersion: 4 } as const,
-		),
-	}),
+		{ minVersion: 2 } as const,
+	),
+	...V.dynamicPropertyWithName(
+		"indicatorDescription",
+		(indicatorId: number) => indicatorId,
+		({ property }) => typeof property === "number",
+		undefined,
+		{ internal: true, minVersion: 4 } as const,
+	),
 });
 
 /**

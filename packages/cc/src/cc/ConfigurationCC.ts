@@ -87,16 +87,14 @@ export class ConfigurationCCError extends ZWaveError {
 	}
 }
 
-export const ConfigurationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Configuration, {
+export const ConfigurationCCValues = V.defineCCValues(
+	CommandClasses.Configuration,
+	{
 		...V.staticProperty(
 			"isParamInformationFromConfig",
 			undefined, // meta
 			{ internal: true, supportsEndpoints: false }, // value options
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Configuration, {
 		...V.dynamicPropertyAndKeyWithName(
 			"paramInformation",
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -109,8 +107,8 @@ export const ConfigurationCCValues = Object.freeze({
 			// Metadata is determined dynamically depending on other factors
 			undefined,
 		),
-	}),
-});
+	},
+);
 
 /** @publicAPI */
 export type ConfigurationCCAPISetOptions =

@@ -50,8 +50,9 @@ import {
 import { V } from "../lib/Values.js";
 import { BinarySwitchCommand } from "../lib/_Types.js";
 
-export const BinarySwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Binary Switch"], {
+export const BinarySwitchCCValues = V.defineCCValues(
+	CommandClasses["Binary Switch"],
+	{
 		...V.staticProperty(
 			"currentValue",
 			{
@@ -59,7 +60,6 @@ export const BinarySwitchCCValues = Object.freeze({
 				label: "Current value",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"targetValue",
 			{
@@ -68,7 +68,6 @@ export const BinarySwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"duration",
 			{
@@ -77,8 +76,8 @@ export const BinarySwitchCCValues = Object.freeze({
 			} as const,
 			{ minVersion: 2 } as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Binary Switch"])
 export class BinarySwitchCCAPI extends CCAPI {
