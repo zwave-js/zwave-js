@@ -2,7 +2,7 @@
 	"manufacturer": "SmartWings",
 	"manufacturerId": "0x046a",
 	"label": "WM25L",
-	"description": "Smartwings Smart Motor",
+	"description": "Smart Motor",
 	"devices": [
 		{
 			"productType": "0x0004",
