@@ -115,86 +115,75 @@ function indicatorObjectsToTimeout(
 	};
 }
 
-export const IndicatorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Indicator, {
-		...V.staticProperty("supportedIndicatorIds", undefined, {
-			internal: true,
+export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
+	...V.staticProperty("supportedIndicatorIds", undefined, {
+		internal: true,
+	}),
+	...V.staticPropertyWithName(
+		"valueV1",
+		"value",
+		{
+			...ValueMetadata.UInt8,
+			label: "Indicator value",
+			ccSpecific: {
+				indicatorId: 0,
+			},
+		} as const,
+	),
+	...V.staticProperty(
+		"identify",
+		{
+			...ValueMetadata.WriteOnlyBoolean,
+			label: "Identify",
+			states: {
+				true: "Identify",
+			},
+		} as const,
+		{ minVersion: 3 } as const,
+	),
+	...V.staticProperty(
+		"timeout",
+		{
+			...ValueMetadata.String,
+			label: "Timeout",
+		} as const,
+		{ minVersion: 3 } as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"supportedPropertyIDs",
+		"supportedPropertyIDs",
+		(indicatorId: number) => indicatorId,
+		({ property, propertyKey }) =>
+			property === "supportedPropertyIDs"
+			&& typeof propertyKey === "number",
+		undefined,
+		{ internal: true },
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"valueV2",
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		(indicatorId: number, propertyId: number) => indicatorId,
+		(indicatorId: number, propertyId: number) => propertyId,
+		({ property, propertyKey }) =>
+			typeof property === "number" && typeof propertyKey === "number",
+		// The metadata is highly dependent on the indicator and property
+		// so this is just a baseline
+		(indicatorId: number, propertyId: number) => ({
+			...ValueMetadata.Any,
+			ccSpecific: {
+				indicatorId,
+				propertyId,
+			},
 		}),
-
-		...V.staticPropertyWithName(
-			"valueV1",
-			"value",
-			{
-				...ValueMetadata.UInt8,
-				label: "Indicator value",
-				ccSpecific: {
-					indicatorId: 0,
-				},
-			} as const,
-		),
-
-		// Convenience values for indicators that are split across multiple properties
-		...V.staticProperty(
-			"identify",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: "Identify",
-				states: {
-					true: "Identify",
-				},
-			} as const,
-			{ minVersion: 3 } as const,
-		),
-
-		...V.staticProperty(
-			"timeout",
-			{
-				...ValueMetadata.String,
-				label: "Timeout",
-			} as const,
-			{ minVersion: 3 } as const,
-		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Indicator, {
-		...V.dynamicPropertyAndKeyWithName(
-			"supportedPropertyIDs",
-			"supportedPropertyIDs",
-			(indicatorId: number) => indicatorId,
-			({ property, propertyKey }) =>
-				property === "supportedPropertyIDs"
-				&& typeof propertyKey === "number",
-			undefined,
-			{ internal: true },
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"valueV2",
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			(indicatorId: number, propertyId: number) => indicatorId,
-			(indicatorId: number, propertyId: number) => propertyId,
-			({ property, propertyKey }) =>
-				typeof property === "number" && typeof propertyKey === "number",
-			// The metadata is highly dependent on the indicator and property
-			// so this is just a baseline
-			(indicatorId: number, propertyId: number) => ({
-				...ValueMetadata.Any,
-				ccSpecific: {
-					indicatorId,
-					propertyId,
-				},
-			}),
-			{ minVersion: 2 } as const,
-		),
-
-		...V.dynamicPropertyWithName(
-			"indicatorDescription",
-			(indicatorId: number) => indicatorId,
-			({ property }) => typeof property === "number",
-			undefined,
-			{ internal: true, minVersion: 4 } as const,
-		),
-	}),
+		{ minVersion: 2 } as const,
+	),
+	...V.dynamicPropertyWithName(
+		"indicatorDescription",
+		(indicatorId: number) => indicatorId,
+		({ property }) => typeof property === "number",
+		undefined,
+		{ internal: true, minVersion: 4 } as const,
+	),
 });
 
 /**
@@ -949,7 +938,7 @@ export class IndicatorCCSet extends IndicatorCC {
 	public indicator0Value: number | undefined;
 	public values: IndicatorObject[] | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (this.values != undefined) {
 			// V2+
 			this.payload = Bytes.alloc(2 + 3 * this.values.length, 0);
@@ -971,7 +960,6 @@ export class IndicatorCCSet extends IndicatorCC {
 			// V1
 			this.payload = Bytes.from([this.indicator0Value ?? 0]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1171,7 +1159,7 @@ export class IndicatorCCReport extends IndicatorCC {
 		this.setValue(ctx, valueV2, value.value);
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (this.values != undefined) {
 			// V2+
 			this.payload = Bytes.alloc(2 + 3 * this.values.length, 0);
@@ -1193,7 +1181,6 @@ export class IndicatorCCReport extends IndicatorCC {
 			// V1
 			this.payload = Bytes.from([this.indicator0Value ?? 0]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1251,11 +1238,10 @@ export class IndicatorCCGet extends IndicatorCC {
 
 	public indicatorId: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (this.indicatorId != undefined) {
 			this.payload = Bytes.from([this.indicatorId]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1335,7 +1321,7 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 	public readonly nextIndicatorId: number;
 	public readonly supportedProperties: readonly number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const bitmask = this.supportedProperties.length > 0
 			? encodeBitMask(this.supportedProperties, undefined, 0)
 			: new Bytes();
@@ -1348,7 +1334,6 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 			bitmask,
 		]);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1412,9 +1397,8 @@ export class IndicatorCCSupportedGet extends IndicatorCC {
 
 	public indicatorId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.indicatorId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1481,13 +1465,12 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const description = Bytes.from(this.description, "utf8");
 		this.payload = Bytes.concat([
 			Bytes.from([this.indicatorId, description.length]),
 			description,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1542,9 +1525,8 @@ export class IndicatorCCDescriptionGet extends IndicatorCC {
 
 	public indicatorId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.indicatorId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

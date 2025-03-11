@@ -4,15 +4,27 @@ import {
 	type EndpointId,
 	type GetValueDB,
 	type ValueID,
-	ValueMetadata,
+	type ValueMetadata,
 } from "@zwave-js/core/safe";
 import {
 	type FnOrStatic,
 	type ReturnTypeOrStatic,
 	evalOrStatic,
 } from "@zwave-js/shared/safe";
-import type { Overwrite } from "alcalzone-shared/types";
 import type { ValueIDProperties } from "./API.js";
+
+import { CCValues } from "../cc/_CCValues.generated.js";
+
+function defineCCValues<T extends CommandClasses>(
+	commandClass: T,
+	_: Record<string, CCValueBlueprint | DynamicCCValueBlueprint<any[]>>,
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore I know what I'm doing!
+): typeof import("../cc/_CCValues.generated.js").CCValues[T] {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore I know what I'm doing!
+	return CCValues[commandClass];
+}
 
 // HINT: To fully view types for definitions created by this, open
 // node_modules/typescript/lib/tsserver.js and change the definition of
@@ -63,8 +75,6 @@ export const defaultCCValueOptions = {
 	autoCreate: true,
 } as const;
 
-type DefaultOptions = typeof defaultCCValueOptions;
-
 // expands object types recursively
 export type ExpandRecursively<T> =
 	// Split functions with properties into the function and object parts
@@ -102,38 +112,6 @@ export type ExpandRecursivelySkipMeta<T> =
 		// Fallback to the type itself if no match
 		: T;
 
-type InferValueIDBase<
-	TCommandClass extends CommandClasses,
-	TBlueprint extends CCValueBlueprint,
-	TWorker = {
-		commandClass: TCommandClass;
-	} & Pick<TBlueprint, "property" | "propertyKey">,
-> = {
-	[K in keyof TWorker as unknown extends TWorker[K] ? never : K]: TWorker[K];
-};
-
-type ToStaticCCValues<
-	TCommandClass extends CommandClasses,
-	TValues extends Record<keyof TValues, CCValueBlueprint>,
-> = Readonly<
-	{
-		[K in keyof TValues]: ExpandRecursively<
-			InferStaticCCValue<TCommandClass, TValues[K]>
-		>;
-	}
->;
-
-type ToDynamicCCValues<
-	TCommandClass extends CommandClasses,
-	TValues extends Record<keyof TValues, DynamicCCValueBlueprint<any>>,
-> = Readonly<
-	{
-		[K in keyof TValues]: ExpandRecursively<
-			InferDynamicCCValue<TCommandClass, TValues[K]>
-		>;
-	}
->;
-
 type InferArgs<T extends FnOrStatic<any, any>[]> = T extends [
 	(...args: infer A) => any,
 	...any,
@@ -141,171 +119,13 @@ type InferArgs<T extends FnOrStatic<any, any>[]> = T extends [
 	: T extends [any, ...infer R] ? InferArgs<R>
 	: [];
 
-/** Defines a single static CC values that belong to a CC */
-function defineStaticCCValue<
-	TCommandClass extends CommandClasses,
-	TBlueprint extends CCValueBlueprint,
->(
-	commandClass: TCommandClass,
-	blueprint: TBlueprint,
-): ExpandRecursively<InferStaticCCValue<TCommandClass, TBlueprint>> {
-	// Normalize value options
-	const _blueprint = {
-		...blueprint,
-		options: {
-			...defaultCCValueOptions,
-			...blueprint.options,
-		},
-	};
-
-	const valueId = {
-		commandClass,
-		property: _blueprint.property,
-		propertyKey: _blueprint.propertyKey,
-	};
-	if (valueId.propertyKey === undefined) delete valueId.propertyKey;
-
-	const ret: InferStaticCCValue<TCommandClass, TBlueprint> = {
-		get id() {
-			return { ...valueId };
-		},
-		endpoint: (endpoint: number = 0) => {
-			if (!_blueprint.options.supportsEndpoints) endpoint = 0;
-			return { ...valueId, endpoint } as any;
-		},
-		is: (testValueId) => {
-			return (
-				valueId.commandClass === testValueId.commandClass
-				&& valueId.property === testValueId.property
-				&& valueId.propertyKey === testValueId.propertyKey
-			);
-		},
-		get meta() {
-			return { ...ValueMetadata.Any, ..._blueprint.meta } as any;
-		},
-		get options() {
-			return { ..._blueprint.options } as any;
-		},
-	};
-
-	return ret as any;
-}
-
-/** Defines a single CC value which depends on one or more parameters */
-function defineDynamicCCValue<
-	TCommandClass extends CommandClasses,
-	TBlueprint extends DynamicCCValueBlueprint<any[]>,
->(
-	commandClass: TCommandClass,
-	blueprint: TBlueprint,
-): ExpandRecursively<InferDynamicCCValue<TCommandClass, TBlueprint>> {
-	const options = {
-		...defaultCCValueOptions,
-		...blueprint.options,
-	};
-
-	const ret: ExpandRecursively<
-		InferDynamicCCValue<TCommandClass, TBlueprint>
-	> = ((...args: Parameters<TBlueprint>) => {
-		const _blueprint = blueprint(...args);
-
-		// Normalize value options
-		const actualBlueprint = {
-			..._blueprint,
-		};
-
-		const valueId = {
-			commandClass,
-			property: actualBlueprint.property,
-			propertyKey: actualBlueprint.propertyKey,
-		};
-		if (valueId.propertyKey === undefined) delete valueId.propertyKey;
-
-		const value: Omit<
-			InferStaticCCValue<TCommandClass, ReturnType<TBlueprint>>,
-			"options" | "is"
-		> = {
-			get id() {
-				return { ...valueId };
-			},
-			endpoint: (endpoint: number = 0) => {
-				if (!options.supportsEndpoints) endpoint = 0;
-				return { ...valueId, endpoint } as any;
-			},
-			get meta() {
-				return { ...ValueMetadata.Any, ...actualBlueprint.meta } as any;
-			},
-		};
-
-		return value;
-	}) as any;
-
-	Object.defineProperty(ret, "options", {
-		configurable: false,
-		enumerable: true,
-		get() {
-			return { ...options };
-		},
-	});
-
-	Object.defineProperty(ret, "is", {
-		configurable: false,
-		enumerable: false,
-		writable: false,
-		value: (id: ValueID) =>
-			id.commandClass === commandClass && blueprint.is(id),
-	});
-
-	return ret;
-}
-
 // Namespace for utilities to define CC values
 export const V = {
-	/** Defines multiple static CC values that belong to the same CC */
-	defineStaticCCValues<
-		TCommandClass extends CommandClasses,
-		TValues extends Record<keyof TValues, CCValueBlueprint>,
-	>(
-		commandClass: TCommandClass,
-		values: TValues,
-	): TValues extends Record<keyof TValues, CCValueBlueprint>
-		? ExpandRecursively<ToStaticCCValues<TCommandClass, TValues>>
-		: never
-	{
-		return Object.fromEntries(
-			Object.entries<CCValueBlueprint>(values).map(([key, blueprint]) => [
-				key,
-				defineStaticCCValue(commandClass, blueprint),
-			]),
-		) as any;
-	},
-
-	/** Defines multiple static CC values that belong to the same CC */
-	defineDynamicCCValues<
-		TCommandClass extends CommandClasses,
-		TValues extends Record<keyof TValues, DynamicCCValueBlueprint<any>>,
-	>(
-		commandClass: TCommandClass,
-		values: TValues,
-	): TValues extends Record<keyof TValues, DynamicCCValueBlueprint<any>>
-		? ExpandRecursively<ToDynamicCCValues<TCommandClass, TValues>>
-		: never
-	{
-		return Object.fromEntries(
-			Object.entries<DynamicCCValueBlueprint<any>>(values).map(
-				([key, blueprint]) => [
-					key,
-					defineDynamicCCValue(commandClass, blueprint),
-				],
-			),
-		) as any;
-	},
-
 	/** Returns a CC value definition that is named like the value `property` */
 	staticProperty<
 		TProp extends string | number,
-		TMeta extends ValueMetadata,
-		TOptions extends CCValueOptions,
+		const TMeta extends ValueMetadata,
+		const TOptions extends CCValueOptions,
 	>(
 		property: TProp,
 		meta?: TMeta,
@@ -330,8 +150,8 @@ export const V = {
 	staticPropertyWithName<
 		TName extends string,
 		TProp extends string | number,
-		TMeta extends ValueMetadata,
-		TOptions extends CCValueOptions,
+		const TMeta extends ValueMetadata,
+		const TOptions extends CCValueOptions,
 	>(
 		name: TName,
 		property: TProp,
@@ -422,8 +242,8 @@ export const V = {
 		TName extends string,
 		TProp extends FnOrStatic<any[], ValueIDProperties["property"]>,
 		TKey extends FnOrStatic<any[], ValueIDProperties["propertyKey"]>,
+		TOptions extends CCValueOptions,
 		TMeta extends FnOrStatic<any[], ValueMetadata> = ValueMetadata,
-		TOptions extends FnOrStatic<any[], CCValueOptions> = CCValueOptions,
 	>(
 		name: TName,
 		property: TProp,
@@ -455,6 +275,8 @@ export const V = {
 			),
 		} as any;
 	},
+
+	defineCCValues,
 };
 
 export interface CCValueBlueprint extends Readonly<ValueIDProperties> {
@@ -474,24 +296,6 @@ export interface DynamicCCValueBlueprint<TArgs extends any[]> {
 	readonly options?: Readonly<CCValueOptions>;
 }
 
-type DropOptional<T> = {
-	[K in keyof T as [undefined] extends [T[K]] ? never : K]: T[K];
-};
-
-type MergeOptions<TOptions extends CCValueOptions> = DropOptional<
-	CCValueOptions extends TOptions
-		// When the type cannot be inferred exactly (not given), default to DefaultOptions
-		? DefaultOptions
-		: Overwrite<DefaultOptions, TOptions>
->;
-
-type MergeMeta<TMeta extends ValueMetadata> = DropOptional<
-	ValueMetadata extends TMeta
-		// When the type cannot be inferred exactly (not given), default to ValueMetadata.Any
-		? (typeof ValueMetadata)["Any"]
-		: Overwrite<(typeof ValueMetadata)["Any"], TMeta>
->;
-
 /** The common base type of all CC value definitions */
 export interface CCValue {
 	readonly id: Omit<ValueID, "endpoint">;
@@ -499,72 +303,12 @@ export interface CCValue {
 	readonly meta: ValueMetadata;
 }
 
-type AddCCValueProperties<
-	TCommandClass extends CommandClasses,
-	TBlueprint extends CCValueBlueprint,
-	ValueIDBase extends Record<string, any> = InferValueIDBase<
-		TCommandClass,
-		TBlueprint
-	>,
-> = {
-	/** Returns the value ID of this CC value, without endpoint information */
-	get id(): ValueIDBase;
-
-	/** Returns the value ID, specialized to the given endpoint */
-	endpoint(
-		endpoint?: number,
-	): Readonly<
-		& Pick<ValueIDBase, "commandClass">
-		& { endpoint: number }
-		& Omit<
-			ValueIDBase,
-			"commandClass"
-		>
-	>;
-
-	/** Whether the given value ID matches this value definition */
-	is: CCValuePredicate;
-
-	/** Returns the metadata for this value ID */
-	get meta(): Readonly<MergeMeta<NonNullable<TBlueprint["meta"]>>>;
-	/** Returns the value options for this value ID */
-	get options(): Readonly<MergeOptions<NonNullable<TBlueprint["options"]>>>;
-};
-
-/** A CC value definition which depends on one or more parameters, transparently inferred from its arguments */
-export type InferDynamicCCValue<
-	TCommandClass extends CommandClasses,
-	TBlueprint extends DynamicCCValueBlueprint<any[]>,
-> = TBlueprint extends DynamicCCValueBlueprint<infer TArgs> ? {
-		(...args: TArgs): Omit<
-			InferStaticCCValue<TCommandClass, ReturnType<TBlueprint>>,
-			"options" | "is"
-		>;
-
-		/** Whether the given value ID matches this value definition */
-		is: CCValuePredicate;
-
-		readonly options: InferStaticCCValue<
-			TCommandClass,
-			ReturnType<TBlueprint> & { options: TBlueprint["options"] }
-		>["options"];
-	}
-	: never;
-
-/** A static or evaluated CC value definition, transparently inferred from its arguments */
-export type InferStaticCCValue<
-	TCommandClass extends CommandClasses,
-	TBlueprint extends CCValueBlueprint,
-> = Readonly<AddCCValueProperties<TCommandClass, TBlueprint>>;
-
-/** The generic variant of {@link InferStaticCCValue}, without inferring arguments */
 export interface StaticCCValue extends CCValue {
 	/** Whether the given value ID matches this value definition */
 	is: CCValuePredicate;
 	readonly options: Required<CCValueOptions>;
 }
 
-/** The generic variant of {@link InferDynamicCCValue}, without inferring arguments */
 export type DynamicCCValue<TArgs extends any[] = any[]> =
 	& ExpandRecursivelySkipMeta<(...args: TArgs) => CCValue>
 	& {
@@ -574,90 +318,3 @@ export type DynamicCCValue<TArgs extends any[] = any[]> =
 	};
 
 export type StaticCCValueFactory<T> = (self: T) => StaticCCValue;
-
-// This interface is auto-generated by maintenance/generateCCValuesInterface.ts
-// Do not edit it by hand or your changes will be lost
-export interface CCValues {
-	// AUTO GENERATION BELOW
-	"Alarm Sensor": typeof import("../cc/AlarmSensorCC.js").AlarmSensorCCValues;
-	Association: typeof import("../cc/AssociationCC.js").AssociationCCValues;
-	"Association Group Information":
-		typeof import("../cc/AssociationGroupInfoCC.js").AssociationGroupInfoCCValues;
-	"Barrier Operator":
-		typeof import("../cc/BarrierOperatorCC.js").BarrierOperatorCCValues;
-	Basic: typeof import("../cc/BasicCC.js").BasicCCValues;
-	Battery: typeof import("../cc/BatteryCC.js").BatteryCCValues;
-	"Binary Sensor":
-		typeof import("../cc/BinarySensorCC.js").BinarySensorCCValues;
-	"Binary Switch":
-		typeof import("../cc/BinarySwitchCC.js").BinarySwitchCCValues;
-	"Central Scene":
-		typeof import("../cc/CentralSceneCC.js").CentralSceneCCValues;
-	"Climate Control Schedule":
-		typeof import("../cc/ClimateControlScheduleCC.js").ClimateControlScheduleCCValues;
-	"Color Switch": typeof import("../cc/ColorSwitchCC.js").ColorSwitchCCValues;
-	Configuration:
-		typeof import("../cc/ConfigurationCC.js").ConfigurationCCValues;
-	"Door Lock": typeof import("../cc/DoorLockCC.js").DoorLockCCValues;
-	"Door Lock Logging":
-		typeof import("../cc/DoorLockLoggingCC.js").DoorLockLoggingCCValues;
-	"Energy Production":
-		typeof import("../cc/EnergyProductionCC.js").EnergyProductionCCValues;
-	"Entry Control":
-		typeof import("../cc/EntryControlCC.js").EntryControlCCValues;
-	"Firmware Update Meta Data":
-		typeof import("../cc/FirmwareUpdateMetaDataCC.js").FirmwareUpdateMetaDataCCValues;
-	"Humidity Control Mode":
-		typeof import("../cc/HumidityControlModeCC.js").HumidityControlModeCCValues;
-	"Humidity Control Operating State":
-		typeof import("../cc/HumidityControlOperatingStateCC.js").HumidityControlOperatingStateCCValues;
-	"Humidity Control Setpoint":
-		typeof import("../cc/HumidityControlSetpointCC.js").HumidityControlSetpointCCValues;
-	Indicator: typeof import("../cc/IndicatorCC.js").IndicatorCCValues;
-	Irrigation: typeof import("../cc/IrrigationCC.js").IrrigationCCValues;
-	Language: typeof import("../cc/LanguageCC.js").LanguageCCValues;
-	Lock: typeof import("../cc/LockCC.js").LockCCValues;
-	"Manufacturer Specific":
-		typeof import("../cc/ManufacturerSpecificCC.js").ManufacturerSpecificCCValues;
-	Meter: typeof import("../cc/MeterCC.js").MeterCCValues;
-	"Multi Channel Association":
-		typeof import("../cc/MultiChannelAssociationCC.js").MultiChannelAssociationCCValues;
-	"Multi Channel":
-		typeof import("../cc/MultiChannelCC.js").MultiChannelCCValues;
-	"Multilevel Sensor":
-		typeof import("../cc/MultilevelSensorCC.js").MultilevelSensorCCValues;
-	"Multilevel Switch":
-		typeof import("../cc/MultilevelSwitchCC.js").MultilevelSwitchCCValues;
-	"Node Naming and Location":
-		typeof import("../cc/NodeNamingCC.js").NodeNamingAndLocationCCValues;
-	Notification: typeof import("../cc/NotificationCC.js").NotificationCCValues;
-	Protection: typeof import("../cc/ProtectionCC.js").ProtectionCCValues;
-	"Scene Activation":
-		typeof import("../cc/SceneActivationCC.js").SceneActivationCCValues;
-	"Scene Actuator Configuration":
-		typeof import("../cc/SceneActuatorConfigurationCC.js").SceneActuatorConfigurationCCValues;
-	"Scene Controller Configuration":
-		typeof import("../cc/SceneControllerConfigurationCC.js").SceneControllerConfigurationCCValues;
-	"Schedule Entry Lock":
-		typeof import("../cc/ScheduleEntryLockCC.js").ScheduleEntryLockCCValues;
-	"Sound Switch": typeof import("../cc/SoundSwitchCC.js").SoundSwitchCCValues;
-	Supervision: typeof import("../cc/SupervisionCC.js").SupervisionCCValues;
-	"Thermostat Fan Mode":
-		typeof import("../cc/ThermostatFanModeCC.js").ThermostatFanModeCCValues;
-	"Thermostat Fan State":
-		typeof import("../cc/ThermostatFanStateCC.js").ThermostatFanStateCCValues;
-	"Thermostat Mode":
-		typeof import("../cc/ThermostatModeCC.js").ThermostatModeCCValues;
-	"Thermostat Operating State":
-		typeof import("../cc/ThermostatOperatingStateCC.js").ThermostatOperatingStateCCValues;
-	"Thermostat Setpoint":
-		typeof import("../cc/ThermostatSetpointCC.js").ThermostatSetpointCCValues;
-	"Time Parameters":
-		typeof import("../cc/TimeParametersCC.js").TimeParametersCCValues;
-	"User Code": typeof import("../cc/UserCodeCC.js").UserCodeCCValues;
-	Version: typeof import("../cc/VersionCC.js").VersionCCValues;
-	"Wake Up": typeof import("../cc/WakeUpCC.js").WakeUpCCValues;
-	"Window Covering":
-		typeof import("../cc/WindowCoveringCC.js").WindowCoveringCCValues;
-	"Z-Wave Plus Info": typeof import("../cc/ZWavePlusCC.js").ZWavePlusCCValues;
-}

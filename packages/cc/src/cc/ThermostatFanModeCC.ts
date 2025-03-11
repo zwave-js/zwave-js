@@ -48,8 +48,9 @@ import {
 import { V } from "../lib/Values.js";
 import { ThermostatFanMode, ThermostatFanModeCommand } from "../lib/_Types.js";
 
-export const ThermostatFanModeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Fan Mode"], {
+export const ThermostatFanModeCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Fan Mode"],
+	{
 		...V.staticPropertyWithName(
 			"turnedOff",
 			"off",
@@ -59,7 +60,6 @@ export const ThermostatFanModeCCValues = Object.freeze({
 			} as const,
 			{ minVersion: 3 } as const,
 		),
-
 		...V.staticPropertyWithName(
 			"fanMode",
 			"mode",
@@ -69,15 +69,14 @@ export const ThermostatFanModeCCValues = Object.freeze({
 				label: "Thermostat fan mode",
 			} as const,
 		),
-
 		...V.staticPropertyWithName(
 			"supportedFanModes",
 			"supportedModes",
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Fan Mode"])
 export class ThermostatFanModeCCAPI extends CCAPI {
@@ -367,12 +366,11 @@ export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
 	public mode: ThermostatFanMode;
 	public off: boolean | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			(this.off ? 0b1000_0000 : 0)
 			| (this.mode & 0b1111),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

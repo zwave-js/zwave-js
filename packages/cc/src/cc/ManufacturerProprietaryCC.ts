@@ -156,7 +156,6 @@ export class ManufacturerProprietaryCC extends CommandClass {
 			manufacturerId,
 		);
 		if (PCConstructor) {
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			return PCConstructor.from(
 				raw.withPayload(raw.payload.subarray(2)),
 				ctx,
@@ -188,7 +187,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		return this.manufacturerId;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const manufacturerId = this.getManufacturerIdOrThrow();
 		// ManufacturerProprietaryCC has no CC command, so the first byte
 		// is stored in ccCommand
@@ -201,7 +200,6 @@ export class ManufacturerProprietaryCC extends CommandClass {
 			]),
 			this.payload,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

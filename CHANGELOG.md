@@ -1,9 +1,71 @@
 # Changelog
-[Older changelog entries (v1...v10)](CHANGELOG_v10.md)
+[Older changelog entries (v1...v12)](CHANGELOG_v12.md)
 
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.0.0-beta.2 (2025-03-06)
+### Breaking changes · [Migration guide](https://zwave-js.github.io/zwave-js/#/getting-started/migrating/v15)
+* Move OTW firmware update functionality to the `Driver` class (#7662)
+
+### Bugfixes
+* Harden end device CLI detection (#7661)
+
+### Config file changes
+* Add fingerprint for ZVIDAR Z-TRV-V01 (#7660)
+
+## 15.0.0-beta.1 (2025-03-05)
+### Changes under the hood
+* Split documentation generation into separate tasks, fix CCValues types generation (#7644)
+
+## 15.0.0-beta.0 (2025-02-27)
+Z-Wave JS is now able to run in the browser! This allows for new use-cases like interactive usage examples in the documentation, and building web-based Z-Wave tools.
+
+To celebrate this achievement, we've renamed the repository to `zwave-js`, dropping the `node-` prefix. The package names will remain the same.
+
+### Breaking changes · [Migration guide](https://zwave-js.github.io/zwave-js/#/getting-started/migrating/v15)
+* Require Node.js 20 or higher
+* Remove non-portable sync-versions of methods, require Node 20 (#7580)
+* Support communicating with SoC end device firmwares via their CLI (#7628)
+
+### Features
+* Browser support (#7586, #7587, #7592, #7631)
+* Support staying in the bootloader instead of recovering (#7444)
+
+### Bugfixes
+* Correctly handle being queried with Firmware Update CC correctly (#7620, #7627)
+* Handle proxy inclusion when NIF and Initiate command are switched (#7621)
+
+### Changes under the hood
+* Replace `xstate` with a simple built-in state machine (#7460)
+* Migrate from Node.js streams to Web Streams API (#7457, #7474)
+* Migrate to `ky` as a lightweight, portable replacement of `got` (#7479)
+* Untar config updates in memory, remove `execa` from prod deps (#7485)
+* Add portable bindings for the filesystem (#7428)
+* Allow switching out the DB bindings (#7486)
+* Use `pathe` instead of `node:path` for path manipulation (#7551)
+* Entry points designated for the browser are now checked by ESLint (#7577)
+* Remove dependency on `isDeepStrictEqual` (#7584)
+* Decouple logging from `winston` (#7585)
+* Lots of dependency updates
+
+## 14.3.10 (2025-02-27)
+### Bugfixes
+* Discard S2 frames with both the MPAN and MGRP extension (#7619)
+* Fixed an issue where subsequent stages of multi-stage firmware updates would fail to start due to the SPAN not being synchronized correctly (#7640)
+
+### Config file changes
+* Preserve endpoints for Namron 16A thermostats (#7637)
+
+## 14.3.9 (2025-02-17)
+### Bugfixes
+* Always query list of supported thermostat setpoint types (#7617)
+* Do not throw error responding to invalid `Indicator Description Get` (#7616)
+* Expose firmware ID for OTA update to applications (#7599)
+
+### Config file changes
+* Allow setting arbitrary Motion Sensitivity for ZSE70 (#7603)
+
 ## 14.3.8 (2025-01-28)
 ### Bugfixes
 * Fixed an issue with restoring the network cache from disk on some systems (#7560)
@@ -93,7 +155,7 @@ Technically this is a breaking change, as `SecurityManager2` now needs to be ins
 ## 14.0.0 (2024-11-05)
 In this release, a lot of the internal API was refactored to decrease interdependencies. Technically this results in a huge list of breaking changes, but most of those should not affect any application, unless very low-level APIs are frequently used. For example, Z-Wave JS UI and Z-Wave JS Server had just two small breaks. In addition, Z-Wave JS is now released as hybrid ESM/CJS packages.
 
-### Breaking changes · [Migration guide](https://zwave-js.github.io/node-zwave-js/#/getting-started/migrating/v14)
+### Breaking changes · [Migration guide](https://zwave-js.github.io/zwave-js/#/getting-started/migrating/v14)
 * `Driver.installConfigUpdates()` now requires the external config directory to be configured (#7365)
 * Replace Node.js Buffer with `Uint8Array` portable replacement class `Bytes` (#7332)
 * `zwave-js` no longer loops up the package version at runtime (#7344)
@@ -301,7 +363,7 @@ Home Assistant users who manage `zwave-js-server` themselves, **must** install t
 * Home Assistant **TBD** or higher
 * `zwave-js-server` **1.37.0**
 
-### Breaking changes · [Migration guide](https://zwave-js.github.io/node-zwave-js/#/getting-started/migrating/v13)
+### Breaking changes · [Migration guide](https://zwave-js.github.io/zwave-js/#/getting-started/migrating/v13)
 * Align Meter CC Reset v6 with specifications, add mocks, add API for report commands (#6921)
 * Convert all Z-Wave specific configs except devices and manufacturers into code, move from ConfigManager methods to utility functions (#6925, #6929, #7023)
 * Remove `ZWaveApplicationHost` dependency from `CommandClass.toLogEntry()` (#6927)

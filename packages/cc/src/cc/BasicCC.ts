@@ -59,44 +59,42 @@ import {
 import { V } from "../lib/Values.js";
 import { BasicCommand } from "../lib/_Types.js";
 
-export const BasicCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Basic, {
-		...V.staticProperty("currentValue", {
-			...ValueMetadata.ReadOnlyLevel,
-			label: "Current value" as const,
-		}),
-		...V.staticProperty("targetValue", {
-			...ValueMetadata.UInt8,
-			label: "Target value" as const,
-			forceCreation: true,
-		}),
-		...V.staticProperty("duration", {
-			...ValueMetadata.ReadOnlyDuration,
-			label: "Remaining duration" as const,
-			minVersion: 2,
-		}),
-
-		...V.staticProperty("restorePrevious", {
-			...ValueMetadata.WriteOnlyBoolean,
-			label: "Restore previous value" as const,
-			states: {
-				true: "Restore",
-			},
-		}),
-
-		...V.staticPropertyWithName(
-			"compatEvent",
-			"event",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Event value",
-			} as const,
-			{
-				stateful: false,
-				autoCreate: false,
-			},
-		),
+export const BasicCCValues = V.defineCCValues(CommandClasses.Basic, {
+	...V.staticProperty("currentValue", {
+		...ValueMetadata.ReadOnlyLevel,
+		label: "Current value",
 	}),
+	...V.staticProperty("targetValue", {
+		...ValueMetadata.UInt8,
+		label: "Target value",
+	}),
+	...V.staticProperty("duration", {
+		...ValueMetadata.ReadOnlyDuration,
+		label: "Remaining duration",
+	}, {
+		minVersion: 2,
+	}),
+
+	...V.staticProperty("restorePrevious", {
+		...ValueMetadata.WriteOnlyBoolean,
+		label: "Restore previous value",
+		states: {
+			true: "Restore",
+		},
+	}),
+
+	...V.staticPropertyWithName(
+		"compatEvent",
+		"event",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Event value",
+		},
+		{
+			stateful: false,
+			autoCreate: false,
+		},
+	),
 });
 
 @API(CommandClasses.Basic)
@@ -394,9 +392,8 @@ export class BasicCCSet extends BasicCC {
 
 	public targetValue: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.targetValue]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -505,7 +502,7 @@ export class BasicCCReport extends BasicCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.currentValue ?? 0xfe,
 			this.targetValue ?? 0xfe,
@@ -522,7 +519,6 @@ export class BasicCCReport extends BasicCC {
 			this.payload = this.payload.subarray(0, 1);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

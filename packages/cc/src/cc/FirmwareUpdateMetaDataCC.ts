@@ -48,8 +48,9 @@ import {
 
 // @noSetValueAPI There are no values to set here
 
-export const FirmwareUpdateMetaDataCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Firmware Update Meta Data"], {
+export const FirmwareUpdateMetaDataCCValues = V.defineCCValues(
+	CommandClasses["Firmware Update Meta Data"],
+	{
 		...V.staticProperty("supportsActivation", undefined, {
 			internal: true,
 		}),
@@ -68,8 +69,8 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 		...V.staticProperty("supportsNonSecureTransfer", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Firmware Update Meta Data"])
 export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
@@ -158,13 +159,14 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 	}
 
 	/**
-	 * Requests the device to start the firmware update process.
-	 * This does not wait for the reply - that is up to the caller of this method.
+	 * Requests the device to start the firmware update process and waits for a response.
+	 * This response may time out on some devices, in which case the caller of this method
+	 * should wait manually.
 	 */
 	@validateArgs()
-	public async requestUpdate(
+	public requestUpdate(
 		options: FirmwareUpdateMetaDataCCRequestGetOptions,
-	): Promise<void> {
+	): Promise<FirmwareUpdateMetaDataCCRequestReport | undefined> {
 		this.assertSupportsCommand(
 			FirmwareUpdateMetaDataCommand,
 			FirmwareUpdateMetaDataCommand.RequestGet,
@@ -176,11 +178,7 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 			...options,
 		});
 
-		await this.host.sendCommand(cc, {
-			...this.commandOptions,
-			// Do not wait for Nonce Reports
-			s2VerifyDelivery: false,
-		});
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	/**
@@ -510,7 +508,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 
 	public readonly supportsNonSecureTransfer?: MaybeNotKnown<boolean>;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(
 			12 + 2 * this.additionalFirmwareIDs.length,
 		);
@@ -531,7 +529,6 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 			| (this.supportsNonSecureTransfer ? 0b100 : 0)
 			| (this.supportsResuming ? 0b1000 : 0);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -626,13 +623,12 @@ export class FirmwareUpdateMetaDataCCRequestReport
 	public resume?: boolean;
 	public nonSecureTransfer?: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.status,
 			(this.resume ? 0b100 : 0) | (this.nonSecureTransfer ? 0b10 : 0),
 		]);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -677,8 +673,8 @@ export type FirmwareUpdateMetaDataCCRequestGetOptions =
 	}>;
 
 @CCCommand(FirmwareUpdateMetaDataCommand.RequestGet)
-// This would expect a FirmwareUpdateMetaDataCCRequestReport, but the response may take
-// a while to come. We don't want to block communication, so we don't expect a response here
+// The response may take a while to be received on some devices, so manual waiting might be required
+@expectedCCResponse(FirmwareUpdateMetaDataCCRequestReport)
 export class FirmwareUpdateMetaDataCCRequestGet
 	extends FirmwareUpdateMetaDataCC
 {
@@ -761,7 +757,7 @@ export class FirmwareUpdateMetaDataCCRequestGet
 	public resume?: boolean;
 	public nonSecureTransfer?: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(10, 0);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.firmwareId, 2);
@@ -781,7 +777,6 @@ export class FirmwareUpdateMetaDataCCRequestGet
 			]);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -852,12 +847,11 @@ export class FirmwareUpdateMetaDataCCGet extends FirmwareUpdateMetaDataCC {
 	public readonly numReports: number;
 	public readonly reportNumber: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(3);
 		this.payload[0] = this.numReports;
 		this.payload.writeUInt16BE(this.reportNumber & 0x7fff, 1);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -910,7 +904,7 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 	public reportNumber: number;
 	public firmwareData: Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const commandBuffer = Bytes.concat([
 			new Bytes(2), // placeholder for report number
 			this.firmwareData,
@@ -937,7 +931,6 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 			this.payload = commandBuffer;
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -993,12 +986,11 @@ export class FirmwareUpdateMetaDataCCStatusReport
 	/** The wait time in seconds before the node becomes available for communication after the update */
 	public readonly waitTime?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(3);
 		this.payload[0] = this.status;
 		this.payload.writeUInt16BE(this.waitTime ?? 0, 1);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1077,7 +1069,7 @@ export class FirmwareUpdateMetaDataCCActivationReport
 	public readonly activationStatus: FirmwareUpdateActivationStatus;
 	public readonly hardwareVersion?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(8);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.firmwareId, 2);
@@ -1090,7 +1082,7 @@ export class FirmwareUpdateMetaDataCCActivationReport
 				[this.hardwareVersion],
 			]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
+
 		return super.serialize(ctx);
 	}
 
@@ -1172,7 +1164,7 @@ export class FirmwareUpdateMetaDataCCActivationSet
 	public firmwareTarget: number;
 	public hardwareVersion?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(7);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.firmwareId, 2);
@@ -1184,7 +1176,6 @@ export class FirmwareUpdateMetaDataCCActivationSet
 				[this.hardwareVersion],
 			]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1242,12 +1233,11 @@ export class FirmwareUpdateMetaDataCCPrepareReport
 	public readonly status: FirmwareDownloadStatus;
 	public readonly checksum: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(3);
 		this.payload[0] = this.status;
 		this.payload.writeUInt16BE(this.checksum, 1);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1314,14 +1304,13 @@ export class FirmwareUpdateMetaDataCCPrepareGet
 	public fragmentSize: number;
 	public hardwareVersion: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(8);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.firmwareId, 2);
 		this.payload[4] = this.firmwareTarget;
 		this.payload.writeUInt16BE(this.fragmentSize, 5);
 		this.payload[7] = this.hardwareVersion;
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

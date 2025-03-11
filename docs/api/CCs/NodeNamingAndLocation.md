@@ -37,7 +37,7 @@ async setLocation(
 ```ts
 {
 	commandClass: CommandClasses["Node Naming and Location"],
-	endpoint: number,
+	endpoint: 0,
 	property: "location",
 }
 ```
@@ -55,7 +55,7 @@ async setLocation(
 ```ts
 {
 	commandClass: CommandClasses["Node Naming and Location"],
-	endpoint: number,
+	endpoint: 0,
 	property: "name",
 }
 ```
