@@ -6,8 +6,11 @@ import {
 	BinarySwitchCommand,
 	CommandClass,
 } from "@zwave-js/cc";
-import { CommandClasses, Duration } from "@zwave-js/core";
-import { type GetSupportedCCVersion } from "@zwave-js/host";
+import {
+	CommandClasses,
+	Duration,
+	type GetSupportedCCVersion,
+} from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared/safe";
 import { test } from "vitest";
 
@@ -27,7 +30,7 @@ test("the Get command should serialize correctly", async (t) => {
 			BinarySwitchCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -50,7 +53,7 @@ test("the Set command should serialize correctly (no duration)", async (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	await t.expect(cc.serializeAsync(ctx)).resolves.toStrictEqual(expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should serialize correctly", async (t) => {
@@ -73,7 +76,7 @@ test("the Set command should serialize correctly", async (t) => {
 		},
 	} satisfies GetSupportedCCVersion as any;
 
-	await t.expect(cc.serializeAsync(ctx)).resolves.toStrictEqual(expected);
+	await t.expect(cc.serialize(ctx)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command (v1) should be deserialized correctly", async (t) => {
@@ -83,7 +86,7 @@ test("the Report command (v1) should be deserialized correctly", async (t) => {
 			0xff, // current value
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as BinarySwitchCCReport;
@@ -103,7 +106,7 @@ test("the Report command (v2) should be deserialized correctly", async (t) => {
 			1, // duration
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as BinarySwitchCCReport;
@@ -119,7 +122,7 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		serializedCC,
 		{ sourceNodeId: 2 } as any,
 	) as BinarySwitchCC;

@@ -4,7 +4,15 @@
 	"compilerOptions": {
 		"plugins": [
 			{
-				"transform": "@zwave-js/transformers"
+				"transform": "@zwave-js/transformers/validateArgs/program",
+				"transformProgram": true
+			},
+			{
+				"transform": "@zwave-js/transformers/validateArgs/decorators"
+			},
+			{
+				// This must come last or it breaks the validateArgs transformer
+				"transform": "@zwave-js/transformers/defineCCValues"
 			}
 		]
 	},

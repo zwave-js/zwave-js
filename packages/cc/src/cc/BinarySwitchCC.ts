@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
@@ -15,11 +17,6 @@ import {
 	parseMaybeBoolean,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -53,8 +50,9 @@ import {
 import { V } from "../lib/Values.js";
 import { BinarySwitchCommand } from "../lib/_Types.js";
 
-export const BinarySwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Binary Switch"], {
+export const BinarySwitchCCValues = V.defineCCValues(
+	CommandClasses["Binary Switch"],
+	{
 		...V.staticProperty(
 			"currentValue",
 			{
@@ -62,7 +60,6 @@ export const BinarySwitchCCValues = Object.freeze({
 				label: "Current value",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"targetValue",
 			{
@@ -71,7 +68,6 @@ export const BinarySwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"duration",
 			{
@@ -80,8 +76,8 @@ export const BinarySwitchCCValues = Object.freeze({
 			} as const,
 			{ minVersion: 2 } as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Binary Switch"])
 export class BinarySwitchCCAPI extends CCAPI {
@@ -340,7 +336,7 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 	public targetValue: boolean;
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.targetValue ? 0xff : 0x00,
 			(this.duration ?? Duration.default()).serializeSet(),
@@ -356,7 +352,6 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 			this.payload = this.payload.subarray(0, 1);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -427,7 +422,7 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 
 	public readonly duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			encodeMaybeBoolean(this.currentValue ?? UNKNOWN_STATE),
 		]);
@@ -440,7 +435,6 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 				]),
 			]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

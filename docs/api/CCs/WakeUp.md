@@ -38,7 +38,7 @@ async sendNoMoreInformation(): Promise<void>;
 ```ts
 {
 	commandClass: CommandClasses["Wake Up"],
-	endpoint: number,
+	endpoint: 0,
 	property: "controllerNodeId",
 }
 ```
@@ -56,7 +56,7 @@ async sendNoMoreInformation(): Promise<void>;
 ```ts
 {
 	commandClass: CommandClasses["Wake Up"],
-	endpoint: number,
+	endpoint: 0,
 	property: "wakeUpInterval",
 }
 ```

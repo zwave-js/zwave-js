@@ -1,4 +1,10 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
+	type LogNode,
 	type Notification,
 	type NotificationState,
 	type NotificationValue,
@@ -36,15 +42,6 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetNode,
-	GetSupportedCCVersion,
-	GetValueDB,
-	LogNode,
-} from "@zwave-js/host/safe";
 import { Bytes, isUint8Array } from "@zwave-js/shared/safe";
 import { buffer2hex, num2hex, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -72,6 +69,7 @@ import {
 	ccValues,
 	commandClass,
 	expectedCCResponse,
+	getCCCommandConstructor,
 	implementedVersion,
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
@@ -81,8 +79,9 @@ import { NotificationCommand, UserCodeCommand } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 import { AssociationGroupInfoCC } from "./AssociationGroupInfoCC.js";
 
-export const NotificationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Notification, {
+export const NotificationCCValues = V.defineCCValues(
+	CommandClasses.Notification,
+	{
 		...V.staticProperty("supportsV1Alarm", undefined, {
 			internal: true,
 			supportsEndpoints: false,
@@ -98,8 +97,6 @@ export const NotificationCCValues = Object.freeze({
 		...V.staticProperty("lastRefresh", undefined, {
 			internal: true,
 		}),
-
-		// V1 Alarm values
 		...V.staticProperty(
 			"alarmType",
 			{
@@ -114,9 +111,6 @@ export const NotificationCCValues = Object.freeze({
 				label: "Alarm Level",
 			} as const,
 		),
-
-		// Simplification for the Door state variable, where we cannot know
-		// if any of the enum values are supported
 		...V.staticPropertyAndKeyWithName(
 			"doorStateSimple",
 			"Access Control",
@@ -137,8 +131,6 @@ export const NotificationCCValues = Object.freeze({
 				autoCreate: shouldAutoCreateSimpleDoorSensorValue,
 			} as const,
 		),
-
-		// Binary tilt value extracted from the Door state variable.
 		...V.staticPropertyAndKeyWithName(
 			"doorTiltState",
 			"Access Control",
@@ -160,9 +152,6 @@ export const NotificationCCValues = Object.freeze({
 				autoCreate: false,
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Notification, {
 		...V.dynamicPropertyAndKeyWithName(
 			"supportedNotificationEvents",
 			"supportedNotificationEvents",
@@ -173,9 +162,6 @@ export const NotificationCCValues = Object.freeze({
 			undefined,
 			{ internal: true, supportsEndpoints: false },
 		),
-
-		// Different variants of the V2 notification values:
-		// Unknown type
 		...V.dynamicPropertyWithName(
 			"unknownNotificationType",
 			(notificationType: number) =>
@@ -193,8 +179,6 @@ export const NotificationCCValues = Object.freeze({
 				ccSpecific: { notificationType },
 			} as const),
 		),
-
-		// Known type, unknown variable
 		...V.dynamicPropertyAndKeyWithName(
 			"unknownNotificationVariable",
 			(notificationType: number, notificationName: string) =>
@@ -208,8 +192,6 @@ export const NotificationCCValues = Object.freeze({
 				ccSpecific: { notificationType },
 			} as const),
 		),
-
-		// (Stateful) notification variable
 		...V.dynamicPropertyAndKeyWithName(
 			"notificationVariable",
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -221,10 +203,10 @@ export const NotificationCCValues = Object.freeze({
 			// Notification metadata is so dynamic, it does not make sense to define it here
 			undefined,
 		),
-	}),
-});
+	},
+);
 
-function shouldAutoCreateSimpleDoorSensorValue(
+export function shouldAutoCreateSimpleDoorSensorValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -556,7 +538,7 @@ export class NotificationCC extends CommandClass {
 		// If everything failed, e.g. because the node is V1/V2, assume this is a "push" node.
 		// If we assumed "pull", we would have to query the node regularly, which can cause
 		// the node to return old (already handled) notifications.
-		// https://github.com/zwave-js/node-zwave-js/issues/5626
+		// https://github.com/zwave-js/zwave-js/issues/5626
 		return "push";
 	}
 
@@ -954,12 +936,11 @@ export class NotificationCCSet extends NotificationCC {
 	public notificationType: number;
 	public notificationStatus: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.notificationType,
 			this.notificationStatus ? 0xff : 0x00,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1316,10 +1297,29 @@ export class NotificationCCReport extends NotificationCC {
 				// Try to parse the event parameters - if this fails, we should still handle the notification report
 				try {
 					// Convert CommandClass instances to a standardized object representation
-					// FIXME: We do not really want to parse asynchronously here. Once parseAsync becomes the standard,
-					// we should add sync methods to only those CCs that will be parsed here - or make the entire call chain async.
-					// eslint-disable-next-line @typescript-eslint/no-deprecated
-					const cc = CommandClass.parse(this.eventParameters, {
+
+					// We do not want to parse asynchronously here, but the `CommandClass.parse` method is async.
+					// However, we only deal with simple CCs that can be parsed synchronously. We can do this
+					// by replicating what `CommandClass.parse` does: determine the correct CC class and call its
+					// `from` method. If that returns a CC instance, we're good to continue.
+
+					const raw = CCRaw.parse(this.eventParameters);
+					if (raw.ccCommand == undefined) {
+						validatePayload.fail(
+							"event parameters contain an invalid CC",
+						);
+					}
+					const CommandConstructor = getCCCommandConstructor(
+						raw.ccId,
+						raw.ccCommand,
+					);
+					if (!CommandConstructor) {
+						validatePayload.fail(
+							"event parameters contain an invalid CC",
+						);
+					}
+
+					const cc = CommandConstructor.from(raw, {
 						...ctx,
 						frameType: "singlecast",
 						sourceNodeId: this.nodeId as number,
@@ -1332,6 +1332,11 @@ export class NotificationCCReport extends NotificationCC {
 						securityManager2: undefined,
 						securityManagerLR: undefined,
 					});
+					if (cc instanceof Promise) {
+						validatePayload.fail(
+							"Cannot asynchronously parse CC from event parameters",
+						);
+					}
 					validatePayload(!(cc instanceof InvalidCC));
 					cc.encapsulatingCC = this as any;
 
@@ -1417,7 +1422,7 @@ export class NotificationCCReport extends NotificationCC {
 		}
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (this.notificationType != undefined) {
 			if (
 				this.notificationEvent == undefined
@@ -1467,7 +1472,6 @@ export class NotificationCCReport extends NotificationCC {
 			]);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 }
@@ -1526,7 +1530,7 @@ export class NotificationCCGet extends NotificationCC {
 	public notificationType: number | undefined;
 	public notificationEvent: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const notificationEvent = this.notificationEvent === 0xff
 			? 0x00
 			: this.notificationEvent;
@@ -1535,7 +1539,6 @@ export class NotificationCCGet extends NotificationCC {
 			this.notificationType ?? 0xff,
 			notificationEvent ?? 0x00,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1616,7 +1619,7 @@ export class NotificationCCSupportedReport extends NotificationCC {
 
 	public supportedNotificationTypes: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const bitMask = encodeBitMask(
 			this.supportedNotificationTypes,
 			Math.max(...this.supportedNotificationTypes),
@@ -1628,7 +1631,6 @@ export class NotificationCCSupportedReport extends NotificationCC {
 			]),
 			bitMask,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1758,7 +1760,7 @@ export class NotificationCCEventSupportedReport extends NotificationCC {
 	public notificationType: number;
 	public supportedEvents: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.notificationType, 0]);
 		if (this.supportedEvents.length > 0) {
 			const bitMask = encodeBitMask(
@@ -1770,7 +1772,6 @@ export class NotificationCCEventSupportedReport extends NotificationCC {
 			this.payload = Bytes.concat([this.payload, bitMask]);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1825,9 +1826,8 @@ export class NotificationCCEventSupportedGet extends NotificationCC {
 
 	public notificationType: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.notificationType]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
