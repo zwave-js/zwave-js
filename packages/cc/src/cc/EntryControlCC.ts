@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -14,11 +16,6 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { buffer2hex, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -56,8 +53,9 @@ import {
 } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 
-export const EntryControlCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Entry Control"], {
+export const EntryControlCCValues = V.defineCCValues(
+	CommandClasses["Entry Control"],
+	{
 		...V.staticProperty(
 			"keyCacheSize",
 			{
@@ -69,7 +67,6 @@ export const EntryControlCCValues = Object.freeze({
 				max: 32,
 			} as const,
 		),
-
 		...V.staticProperty(
 			"keyCacheTimeout",
 			{
@@ -82,7 +79,6 @@ export const EntryControlCCValues = Object.freeze({
 				max: 10,
 			} as const,
 		),
-
 		...V.staticProperty("supportedDataTypes", undefined, {
 			internal: true,
 		}),
@@ -92,8 +88,8 @@ export const EntryControlCCValues = Object.freeze({
 		...V.staticProperty("supportedKeys", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Entry Control"])
 export class EntryControlCCAPI extends CCAPI {
@@ -459,14 +455,21 @@ export class EntryControlCCNotification extends EntryControlCC {
 							eventDataLength === 16 || eventDataLength === 32,
 						);
 					}
-					eventData = eventData.toString("ascii");
-					if (!noStrictValidation) {
-						validatePayload(
-							/^[\u0000-\u007f]+[\u00ff]*$/.test(eventData),
-						);
-					}
 					// Trim 0xff padding bytes
-					eventData = eventData.replace(/[\u00ff]*$/, "");
+					let paddingStart = eventDataLength;
+					while (
+						paddingStart > 0
+						&& eventData[paddingStart - 1] === 0xff
+					) {
+						paddingStart--;
+					}
+					eventData = eventData.subarray(0, paddingStart).toString(
+						"ascii",
+					);
+
+					if (!noStrictValidation) {
+						validatePayload(/^[\u0000-\u007f]+$/.test(eventData));
+					}
 					break;
 				case EntryControlDataTypes.MD5:
 					// MD5 16 byte binary data encoded as a MD5 hash value.
@@ -789,9 +792,8 @@ export class EntryControlCCConfigurationSet extends EntryControlCC {
 	public readonly keyCacheSize: number;
 	public readonly keyCacheTimeout: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.keyCacheSize, this.keyCacheTimeout]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

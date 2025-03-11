@@ -1,11 +1,17 @@
 {
   "name": "@zwave-js/transformers",
-  "version": "14.0.0",
+  "version": "15.0.0-beta.1",
   "description": "zwave-js: compile-time transformers",
   "private": true,
   "keywords": [],
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "exports": {
+    ".": "./build/index.js",
+    "./defineCCValues": "./build/defineCCValues/transformer.js",
+    "./validateArgs/program": "./build/validateArgs/transformProgram.js",
+    "./validateArgs/decorators": "./build/validateArgs/transformDecorators.js"
+  },
   "files": [
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
     "build/**/package.json"
@@ -15,25 +21,25 @@
     "email": "d.griesel@gmx.net"
   },
   "license": "MIT",
-  "homepage": "https://github.com/zwave-js/node-zwave-js#readme",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zwave-js/node-zwave-js.git"
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
   },
   "bugs": {
-    "url": "https://github.com/zwave-js/node-zwave-js/issues"
+    "url": "https://github.com/zwave-js/zwave-js/issues"
   },
   "funding": {
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 18"
+    "node": ">= 20"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "bootstrap": "yarn build",
-    "pretest": "del-cli \"test/fixtures/*.js\" && tsc -p tsconfig.test.json && cpy \"test/build/test/fixtures/*.js\" test/fixtures && del-cli test/build",
+    "pretest": "del-cli \"test/fixtures/*.{mjs,map}\" && tsc -p tsconfig.test.json && cpy \"test/build/test/fixtures/*.mjs\" test/fixtures && del-cli test/build",
     "lint:ts": "eslint --cache \"src/**/*.ts\"",
     "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
@@ -42,9 +48,10 @@
   "devDependencies": {
     "cpy-cli": "^5.0.0",
     "del-cli": "^6.0.0",
-    "execa": "^5.1.1",
+    "execa": "^9.5.2",
+    "ts-morph": "^25.0.1",
     "tsutils": "^3.21.0",
-    "typescript": "5.6.2",
-    "vitest": "^2.1.4"
+    "typescript": "5.7.3",
+    "vitest": "^2.1.9"
   }
 }

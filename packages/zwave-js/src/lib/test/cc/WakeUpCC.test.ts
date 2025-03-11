@@ -34,8 +34,8 @@ test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
 
 	const securityManager = {
 		getNonce: () => nonce,
-		authKey: generateAuthKey(networkKey),
-		encryptionKey: generateEncryptionKey(networkKey),
+		getAuthKey: generateAuthKey(networkKey),
+		getEncryptionKey: generateEncryptionKey(networkKey),
 	};
 
 	const ccRequest = SecurityCC.encapsulate(

@@ -71,7 +71,7 @@ async set(
 ```
 
 - **label:** Remaining duration
-- **min. CC version:** 1
+- **min. CC version:** 2
 - **readable:** true
 - **writeable:** false
 - **stateful:** true

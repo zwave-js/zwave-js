@@ -132,8 +132,19 @@ export class Bytes extends Uint8Array {
 				return uint8ArrayToBase64(this);
 			case "base64url":
 				return uint8ArrayToBase64(this, { urlSafe: true });
+			case "ucs-2":
+			case "ucs2":
+			case "utf16le":
+				return uint8ArrayToString(this, "utf-16le");
+			case "ascii":
+			case "latin1":
+			case "binary":
+			// For TextDecoder, these are aliases for "windows-1252"
+			// which is not supported with small-icu or without ICU.
+			// When dealing with actual ASCII data, there is no difference
+			// to simply using "utf8" instead.
 			default:
-				return uint8ArrayToString(this, encoding);
+				return uint8ArrayToString(this, "utf-8");
 		}
 	}
 
@@ -389,7 +400,7 @@ export class Bytes extends Uint8Array {
 		}
 	}
 	/**
-	 * Writes `byteLength` bytes of `value` to `buf` at the specified `offset`as big-endian. Supports up to 48 bits of accuracy. Behavior is undefined
+	 * Writes `byteLength` bytes of `value` to `buf` at the specified `offset`as big-endian. Supports up to 64 bits of accuracy. Behavior is undefined
 	 * when `value` is anything other than an unsigned integer.
 	 *
 	 * ```js
@@ -405,7 +416,7 @@ export class Bytes extends Uint8Array {
 	 * @since v0.5.5
 	 * @param value Number to be written to `buf`.
 	 * @param offset Number of bytes to skip before starting to write. Must satisfy `0 <= offset <= buf.length - byteLength`.
-	 * @param byteLength Number of bytes to write. Must satisfy `0 < byteLength <= 6`.
+	 * @param byteLength Number of bytes to write. Must satisfy `0 < byteLength <= 8`.
 	 * @return `offset` plus the number of bytes written.
 	 */
 	writeUIntBE(value: number, offset: number, byteLength: number): number {
@@ -437,6 +448,20 @@ export class Bytes extends Uint8Array {
 				const low = Number(big & 0xffffn);
 				let ret = this.writeUInt32BE(high, offset);
 				ret = this.writeUInt16BE(low, ret);
+				return ret;
+			}
+			case 7: {
+				const big = BigInt(value);
+				const high = Number(big >> 24n);
+				const mid = Number((big >> 8n) & 0xffffn);
+				const low = Number(big & 0xffn);
+				let ret = this.writeUInt32BE(high, offset);
+				ret = this.writeUInt16BE(mid, ret);
+				ret = this.writeUInt8(low, ret);
+				return ret;
+			}
+			case 8: {
+				const ret = this.writeBigUInt64BE(BigInt(value), offset);
 				return ret;
 			}
 			default:

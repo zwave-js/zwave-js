@@ -352,7 +352,8 @@ Performs an OTA firmware update process for this node, applying the provided fir
 This method an array of firmware updates, each of which contains the following properties:
 
 - `data` - A buffer containing the firmware image in a format supported by the device
-- `target` - _(optional)_ The firmware target (i.e. chip) to upgrade. `0` updates the Z-Wave chip, `>=1` updates others if they exist
+- `firmwareTarget` - _(optional)_ The firmware target (i.e. chip) to upgrade. `0` updates the Z-Wave chip, `>=1` updates others if they exist
+- `firmwareId` - _(optional)_ The ID of the new firmware that will be uploaded. This is only necessary if the device checks the firmware ID before starting the update. If not given, the current firmware ID will be reused.
 
 <!-- #import Firmware from "zwave-js" -->
 
@@ -360,6 +361,7 @@ This method an array of firmware updates, each of which contains the following p
 interface Firmware {
 	data: Uint8Array;
 	firmwareTarget?: number;
+	firmwareId?: number;
 }
 ```
 
@@ -383,7 +385,7 @@ interface FirmwareUpdateResult {
 The library includes helper methods (exported from `zwave-js/Utils`) to prepare the firmware update.
 
 ```ts
-extractFirmware(rawData: Buffer, format: FirmwareFileFormat): Firmware
+async extractFirmwareAsync(rawData: Buffer, format: FirmwareFileFormat): Promise<Firmware>
 ```
 
 `rawData` is a buffer containing the original firmware update file, `format` describes which kind of file that is. The following formats are available:
@@ -394,7 +396,7 @@ extractFirmware(rawData: Buffer, format: FirmwareFileFormat): Firmware
 - `"hec"` - An encrypted Intel HEX firmware file
 - `"gecko"` - A binary gecko bootloader firmware file with `.gbl` extension
 
-If successful, `extractFirmware` returns an `Firmware` object which can be passed to the `updateFirmware` method.
+If successful, `extractFirmwareAsync` returns an `Firmware` object which can be passed to the `updateFirmware` method.
 
 If no firmware data can be extracted, the method will throw.
 
@@ -417,7 +419,7 @@ Example usage:
 let actualFirmware: Firmware;
 try {
 	const format = guessFirmwareFileFormat(filename, rawData);
-	actualFirmware = extractFirmware(rawData, format);
+	actualFirmware = await extractFirmwareAsync(rawData, format);
 } catch (e) {
 	// handle the error, then abort the update
 }
@@ -455,7 +457,7 @@ If the given ZIP archive contains a compatible firmware update file, the method 
 
 Otherwise `undefined` is returned.
 
-The unzipped firmware file can then be passed to `extractFirmware` to get the firmware data. Example usage:
+The unzipped firmware file can then be passed to `extractFirmwareAsync` to get the firmware data. Example usage:
 
 ```ts
 // Unzip the firmware archive
@@ -468,7 +470,7 @@ const { filename, format, rawData } = unzippedFirmware;
 // Extract the firmware from a given firmware file
 let actualFirmware: Firmware;
 try {
-	actualFirmware = extractFirmware(rawData, format);
+	actualFirmware = await extractFirmwareAsync(rawData, format);
 } catch (e) {
 	// handle the error, then abort the update
 }

@@ -9,6 +9,7 @@ export {
 	guessFirmwareFileFormat,
 	parseQRCodeString,
 	rssiToString,
+	tryUnzipFirmwareFile,
 } from "@zwave-js/core";
 export type {
 	Firmware,
@@ -22,7 +23,6 @@ export {
 	getEnumMemberName,
 	num2hex,
 } from "@zwave-js/shared/safe";
-export { createDefaultBehaviors as createDefaultMockControllerBehaviors } from "./lib/controller/MockControllerBehaviors.js";
 export { driverPresets } from "./lib/driver/ZWaveOptions.js";
 export {
 	formatLifelineHealthCheckRound,
@@ -31,4 +31,3 @@ export {
 	formatRouteHealthCheckSummary,
 	healthCheckRatingToWord,
 } from "./lib/node/HealthCheck.js";
-export { createDefaultBehaviors as createDefaultMockNodeBehaviors } from "./lib/node/MockNodeBehaviors.js";

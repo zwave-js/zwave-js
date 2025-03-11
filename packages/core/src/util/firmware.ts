@@ -1,7 +1,6 @@
-import { getErrorMessage, isUint8Array } from "@zwave-js/shared";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes, getErrorMessage, isUint8Array } from "@zwave-js/shared/safe";
 import { unzipSync } from "fflate";
-import * as crypto from "node:crypto";
+import { decryptAES256CBC } from "../crypto/index.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import type { Firmware, FirmwareFileFormat } from "./_Types.js";
 import { CRC16_CCITT } from "./crc.js";
@@ -105,10 +104,10 @@ export function tryUnzipFirmwareFile(zipData: Uint8Array): {
  *
  * The returned firmware data and target can be used to start a firmware update process with `node.beginFirmwareUpdate`
  */
-export function extractFirmware(
+export async function extractFirmware(
 	rawData: Uint8Array,
 	format: FirmwareFileFormat,
-): Firmware {
+): Promise<Firmware> {
 	switch (format) {
 		case "aeotec":
 			return extractFirmwareAeotec(rawData);
@@ -274,24 +273,22 @@ function extractFirmwareHEX(dataHEX: Uint8Array | string): Firmware {
 	}
 }
 
-function extractFirmwareHEC(data: Uint8Array): Firmware {
+async function extractFirmwareHEC(data: Uint8Array): Promise<Firmware> {
 	const key =
 		"d7a68def0f4a1241940f6cb8017121d15f0e2682e258c9f7553e706e834923b7";
 	const iv = "0e6519297530583708612a2823663844";
-	const decipher = crypto.createDecipheriv(
-		"aes-256-cbc",
-		Bytes.from(key, "hex"),
-		Bytes.from(iv, "hex"),
-	);
 
 	const ciphertext = Bytes.from(
 		Bytes.view(data.subarray(6)).toString("ascii"),
 		"base64",
 	);
-	const plaintext = Bytes.concat([
-		decipher.update(ciphertext),
-		decipher.final(),
-	])
+	const plaintext = Bytes.view(
+		await decryptAES256CBC(
+			ciphertext,
+			Bytes.from(key, "hex"),
+			Bytes.from(iv, "hex"),
+		),
+	)
 		.toString("ascii")
 		.replaceAll(" ", "\n");
 

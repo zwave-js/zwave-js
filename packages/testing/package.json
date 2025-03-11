@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/testing",
-  "version": "14.2.0",
+  "version": "15.0.0-beta.2",
   "description": "zwave-js: testing utilities",
   "keywords": [],
   "publishConfig": {
@@ -24,19 +24,19 @@
     "email": "d.griesel@gmx.net"
   },
   "license": "MIT",
-  "homepage": "https://github.com/zwave-js/node-zwave-js#readme",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zwave-js/node-zwave-js.git"
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
   },
   "bugs": {
-    "url": "https://github.com/zwave-js/node-zwave-js/issues"
+    "url": "https://github.com/zwave-js/zwave-js/issues"
   },
   "funding": {
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 18"
+    "node": ">= 20"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
@@ -55,15 +55,15 @@
     "ansi-colors": "^4.1.3"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.3.0",
-    "@microsoft/api-extractor": "^7.47.9",
-    "@types/node": "^18.19.63",
+    "@alcalzone/esm2cjs": "^1.4.1",
+    "@microsoft/api-extractor": "^7.48.0",
+    "@types/node": "^20.17.16",
     "@types/triple-beam": "^1.3.5",
     "@zwave-js/cc": "workspace:*",
     "del-cli": "^6.0.0",
     "triple-beam": "*",
     "tsx": "^4.19.2",
-    "typescript": "5.6.2",
-    "winston-transport": "^4.8.0"
+    "typescript": "5.7.3",
+    "winston-transport": "^4.9.0"
   }
 }

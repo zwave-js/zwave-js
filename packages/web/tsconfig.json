@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"target": "ESNext",
+		"lib": ["DOM", "ESNext"],
+		"customConditions": ["browser"]
+	}
+}

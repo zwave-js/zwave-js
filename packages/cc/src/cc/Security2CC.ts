@@ -1,12 +1,13 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	MPANState,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
 	type MulticastDestination,
 	type S2SecurityClass,
-	SECURITY_S2_AUTH_TAG_LENGTH,
 	SPANState,
 	type SPANTableEntry,
 	SecurityClass,
@@ -37,11 +38,6 @@ import {
 	type SecurityManagers,
 	encodeCCList,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { wait } from "alcalzone-shared/async";
@@ -99,6 +95,8 @@ function bitMaskToSecurityClass(
 	validatePayload(keys.length === 1);
 	return keys[0];
 }
+
+const SECURITY_S2_AUTH_TAG_LENGTH = 8;
 
 function getAuthenticationData(
 	sendingNodeId: number,
@@ -220,7 +218,7 @@ function assertSecurityTX(
 	return ret;
 }
 
-function decryptSinglecast(
+async function decryptSinglecast(
 	ctx: CCParsingContext,
 	securityManager: SecurityManager2,
 	sendingNodeId: number,
@@ -233,8 +231,8 @@ function decryptSinglecast(
 		type: SPANState.SPAN | SPANState.LocalEI;
 	},
 	extensions: Security2Extension[],
-): DecryptionResult {
-	const decryptWithNonce = (nonce: Uint8Array) => {
+): Promise<DecryptionResult> {
+	const decryptWithNonce = async (nonce: Uint8Array) => {
 		const { keyCCM: key } = securityManager.getKeysForNode(
 			sendingNodeId,
 		);
@@ -243,11 +241,17 @@ function decryptSinglecast(
 		return {
 			key,
 			iv,
-			...decryptAES128CCM(key, iv, ciphertext, authData, authTag),
+			...(await decryptAES128CCM(
+				ciphertext,
+				key,
+				iv,
+				authData,
+				authTag,
+			)),
 		};
 	};
-	const getNonceAndDecrypt = () => {
-		const iv = securityManager.nextNonce(sendingNodeId);
+	const getNonceAndDecrypt = async () => {
+		const iv = await securityManager.nextNonce(sendingNodeId);
 		return decryptWithNonce(iv);
 	};
 
@@ -271,7 +275,7 @@ function decryptSinglecast(
 			spanState.currentSPAN = undefined;
 
 			// If we could decrypt this way, we're done...
-			const result = decryptWithNonce(nonce);
+			const result = await decryptWithNonce(nonce);
 			if (result.authOK) {
 				return {
 					...result,
@@ -286,7 +290,7 @@ function decryptSinglecast(
 
 		// This can only happen if the security class is known
 		return {
-			...getNonceAndDecrypt(),
+			...(await getNonceAndDecrypt()),
 			securityClass: spanState.securityClass,
 		};
 	} else if (spanState.type === SPANState.LocalEI) {
@@ -302,13 +306,13 @@ function decryptSinglecast(
 		);
 		if (isBootstrappingNode) {
 			// We're currently bootstrapping the node, it might be using a temporary key
-			securityManager.initializeTempSPAN(
+			await securityManager.initializeTempSPAN(
 				sendingNodeId,
 				senderEI,
 				receiverEI,
 			);
 
-			const ret = getNonceAndDecrypt();
+			const ret = await getNonceAndDecrypt();
 			// Decryption with the temporary key worked
 			if (ret.authOK) {
 				return {
@@ -353,13 +357,13 @@ function decryptSinglecast(
 			}
 
 			// Initialize an SPAN with that security class
-			securityManager.initializeSPAN(
+			await securityManager.initializeSPAN(
 				sendingNodeId,
 				secClass,
 				senderEI,
 				receiverEI,
 			);
-			const ret = getNonceAndDecrypt();
+			const ret = await getNonceAndDecrypt();
 
 			// It worked, return the result
 			if (ret.authOK) {
@@ -392,15 +396,15 @@ function decryptSinglecast(
 	};
 }
 
-function decryptMulticast(
+async function decryptMulticast(
 	sendingNodeId: number,
 	securityManager: SecurityManager2,
 	groupId: number,
 	ciphertext: Uint8Array,
 	authData: Uint8Array,
 	authTag: Uint8Array,
-): DecryptionResult {
-	const iv = securityManager.nextPeerMPAN(
+): Promise<DecryptionResult> {
+	const iv = await securityManager.nextPeerMPAN(
 		sendingNodeId,
 		groupId,
 	);
@@ -410,9 +414,96 @@ function decryptMulticast(
 	return {
 		key,
 		iv,
-		...decryptAES128CCM(key, iv, ciphertext, authData, authTag),
+		...(await decryptAES128CCM(
+			ciphertext,
+			key,
+			iv,
+			authData,
+			authTag,
+		)),
 		// The security class is irrelevant when decrypting multicast commands
 		securityClass: undefined,
+	};
+}
+
+function parseExtensions(buffer: Uint8Array, wasEncrypted: boolean): {
+	extensions: Security2Extension[];
+	mustDiscardCommand: boolean;
+	bytesRead: number;
+} {
+	const extensions: Security2Extension[] = [];
+	let mustDiscardCommand = false;
+	let offset = 0;
+
+	parsing: while (true) {
+		if (buffer.length < offset + 2) {
+			// An S2 extension was expected, but the buffer is too short
+			mustDiscardCommand = true;
+			break parsing;
+		}
+
+		// The length field could be too large, which would cause part of the actual ciphertext
+		// to be ignored. Try to avoid this for known extensions by checking the actual and expected length.
+		const { actual: actualLength, expected: expectedLength } =
+			Security2Extension
+				.getExtensionLength(
+					buffer.subarray(offset),
+				);
+
+		// Parse the extension using the expected length if possible
+		const extensionLength = expectedLength ?? actualLength;
+		if (extensionLength < 2) {
+			// An S2 extension was expected, but the length is too short
+			mustDiscardCommand = true;
+			break parsing;
+		} else if (
+			extensionLength
+				> buffer.length
+					- offset
+					- (wasEncrypted
+						? 0
+						: SECURITY_S2_AUTH_TAG_LENGTH)
+		) {
+			// The supposed length is longer than the space the extensions may occupy
+			mustDiscardCommand = true;
+			break parsing;
+		}
+
+		const extensionData = buffer.subarray(
+			offset,
+			offset + extensionLength,
+		);
+		offset += extensionLength;
+
+		const ext = Security2Extension.parse(extensionData);
+
+		switch (validateS2Extension(ext, wasEncrypted)) {
+			case ValidateS2ExtensionResult.OK:
+				if (
+					expectedLength != undefined
+					&& actualLength !== expectedLength
+				) {
+					// The extension length field does not match, ignore the extension
+				} else {
+					extensions.push(ext);
+				}
+				break;
+			case ValidateS2ExtensionResult.DiscardExtension:
+				// Do nothing
+				break;
+			case ValidateS2ExtensionResult.DiscardCommand:
+				mustDiscardCommand = true;
+				break;
+		}
+
+		// Check if that was the last extension
+		if (!ext.moreToFollow) break parsing;
+	}
+
+	return {
+		extensions,
+		mustDiscardCommand,
+		bytesRead: offset,
 	};
 }
 
@@ -502,7 +593,7 @@ export class Security2CCAPI extends CCAPI {
 			);
 		}
 
-		const receiverEI = securityManager.generateNonce(
+		const receiverEI = await securityManager.generateNonce(
 			this.endpoint.nodeId,
 		);
 
@@ -1359,347 +1450,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		}
 	}
 
-	/** @deprecated Use {@link fromAsync} instead */
-	public static from(
-		raw: CCRaw,
-		ctx: CCParsingContext,
-	): Security2CCMessageEncapsulation {
-		const securityManager = assertSecurityRX(ctx);
-
-		validatePayload(raw.payload.length >= 2);
-		// Check the sequence number to avoid duplicates
-		const sequenceNumber: number | undefined = raw.payload[0];
-
-		// Ensure the node has a security class
-		validatePayload.withReason("No security class granted")(
-			ctx.getHighestSecurityClass(
-				ctx.sourceNodeId,
-			) !== SecurityClass.None,
-		);
-
-		const hasExtensions = !!(raw.payload[1] & 0b1);
-		const hasEncryptedExtensions = !!(raw.payload[1] & 0b10);
-
-		let offset = 2;
-		const extensions: Security2Extension[] = [];
-		let mustDiscardCommand = false;
-
-		const parseExtensions = (buffer: Uint8Array, wasEncrypted: boolean) => {
-			while (true) {
-				if (buffer.length < offset + 2) {
-					// An S2 extension was expected, but the buffer is too short
-					mustDiscardCommand = true;
-					return;
-				}
-
-				// The length field could be too large, which would cause part of the actual ciphertext
-				// to be ignored. Try to avoid this for known extensions by checking the actual and expected length.
-				const { actual: actualLength, expected: expectedLength } =
-					Security2Extension
-						.getExtensionLength(
-							buffer.subarray(offset),
-						);
-
-				// Parse the extension using the expected length if possible
-				const extensionLength = expectedLength ?? actualLength;
-				if (extensionLength < 2) {
-					// An S2 extension was expected, but the length is too short
-					mustDiscardCommand = true;
-					return;
-				} else if (
-					extensionLength
-						> buffer.length
-							- offset
-							- (wasEncrypted
-								? 0
-								: SECURITY_S2_AUTH_TAG_LENGTH)
-				) {
-					// The supposed length is longer than the space the extensions may occupy
-					mustDiscardCommand = true;
-					return;
-				}
-
-				const extensionData = buffer.subarray(
-					offset,
-					offset + extensionLength,
-				);
-				offset += extensionLength;
-
-				const ext = Security2Extension.parse(extensionData);
-
-				switch (validateS2Extension(ext, wasEncrypted)) {
-					case ValidateS2ExtensionResult.OK:
-						if (
-							expectedLength != undefined
-							&& actualLength !== expectedLength
-						) {
-							// The extension length field does not match, ignore the extension
-						} else {
-							extensions.push(ext);
-						}
-						break;
-					case ValidateS2ExtensionResult.DiscardExtension:
-						// Do nothing
-						break;
-					case ValidateS2ExtensionResult.DiscardCommand:
-						mustDiscardCommand = true;
-						break;
-				}
-
-				// Check if that was the last extension
-				if (!ext.moreToFollow) break;
-			}
-		};
-		if (hasExtensions) parseExtensions(raw.payload, false);
-
-		const mcctx = ((): MulticastContext => {
-			const multicastGroupId = getMulticastGroupId(extensions);
-			if (
-				ctx.frameType === "multicast" || ctx.frameType === "broadcast"
-			) {
-				if (multicastGroupId == undefined) {
-					validatePayload.fail(
-						"Multicast frames without MGRP extension",
-					);
-				}
-				return {
-					isMulticast: true,
-					groupId: multicastGroupId,
-				};
-			} else {
-				return { isMulticast: false, groupId: multicastGroupId };
-			}
-		})();
-
-		// If a command is to be discarded before decryption,
-		// we still need to increment the SPAN or MPAN state
-		if (mustDiscardCommand) {
-			if (mcctx.isMulticast) {
-				securityManager.nextPeerMPAN(
-					ctx.sourceNodeId,
-					mcctx.groupId,
-				);
-			} else {
-				securityManager.nextNonce(ctx.sourceNodeId);
-			}
-			validatePayload.fail(
-				"Invalid S2 extension",
-			);
-		}
-
-		let prevSequenceNumber: number | undefined;
-		let mpanState:
-			| ReturnType<SecurityManager2["getPeerMPAN"]>
-			| undefined;
-		if (mcctx.isMulticast) {
-			mpanState = securityManager.getPeerMPAN(
-				ctx.sourceNodeId,
-				mcctx.groupId,
-			);
-		} else {
-			// Don't accept duplicate Singlecast commands
-			prevSequenceNumber = validateSequenceNumber(
-				securityManager,
-				ctx.sourceNodeId,
-				sequenceNumber,
-			);
-
-			// When a node receives a singlecast message after a multicast group was marked out of sync,
-			// it must forget about the group.
-			if (mcctx.groupId == undefined) {
-				securityManager.resetOutOfSyncMPANs(
-					ctx.sourceNodeId,
-				);
-			}
-		}
-
-		const unencryptedPayload = raw.payload.subarray(0, offset);
-		const ciphertext = raw.payload.subarray(
-			offset,
-			-SECURITY_S2_AUTH_TAG_LENGTH,
-		);
-		const authTag = raw.payload.subarray(-SECURITY_S2_AUTH_TAG_LENGTH);
-		const messageLength =
-			2 /* CommandClass.computeEncapsulationOverhead() */
-			+ raw.payload.length;
-
-		const authData = getAuthenticationData(
-			ctx.sourceNodeId,
-			getDestinationIDRX(ctx, extensions),
-			ctx.homeId,
-			messageLength,
-			unencryptedPayload,
-		);
-
-		let decrypt: () => DecryptionResult;
-		if (mcctx.isMulticast) {
-			// For incoming multicast commands, make sure we have an MPAN
-			if (mpanState?.type !== MPANState.MPAN) {
-				// If we don't, mark the MPAN as out of sync, so we can respond accordingly on the singlecast followup
-				securityManager.storePeerMPAN(
-					ctx.sourceNodeId,
-					mcctx.groupId,
-					{ type: MPANState.OutOfSync },
-				);
-				failNoMPAN();
-			}
-
-			decrypt = () =>
-				decryptMulticast(
-					ctx.sourceNodeId,
-					securityManager,
-					mcctx.groupId,
-					ciphertext,
-					authData,
-					authTag,
-				);
-		} else {
-			// Decrypt payload and verify integrity
-			const spanState = securityManager.getSPANState(
-				ctx.sourceNodeId,
-			);
-
-			// If we are not able to establish an SPAN yet, fail the decryption
-			if (spanState.type === SPANState.None) {
-				failNoSPAN();
-			} else if (spanState.type === SPANState.RemoteEI) {
-				// TODO: The specs are not clear how to handle this case
-				// For now, do the same as if we didn't have any EI
-				failNoSPAN();
-			}
-
-			decrypt = () =>
-				decryptSinglecast(
-					ctx,
-					securityManager,
-					ctx.sourceNodeId,
-					sequenceNumber,
-					prevSequenceNumber!,
-					ciphertext,
-					authData,
-					authTag,
-					spanState,
-					extensions,
-				);
-		}
-
-		let plaintext: Uint8Array | undefined;
-		let authOK = false;
-		let key: Uint8Array | undefined;
-		let iv: Uint8Array | undefined;
-		let decryptionSecurityClass: SecurityClass | undefined;
-
-		// If the Receiver is unable to authenticate the singlecast message with the current SPAN,
-		// the Receiver SHOULD try decrypting the message with one or more of the following SPAN values,
-		// stopping when decryption is successful or the maximum number of iterations is reached.
-
-		// If the Receiver is unable to decrypt the S2 MC frame with the current MPAN, the Receiver MAY try
-		// decrypting the frame with one or more of the subsequent MPAN values, stopping when decryption is
-		// successful or the maximum number of iterations is reached.
-		const decryptAttempts = mcctx.isMulticast
-			? MAX_DECRYPT_ATTEMPTS_MULTICAST
-			: mcctx.groupId != undefined
-			? MAX_DECRYPT_ATTEMPTS_SC_FOLLOWUP
-			: MAX_DECRYPT_ATTEMPTS_SINGLECAST;
-
-		for (let i = 0; i < decryptAttempts; i++) {
-			({
-				plaintext,
-				authOK,
-				key,
-				iv,
-				securityClass: decryptionSecurityClass,
-			} = decrypt());
-			if (!!authOK && !!plaintext) break;
-			// No need to try further SPANs if we just got the sender's EI
-			if (!!getSenderEI(extensions)) break;
-		}
-
-		// If authentication fails, do so with an error code that instructs the
-		// applHost to tell the node we have no nonce
-		if (!authOK || !plaintext) {
-			if (mcctx.isMulticast) {
-				// Mark the MPAN as out of sync
-				securityManager.storePeerMPAN(
-					ctx.sourceNodeId,
-					mcctx.groupId,
-					{ type: MPANState.OutOfSync },
-				);
-				validatePayload.fail(
-					ZWaveErrorCodes.Security2CC_CannotDecodeMulticast,
-				);
-			} else {
-				validatePayload.fail(
-					ZWaveErrorCodes.Security2CC_CannotDecode,
-				);
-			}
-		} else if (!mcctx.isMulticast && mcctx.groupId != undefined) {
-			// After reception of a singlecast followup, the MPAN state must be increased
-			securityManager.tryIncrementPeerMPAN(
-				ctx.sourceNodeId,
-				mcctx.groupId,
-			);
-		}
-
-		// Remember which security class was used to decrypt this message, so we can discard it later
-		const securityClass: SecurityClass | undefined =
-			decryptionSecurityClass;
-
-		offset = 0;
-		if (hasEncryptedExtensions) parseExtensions(plaintext, true);
-
-		// Before we can continue, check if the command must be discarded
-		if (mustDiscardCommand) {
-			validatePayload.fail("Invalid extension");
-		}
-
-		// If the MPAN extension was received, store the MPAN
-		if (!mcctx.isMulticast) {
-			const mpanExtension = extensions.find((e) =>
-				e instanceof MPANExtension
-			);
-			if (mpanExtension) {
-				securityManager.storePeerMPAN(
-					ctx.sourceNodeId,
-					mpanExtension.groupId,
-					{
-						type: MPANState.MPAN,
-						currentMPAN: mpanExtension.innerMPANState,
-					},
-				);
-			}
-		}
-
-		// Not every S2 message includes an encapsulated CC
-		const decryptedCCBytes = plaintext.subarray(offset);
-		let encapsulated: CommandClass | undefined;
-		if (decryptedCCBytes.length > 0) {
-			// make sure this contains a complete CC command that's worth splitting
-			validatePayload(decryptedCCBytes.length >= 2);
-			// and deserialize the CC
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
-			encapsulated = CommandClass.parse(decryptedCCBytes, ctx);
-		}
-
-		const ret = new Security2CCMessageEncapsulation({
-			nodeId: ctx.sourceNodeId,
-			sequenceNumber,
-			securityClass,
-			extensions,
-			encapsulated,
-		});
-
-		// Remember for debugging purposes
-		ret.key = key;
-		ret.iv = iv;
-		ret.authData = authData;
-		ret.authTag = authTag;
-		ret.plaintext = decryptedCCBytes;
-
-		return ret;
-	}
-
-	public static async fromAsync(
+	public static async from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): Promise<Security2CCMessageEncapsulation> {
@@ -1723,73 +1474,15 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		const extensions: Security2Extension[] = [];
 		let mustDiscardCommand = false;
 
-		const parseExtensions = (buffer: Uint8Array, wasEncrypted: boolean) => {
-			while (true) {
-				if (buffer.length < offset + 2) {
-					// An S2 extension was expected, but the buffer is too short
-					mustDiscardCommand = true;
-					return;
-				}
-
-				// The length field could be too large, which would cause part of the actual ciphertext
-				// to be ignored. Try to avoid this for known extensions by checking the actual and expected length.
-				const { actual: actualLength, expected: expectedLength } =
-					Security2Extension
-						.getExtensionLength(
-							buffer.subarray(offset),
-						);
-
-				// Parse the extension using the expected length if possible
-				const extensionLength = expectedLength ?? actualLength;
-				if (extensionLength < 2) {
-					// An S2 extension was expected, but the length is too short
-					mustDiscardCommand = true;
-					return;
-				} else if (
-					extensionLength
-						> buffer.length
-							- offset
-							- (wasEncrypted
-								? 0
-								: SECURITY_S2_AUTH_TAG_LENGTH)
-				) {
-					// The supposed length is longer than the space the extensions may occupy
-					mustDiscardCommand = true;
-					return;
-				}
-
-				const extensionData = buffer.subarray(
-					offset,
-					offset + extensionLength,
-				);
-				offset += extensionLength;
-
-				const ext = Security2Extension.parse(extensionData);
-
-				switch (validateS2Extension(ext, wasEncrypted)) {
-					case ValidateS2ExtensionResult.OK:
-						if (
-							expectedLength != undefined
-							&& actualLength !== expectedLength
-						) {
-							// The extension length field does not match, ignore the extension
-						} else {
-							extensions.push(ext);
-						}
-						break;
-					case ValidateS2ExtensionResult.DiscardExtension:
-						// Do nothing
-						break;
-					case ValidateS2ExtensionResult.DiscardCommand:
-						mustDiscardCommand = true;
-						break;
-				}
-
-				// Check if that was the last extension
-				if (!ext.moreToFollow) break;
-			}
-		};
-		if (hasExtensions) parseExtensions(raw.payload, false);
+		if (hasExtensions) {
+			const parseResult = parseExtensions(
+				raw.payload.subarray(offset),
+				false,
+			);
+			extensions.push(...parseResult.extensions);
+			offset += parseResult.bytesRead;
+			mustDiscardCommand = parseResult.mustDiscardCommand;
+		}
 
 		const mcctx = ((): MulticastContext => {
 			const multicastGroupId = getMulticastGroupId(extensions);
@@ -1814,12 +1507,12 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		// we still need to increment the SPAN or MPAN state
 		if (mustDiscardCommand) {
 			if (mcctx.isMulticast) {
-				securityManager.nextPeerMPAN(
+				await securityManager.nextPeerMPAN(
 					ctx.sourceNodeId,
 					mcctx.groupId,
 				);
 			} else {
-				securityManager.nextNonce(ctx.sourceNodeId);
+				await securityManager.nextNonce(ctx.sourceNodeId);
 			}
 			validatePayload.fail(
 				"Invalid S2 extension",
@@ -1870,7 +1563,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			unencryptedPayload,
 		);
 
-		let decrypt: () => DecryptionResult;
+		let decrypt: () => Promise<DecryptionResult>;
 		if (mcctx.isMulticast) {
 			// For incoming multicast commands, make sure we have an MPAN
 			if (mpanState?.type !== MPANState.MPAN) {
@@ -1948,7 +1641,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				key,
 				iv,
 				securityClass: decryptionSecurityClass,
-			} = decrypt());
+			} = await decrypt());
 			if (!!authOK && !!plaintext) break;
 			// No need to try further SPANs if we just got the sender's EI
 			if (!!getSenderEI(extensions)) break;
@@ -1985,11 +1678,24 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			decryptionSecurityClass;
 
 		offset = 0;
-		if (hasEncryptedExtensions) parseExtensions(plaintext, true);
+		if (hasEncryptedExtensions) {
+			const parseResult = parseExtensions(plaintext, true);
+			extensions.push(...parseResult.extensions);
+			offset += parseResult.bytesRead;
+			mustDiscardCommand = parseResult.mustDiscardCommand;
+		}
 
 		// Before we can continue, check if the command must be discarded
 		if (mustDiscardCommand) {
 			validatePayload.fail("Invalid extension");
+		}
+
+		// The MPAN and MGRP extensions must not be sent together
+		const mpanExtension = extensions.find((e) =>
+			e instanceof MPANExtension
+		);
+		if (mcctx.groupId != undefined && mpanExtension) {
+			validatePayload.fail("Invalid combination of extensions");
 		}
 
 		// If the MPAN extension was received, store the MPAN
@@ -2016,7 +1722,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			// make sure this contains a complete CC command that's worth splitting
 			validatePayload(decryptedCCBytes.length >= 2);
 			// and deserialize the CC
-			encapsulated = await CommandClass.parseAsync(decryptedCCBytes, ctx);
+			encapsulated = await CommandClass.parse(decryptedCCBytes, ctx);
 		}
 
 		const ret = new Security2CCMessageEncapsulation({
@@ -2092,10 +1798,10 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		return getMulticastGroupId(this.extensions);
 	}
 
-	private maybeAddSPANExtension(
+	private async maybeAddSPANExtension(
 		ctx: CCEncodingContext,
 		securityManager: SecurityManager2,
-	): void {
+	): Promise<void> {
 		if (!this.isSinglecast()) return;
 
 		const receiverNodeId: number = this.nodeId;
@@ -2114,7 +1820,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		} else if (spanState.type === SPANState.RemoteEI) {
 			// We have the receiver's EI, generate our input and send it over
 			// With both, we can create an SPAN
-			const senderEI = securityManager.generateNonce(
+			const senderEI = await securityManager.generateNonce(
 				undefined,
 			);
 			const receiverEI = spanState.receiverEI;
@@ -2125,7 +1831,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				this.securityClass == undefined
 				&& securityManager.tempKeys.has(receiverNodeId)
 			) {
-				securityManager.initializeTempSPAN(
+				await securityManager.initializeTempSPAN(
 					receiverNodeId,
 					senderEI,
 					receiverEI,
@@ -2140,7 +1846,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 						ZWaveErrorCodes.Security2CC_NoSPAN,
 					);
 				}
-				securityManager.initializeSPAN(
+				await securityManager.initializeSPAN(
 					receiverNodeId,
 					securityClass,
 					senderEI,
@@ -2161,13 +1867,12 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		}
 	}
 
-	/** @deprecated Use {@link serializeAsync} instead */
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const securityManager = assertSecurityTX(ctx, this.nodeId);
 		this.ensureSequenceNumber(securityManager);
 
 		// Include Sender EI in the command if we only have the receiver's EI
-		this.maybeAddSPANExtension(ctx, securityManager);
+		await this.maybeAddSPANExtension(ctx, securityManager);
 
 		const unencryptedExtensions = this.extensions.filter(
 			(e) => !e.isEncrypted(),
@@ -2186,8 +1891,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				e.serialize(index < unencryptedExtensions.length - 1)
 			),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
-		const serializedCC = this.encapsulated?.serialize(ctx)
+		const serializedCC = (await this.encapsulated?.serialize(ctx))
 			?? new Bytes();
 		const plaintextPayload = Bytes.concat([
 			...encryptedExtensions.map((e, index) =>
@@ -2217,7 +1921,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			// Singlecast:
 			// Generate a nonce for encryption, and remember it to attempt decryption
 			// of potential in-flight messages from the target node.
-			iv = securityManager.nextNonce(this.nodeId, true);
+			iv = await securityManager.nextNonce(this.nodeId, true);
 			const { keyCCM } =
 				// Prefer the overridden security class if it was given
 				this.securityClass != undefined
@@ -2228,20 +1932,21 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			key = keyCCM;
 		} else {
 			// Multicast:
-			const keyAndIV = securityManager.getMulticastKeyAndIV(
+			const keyAndIV = await securityManager.getMulticastKeyAndIV(
 				destinationTag,
 			);
 			key = keyAndIV.key;
 			iv = keyAndIV.iv;
 		}
 
-		const { ciphertext: ciphertextPayload, authTag } = encryptAES128CCM(
-			key,
-			iv,
-			plaintextPayload,
-			authData,
-			SECURITY_S2_AUTH_TAG_LENGTH,
-		);
+		const { ciphertext: ciphertextPayload, authTag } =
+			await encryptAES128CCM(
+				plaintextPayload,
+				key,
+				iv,
+				authData,
+				SECURITY_S2_AUTH_TAG_LENGTH,
+			);
 
 		// Remember key and IV for debugging purposes
 		this.key = key;
@@ -2255,103 +1960,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			ciphertextPayload,
 			authTag,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
-	}
-
-	public async serializeAsync(ctx: CCEncodingContext): Promise<Bytes> {
-		const securityManager = assertSecurityTX(ctx, this.nodeId);
-		this.ensureSequenceNumber(securityManager);
-
-		// Include Sender EI in the command if we only have the receiver's EI
-		this.maybeAddSPANExtension(ctx, securityManager);
-
-		const unencryptedExtensions = this.extensions.filter(
-			(e) => !e.isEncrypted(),
-		);
-		const encryptedExtensions = this.extensions.filter((e) =>
-			e.isEncrypted()
-		);
-
-		const unencryptedPayload = Bytes.concat([
-			Bytes.from([
-				this.sequenceNumber,
-				(encryptedExtensions.length > 0 ? 0b10 : 0)
-				| (unencryptedExtensions.length > 0 ? 1 : 0),
-			]),
-			...unencryptedExtensions.map((e, index) =>
-				e.serialize(index < unencryptedExtensions.length - 1)
-			),
-		]);
-		const serializedCC = (await this.encapsulated?.serializeAsync(ctx))
-			?? new Bytes();
-		const plaintextPayload = Bytes.concat([
-			...encryptedExtensions.map((e, index) =>
-				e.serialize(index < encryptedExtensions.length - 1)
-			),
-			serializedCC,
-		]);
-
-		// Generate the authentication data for CCM encryption
-		const destinationTag = getDestinationIDTX.call(
-			this as Security2CCMessageEncapsulation,
-		);
-		const messageLength = this.computeEncapsulationOverhead()
-			+ serializedCC.length;
-		const authData = getAuthenticationData(
-			ctx.ownNodeId,
-			destinationTag,
-			ctx.homeId,
-			messageLength,
-			unencryptedPayload,
-		);
-
-		let key: Uint8Array;
-		let iv: Uint8Array;
-
-		if (this.isSinglecast()) {
-			// Singlecast:
-			// Generate a nonce for encryption, and remember it to attempt decryption
-			// of potential in-flight messages from the target node.
-			iv = securityManager.nextNonce(this.nodeId, true);
-			const { keyCCM } =
-				// Prefer the overridden security class if it was given
-				this.securityClass != undefined
-					? securityManager.getKeysForSecurityClass(
-						this.securityClass,
-					)
-					: securityManager.getKeysForNode(this.nodeId);
-			key = keyCCM;
-		} else {
-			// Multicast:
-			const keyAndIV = securityManager.getMulticastKeyAndIV(
-				destinationTag,
-			);
-			key = keyAndIV.key;
-			iv = keyAndIV.iv;
-		}
-
-		const { ciphertext: ciphertextPayload, authTag } = encryptAES128CCM(
-			key,
-			iv,
-			plaintextPayload,
-			authData,
-			SECURITY_S2_AUTH_TAG_LENGTH,
-		);
-
-		// Remember key and IV for debugging purposes
-		this.key = key;
-		this.iv = iv;
-		this.authData = authData;
-		this.authTag = authTag;
-		this.ciphertext = ciphertextPayload;
-
-		this.payload = Bytes.concat([
-			unencryptedPayload,
-			ciphertextPayload,
-			authTag,
-		]);
-		return super.serializeAsync(ctx);
 	}
 
 	protected computeEncapsulationOverhead(): number {
@@ -2517,7 +2126,7 @@ export class Security2CCNonceReport extends Security2CC {
 	public readonly MOS: boolean;
 	public readonly receiverEI?: Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const securityManager = assertSecurityTX(ctx, this.nodeId);
 		this.ensureSequenceNumber(securityManager);
 
@@ -2528,7 +2137,6 @@ export class Security2CCNonceReport extends Security2CC {
 		if (this.SOS) {
 			this.payload = Bytes.concat([this.payload, this.receiverEI!]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2598,12 +2206,11 @@ export class Security2CCNonceGet extends Security2CC {
 		}
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const securityManager = assertSecurityTX(ctx, this.nodeId);
 		this.ensureSequenceNumber(securityManager);
 
 		this.payload = Bytes.from([this.sequenceNumber]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2684,7 +2291,7 @@ export class Security2CCKEXReport extends Security2CC {
 	public readonly supportedECDHProfiles: readonly ECDHProfiles[];
 	public readonly requestedKeys: readonly SecurityClass[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([
 				this._reserved
@@ -2704,7 +2311,6 @@ export class Security2CCKEXReport extends Security2CC {
 				SecurityClass.S2_Unauthenticated,
 			),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2821,7 +2427,7 @@ export class Security2CCKEXSet extends Security2CC {
 	public selectedECDHProfile: ECDHProfiles;
 	public grantedKeys: SecurityClass[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([
 				this._reserved
@@ -2841,7 +2447,6 @@ export class Security2CCKEXSet extends Security2CC {
 				SecurityClass.S2_Unauthenticated,
 			),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2893,9 +2498,8 @@ export class Security2CCKEXFail extends Security2CC {
 
 	public failType: KEXFailType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.failType]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2941,12 +2545,11 @@ export class Security2CCPublicKeyReport extends Security2CC {
 	public includingNode: boolean;
 	public publicKey: Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.includingNode ? 1 : 0]),
 			this.publicKey,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2998,12 +2601,11 @@ export class Security2CCNetworkKeyReport extends Security2CC {
 	public grantedKey: SecurityClass;
 	public networkKey: Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			securityClassToBitMask(this.grantedKey),
 			this.networkKey,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -3056,9 +2658,8 @@ export class Security2CCNetworkKeyGet extends Security2CC {
 
 	public requestedKey: SecurityClass;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = securityClassToBitMask(this.requestedKey);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -3112,11 +2713,10 @@ export class Security2CCTransferEnd extends Security2CC {
 	public keyVerified: boolean;
 	public keyRequestComplete: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			(this.keyVerified ? 0b10 : 0) + (this.keyRequestComplete ? 0b1 : 0),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -3164,9 +2764,8 @@ export class Security2CCCommandsSupportedReport extends Security2CC {
 
 	public readonly supportedCCs: CommandClasses[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeCCList(this.supportedCCs, []);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

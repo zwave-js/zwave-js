@@ -5,5 +5,5 @@ void (async () => {
 	const filename = process.argv[2];
 	const data = await fs.readFile(filename);
 	const format = guessFirmwareFileFormat(filename, data);
-	extractFirmware(data, format);
+	await extractFirmware(data, format);
 })();
