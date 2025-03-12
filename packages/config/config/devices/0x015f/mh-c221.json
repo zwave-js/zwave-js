@@ -28,7 +28,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Watt Meter Report Period",
+			"label": "Power (W) Report Interval",
 			"valueSize": 2,
 			"unit": "5 seconds",
 			"minValue": 1,
@@ -37,26 +37,27 @@
 		},
 		{
 			"#": "2",
-			"label": "KHW Meter Report Period",
+			"label": "Energy (kWh) Report Interval",
 			"valueSize": 2,
-			"unit": "10min,6*10min=1h",
+			"unit": "10 minutes",
 			"minValue": 1,
 			"maxValue": 32767,
 			"defaultValue": 6
 		},
 		{
 			"#": "3",
-			"label": "Threshold of Current Load - Caution",
+			"label": "Power (W) Load Caution Threshold",
 			"valueSize": 2,
-			"unit": "0.01A 500*0.01A=5A",
+			"unit": "0.01 A",
 			"minValue": 10,
 			"maxValue": 500,
 			"defaultValue": 500
 		},
 		{
 			"#": "4",
-			"label": "Watt Meter Report Period",
+			"label": "Energy (kWh) Load Caution Threshold",
 			"valueSize": 2,
+			"unit": "kWh",
 			"minValue": 1,
 			"maxValue": 10000,
 			"defaultValue": 10000
@@ -86,12 +87,12 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Activate demo trip and calibration when first touch of the buttony",
-					"value": 1
+					"label": "Idle",
+					"value": 0
 				},
 				{
-					"label": "Do nothing",
-					"value": 0
+					"label": "Activate with first press of the button",
+					"value": 1
 				}
 			]
 		},
@@ -103,12 +104,12 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Activate demo trip and calibration",
-					"value": 1
+					"label": "Idle",
+					"value": 0
 				},
 				{
-					"label": "Do nothing",
-					"value": 0
+					"label": "Activate with first press of the button",
+					"value": 1
 				}
 			]
 		},
@@ -120,18 +121,18 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Activate calibration only",
-					"value": 1
+					"label": "Idle",
+					"value": 0
 				},
 				{
-					"label": "Do nothing",
-					"value": 0
+					"label": "Activate",
+					"value": 1
 				}
 			]
 		},
 		{
 			"#": "11",
-			"label": "Min Level of the Shutter Close",
+			"label": "Minimum Shutter Position (Closed)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 98,
@@ -139,7 +140,7 @@
 		},
 		{
 			"#": "12",
-			"label": "Max Level of Shutter Open",
+			"label": "Maximum Shutter Position (Open)",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 99,
@@ -153,15 +154,15 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Button (Momentary buttons)",
+					"label": "Momentary switches",
 					"value": 0
 				},
 				{
-					"label": "Toggle 2 state switches; On position shutter open; Off position shutter close; Momentary or toggle key to S1 only",
+					"label": "Toggle switches: On = open shutter, off = close shutter",
 					"value": 1
 				},
 				{
-					"label": "Toggle 2 state switches; On position shutter close; Off position shutter open",
+					"label": "Toggle switches: On = close shutter, off = open shutter",
 					"value": 2
 				}
 			]
@@ -174,41 +175,41 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Neo external switch",
+					"label": "No external switch",
 					"value": 0
 				},
 				{
-					"label": "Wire 1 ex, momentary or toggle key to S1 only",
+					"label": "S1 only: Momentary or toggle switches",
 					"value": 1
 				},
 				{
-					"label": "Wire 1 ex, momentary or toggle key to S2 only",
+					"label": "S2 only: Momentary or toggle switches",
 					"value": 2
 				},
 				{
-					"label": "Wire 2 ex, momentary or toggle keys to S1 and S2, each key can control both directions",
+					"label": "S1 & S2: Momentary or toggle switches, each switch controls both directions",
 					"value": 3
 				},
 				{
-					"label": "Wire 2",
+					"label": "S1 & S2: Momentary switches, each switch controls one directions",
 					"value": 4
 				}
 			]
 		},
 		{
 			"#": "255",
-			"label": "Factory Setting",
+			"label": "Factory Reset",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Restore factory setting",
-					"value": 85
+					"label": "Idle",
+					"value": 0
 				},
 				{
-					"label": "Do nothing",
-					"value": 0
+					"label": "Restore factory setting",
+					"value": 85
 				}
 			]
 		}
