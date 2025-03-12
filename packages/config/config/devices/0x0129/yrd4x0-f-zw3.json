@@ -104,7 +104,7 @@
 	"compat": {
 		"alarmMapping": [
 			{
-				import": "templates/yale_template.json#alarm_map_outside_schedule"
+				"$import": "templates/yale_template.json#alarm_map_outside_schedule"
 			},
 		],
 	},
