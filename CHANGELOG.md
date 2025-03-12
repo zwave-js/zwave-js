@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 14.3.13 (2025-03-12)
 ### Config file changes
 * Add missing parameters to Qubino Smart Plug 16A (#7409)
 * Add missing parameters for the MCO MH-C221 shutter (#7672)
