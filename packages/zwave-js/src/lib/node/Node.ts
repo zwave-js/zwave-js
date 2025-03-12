@@ -8,7 +8,6 @@ import {
 	DeviceResetLocallyCommand,
 	DoorLockMode,
 	EntryControlDataTypes,
-	type FirmwareUpdateCapabilities,
 	InclusionControllerCCInitiate,
 	InclusionControllerStep,
 	IndicatorCCDescriptionGet,
@@ -77,7 +76,6 @@ import {
 	FirmwareUpdateMetaDataCCMetaDataGet,
 	FirmwareUpdateMetaDataCCPrepareGet,
 	FirmwareUpdateMetaDataCCRequestGet,
-	FirmwareUpdateMetaDataCCValues,
 } from "@zwave-js/cc/FirmwareUpdateMetaDataCC";
 import { HailCC } from "@zwave-js/cc/HailCC";
 import { LockCCValues } from "@zwave-js/cc/LockCC";
@@ -231,7 +229,7 @@ import {
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
-import { isArray, isObject } from "alcalzone-shared/typeguards";
+import { isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
 import semverParse from "semver/functions/parse.js";
 import { RemoveNodeReason } from "../controller/Inclusion.js";
@@ -4638,82 +4636,6 @@ protocol version:      ${this.protocolVersion}`;
 		} catch {
 			// ignore
 		}
-	}
-
-	/**
-	 * Retrieves the firmware update capabilities of a node to decide which options to offer a user prior to the update.
-	 * This method uses cached information from the most recent interview.
-	 */
-	public getFirmwareUpdateCapabilitiesCached(): FirmwareUpdateCapabilities {
-		const firmwareUpgradable = this.getValue<boolean>(
-			FirmwareUpdateMetaDataCCValues.firmwareUpgradable.id,
-		);
-		const supportsActivation = this.getValue<boolean>(
-			FirmwareUpdateMetaDataCCValues.supportsActivation.id,
-		);
-		const continuesToFunction = this.getValue<boolean>(
-			FirmwareUpdateMetaDataCCValues.continuesToFunction.id,
-		);
-		const additionalFirmwareIDs = this.getValue<number[]>(
-			FirmwareUpdateMetaDataCCValues.additionalFirmwareIDs.id,
-		);
-		const supportsResuming = this.getValue<boolean>(
-			FirmwareUpdateMetaDataCCValues.supportsResuming.id,
-		);
-		const supportsNonSecureTransfer = this.getValue<boolean>(
-			FirmwareUpdateMetaDataCCValues.supportsNonSecureTransfer.id,
-		);
-
-		// Ensure all information was queried
-		if (
-			!firmwareUpgradable
-			|| !isArray(additionalFirmwareIDs)
-		) {
-			return { firmwareUpgradable: false };
-		}
-
-		return {
-			firmwareUpgradable: true,
-			// TODO: Targets are not the list of IDs - maybe expose the IDs as well?
-			firmwareTargets: new Array(1 + additionalFirmwareIDs.length).fill(0)
-				.map((_, i) => i),
-			continuesToFunction,
-			supportsActivation,
-			supportsResuming,
-			supportsNonSecureTransfer,
-		};
-	}
-
-	/**
-	 * Retrieves the firmware update capabilities of a node to decide which options to offer a user prior to the update.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	public async getFirmwareUpdateCapabilities(): Promise<
-		FirmwareUpdateCapabilities
-	> {
-		const api = this.commandClasses["Firmware Update Meta Data"];
-		const meta = await api.getMetaData();
-		if (!meta) {
-			throw new ZWaveError(
-				`Failed to request firmware update capabilities: The node did not respond in time!`,
-				ZWaveErrorCodes.Controller_NodeTimeout,
-			);
-		} else if (!meta.firmwareUpgradable) {
-			return {
-				firmwareUpgradable: false,
-			};
-		}
-
-		return {
-			firmwareUpgradable: true,
-			// TODO: Targets are not the list of IDs - maybe expose the IDs as well?
-			firmwareTargets: new Array(1 + meta.additionalFirmwareIDs.length)
-				.fill(0).map((_, i) => i),
-			continuesToFunction: meta.continuesToFunction,
-			supportsActivation: meta.supportsActivation,
-			supportsResuming: meta.supportsResuming,
-			supportsNonSecureTransfer: meta.supportsNonSecureTransfer,
-		};
 	}
 
 	private recentEntryControlNotificationSequenceNumbers: number[] = [];
