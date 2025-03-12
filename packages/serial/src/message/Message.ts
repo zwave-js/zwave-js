@@ -1,4 +1,8 @@
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
+	type GetNode,
+	type GetSupportedCCVersion,
+	type HostIDs,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessagePriority,
@@ -12,12 +16,6 @@ import {
 	highResTimestamp,
 } from "@zwave-js/core";
 import { createReflectionDecorator } from "@zwave-js/core/reflection";
-import type {
-	GetDeviceConfig,
-	GetNode,
-	GetSupportedCCVersion,
-	HostIDs,
-} from "@zwave-js/host";
 import {
 	Bytes,
 	type JSONObject,
@@ -269,10 +267,9 @@ export class Message {
 
 	/**
 	 * Serializes this message into a Buffer
-	 * @deprecated Use {@link serializeAsync} instead
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const ret = new Bytes(this.payload.length + 5);
 		ret[0] = MessageHeaders.SOF;
 		// length of the following data, including the checksum
@@ -284,19 +281,6 @@ export class Message {
 		// followed by the checksum
 		ret[ret.length - 1] = computeChecksum(ret);
 		return ret;
-	}
-
-	/** Serializes this message into a Buffer */
-	// eslint-disable-next-line @typescript-eslint/require-await
-	public async serializeAsync(ctx: MessageEncodingContext): Promise<Bytes> {
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
-		return this.serialize(ctx);
-
-		// TODO: Plan for next major release:
-		// - Message ONLY exposes `public async serialize` (renamed!)
-		// - Message internally implements `protected serializeSync` and `protected async serializeAsync`
-		// - The default implementation of `serializeAsync` just calls `serializeSync`
-		// - Sub-classes override either `serializeSync` OR `serializeAsync` as needed
 	}
 
 	/** Generates a representation of this Message for the log */

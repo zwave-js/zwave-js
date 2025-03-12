@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
@@ -15,11 +17,6 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -57,61 +54,55 @@ import {
 	RFProtectionState,
 } from "../lib/_Types.js";
 
-export const ProtectionCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Protection, {
-		...V.staticProperty(
-			"exclusiveControlNodeId",
-			{
-				...ValueMetadata.UInt8,
-				min: 1,
-				max: MAX_NODES,
-				label: "Node ID with exclusive control",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticPropertyWithName(
-			"localProtectionState",
-			"local",
-			{
-				...ValueMetadata.Number,
-				label: "Local protection state",
-				states: enumValuesToMetadataStates(LocalProtectionState),
-			} as const,
-		),
-
-		...V.staticPropertyWithName(
-			"rfProtectionState",
-			"rf",
-			{
-				...ValueMetadata.Number,
-				label: "RF protection state",
-				states: enumValuesToMetadataStates(RFProtectionState),
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty(
-			"timeout",
-			{
-				...ValueMetadata.UInt8,
-				label: "RF protection timeout",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty("supportsExclusiveControl", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsTimeout", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedLocalStates", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedRFStates", undefined, {
-			internal: true,
-		}),
+export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
+	...V.staticProperty(
+		"exclusiveControlNodeId",
+		{
+			...ValueMetadata.UInt8,
+			min: 1,
+			max: MAX_NODES,
+			label: "Node ID with exclusive control",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticPropertyWithName(
+		"localProtectionState",
+		"local",
+		{
+			...ValueMetadata.Number,
+			label: "Local protection state",
+			states: enumValuesToMetadataStates(LocalProtectionState),
+		} as const,
+	),
+	...V.staticPropertyWithName(
+		"rfProtectionState",
+		"rf",
+		{
+			...ValueMetadata.Number,
+			label: "RF protection state",
+			states: enumValuesToMetadataStates(RFProtectionState),
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty(
+		"timeout",
+		{
+			...ValueMetadata.UInt8,
+			label: "RF protection timeout",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty("supportsExclusiveControl", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportsTimeout", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedLocalStates", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedRFStates", undefined, {
+		internal: true,
 	}),
 });
 
@@ -530,7 +521,7 @@ export class ProtectionCCSet extends ProtectionCC {
 	public local: LocalProtectionState;
 	public rf?: RFProtectionState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.local & 0b1111,
 			(this.rf ?? RFProtectionState.Unprotected) & 0b1111,
@@ -546,7 +537,6 @@ export class ProtectionCCSet extends ProtectionCC {
 			this.payload = this.payload.subarray(0, 1);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -818,9 +808,8 @@ export class ProtectionCCExclusiveControlSet extends ProtectionCC {
 
 	public exclusiveControlNodeId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.exclusiveControlNodeId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -911,9 +900,8 @@ export class ProtectionCCTimeoutSet extends ProtectionCC {
 
 	public timeout: Timeout;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.timeout.serialize()]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

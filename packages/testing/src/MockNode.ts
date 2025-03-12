@@ -1,4 +1,4 @@
-import type { CommandClass } from "@zwave-js/cc";
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type CommandClassInfo,
 	type CommandClasses,
@@ -6,11 +6,10 @@ import {
 	NOT_KNOWN,
 	SecurityClass,
 	type SecurityManagers,
+	isCCInfoEqual,
 	securityClassOrder,
 } from "@zwave-js/core";
-import type { CCEncodingContext } from "@zwave-js/host";
 import { TimedExpectation } from "@zwave-js/shared";
-import { isDeepStrictEqual } from "node:util";
 import type { CCIdToCapabilities } from "./CCSpecificCapabilities.js";
 import type { MockController } from "./MockController.js";
 import {
@@ -95,7 +94,7 @@ export class MockEndpoint {
 	public addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void {
 		const original = this.implementedCCs.get(cc);
 		const updated = Object.assign({}, original ?? defaultCCInfo, info);
-		if (!isDeepStrictEqual(original, updated)) {
+		if (original == undefined || !isCCInfoEqual(original, updated)) {
 			this.implementedCCs.set(cc, updated);
 		}
 	}
@@ -388,7 +387,7 @@ export class MockNode {
 	public addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void {
 		const original = this.implementedCCs.get(cc);
 		const updated = Object.assign({}, original ?? defaultCCInfo, info);
-		if (!isDeepStrictEqual(original, updated)) {
+		if (original == undefined || !isCCInfoEqual(original, updated)) {
 			this.implementedCCs.set(cc, updated);
 		}
 	}

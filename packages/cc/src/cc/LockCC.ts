@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -11,11 +13,6 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -47,17 +44,15 @@ import {
 import { V } from "../lib/Values.js";
 import { LockCommand } from "../lib/_Types.js";
 
-export const LockCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Lock, {
-		...V.staticProperty(
-			"locked",
-			{
-				...ValueMetadata.Boolean,
-				label: "Locked",
-				description: "Whether the lock is locked",
-			} as const,
-		),
-	}),
+export const LockCCValues = V.defineCCValues(CommandClasses.Lock, {
+	...V.staticProperty(
+		"locked",
+		{
+			...ValueMetadata.Boolean,
+			label: "Locked",
+			description: "Whether the lock is locked",
+		} as const,
+	),
 });
 
 @API(CommandClasses.Lock)
@@ -211,9 +206,8 @@ export class LockCCSet extends LockCC {
 
 	public locked: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.locked ? 1 : 0]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

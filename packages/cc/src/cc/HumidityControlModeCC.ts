@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -13,11 +15,6 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -53,8 +50,9 @@ import {
 	HumidityControlModeCommand,
 } from "../lib/_Types.js";
 
-export const HumidityControlModeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Humidity Control Mode"], {
+export const HumidityControlModeCCValues = V.defineCCValues(
+	CommandClasses["Humidity Control Mode"],
+	{
 		...V.staticProperty(
 			"mode",
 			{
@@ -63,10 +61,9 @@ export const HumidityControlModeCCValues = Object.freeze({
 				label: "Humidity control mode",
 			} as const,
 		),
-
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Humidity Control Mode"])
 export class HumidityControlModeCCAPI extends CCAPI {
@@ -313,9 +310,8 @@ export class HumidityControlModeCCSet extends HumidityControlModeCC {
 
 	public mode: HumidityControlMode;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.mode & 0b1111]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

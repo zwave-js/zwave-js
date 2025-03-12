@@ -1,4 +1,6 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import type {
+	GetValueDB,
 	MessageOrCCLogEntry,
 	MessageRecord,
 	SupervisionResult,
@@ -13,11 +15,6 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -41,24 +38,21 @@ import {
 import { V } from "../lib/Values.js";
 import { LanguageCommand } from "../lib/_Types.js";
 
-export const LanguageCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Language, {
-		...V.staticProperty(
-			"language",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Language code",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"country",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Country code",
-			} as const,
-		),
-	}),
+export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
+	...V.staticProperty(
+		"language",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Language code",
+		} as const,
+	),
+	...V.staticProperty(
+		"country",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Country code",
+		} as const,
+	),
 });
 
 // @noSetValueAPI It doesn't make sense
@@ -224,7 +218,7 @@ export class LanguageCCSet extends LanguageCC {
 		this._country = value;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from(this._language, "ascii");
 		if (this._country) {
 			this.payload = Bytes.concat([
@@ -232,7 +226,6 @@ export class LanguageCCSet extends LanguageCC {
 				Bytes.from(this._country, "ascii"),
 			]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

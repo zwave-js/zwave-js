@@ -1,5 +1,7 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import type {
 	EndpointId,
+	GetValueDB,
 	MessageRecord,
 	SupervisionResult,
 	WithAddress,
@@ -16,11 +18,6 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -50,14 +47,10 @@ import {
 import * as ccUtils from "../lib/utils.js";
 import { AssociationCCValues } from "./AssociationCC.js";
 
-export const MultiChannelAssociationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multi Channel Association"], {
-		// number multi channel association groups
+export const MultiChannelAssociationCCValues = V.defineCCValues(
+	CommandClasses["Multi Channel Association"],
+	{
 		...V.staticProperty("groupCount", undefined, { internal: true }),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multi Channel Association"], {
-		// maximum number of nodes of a multi channel association group
 		...V.dynamicPropertyAndKeyWithName(
 			"maxNodes",
 			"maxNodes",
@@ -67,8 +60,6 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
-		// node IDs of a multi channel association group
 		...V.dynamicPropertyAndKeyWithName(
 			"nodeIds",
 			"nodeIds",
@@ -78,8 +69,6 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
-		// Endpoint addresses of a multi channel association group
 		...V.dynamicPropertyAndKeyWithName(
 			"endpoints",
 			"endpoints",
@@ -89,8 +78,8 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 function endpointAddressesToString(
 	endpoints: readonly EndpointAddress[],
@@ -668,7 +657,7 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
 	public nodeIds: number[];
 	public endpoints: EndpointAddress[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.groupId]),
 			serializeMultiChannelAssociationDestination(
@@ -676,7 +665,6 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
 				this.endpoints,
 			),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -740,7 +728,7 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
 	public nodeIds?: number[];
 	public endpoints?: EndpointAddress[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.groupId || 0]),
 			serializeMultiChannelAssociationDestination(
@@ -748,7 +736,6 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
 				this.endpoints || [],
 			),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -850,22 +837,7 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 		return this.reportsToFollow > 0;
 	}
 
-	/** @deprecated Use {@link mergePartialCCsAsync} instead */
 	public mergePartialCCs(
-		partials: MultiChannelAssociationCCReport[],
-		_ctx: CCParsingContext,
-	): void {
-		// Concat the list of nodes
-		this.nodeIds = [...partials, this]
-			.map((report) => [...report.nodeIds])
-			.reduce((prev, cur) => prev.concat(...cur), []);
-		// Concat the list of endpoints
-		this.endpoints = [...partials, this]
-			.map((report) => [...report.endpoints])
-			.reduce((prev, cur) => prev.concat(...cur), []);
-	}
-
-	public mergePartialCCsAsync(
 		partials: MultiChannelAssociationCCReport[],
 		_ctx: CCParsingContext,
 	): Promise<void> {
@@ -880,7 +852,7 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 		return Promise.resolve();
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const destinations = serializeMultiChannelAssociationDestination(
 			this.nodeIds,
 			this.endpoints,
@@ -893,7 +865,6 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 			]),
 			destinations,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -946,9 +917,8 @@ export class MultiChannelAssociationCCGet extends MultiChannelAssociationCC {
 
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.groupId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -995,9 +965,8 @@ export class MultiChannelAssociationCCSupportedGroupingsReport
 
 	public readonly groupCount: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.groupCount]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

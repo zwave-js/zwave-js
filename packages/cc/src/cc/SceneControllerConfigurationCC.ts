@@ -1,7 +1,10 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	Duration,
 	type EndpointId,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -13,12 +16,6 @@ import {
 	getCCName,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetValueDB,
-} from "@zwave-js/host/safe";
 import { Bytes } from "@zwave-js/shared/safe";
 import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
@@ -53,38 +50,35 @@ import { V } from "../lib/Values.js";
 import { SceneControllerConfigurationCommand } from "../lib/_Types.js";
 import { AssociationCC } from "./AssociationCC.js";
 
-export const SceneControllerConfigurationCCValues = Object.freeze({
-	...V.defineDynamicCCValues(
-		CommandClasses["Scene Controller Configuration"],
-		{
-			...V.dynamicPropertyAndKeyWithName(
-				"sceneId",
-				"sceneId",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "sceneId" && typeof propertyKey === "number",
-				(groupId: number) => ({
-					...ValueMetadata.UInt8,
-					label: `Associated Scene ID (${groupId})`,
-					valueChangeOptions: ["transitionDuration"],
-				} as const),
-			),
-
-			...V.dynamicPropertyAndKeyWithName(
-				"dimmingDuration",
-				"dimmingDuration",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "dimmingDuration"
-					&& typeof propertyKey === "number",
-				(groupId: number) => ({
-					...ValueMetadata.Duration,
-					label: `Dimming duration (${groupId})`,
-				} as const),
-			),
-		},
-	),
-});
+export const SceneControllerConfigurationCCValues = V.defineCCValues(
+	CommandClasses["Scene Controller Configuration"],
+	{
+		...V.dynamicPropertyAndKeyWithName(
+			"sceneId",
+			"sceneId",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "sceneId" && typeof propertyKey === "number",
+			(groupId: number) => ({
+				...ValueMetadata.UInt8,
+				label: `Associated Scene ID (${groupId})`,
+				valueChangeOptions: ["transitionDuration"],
+			} as const),
+		),
+		...V.dynamicPropertyAndKeyWithName(
+			"dimmingDuration",
+			"dimmingDuration",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "dimmingDuration"
+				&& typeof propertyKey === "number",
+			(groupId: number) => ({
+				...ValueMetadata.Duration,
+				label: `Dimming duration (${groupId})`,
+			} as const),
+		),
+	},
+);
 
 @API(CommandClasses["Scene Controller Configuration"])
 export class SceneControllerConfigurationCCAPI extends CCAPI {
@@ -524,13 +518,12 @@ export class SceneControllerConfigurationCCSet
 	public sceneId: number;
 	public dimmingDuration: Duration;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.groupId,
 			this.sceneId,
 			this.dimmingDuration.serializeSet(),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -668,9 +661,8 @@ export class SceneControllerConfigurationCCGet
 
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.groupId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
