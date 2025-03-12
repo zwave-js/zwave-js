@@ -49,6 +49,39 @@ To celebrate this achievement, we've renamed the repository to `zwave-js`, dropp
 * Decouple logging from `winston` (#7585)
 * Lots of dependency updates
 
+## 14.3.13 (2025-03-12)
+### Config file changes
+* Add missing parameters to Qubino Smart Plug 16A (#7409)
+* Add missing parameters for the MCO MH-C221 shutter (#7672)
+* Correct Fibaro FGMS001 association groups (#7463)
+* Add multi-click detection parameter to Zooz ZEN51/52 (#6730)
+
+## 14.3.12 (2025-03-11)
+### Config file changes
+* Add Shelly Door/Window Sensor, Wave Plug S, Wave PRO Dimmer 1PM/2PM  (#7641)
+* Add SmartWings WB04V (#7659)
+* Add new parameters for Zooz ZEN72 firmware 3.40 and 3.50 (#7651)
+* Add new Zooz ZEN32 parameter 27 (#7629)
+* Update New One N4002 to correct parameters and other information (#7600)
+* Update Zooz ZSE44 based on latest docs (#7588)
+* Add SmartWings WM25L Smart Motor (#7565)
+* Update Zooz ZEN04 to firmware 2.30 (#7538)
+* Update Zooz ZEN30 to Firmware v4.20 (#7539)
+* Update Zooz ZEN20 to firmware 4.20 (#7541)
+* Update Zooz ZEN17 800LR to firmware 2.0 (#7542)
+* Update to TKB Home TZ88 (#7523)
+* Add missing and new parameters for Zooz ZEN15 (#7495)
+* Add fingerprint to Yale YRL210 (#7455)
+* Add Springs Window Fashions CRBZ motorized blinds (#7416)
+* Add Jasco ZWN4015 In-Wall Smart Switch (#7668)
+* Add config parameters to Schlage PIR Motion Sensor (#7413)
+* Add Lockly Secure Plus (#7382)
+* Update Zooz ZEN74 to firmware 2.10 (#7328)
+
+## 14.3.11 (2025-03-10)
+### Bugfixes
+* Fixes an issue where no firmware updates would show as available when the region is set to EU_LR (#7667)
+
 ## 14.3.10 (2025-02-27)
 ### Bugfixes
 * Discard S2 frames with both the MPAN and MGRP extension (#7619)
