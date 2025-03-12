@@ -105,8 +105,8 @@
 		"alarmMapping": [
 			{
 				"$import": "templates/yale_template.json#alarm_map_outside_schedule"
-			},
-		],
+			}
+		]
 	},
 	"metadata": {
 		"$import": "templates/yale_template.json#assure2_zw3_metadata",
