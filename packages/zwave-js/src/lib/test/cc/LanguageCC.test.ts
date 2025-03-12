@@ -1,4 +1,5 @@
 import {
+	CommandClass,
 	LanguageCC,
 	LanguageCCGet,
 	LanguageCCReport,
@@ -6,37 +7,37 @@ import {
 	LanguageCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses.Language, // CC
 		]),
 		payload,
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
-	const cc = new LanguageCCGet(host, { nodeId: 1 });
+test("the Get command should serialize correctly", async (t) => {
+	const cc = new LanguageCCGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			LanguageCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly (w/o country code)", (t) => {
-	const cc = new LanguageCCSet(host, {
+test("the Set command should serialize correctly (w/o country code)", async (t) => {
+	const cc = new LanguageCCSet({
 		nodeId: 2,
 		language: "deu",
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			LanguageCommand.Set, // CC Command
 			// "deu"
 			0x64,
@@ -44,17 +45,19 @@ test("the Set command should serialize correctly (w/o country code)", (t) => {
 			0x75,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly (w/ country code)", (t) => {
-	const cc = new LanguageCCSet(host, {
+test("the Set command should serialize correctly (w/ country code)", async (t) => {
+	const cc = new LanguageCCSet({
 		nodeId: 2,
 		language: "deu",
 		country: "DE",
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			LanguageCommand.Set, // CC Command
 			// "deu"
 			0x64,
@@ -65,12 +68,14 @@ test("the Set command should serialize correctly (w/ country code)", (t) => {
 			0x45,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command should be deserialized correctly (w/o country code)", (t) => {
+test("the Report command should be deserialized correctly (w/o country code)", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			LanguageCommand.Report, // CC Command
 			// "deu"
 			0x64,
@@ -78,18 +83,19 @@ test("the Report command should be deserialized correctly (w/o country code)", (
 			0x75,
 		]),
 	);
-	const cc = new LanguageCCReport(host, {
-		nodeId: 4,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 4 } as any,
+	) as LanguageCCReport;
+	t.expect(cc.constructor).toBe(LanguageCCReport);
 
-	t.is(cc.language, "deu");
-	t.is(cc.country, undefined);
+	t.expect(cc.language).toBe("deu");
+	t.expect(cc.country).toBeUndefined();
 });
 
-test("the Report command should be deserialized correctly (w/ country code)", (t) => {
+test("the Report command should be deserialized correctly (w/ country code)", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			LanguageCommand.Report, // CC Command
 			// "deu"
 			0x64,
@@ -100,24 +106,25 @@ test("the Report command should be deserialized correctly (w/ country code)", (t
 			0x45,
 		]),
 	);
-	const cc = new LanguageCCReport(host, {
-		nodeId: 4,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 4 } as any,
+	) as LanguageCCReport;
+	t.expect(cc.constructor).toBe(LanguageCCReport);
 
-	t.is(cc.language, "deu");
-	t.is(cc.country, "DE");
+	t.expect(cc.language).toBe("deu");
+	t.expect(cc.country).toBe("DE");
 });
 
-test("deserializing an unsupported command should return an unspecified version of LanguageCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of LanguageCC", async (t) => {
 	const serializedCC = buildCCBuffer(
-		Buffer.from([255]), // not a valid command
+		Uint8Array.from([255]), // not a valid command
 	);
-	const cc: any = new LanguageCC(host, {
-		nodeId: 4,
-		data: serializedCC,
-	});
-	t.is(cc.constructor, LanguageCC);
+	const cc = await CommandClass.parse(
+		serializedCC,
+		{ sourceNodeId: 4 } as any,
+	) as LanguageCC;
+	t.expect(cc.constructor).toBe(LanguageCC);
 });
 
 // test("the CC values should have the correct metadata", (t) => {

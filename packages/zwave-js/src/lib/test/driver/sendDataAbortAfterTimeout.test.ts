@@ -1,23 +1,38 @@
 import { FunctionType } from "@zwave-js/serial";
-import { type MockControllerBehavior } from "@zwave-js/testing";
+import {
+	type MockControllerBehavior,
+	type MockControllerCapabilities,
+	getDefaultMockControllerCapabilities,
+	getDefaultSupportedFunctionTypes,
+} from "@zwave-js/testing";
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
-} from "../../controller/MockControllerState";
+} from "../../controller/MockControllerState.js";
 
 import { TransmitStatus } from "@zwave-js/core";
-import { SoftResetRequest } from "../../serialapi/misc/SoftResetRequest";
+import { SoftResetRequest } from "@zwave-js/serial/serialapi";
 
 import {
 	SendDataAbort,
 	SendDataRequest,
 	SendDataRequestTransmitReport,
 	SendDataResponse,
-} from "../../serialapi/transport/SendDataMessages";
-import { integrationTest } from "../integrationTestSuite";
+} from "@zwave-js/serial/serialapi";
+import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldTimeOut: boolean;
 let lastCallbackId: number;
+
+const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
+	// No support for Bridge API:
+	...getDefaultMockControllerCapabilities(),
+	supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
+		(ft) =>
+			ft !== FunctionType.SendDataBridge
+			&& ft !== FunctionType.SendDataMulticastBridge,
+	),
+};
 
 integrationTest(
 	"Abort transmission if the Send Data callback hasn't been received after the sendDataAbort timeout elapses",
@@ -29,6 +44,8 @@ integrationTest(
 		// 	"__fixtures/supervision_binary_switch",
 		// ),
 
+		controllerCapabilities: controllerCapabilitiesNoBridge,
+
 		additionalDriverOptions: {
 			testingHooks: {
 				skipNodeInterview: true,
@@ -38,7 +55,7 @@ integrationTest(
 		customSetup: async (driver, mockController, mockNode) => {
 			// This is almost a 1:1 copy of the default behavior, except that the callback never gets sent
 			const handleBrokenSendData: MockControllerBehavior = {
-				async onHostMessage(host, controller, msg) {
+				async onHostMessage(controller, msg) {
 					// If the controller is operating normally, defer to the default behavior
 					if (!shouldTimeOut) return false;
 
@@ -62,24 +79,24 @@ integrationTest(
 							MockControllerCommunicationState.Sending,
 						);
 
-						lastCallbackId = msg.callbackId;
+						lastCallbackId = msg.callbackId!;
 
 						// Notify the host that the message was sent
-						const res = new SendDataResponse(host, {
+						const res = new SendDataResponse({
 							wasSent: true,
 						});
-						await controller.sendToHost(res.serialize());
+						await controller.sendMessageToHost(res);
 
 						return true;
 					} else if (msg instanceof SendDataAbort) {
 						// Finish the transmission by sending the callback
-						const cb = new SendDataRequestTransmitReport(host, {
+						const cb = new SendDataRequestTransmitReport({
 							callbackId: lastCallbackId,
 							transmitStatus: TransmitStatus.NoAck,
 						});
 
 						setTimeout(() => {
-							controller.sendToHost(cb.serialize());
+							controller.sendMessageToHost(cb);
 						}, 1000);
 
 						// Put the controller into idle state
@@ -95,7 +112,7 @@ integrationTest(
 			mockController.defineBehavior(handleBrokenSendData);
 
 			const handleSoftReset: MockControllerBehavior = {
-				onHostMessage(host, controller, msg) {
+				onHostMessage(controller, msg) {
 					// Soft reset should restore normal operation
 					if (msg instanceof SoftResetRequest) {
 						shouldTimeOut = false;
@@ -117,16 +134,16 @@ integrationTest(
 
 			// await wait(3000);
 			// The ping should eventually fail
-			t.false(await pingPromise);
+			t.expect(await pingPromise).toBe(false);
 
 			mockController.assertReceivedHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
 			);
-			t.throws(() =>
+			t.expect(() =>
 				mockController.assertReceivedHostMessage(
 					(msg) => msg.functionType === FunctionType.SoftReset,
 				)
-			);
+			).toThrow();
 
 			// mockController.clearReceivedHostMessages();
 
@@ -160,7 +177,7 @@ integrationTest(
 // 		customSetup: async (driver, mockController, mockNode) => {
 // 			// This is almost a 1:1 copy of the default behavior, except that the callback never gets sent
 // 			const handleBrokenSendData: MockControllerBehavior = {
-// 				async onHostMessage(host, controller, msg) {
+// 				async onHostMessage(controller, msg) {
 // 					if (msg instanceof SendDataRequest) {
 // 						// Check if this command is legal right now
 // 						const state = controller.state.get(
@@ -182,10 +199,10 @@ integrationTest(
 // 						);
 
 // 						// Notify the host that the message was sent
-// 						const res = new SendDataResponse(host, {
+// 						const res = new SendDataResponse({
 // 							wasSent: true,
 // 						});
-// 						await controller.sendToHost(res.serialize());
+// 						await controller.sendMessageToHost(res);
 
 // 						return true;
 // 					} else if (msg instanceof SendDataAbort) {
@@ -255,7 +272,7 @@ integrationTest(
 // 		customSetup: async (driver, mockController, mockNode) => {
 // 			// This is almost a 1:1 copy of the default behavior, except that the callback never gets sent
 // 			const handleBrokenSendData: MockControllerBehavior = {
-// 				async onHostMessage(host, controller, msg) {
+// 				async onHostMessage(controller, msg) {
 // 					// If the controller is operating normally, defer to the default behavior
 // 					if (!shouldTimeOut) return false;
 
@@ -280,10 +297,10 @@ integrationTest(
 // 						);
 
 // 						// Notify the host that the message was sent
-// 						const res = new SendDataResponse(host, {
+// 						const res = new SendDataResponse({
 // 							wasSent: true,
 // 						});
-// 						await controller.sendToHost(res.serialize());
+// 						await controller.sendMessageToHost(res);
 
 // 						return true;
 // 					} else if (msg instanceof SendDataAbort) {
@@ -300,7 +317,7 @@ integrationTest(
 // 			mockController.defineBehavior(handleBrokenSendData);
 
 // 			const handleSoftReset: MockControllerBehavior = {
-// 				onHostMessage(host, controller, msg) {
+// 				onHostMessage(controller, msg) {
 // 					// Soft reset should restore normal operation
 // 					if (msg instanceof SoftResetRequest) {
 // 						shouldTimeOut = false;
@@ -337,8 +354,7 @@ integrationTest(
 // 			await firstCommand;
 // 			await followupCommand;
 
-// 			t.pass();
-// 		},
+// 		// 		},
 // 	},
 // );
 
@@ -356,13 +372,13 @@ integrationTest(
 // 		customSetup: async (driver, mockController, mockNode) => {
 // 			// This is almost a 1:1 copy of the default behavior, except that the callback never gets sent
 // 			const handleBrokenRequestNodeInfo: MockControllerBehavior = {
-// 				async onHostMessage(host, controller, msg) {
+// 				async onHostMessage(controller, msg) {
 // 					if (msg instanceof RequestNodeInfoRequest) {
 // 						// Notify the host that the message was sent
-// 						const res = new RequestNodeInfoResponse(host, {
+// 						const res = new RequestNodeInfoResponse({
 // 							wasSent: true,
 // 						});
-// 						await controller.sendToHost(res.serialize());
+// 						await controller.sendMessageToHost(res);
 
 // 						// And never send a callback
 // 						return true;
@@ -375,7 +391,7 @@ integrationTest(
 // 			// Circumvent the options validation so the test doesn't take forever
 // 			driver.options.timeouts.sendDataCallback = 1500;
 
-// 			await assertZWaveError(t, () => node.requestNodeInfo(), {
+// 			await assertZWaveError(t.expect, () => node.requestNodeInfo(), {
 // 				errorCode: ZWaveErrorCodes.Controller_Timeout,
 // 				context: "callback",
 // 			});

@@ -18,7 +18,7 @@ import {
 import { wait } from "alcalzone-shared/async";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"S2 encapsulated commands using a lower security class can be decoded",
@@ -33,49 +33,59 @@ integrationTest(
 
 		customSetup: async (driver, controller, mockNode) => {
 			// Create a security manager for the node
-			const sm2Node = new SecurityManager2();
+			const sm2Node = await SecurityManager2.create();
 			// Copy keys from the driver
-			sm2Node.setKey(
+			await sm2Node.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			sm2Node.setKey(
+			await sm2Node.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			sm2Node.setKey(
+			await sm2Node.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
-			mockNode.host.securityManager2 = sm2Node;
-			// The fixtures define Access Control as granted, but we want the node to send commands using Unauthenticated
-			mockNode.host.getHighestSecurityClass = () =>
+			mockNode.securityManagers.securityManager2 = sm2Node;
+			// The fixtures define Access Control as granted, but we want the prode to send commands using Unauthenticated
+			mockNode.encodingContext.getHighestSecurityClass = () =>
+				SecurityClass.S2_Unauthenticated;
+
+			// Create a security manager for the controller
+			const smCtrlr = await SecurityManager2.create();
+			// Copy keys from the driver
+			await smCtrlr.setKey(
+				SecurityClass.S2_AccessControl,
+				driver.options.securityKeys!.S2_AccessControl!,
+			);
+			await smCtrlr.setKey(
+				SecurityClass.S2_Authenticated,
+				driver.options.securityKeys!.S2_Authenticated!,
+			);
+			await smCtrlr.setKey(
+				SecurityClass.S2_Unauthenticated,
+				driver.options.securityKeys!.S2_Unauthenticated!,
+			);
+			controller.securityManagers.securityManager2 = smCtrlr;
+			controller.encodingContext.getHighestSecurityClass = () =>
 				SecurityClass.S2_Unauthenticated;
 
 			// Respond to S2 Nonce Get
 			const respondToS2NonceGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof Security2CCNonceGet
-					) {
-						const nonce = sm2Node.generateNonce(
-							controller.host.ownNodeId,
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof Security2CCNonceGet) {
+						const nonce = await sm2Node.generateNonce(
+							controller.ownNodeId,
 						);
-						const cc = new Security2CCNonceReport(self.host, {
-							nodeId: controller.host.ownNodeId,
+						const cc = new Security2CCNonceReport({
+							nodeId: controller.ownNodeId,
 							SOS: true,
 							MOS: false,
 							receiverEI: nonce,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToS2NonceGet);
@@ -88,8 +98,8 @@ integrationTest(
 				type: SPANState.LocalEI,
 				receiverEI: controllerEI,
 			});
-			mockNode.host.securityManager2!.setSPANState(
-				mockController.host.ownNodeId,
+			mockNode.securityManagers.securityManager2!.setSPANState(
+				mockController.ownNodeId,
 				{
 					type: SPANState.RemoteEI,
 					receiverEI: controllerEI,
@@ -97,11 +107,11 @@ integrationTest(
 			);
 
 			// The node sends an S2-encapsulated command, but with a lower security class than expected
-			let innerCC: CommandClass = new TimeCCTimeGet(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let innerCC: CommandClass = new TimeCCTimeGet({
+				nodeId: mockController.ownNodeId,
 			});
-			let cc = new Security2CCMessageEncapsulation(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let cc = new Security2CCMessageEncapsulation({
+				nodeId: mockController.ownNodeId,
 				encapsulated: innerCC,
 			});
 
@@ -138,12 +148,12 @@ integrationTest(
 			mockNode.clearReceivedControllerFrames();
 
 			// Now the node queries our securely supported commands
-			innerCC = new Security2CCCommandsSupportedGet(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			innerCC = new Security2CCCommandsSupportedGet({
+				nodeId: mockController.ownNodeId,
 			});
 
-			cc = new Security2CCMessageEncapsulation(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new Security2CCMessageEncapsulation({
+				nodeId: mockController.ownNodeId,
 				encapsulated: innerCC,
 			});
 
@@ -195,8 +205,6 @@ integrationTest(
 					&& f.payload instanceof Security2CCMessageEncapsulation
 					&& f.payload.encapsulated instanceof BasicCCSet,
 			);
-
-			t.pass();
 		},
 	},
 );

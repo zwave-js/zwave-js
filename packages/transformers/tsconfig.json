@@ -1,14 +1,12 @@
 // tsconfig for IntelliSense - active in all files in the current package
 {
-	"extends": "../../tsconfig.json",
+	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"newLine": "lf",
-		"experimentalDecorators": true,
 		"paths": {
 			"@zwave-js/transformers": ["./src"]
 		}
 	},
-	"references": [],
 	"include": ["src/**/*.ts", "test/**/*.ts"],
 	"exclude": ["build/**", "node_modules/**"]
 }

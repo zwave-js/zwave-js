@@ -3,7 +3,9 @@
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"rootDir": "src",
-		"outDir": "build"
+		"outDir": "build/esm",
+		// Do not use the @@dev export for compiling
+		"customConditions": []
 	},
 	"references": [
 		{
@@ -13,16 +15,10 @@
 			"path": "../host/tsconfig.build.json"
 		},
 		{
-			"path": "../serial/tsconfig.build.json"
-		},
-		{
 			"path": "../shared/tsconfig.build.json"
 		},
 		{
 			"path": "../maintenance/tsconfig.build.json"
-		},
-		{
-			"path": "../testing/tsconfig.build.json"
 		},
 		{
 			"path": "../transformers/tsconfig.build.json"

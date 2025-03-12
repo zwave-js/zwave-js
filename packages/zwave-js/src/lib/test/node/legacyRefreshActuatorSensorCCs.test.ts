@@ -4,14 +4,10 @@ import {
 	MultilevelSwitchCCSet,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { ApplicationUpdateRequestNodeInfoReceived } from "@zwave-js/serial/serialapi";
+import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { ApplicationUpdateRequestNodeInfoReceived } from "../../serialapi/application/ApplicationUpdateRequest";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"When a NIF is received for a node that does not send unsolicited reports, refresh actuator and sensor CCs",
@@ -33,12 +29,9 @@ integrationTest(
 			let lastBrightness = 88;
 			let currentBrightness = 0;
 			const respondToMultilevelSwitchSet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof MultilevelSwitchCCSet
-					) {
-						const targetValue = frame.payload.targetValue;
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof MultilevelSwitchCCSet) {
+						const targetValue = receivedCC.targetValue;
 						if (targetValue === 255) {
 							currentBrightness = lastBrightness;
 						} else {
@@ -48,55 +41,41 @@ integrationTest(
 							}
 						}
 
-						return true;
+						return { action: "ok" };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToMultilevelSwitchSet);
 
 			// Report Multilevel Switch status
 			const respondToMultilevelSwitchGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof MultilevelSwitchCCGet
-					) {
-						const cc = new MultilevelSwitchCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof MultilevelSwitchCCGet) {
+						const cc = new MultilevelSwitchCCReport({
+							nodeId: controller.ownNodeId,
 							targetValue: 88,
 							currentValue: 88,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToMultilevelSwitchGet);
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const nif = new ApplicationUpdateRequestNodeInfoReceived(
-				mockController.host,
-				{
-					nodeInformation: {
-						nodeId: node.id,
-						basicDeviceClass:
-							mockNode.capabilities.basicDeviceClass,
-						genericDeviceClass:
-							mockNode.capabilities.genericDeviceClass,
-						specificDeviceClass:
-							mockNode.capabilities.specificDeviceClass,
-						supportedCCs: [...mockNode.implementedCCs.keys()],
-					},
+			const nif = new ApplicationUpdateRequestNodeInfoReceived({
+				nodeInformation: {
+					nodeId: node.id,
+					basicDeviceClass: mockNode.capabilities.basicDeviceClass,
+					genericDeviceClass:
+						mockNode.capabilities.genericDeviceClass,
+					specificDeviceClass:
+						mockNode.capabilities.specificDeviceClass,
+					supportedCCs: [...mockNode.implementedCCs.keys()],
 				},
-			);
-			await mockController.sendToHost(nif.serialize());
+			});
+			await mockController.sendMessageToHost(nif);
 
 			await wait(100);
 
@@ -105,8 +84,6 @@ integrationTest(
 					f.type === MockZWaveFrameType.Request
 					&& f.payload instanceof MultilevelSwitchCCGet,
 			);
-
-			t.pass();
 		},
 	},
 );

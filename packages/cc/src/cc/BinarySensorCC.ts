@@ -1,14 +1,19 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
-	type IZWaveEndpoint,
+	type EndpointId,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type SupervisionResult,
 	ValueMetadata,
+	type WithAddress,
+	encodeBitMask,
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, isEnumMember } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -17,33 +22,33 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type PersistValuesContext,
+	type RefreshValuesContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { BinarySensorCommand, BinarySensorType } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { BinarySensorCommand, BinarySensorType } from "../lib/_Types.js";
 
-export const BinarySensorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Binary Sensor"], {
+export const BinarySensorCCValues = V.defineCCValues(
+	CommandClasses["Binary Sensor"],
+	{
 		...V.staticProperty("supportedSensorTypes", undefined, {
 			internal: true,
 		}),
-	}),
 
-	...V.defineDynamicCCValues(CommandClasses["Binary Sensor"], {
 		...V.dynamicPropertyWithName(
 			"state",
 			/* property */ (sensorType: BinarySensorType) =>
@@ -61,8 +66,8 @@ export const BinarySensorCCValues = Object.freeze({
 				ccSpecific: { sensorType },
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -71,8 +76,10 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 	public supportsCommand(cmd: BinarySensorCommand): MaybeNotKnown<boolean> {
 		switch (cmd) {
 			case BinarySensorCommand.Get:
+			case BinarySensorCommand.Report:
 				return true; // This is mandatory
 			case BinarySensorCommand.SupportedGet:
+			case BinarySensorCommand.SupportedReport:
 				return this.version >= 2;
 		}
 		return super.supportsCommand(cmd);
@@ -103,12 +110,12 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 			BinarySensorCommand.Get,
 		);
 
-		const cc = new BinarySensorCCGet(this.applHost, {
+		const cc = new BinarySensorCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			sensorType,
 		});
-		const response = await this.applHost.sendCommand<BinarySensorCCReport>(
+		const response = await this.host.sendCommand<BinarySensorCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -116,18 +123,38 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 		return response?.value;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	public async getSupportedSensorTypes() {
+	@validateArgs()
+	public async sendReport(
+		value: boolean,
+		sensorType?: BinarySensorType,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			BinarySensorCommand,
+			BinarySensorCommand.Report,
+		);
+
+		const cc = new BinarySensorCCReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			value,
+			type: sensorType,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	public async getSupportedSensorTypes(): Promise<
+		readonly BinarySensorType[] | undefined
+	> {
 		this.assertSupportsCommand(
 			BinarySensorCommand,
 			BinarySensorCommand.SupportedGet,
 		);
 
-		const cc = new BinarySensorCCSupportedGet(this.applHost, {
+		const cc = new BinarySensorCCSupportedGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			BinarySensorCCSupportedReport
 		>(
 			cc,
@@ -135,6 +162,23 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 		);
 		// We don't want to repeat the sensor type
 		return response?.supportedSensorTypes;
+	}
+
+	@validateArgs()
+	public async reportSupportedSensorTypes(
+		supported: BinarySensorType[],
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			BinarySensorCommand,
+			BinarySensorCommand.SupportedReport,
+		);
+
+		const cc = new BinarySensorCCSupportedReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			supportedSensorTypes: supported,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -144,26 +188,28 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 export class BinarySensorCC extends CommandClass {
 	declare ccCommand: BinarySensorCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Binary Sensor"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
 		// Find out which sensor types this sensor supports
-		if (this.version >= 2) {
-			applHost.controllerLog.logNode(node.id, {
+		if (api.version >= 2) {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: "querying supported sensor types...",
 				direction: "outbound",
@@ -178,13 +224,13 @@ export class BinarySensorCC extends CommandClass {
 						.map((name) => `\n· ${name}`)
 						.join("")
 				}`;
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: logMessage,
 					direction: "inbound",
 				});
 			} else {
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message:
 						"Querying supported sensor types timed out, skipping interview...",
@@ -194,33 +240,35 @@ export class BinarySensorCC extends CommandClass {
 			}
 		}
 
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Binary Sensor"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
 		// Query (all of) the sensor's current value(s)
-		if (this.version === 1) {
-			applHost.controllerLog.logNode(node.id, {
+		if (api.version === 1) {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: "querying current value...",
 				direction: "outbound",
 			});
 			const currentValue = await api.get();
 			if (currentValue != undefined) {
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `received current value: ${currentValue}`,
 					direction: "inbound",
@@ -229,7 +277,7 @@ export class BinarySensorCC extends CommandClass {
 		} else {
 			const supportedSensorTypes: readonly BinarySensorType[] =
 				this.getValue(
-					applHost,
+					ctx,
 					BinarySensorCCValues.supportedSensorTypes,
 				) ?? [];
 
@@ -239,14 +287,14 @@ export class BinarySensorCC extends CommandClass {
 				if (!isEnumMember(BinarySensorType, type)) continue;
 
 				const sensorName = getEnumMemberName(BinarySensorType, type);
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `querying current value for ${sensorName}...`,
 					direction: "outbound",
 				});
 				const currentValue = await api.get(type);
 				if (currentValue != undefined) {
-					applHost.controllerLog.logNode(node.id, {
+					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
 						message:
 							`received current value for ${sensorName}: ${currentValue}`,
@@ -262,10 +310,10 @@ export class BinarySensorCC extends CommandClass {
 	 * This only works AFTER the interview process
 	 */
 	public static getSupportedSensorTypesCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 	): MaybeNotKnown<BinarySensorType[]> {
-		return applHost
+		return ctx
 			.getValueDB(endpoint.nodeId)
 			.getValue(
 				BinarySensorCCValues.supportedSensorTypes.endpoint(
@@ -275,11 +323,11 @@ export class BinarySensorCC extends CommandClass {
 	}
 
 	public setMappedBasicValue(
-		applHost: ZWaveApplicationHost,
+		ctx: GetValueDB,
 		value: number,
 	): boolean {
 		this.setValue(
-			applHost,
+			ctx,
 			BinarySensorCCValues.state(BinarySensorType.Any),
 			value > 0,
 		);
@@ -288,7 +336,7 @@ export class BinarySensorCC extends CommandClass {
 }
 
 // @publicAPI
-export interface BinarySensorCCReportOptions extends CCCommandOptions {
+export interface BinarySensorCCReportOptions {
 	type?: BinarySensorType;
 	value: boolean;
 }
@@ -296,32 +344,51 @@ export interface BinarySensorCCReportOptions extends CCCommandOptions {
 @CCCommand(BinarySensorCommand.Report)
 export class BinarySensorCCReport extends BinarySensorCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| BinarySensorCCReportOptions
-			| CommandClassDeserializationOptions,
+		options: WithAddress<BinarySensorCCReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.value = this.payload[0] === 0xff;
-			this.type = BinarySensorType.Any;
-			if (this.payload.length >= 2) {
-				this.type = this.payload[1];
-			}
-		} else {
-			this.type = options.type ?? BinarySensorType.Any;
-			this.value = options.value;
-		}
+		this.type = options.type ?? BinarySensorType.Any;
+		this.value = options.value;
 	}
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
-		if (!super.persistValues(applHost)) return false;
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): BinarySensorCCReport {
+		validatePayload(raw.payload.length >= 1);
+		const value = raw.payload[0] === 0xff;
+		let type: BinarySensorType = BinarySensorType.Any;
 
-		const binarySensorValue = BinarySensorCCValues.state(this.type);
-		this.setMetadata(applHost, binarySensorValue, binarySensorValue.meta);
-		this.setValue(applHost, binarySensorValue, this.value);
+		if (raw.payload.length >= 2) {
+			type = raw.payload[1];
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			value,
+			type,
+		});
+	}
+
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
+
+		// Workaround for devices reporting with sensor type Any -> find first supported sensor type and use that
+		let sensorType = this.type;
+		if (sensorType === BinarySensorType.Any) {
+			const supportedSensorTypes = this.getValue<BinarySensorType[]>(
+				ctx,
+				BinarySensorCCValues.supportedSensorTypes,
+			);
+			if (supportedSensorTypes?.length) {
+				sensorType = supportedSensorTypes[0];
+			}
+		}
+
+		const binarySensorValue = BinarySensorCCValues.state(sensorType);
+		this.setMetadata(ctx, binarySensorValue, binarySensorValue.meta);
+		this.setValue(ctx, binarySensorValue, this.value);
 
 		return true;
 	}
@@ -329,14 +396,14 @@ export class BinarySensorCCReport extends BinarySensorCC {
 	public type: BinarySensorType;
 	public value: boolean;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.value ? 0xff : 0x00, this.type]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.value ? 0xff : 0x00, this.type]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				type: getEnumMemberName(BinarySensorType, this.type),
 				value: this.value,
@@ -354,11 +421,13 @@ function testResponseForBinarySensorGet(
 		sent.sensorType == undefined
 		|| sent.sensorType === BinarySensorType.Any
 		|| received.type === sent.sensorType
+		// This is technically not correct, but some devices do this anyways
+		|| received.type === BinarySensorType.Any
 	);
 }
 
 // @publicAPI
-export interface BinarySensorCCGetOptions extends CCCommandOptions {
+export interface BinarySensorCCGetOptions {
 	sensorType?: BinarySensorType;
 }
 
@@ -366,31 +435,35 @@ export interface BinarySensorCCGetOptions extends CCCommandOptions {
 @expectedCCResponse(BinarySensorCCReport, testResponseForBinarySensorGet)
 export class BinarySensorCCGet extends BinarySensorCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | BinarySensorCCGetOptions,
+		options: WithAddress<BinarySensorCCGetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			if (this.payload.length >= 1) {
-				this.sensorType = this.payload[0];
-			}
-		} else {
-			this.sensorType = options.sensorType;
+		super(options);
+		this.sensorType = options.sensorType;
+	}
+
+	public static from(raw: CCRaw, ctx: CCParsingContext): BinarySensorCCGet {
+		let sensorType: BinarySensorType | undefined;
+
+		if (raw.payload.length >= 1) {
+			sensorType = raw.payload[0];
 		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			sensorType,
+		});
 	}
 
 	public sensorType: BinarySensorType | undefined;
 
-	public serialize(): Buffer {
-		if (this.version >= 2 && this.sensorType != undefined) {
-			this.payload = Buffer.from([this.sensorType]);
-		}
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.sensorType ?? BinarySensorType.Any]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				type: getEnumMemberName(
 					BinarySensorType,
@@ -401,28 +474,60 @@ export class BinarySensorCCGet extends BinarySensorCC {
 	}
 }
 
+// @publicAPI
+export interface BinarySensorCCSupportedReportOptions {
+	supportedSensorTypes: BinarySensorType[];
+}
+
 @CCCommand(BinarySensorCommand.SupportedReport)
+@ccValueProperty(
+	"supportedSensorTypes",
+	BinarySensorCCValues.supportedSensorTypes,
+)
 export class BinarySensorCCSupportedReport extends BinarySensorCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<BinarySensorCCSupportedReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		validatePayload(this.payload.length >= 1);
-		// The enumeration starts at 1, but the first (reserved) bit is included
-		// in the report
-		this.supportedSensorTypes = parseBitMask(this.payload, 0).filter(
-			(t) => t !== 0,
-		);
+		this.supportedSensorTypes = options.supportedSensorTypes;
 	}
 
-	@ccValue(BinarySensorCCValues.supportedSensorTypes)
-	public readonly supportedSensorTypes: readonly BinarySensorType[];
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): BinarySensorCCSupportedReport {
+		validatePayload(raw.payload.length >= 1);
+		// The enumeration starts at 1, but the first (reserved) bit is included
+		// in the report
+		const supportedSensorTypes: BinarySensorType[] = parseBitMask(
+			raw.payload,
+			0,
+		)
+			.filter(
+				(t) => t !== 0,
+			);
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			supportedSensorTypes,
+		});
+	}
+
+	public supportedSensorTypes: BinarySensorType[];
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeBitMask(
+			this.supportedSensorTypes.filter((t) => t !== BinarySensorType.Any),
+			undefined,
+			0,
+		);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"supported types": this.supportedSensorTypes
 					.map((type) => getEnumMemberName(BinarySensorType, type))

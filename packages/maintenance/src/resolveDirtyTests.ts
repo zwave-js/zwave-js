@@ -3,12 +3,13 @@
  * anything they are not supposed to.
  */
 
-import execa from "execa";
+import esMain from "es-main";
+import { execa } from "execa";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
-import { loadTSConfig, projectRoot, repoRoot } from "./tsAPITools";
+import { loadTSConfig, projectRoot, repoRoot } from "./tsAPITools.js";
 
 const reportFile = path.join(repoRoot, ".tmp", "dirty-tests.json");
 
@@ -206,7 +207,7 @@ export async function resolveDirtyTests(
 	// Create a Program to represent the project, then pull out the
 	// source file to parse its AST.
 
-	const tsConfig = loadTSConfig(undefined, false);
+	const tsConfig = loadTSConfig(undefined, "all");
 	const program = ts.createProgram(tsConfig.fileNames, {
 		...tsConfig.options,
 		preserveSymlinks: false,
@@ -338,7 +339,7 @@ async function runDirtyTests(diffBase?: string): Promise<void> {
 	});
 }
 
-if (require.main === module) {
+if (esMain(import.meta)) {
 	const args = process.argv.slice(2);
 	const run = args.includes("--run");
 	// Resolve dirty tests by default, unless --run is specified

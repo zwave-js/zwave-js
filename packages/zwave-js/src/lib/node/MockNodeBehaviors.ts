@@ -1,11 +1,5 @@
 import {
 	type CommandClass,
-	MultiChannelCCCapabilityGet,
-	MultiChannelCCCapabilityReport,
-	MultiChannelCCEndPointFind,
-	MultiChannelCCEndPointFindReport,
-	MultiChannelCCEndPointGet,
-	MultiChannelCCEndPointReport,
 	Security2CC,
 	Security2CCMessageEncapsulation,
 	SecurityCC,
@@ -20,64 +14,64 @@ import {
 	ZWaveProtocolCCNodeInformationFrame,
 	ZWaveProtocolCCRequestNodeInformationFrame,
 } from "@zwave-js/cc/ZWaveProtocolCC";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
-
 import { CommandClasses } from "@zwave-js/core";
-import { BasicCCBehaviors } from "./mockCCBehaviors/Basic";
-import { ConfigurationCCBehaviors } from "./mockCCBehaviors/Configuration";
-import { EnergyProductionCCBehaviors } from "./mockCCBehaviors/EnergyProduction";
-import { ManufacturerSpecificCCBehaviors } from "./mockCCBehaviors/ManufacturerSpecific";
-import { MultilevelSensorCCBehaviors } from "./mockCCBehaviors/MultilevelSensor";
-import { NotificationCCBehaviors } from "./mockCCBehaviors/Notification";
-import { ScheduleEntryLockCCBehaviors } from "./mockCCBehaviors/ScheduleEntryLock";
-import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch";
-import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode";
-import { ThermostatSetpointCCBehaviors } from "./mockCCBehaviors/ThermostatSetpoint";
-import { UserCodeCCBehaviors } from "./mockCCBehaviors/UserCode";
-import { WindowCoveringCCBehaviors } from "./mockCCBehaviors/WindowCovering";
+import { type MockNodeBehavior } from "@zwave-js/testing";
+
+import { BasicCCBehaviors } from "./mockCCBehaviors/Basic.js";
+import { BinarySensorCCBehaviors } from "./mockCCBehaviors/BinarySensor.js";
+import { BinarySwitchCCBehaviors } from "./mockCCBehaviors/BinarySwitch.js";
+import { ColorSwitchCCBehaviors } from "./mockCCBehaviors/ColorSwitch.js";
+import { ConfigurationCCBehaviors } from "./mockCCBehaviors/Configuration.js";
+import { EnergyProductionCCBehaviors } from "./mockCCBehaviors/EnergyProduction.js";
+import { ManufacturerSpecificCCBehaviors } from "./mockCCBehaviors/ManufacturerSpecific.js";
+import { MeterCCBehaviors } from "./mockCCBehaviors/Meter.js";
+import {
+	MultiChannelCCBehaviors,
+	MultiChannelCCHooks,
+} from "./mockCCBehaviors/MultiChannel.js";
+import { MultilevelSensorCCBehaviors } from "./mockCCBehaviors/MultilevelSensor.js";
+import { MultilevelSwitchCCBehaviors } from "./mockCCBehaviors/MultilevelSwitch.js";
+import { NotificationCCBehaviors } from "./mockCCBehaviors/Notification.js";
+import { ScheduleEntryLockCCBehaviors } from "./mockCCBehaviors/ScheduleEntryLock.js";
+import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch.js";
+import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
+import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
+import { ThermostatSetpointCCBehaviors } from "./mockCCBehaviors/ThermostatSetpoint.js";
+import { UserCodeCCBehaviors } from "./mockCCBehaviors/UserCode.js";
+import { WindowCoveringCCBehaviors } from "./mockCCBehaviors/WindowCovering.js";
 
 const respondToRequestNodeInfo: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
+	handleCC(controller, self, receivedCC) {
 		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload
+			receivedCC
 				instanceof ZWaveProtocolCCRequestNodeInformationFrame
 		) {
-			const cc = new ZWaveProtocolCCNodeInformationFrame(self.host, {
+			const cc = new ZWaveProtocolCCNodeInformationFrame({
 				nodeId: self.id,
 				...self.capabilities,
 				supportedCCs: [...self.implementedCCs]
+					// Basic CC must not be included in the NIF
+					.filter(([ccId]) => ccId !== CommandClasses.Basic)
+					// Only include supported CCs
 					.filter(([, info]) => info.isSupported)
 					.map(([ccId]) => ccId),
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			return true;
+			return { action: "sendCC", cc };
 		}
 	},
 };
 
 const respondToVersionCCCommandClassGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof VersionCCCommandClassGet
-		) {
-			const endpoint = frame.payload.endpointIndex === 0
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof VersionCCCommandClassGet) {
+			const endpoint = receivedCC.endpointIndex === 0
 				? self
-				: self.endpoints.get(frame.payload.endpointIndex);
-			if (!endpoint) return false;
+				: self.endpoints.get(receivedCC.endpointIndex);
+			if (!endpoint) return;
 
 			let version = 0;
 			for (const ep of [self, ...self.endpoints.values()]) {
-				const info = ep.implementedCCs.get(frame.payload.requestedCC);
+				const info = ep.implementedCCs.get(receivedCC.requestedCC);
 				if (info?.version) {
 					version = info.version;
 					break;
@@ -86,116 +80,27 @@ const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 
 			// Basic CC is always supported implicitly
 			if (
-				version === 0
-				&& frame.payload.requestedCC === CommandClasses.Basic
+				version === 0 && receivedCC.requestedCC === CommandClasses.Basic
 			) {
 				version = 1;
 			}
 
-			const cc = new VersionCCCommandClassReport(self.host, {
+			const cc = new VersionCCCommandClassReport({
 				nodeId: self.id,
-				endpoint: "index" in endpoint ? endpoint.index : undefined,
-				requestedCC: frame.payload.requestedCC,
+				endpointIndex: "index" in endpoint ? endpoint.index : undefined,
+				requestedCC: receivedCC.requestedCC,
 				ccVersion: version,
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-
-			return true;
+			return { action: "sendCC", cc };
 		}
-	},
-};
-
-const respondToMultiChannelCCEndPointGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof MultiChannelCCEndPointGet
-		) {
-			const cc = new MultiChannelCCEndPointReport(self.host, {
-				nodeId: controller.host.ownNodeId,
-				countIsDynamic: false,
-				identicalCapabilities: false,
-				individualCount: self.endpoints.size,
-			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			return true;
-		}
-		return false;
-	},
-};
-
-const respondToMultiChannelCCEndPointFind: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof MultiChannelCCEndPointFind
-		) {
-			const request = frame.payload;
-			const cc = new MultiChannelCCEndPointFindReport(self.host, {
-				nodeId: controller.host.ownNodeId,
-				genericClass: request.genericClass,
-				specificClass: request.specificClass,
-				foundEndpoints: [...self.endpoints.keys()],
-				reportsToFollow: 0,
-			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			return true;
-		}
-		return false;
-	},
-};
-
-const respondToMultiChannelCCCapabilityGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof MultiChannelCCCapabilityGet
-		) {
-			const endpoint = self.endpoints.get(
-				frame.payload.requestedEndpoint,
-			)!;
-			const cc = new MultiChannelCCCapabilityReport(self.host, {
-				nodeId: controller.host.ownNodeId,
-				endpointIndex: endpoint.index,
-				genericDeviceClass: endpoint?.capabilities.genericDeviceClass
-					?? self.capabilities.genericDeviceClass,
-				specificDeviceClass: endpoint?.capabilities.specificDeviceClass
-					?? self.capabilities.specificDeviceClass,
-				isDynamic: false,
-				wasRemoved: false,
-				supportedCCs: [...endpoint.implementedCCs.keys()],
-			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			return true;
-		}
-		return false;
 	},
 };
 
 const respondToZWavePlusCCGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof ZWavePlusCCGet
-		) {
-			const cc = new ZWavePlusCCReport(self.host, {
-				nodeId: controller.host.ownNodeId,
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof ZWavePlusCCGet) {
+			const cc = new ZWavePlusCCReport({
+				nodeId: controller.ownNodeId,
 				zwavePlusVersion: 2,
 				nodeType: ZWavePlusNodeType.Node,
 				roleType: self.capabilities.isListening
@@ -206,26 +111,20 @@ const respondToZWavePlusCCGet: MockNodeBehavior = {
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: true,
-				}),
-			);
-			return true;
+			return { action: "sendCC", cc, ackRequested: true };
 		}
 	},
 };
 
 // TODO: We should handle this more generically:
 const respondToS0ZWavePlusCCGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
+	handleCC(controller, self, receivedCC) {
 		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof SecurityCCCommandEncapsulation
-			&& frame.payload.encapsulated instanceof ZWavePlusCCGet
+			receivedCC instanceof SecurityCCCommandEncapsulation
+			&& receivedCC.encapsulated instanceof ZWavePlusCCGet
 		) {
-			let cc: CommandClass = new ZWavePlusCCReport(self.host, {
-				nodeId: controller.host.ownNodeId,
+			let cc: CommandClass = new ZWavePlusCCReport({
+				nodeId: controller.ownNodeId,
 				zwavePlusVersion: 2,
 				nodeType: ZWavePlusNodeType.Node,
 				roleType: self.capabilities.isListening
@@ -236,26 +135,24 @@ const respondToS0ZWavePlusCCGet: MockNodeBehavior = {
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
-			cc = SecurityCC.encapsulate(self.host, cc);
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: true,
-				}),
+			cc = SecurityCC.encapsulate(
+				self.id,
+				self.securityManagers.securityManager!,
+				cc,
 			);
-			return true;
+			return { action: "sendCC", cc, ackRequested: true };
 		}
 	},
 };
 
 const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
+	handleCC(controller, self, receivedCC) {
 		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof Security2CCMessageEncapsulation
-			&& frame.payload.encapsulated instanceof ZWavePlusCCGet
+			receivedCC instanceof Security2CCMessageEncapsulation
+			&& receivedCC.encapsulated instanceof ZWavePlusCCGet
 		) {
-			let cc: CommandClass = new ZWavePlusCCReport(self.host, {
-				nodeId: controller.host.ownNodeId,
+			let cc: CommandClass = new ZWavePlusCCReport({
+				nodeId: controller.ownNodeId,
 				zwavePlusVersion: 2,
 				nodeType: ZWavePlusNodeType.Node,
 				roleType: self.capabilities.isListening
@@ -266,13 +163,12 @@ const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
-			cc = Security2CC.encapsulate(self.host, cc);
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: true,
-				}),
+			cc = Security2CC.encapsulate(
+				cc,
+				self.id,
+				self.securityManagers,
 			);
-			return true;
+			return { action: "sendCC", cc };
 		}
 	},
 };
@@ -281,25 +177,32 @@ const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
 export function createDefaultBehaviors(): MockNodeBehavior[] {
 	return [
 		respondToRequestNodeInfo,
+
+		...MultiChannelCCHooks,
+		...MultiChannelCCBehaviors,
+
 		respondToVersionCCCommandClassGet,
-		respondToMultiChannelCCEndPointGet,
-		respondToMultiChannelCCEndPointFind,
-		respondToMultiChannelCCCapabilityGet,
 
 		respondToZWavePlusCCGet,
 		respondToS0ZWavePlusCCGet,
 		respondToS2ZWavePlusCCGet,
 
 		...BasicCCBehaviors,
+		...BinarySensorCCBehaviors,
+		...BinarySwitchCCBehaviors,
+		...ColorSwitchCCBehaviors,
 		...ConfigurationCCBehaviors,
 		...EnergyProductionCCBehaviors,
 		...ManufacturerSpecificCCBehaviors,
+		...MeterCCBehaviors,
 		...MultilevelSensorCCBehaviors,
+		...MultilevelSwitchCCBehaviors,
 		...NotificationCCBehaviors,
 		...ScheduleEntryLockCCBehaviors,
 		...SoundSwitchCCBehaviors,
 		...ThermostatModeCCBehaviors,
 		...ThermostatSetpointCCBehaviors,
+		...ThermostatSetbackCCBehaviors,
 		...UserCodeCCBehaviors,
 		...WindowCoveringCCBehaviors,
 	];

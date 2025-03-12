@@ -6,99 +6,108 @@ import {
 	BinarySensorCCSupportedReport,
 	BinarySensorCommand,
 	BinarySensorType,
+	CommandClass,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Binary Sensor"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the Get command (v1) should serialize correctly", (t) => {
-	const cc = new BinarySensorCCGet(host, { nodeId: 1 });
+test("the Get command should serialize correctly (no sensor type)", async (t) => {
+	const cc = new BinarySensorCCGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BinarySensorCommand.Get, // CC Command
+			BinarySensorType.Any, // sensor type
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Get command (v2) should serialize correctly", (t) => {
-	const cc = new BinarySensorCCGet(host, {
+test("the Get command should serialize correctly", async (t) => {
+	const cc = new BinarySensorCCGet({
 		nodeId: 1,
 		sensorType: BinarySensorType.CO,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([BinarySensorCommand.Get, BinarySensorType.CO]),
+		Uint8Array.from([BinarySensorCommand.Get, BinarySensorType.CO]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command (v1) should be deserialized correctly", (t) => {
+test("the Report command (v1) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BinarySensorCommand.Report, // CC Command
 			0xff, // current value
 		]),
 	);
-	const cc = new BinarySensorCCReport(host, {
-		nodeId: 1,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 1 } as any,
+	) as BinarySensorCCReport;
+	t.expect(cc.constructor).toBe(BinarySensorCCReport);
 
-	t.is(cc.value, true);
+	t.expect(cc.value).toBe(true);
 });
 
-test("the Report command (v2) should be deserialized correctly", (t) => {
+test("the Report command (v2) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BinarySensorCommand.Report, // CC Command
 			0x00, // current value
 			BinarySensorType.CO2,
 		]),
 	);
-	const cc = new BinarySensorCCReport(host, {
-		nodeId: 1,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 1 } as any,
+	) as BinarySensorCCReport;
+	t.expect(cc.constructor).toBe(BinarySensorCCReport);
 
-	t.is(cc.value, false);
-	t.is(cc.type, BinarySensorType.CO2);
+	t.expect(cc.value).toBe(false);
+	t.expect(cc.type).toBe(BinarySensorType.CO2);
 });
 
-test("the SupportedGet command should serialize correctly", (t) => {
-	const cc = new BinarySensorCCSupportedGet(host, { nodeId: 1 });
+test("the SupportedGet command should serialize correctly", async (t) => {
+	const cc = new BinarySensorCCSupportedGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BinarySensorCommand.SupportedGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the SupportedReport command should be deserialized correctly", (t) => {
+test("the SupportedReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			BinarySensorCommand.SupportedReport, // CC Command
 			0b10101010,
 			0b10,
 		]),
 	);
-	const cc = new BinarySensorCCSupportedReport(host, {
-		nodeId: 1,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 1 } as any,
+	) as BinarySensorCCSupportedReport;
+	t.expect(cc.constructor).toBe(BinarySensorCCSupportedReport);
 
-	t.deepEqual(cc.supportedSensorTypes, [
+	t.expect(cc.supportedSensorTypes).toStrictEqual([
 		BinarySensorType["General Purpose"],
 		BinarySensorType.CO,
 		BinarySensorType.Heat,
@@ -107,15 +116,15 @@ test("the SupportedReport command should be deserialized correctly", (t) => {
 	]);
 });
 
-test("deserializing an unsupported command should return an unspecified version of BinarySensorCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of BinarySensorCC", async (t) => {
 	const serializedCC = buildCCBuffer(
-		Buffer.from([255]), // not a valid command
+		Uint8Array.from([255]), // not a valid command
 	);
-	const cc: any = new BinarySensorCC(host, {
-		nodeId: 1,
-		data: serializedCC,
-	});
-	t.is(cc.constructor, BinarySensorCC);
+	const cc = await CommandClass.parse(
+		serializedCC,
+		{ sourceNodeId: 1 } as any,
+	) as BinarySensorCC;
+	t.expect(cc.constructor).toBe(BinarySensorCC);
 });
 
 // test("the CC values should have the correct metadata", (t) => {

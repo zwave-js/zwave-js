@@ -4,11 +4,10 @@ import {
 	ESLintUtils,
 	type TSESTree,
 } from "@typescript-eslint/utils";
-import { type Rule } from "../utils";
 
 // const isFixMode = process.argv.some((arg) => arg.startsWith("--fix"));
 
-export const noInternalCCTypes: Rule = ESLintUtils.RuleCreator.withoutDocs({
+export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 	create(context) {
 		const localTypeNodes = new Map<
 			string,
@@ -32,7 +31,6 @@ export const noInternalCCTypes: Rule = ESLintUtils.RuleCreator.withoutDocs({
 					| TSESTree.TSInterfaceDeclaration
 					| TSESTree.TSTypeAliasDeclaration,
 			) {
-				if (node.id.name === "BasicCCSetOptions") debugger;
 				let fullNode:
 					| TSESTree.TSInterfaceDeclaration
 					| TSESTree.TSTypeAliasDeclaration

@@ -1,4 +1,9 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core/safe";
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type {
+	GetValueDB,
+	MessageOrCCLogEntry,
+	WithAddress,
+} from "@zwave-js/core/safe";
 import {
 	CommandClasses,
 	type MaybeNotKnown,
@@ -8,30 +13,30 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, num2hex, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
 
-export const ManufacturerSpecificCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Manufacturer Specific"], {
+export const ManufacturerSpecificCCValues = V.defineCCValues(
+	CommandClasses["Manufacturer Specific"],
+	{
 		...V.staticProperty(
 			"manufacturerId",
 			{
@@ -40,7 +45,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productType",
 			{
@@ -49,7 +53,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productId",
 			{
@@ -58,9 +61,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Manufacturer Specific"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"deviceId",
 			"deviceId",
@@ -75,8 +75,8 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			}),
 			{ minVersion: 2 } as const,
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -87,8 +87,10 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 	): MaybeNotKnown<boolean> {
 		switch (cmd) {
 			case ManufacturerSpecificCommand.Get:
+			case ManufacturerSpecificCommand.Report:
 				return true; // This is mandatory
 			case ManufacturerSpecificCommand.DeviceSpecificGet:
+			case ManufacturerSpecificCommand.DeviceSpecificReport:
 				return this.version >= 2;
 		}
 		return super.supportsCommand(cmd);
@@ -101,11 +103,11 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 			ManufacturerSpecificCommand.Get,
 		);
 
-		const cc = new ManufacturerSpecificCCGet(this.applHost, {
+		const cc = new ManufacturerSpecificCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			ManufacturerSpecificCCReport
 		>(
 			cc,
@@ -129,18 +131,35 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 			ManufacturerSpecificCommand.DeviceSpecificGet,
 		);
 
-		const cc = new ManufacturerSpecificCCDeviceSpecificGet(this.applHost, {
+		const cc = new ManufacturerSpecificCCDeviceSpecificGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			deviceIdType,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			ManufacturerSpecificCCDeviceSpecificReport
 		>(
 			cc,
 			this.commandOptions,
 		);
 		return response?.deviceId;
+	}
+
+	@validateArgs()
+	public async sendReport(
+		options: ManufacturerSpecificCCReportOptions,
+	): Promise<void> {
+		this.assertSupportsCommand(
+			ManufacturerSpecificCommand,
+			ManufacturerSpecificCommand.Report,
+		);
+
+		const cc = new ManufacturerSpecificCCReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		await this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -155,23 +174,25 @@ export class ManufacturerSpecificCC extends CommandClass {
 		return [];
 	}
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Manufacturer Specific"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({ priority: MessagePriority.NodeQuery });
 
-		if (!applHost.isControllerNode(node.id)) {
-			applHost.controllerLog.logNode(node.id, {
+		if (node.id !== ctx.ownNodeId) {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `Interviewing ${this.ccName}...`,
 				direction: "none",
 			});
 
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: "querying manufacturer information...",
 				direction: "outbound",
@@ -181,14 +202,14 @@ export class ManufacturerSpecificCC extends CommandClass {
 				const logMessage =
 					`received response for manufacturer information:
   manufacturer: ${
-						applHost.configManager.lookupManufacturer(
+						ctx.lookupManufacturer(
 							mfResp.manufacturerId,
 						)
 						|| "unknown"
 					} (${num2hex(mfResp.manufacturerId)})
   product type: ${num2hex(mfResp.productType)}
   product id:   ${num2hex(mfResp.productId)}`;
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: logMessage,
 					direction: "inbound",
@@ -197,59 +218,66 @@ export class ManufacturerSpecificCC extends CommandClass {
 		}
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 }
 
 // @publicAPI
-export interface ManufacturerSpecificCCReportOptions extends CCCommandOptions {
+export interface ManufacturerSpecificCCReportOptions {
 	manufacturerId: number;
 	productType: number;
 	productId: number;
 }
 
 @CCCommand(ManufacturerSpecificCommand.Report)
+@ccValueProperty("manufacturerId", ManufacturerSpecificCCValues.manufacturerId)
+@ccValueProperty("productType", ManufacturerSpecificCCValues.productType)
+@ccValueProperty("productId", ManufacturerSpecificCCValues.productId)
 export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| ManufacturerSpecificCCReportOptions
-			| CommandClassDeserializationOptions,
+		options: WithAddress<ManufacturerSpecificCCReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 6);
-			this.manufacturerId = this.payload.readUInt16BE(0);
-			this.productType = this.payload.readUInt16BE(2);
-			this.productId = this.payload.readUInt16BE(4);
-		} else {
-			this.manufacturerId = options.manufacturerId;
-			this.productType = options.productType;
-			this.productId = options.productId;
-		}
+		this.manufacturerId = options.manufacturerId;
+		this.productType = options.productType;
+		this.productId = options.productId;
 	}
 
-	@ccValue(ManufacturerSpecificCCValues.manufacturerId)
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ManufacturerSpecificCCReport {
+		validatePayload(raw.payload.length >= 6);
+		const manufacturerId = raw.payload.readUInt16BE(0);
+		const productType = raw.payload.readUInt16BE(2);
+		const productId = raw.payload.readUInt16BE(4);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			manufacturerId,
+			productType,
+			productId,
+		});
+	}
+
 	public readonly manufacturerId: number;
 
-	@ccValue(ManufacturerSpecificCCValues.productType)
 	public readonly productType: number;
 
-	@ccValue(ManufacturerSpecificCCValues.productId)
 	public readonly productId: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.allocUnsafe(6);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = new Bytes(6);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.productType, 2);
 		this.payload.writeUInt16BE(this.productId, 4);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"manufacturer id": num2hex(this.manufacturerId),
 				"product type": num2hex(this.productType),
@@ -263,40 +291,59 @@ export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
 @expectedCCResponse(ManufacturerSpecificCCReport)
 export class ManufacturerSpecificCCGet extends ManufacturerSpecificCC {}
 
+// @publicAPI
+export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
+	type: DeviceIdType;
+	deviceId: string;
+}
+
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificReport)
+@ccValueProperty(
+	"deviceId",
+	ManufacturerSpecificCCValues.deviceId,
+	(self) => [self.type],
+)
 export class ManufacturerSpecificCCDeviceSpecificReport
 	extends ManufacturerSpecificCC
 {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<ManufacturerSpecificCCDeviceSpecificReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		validatePayload(this.payload.length >= 2);
-		this.type = this.payload[0] & 0b111;
-		const dataFormat = this.payload[1] >>> 5;
-		const dataLength = this.payload[1] & 0b11111;
+		// TODO: Check implementation:
+		this.type = options.type;
+		this.deviceId = options.deviceId;
+	}
 
-		validatePayload(dataLength > 0, this.payload.length >= 2 + dataLength);
-		const deviceIdData = this.payload.subarray(2, 2 + dataLength);
-		this.deviceId = dataFormat === 0
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ManufacturerSpecificCCDeviceSpecificReport {
+		validatePayload(raw.payload.length >= 2);
+		const type: DeviceIdType = raw.payload[0] & 0b111;
+		const dataFormat = raw.payload[1] >>> 5;
+		const dataLength = raw.payload[1] & 0b11111;
+		validatePayload(dataLength > 0, raw.payload.length >= 2 + dataLength);
+		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
+		const deviceId: string = dataFormat === 0
 			? deviceIdData.toString("utf8")
 			: "0x" + deviceIdData.toString("hex");
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			type,
+			deviceId,
+		});
 	}
 
 	public readonly type: DeviceIdType;
 
-	@ccValue(
-		ManufacturerSpecificCCValues.deviceId,
-		(self: ManufacturerSpecificCCDeviceSpecificReport) =>
-			[self.type] as const,
-	)
 	public readonly deviceId: string;
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"device id type": getEnumMemberName(DeviceIdType, this.type),
 				"device id": this.deviceId,
@@ -306,9 +353,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 }
 
 // @publicAPI
-export interface ManufacturerSpecificCCDeviceSpecificGetOptions
-	extends CCCommandOptions
-{
+export interface ManufacturerSpecificCCDeviceSpecificGetOptions {
 	deviceIdType: DeviceIdType;
 }
 
@@ -318,32 +363,36 @@ export class ManufacturerSpecificCCDeviceSpecificGet
 	extends ManufacturerSpecificCC
 {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ManufacturerSpecificCCDeviceSpecificGetOptions,
+		options: WithAddress<ManufacturerSpecificCCDeviceSpecificGetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.deviceIdType = options.deviceIdType;
-		}
+		super(options);
+		this.deviceIdType = options.deviceIdType;
+	}
+
+	public static from(
+		_raw: CCRaw,
+		_ctx: CCParsingContext,
+	): ManufacturerSpecificCCDeviceSpecificGet {
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
+		);
+
+		// return new ManufacturerSpecificCCDeviceSpecificGet({
+		// 	nodeId: ctx.sourceNodeId,
+		// });
 	}
 
 	public deviceIdType: DeviceIdType;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([(this.deviceIdType || 0) & 0b111]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([(this.deviceIdType || 0) & 0b111]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"device id type": getEnumMemberName(
 					DeviceIdType,

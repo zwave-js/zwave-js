@@ -1,49 +1,51 @@
 import {
+	CommandClass,
 	HumidityControlOperatingState,
 	HumidityControlOperatingStateCCGet,
 	HumidityControlOperatingStateCCReport,
 	HumidityControlOperatingStateCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Humidity Control Operating State"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
-	const cc = new HumidityControlOperatingStateCCGet(host, {
+test("the Get command should serialize correctly", async (t) => {
+	const cc = new HumidityControlOperatingStateCCGet({
 		nodeId: 1,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			HumidityControlOperatingStateCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command should be deserialized correctly", (t) => {
+test("the Report command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			HumidityControlOperatingStateCommand.Report, // CC Command
 			HumidityControlOperatingState.Humidifying, // state
 		]),
 	);
-	const cc = new HumidityControlOperatingStateCCReport(host, {
-		nodeId: 1,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 1 } as any,
+	) as HumidityControlOperatingStateCCReport;
+	t.expect(cc.constructor).toBe(HumidityControlOperatingStateCCReport);
 
-	t.is(cc.state, HumidityControlOperatingState.Humidifying);
+	t.expect(cc.state).toBe(HumidityControlOperatingState.Humidifying);
 });
 
 // test("the CC values should have the correct metadata", (t) => {

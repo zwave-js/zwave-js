@@ -1,4 +1,5 @@
 import {
+	CommandClass,
 	MultiChannelAssociationCCGet,
 	MultiChannelAssociationCCRemove,
 	MultiChannelAssociationCCReport,
@@ -8,55 +9,58 @@ import {
 	MultiChannelAssociationCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Multi Channel Association"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the SupportedGroupingsGet command should serialize correctly", (t) => {
-	const cc = new MultiChannelAssociationCCSupportedGroupingsGet(host, {
+test("the SupportedGroupingsGet command should serialize correctly", async (t) => {
+	const cc = new MultiChannelAssociationCCSupportedGroupingsGet({
 		nodeId: 1,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.SupportedGroupingsGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the SupportedGroupingsReport command should be deserialized correctly", (t) => {
+test("the SupportedGroupingsReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.SupportedGroupingsReport, // CC Command
 			7, // # of groups
 		]),
 	);
-	const cc = new MultiChannelAssociationCCSupportedGroupingsReport(host, {
-		nodeId: 4,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 4 } as any,
+	) as MultiChannelAssociationCCSupportedGroupingsReport;
+	t.expect(cc.constructor).toBe(
+		MultiChannelAssociationCCSupportedGroupingsReport,
+	);
 
-	t.is(cc.groupCount, 7);
+	t.expect(cc.groupCount).toBe(7);
 });
 
-test("the Set command should serialize correctly (node IDs only)", (t) => {
-	const cc = new MultiChannelAssociationCCSet(host, {
+test("the Set command should serialize correctly (node IDs only)", async (t) => {
+	const cc = new MultiChannelAssociationCCSet({
 		nodeId: 2,
 		groupId: 5,
 		nodeIds: [1, 2, 5],
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Set, // CC Command
 			5, // group id
 			// Node IDs
@@ -65,11 +69,13 @@ test("the Set command should serialize correctly (node IDs only)", (t) => {
 			5,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly (endpoint addresses only)", (t) => {
-	const cc = new MultiChannelAssociationCCSet(host, {
+test("the Set command should serialize correctly (endpoint addresses only)", async (t) => {
+	const cc = new MultiChannelAssociationCCSet({
 		nodeId: 2,
 		groupId: 5,
 		endpoints: [
@@ -84,7 +90,7 @@ test("the Set command should serialize correctly (endpoint addresses only)", (t)
 		],
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Set, // CC Command
 			5, // group id
 			0, // Endpoint marker
@@ -96,11 +102,13 @@ test("the Set command should serialize correctly (endpoint addresses only)", (t)
 			0b11010111,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly (both options)", (t) => {
-	const cc = new MultiChannelAssociationCCSet(host, {
+test("the Set command should serialize correctly (both options)", async (t) => {
+	const cc = new MultiChannelAssociationCCSet({
 		nodeId: 2,
 		groupId: 5,
 		nodeIds: [1, 2, 3],
@@ -116,7 +124,7 @@ test("the Set command should serialize correctly (both options)", (t) => {
 		],
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Set, // CC Command
 			5, // group id
 			// Node IDs:
@@ -132,26 +140,30 @@ test("the Set command should serialize correctly (both options)", (t) => {
 			0b11010111,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Get command should serialize correctly", (t) => {
-	const cc = new MultiChannelAssociationCCGet(host, {
+test("the Get command should serialize correctly", async (t) => {
+	const cc = new MultiChannelAssociationCCGet({
 		nodeId: 1,
 		groupId: 9,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Get, // CC Command
 			9, // group ID
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command should be deserialized correctly (node IDs only)", (t) => {
+test("the Report command should be deserialized correctly (node IDs only)", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Report, // CC Command
 			5, // group id
 			9, // max nodes
@@ -162,21 +174,22 @@ test("the Report command should be deserialized correctly (node IDs only)", (t) 
 			5,
 		]),
 	);
-	const cc = new MultiChannelAssociationCCReport(host, {
-		nodeId: 4,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 4 } as any,
+	) as MultiChannelAssociationCCReport;
+	t.expect(cc.constructor).toBe(MultiChannelAssociationCCReport);
 
-	t.is(cc.groupId, 5);
-	t.is(cc.maxNodes, 9);
-	t.is(cc.reportsToFollow, 0);
-	t.deepEqual(cc.nodeIds, [1, 2, 5]);
-	t.deepEqual(cc.endpoints, []);
+	t.expect(cc.groupId).toBe(5);
+	t.expect(cc.maxNodes).toBe(9);
+	t.expect(cc.reportsToFollow).toBe(0);
+	t.expect(cc.nodeIds).toStrictEqual([1, 2, 5]);
+	t.expect(cc.endpoints).toStrictEqual([]);
 });
 
-test("the Report command should be deserialized correctly (endpoint addresses only)", (t) => {
+test("the Report command should be deserialized correctly (endpoint addresses only)", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Report, // CC Command
 			5, // group id
 			9, // max nodes
@@ -190,13 +203,14 @@ test("the Report command should be deserialized correctly (endpoint addresses on
 			0b11010111,
 		]),
 	);
-	const cc = new MultiChannelAssociationCCReport(host, {
-		nodeId: 4,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 4 } as any,
+	) as MultiChannelAssociationCCReport;
+	t.expect(cc.constructor).toBe(MultiChannelAssociationCCReport);
 
-	t.deepEqual(cc.nodeIds, []);
-	t.deepEqual(cc.endpoints, [
+	t.expect(cc.nodeIds).toStrictEqual([]);
+	t.expect(cc.endpoints).toStrictEqual([
 		{
 			nodeId: 5,
 			endpoint: 1,
@@ -208,9 +222,9 @@ test("the Report command should be deserialized correctly (endpoint addresses on
 	]);
 });
 
-test("the Report command should be deserialized correctly (both options)", (t) => {
+test("the Report command should be deserialized correctly (both options)", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Report, // CC Command
 			5, // group id
 			9, // max nodes
@@ -227,13 +241,14 @@ test("the Report command should be deserialized correctly (both options)", (t) =
 			0b11010111,
 		]),
 	);
-	const cc = new MultiChannelAssociationCCReport(host, {
-		nodeId: 4,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 4 } as any,
+	) as MultiChannelAssociationCCReport;
+	t.expect(cc.constructor).toBe(MultiChannelAssociationCCReport);
 
-	t.deepEqual(cc.nodeIds, [1, 5, 9]);
-	t.deepEqual(cc.endpoints, [
+	t.expect(cc.nodeIds).toStrictEqual([1, 5, 9]);
+	t.expect(cc.endpoints).toStrictEqual([
 		{
 			nodeId: 5,
 			endpoint: 1,
@@ -245,14 +260,14 @@ test("the Report command should be deserialized correctly (both options)", (t) =
 	]);
 });
 
-test("the Remove command should serialize correctly (node IDs only)", (t) => {
-	const cc = new MultiChannelAssociationCCRemove(host, {
+test("the Remove command should serialize correctly (node IDs only)", async (t) => {
+	const cc = new MultiChannelAssociationCCRemove({
 		nodeId: 2,
 		groupId: 5,
 		nodeIds: [1, 2, 5],
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Remove, // CC Command
 			5, // group id
 			// Node IDs
@@ -261,11 +276,13 @@ test("the Remove command should serialize correctly (node IDs only)", (t) => {
 			5,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Remove command should serialize correctly (endpoint addresses only)", (t) => {
-	const cc = new MultiChannelAssociationCCRemove(host, {
+test("the Remove command should serialize correctly (endpoint addresses only)", async (t) => {
+	const cc = new MultiChannelAssociationCCRemove({
 		nodeId: 2,
 		groupId: 5,
 		endpoints: [
@@ -280,7 +297,7 @@ test("the Remove command should serialize correctly (endpoint addresses only)", 
 		],
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Remove, // CC Command
 			5, // group id
 			0, // Endpoint marker
@@ -292,11 +309,13 @@ test("the Remove command should serialize correctly (endpoint addresses only)", 
 			0b11010111,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Remove command should serialize correctly (both options)", (t) => {
-	const cc = new MultiChannelAssociationCCRemove(host, {
+test("the Remove command should serialize correctly (both options)", async (t) => {
+	const cc = new MultiChannelAssociationCCRemove({
 		nodeId: 2,
 		groupId: 5,
 		nodeIds: [1, 2, 3],
@@ -312,7 +331,7 @@ test("the Remove command should serialize correctly (both options)", (t) => {
 		],
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Remove, // CC Command
 			5, // group id
 			// Node IDs:
@@ -328,29 +347,33 @@ test("the Remove command should serialize correctly (both options)", (t) => {
 			0b11010111,
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Remove command should serialize correctly (both empty)", (t) => {
-	const cc = new MultiChannelAssociationCCRemove(host, {
+test("the Remove command should serialize correctly (both empty)", async (t) => {
+	const cc = new MultiChannelAssociationCCRemove({
 		nodeId: 2,
 		groupId: 5,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelAssociationCommand.Remove, // CC Command
 			5, // group id
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
 // test("deserializing an unsupported command should return an unspecified version of MultiChannelAssociationCC", (t) => {
 // 	const serializedCC = buildCCBuffer(
 // 		1,
-// 		Buffer.from([255]), // not a valid command
+// 		Uint8Array.from([255]), // not a valid command
 // 	);
-// 	const cc: any = new MultiChannelAssociationCC(host, {
+// 	const cc: any = new MultiChannelAssociationCC({
 // 		data: serializedCC,
 // 	});
 // 	t.is(cc.constructor, MultiChannelAssociationCC);

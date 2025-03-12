@@ -1,14 +1,13 @@
 import {
 	type CommandClass,
-	isCommandClassContainer,
 	isEncapsulatingCommandClass,
 	isMultiEncapsulatingCommandClass,
 } from "@zwave-js/cc";
 import {
 	type DataDirection,
+	type LogContainer,
 	type LogContext,
 	MessagePriority,
-	type ZWaveLogContainer,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 	messageRecordToLines,
@@ -16,11 +15,12 @@ import {
 } from "@zwave-js/core";
 import type { Message, ResponseRole } from "@zwave-js/serial";
 import { FunctionType, MessageType } from "@zwave-js/serial";
+import { containsCC } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName } from "@zwave-js/shared";
-import type { Driver } from "../driver/Driver";
-import { type TransactionQueue } from "../driver/Queue";
-import type { Transaction } from "../driver/Transaction";
-import { NodeStatus } from "../node/_Types";
+import type { Driver } from "../driver/Driver.js";
+import { type TransactionQueue } from "../driver/Queue.js";
+import type { Transaction } from "../driver/Transaction.js";
+import { NodeStatus } from "../node/_Types.js";
 
 export const DRIVER_LABEL = "DRIVER";
 const DRIVER_LOGLEVEL = "verbose";
@@ -31,7 +31,10 @@ export interface DriverLogContext extends LogContext<"driver"> {
 }
 
 export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
-	constructor(private readonly driver: Driver, loggers: ZWaveLogContainer) {
+	constructor(
+		private readonly driver: Driver,
+		loggers: LogContainer,
+	) {
 		super(loggers, DRIVER_LABEL);
 	}
 
@@ -118,11 +121,13 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 	): void {
 		if (!this.isDriverLogVisible()) return;
 		if (nodeId == undefined) nodeId = message.getNodeId();
-		if (nodeId != undefined && !this.container.shouldLogNode(nodeId)) {
+		if (
+			nodeId != undefined && !this.container.isNodeLoggingVisible(nodeId)
+		) {
 			return;
 		}
 
-		const isCCContainer = isCommandClassContainer(message);
+		const isCCContainer = containsCC(message);
 		const logEntry = message.toLogEntry();
 
 		let msg: string[] = [tagify(logEntry.tags)];
@@ -136,7 +141,7 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 
 		try {
 			// If possible, include information about the CCs
-			if (isCommandClassContainer(message)) {
+			if (isCCContainer) {
 				// Remove the default payload message and draw a bracket
 				msg = msg.filter((line) => !line.startsWith("│ payload:"));
 
@@ -197,7 +202,7 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 			if (queue.length > 0) {
 				for (const trns of queue.transactions) {
 					// TODO: This formatting should be shared with the other logging methods
-					const node = trns.message.getNodeUnsafe(this.driver);
+					const node = trns.message.tryGetNode(this.driver);
 					const prefix = trns.message.type === MessageType.Request
 						? "[REQ]"
 						: "[RES]";
@@ -209,12 +214,14 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 							)
 						}]`
 						: "";
-					const command = isCommandClassContainer(trns.message)
-						? ` (${trns.message.command.constructor.name})`
+					const command = containsCC(trns.message)
+						? `: ${trns.message.command.constructor.name}`
 						: "";
 					message += `\n· ${prefix} ${
 						FunctionType[trns.message.functionType]
-					}${command}${postfix}`;
+					}${command}${postfix} (P: ${
+						getEnumMemberName(MessagePriority, trns.priority)
+					})`;
 				}
 			} else {
 				message += " (empty)";

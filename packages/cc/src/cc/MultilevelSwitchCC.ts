@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
@@ -9,11 +11,12 @@ import {
 	NOT_KNOWN,
 	type SupervisionResult,
 	ValueMetadata,
+	type WithAddress,
 	maybeUnknownToString,
 	parseMaybeNumber,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -26,48 +29,39 @@ import {
 	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	multilevelSwitchTypeProperties,
+	multilevelSwitchTypeToActions,
+} from "../lib/CCValueUtils.js";
+import {
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type PersistValuesContext,
+	type RefreshValuesContext,
+	getEffectiveCCVersion,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	LevelChangeDirection,
 	MultilevelSwitchCommand,
 	SwitchType,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-/**
- * Translates a switch type into two actions that may be performed. Unknown types default to Down/Up
- */
-function switchTypeToActions(switchType: string): [down: string, up: string] {
-	if (!switchType.includes("/")) switchType = SwitchType[0x02]; // Down/Up
-	return switchType.split("/", 2) as any;
-}
-
-/**
- * The property names are organized so that positive motions are at odd indices and negative motions at even indices
- */
-const switchTypeProperties = Object.keys(SwitchType)
-	.filter((key) => key.includes("/"))
-	.map((key) => switchTypeToActions(key))
-	.reduce<string[]>((acc, cur) => acc.concat(...cur), []);
-
-export const MultilevelSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multilevel Switch"], {
+export const MultilevelSwitchCCValues = V.defineCCValues(
+	CommandClasses["Multilevel Switch"],
+	{
 		...V.staticProperty(
 			"currentValue",
 			{
@@ -75,7 +69,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				label: "Current value",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"targetValue",
 			{
@@ -84,7 +77,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"duration",
 			{
@@ -92,7 +84,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				label: "Remaining duration",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"restorePrevious",
 			{
@@ -103,7 +94,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				},
 			} as const,
 		),
-
 		...V.staticPropertyWithName(
 			"compatEvent",
 			"event",
@@ -118,17 +108,11 @@ export const MultilevelSwitchCCValues = Object.freeze({
 						?.treatMultilevelSwitchSetAsEvent,
 			},
 		),
-
 		...V.staticProperty("switchType", undefined, { internal: true }),
-
-		// TODO: Solve this differently
 		...V.staticProperty("superviseStartStopLevelChange", undefined, {
 			internal: true,
 			supportsEndpoints: false,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multilevel Switch"], {
 		...V.dynamicPropertyWithName(
 			"levelChangeUp",
 			// This is called "up" here, but the actual property name will depend on
@@ -138,18 +122,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 					SwitchType,
 					switchType,
 				);
-				const [, up] = switchTypeToActions(switchTypeName);
+				const [, up] = multilevelSwitchTypeToActions(switchTypeName);
 				return up;
 			},
 			({ property }) =>
 				typeof property === "string"
-				&& switchTypeProperties.indexOf(property) % 2 === 1,
+				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 1,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
 					switchType,
 				);
-				const [, up] = switchTypeToActions(switchTypeName);
+				const [, up] = multilevelSwitchTypeToActions(switchTypeName);
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `Perform a level change (${up})`,
@@ -162,7 +146,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyWithName(
 			"levelChangeDown",
 			// This is called "down" here, but the actual property name will depend on
@@ -172,18 +155,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 					SwitchType,
 					switchType,
 				);
-				const [down] = switchTypeToActions(switchTypeName);
+				const [down] = multilevelSwitchTypeToActions(switchTypeName);
 				return down;
 			},
 			({ property }) =>
 				typeof property === "string"
-				&& switchTypeProperties.indexOf(property) % 2 === 0,
+				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 0,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
 					switchType,
 				);
-				const [down] = switchTypeToActions(switchTypeName);
+				const [down] = multilevelSwitchTypeToActions(switchTypeName);
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `Perform a level change (${down})`,
@@ -196,8 +179,8 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Multilevel Switch"])
 export class MultilevelSwitchCCAPI extends CCAPI {
@@ -224,11 +207,11 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 			MultilevelSwitchCommand.Get,
 		);
 
-		const cc = new MultilevelSwitchCCGet(this.applHost, {
+		const cc = new MultilevelSwitchCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			MultilevelSwitchCCReport
 		>(
 			cc,
@@ -255,13 +238,13 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 			MultilevelSwitchCommand.Set,
 		);
 
-		const cc = new MultilevelSwitchCCSet(this.applHost, {
+		const cc = new MultilevelSwitchCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			targetValue,
 			duration,
 		});
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	@validateArgs()
@@ -273,13 +256,13 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 			MultilevelSwitchCommand.StartLevelChange,
 		);
 
-		const cc = new MultilevelSwitchCCStartLevelChange(this.applHost, {
+		const cc = new MultilevelSwitchCCStartLevelChange({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...options,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	public async stopLevelChange(): Promise<SupervisionResult | undefined> {
@@ -288,12 +271,12 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 			MultilevelSwitchCommand.StopLevelChange,
 		);
 
-		const cc = new MultilevelSwitchCCStopLevelChange(this.applHost, {
+		const cc = new MultilevelSwitchCCStopLevelChange({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	public async getSupported(): Promise<MaybeNotKnown<SwitchType>> {
@@ -302,11 +285,11 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 			MultilevelSwitchCommand.SupportedGet,
 		);
 
-		const cc = new MultilevelSwitchCCSupportedGet(this.applHost, {
+		const cc = new MultilevelSwitchCCSupportedGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			MultilevelSwitchCCSupportedReport
 		>(
 			cc,
@@ -339,7 +322,9 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				}
 				const duration = Duration.from(options?.transitionDuration);
 				return this.set(value, duration);
-			} else if (switchTypeProperties.includes(property as string)) {
+			} else if (
+				multilevelSwitchTypeProperties.includes(property as string)
+			) {
 				// Since the switch only supports one of the switch types, we would
 				// need to check if the correct one is used. But since the names are
 				// purely cosmetic, we just accept all of them
@@ -354,11 +339,12 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				if (value) {
 					// The property names are organized so that positive motions are
 					// at odd indices and negative motions at even indices
-					const direction =
-						switchTypeProperties.indexOf(property as string) % 2
-								=== 0
-							? "down"
-							: "up";
+					const direction = multilevelSwitchTypeProperties.indexOf(
+									property as string,
+								) % 2
+							=== 0
+						? "down"
+						: "up";
 					// Singlecast only: Try to retrieve the current value to use as the start level,
 					// even if the target node is going to ignore it. There might
 					// be some bugged devices that ignore the ignore start level flag.
@@ -464,7 +450,7 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 								);
 							// and optimistically update the currentValue
 							for (const node of affectedNodes) {
-								this.applHost
+								this.host
 									.tryGetValueDB(node.id)
 									?.setValue(currentValueValueId, value);
 							}
@@ -514,33 +500,35 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 export class MultilevelSwitchCC extends CommandClass {
 	declare ccCommand: MultilevelSwitchCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Multilevel Switch"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		if (this.version >= 3) {
+		if (api.version >= 3) {
 			// Find out which kind of switch this is
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: "requesting switch type...",
 				direction: "outbound",
 			});
 			const switchType = await api.getSupported();
 			if (switchType != undefined) {
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `has switch type ${
 						getEnumMemberName(
@@ -554,27 +542,29 @@ export class MultilevelSwitchCC extends CommandClass {
 		} else {
 			// requesting the switch type automatically creates the up/down actions
 			// We need to do this manually for V1 and V2
-			this.createMetadataForLevelChangeActions(applHost);
+			this.createMetadataForLevelChangeActions(ctx);
 		}
 
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Multilevel Switch"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "requesting current switch state...",
 			direction: "outbound",
@@ -583,31 +573,31 @@ export class MultilevelSwitchCC extends CommandClass {
 	}
 
 	public setMappedBasicValue(
-		applHost: ZWaveApplicationHost,
+		ctx: GetValueDB,
 		value: number,
 	): boolean {
-		this.setValue(applHost, MultilevelSwitchCCValues.currentValue, value);
+		this.setValue(ctx, MultilevelSwitchCCValues.currentValue, value);
 		return true;
 	}
 
 	protected createMetadataForLevelChangeActions(
-		applHost: ZWaveApplicationHost,
+		ctx: GetValueDB,
 		// SDS13781: The Primary Switch Type SHOULD be 0x02 (Up/Down)
 		switchType: SwitchType = SwitchType["Down/Up"],
 	): void {
 		this.ensureMetadata(
-			applHost,
+			ctx,
 			MultilevelSwitchCCValues.levelChangeUp(switchType),
 		);
 		this.ensureMetadata(
-			applHost,
+			ctx,
 			MultilevelSwitchCCValues.levelChangeDown(switchType),
 		);
 	}
 }
 
 // @publicAPI
-export interface MultilevelSwitchCCSetOptions extends CCCommandOptions {
+export interface MultilevelSwitchCCSetOptions {
 	targetValue: number;
 	// Version >= 2:
 	duration?: Duration | string;
@@ -617,38 +607,55 @@ export interface MultilevelSwitchCCSetOptions extends CCCommandOptions {
 @useSupervision()
 export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| MultilevelSwitchCCSetOptions,
+		options: WithAddress<MultilevelSwitchCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.targetValue = this.payload[0];
+		super(options);
+		this.targetValue = options.targetValue;
+		this.duration = Duration.from(options.duration);
+	}
 
-			if (this.payload.length >= 2) {
-				this.duration = Duration.parseReport(this.payload[1]);
-			}
-		} else {
-			this.targetValue = options.targetValue;
-			this.duration = Duration.from(options.duration);
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): MultilevelSwitchCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const targetValue = raw.payload[0];
+		let duration: Duration | undefined;
+
+		if (raw.payload.length >= 2) {
+			duration = Duration.parseReport(raw.payload[1]);
 		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			targetValue,
+			duration,
+		});
 	}
 
 	public targetValue: number;
 	public duration: Duration | undefined;
 
-	public serialize(): Buffer {
-		const payload = [this.targetValue];
-		if (this.version >= 2) {
-			payload.push((this.duration ?? Duration.default()).serializeSet());
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.targetValue,
+			(this.duration ?? Duration.default()).serializeSet(),
+		]);
+
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+		if (
+			ccVersion < 2 && ctx.getDeviceConfig?.(
+				this.nodeId as number,
+			)?.compat?.encodeCCsUsingTargetVersion
+		) {
+			// When forcing CC version 1, only include the target value
+			this.payload = this.payload.subarray(0, 1);
 		}
-		this.payload = Buffer.from(payload);
-		return super.serialize();
+
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"target value": this.targetValue,
 		};
@@ -656,73 +663,76 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
 }
 
 // @publicAPI
-export interface MultilevelSwitchCCReportOptions extends CCCommandOptions {
-	currentValue: number;
-	targetValue: number;
+export interface MultilevelSwitchCCReportOptions {
+	currentValue?: MaybeUnknown<number>;
+	targetValue?: MaybeUnknown<number>;
 	duration?: Duration | string;
 }
 
 @CCCommand(MultilevelSwitchCommand.Report)
+@ccValueProperty("targetValue", MultilevelSwitchCCValues.targetValue)
+@ccValueProperty("duration", MultilevelSwitchCCValues.duration)
+@ccValueProperty("currentValue", MultilevelSwitchCCValues.currentValue)
 export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| MultilevelSwitchCCReportOptions,
+		options: WithAddress<MultilevelSwitchCCReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.currentValue =
-				// 0xff is a legacy value for 100% (99)
-				this.payload[0] === 0xff
-					? 99
-					: parseMaybeNumber(this.payload[0]);
-			if (this.version >= 4 && this.payload.length >= 3) {
-				this.targetValue = parseMaybeNumber(this.payload[1]);
-				this.duration = Duration.parseReport(this.payload[2]);
-			}
-		} else {
-			this.currentValue = options.currentValue;
-			this.targetValue = options.targetValue;
-			this.duration = Duration.from(options.duration);
-		}
+		this.currentValue = options.currentValue;
+		this.targetValue = options.targetValue;
+		this.duration = Duration.from(options.duration);
 	}
 
-	@ccValue(MultilevelSwitchCCValues.targetValue)
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): MultilevelSwitchCCReport {
+		validatePayload(raw.payload.length >= 1);
+		const currentValue: MaybeUnknown<number> | undefined =
+			// 0xff is a legacy value for 100% (99)
+			raw.payload[0] === 0xff
+				? 99
+				: parseMaybeNumber(raw.payload[0]);
+		let targetValue: MaybeUnknown<number> | undefined;
+		let duration: Duration | undefined;
+
+		if (raw.payload.length >= 3) {
+			targetValue = parseMaybeNumber(raw.payload[1]);
+			duration = Duration.parseReport(raw.payload[2]);
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			currentValue,
+			targetValue,
+			duration,
+		});
+	}
+
 	public targetValue: MaybeUnknown<number> | undefined;
 
-	@ccValue(MultilevelSwitchCCValues.duration)
 	public duration: Duration | undefined;
 
-	@ccValue(MultilevelSwitchCCValues.currentValue)
 	public currentValue: MaybeUnknown<number> | undefined;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
-			typeof this.currentValue === "number" ? this.currentValue : 254,
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.currentValue ?? 0xfe,
+			this.targetValue ?? 0xfe,
+			(this.duration ?? Duration.default()).serializeReport(),
 		]);
-		if (this.version >= 4) {
-			this.payload = Buffer.concat([
-				this.payload,
-				Buffer.from([
-					this.targetValue ?? 254,
-					(this.duration ?? Duration.default()).serializeReport(),
-				]),
-			]);
-		}
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"current value": maybeUnknownToString(this.currentValue),
 		};
@@ -731,7 +741,7 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -765,30 +775,37 @@ export type MultilevelSwitchCCStartLevelChangeOptions =
 @useSupervision()
 export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| (CCCommandOptions & MultilevelSwitchCCStartLevelChangeOptions),
+		options: WithAddress<MultilevelSwitchCCStartLevelChangeOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			const ignoreStartLevel = (this.payload[0] & 0b0_0_1_00000) >>> 5;
-			this.ignoreStartLevel = !!ignoreStartLevel;
-			const direction = (this.payload[0] & 0b0_1_0_00000) >>> 6;
-			this.direction = direction ? "down" : "up";
+		super(options);
+		this.duration = Duration.from(options.duration);
+		this.ignoreStartLevel = options.ignoreStartLevel;
+		this.startLevel = options.startLevel ?? 0;
+		this.direction = options.direction;
+	}
 
-			this.startLevel = this.payload[1];
-
-			if (this.payload.length >= 3) {
-				this.duration = Duration.parseSet(this.payload[2]);
-			}
-		} else {
-			this.duration = Duration.from(options.duration);
-			this.ignoreStartLevel = options.ignoreStartLevel;
-			this.startLevel = options.startLevel ?? 0;
-			this.direction = options.direction;
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): MultilevelSwitchCCStartLevelChange {
+		validatePayload(raw.payload.length >= 2);
+		const ignoreStartLevel = !!((raw.payload[0] & 0b0_0_1_00000) >>> 5);
+		const direction = ((raw.payload[0] & 0b0_1_0_00000) >>> 6)
+			? "down"
+			: "up";
+		const startLevel = raw.payload[1];
+		let duration: Duration | undefined;
+		if (raw.payload.length >= 3) {
+			duration = Duration.parseSet(raw.payload[2]);
 		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			ignoreStartLevel,
+			direction,
+			startLevel,
+			duration,
+		});
 	}
 
 	public duration: Duration | undefined;
@@ -796,18 +813,29 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	public ignoreStartLevel: boolean;
 	public direction: keyof typeof LevelChangeDirection;
 
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const controlByte = (LevelChangeDirection[this.direction] << 6)
 			| (this.ignoreStartLevel ? 0b0010_0000 : 0);
-		const payload = [controlByte, this.startLevel];
-		if (this.version >= 2) {
-			payload.push((this.duration ?? Duration.default()).serializeSet());
+		this.payload = Bytes.from([
+			controlByte,
+			this.startLevel,
+			(this.duration ?? Duration.default()).serializeSet(),
+		]);
+
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+		if (
+			ccVersion < 2 && ctx.getDeviceConfig?.(
+				this.nodeId as number,
+			)?.compat?.encodeCCsUsingTargetVersion
+		) {
+			// When forcing CC version 1, omit the duration byte
+			this.payload = this.payload.subarray(0, -1);
 		}
-		this.payload = Buffer.from(payload);
-		return super.serialize();
+
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			startLevel: `${this.startLevel}${
 				this.ignoreStartLevel ? " (ignored)" : ""
@@ -818,7 +846,7 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -828,32 +856,53 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 @useSupervision()
 export class MultilevelSwitchCCStopLevelChange extends MultilevelSwitchCC {}
 
+// @publicAPI
+export interface MultilevelSwitchCCSupportedReportOptions {
+	switchType: SwitchType;
+}
+
 @CCCommand(MultilevelSwitchCommand.SupportedReport)
+@ccValueProperty("switchType", MultilevelSwitchCCValues.switchType)
 export class MultilevelSwitchCCSupportedReport extends MultilevelSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<MultilevelSwitchCCSupportedReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		validatePayload(this.payload.length >= 1);
-		this.switchType = this.payload[0] & 0b11111;
-		// We do not support the deprecated secondary switch type
+		this.switchType = options.switchType;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): MultilevelSwitchCCSupportedReport {
+		validatePayload(raw.payload.length >= 1);
+		const switchType: SwitchType = raw.payload[0] & 0b11111;
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			switchType,
+		});
 	}
 
 	// This is the primary switch type. We're not supporting secondary switch types
-	@ccValue(MultilevelSwitchCCValues.switchType)
+
 	public readonly switchType: SwitchType;
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
-		if (!super.persistValues(applHost)) return false;
-		this.createMetadataForLevelChangeActions(applHost, this.switchType);
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
+		this.createMetadataForLevelChangeActions(ctx, this.switchType);
 		return true;
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.switchType & 0b11111]);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"switch type": getEnumMemberName(SwitchType, this.switchType),
 			},

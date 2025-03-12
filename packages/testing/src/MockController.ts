@@ -1,21 +1,31 @@
-import { type ICommandClass, MAX_SUPERVISION_SESSION_ID } from "@zwave-js/core";
-import type { ZWaveHost } from "@zwave-js/host";
 import {
+	type CCId,
+	type MaybeNotKnown,
+	NOT_KNOWN,
+	NodeIDType,
+	SecurityClass,
+	type SecurityManagers,
+	randomBytes,
+	securityClassOrder,
+} from "@zwave-js/core";
+import {
+	type FunctionType,
 	Message,
+	type MessageEncodingContext,
 	MessageHeaders,
 	MessageOrigin,
-	SerialAPIParser,
+	type MessageParsingContext,
+	type ZWaveSerialStream,
 } from "@zwave-js/serial";
-import type { MockPortBinding } from "@zwave-js/serial/mock";
+import { type MockPort } from "@zwave-js/serial/mock";
 import { AsyncQueue } from "@zwave-js/shared";
-import { TimedExpectation, createWrappingCounter } from "@zwave-js/shared/safe";
+import { TimedExpectation, isAbortError, noop } from "@zwave-js/shared/safe";
 import { wait } from "alcalzone-shared/async";
-import { randomInt } from "node:crypto";
 import {
 	type MockControllerCapabilities,
 	getDefaultMockControllerCapabilities,
-} from "./MockControllerCapabilities";
-import type { MockNode } from "./MockNode";
+} from "./MockControllerCapabilities.js";
+import type { MockNode } from "./MockNode.js";
 import {
 	type LazyMockZWaveFrame,
 	MOCK_FRAME_ACK_TIMEOUT,
@@ -25,10 +35,12 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveAckFrame,
 	unlazyMockZWaveFrame,
-} from "./MockZWaveFrame";
+} from "./MockZWaveFrame.js";
 
 export interface MockControllerOptions {
-	serial: MockPortBinding;
+	mockPort: MockPort;
+	serial: ZWaveSerialStream;
+	// serial: MockPortBinding;
 	ownNodeId?: number;
 	homeId?: number;
 	capabilities?: Partial<MockControllerCapabilities>;
@@ -37,38 +49,61 @@ export interface MockControllerOptions {
 /** A mock Z-Wave controller which interacts with {@link MockNode}s and can be controlled via a {@link MockSerialPort} */
 export class MockController {
 	public constructor(options: MockControllerOptions) {
+		this.mockPort = options.mockPort;
 		this.serial = options.serial;
-		// Pipe the serial data through a parser, so we get complete message buffers or headers out the other end
-		this.serialParser = new SerialAPIParser();
-		this.serial.on("write", (data) => {
-			this.serialParser.write(data);
-		});
-		this.serialParser.on("data", (data) => this.serialOnData(data));
 
-		// Set up the fake host
-		// const valuesStorage = new Map();
-		// const metadataStorage = new Map();
-		// const valueDBCache = new Map<number, ValueDB>();
-		const supervisionSessionIDs = new Map<number, () => number>();
+		void this.handleSerialData();
 
-		this.host = {
-			ownNodeId: options.ownNodeId ?? 1,
-			homeId: options.homeId ?? 0x7e571000,
-			securityManager: undefined,
-			securityManager2: undefined,
-			securityManagerLR: undefined,
-			// nodes: this.nodes as any,
-			getNextCallbackId: () => 1,
-			getNextSupervisionSessionId: (nodeId) => {
-				if (!supervisionSessionIDs.has(nodeId)) {
-					supervisionSessionIDs.set(
-						nodeId,
-						createWrappingCounter(MAX_SUPERVISION_SESSION_ID, true),
-					);
-				}
-				return supervisionSessionIDs.get(nodeId)!();
+		this.ownNodeId = options.ownNodeId ?? 1;
+		this.homeId = options.homeId ?? 0x7e571000;
+
+		this.capabilities = {
+			...getDefaultMockControllerCapabilities(),
+			...options.capabilities,
+		};
+
+		const securityClasses = new Map<number, Map<SecurityClass, boolean>>();
+		const requestStorage = new Map<FunctionType, Record<string, unknown>>();
+
+		const self = this;
+		this.encodingContext = {
+			homeId: this.homeId,
+			ownNodeId: this.ownNodeId,
+			// TODO: LR is not supported in mocks
+			nodeIdType: NodeIDType.Short,
+			hasSecurityClass(
+				nodeId: number,
+				securityClass: SecurityClass,
+			): MaybeNotKnown<boolean> {
+				return (
+					securityClasses.get(nodeId)?.get(securityClass) ?? NOT_KNOWN
+				);
 			},
-			getSafeCCVersion: () => 100,
+			setSecurityClass(
+				nodeId: number,
+				securityClass: SecurityClass,
+				granted: boolean,
+			): void {
+				if (!securityClasses.has(nodeId)) {
+					securityClasses.set(nodeId, new Map());
+				}
+				securityClasses.get(nodeId)!.set(securityClass, granted);
+			},
+			getHighestSecurityClass(
+				nodeId: number,
+			): MaybeNotKnown<SecurityClass> {
+				const map = securityClasses.get(nodeId);
+				if (!map?.size) return undefined;
+				let missingSome = false;
+				for (const secClass of securityClassOrder) {
+					if (map.get(secClass) === true) return secClass;
+					if (!map.has(secClass)) {
+						missingSome = true;
+					}
+				}
+				// If we don't have the info for every security class, we don't know the highest one yet
+				return missingSome ? undefined : SecurityClass.None;
+			},
 			getSupportedCCVersion: (cc, nodeId, endpointIndex = 0) => {
 				if (!this.nodes.has(nodeId)) {
 					return 0;
@@ -77,37 +112,41 @@ export class MockController {
 				const endpoint = node.endpoints.get(endpointIndex);
 				return (endpoint ?? node).implementedCCs.get(cc)?.version ?? 0;
 			},
-			isCCSecure: () => false,
-			// TODO: We don't care about security classes on the controller
-			// This is handled by the nodes hosts
-			getHighestSecurityClass: () => undefined,
-			hasSecurityClass: () => false,
-			setSecurityClass: () => {},
-			// getValueDB: (nodeId) => {
-			// 	if (!valueDBCache.has(nodeId)) {
-			// 		valueDBCache.set(
-			// 			nodeId,
-			// 			new ValueDB(
-			// 				nodeId,
-			// 				valuesStorage as any,
-			// 				metadataStorage as any,
-			// 			),
-			// 		);
-			// 	}
-			// 	return valueDBCache.get(nodeId)!;
-			// },
+			getDeviceConfig: () => undefined,
+			get securityManager() {
+				return self.securityManagers.securityManager;
+			},
+			get securityManager2() {
+				return self.securityManagers.securityManager2;
+			},
+			get securityManagerLR() {
+				return self.securityManagers.securityManagerLR;
+			},
 		};
-
-		this.capabilities = {
-			...getDefaultMockControllerCapabilities(),
-			...options.capabilities,
+		this.parsingContext = {
+			...this.encodingContext,
+			// FIXME: Take from the controller capabilities
+			sdkVersion: undefined,
+			requestStorage,
 		};
 
 		void this.execute();
 	}
 
-	public readonly serial: MockPortBinding;
-	private readonly serialParser: SerialAPIParser;
+	public homeId: number;
+	public ownNodeId: number;
+
+	public securityManagers: SecurityManagers = {
+		securityManager: undefined,
+		securityManager2: undefined,
+		securityManagerLR: undefined,
+	};
+
+	public encodingContext: MessageEncodingContext;
+	public parsingContext: MessageParsingContext;
+
+	public readonly mockPort: MockPort;
+	public readonly serial: ZWaveSerialStream;
 
 	private expectedHostACKs: TimedExpectation[] = [];
 	private expectedHostMessages: TimedExpectation<Message, Message>[] = [];
@@ -145,8 +184,6 @@ export class MockController {
 		this._nodes.delete(node.id);
 	}
 
-	public readonly host: ZWaveHost;
-
 	public readonly capabilities: MockControllerCapabilities;
 
 	/** Can be used by behaviors to store controller related state */
@@ -159,10 +196,38 @@ export class MockController {
 	/** Allows reproducing issues with the 7.19.x firmware where the high nibble of the ACK after soft-reset is corrupted */
 	public corruptACK: boolean = false;
 
+	private async handleSerialData(): Promise<void> {
+		try {
+			read: for await (const data of this.mockPort.readable) {
+				// Execute hooks for inspecting the raw data first
+				for (const behavior of this.behaviors) {
+					if (await behavior.onHostData?.(this, data)) {
+						continue read;
+					}
+				}
+
+				if (data.length === 1) {
+					const header = data[0];
+					switch (header) {
+						case MessageHeaders.ACK:
+						case MessageHeaders.NAK:
+						case MessageHeaders.CAN:
+							void this.serialOnData(header).catch(noop);
+							continue;
+					}
+				}
+				void this.serialOnData(data).catch(noop);
+			}
+		} catch (e) {
+			if (isAbortError(e)) return;
+			throw e;
+		}
+	}
+
 	/** Gets called when parsed/chunked data is received from the serial port */
 	private async serialOnData(
 		data:
-			| Buffer
+			| Uint8Array
 			| MessageHeaders.ACK
 			| MessageHeaders.CAN
 			| MessageHeaders.NAK,
@@ -189,10 +254,9 @@ export class MockController {
 
 		let msg: Message;
 		try {
-			msg = Message.from(this.host, {
-				data,
+			msg = Message.parse(data, {
+				...this.parsingContext,
 				origin: MessageOrigin.Host,
-				parseCCs: false,
 			});
 			this._receivedHostMessages.push(msg);
 			if (this.autoAckHostMessages) {
@@ -213,7 +277,7 @@ export class MockController {
 			handler.resolve(msg);
 		} else {
 			for (const behavior of this.behaviors) {
-				if (await behavior.onHostMessage?.(this.host, this, msg)) {
+				if (await behavior.onHostMessage?.(this, msg)) {
 					return;
 				}
 			}
@@ -301,10 +365,10 @@ export class MockController {
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 */
-	public async expectNodeCC<T extends ICommandClass = ICommandClass>(
+	public async expectNodeCC<T extends CCId = CCId>(
 		node: MockNode,
 		timeout: number,
-		predicate: (cc: ICommandClass) => cc is T,
+		predicate: (cc: CCId) => cc is T,
 	): Promise<T> {
 		const ret = await this.expectNodeFrame(
 			node,
@@ -335,12 +399,33 @@ export class MockController {
 
 	/** Sends a message header (ACK/NAK/CAN) to the host/driver */
 	private sendHeaderToHost(data: MessageHeaders): void {
-		this.serial.emitData(Buffer.from([data]));
+		this.mockPort.emitData(Uint8Array.from([data]));
 	}
 
 	/** Sends a raw buffer to the host/driver and expect an ACK */
-	public async sendToHost(data: Buffer): Promise<void> {
-		this.serial.emitData(data);
+	public async sendMessageToHost(
+		msg: Message,
+		fromNode?: MockNode,
+	): Promise<void> {
+		let data: Uint8Array;
+		if (fromNode) {
+			data = await msg.serialize({
+				nodeIdType: this.encodingContext.nodeIdType,
+				...fromNode.encodingContext,
+			});
+			// Simulate the frame being transmitted via radio
+			await wait(fromNode.capabilities.txDelay);
+		} else {
+			data = await msg.serialize(this.encodingContext);
+		}
+		this.mockPort.emitData(data);
+		// TODO: make the timeout match the configured ACK timeout
+		await this.expectHostACK(1000);
+	}
+
+	/** Sends a raw buffer to the host/driver and expect an ACK */
+	public async sendToHost(data: Uint8Array): Promise<void> {
+		this.mockPort.emitData(data);
 		// TODO: make the timeout match the configured ACK timeout
 		await this.expectHostACK(1000);
 	}
@@ -350,9 +435,9 @@ export class MockController {
 	 */
 	public ackHostMessage(): void {
 		if (this.corruptACK) {
-			const highNibble = randomInt(1, 0xf) << 4;
-			this.serial.emitData(
-				Buffer.from([highNibble | MessageHeaders.ACK]),
+			const highNibble = randomBytes(1)[0] & 0xf0;
+			this.mockPort.emitData(
+				Uint8Array.from([highNibble | MessageHeaders.ACK]),
 			);
 		} else {
 			this.sendHeaderToHost(MessageHeaders.ACK);
@@ -382,7 +467,7 @@ export class MockController {
 			// Then apply generic predefined behavior
 			for (const behavior of this.behaviors) {
 				if (
-					await behavior.onNodeFrame?.(this.host, this, node, frame)
+					await behavior.onNodeFrame?.(this, node, frame)
 				) {
 					return;
 				}
@@ -459,7 +544,7 @@ export class MockController {
 
 				await wait(node.capabilities.txDelay);
 
-				const unlazy = unlazyMockZWaveFrame(frame);
+				const unlazy = await unlazyMockZWaveFrame(frame);
 				onTransmit?.(unlazy);
 				node.onControllerFrame(unlazy).catch((e) => {
 					console.error(e);
@@ -471,7 +556,7 @@ export class MockController {
 
 				await wait(node.capabilities.txDelay);
 
-				const unlazy = unlazyMockZWaveFrame(frame);
+				const unlazy = await unlazyMockZWaveFrame(frame);
 				onTransmit?.(unlazy);
 				this.onNodeFrame(node, unlazy).catch((e) => {
 					console.error(e);
@@ -486,15 +571,21 @@ export class MockController {
 }
 
 export interface MockControllerBehavior {
+	/**
+	 * Can be used to inspect raw data received from the host before it is processed by the serial parser and the mock controller.
+	 * Return `true` to indicate that the data has been handled and should not be processed further.
+	 */
+	onHostData?: (
+		controller: MockController,
+		data: Uint8Array,
+	) => Promise<boolean | undefined> | boolean | undefined;
 	/** Gets called when a message from the host is received. Return `true` to indicate that the message has been handled. */
 	onHostMessage?: (
-		host: ZWaveHost,
 		controller: MockController,
 		msg: Message,
 	) => Promise<boolean | undefined> | boolean | undefined;
 	/** Gets called when a message from a node is received. Return `true` to indicate that the message has been handled. */
 	onNodeFrame?: (
-		host: ZWaveHost,
 		controller: MockController,
 		node: MockNode,
 		frame: MockZWaveFrame,

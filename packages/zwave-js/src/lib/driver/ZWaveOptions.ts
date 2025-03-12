@@ -1,11 +1,19 @@
-import type { LogConfig, RFRegion } from "@zwave-js/core";
-import type { FileSystem, ZWaveHostOptions } from "@zwave-js/host";
-import type { ZWaveSerialPortBase } from "@zwave-js/serial";
+import type {
+	FileSystem as LegacyFileSystemBindings,
+	LogConfig,
+	LogFactory,
+	LongRangeChannel,
+	RFRegion,
+} from "@zwave-js/core";
+import { type Serial, type ZWaveSerialStream } from "@zwave-js/serial";
 import { type DeepPartial, type Expand } from "@zwave-js/shared";
-import type { SerialPort } from "serialport";
-import type { InclusionUserCallbacks } from "../controller/Inclusion";
+import type { DatabaseFactory, FileSystem } from "@zwave-js/shared/bindings";
+import type {
+	InclusionUserCallbacks,
+	JoinNetworkUserCallbacks,
+} from "../controller/Inclusion.js";
 
-export interface ZWaveOptions extends ZWaveHostOptions {
+export interface ZWaveOptions {
 	/** Specify timeouts in milliseconds */
 	timeouts: {
 		/** how long to wait for an ACK */
@@ -118,9 +126,36 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		disableOnNodeAdded?: boolean;
 	};
 
+	/** Host abstractions allowing Z-Wave JS to run on different platforms */
+	host?: {
+		/**
+		 * Specifies which bindings are used to access the file system when
+		 * reading or writing the cache, or loading device configuration files.
+		 */
+		fs?: FileSystem;
+
+		/**
+		 * Specifies which bindings are used interact with serial ports.
+		 */
+		serial?: Serial;
+
+		/**
+		 * Specifies which bindings are used to interact with the database used to store the cache.
+		 */
+		db?: DatabaseFactory;
+
+		/**
+		 * Specifies the logging implementation to be used
+		 */
+		log?: LogFactory;
+	};
+
 	storage: {
-		/** Allows you to replace the default file system driver used to store and read the cache */
-		driver: FileSystem;
+		/**
+		 * Allows you to replace the default file system driver used to store and read the cache
+		 * @deprecated Use `bindings.fs` instead.
+		 */
+		driver?: LegacyFileSystemBindings;
 		/** Allows you to specify a different cache directory */
 		cacheDir: string;
 		/**
@@ -128,6 +163,15 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		 * Can also be set with the ZWAVEJS_LOCK_DIRECTORY env variable.
 		 */
 		lockDir?: string;
+
+		/**
+		 * Allows you to specify a directory where the embedded device configuration files are stored.
+		 * When set, the configuration files can automatically be updated using `Driver.installConfigUpdate()`
+		 * without having to update the npm packages.
+		 * Can also be set using the ZWAVEJS_EXTERNAL_CONFIG env variable.
+		 */
+		deviceConfigExternalDir?: string;
+
 		/**
 		 * Allows you to specify a directory where device configuration files can be loaded from with higher priority than the included ones.
 		 * This directory does not get indexed and should be used sparingly, e.g. for testing.
@@ -149,18 +193,18 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 	 * Specify the security keys to use for encryption (Z-Wave Classic). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeys?: {
-		S2_AccessControl?: Buffer;
-		S2_Authenticated?: Buffer;
-		S2_Unauthenticated?: Buffer;
-		S0_Legacy?: Buffer;
+		S2_AccessControl?: Uint8Array;
+		S2_Authenticated?: Uint8Array;
+		S2_Unauthenticated?: Uint8Array;
+		S0_Legacy?: Uint8Array;
 	};
 
 	/**
 	 * Specify the security keys to use for encryption (Z-Wave Long Range). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeysLongRange?: {
-		S2_AccessControl?: Buffer;
-		S2_Authenticated?: Buffer;
+		S2_AccessControl?: Uint8Array;
+		S2_Authenticated?: Uint8Array;
 	};
 
 	/**
@@ -168,6 +212,13 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 	 * If not given, nodes won't be included using S2, unless matching provisioning entries exists.
 	 */
 	inclusionUserCallbacks?: InclusionUserCallbacks;
+
+	/**
+	 * Defines the callbacks that are necessary to trigger user interaction during S2 bootstrapping when joining a network.
+	 * If not given, joining a network with S2 may not be possible, unless the application handles
+	 * displaying the DSK to the user on its own.
+	 */
+	joinNetworkUserCallbacks?: JoinNetworkUserCallbacks;
 
 	/**
 	 * Some SET-type commands optimistically update the current value to match the target value
@@ -217,18 +268,15 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		 * Default: `true`, except when the ZWAVEJS_DISABLE_UNRESPONSIVE_CONTROLLER_RECOVERY env variable is set.
 		 */
 		unresponsiveControllerRecovery?: boolean;
-	};
 
-	/**
-	 * @deprecated Use `features.softReset` instead.
-	 *
-	 * Soft Reset is required after some commands like changing the RF region or restoring an NVM backup.
-	 * Because it may be problematic in certain environments, we provide the user with an option to opt out.
-	 * Default: `true,` except when ZWAVEJS_DISABLE_SOFT_RESET env variable is set.
-	 *
-	 * **Note:** This option has no effect on 700+ series controllers. For those, soft reset is always enabled.
-	 */
-	enableSoftReset?: boolean;
+		/**
+		 * Controllers of the 700 series and newer have a hardware watchdog that can be enabled to automatically
+		 * reset the chip in case it becomes unresponsive. This option controls whether the watchdog should be enabled.
+		 *
+		 * Default: `true`, except when the ZWAVEJS_DISABLE_WATCHDOG env variable is set.
+		 */
+		watchdog?: boolean;
+	};
 
 	preferences: {
 		/**
@@ -269,12 +317,32 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		/** The RF region the radio should be tuned to. */
 		region?: RFRegion;
 
+		/**
+		 * Whether LR-capable regions should automatically be preferred over their corresponding non-LR regions, e.g. `USA` -> `USA (Long Range)`.
+		 * This also overrides the `rf.region` setting if the desired region is not LR-capable.
+		 *
+		 * Default: true.
+		 */
+		preferLRRegion?: boolean;
+
 		txPower?: {
 			/** The desired TX power in dBm. */
 			powerlevel: number;
 			/** A hardware-specific calibration value. */
 			measured0dBm: number;
 		};
+
+		/** The desired max. powerlevel setting for Z-Wave Long Range in dBm. */
+		maxLongRangePowerlevel?: number;
+
+		/**
+		 * The desired channel to use for Z-Wave Long Range.
+		 * Auto may be unsupported by the controller and will be ignored in that case.
+		 */
+		longRangeChannel?:
+			| LongRangeChannel.A
+			| LongRangeChannel.B
+			| LongRangeChannel.Auto;
 	};
 
 	apiKeys?: {
@@ -283,16 +351,22 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 	};
 
 	/**
-	 * Normally, the driver expects to start in Serial API mode and enter the bootloader on demand. If in bootloader,
-	 * it will try to exit it and enter Serial API mode again.
+	 * Determines how the driver should be have when it encounters a controller that is in bootloader mode
+	 * and when the Serial API is not available (yet).
+	 * This can be useful when a controller may be stuck in bootloader mode, or when the application
+	 * wants to operate in bootloader mode anyways.
 	 *
-	 * However there are situations where a controller may be stuck in bootloader mode and no Serial API is available.
-	 * In this case, the driver startup will fail, unless this option is set to `true`.
+	 * The following options exist:
+	 * - `recover`: Z-Wave JS will attempt to recover the controller from bootloader mode.
+	 *   If this does not succeed, the driver startup will fail.
+	 * - `allow`: Z-Wave JS will attempt to recover the controller from bootloader mode.
+	 *   If this does not succeed, the driver will continue to operate in bootloader mode,
+	 *   e.g. for flashing a new image. Commands attempting to talk to the serial API will fail.
+	 * - `stay`: Z-Wave JS will NOT attempt to recover the controller from bootlaoder mode.
 	 *
-	 * If it is, the driver instance will only be good for interacting with the bootloader, e.g. for flashing a new image.
-	 * Commands attempting to talk to the serial API will fail.
+	 * Default: `recover`
 	 */
-	allowBootloaderOnly?: boolean;
+	bootloaderMode?: "recover" | "allow" | "stay";
 
 	/**
 	 * An object with application/module/component names and their versions.
@@ -300,14 +374,30 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 	 */
 	userAgent?: Record<string, string>;
 
+	/**
+	 * Specify application-specific information to use in queries from other devices
+	 */
+	vendor?: {
+		manufacturerId: number;
+		productType: number;
+		productId: number;
+
+		/** The version of the hardware the application is running on. Can be omitted if unknown. */
+		hardwareVersion?: number;
+
+		/** The icon type to use for installers. Default: 0x0500 - Generic Gateway */
+		installerIcon?: number;
+		/** The icon type to use for users. Default: 0x0500 - Generic Gateway */
+		userIcon?: number;
+	};
+
 	/** DO NOT USE! Used for testing internally */
 	testingHooks?: {
-		serialPortBinding?: typeof SerialPort;
 		/**
 		 * A hook that allows accessing the serial port instance after opening
 		 * and before interacting with it.
 		 */
-		onSerialPortOpen?: (port: ZWaveSerialPortBase) => Promise<void>;
+		onSerialPortOpen?: (port: ZWaveSerialStream) => Promise<void>;
 
 		/**
 		 * Set this to true to skip the controller identification sequence.
@@ -320,9 +410,10 @@ export interface ZWaveOptions extends ZWaveHostOptions {
 		skipNodeInterview?: boolean;
 
 		/**
-		 * Set this to true to skip checking if the controller is in bootloader mode
+		 * Set this to true to skip checking if the Z-Wave is in bootloader mode,
+		 * running a Serial API, or an end device CLI.
 		 */
-		skipBootloaderCheck?: boolean;
+		skipFirmwareIdentification?: boolean;
 
 		/**
 		 * Set this to false to skip loading the configuration files. Default: `true`..
@@ -335,17 +426,24 @@ export type PartialZWaveOptions = Expand<
 	& DeepPartial<
 		Omit<
 			ZWaveOptions,
-			"inclusionUserCallbacks" | "logConfig" | "testingHooks"
+			| "inclusionUserCallbacks"
+			| "joinNetworkUserCallbacks"
+			| "logConfig"
+			| "testingHooks"
+			| "host"
 		>
 	>
 	& Partial<
 		Pick<
 			ZWaveOptions,
-			"inclusionUserCallbacks" | "testingHooks"
+			| "testingHooks"
+			| "vendor"
+			| "host"
 		>
 	>
 	& {
 		inclusionUserCallbacks?: ZWaveOptions["inclusionUserCallbacks"];
+		joinNetworkUserCallbacks?: ZWaveOptions["joinNetworkUserCallbacks"];
 		logConfig?: Partial<LogConfig>;
 	}
 >;
@@ -356,9 +454,11 @@ export type EditableZWaveOptions = Expand<
 		| "disableOptimisticValueUpdate"
 		| "emitValueUpdateAfterSetValue"
 		| "inclusionUserCallbacks"
+		| "joinNetworkUserCallbacks"
 		| "interview"
 		| "logConfig"
 		| "preferences"
+		| "vendor"
 	>
 	& {
 		userAgent?: Record<string, string | null | undefined>;
@@ -397,6 +497,16 @@ export const driverPresets = Object.freeze(
 		NO_CONTROLLER_RECOVERY: {
 			features: {
 				unresponsiveControllerRecovery: false,
+			},
+		},
+
+		/**
+		 * Prevents enabling the watchdog to be able to deal with controllers
+		 * which frequently get restarted for seemingly no reason.
+		 */
+		NO_WATCHDOG: {
+			features: {
+				watchdog: false,
 			},
 		},
 

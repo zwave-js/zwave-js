@@ -75,7 +75,7 @@
 		},
 		{
 			"#": "10",
-			"$import": "templates/philio_template.json#battery_report_interval"
+			"$import": "templates/philio_template.json#battery_report_interval_30m"
 		},
 		{
 			"#": "82",
@@ -126,6 +126,6 @@
 	},
 	"compat": {
 		// The device uses Basic Set to indicate pressed buttons in Lighting Control Mode
-		"treatBasicSetAsEvent": true
+		"mapBasicSet": "event"
 	}
 }

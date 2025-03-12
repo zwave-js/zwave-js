@@ -1,9 +1,11 @@
-import type { Scale } from "@zwave-js/config/safe";
 import {
 	type CommandClasses,
 	type DataRate,
 	type FLiRS,
 	type MaybeNotKnown,
+	type MaybeUnknown,
+	type MeterScale,
+	type Scale,
 	type ValueMetadata,
 	ZWaveDataRate,
 } from "@zwave-js/core/safe";
@@ -38,19 +40,24 @@ export enum AssociationCommand {
 	Remove = 0x04,
 	SupportedGroupingsGet = 0x05,
 	SupportedGroupingsReport = 0x06,
-	// TODO: These two commands are V2. I have no clue how this is supposed to function:
-	// SpecificGroupGet = 0x0b,
-	// SpecificGroupReport = 0x0c,
+	SpecificGroupGet = 0x0b,
+	SpecificGroupReport = 0x0c,
+}
 
-	// Here's what the docs have to say:
-	// This functionality allows a supporting multi-button device to detect a key press and subsequently advertise
-	// the identity of the key. The following sequence of events takes place:
-	// * The user activates a special identification sequence and pushes the button to be identified
-	// * The device issues a Node Information frame (NIF)
-	// * The NIF allows the portable controller to determine the NodeID of the multi-button device
-	// * The portable controller issues an Association Specific Group Get Command to the multi-button device
-	// * The multi-button device returns an Association Specific Group Report Command that advertises the
-	//   association group that represents the most recently detected button
+export enum AssociationCheckResult {
+	OK = 0x01,
+	/** The association is forbidden, because the destination is a ZWLR node. ZWLR does not support direct communication between end devices. */
+	Forbidden_DestinationIsLongRange,
+	/** The association is forbidden, because the source is a ZWLR node. ZWLR does not support direct communication between end devices. */
+	Forbidden_SourceIsLongRange,
+	/** The association is forbidden, because a node cannot be associated with itself. */
+	Forbidden_SelfAssociation,
+	/** The association is forbidden, because the source node's CC versions require the source and destination node to have the same (highest) security class. */
+	Forbidden_SecurityClassMismatch,
+	/** The association is forbidden, because the source node's CC versions require the source node to have the key for the destination node's highest security class. */
+	Forbidden_DestinationSecurityClassNotGranted,
+	/** The association is forbidden, because none of the CCs the source node sends are supported by the destination. */
+	Forbidden_NoSupportedCCs,
 }
 
 export enum AssociationGroupInfoCommand {
@@ -655,7 +662,7 @@ export enum DoorLockLoggingEventType {
 	UserCodeAdded = 0x17,
 	UserCodeDeleted = 0x18,
 	AllUserCodesDeleted = 0x19,
-	MasterCodeChanged = 0x1a,
+	AdminCodeChanged = 0x1a,
 	UserCodeChanged = 0x1b,
 	LockReset = 0x1c,
 	ConfigurationChanged = 0x1d,
@@ -669,7 +676,7 @@ export interface DoorLockLoggingRecord {
 	eventType: DoorLockLoggingEventType;
 	label: string;
 	userId?: number;
-	userCode?: string | Buffer;
+	userCode?: string | Uint8Array;
 }
 
 export enum DoorLockLoggingRecordStatus {
@@ -719,6 +726,8 @@ export interface FirmwareUpdateMetaData {
 	hardwareVersion?: number;
 	continuesToFunction: MaybeNotKnown<boolean>;
 	supportsActivation: MaybeNotKnown<boolean>;
+	supportsResuming?: MaybeNotKnown<boolean>;
+	supportsNonSecureTransfer?: MaybeNotKnown<boolean>;
 }
 
 export enum FirmwareUpdateRequestStatus {
@@ -730,6 +739,14 @@ export enum FirmwareUpdateRequestStatus {
 	Error_FirmwareUpgradeInProgress = 5,
 	Error_BatteryLow = 6,
 	OK = 0xff,
+}
+
+export interface FirmwareUpdateInitResult {
+	status: FirmwareUpdateRequestStatus;
+	/** Whether the node will resume a previous transfer */
+	resume?: boolean;
+	/** Whether the node will accept non-secure firmware fragments */
+	nonSecureTransfer?: boolean;
 }
 
 export enum FirmwareUpdateStatus {
@@ -783,6 +800,10 @@ export type FirmwareUpdateCapabilities =
 		readonly continuesToFunction: MaybeNotKnown<boolean>;
 		/** Indicates whether the node supports delayed activation of the new firmware */
 		readonly supportsActivation: MaybeNotKnown<boolean>;
+		/** Indicates whether the node supports resuming aborted firmware transfers */
+		readonly supportsResuming: MaybeNotKnown<boolean>;
+		/** Indicates whether the node supports non-secure firmware transfers */
+		readonly supportsNonSecureTransfer: MaybeNotKnown<boolean>;
 	};
 
 export interface FirmwareUpdateProgress {
@@ -807,6 +828,18 @@ export interface FirmwareUpdateResult {
 	waitTime?: number;
 	/** Whether the device will be re-interviewed. If this is `true`, applications should wait for the `"ready"` event to interact with the device again. */
 	reInterview: boolean;
+}
+
+export interface FirmwareUpdateOptions {
+	/**
+	 * Whether a previous attempt to update this node's firmware should be resumed (if supported).
+	 */
+	resume?: boolean;
+	/**
+	 * Whether the firmware data should be transferred without encryption (if supported).
+	 * This can massively reduce the time needed.
+	 */
+	nonSecureTransfer?: boolean;
 }
 
 export enum HailCommand {
@@ -1006,6 +1039,15 @@ export type MeterMetadata = ValueMetadata & {
 		scale?: number;
 	};
 };
+
+export interface MeterReading {
+	rateType: RateType;
+	value: number;
+	previousValue: MaybeNotKnown<number>;
+	deltaTime: MaybeUnknown<number>;
+	type: number;
+	scale: MeterScale;
+}
 
 export enum MultiChannelAssociationCommand {
 	Set = 0x01,
@@ -1470,6 +1512,7 @@ export enum ThermostatSetpointType {
 	"Away Heating" = 0x0d, // CC v2
 	"Away Cooling" = 0x0e, // CC v3
 	"Full Power" = 0x0f, // CC v3
+	// Update the interview procecure when adding new types
 }
 
 export interface ThermostatSetpointValue {
@@ -1529,9 +1572,9 @@ export enum UserCodeCommand {
 	ExtendedUserCodeSet = 0x0b,
 	ExtendedUserCodeGet = 0x0c,
 	ExtendedUserCodeReport = 0x0d,
-	MasterCodeSet = 0x0e,
-	MasterCodeGet = 0x0f,
-	MasterCodeReport = 0x10,
+	AdminCodeSet = 0x0e,
+	AdminCodeGet = 0x0f,
+	AdminCodeReport = 0x10,
 	UserCodeChecksumGet = 0x11,
 	UserCodeChecksumReport = 0x12,
 }

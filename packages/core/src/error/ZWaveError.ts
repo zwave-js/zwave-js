@@ -1,5 +1,3 @@
-import { padStart } from "alcalzone-shared/strings";
-
 /**
  * Used to identify errors from this library without relying on the specific wording of the error message
  */
@@ -14,7 +12,7 @@ export enum ZWaveErrorCodes {
 
 	/** The driver failed to start */
 	Driver_Failed = 100,
-	Driver_Reset,
+	Driver_Reset, // FIXME: This is not used
 	Driver_Destroyed,
 	Driver_NotReady,
 	Driver_InvalidDataReceived,
@@ -24,8 +22,10 @@ export enum ZWaveErrorCodes {
 	Driver_InvalidOptions,
 	/** The driver tried to do something that requires security */
 	Driver_NoSecurity,
-	Driver_NoErrorHandler,
 	Driver_FeatureDisabled,
+
+	/** The task was removed from the task queue */
+	Driver_TaskRemoved,
 
 	/** There was a timeout while waiting for a message from the controller */
 	Controller_Timeout = 200,
@@ -35,6 +35,9 @@ export enum ZWaveErrorCodes {
 	Controller_ResponseNOK,
 	Controller_CallbackNOK,
 	Controller_Jammed,
+	/** The controller was reset in the middle of a Serial API command */
+	Controller_Reset,
+
 	Controller_InclusionFailed,
 	Controller_ExclusionFailed,
 
@@ -62,6 +65,9 @@ export enum ZWaveErrorCodes {
 	/** Tried to send a message that is too large */
 	Controller_MessageTooLarge,
 
+	/** Tried to perform an action for a Long Range node that does not make sense for ZWLR */
+	Controller_NotSupportedForLongRange,
+
 	/** Could not fetch some information to determine firmware upgrades from a node */
 	FWUpdateService_MissingInformation = 260,
 	/** Any error related to HTTP requests during firmware update communication */
@@ -81,12 +87,16 @@ export enum ZWaveErrorCodes {
 	NVM_InvalidFormat,
 	/** Not enough space in the NVM */
 	NVM_NoSpace,
+	/** The NVM hasn't been opened yet */
+	NVM_NotOpen,
 
 	CC_Invalid = 300,
 	CC_NoNodeID,
 	CC_NotSupported,
 	CC_NotImplemented,
 	CC_NoAPI,
+	/** Used to communicate that a given operation triggered by another node was not successful */
+	CC_OperationFailed,
 
 	Deserialization_NotImplemented = 320,
 	Arithmetic,
@@ -120,6 +130,8 @@ export enum ZWaveErrorCodes {
 
 	/** The node is currently busy with another health check */
 	HealthCheck_Busy = 400,
+	/** The node is currently busy with another link reliability check */
+	LinkReliabilityCheck_Busy,
 
 	// Here follow CC specific errors
 
@@ -200,7 +212,7 @@ export enum ZWaveErrorCodes {
 }
 
 export function getErrorSuffix(code: ZWaveErrorCodes): string {
-	return `ZW${padStart(code.toString(), 4, "0")}`;
+	return `ZW${code.toString().padStart(4, "0")}`;
 }
 
 function appendErrorSuffix(message: string, code: ZWaveErrorCodes): string {
@@ -290,6 +302,15 @@ export function isMissingControllerACK(
 	return isZWaveError(e)
 		&& e.code === ZWaveErrorCodes.Controller_Timeout
 		&& e.context === "ACK";
+}
+
+export function wasControllerReset(
+	e: unknown,
+): e is ZWaveError & {
+	code: ZWaveErrorCodes.Controller_Reset;
+} {
+	return isZWaveError(e)
+		&& e.code === ZWaveErrorCodes.Controller_Reset;
 }
 
 export function isMissingControllerResponse(

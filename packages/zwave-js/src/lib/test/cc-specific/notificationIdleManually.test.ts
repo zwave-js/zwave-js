@@ -5,7 +5,7 @@ import {
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Notification values can get idled manually", {
 	// debug: true,
@@ -17,8 +17,8 @@ integrationTest("Notification values can get idled manually", {
 			"Alarm status",
 		).id;
 
-		let cc = new NotificationCCReport(mockNode.host, {
-			nodeId: mockController.host.ownNodeId,
+		let cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
 			notificationType: 0x01, // Smoke Alarm
 			notificationEvent: 0x03, // Smoke alarm test
 		});
@@ -29,15 +29,19 @@ integrationTest("Notification values can get idled manually", {
 		);
 		// wait a bit for the value to be updated
 		await wait(100);
-		t.is(node.getValue(alarmStatusValueId), 0x03 /* Smoke alarm test */);
+		t.expect(node.getValue(alarmStatusValueId) /* Smoke alarm test */).toBe(
+			0x03,
+		);
 
 		// Trying to idle a different value does not work
 		node.manuallyIdleNotificationValue(0x01, 0x06 /* Alarm silenced */);
-		t.is(node.getValue(alarmStatusValueId), 0x03 /* Smoke alarm test */);
+		t.expect(node.getValue(alarmStatusValueId) /* Smoke alarm test */).toBe(
+			0x03,
+		);
 
 		// Idling the correct value does work
 		node.manuallyIdleNotificationValue(0x01, 0x03);
-		t.is(node.getValue(alarmStatusValueId), 0x00 /* Idle */);
+		t.expect(node.getValue(alarmStatusValueId) /* Idle */).toBe(0x00);
 
 		// Now try one that cannot be idled
 
@@ -46,8 +50,8 @@ integrationTest("Notification values can get idled manually", {
 			"Door state",
 		).id;
 
-		cc = new NotificationCCReport(mockNode.host, {
-			nodeId: mockController.host.ownNodeId,
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
 			notificationType: 0x06, // Access Control
 			notificationEvent: 0x16, // Door state
 		});
@@ -59,11 +63,11 @@ integrationTest("Notification values can get idled manually", {
 		// wait a bit for the value to be updated
 		await wait(100);
 
-		t.is(node.getValue(doorStateValueId), 0x16 /* Door state */);
+		t.expect(node.getValue(doorStateValueId) /* Door state */).toBe(0x16);
 
 		node.manuallyIdleNotificationValue(0x06, 0x16);
 		// Unchanged
-		t.is(node.getValue(doorStateValueId), 0x16 /* Door state */);
+		t.expect(node.getValue(doorStateValueId) /* Door state */).toBe(0x16);
 	},
 });
 
@@ -80,8 +84,8 @@ integrationTest(
 					"Alarm status",
 				).id;
 
-			let cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x01, // Smoke Alarm
 				notificationEvent: 0x03, // Smoke alarm test
 			});
@@ -92,14 +96,13 @@ integrationTest(
 			);
 			// wait a bit for the value to be updated
 			await wait(100);
-			t.is(
-				node.getValue(alarmStatusValueId),
-				0x03, /* Smoke alarm test */
-			);
+			t.expect(
+				node.getValue(alarmStatusValueId), /* Smoke alarm test */
+			).toBe(0x03);
 
 			// Idling with a valueId does work
 			node.manuallyIdleNotificationValue(alarmStatusValueId);
-			t.is(node.getValue(alarmStatusValueId), 0x00 /* Idle */);
+			t.expect(node.getValue(alarmStatusValueId) /* Idle */).toBe(0x00);
 
 			// Now try one that cannot be idled
 
@@ -108,8 +111,8 @@ integrationTest(
 				"Door state",
 			).id;
 
-			cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x06, // Access Control
 				notificationEvent: 0x16, // Door state
 			});
@@ -121,11 +124,15 @@ integrationTest(
 			// wait a bit for the value to be updated
 			await wait(100);
 
-			t.is(node.getValue(doorStateValueId), 0x16 /* Door state */);
+			t.expect(node.getValue(doorStateValueId) /* Door state */).toBe(
+				0x16,
+			);
 
 			node.manuallyIdleNotificationValue(doorStateValueId);
 			// Unchanged
-			t.is(node.getValue(doorStateValueId), 0x16 /* Door state */);
+			t.expect(node.getValue(doorStateValueId) /* Door state */).toBe(
+				0x16,
+			);
 		},
 	},
 );

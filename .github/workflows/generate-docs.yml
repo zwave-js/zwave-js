@@ -19,15 +19,12 @@ jobs:
   # If they do, a PR will be created with the changes
   check-and-update:
     # Don't run in forks
-    if: github.repository == 'zwave-js/node-zwave-js'
+    if: github.repository == 'zwave-js/zwave-js'
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
-
-    outputs:
-      CHANGES: ${{ steps.changes.outputs.CHANGES }}
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -35,15 +32,13 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+    - name: Prepare environment
+      uses: ./.github/actions/prepare-env
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install dependencies
-      run: yarn install --immutable
-
+    # FIXME: Check if this build step is still needed
     - name: Compile TypeScript code
       run: yarn run build
 
@@ -58,8 +53,10 @@ jobs:
       if: |
         github.event_name == 'push' && 
         github.ref == 'refs/heads/master'
-      uses: ./.github/actions/generateTypedDocs
+      uses: actions/github-script@v7
       with:
-        githubToken: ${{ secrets.BOT_TOKEN }}
-      env:
-        CI: true
+        github-token: ${{secrets.BOT_TOKEN}}
+        result-encoding: string
+        script: |
+          const main = require(`${process.env.GITHUB_WORKSPACE}/.github/action-scripts/generateTypedDocs.cjs`);
+          return main({github, context});

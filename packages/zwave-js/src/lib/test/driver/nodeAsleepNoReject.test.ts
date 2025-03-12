@@ -1,10 +1,10 @@
 import { BasicCCGet, BasicCCSet } from "@zwave-js/cc";
 import { MessagePriority, NodeStatus } from "@zwave-js/core";
+import { type SendDataRequest } from "@zwave-js/serial/serialapi";
 import { MOCK_FRAME_ACK_TIMEOUT, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { type SendDataRequest } from "../../serialapi/transport/SendDataMessages";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro from #1078
 
@@ -21,9 +21,9 @@ integrationTest(
 			node2.markAsAwake();
 			mockNode.autoAckControllerFrames = false;
 
-			t.is(node2.status, NodeStatus.Awake);
+			t.expect(node2.status).toBe(NodeStatus.Awake);
 
-			const command1 = new BasicCCSet(driver, {
+			const command1 = new BasicCCSet({
 				nodeId: 2,
 				targetValue: 99,
 			});
@@ -31,7 +31,7 @@ integrationTest(
 				maxSendAttempts: 1,
 			});
 
-			const command2 = new BasicCCGet(driver, {
+			const command2 = new BasicCCGet({
 				nodeId: 2,
 			});
 			driver.sendCommand(command2, {
@@ -51,40 +51,37 @@ integrationTest(
 			);
 
 			// The command fails due to no ACK, ...
-			t.is(
+			t.expect(
 				await Promise.race([
 					basicSetPromise1,
 					wait(MOCK_FRAME_ACK_TIMEOUT + 100).then(() => "timeout"),
 				]),
-				"timeout",
-			);
+			).toBe("timeout");
 
 			// ...but both should still be in the queue
 			const sendQueue = driver["queue"];
 			driver.driverLog.sendQueue(sendQueue);
-			t.is(sendQueue.length, 2);
-			t.is(
+			t.expect(sendQueue.length).toBe(2);
+			// with priority WakeUp
+			t.expect(
 				sendQueue.transactions.get(0)?.priority,
-				MessagePriority.WakeUp,
-			);
-			t.is(
+			).toBe(MessagePriority.WakeUp);
+			t.expect(
 				sendQueue.transactions.get(1)?.priority,
-				MessagePriority.WakeUp,
-			);
-			t.is(node2.status, NodeStatus.Asleep);
+			).toBe(MessagePriority.WakeUp);
+			t.expect(node2.status).toBe(NodeStatus.Asleep);
 
 			// And the order should be correct
-			t.is(
+			t.expect(
 				(
 					(sendQueue.transactions.get(0)?.message as SendDataRequest)
 						.command as BasicCCSet
 				).targetValue,
-				99,
-			);
-			t.true(
+			).toBe(99);
+			t.expect(
 				(sendQueue.transactions.get(1)?.message as SendDataRequest)
 					.command instanceof BasicCCGet,
-			);
+			).toBe(true);
 		},
 	},
 );

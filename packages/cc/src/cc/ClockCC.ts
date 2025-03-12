@@ -1,6 +1,9 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import type {
+	GetValueDB,
 	MessageOrCCLogEntry,
 	SupervisionResult,
+	WithAddress,
 } from "@zwave-js/core/safe";
 import {
 	CommandClasses,
@@ -10,17 +13,16 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { padStart } from "alcalzone-shared/strings";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type RefreshValuesContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -28,8 +30,8 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { ClockCommand, Weekday } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { ClockCommand, Weekday } from "../lib/_Types.js";
 
 // @noSetValueAPI - This CC has no simple value to set
 
@@ -49,11 +51,11 @@ export class ClockCCAPI extends CCAPI {
 	public async get() {
 		this.assertSupportsCommand(ClockCommand, ClockCommand.Get);
 
-		const cc = new ClockCCGet(this.applHost, {
+		const cc = new ClockCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<ClockCCReport>(
+		const response = await this.host.sendCommand<ClockCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -70,14 +72,14 @@ export class ClockCCAPI extends CCAPI {
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(ClockCommand, ClockCommand.Set);
 
-		const cc = new ClockCCSet(this.applHost, {
+		const cc = new ClockCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			hour,
 			minute,
 			weekday: weekday ?? Weekday.Unknown,
 		});
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -86,33 +88,37 @@ export class ClockCCAPI extends CCAPI {
 export class ClockCC extends CommandClass {
 	declare ccCommand: ClockCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses.Clock,
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			message: "requesting current clock setting...",
 			direction: "outbound",
 		});
@@ -125,7 +131,7 @@ export class ClockCC extends CommandClass {
 			}${response.hour < 10 ? "0" : ""}${response.hour}:${
 				response.minute < 10 ? "0" : ""
 			}${response.minute}`;
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				message: logMessage,
 				direction: "inbound",
 			});
@@ -134,7 +140,7 @@ export class ClockCC extends CommandClass {
 }
 
 // @publicAPI
-export interface ClockCCSetOptions extends CCCommandOptions {
+export interface ClockCCSetOptions {
 	weekday: Weekday;
 	hour: number;
 	minute: number;
@@ -144,47 +150,49 @@ export interface ClockCCSetOptions extends CCCommandOptions {
 @useSupervision()
 export class ClockCCSet extends ClockCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | ClockCCSetOptions,
+		options: WithAddress<ClockCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.weekday = options.weekday;
-			this.hour = options.hour;
-			this.minute = options.minute;
-		}
+		super(options);
+		this.weekday = options.weekday;
+		this.hour = options.hour;
+		this.minute = options.minute;
+	}
+
+	public static from(_raw: CCRaw, _ctx: CCParsingContext): ClockCCSet {
+		// TODO: Deserialize payload
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
+		);
+
+		// return new ClockCCSet({
+		// 	nodeId: ctx.sourceNodeId,
+		// });
 	}
 
 	public weekday: Weekday;
 	public hour: number;
 	public minute: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			((this.weekday & 0b111) << 5) | (this.hour & 0b11111),
 			this.minute,
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"clock setting": `${
 					getEnumMemberName(
 						Weekday,
 						this.weekday,
 					)
-				}, ${padStart(this.hour.toString(), 2, "0")}:${
-					padStart(
-						this.minute.toString(),
+				}, ${this.hour.toString().padStart(2, "0")}:${
+					this.minute.toString().padStart(
 						2,
 						"0",
 					)
@@ -194,41 +202,60 @@ export class ClockCCSet extends ClockCC {
 	}
 }
 
+// @publicAPI
+export interface ClockCCReportOptions {
+	weekday: Weekday;
+	hour: number;
+	minute: number;
+}
+
 @CCCommand(ClockCommand.Report)
 export class ClockCCReport extends ClockCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<ClockCCReportOptions>,
 	) {
-		super(host, options);
-		validatePayload(this.payload.length >= 2);
+		super(options);
 
-		this.weekday = this.payload[0] >>> 5;
-		this.hour = this.payload[0] & 0b11111;
-		this.minute = this.payload[1];
+		// TODO: Check implementation:
+		this.weekday = options.weekday;
+		this.hour = options.hour;
+		this.minute = options.minute;
+	}
+
+	public static from(raw: CCRaw, ctx: CCParsingContext): ClockCCReport {
+		validatePayload(raw.payload.length >= 2);
+		const weekday: Weekday = raw.payload[0] >>> 5;
+		const hour = raw.payload[0] & 0b11111;
+		const minute = raw.payload[1];
 		validatePayload(
-			this.weekday <= Weekday.Sunday,
-			this.hour <= 23,
-			this.minute <= 59,
+			weekday <= Weekday.Sunday,
+			hour <= 23,
+			minute <= 59,
 		);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			weekday,
+			hour,
+			minute,
+		});
 	}
 
 	public readonly weekday: Weekday;
 	public readonly hour: number;
 	public readonly minute: number;
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"clock setting": `${
 					getEnumMemberName(
 						Weekday,
 						this.weekday,
 					)
-				}, ${padStart(this.hour.toString(), 2, "0")}:${
-					padStart(
-						this.minute.toString(),
+				}, ${this.hour.toString().padStart(2, "0")}:${
+					this.minute.toString().padStart(
 						2,
 						"0",
 					)

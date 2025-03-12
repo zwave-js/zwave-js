@@ -1,28 +1,31 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	ValueMetadata,
+	type WithAddress,
 	encodeFloatWithScale,
 	parseFloatWithScale,
 	validatePayload,
 } from "@zwave-js/core";
 import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host";
-import { getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
 	POLL_VALUE,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type PersistValuesContext,
+	type RefreshValuesContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -30,22 +33,18 @@ import {
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	EnergyProductionCommand,
 	EnergyProductionParameter,
 	type EnergyProductionScale,
 	getEnergyProductionScale,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-export const EnergyProductionCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Energy Production"], {
-		// Static CC values go here
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Energy Production"], {
-		// Dynamic CC values go here
+export const EnergyProductionCCValues = V.defineCCValues(
+	CommandClasses["Energy Production"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"value",
 			"value",
@@ -61,8 +60,8 @@ export const EnergyProductionCCValues = Object.freeze({
 				// unit and ccSpecific are set dynamically
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Energy Production"])
 export class EnergyProductionCCAPI extends CCAPI {
@@ -105,12 +104,12 @@ export class EnergyProductionCCAPI extends CCAPI {
 			EnergyProductionCommand.Get,
 		);
 
-		const cc = new EnergyProductionCCGet(this.applHost, {
+		const cc = new EnergyProductionCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			parameter,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			EnergyProductionCCReport
 		>(
 			cc,
@@ -128,28 +127,32 @@ export class EnergyProductionCCAPI extends CCAPI {
 export class EnergyProductionCC extends CommandClass {
 	declare ccCommand: EnergyProductionCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
 		// Query current values
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Energy Production"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
@@ -163,7 +166,7 @@ export class EnergyProductionCC extends CommandClass {
 				EnergyProductionParameter["Total Time"],
 			] as const
 		) {
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `querying energy production (${
 					getEnumMemberName(
@@ -180,7 +183,7 @@ export class EnergyProductionCC extends CommandClass {
 }
 
 // @publicAPI
-export interface EnergyProductionCCReportOptions extends CCCommandOptions {
+export interface EnergyProductionCCReportOptions {
 	parameter: EnergyProductionParameter;
 	scale: EnergyProductionScale;
 	value: number;
@@ -189,36 +192,45 @@ export interface EnergyProductionCCReportOptions extends CCCommandOptions {
 @CCCommand(EnergyProductionCommand.Report)
 export class EnergyProductionCCReport extends EnergyProductionCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| EnergyProductionCCReportOptions,
+		options: WithAddress<EnergyProductionCCReportOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.parameter = this.payload[0];
-			const { value, scale } = parseFloatWithScale(
-				this.payload.subarray(1),
-			);
-			this.value = value;
-			this.scale = getEnergyProductionScale(this.parameter, scale);
-		} else {
-			this.parameter = options.parameter;
-			this.value = options.value;
-			this.scale = options.scale;
-		}
+		super(options);
+		this.parameter = options.parameter;
+		this.value = options.value;
+		this.scale = options.scale;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): EnergyProductionCCReport {
+		validatePayload(raw.payload.length >= 2);
+		const parameter: EnergyProductionParameter = raw.payload[0];
+		const { value, scale: rawScale } = parseFloatWithScale(
+			raw.payload.subarray(1),
+		);
+		const scale: EnergyProductionScale = getEnergyProductionScale(
+			parameter,
+			rawScale,
+		);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameter,
+			value,
+			scale,
+		});
 	}
 
 	public readonly parameter: EnergyProductionParameter;
 	public readonly scale: EnergyProductionScale;
 	public readonly value: number;
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
-		if (!super.persistValues(applHost)) return false;
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
 
 		const valueValue = EnergyProductionCCValues.value(this.parameter);
-		this.setMetadata(applHost, valueValue, {
+		this.setMetadata(ctx, valueValue, {
 			...valueValue.meta,
 			unit: this.scale.unit,
 			ccSpecific: {
@@ -226,22 +238,22 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
 				scale: this.scale.key,
 			},
 		});
-		this.setValue(applHost, valueValue, this.value);
+		this.setValue(ctx, valueValue, this.value);
 
 		return true;
 	}
 
-	public serialize(): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([this.parameter]),
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([this.parameter]),
 			encodeFloatWithScale(this.value, this.scale.key),
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				[
 					getEnumMemberName(
@@ -255,7 +267,7 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
 }
 
 // @publicAPI
-export interface EnergyProductionCCGetOptions extends CCCommandOptions {
+export interface EnergyProductionCCGetOptions {
 	parameter: EnergyProductionParameter;
 }
 
@@ -273,30 +285,35 @@ function testResponseForEnergyProductionGet(
 )
 export class EnergyProductionCCGet extends EnergyProductionCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| EnergyProductionCCGetOptions,
+		options: WithAddress<EnergyProductionCCGetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.parameter = this.payload[0];
-		} else {
-			this.parameter = options.parameter;
-		}
+		super(options);
+		this.parameter = options.parameter;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): EnergyProductionCCGet {
+		validatePayload(raw.payload.length >= 1);
+		const parameter: EnergyProductionParameter = raw.payload[0];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameter,
+		});
 	}
 
 	public parameter: EnergyProductionParameter;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.parameter]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.parameter]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				parameter: getEnumMemberName(
 					EnergyProductionParameter,

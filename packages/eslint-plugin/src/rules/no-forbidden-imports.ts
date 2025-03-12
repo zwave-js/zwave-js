@@ -2,24 +2,33 @@ import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
-import { type Rule } from "../utils";
 
 // Whitelist some imports that are known not to import forbidden modules
 const whitelistedImports = [
 	"reflect-metadata",
+	// These are browser-compatible
+	"fflate",
+	"dayjs",
+	"nrf-intel-hex",
+	"triple-beam",
 	"alcalzone-shared/arrays",
 	"alcalzone-shared/async",
 	"alcalzone-shared/comparable",
 	"alcalzone-shared/deferred-promise",
+	"alcalzone-shared/helpers",
 	"alcalzone-shared/math",
-	"alcalzone-shared/objects",
 	"alcalzone-shared/sorted-list",
-	"alcalzone-shared/strings",
 	"alcalzone-shared/typeguards",
 ];
+const whitelistedImportsRegex: RegExp[] = [];
+
+// FIXME: When looking at node modules, consider the imports of the implementation
+// files, not the declaration files. Those might import types from forbidden modules
+// even though they are not used in the implementation.
 
 // Whitelist some more imports that should be ignored in the checking
-const ignoredImports = ["@zwave-js/transformers"];
+const ignoredImports = ["@zwave-js/transformers", "pathe"];
+const ignoredImportsRegex: RegExp[] = [/^semver\/functions\/.+/];
 
 function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 	if (
@@ -186,14 +195,14 @@ function resolveSourceFileFromDefinition(
 
 const forbiddenImportsRegex = /^@forbiddenImports (?<forbidden>.*?)$/;
 
-export const noForbiddenImports: Rule = ESLintUtils.RuleCreator.withoutDocs({
+export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 	create(context) {
 		// And only those with at least one /* @forbiddenImports ... */ comment
 		const comments = context.sourceCode.getAllComments()
 			.filter((c) => c.type === "Block")
 			.map((c) => c.value.trim());
 		const forbidden = comments.map((c) => c.match(forbiddenImportsRegex))
-			.filter((match): match is RegExpMatchArray => !!match)
+			.filter((match) => !!match)
 			.map((match) => match.groups?.forbidden?.trim())
 			.filter((forbidden): forbidden is string => !!forbidden)
 			.flatMap((forbidden) => forbidden.split(" "));
@@ -277,7 +286,12 @@ export const noForbiddenImports: Rule = ESLintUtils.RuleCreator.withoutDocs({
 			imp: ResolvedImport,
 		): "ignored" | "forbidden" | "ok" {
 			const trimmedImport = imp.name.replaceAll("\"", "");
-			if (ignoredImports.includes(trimmedImport)) return "ignored";
+			if (
+				ignoredImports.includes(trimmedImport)
+				|| ignoredImportsRegex.some((regex) =>
+					regex.test(trimmedImport)
+				)
+			) return "ignored";
 
 			if (forbidden.includes("external")) {
 				// The special import name "external" forbids all external imports
@@ -286,6 +300,9 @@ export const noForbiddenImports: Rule = ESLintUtils.RuleCreator.withoutDocs({
 				if (
 					imp.sourceFile.fileName.includes("node_modules")
 					&& !whitelistedImports.includes(trimmedImport)
+					&& !whitelistedImportsRegex.some((regex) =>
+						regex.test(trimmedImport)
+					)
 				) {
 					return "forbidden";
 				}

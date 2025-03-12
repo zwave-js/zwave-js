@@ -4,9 +4,9 @@ import {
 	SecurityClass,
 	SecurityManager2,
 } from "@zwave-js/core";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
-// Repro for https://github.com/zwave-js/node-zwave-js/issues/6098
+// Repro for https://github.com/zwave-js/zwave-js/issues/6098
 
 integrationTest(`An insecurely-included node has security class None`, {
 	// debug: true,
@@ -24,9 +24,11 @@ integrationTest(`An insecurely-included node has security class None`, {
 	},
 
 	testBody: async (t, driver, node, mockController, mockNode) => {
-		t.is(node.hasSecurityClass(SecurityClass.S0_Legacy), false);
-		t.is(node.hasSecurityClass(SecurityClass.S2_AccessControl), false);
-		t.is(node.getHighestSecurityClass(), SecurityClass.None);
+		t.expect(node.hasSecurityClass(SecurityClass.S0_Legacy)).toBe(false);
+		t.expect(node.hasSecurityClass(SecurityClass.S2_AccessControl)).toBe(
+			false,
+		);
+		t.expect(node.getHighestSecurityClass()).toBe(SecurityClass.None);
 	},
 });
 
@@ -49,9 +51,12 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			t.is(node.hasSecurityClass(SecurityClass.S0_Legacy), false);
-			t.is(node.hasSecurityClass(SecurityClass.S2_AccessControl), false);
-			t.is(node.getHighestSecurityClass(), SecurityClass.None);
+			t.expect(node.hasSecurityClass(SecurityClass.S0_Legacy)).toBe(
+				false,
+			);
+			t.expect(node.hasSecurityClass(SecurityClass.S2_AccessControl))
+				.toBe(false);
+			t.expect(node.getHighestSecurityClass()).toBe(SecurityClass.None);
 		},
 	},
 );
@@ -74,51 +79,56 @@ integrationTest(
 			driver.options.timeouts.report = 200;
 
 			// Create a security manager for the node
-			const smNode = new SecurityManager2();
+			const smNode = await SecurityManager2.create();
 			// Copy keys from the driver
-			smNode.setKey(
+			await smNode.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			smNode.setKey(
+			await smNode.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			smNode.setKey(
+			await smNode.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
-			mockNode.host.securityManager2 = smNode;
-			mockNode.host.getHighestSecurityClass = () => SecurityClass.None;
+			mockNode.securityManagers.securityManager2 = smNode;
+			mockNode.encodingContext.getHighestSecurityClass = () =>
+				SecurityClass.None;
 
 			// Create a security manager for the controller
-			const smCtrlr = new SecurityManager2();
+			const smCtrlr = await SecurityManager2.create();
 			// Copy keys from the driver
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
-			controller.host.securityManager2 = smCtrlr;
-			controller.host.getHighestSecurityClass = () => NOT_KNOWN;
+			controller.securityManagers.securityManager2 = smCtrlr;
+			controller.encodingContext.getHighestSecurityClass = () =>
+				NOT_KNOWN;
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			t.is(node.hasSecurityClass(SecurityClass.S0_Legacy), false);
-			t.is(
-				node.hasSecurityClass(SecurityClass.S2_Unauthenticated),
+			t.expect(node.hasSecurityClass(SecurityClass.S0_Legacy)).toBe(
 				false,
 			);
-			t.is(node.hasSecurityClass(SecurityClass.S2_Authenticated), false);
-			t.is(node.hasSecurityClass(SecurityClass.S2_AccessControl), false);
-			t.is(node.getHighestSecurityClass(), SecurityClass.None);
+			t.expect(
+				node.hasSecurityClass(SecurityClass.S2_Unauthenticated),
+			).toBe(false);
+			t.expect(node.hasSecurityClass(SecurityClass.S2_Authenticated))
+				.toBe(false);
+			t.expect(node.hasSecurityClass(SecurityClass.S2_AccessControl))
+				.toBe(false);
+			t.expect(node.getHighestSecurityClass()).toBe(SecurityClass.None);
 		},
 	},
 );

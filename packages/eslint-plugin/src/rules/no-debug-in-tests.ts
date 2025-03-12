@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 import path from "node:path";
-import { type Rule, repoRoot } from "../utils.js";
+import { repoRoot } from "../utils.js";
 
 const isFixMode = process.argv.some((arg) => arg.startsWith("--fix"));
 
@@ -20,7 +20,7 @@ const integrationTestExportNames = new Set([
 	"integrationTest",
 ]);
 
-export const noDebugInTests: Rule = ESLintUtils.RuleCreator.withoutDocs({
+export const noDebugInTests = ESLintUtils.RuleCreator.withoutDocs({
 	create(context) {
 		const integrationTestMethodNames = new Set<string>();
 
@@ -31,7 +31,8 @@ export const noDebugInTests: Rule = ESLintUtils.RuleCreator.withoutDocs({
 				// Figure out how the integration test methods are imported
 				if (
 					// node.importKind === "value"
-					integrationTestExportNames.has(node.imported.name)
+					node.imported.type === AST_NODE_TYPES.Identifier
+					&& integrationTestExportNames.has(node.imported.name)
 					&& node.parent.type === AST_NODE_TYPES.ImportDeclaration
 					&& integrationTestDefinitionFiles.has(path.join(
 						path.dirname(context.filename),

@@ -36,6 +36,12 @@ async reportCCVersion(requestedCC: CommandClasses): Promise<void>;
 async getCapabilities(): Promise<Pick<VersionCCCapabilitiesReport, "supportsZWaveSoftwareGet"> | undefined>;
 ```
 
+### `reportCapabilities`
+
+```ts
+async reportCapabilities(): Promise<void>;
+```
+
 ### `getZWaveSoftware`
 
 ```ts
@@ -49,7 +55,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "applicationBuildNumber",
 }
 ```
@@ -67,7 +73,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "applicationFrameworkAPIVersion",
 }
 ```
@@ -85,7 +91,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "applicationFrameworkBuildNumber",
 }
 ```
@@ -103,7 +109,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "applicationVersion",
 }
 ```
@@ -121,7 +127,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "firmwareVersions",
 }
 ```
@@ -139,7 +145,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "hardwareVersion",
 }
 ```
@@ -157,7 +163,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "libraryType",
 }
 ```
@@ -175,7 +181,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "protocolVersion",
 }
 ```
@@ -193,7 +199,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "sdkVersion",
 }
 ```
@@ -211,7 +217,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "hostInterfaceBuildNumber",
 }
 ```
@@ -229,7 +235,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "hostInterfaceVersion",
 }
 ```
@@ -247,7 +253,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "zWaveProtocolBuildNumber",
 }
 ```
@@ -265,7 +271,7 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 ```ts
 {
 	commandClass: CommandClasses.Version,
-	endpoint: number,
+	endpoint: 0,
 	property: "zWaveProtocolVersion",
 }
 ```

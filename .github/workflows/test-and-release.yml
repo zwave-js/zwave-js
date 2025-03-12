@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -47,9 +47,7 @@ jobs:
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Compile TypeScript code
-      run: |
-        # yarn clean $TURBO_FLAGS
-        yarn build $TURBO_FLAGS
+      run: yarn build $TURBO_FLAGS
 
     - name: Save Turbo Cache between jobs
       uses: ./.github/actions/build-cache-upload
@@ -63,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -85,8 +83,10 @@ jobs:
     # I'd love to use yalc or something for this, but it doesn't use yarn pack to pack the tarballs
     # so we need to fake the install
     - name: Import main entry points for each package
+      id: monopack
       run: |
         TMP_DIR=$(mktemp -d)
+        echo TMP_DIR=$TMP_DIR >> $GITHUB_OUTPUT
 
         echo "Re-creating a production environment..."
         yarn monopack --target "$TMP_DIR/.tarballs" --no-version
@@ -94,8 +94,30 @@ jobs:
 
         npm init -y
         npm i .tarballs/zwave-js.tgz
+        # bindings-browser is not automatically installed
+        npm i .tarballs/zwave-js-bindings-browser.tgz
 
-        echo "Testing entry points..."
+        echo "Testing ESM entry points..."
+        # Now all entrypoints should work
+        node -e '(async () => { await import("zwave-js") })()'
+        node -e '(async () => { await import("@zwave-js/cc") })()'
+        node -e '(async () => { await import("@zwave-js/config") })()'
+        node -e '(async () => { await import("@zwave-js/core") })()'
+        node -e '(async () => { await import("@zwave-js/host") })()'
+        node -e '(async () => { await import("@zwave-js/nvmedit") })()'
+        node -e '(async () => { await import("@zwave-js/serial") })()'
+        node -e '(async () => { await import("@zwave-js/shared") })()'
+        node -e '(async () => { await import("@zwave-js/testing") })()'
+        node -e '(async () => { await import("zwave-js/safe") })()'
+        node -e '(async () => { await import("@zwave-js/cc/safe") })()'
+        node -e '(async () => { await import("@zwave-js/config/safe") })()'
+        node -e '(async () => { await import("@zwave-js/core/safe") })()'
+        node -e '(async () => { await import("@zwave-js/nvmedit/safe") })()'
+        node -e '(async () => { await import("@zwave-js/serial/safe") })()'
+        node -e '(async () => { await import("@zwave-js/shared/safe") })()'
+        node -e '(async () => { await import("@zwave-js/bindings-browser/fs") })()'
+
+        echo "Testing CJS entry points..."
         # Now all entrypoints should work
         node -e 'require("zwave-js")'
         node -e 'require("@zwave-js/cc")'
@@ -110,38 +132,46 @@ jobs:
         node -e 'require("@zwave-js/cc/safe")'
         node -e 'require("@zwave-js/config/safe")'
         node -e 'require("@zwave-js/core/safe")'
-        node -e 'require("@zwave-js/host/safe")'
         node -e 'require("@zwave-js/nvmedit/safe")'
         node -e 'require("@zwave-js/serial/safe")'
         node -e 'require("@zwave-js/shared/safe")'
 
+        echo "Testing version exports..."
+        node -e 'assert.equal(require("@zwave-js/config").PACKAGE_VERSION, require("@zwave-js/config/package.json").version)'
+        node -e 'assert.equal(require("zwave-js").libVersion, require("zwave-js/package.json").version)'
+        node -e 'assert.equal(require("zwave-js").libName, require("zwave-js/package.json").name)'
+
+        echo "Doing spot checks for some exports"
+        node -e 'assert.equal(typeof require("@zwave-js/core").randomBytes, "function")'
+
+    # Test if bundling for the browser is supported yet
+    - name: Are we browser yet?
+      continue-on-error: true
+      env:
+        TMP_DIR: ${{ steps.monopack.outputs.TMP_DIR }}
+      run: |
+        cd $TMP_DIR
+        npm i -D esbuild
+        echo "import 'zwave-js'" > test.mjs
+        npx esbuild test.mjs --bundle --format=esm --outdir=build --sourcemap --target=es2022 --platform=browser --analyze=verbose --external:node:crypto
+        
   # ===================
 
   lint:
-    needs: [build]
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Restore Turbo Cache from previous jobs
-      uses: ./.github/actions/build-cache-download
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
       with:
         node-version: ${{ matrix.node-version }}
         githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-    # For linting to succeed, we need to build the eslint plugin first.
-    # Thanks to caching from the previous job, this should be almost a no-op
-    - name: Compile TypeScript code
-      run: yarn build $TURBO_FLAGS
 
     - name: Run linters
       run: yarn run lint $TURBO_FLAGS
@@ -179,19 +209,14 @@ jobs:
   # ===================
 
   lint-zwave:
-    needs: [build]
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Restore Turbo Cache from previous jobs
-      uses: ./.github/actions/build-cache-download
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -200,25 +225,23 @@ jobs:
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Lint config files and Z-Wave specifics
-      run: yarn run lint:zwave $TURBO_FLAGS
+      # Disable log prefix, so GitHub recognizes annotations in the output
+      run: yarn run lint:zwave $TURBO_FLAGS --log-prefix=none
 
   # ===================
   # Runs unit tests on all supported node versions and OSes
   unit-tests:
-    needs: [build]
-
+    name: "Unit tests: ${{ matrix.os }}, Node.js ${{ matrix.node-version }} (part ${{ matrix.shard }})"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
         os: [ubuntu-latest]
+        shard: [1/4, 2/4, 3/4, 4/4]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Restore Turbo Cache from previous jobs
-      uses: ./.github/actions/build-cache-download
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -226,23 +249,47 @@ jobs:
         node-version: ${{ matrix.node-version }}
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
-    # For the partial tests to succeed, we need to build the packages first.
-    # Thanks to caching from the previous job, this should be almost a no-op
-    - name: Compile TypeScript code
-      run: yarn build $TURBO_FLAGS
-
-    # For pull requests, only run tests for changed files
-    - name: Run component tests (changes)
-      if: github.event_name == 'pull_request'
-      run: |
-        git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
-        yarn run test:dirty --resolve --base origin/${{ github.event.pull_request.base.ref }}
+    # # For pull requests, only run tests for changed files
+    # - name: Run component tests (changes)
+    #   if: github.event_name == 'pull_request'
+    #   run: |
+    #     git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
+    #     yarn run test:dirty --resolve --base origin/${{ github.event.pull_request.base.ref }}
 
     # For all other events, especially on master and releases, run the full test suite
     # Run the full test suite on master, release branches and tags
     - name: Run component tests (full)
-      if: github.event_name != 'pull_request'
-      run: yarn run test:ts $TURBO_FLAGS
+      # if: github.event_name != 'pull_request'
+      run: yarn run test:ts --shard ${{ matrix.shard }}
+
+  # ===================
+  # Test if the transformers are working
+  test-transformers:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [20, 22]
+        os: [ubuntu-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Prepare testing environment
+      uses: ./.github/actions/prepare-env
+      with:
+        node-version: ${{ matrix.node-version }}
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+    # Transformer tests need their dependencies to be compiled
+    - name: Compile test dependencies
+      run: |
+        yarn workspace @zwave-js/shared run build
+        yarn workspace @zwave-js/core run build
+
+    # For pull requests, only run tests for changed files
+    - name: Test transformers
+      run: yarn workspace @zwave-js/transformers run test:ts
 
   # # ===================
   # # This job checks if a PR changes the public API surface
@@ -256,7 +303,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   strategy:
   #     matrix:
-  #       node-version: [18] # This should be LTS
+  #       node-version: [22] # This should be LTS
 
   #   steps:
   #   - name: Checkout code
@@ -295,22 +342,20 @@ jobs:
   gh-cc-table:
     name: Update CC implementation status
     # Only run for master branch and don't run in forks
-    if: github.repository == 'zwave-js/node-zwave-js' && github.ref == 'refs/heads/master' && github.event_name == 'push'
-
-    needs: [build]
+    if: |
+      github.repository == 'zwave-js/zwave-js' &&
+      github.ref == 'refs/heads/master' &&
+      github.event_name == 'push'
 
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Restore Turbo Cache from previous jobs
-      uses: ./.github/actions/build-cache-download
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -318,37 +363,34 @@ jobs:
         node-version: ${{ matrix.node-version }}
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Compile TypeScript code
-      run: yarn build $TURBO_FLAGS
-
     - name: Update CC table # (maybe)
-      uses: ./.github/actions/gh-cc-table
+      uses: actions/github-script@v7
       with:
-        githubToken: ${{ secrets.BOT_TOKEN }}
-      env:
-        CI: true
+        github-token: ${{secrets.BOT_TOKEN}}
+        result-encoding: string
+        script: |
+          const main = require(`${process.env.GITHUB_WORKSPACE}/.github/action-scripts/updateCCImplementationOverview.cjs`);
+          return main({github, context});
 
   # ===================
 
   generate-overview:
     name: Update toLogEntry overview
     # Only run for master branch and don't run in forks
-    if: github.repository == 'zwave-js/node-zwave-js' && github.ref == 'refs/heads/master' && github.event_name == 'push'
-
-    needs: [build]
+    if: |
+      github.repository == 'zwave-js/zwave-js' &&
+      github.ref == 'refs/heads/master' &&
+      github.event_name == 'push'
 
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Restore Turbo Cache from previous jobs
-      uses: ./.github/actions/build-cache-download
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -356,15 +398,14 @@ jobs:
         node-version: ${{ matrix.node-version }}
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Compile TypeScript code
-      run: yarn build $TURBO_FLAGS
-
     - name: Update overview
-      uses: ./.github/actions/toLogEntry
+      uses: actions/github-script@v7
       with:
-        githubToken: ${{ secrets.BOT_TOKEN }}
-      env:
-        CI: true
+        github-token: ${{secrets.BOT_TOKEN}}
+        result-encoding: string
+        script: |
+          const main = require(`${process.env.GITHUB_WORKSPACE}/.github/action-scripts/updateToLogEntryOverview.cjs`);
+          return main({github, context});
 
   # ===================
 
@@ -376,12 +417,18 @@ jobs:
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v')
 
-    needs: [lint, lint-zwave, unit-tests, test-packages]
+    needs:
+      - build
+      - lint
+      - lint-zwave
+      - unit-tests
+      - test-transformers
+      - test-packages
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -421,7 +468,7 @@ jobs:
       run: |
         yarn config set npmAuthToken "${{ secrets.NPM_TOKEN }}"
         yarn npm whoami
-        yarn workspaces foreach -vti --no-private npm publish --tolerate-republish $TAG
+        yarn workspaces foreach --all -vti --no-private npm publish --tolerate-republish $TAG
 
 
     - name: Create Github Release

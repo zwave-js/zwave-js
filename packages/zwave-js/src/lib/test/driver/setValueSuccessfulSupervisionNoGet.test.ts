@@ -6,14 +6,10 @@ import {
 	SupervisionCCReport,
 } from "@zwave-js/cc";
 import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import sinon from "sinon";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"setValue with successful supervised command: expect NO validation GET",
@@ -34,25 +30,16 @@ integrationTest(
 		customSetup: async (driver, controller, mockNode) => {
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof SupervisionCCGet
-					) {
-						const cc = new SupervisionCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
-							sessionId: frame.payload.sessionId,
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof SupervisionCCGet) {
+						const cc = new SupervisionCCReport({
+							nodeId: controller.ownNodeId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToSupervisionGet);
@@ -90,7 +77,7 @@ integrationTest(
 			const currentValue = node.getValue(
 				BinarySwitchCCValues.currentValue.id,
 			);
-			t.true(currentValue);
+			t.expect(currentValue).toBe(true);
 
 			// And make sure the value event handlers are called
 			sinon.assert.calledWith(

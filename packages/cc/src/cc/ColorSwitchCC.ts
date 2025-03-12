@@ -1,6 +1,8 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -8,6 +10,7 @@ import {
 	type ValueDB,
 	type ValueID,
 	ValueMetadata,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	isUnsupervisedOrSucceeded,
@@ -15,8 +18,8 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { type MaybeNotKnown, encodeBitMask } from "@zwave-js/core/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import {
 	getEnumMemberName,
 	isEnumMember,
@@ -36,24 +39,26 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type PersistValuesContext,
+	type RefreshValuesContext,
+	getEffectiveCCVersion,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ColorComponent,
 	ColorComponentMap,
@@ -61,7 +66,7 @@ import {
 	ColorSwitchCommand,
 	type ColorTable,
 	LevelChangeDirection,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
 const hexColorRegex =
 	/^#?(?<red>[0-9a-f]{2})(?<green>[0-9a-f]{2})(?<blue>[0-9a-f]{2})$/i;
@@ -93,16 +98,15 @@ function colorComponentToTableKey(
 	}
 }
 
-export const ColorSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Color Switch"], {
+export const ColorSwitchCCValues = V.defineCCValues(
+	CommandClasses["Color Switch"],
+	{
 		...V.staticProperty("supportedColorComponents", undefined, {
 			internal: true,
 		}),
 		...V.staticProperty("supportsHexColor", undefined, {
 			internal: true,
 		}),
-
-		// The compound color (static)
 		...V.staticPropertyWithName(
 			"currentColor",
 			"currentColor",
@@ -127,8 +131,6 @@ export const ColorSwitchCCValues = Object.freeze({
 				label: "Remaining duration",
 			} as const,
 		),
-
-		// The compound color as HEX
 		...V.staticProperty(
 			"hexColor",
 			{
@@ -139,10 +141,6 @@ export const ColorSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Color Switch"], {
-		// The individual color channels (dynamic)
 		...V.dynamicPropertyAndKeyWithName(
 			"currentColorChannel",
 			"currentColor",
@@ -176,8 +174,8 @@ export const ColorSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Color Switch"])
 export class ColorSwitchCCAPI extends CCAPI {
@@ -202,11 +200,11 @@ export class ColorSwitchCCAPI extends CCAPI {
 			ColorSwitchCommand.SupportedGet,
 		);
 
-		const cc = new ColorSwitchCCSupportedGet(this.applHost, {
+		const cc = new ColorSwitchCCSupportedGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			ColorSwitchCCSupportedReport
 		>(
 			cc,
@@ -220,12 +218,12 @@ export class ColorSwitchCCAPI extends CCAPI {
 	public async get(component: ColorComponent) {
 		this.assertSupportsCommand(ColorSwitchCommand, ColorSwitchCommand.Get);
 
-		const cc = new ColorSwitchCCGet(this.applHost, {
+		const cc = new ColorSwitchCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			colorComponent: component,
 		});
-		const response = await this.applHost.sendCommand<ColorSwitchCCReport>(
+		const response = await this.host.sendCommand<ColorSwitchCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -240,13 +238,13 @@ export class ColorSwitchCCAPI extends CCAPI {
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(ColorSwitchCommand, ColorSwitchCommand.Set);
 
-		const cc = new ColorSwitchCCSet(this.applHost, {
+		const cc = new ColorSwitchCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...options,
 		});
 
-		const result = await this.applHost.sendCommand(cc, this.commandOptions);
+		const result = await this.host.sendCommand(cc, this.commandOptions);
 
 		if (isUnsupervisedOrSucceeded(result)) {
 			// If the command did not fail, assume that it succeeded and update the values accordingly
@@ -265,7 +263,7 @@ export class ColorSwitchCCAPI extends CCAPI {
 				);
 				// and optimistically update the currentColor
 				for (const node of affectedNodes) {
-					const valueDB = this.applHost.tryGetValueDB(node.id);
+					const valueDB = this.host.tryGetValueDB(node.id);
 					if (valueDB) {
 						this.updateCurrentColor(valueDB, cc.colorTable);
 					}
@@ -358,13 +356,13 @@ export class ColorSwitchCCAPI extends CCAPI {
 			ColorSwitchCommand.StartLevelChange,
 		);
 
-		const cc = new ColorSwitchCCStartLevelChange(this.applHost, {
+		const cc = new ColorSwitchCCStartLevelChange({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...options,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	@validateArgs({ strictEnums: true })
@@ -376,13 +374,13 @@ export class ColorSwitchCCAPI extends CCAPI {
 			ColorSwitchCommand.StopLevelChange,
 		);
 
-		const cc = new ColorSwitchCCStopLevelChange(this.applHost, {
+		const cc = new ColorSwitchCCStopLevelChange({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			colorComponent,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
@@ -472,7 +470,7 @@ export class ColorSwitchCCAPI extends CCAPI {
 								value,
 								supportedColors
 									.map((c) => colorComponentToTableKey(c))
-									.filter((c) => !!c) as ColorKey[],
+									.filter((c) => !!c),
 							);
 						}
 					}
@@ -538,31 +536,33 @@ export class ColorSwitchCCAPI extends CCAPI {
 export class ColorSwitchCC extends CommandClass {
 	declare ccCommand: ColorSwitchCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Color Switch"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying supported colors...",
 			direction: "outbound",
 		});
 		const supportedColors = await api.getSupported();
 		if (!supportedColors) {
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message:
 					"Querying supported colors timed out, skipping interview...",
@@ -571,7 +571,7 @@ export class ColorSwitchCC extends CommandClass {
 			return;
 		}
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `received supported colors:${
 				supportedColors
@@ -585,17 +585,17 @@ export class ColorSwitchCC extends CommandClass {
 		for (const color of supportedColors) {
 			const currentColorChannelValue = ColorSwitchCCValues
 				.currentColorChannel(color);
-			this.setMetadata(applHost, currentColorChannelValue);
+			this.setMetadata(ctx, currentColorChannelValue);
 
 			const targetColorChannelValue = ColorSwitchCCValues
 				.targetColorChannel(color);
-			this.setMetadata(applHost, targetColorChannelValue);
+			this.setMetadata(ctx, targetColorChannelValue);
 		}
 		// And the compound one
 		const currentColorValue = ColorSwitchCCValues.currentColor;
-		this.setMetadata(applHost, currentColorValue);
+		this.setMetadata(ctx, currentColorValue);
 		const targetColorValue = ColorSwitchCCValues.targetColor;
-		this.setMetadata(applHost, targetColorValue);
+		this.setMetadata(ctx, targetColorValue);
 
 		// Create the collective HEX color values
 		const supportsHex = [
@@ -604,35 +604,37 @@ export class ColorSwitchCC extends CommandClass {
 			ColorComponent.Blue,
 		].every((c) => supportedColors.includes(c));
 		this.setValue(
-			applHost,
+			ctx,
 			ColorSwitchCCValues.supportsHexColor,
 			supportsHex,
 		);
 		if (supportsHex) {
 			const hexColorValue = ColorSwitchCCValues.hexColor;
-			this.setMetadata(applHost, hexColorValue);
+			this.setMetadata(ctx, hexColorValue);
 		}
 
 		// Query all color components
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Color Switch"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
 		const supportedColors: readonly ColorComponent[] = this.getValue(
-			applHost,
+			ctx,
 			ColorSwitchCCValues.supportedColorComponents,
 		) ?? [];
 
@@ -642,7 +644,7 @@ export class ColorSwitchCC extends CommandClass {
 			if (!isEnumMember(ColorComponent, color)) continue;
 
 			const colorName = getEnumMemberName(ColorComponent, color);
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `querying current color state (${colorName})`,
 				direction: "outbound",
@@ -652,7 +654,7 @@ export class ColorSwitchCC extends CommandClass {
 	}
 
 	public translatePropertyKey(
-		applHost: ZWaveApplicationHost,
+		ctx: GetValueDB,
 		property: string | number,
 		propertyKey: string | number,
 	): string | undefined {
@@ -663,33 +665,60 @@ export class ColorSwitchCC extends CommandClass {
 			const translated = ColorComponent[propertyKey];
 			if (translated) return translated;
 		}
-		return super.translatePropertyKey(applHost, property, propertyKey);
+		return super.translatePropertyKey(ctx, property, propertyKey);
 	}
 }
 
+// @publicAPI
+export interface ColorSwitchCCSupportedReportOptions {
+	supportedColorComponents: readonly ColorComponent[];
+}
+
 @CCCommand(ColorSwitchCommand.SupportedReport)
+@ccValueProperty(
+	"supportedColorComponents",
+	ColorSwitchCCValues.supportedColorComponents,
+)
 export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<ColorSwitchCCSupportedReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		// Docs say 'variable length', but the table shows 2 bytes.
-		validatePayload(this.payload.length >= 2);
-
-		this.supportedColorComponents = parseBitMask(
-			this.payload.subarray(0, 2),
-			ColorComponent["Warm White"],
-		);
+		this.supportedColorComponents = options.supportedColorComponents;
 	}
 
-	@ccValue(ColorSwitchCCValues.supportedColorComponents)
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ColorSwitchCCSupportedReport {
+		// Docs say 'variable length', but the table shows 2 bytes.
+		validatePayload(raw.payload.length >= 2);
+		const supportedColorComponents: ColorComponent[] = parseBitMask(
+			raw.payload.subarray(0, 2),
+			ColorComponent["Warm White"],
+		);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			supportedColorComponents,
+		});
+	}
+
 	public readonly supportedColorComponents: readonly ColorComponent[];
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeBitMask(
+			this.supportedColorComponents,
+			15, // fixed 2 bytes
+			ColorComponent["Warm White"],
+		);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"supported color components": this.supportedColorComponents
 					.map((c) => `\n· ${getEnumMemberName(ColorComponent, c)}`)
@@ -703,37 +732,72 @@ export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
 @expectedCCResponse(ColorSwitchCCSupportedReport)
 export class ColorSwitchCCSupportedGet extends ColorSwitchCC {}
 
+// @publicAPI
+export interface ColorSwitchCCReportOptions {
+	colorComponent: ColorComponent;
+	currentValue: number;
+	targetValue?: number;
+	duration?: Duration | string;
+}
+
 @CCCommand(ColorSwitchCommand.Report)
+@ccValueProperty(
+	"currentValue",
+	ColorSwitchCCValues.currentColorChannel,
+	(self) => [self.colorComponent],
+)
+@ccValueProperty(
+	"targetValue",
+	ColorSwitchCCValues.targetColorChannel,
+	(self) => [self.colorComponent],
+)
+@ccValueProperty("duration", ColorSwitchCCValues.duration)
 export class ColorSwitchCCReport extends ColorSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<ColorSwitchCCReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		validatePayload(this.payload.length >= 2);
-		this.colorComponent = this.payload[0];
-		this.currentValue = this.payload[1];
-
-		if (this.version >= 3 && this.payload.length >= 4) {
-			this.targetValue = this.payload[2];
-			this.duration = Duration.parseReport(this.payload[3]);
-		}
+		this.colorComponent = options.colorComponent;
+		this.currentValue = options.currentValue;
+		this.targetValue = options.targetValue;
+		this.duration = Duration.from(options.duration);
 	}
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
+	public static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCReport {
+		validatePayload(raw.payload.length >= 2);
+		const colorComponent: ColorComponent = raw.payload[0];
+		const currentValue = raw.payload[1];
+		let targetValue: number | undefined;
+		let duration: Duration | undefined;
+
+		if (raw.payload.length >= 4) {
+			targetValue = raw.payload[2];
+			duration = Duration.parseReport(raw.payload[3]);
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			colorComponent,
+			currentValue,
+			targetValue,
+			duration,
+		});
+	}
+
+	public persistValues(ctx: PersistValuesContext): boolean {
 		// Duration is stored globally instead of per component
-		if (!super.persistValues(applHost)) return false;
+		if (!super.persistValues(ctx)) return false;
 
 		// Update compound current value
 		const colorTableKey = colorComponentToTableKey(this.colorComponent);
 		if (colorTableKey) {
 			const compoundCurrentColorValue = ColorSwitchCCValues.currentColor;
 			const compoundCurrentColor: Partial<Record<ColorKey, number>> =
-				this.getValue(applHost, compoundCurrentColorValue) ?? {};
+				this.getValue(ctx, compoundCurrentColorValue) ?? {};
 			compoundCurrentColor[colorTableKey] = this.currentValue;
 			this.setValue(
-				applHost,
+				ctx,
 				compoundCurrentColorValue,
 				compoundCurrentColor,
 			);
@@ -743,10 +807,10 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 				const compoundTargetColorValue =
 					ColorSwitchCCValues.targetColor;
 				const compoundTargetColor: Partial<Record<ColorKey, number>> =
-					this.getValue(applHost, compoundTargetColorValue) ?? {};
+					this.getValue(ctx, compoundTargetColorValue) ?? {};
 				compoundTargetColor[colorTableKey] = this.targetValue;
 				this.setValue(
-					applHost,
+					ctx,
 					compoundTargetColorValue,
 					compoundTargetColor,
 				);
@@ -755,7 +819,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 
 		// Update collective hex value if required
 		const supportsHex = !!this.getValue(
-			applHost,
+			ctx,
 			ColorSwitchCCValues.supportsHexColor,
 		);
 		if (
@@ -766,7 +830,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 		) {
 			const hexColorValue = ColorSwitchCCValues.hexColor;
 
-			const hexValue: string = this.getValue(applHost, hexColorValue)
+			const hexValue: string = this.getValue(ctx, hexColorValue)
 				?? "000000";
 			const byteOffset = ColorComponent.Blue - this.colorComponent;
 			const byteMask = 0xff << (byteOffset * 8);
@@ -774,7 +838,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 			hexValueNumeric = (hexValueNumeric & ~byteMask)
 				| (this.currentValue << (byteOffset * 8));
 			this.setValue(
-				applHost,
+				ctx,
 				hexColorValue,
 				hexValueNumeric.toString(16).padStart(6, "0"),
 			);
@@ -784,22 +848,31 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 	}
 
 	public readonly colorComponent: ColorComponent;
-	@ccValue(
-		ColorSwitchCCValues.currentColorChannel,
-		(self: ColorSwitchCCReport) => [self.colorComponent] as const,
-	)
+
 	public readonly currentValue: number;
 
-	@ccValue(
-		ColorSwitchCCValues.targetColorChannel,
-		(self: ColorSwitchCCReport) => [self.colorComponent] as const,
-	)
 	public readonly targetValue: number | undefined;
 
-	@ccValue(ColorSwitchCCValues.duration)
 	public readonly duration: Duration | undefined;
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.colorComponent,
+			this.currentValue,
+		]);
+		if (this.targetValue != undefined && this.duration != undefined) {
+			this.payload = Bytes.concat([
+				this.payload,
+				Bytes.from([
+					this.targetValue ?? 0xfe,
+					(this.duration ?? Duration.default()).serializeReport(),
+				]),
+			]);
+		}
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"color component": getEnumMemberName(
 				ColorComponent,
@@ -814,14 +887,14 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
 }
 
 // @publicAPI
-export interface ColorSwitchCCGetOptions extends CCCommandOptions {
+export interface ColorSwitchCCGetOptions {
 	colorComponent: ColorComponent;
 }
 
@@ -836,19 +909,20 @@ function testResponseForColorSwitchGet(
 @expectedCCResponse(ColorSwitchCCReport, testResponseForColorSwitchGet)
 export class ColorSwitchCCGet extends ColorSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | ColorSwitchCCGetOptions,
+		options: WithAddress<ColorSwitchCCGetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this._colorComponent = options.colorComponent;
-		}
+		super(options);
+		this._colorComponent = options.colorComponent;
+	}
+
+	public static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCGet {
+		validatePayload(raw.payload.length >= 1);
+		const colorComponent: ColorComponent = raw.payload[0];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			colorComponent,
+		});
 	}
 
 	private _colorComponent: ColorComponent;
@@ -865,14 +939,14 @@ export class ColorSwitchCCGet extends ColorSwitchCC {
 		this._colorComponent = value;
 	}
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this._colorComponent]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this._colorComponent]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"color component": getEnumMemberName(
 					ColorComponent,
@@ -892,47 +966,64 @@ export type ColorSwitchCCSetOptions = (ColorTable | { hexColor: string }) & {
 @useSupervision()
 export class ColorSwitchCCSet extends ColorSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| (CCCommandOptions & ColorSwitchCCSetOptions),
+		options: WithAddress<ColorSwitchCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			// Populate properties from options object
-			if ("hexColor" in options) {
-				const match = hexColorRegex.exec(options.hexColor);
-				if (!match) {
-					throw new ZWaveError(
-						`${options.hexColor} is not a valid HEX color string`,
-						ZWaveErrorCodes.Argument_Invalid,
-					);
-				}
-				this.colorTable = {
-					red: parseInt(match.groups!.red, 16),
-					green: parseInt(match.groups!.green, 16),
-					blue: parseInt(match.groups!.blue, 16),
-				};
-			} else {
-				this.colorTable = pick(options, colorTableKeys as any[]);
+		super(options);
+		// Populate properties from options object
+		if ("hexColor" in options) {
+			const match = hexColorRegex.exec(options.hexColor);
+			if (!match) {
+				throw new ZWaveError(
+					`${options.hexColor} is not a valid HEX color string`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
 			}
-			this.duration = Duration.from(options.duration);
+			this.colorTable = {
+				red: parseInt(match.groups!.red, 16),
+				green: parseInt(match.groups!.green, 16),
+				blue: parseInt(match.groups!.blue, 16),
+			};
+		} else {
+			this.colorTable = pick(options, colorTableKeys as any[]);
 		}
+		this.duration = Duration.from(options.duration);
+	}
+
+	public static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const populatedColorCount = raw.payload[0] & 0b11111;
+
+		validatePayload(raw.payload.length >= 1 + populatedColorCount * 2);
+		const colorTable: ColorTable = {};
+		let offset = 1;
+		for (let color = 0; color < populatedColorCount; color++) {
+			const component = raw.payload[offset];
+			const value = raw.payload[offset + 1];
+			const key = colorComponentToTableKey(component);
+			// @ts-expect-error
+			if (key) this.colorTable[key] = value;
+			offset += 2;
+		}
+
+		let duration: Duration | undefined;
+		if (raw.payload.length > offset) {
+			duration = Duration.parseSet(raw.payload[offset]);
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			...colorTable,
+			duration,
+		});
 	}
 
 	public colorTable: ColorTable;
 	public duration: Duration | undefined;
 
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const populatedColorCount = Object.keys(this.colorTable).length;
-		this.payload = Buffer.allocUnsafe(
-			1 + populatedColorCount * 2 + (this.version >= 2 ? 1 : 0),
+		this.payload = new Bytes(
+			1 + populatedColorCount * 2 + 1,
 		);
 		this.payload[0] = populatedColorCount & 0b11111;
 		let i = 1;
@@ -942,15 +1033,24 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 			this.payload[i + 1] = clamp(value, 0, 0xff);
 			i += 2;
 		}
-		if (this.version >= 2) {
-			this.payload[i] = (
-				this.duration ?? Duration.default()
-			).serializeSet();
+		this.payload[i] = (
+			this.duration ?? Duration.default()
+		).serializeSet();
+
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+		if (
+			ccVersion < 2 && ctx.getDeviceConfig?.(
+				this.nodeId as number,
+			)?.compat?.encodeCCsUsingTargetVersion
+		) {
+			// When forcing CC version 1, omit the duration byte
+			this.payload = this.payload.subarray(0, -1);
 		}
-		return super.serialize();
+
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		for (const [key, value] of Object.entries(this.colorTable)) {
 			const realKey: string = key in ColorComponentMap
@@ -962,7 +1062,7 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -993,25 +1093,40 @@ export type ColorSwitchCCStartLevelChangeOptions =
 @useSupervision()
 export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| (CCCommandOptions & ColorSwitchCCStartLevelChangeOptions),
+		options: WithAddress<ColorSwitchCCStartLevelChangeOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.duration = Duration.from(options.duration);
-			this.ignoreStartLevel = options.ignoreStartLevel;
-			this.startLevel = options.startLevel ?? 0;
-			this.direction = options.direction;
-			this.colorComponent = options.colorComponent;
+		super(options);
+		this.duration = Duration.from(options.duration);
+		this.ignoreStartLevel = options.ignoreStartLevel;
+		this.startLevel = options.startLevel ?? 0;
+		this.direction = options.direction;
+		this.colorComponent = options.colorComponent;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ColorSwitchCCStartLevelChange {
+		validatePayload(raw.payload.length >= 3);
+		const ignoreStartLevel = !!((raw.payload[0] & 0b0_0_1_00000) >>> 5);
+		const direction = ((raw.payload[0] & 0b0_1_0_00000) >>> 6)
+			? "down"
+			: "up";
+		const colorComponent: ColorComponent = raw.payload[1];
+		const startLevel = raw.payload[2];
+		let duration: Duration | undefined;
+		if (raw.payload.length >= 4) {
+			duration = Duration.parseSet(raw.payload[3]);
 		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			ignoreStartLevel,
+			direction,
+			colorComponent,
+			startLevel,
+			duration,
+		});
 	}
 
 	public duration: Duration | undefined;
@@ -1020,19 +1135,30 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 	public direction: keyof typeof LevelChangeDirection;
 	public colorComponent: ColorComponent;
 
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const controlByte = (LevelChangeDirection[this.direction] << 6)
 			| (this.ignoreStartLevel ? 0b0010_0000 : 0);
-		const payload = [controlByte, this.colorComponent, this.startLevel];
+		this.payload = Bytes.from([
+			controlByte,
+			this.colorComponent,
+			this.startLevel,
+			(this.duration ?? Duration.default()).serializeSet(),
+		]);
 
-		if (this.version >= 3) {
-			payload.push((this.duration ?? Duration.default()).serializeSet());
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+		if (
+			ccVersion < 3 && ctx.getDeviceConfig?.(
+				this.nodeId as number,
+			)?.compat?.encodeCCsUsingTargetVersion
+		) {
+			// When forcing CC version 1 or 2, omit the duration byte
+			this.payload = this.payload.subarray(0, -1);
 		}
-		this.payload = Buffer.from(payload);
-		return super.serialize();
+
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"color component": getEnumMemberName(
 				ColorComponent,
@@ -1047,14 +1173,14 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
 }
 
 // @publicAPI
-export interface ColorSwitchCCStopLevelChangeOptions extends CCCommandOptions {
+export interface ColorSwitchCCStopLevelChangeOptions {
 	colorComponent: ColorComponent;
 }
 
@@ -1062,33 +1188,35 @@ export interface ColorSwitchCCStopLevelChangeOptions extends CCCommandOptions {
 @useSupervision()
 export class ColorSwitchCCStopLevelChange extends ColorSwitchCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ColorSwitchCCStopLevelChangeOptions,
+		options: WithAddress<ColorSwitchCCStopLevelChangeOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.colorComponent = options.colorComponent;
-		}
+		super(options);
+		this.colorComponent = options.colorComponent;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ColorSwitchCCStopLevelChange {
+		validatePayload(raw.payload.length >= 1);
+		const colorComponent: ColorComponent = raw.payload[0];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			colorComponent,
+		});
 	}
 
 	public readonly colorComponent: ColorComponent;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.colorComponent]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.colorComponent]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"color component": getEnumMemberName(
 					ColorComponent,

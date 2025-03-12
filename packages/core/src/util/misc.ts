@@ -1,4 +1,4 @@
-import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 /** Ensures that the values array is consecutive */
 export function isConsecutiveArray(values: number[]): boolean {
@@ -48,7 +48,7 @@ function validatePayloadInternal(
 }
 
 // Export and augment the validatePayload method with a reason
-export const validatePayload = validatePayloadInternal.bind(
+export const validatePayload: ValidatePayload = validatePayloadInternal.bind(
 	undefined,
 	undefined,
 ) as ValidatePayload;

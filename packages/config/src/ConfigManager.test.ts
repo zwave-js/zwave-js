@@ -1,156 +1,163 @@
-import { ZWaveLogContainer } from "@zwave-js/core";
-import ava, { type ExecutionContext, type TestFn } from "ava";
-import * as fs from "fs-extra";
+import { type LogContainer } from "@zwave-js/core";
+import { fs } from "@zwave-js/core/bindings/fs/node";
+import { log as createZWaveLogContainer } from "@zwave-js/core/bindings/log/node";
+import { pathExists } from "@zwave-js/shared";
+import fsp from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import semver from "semver";
-import { ConfigManager } from "./ConfigManager";
-import { ConfigLogger } from "./Logger";
-import { syncExternalConfigDir } from "./utils";
+import semverInc from "semver/functions/inc.js";
+import { type ExpectStatic, beforeEach, test as baseTest } from "vitest";
+import { ConfigManager } from "./ConfigManager.js";
+import { ConfigLogger } from "./Logger.js";
+import { syncExternalConfigDir } from "./utils.js";
 
-interface TestContext {
-	tempDir: string;
-	logContainer: ZWaveLogContainer;
-	logger: ConfigLogger;
+interface LocalTestContext {
+	context: {
+		tempDir: string;
+		logContainer: LogContainer;
+		logger: ConfigLogger;
+	};
 }
 
-const test = ava as TestFn<TestContext>;
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const ownVersion = require("../package.json").version;
 
-test.before(async (t) => {
-	const tempDir = path.join(tmpdir(), "zwavejs_test");
-	await fs.ensureDir(tempDir);
-	t.context.tempDir = tempDir;
+const test = baseTest.extend<LocalTestContext>({
+	context: [
+		async ({}, use) => {
+			// Setup
+			const tempDir = path.join(tmpdir(), "zwavejs_test");
+			await fsp.mkdir(tempDir, { recursive: true });
 
-	const logContainer = new ZWaveLogContainer({ enabled: false });
-	t.context.logContainer = logContainer;
+			const logContainer = createZWaveLogContainer({ enabled: false });
+			const logger = new ConfigLogger(logContainer);
 
-	t.context.logger = new ConfigLogger(logContainer);
+			// Run tests
+			await use({ tempDir, logContainer, logger });
+
+			// Teardown
+			await fsp.rm(tempDir, { recursive: true, force: true });
+		},
+		{ auto: true },
+	],
 });
 
-test.beforeEach(async (t) => {
-	await fs.emptyDir(t.context.tempDir);
+beforeEach<LocalTestContext>(async ({ context, expect }) => {
+	await fsp.rm(context.tempDir, { recursive: true, force: true });
+	await fsp.mkdir(context.tempDir, { recursive: true });
 });
 
-test.after.always(async (t) => {
-	await fs.remove(t.context.tempDir);
-});
-
-test.serial(
+test.sequential(
 	"syncExternalConfigDir() syncs the external config dir if it does not exist",
-	async (t) => {
-		t.timeout(60000);
-		const { tempDir, logger } = t.context;
+	async ({ context, expect }) => {
+		const { tempDir, logger } = context;
 
 		const configDir = path.join(tempDir, "extconfig");
-		process.env.ZWAVEJS_EXTERNAL_CONFIG = configDir;
-		await syncExternalConfigDir(logger);
+		await syncExternalConfigDir(fs, configDir, logger);
 
-		t.true(await fs.pathExists(configDir));
-		t.is(
-			await fs.readFile(path.join(configDir, "version"), "utf8"),
-			ownVersion,
-		);
+		expect(await pathExists(fs, configDir)).toBe(true);
+		expect(
+			await fsp.readFile(path.join(configDir, "version"), "utf8"),
+		).toBe(ownVersion);
 	},
+	60000,
 );
 
-test.serial(
+test.sequential(
 	"syncExternalConfigDir() syncs the external config dir alone if it is from an incompatible version",
-	async (t) => {
-		t.timeout(60000);
-		const { tempDir, logger } = t.context;
+	async ({ context, expect }) => {
+		const { tempDir, logger } = context;
 
 		const configDir = path.join(tempDir, "extconfig");
-		process.env.ZWAVEJS_EXTERNAL_CONFIG = configDir;
-		const otherVersion = semver.inc(ownVersion, "major");
+		const otherVersion = semverInc(ownVersion, "major");
 
-		await fs.ensureDir(configDir);
-		await fs.writeFile(
+		await fsp.mkdir(configDir, { recursive: true });
+		await fsp.writeFile(
 			path.join(configDir, "version"),
-			otherVersion,
+			otherVersion!,
 			"utf8",
 		);
 
-		await syncExternalConfigDir(logger);
+		await syncExternalConfigDir(fs, configDir, logger);
 
-		t.true(await fs.pathExists(configDir));
+		expect(await pathExists(fs, configDir)).toBe(true);
 
-		t.is(
-			await fs.readFile(path.join(configDir, "version"), "utf8"),
-			ownVersion,
-		);
+		expect(
+			await fsp.readFile(path.join(configDir, "version"), "utf8"),
+		).toBe(ownVersion);
 	},
+	60000,
 );
 
-test.serial(
+test.sequential(
 	"syncExternalConfigDir() leaves the external config dir alone if it is from a newer compatible version",
-	async (t) => {
-		t.timeout(60000);
-		const { tempDir, logger } = t.context;
+	async ({ context, expect }) => {
+		const { tempDir, logger } = context;
 
 		const configDir = path.join(tempDir, "extconfig");
-		process.env.ZWAVEJS_EXTERNAL_CONFIG = configDir;
-		const otherVersion = semver.inc(ownVersion, "prerelease")!;
+		const otherVersion = semverInc(ownVersion, "prerelease")!;
 
-		await fs.ensureDir(configDir);
-		await fs.writeFile(
+		await fsp.mkdir(configDir, { recursive: true });
+		await fsp.writeFile(
 			path.join(configDir, "version"),
 			otherVersion,
 			"utf8",
 		);
 
-		await syncExternalConfigDir(logger);
+		await syncExternalConfigDir(fs, configDir, logger);
 
-		t.true(await fs.pathExists(configDir));
+		expect(await pathExists(fs, configDir)).toBe(true);
 
-		t.is(
-			await fs.readFile(path.join(configDir, "version"), "utf8"),
-			otherVersion,
-		);
+		expect(
+			await fsp.readFile(path.join(configDir, "version"), "utf8"),
+		).toBe(otherVersion);
 	},
+	60000,
 );
 
-test.serial("loading config files from the embedded config dir", async (t) => {
-	t.timeout(60000);
-	delete process.env.ZWAVEJS_EXTERNAL_CONFIG;
+test.sequential(
+	"loading config files from the embedded config dir",
+	async ({ context, expect }) => {
+		delete process.env.ZWAVEJS_EXTERNAL_CONFIG;
 
-	const { logContainer } = t.context;
-	const cm = new ConfigManager({ logContainer });
-	await cm.loadAll();
+		const { logContainer } = context;
+		const cm = new ConfigManager({ logContainer });
+		await cm.loadAll();
 
-	// Load the Aeotec ZW100 Multisensor 6 - we know that it uses multiple imports that could fail validation
-	const device = await cm.lookupDevice(0x0086, 0x0002, 0x0064);
-	t.truthy(device);
-	t.true(device?.isEmbedded);
-});
+		// Load the Aeotec ZW100 Multisensor 6 - we know that it uses multiple imports that could fail validation
+		const device = await cm.lookupDevice(0x0086, 0x0002, 0x0064);
+		expect(device).toBeDefined();
+		expect(device?.isEmbedded).toBe(true);
+	},
+	60000,
+);
 
-test.serial(
+test.sequential(
 	"loading config files from the ZWAVEJS_EXTERNAL_CONFIG",
-	async (t) => {
-		t.timeout(60000);
-		const { tempDir, logContainer } = t.context;
+	async ({ context, expect }) => {
+		const { tempDir, logContainer } = context;
 
 		const configDir = path.join(tempDir, "extconfig");
 		process.env.ZWAVEJS_EXTERNAL_CONFIG = configDir;
 
 		const cm = new ConfigManager({ logContainer });
 		await cm.loadAll();
-		t.true(await fs.pathExists(configDir));
+		expect(await pathExists(fs, configDir)).toBe(true);
 
 		// Load the Aeotec ZW100 Multisensor 6 - we know that it uses multiple imports that could fail validation
 		const device = await cm.lookupDevice(0x0086, 0x0002, 0x0064);
-		t.truthy(device);
-		t.true(device?.isEmbedded); // ZWAVEJS_EXTERNAL_CONFIG is still considered as an embedded config
+		expect(device).toBeDefined();
+		expect(device?.isEmbedded).toBe(true); // ZWAVEJS_EXTERNAL_CONFIG is still considered as an embedded config
 	},
+	60000,
 );
 
 async function testDeviceConfigPriorityDir(
-	t: ExecutionContext<TestContext>,
+	expect: ExpectStatic,
+	context: LocalTestContext["context"],
 	useExternalConfig: boolean,
 ): Promise<void> {
-	const { tempDir } = t.context;
+	const { tempDir } = context;
 
 	let externalConfigDir: string;
 	if (useExternalConfig) {
@@ -162,87 +169,85 @@ async function testDeviceConfigPriorityDir(
 
 	// Set up a dummy structure in the priority dir
 	const priorityDir = path.join(tempDir, "priority");
-	await fs.ensureDir(priorityDir);
-	await fs.ensureDir(path.join(priorityDir, "templates"));
-	await fs.writeJSON(
+	await fsp.mkdir(path.join(priorityDir, "templates"), { recursive: true });
+	let json: any = {
+		manufacturer: "AEON Labs",
+		manufacturerId: "0x0086",
+		label: "ZW100",
+		description: "MultiSensor 6",
+		devices: [
+			{
+				productType: "0x0002",
+				productId: "0x0064",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				$import: "templates/template.json#test",
+			},
+		],
+	};
+	await fsp.writeFile(
 		path.join(priorityDir, "aeotec.json"),
-		{
-			manufacturer: "AEON Labs",
-			manufacturerId: "0x0086",
-			label: "ZW100",
-			description: "MultiSensor 6",
-			devices: [
-				{
-					productType: "0x0002",
-					productId: "0x0064",
-				},
-			],
-			firmwareVersion: {
-				min: "0.0",
-				max: "255.255",
-			},
-			paramInformation: [
-				{
-					"#": "1",
-					$import: "templates/template.json#test",
-				},
-			],
-		},
-		{ encoding: "utf8", spaces: 4 },
+		JSON.stringify(json, null, 4),
 	);
-	await fs.writeJSON(
-		path.join(priorityDir, "templates/template.json"),
-		{
-			test: {
-				label: "Test",
-				valueSize: 1,
-				minValue: 1,
-				maxValue: 2,
-				defaultValue: 1,
-				unsigned: true,
-			},
+	json = {
+		test: {
+			label: "Test",
+			valueSize: 1,
+			minValue: 1,
+			maxValue: 2,
+			defaultValue: 1,
+			unsigned: true,
 		},
-		{ encoding: "utf8", spaces: 4 },
+	};
+	await fsp.writeFile(
+		path.join(priorityDir, "templates/template.json"),
+		JSON.stringify(json, null, 4),
 	);
 
 	// And load the file
 	const cm = new ConfigManager({
 		deviceConfigPriorityDir: priorityDir,
-		logContainer: new ZWaveLogContainer({ enabled: false }),
+		logContainer: createZWaveLogContainer({ enabled: false }),
 	});
 	await cm.loadAll();
 
 	if (useExternalConfig) {
-		t.true(await fs.pathExists(externalConfigDir!));
+		expect(await pathExists(fs, externalConfigDir!)).toBe(true);
 	}
 
 	// Load the dummy device
 	const device = await cm.lookupDevice(0x0086, 0x0002, 0x0064);
-	t.is(device?.paramInformation?.get({ parameter: 1 })?.label, "Test");
-	t.false(device?.isEmbedded); // deviceConfigPriorityDir is considered a user-provided config
+	expect(device?.paramInformation?.get({ parameter: 1 })?.label).toBe("Test");
+	expect(device?.isEmbedded).toBe(false); // deviceConfigPriorityDir is considered a user-provided config
 }
 
-test.serial(
+test.sequential(
 	"loading config from the deviceConfigPriorityDir (without ZWAVEJS_EXTERNAL_CONFIG)",
-	async (t) => {
-		t.timeout(60000);
-		await testDeviceConfigPriorityDir(t, false);
+	async ({ context, expect }) => {
+		await testDeviceConfigPriorityDir(expect, context, false);
 	},
+	60000,
 );
 
-test.serial(
+test.sequential(
 	"loading config from the deviceConfigPriorityDir (with ZWAVEJS_EXTERNAL_CONFIG)",
-	async (t) => {
-		t.timeout(60000);
-		await testDeviceConfigPriorityDir(t, true);
+	async ({ context, expect }) => {
+		await testDeviceConfigPriorityDir(expect, context, true);
 	},
+	60000,
 );
 
-test.serial(
+test.sequential(
 	`config files with the "preferred" flag are preferred`,
-	async (t) => {
-		t.timeout(60000);
-		const { logContainer } = t.context;
+	async ({ context, expect }) => {
+		const { logContainer } = context;
 
 		const cm = new ConfigManager({ logContainer });
 		await cm.loadAll();
@@ -251,7 +256,8 @@ test.serial(
 		const preferred = await cm.lookupDevice(0x0330, 0x0300, 0xb302, "1.26");
 		// ZV9001K12-DIM-Z4 is the fallback config for the same IDs
 		const fallback = await cm.lookupDevice(0x0330, 0x0300, 0xb302, "1.0");
-		t.is(preferred?.manufacturer, "Vesternet");
-		t.is(fallback?.manufacturer, "Sunricher");
+		expect(preferred?.manufacturer).toBe("Vesternet");
+		expect(fallback?.manufacturer).toBe("Sunricher");
 	},
+	60000,
 );

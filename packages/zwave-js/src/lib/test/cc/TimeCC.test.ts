@@ -1,4 +1,5 @@
 import {
+	CommandClass,
 	TimeCC,
 	TimeCCDateGet,
 	TimeCCDateReport,
@@ -7,62 +8,65 @@ import {
 	TimeCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses.Time, // CC
 		]),
 		payload,
 	]);
 }
 
-test("the TimeGet command should serialize correctly", (t) => {
-	const cc = new TimeCCTimeGet(host, { nodeId: 1 });
+test("the TimeGet command should serialize correctly", async (t) => {
+	const cc = new TimeCCTimeGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			TimeCommand.TimeGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the TimeReport command should be deserialized correctly", (t) => {
+test("the TimeReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			TimeCommand.TimeReport, // CC Command
 			14,
 			23,
 			59,
 		]),
 	);
-	const cc = new TimeCCTimeReport(host, {
-		nodeId: 8,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 8 } as any,
+	) as TimeCCTimeReport;
+	t.expect(cc.constructor).toBe(TimeCCTimeReport);
 
-	t.is(cc.hour, 14);
-	t.is(cc.minute, 23);
-	t.is(cc.second, 59);
+	t.expect(cc.hour).toBe(14);
+	t.expect(cc.minute).toBe(23);
+	t.expect(cc.second).toBe(59);
 });
 
-test("the DateGet command should serialize correctly", (t) => {
-	const cc = new TimeCCDateGet(host, { nodeId: 1 });
+test("the DateGet command should serialize correctly", async (t) => {
+	const cc = new TimeCCDateGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			TimeCommand.DateGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the DateReport command should be deserialized correctly", (t) => {
+test("the DateReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			TimeCommand.DateReport, // CC Command
 			0x07,
 			0xc5,
@@ -70,25 +74,26 @@ test("the DateReport command should be deserialized correctly", (t) => {
 			17,
 		]),
 	);
-	const cc = new TimeCCDateReport(host, {
-		nodeId: 8,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 8 } as any,
+	) as TimeCCDateReport;
+	t.expect(cc.constructor).toBe(TimeCCDateReport);
 
-	t.is(cc.year, 1989);
-	t.is(cc.month, 10);
-	t.is(cc.day, 17);
+	t.expect(cc.year).toBe(1989);
+	t.expect(cc.month).toBe(10);
+	t.expect(cc.day).toBe(17);
 });
 
-test("deserializing an unsupported command should return an unspecified version of TimeCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of TimeCC", async (t) => {
 	const serializedCC = buildCCBuffer(
-		Buffer.from([255]), // not a valid command
+		Uint8Array.from([255]), // not a valid command
 	);
-	const cc: any = new TimeCC(host, {
-		nodeId: 8,
-		data: serializedCC,
-	});
-	t.is(cc.constructor, TimeCC);
+	const cc = await CommandClass.parse(
+		serializedCC,
+		{ sourceNodeId: 8 } as any,
+	) as TimeCC;
+	t.expect(cc.constructor).toBe(TimeCC);
 });
 
 // test("the CC values should have the correct metadata", (t) => {

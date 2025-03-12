@@ -1,3 +1,4 @@
+// 800 series (LR) starting with firmware 2.0
 {
 	"manufacturer": "Zooz",
 	"manufacturerId": "0x027a",
@@ -131,6 +132,20 @@
 					"value": 0
 				}
 			]
+		}
+	],
+	"compat": [
+		{
+			// On the 500 series version of this device, the wakeup destination
+			// cannot be set using Supervision, resulting in missing wakeup reports
+			"$if": "firmwareVersion < 2.0",
+			"commandClasses": {
+				"remove": {
+					"Supervision": {
+						"endpoints": "*"
+					}
+				}
+			}
 		}
 	],
 	"metadata": {

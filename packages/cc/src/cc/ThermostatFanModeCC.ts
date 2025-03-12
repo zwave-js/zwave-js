@@ -1,11 +1,14 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
@@ -13,7 +16,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -24,28 +27,30 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type PersistValuesContext,
+	type RefreshValuesContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { ThermostatFanMode, ThermostatFanModeCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { ThermostatFanMode, ThermostatFanModeCommand } from "../lib/_Types.js";
 
-export const ThermostatFanModeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Fan Mode"], {
+export const ThermostatFanModeCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Fan Mode"],
+	{
 		...V.staticPropertyWithName(
 			"turnedOff",
 			"off",
@@ -55,7 +60,6 @@ export const ThermostatFanModeCCValues = Object.freeze({
 			} as const,
 			{ minVersion: 3 } as const,
 		),
-
 		...V.staticPropertyWithName(
 			"fanMode",
 			"mode",
@@ -65,15 +69,14 @@ export const ThermostatFanModeCCValues = Object.freeze({
 				label: "Thermostat fan mode",
 			} as const,
 		),
-
 		...V.staticPropertyWithName(
 			"supportedFanModes",
 			"supportedModes",
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Fan Mode"])
 export class ThermostatFanModeCCAPI extends CCAPI {
@@ -171,11 +174,11 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 			ThermostatFanModeCommand.Get,
 		);
 
-		const cc = new ThermostatFanModeCCGet(this.applHost, {
+		const cc = new ThermostatFanModeCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			ThermostatFanModeCCReport
 		>(
 			cc,
@@ -196,13 +199,13 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 			ThermostatFanModeCommand.Set,
 		);
 
-		const cc = new ThermostatFanModeCCSet(this.applHost, {
+		const cc = new ThermostatFanModeCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			mode,
 			off,
 		});
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	public async getSupportedModes(): Promise<
@@ -213,11 +216,11 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 			ThermostatFanModeCommand.SupportedGet,
 		);
 
-		const cc = new ThermostatFanModeCCSupportedGet(this.applHost, {
+		const cc = new ThermostatFanModeCCSupportedGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			ThermostatFanModeCCSupportedReport
 		>(
 			cc,
@@ -233,25 +236,27 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 export class ThermostatFanModeCC extends CommandClass {
 	declare ccCommand: ThermostatFanModeCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Thermostat Fan Mode"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
 		// First query the possible modes to set the metadata
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying supported thermostat fan modes...",
 			direction: "outbound",
@@ -267,13 +272,13 @@ export class ThermostatFanModeCC extends CommandClass {
 					)
 					.join("")
 			}`;
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
 				direction: "inbound",
 			});
 		} else {
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message:
 					"Querying supported thermostat fan modes timed out, skipping interview...",
@@ -281,25 +286,27 @@ export class ThermostatFanModeCC extends CommandClass {
 			return;
 		}
 
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Thermostat Fan Mode"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
 		// Query the current status
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying current thermostat fan mode...",
 			direction: "outbound",
@@ -315,7 +322,7 @@ export class ThermostatFanModeCC extends CommandClass {
 			if (currentStatus.off != undefined) {
 				logMessage += ` (turned off)`;
 			}
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
 				direction: "inbound",
@@ -325,78 +332,100 @@ export class ThermostatFanModeCC extends CommandClass {
 }
 
 // @publicAPI
-export type ThermostatFanModeCCSetOptions = CCCommandOptions & {
+export interface ThermostatFanModeCCSetOptions {
 	mode: ThermostatFanMode;
 	off?: boolean;
-};
+}
 
 @CCCommand(ThermostatFanModeCommand.Set)
 @useSupervision()
 export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ThermostatFanModeCCSetOptions,
+		options: WithAddress<ThermostatFanModeCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.mode = options.mode;
-			this.off = options.off;
-		}
+		super(options);
+		this.mode = options.mode;
+		this.off = options.off;
+	}
+
+	public static from(
+		_raw: CCRaw,
+		_ctx: CCParsingContext,
+	): ThermostatFanModeCCSet {
+		// TODO: Deserialize payload
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
+		);
+
+		// return new ThermostatFanModeCCSet({
+		// 	nodeId: ctx.sourceNodeId,
+		// });
 	}
 
 	public mode: ThermostatFanMode;
 	public off: boolean | undefined;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
-			(this.version >= 2 && this.off ? 0b1000_0000 : 0)
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			(this.off ? 0b1000_0000 : 0)
 			| (this.mode & 0b1111),
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			mode: getEnumMemberName(ThermostatFanMode, this.mode),
 		};
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
 }
 
+// @publicAPI
+export interface ThermostatFanModeCCReportOptions {
+	mode: ThermostatFanMode;
+	off?: boolean;
+}
+
 @CCCommand(ThermostatFanModeCommand.Report)
+@ccValueProperty("mode", ThermostatFanModeCCValues.fanMode)
+@ccValueProperty("off", ThermostatFanModeCCValues.turnedOff)
 export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<ThermostatFanModeCCReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		validatePayload(this.payload.length >= 1);
-		this.mode = this.payload[0] & 0b1111;
-
-		if (this.version >= 3) {
-			this.off = !!(this.payload[0] & 0b1000_0000);
-		}
+		// TODO: Check implementation:
+		this.mode = options.mode;
+		this.off = options.off;
 	}
 
-	@ccValue(ThermostatFanModeCCValues.fanMode)
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ThermostatFanModeCCReport {
+		validatePayload(raw.payload.length >= 1);
+		const mode: ThermostatFanMode = raw.payload[0] & 0b1111;
+		// V3+
+		const off = !!(raw.payload[0] & 0b1000_0000);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			mode,
+			off,
+		});
+	}
+
 	public readonly mode: ThermostatFanMode;
 
-	@ccValue(ThermostatFanModeCCValues.turnedOff)
 	public readonly off: boolean | undefined;
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			mode: getEnumMemberName(ThermostatFanMode, this.mode),
 		};
@@ -404,7 +433,7 @@ export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 			message.off = this.off;
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -414,25 +443,44 @@ export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 @expectedCCResponse(ThermostatFanModeCCReport)
 export class ThermostatFanModeCCGet extends ThermostatFanModeCC {}
 
+// @publicAPI
+export interface ThermostatFanModeCCSupportedReportOptions {
+	supportedModes: ThermostatFanMode[];
+}
+
 @CCCommand(ThermostatFanModeCommand.SupportedReport)
+@ccValueProperty("supportedModes", ThermostatFanModeCCValues.supportedFanModes)
 export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<ThermostatFanModeCCSupportedReportOptions>,
 	) {
-		super(host, options);
-		this.supportedModes = parseBitMask(
-			this.payload,
-			ThermostatFanMode["Auto low"],
-		);
+		super(options);
+
+		// TODO: Check implementation:
+		this.supportedModes = options.supportedModes;
 	}
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
-		if (!super.persistValues(applHost)) return false;
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ThermostatFanModeCCSupportedReport {
+		const supportedModes: ThermostatFanMode[] = parseBitMask(
+			raw.payload,
+			ThermostatFanMode["Auto low"],
+		);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			supportedModes,
+		});
+	}
+
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
 
 		// Remember which fan modes are supported
 		const fanModeValue = ThermostatFanModeCCValues.fanMode;
-		this.setMetadata(applHost, fanModeValue, {
+		this.setMetadata(ctx, fanModeValue, {
 			...fanModeValue.meta,
 			states: enumValuesToMetadataStates(
 				ThermostatFanMode,
@@ -443,12 +491,11 @@ export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
 		return true;
 	}
 
-	@ccValue(ThermostatFanModeCCValues.supportedFanModes)
 	public readonly supportedModes: ThermostatFanMode[];
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"supported modes": this.supportedModes
 					.map(

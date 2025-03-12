@@ -1,12 +1,11 @@
 import { Powerlevel } from "@zwave-js/cc/safe";
 import { getEnumMemberName } from "@zwave-js/shared/safe";
-import { padStart } from "alcalzone-shared/strings";
 import type {
 	LifelineHealthCheckResult,
 	LifelineHealthCheckSummary,
 	RouteHealthCheckResult,
 	RouteHealthCheckSummary,
-} from "./_Types";
+} from "./_Types.js";
 
 export const healthCheckTestFrameCount = 10;
 
@@ -29,8 +28,7 @@ export function formatLifelineHealthCheckRound(
 ): string {
 	const ret = [
 		`· round ${
-			padStart(
-				round.toString(),
+			round.toString().padStart(
 				Math.floor(Math.log10(numRounds) + 1),
 				" ",
 			)
@@ -66,14 +64,20 @@ export function formatLifelineHealthCheckRound(
 export function formatLifelineHealthCheckSummary(
 	summary: LifelineHealthCheckSummary,
 ): string {
-	return `
+	let ret = `
 rating:                   ${summary.rating} (${
 		healthCheckRatingToWord(
 			summary.rating,
 		)
-	})
-no. of routing neighbors: ${summary.results.at(-1)!.numNeighbors}
- 
+	})`;
+	const numNeighbors = summary.results.at(-1)!.numNeighbors;
+	if (numNeighbors != undefined) {
+		ret += `
+no. of routing neighbors: ${summary.results.at(-1)!.numNeighbors}`;
+	}
+
+	ret += `
+
 Check rounds:
 ${
 		summary.results
@@ -81,7 +85,9 @@ ${
 				formatLifelineHealthCheckRound(i + 1, summary.results.length, r)
 			)
 			.join("\n \n")
-	}`.trim();
+	}`;
+
+	return ret.trim();
 }
 
 export function formatRouteHealthCheckRound(
@@ -93,8 +99,7 @@ export function formatRouteHealthCheckRound(
 ): string {
 	const ret = [
 		`· round ${
-			padStart(
-				round.toString(),
+			round.toString().padStart(
 				Math.floor(Math.log10(numRounds) + 1),
 				" ",
 			)
@@ -134,14 +139,20 @@ export function formatRouteHealthCheckSummary(
 	targetNodeId: number,
 	summary: RouteHealthCheckSummary,
 ): string {
-	return `
+	let ret = `
 rating:                   ${summary.rating} (${
 		healthCheckRatingToWord(
 			summary.rating,
 		)
-	})
-no. of routing neighbors: ${summary.results.at(-1)!.numNeighbors}
- 
+	})`;
+	const numNeighbors = summary.results.at(-1)!.numNeighbors;
+	if (numNeighbors != undefined) {
+		ret += `
+no. of routing neighbors: ${summary.results.at(-1)!.numNeighbors}`;
+	}
+
+	ret += `
+
 Check rounds:
 ${
 		summary.results
@@ -155,5 +166,7 @@ ${
 				)
 			)
 			.join("\n \n")
-	}`.trim();
+	}`;
+
+	return ret.trim();
 }

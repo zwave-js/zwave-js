@@ -1,12 +1,15 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
 	SecurityClass,
 	type SecurityManager,
 	TransmitOptions,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	computeMAC,
@@ -18,46 +21,45 @@ import {
 	getCCName,
 	isTransmissionError,
 	parseCCList,
+	randomBytes,
 	validatePayload,
 } from "@zwave-js/core";
 import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { buffer2hex, num2hex, pick } from "@zwave-js/shared/safe";
 import { wait } from "alcalzone-shared/async";
-import { randomBytes } from "node:crypto";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { SecurityCommand } from "../lib/_Types";
-import { CRC16CC } from "./CRC16CC";
-import { Security2CC } from "./Security2CC";
-import { TransportServiceCC } from "./TransportServiceCC";
+} from "../lib/CommandClassDecorators.js";
+import { SecurityCommand } from "../lib/_Types.js";
+import { CRC16CC } from "./CRC16CC.js";
+import { Security2CC } from "./Security2CC.js";
+import { TransportServiceCC } from "./TransportServiceCC.js";
 
 // @noSetValueAPI This is an encapsulation CC
 
 function getAuthenticationData(
-	senderNonce: Buffer,
-	receiverNonce: Buffer,
+	senderNonce: Uint8Array,
+	receiverNonce: Uint8Array,
 	ccCommand: SecurityCommand,
 	sendingNodeId: number,
 	receivingNodeId: number,
-	encryptedPayload: Buffer,
-): Buffer {
-	return Buffer.concat([
+	encryptedPayload: Uint8Array,
+): Uint8Array {
+	return Bytes.concat([
 		senderNonce,
 		receiverNonce,
-		Buffer.from([
+		Bytes.from([
 			ccCommand,
 			sendingNodeId,
 			receivingNodeId,
@@ -74,6 +76,42 @@ function throwNoNonce(reason?: string): never {
 }
 
 const HALF_NONCE_SIZE = 8;
+
+function assertSecurityRX(
+	ctx: CCParsingContext,
+): asserts ctx is CCParsingContext & { securityManager: SecurityManager } {
+	if (!ctx.ownNodeId) {
+		throw new ZWaveError(
+			`Secure commands (S0) can only be decoded when the controller's node id is known!`,
+			ZWaveErrorCodes.Driver_NotReady,
+		);
+	}
+
+	if (!ctx.securityManager) {
+		throw new ZWaveError(
+			`Secure commands (S0) can only be decoded when the security manager is set up!`,
+			ZWaveErrorCodes.Driver_NoSecurity,
+		);
+	}
+}
+
+function assertSecurityTX(
+	ctx: CCEncodingContext,
+): asserts ctx is CCEncodingContext & { securityManager: SecurityManager } {
+	if (!ctx.ownNodeId) {
+		throw new ZWaveError(
+			`Secure commands (S0) can only be sent when the controller's node id is known!`,
+			ZWaveErrorCodes.Driver_NotReady,
+		);
+	}
+
+	if (!ctx.securityManager) {
+		throw new ZWaveError(
+			`Secure commands (S0) can only be sent when the security manager is set up!`,
+			ZWaveErrorCodes.Driver_NoSecurity,
+		);
+	}
+}
 
 // TODO: Ignore commands if received via multicast
 
@@ -108,24 +146,24 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 			requestNextNonce
 				? SecurityCCCommandEncapsulationNonceGet
 				: SecurityCCCommandEncapsulation
-		)(this.applHost, {
+		)({
 			nodeId: this.endpoint.nodeId,
 			encapsulated,
 		});
-		await this.applHost.sendCommand(cc, this.commandOptions);
+		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	/**
 	 * Requests a new nonce for Security CC encapsulation which is not directly linked to a specific command.
 	 */
-	public async getNonce(): Promise<Buffer | undefined> {
+	public async getNonce(): Promise<Uint8Array | undefined> {
 		this.assertSupportsCommand(SecurityCommand, SecurityCommand.NonceGet);
 
-		const cc = new SecurityCCNonceGet(this.applHost, {
+		const cc = new SecurityCCNonceGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<SecurityCCNonceReport>(
+		const response = await this.host.sendCommand<SecurityCCNonceReport>(
 			cc,
 			{
 				...this.commandOptions,
@@ -136,13 +174,13 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 		if (!response) return;
 
 		const nonce = response.nonce;
-		const secMan = this.applHost.securityManager!;
+		const secMan = this.host.securityManager!;
 		secMan.setNonce(
 			{
 				issuer: this.endpoint.nodeId,
 				nonceId: secMan.getNonceId(nonce),
 			},
-			{ nonce, receiver: this.applHost.ownNodeId },
+			{ nonce, receiver: this.host.ownNodeId },
 			{ free: true },
 		);
 		return nonce;
@@ -158,27 +196,27 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 			SecurityCommand.NonceReport,
 		);
 
-		if (!this.applHost.securityManager) {
+		if (!this.host.securityManager) {
 			throw new ZWaveError(
 				`Nonces can only be sent if secure communication is set up!`,
 				ZWaveErrorCodes.Driver_NoSecurity,
 			);
 		}
 
-		const nonce = this.applHost.securityManager.generateNonce(
+		const nonce = this.host.securityManager.generateNonce(
 			this.endpoint.nodeId,
 			HALF_NONCE_SIZE,
 		);
-		const nonceId = this.applHost.securityManager.getNonceId(nonce);
+		const nonceId = this.host.securityManager.getNonceId(nonce);
 
-		const cc = new SecurityCCNonceReport(this.applHost, {
+		const cc = new SecurityCCNonceReport({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			nonce,
 		});
 
 		try {
-			await this.applHost.sendCommand(cc, {
+			await this.host.sendCommand(cc, {
 				...this.commandOptions,
 				// Seems we need these options or some nodes won't accept the nonce
 				transmitOptions: TransmitOptions.ACK
@@ -193,7 +231,7 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 		} catch (e) {
 			if (isTransmissionError(e)) {
 				// The nonce could not be sent, invalidate it
-				this.applHost.securityManager.deleteNonce(nonceId);
+				this.host.securityManager.deleteNonce(nonceId);
 				return false;
 			} else {
 				// Pass other errors through
@@ -206,13 +244,33 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 	public async getSecurityScheme(): Promise<[0]> {
 		this.assertSupportsCommand(SecurityCommand, SecurityCommand.SchemeGet);
 
-		const cc = new SecurityCCSchemeGet(this.applHost, {
+		const cc = new SecurityCCSchemeGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		await this.applHost.sendCommand(cc, this.commandOptions);
+		await this.host.sendCommand(cc, this.commandOptions);
 		// There is only one scheme, so we hardcode it
 		return [0];
+	}
+
+	public async reportSecurityScheme(encapsulated: boolean): Promise<void> {
+		this.assertSupportsCommand(
+			SecurityCommand,
+			SecurityCommand.SchemeReport,
+		);
+
+		let cc: CommandClass = new SecurityCCSchemeReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+		});
+		if (encapsulated) {
+			cc = new SecurityCCCommandEncapsulation({
+				nodeId: this.endpoint.nodeId,
+				endpointIndex: this.endpoint.index,
+				encapsulated: cc,
+			});
+		}
+		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	public async inheritSecurityScheme(): Promise<void> {
@@ -221,32 +279,45 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 			SecurityCommand.SchemeInherit,
 		);
 
-		const cc = new SecurityCCSchemeInherit(this.applHost, {
+		const cc = new SecurityCCSchemeInherit({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		await this.applHost.sendCommand(cc, this.commandOptions);
+		await this.host.sendCommand(cc, this.commandOptions);
 		// There is only one scheme, so we don't return anything here
 	}
 
-	public async setNetworkKey(networkKey: Buffer): Promise<void> {
+	public async setNetworkKey(networkKey: Uint8Array): Promise<void> {
 		this.assertSupportsCommand(
 			SecurityCommand,
 			SecurityCommand.NetworkKeySet,
 		);
 
-		const keySet = new SecurityCCNetworkKeySet(this.applHost, {
+		const keySet = new SecurityCCNetworkKeySet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			networkKey,
 		});
-		const cc = new SecurityCCCommandEncapsulation(this.applHost, {
+		const cc = new SecurityCCCommandEncapsulation({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			encapsulated: keySet,
-			alternativeNetworkKey: Buffer.alloc(16, 0),
+			alternativeNetworkKey: new Uint8Array(16).fill(0),
 		});
-		await this.applHost.sendCommand(cc, this.commandOptions);
+		await this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	public async verifyNetworkKey(): Promise<void> {
+		this.assertSupportsCommand(
+			SecurityCommand,
+			SecurityCommand.NetworkKeyVerify,
+		);
+
+		const cc = new SecurityCCNetworkKeyVerify({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+		});
+		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -256,11 +327,11 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 			SecurityCommand.CommandsSupportedGet,
 		);
 
-		const cc = new SecurityCCCommandsSupportedGet(this.applHost, {
+		const cc = new SecurityCCCommandsSupportedGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			SecurityCCCommandsSupportedReport
 		>(
 			cc,
@@ -280,13 +351,14 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 			SecurityCommand.CommandsSupportedReport,
 		);
 
-		const cc = new SecurityCCCommandsSupportedReport(this.applHost, {
+		const cc = new SecurityCCCommandsSupportedReport({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			supportedCCs,
 			controlledCCs,
+			reportsToFollow: 0,
 		});
-		await this.applHost.sendCommand(cc, this.commandOptions);
+		await this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -294,25 +366,23 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 @implementedVersion(1)
 export class SecurityCC extends CommandClass {
 	declare ccCommand: SecurityCommand;
-	// Force singlecast for the Security CC (for now)
+	// Force singlecast for the Security CC
 	declare nodeId: number;
-	// Define the securityManager as existing
-	declare host: ZWaveHost & {
-		securityManager: SecurityManager;
-	};
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses.Security,
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			message: "Querying securely supported commands (S0)...",
 			direction: "outbound",
 		});
@@ -329,7 +399,7 @@ export class SecurityCC extends CommandClass {
 				controlledCCs = resp.controlledCCs;
 				break;
 			} else if (attempts < MAX_ATTEMPTS) {
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message:
 						`Querying securely supported commands (S0), attempt ${attempts}/${MAX_ATTEMPTS} failed. Retrying in 500ms...`,
@@ -341,7 +411,7 @@ export class SecurityCC extends CommandClass {
 
 		if (!supportedCCs || !controlledCCs) {
 			if (node.hasSecurityClass(SecurityClass.S0_Legacy) === true) {
-				applHost.controllerLog.logNode(node.id, {
+				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: "Querying securely supported commands (S0) failed",
 					level: "warn",
@@ -350,7 +420,7 @@ export class SecurityCC extends CommandClass {
 			} else {
 				// We didn't know if the node was secure and it didn't respond,
 				// assume that it doesn't have the S0 security class
-				applHost.controllerLog.logNode(
+				ctx.logNode(
 					node.id,
 					`The node was not granted the S0 security class. Continuing interview non-securely.`,
 				);
@@ -370,30 +440,50 @@ export class SecurityCC extends CommandClass {
 		for (const cc of controlledCCs) {
 			logLines.push(`· ${getCCName(cc)}`);
 		}
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			message: logLines.join("\n"),
 			direction: "inbound",
 		});
 
 		// Remember which commands are supported securely
 		for (const cc of supportedCCs) {
-			endpoint.addCC(cc, { isSupported: true, secure: true });
+			// Basic CC has special rules for when it is considered supported
+			// Therefore we mark all other CCs as supported, but not Basic CC,
+			// for which support is determined later.
+			if (cc === CommandClasses.Basic) {
+				endpoint.addCC(cc, { secure: true });
+			} else {
+				endpoint.addCC(cc, {
+					isSupported: true,
+					secure: true,
+				});
+			}
 		}
 		for (const cc of controlledCCs) {
-			endpoint.addCC(cc, { isControlled: true, secure: true });
+			// Basic CC has special rules for when it is considered supported
+			// Therefore we mark all other CCs as supported, but not Basic CC,
+			// for which support is determined later.
+			if (cc === CommandClasses.Basic) {
+				endpoint.addCC(cc, { secure: true });
+			} else {
+				endpoint.addCC(cc, {
+					isControlled: true,
+					secure: true,
+				});
+			}
 		}
 
 		// We know for sure that the node is included securely
 		if (node.hasSecurityClass(SecurityClass.S0_Legacy) !== true) {
 			node.setSecurityClass(SecurityClass.S0_Legacy, true);
-			applHost.controllerLog.logNode(
+			ctx.logNode(
 				node.id,
 				`The node was granted the S0 security class`,
 			);
 		}
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
 	/** Tests if a command should be sent secure and thus requires encapsulation */
@@ -437,11 +527,12 @@ export class SecurityCC extends CommandClass {
 
 	/** Encapsulates a command that should be sent encrypted */
 	public static encapsulate(
-		host: ZWaveHost,
+		ownNodeId: number,
+		securityManager: SecurityManager,
 		cc: CommandClass,
 	): SecurityCCCommandEncapsulation {
 		// TODO: When to return a SecurityCCCommandEncapsulationNonceGet?
-		const ret = new SecurityCCCommandEncapsulation(host, {
+		const ret = new SecurityCCCommandEncapsulation({
 			nodeId: cc.nodeId,
 			encapsulated: cc,
 		});
@@ -455,45 +546,49 @@ export class SecurityCC extends CommandClass {
 	}
 }
 
-interface SecurityCCNonceReportOptions extends CCCommandOptions {
-	nonce: Buffer;
+interface SecurityCCNonceReportOptions {
+	nonce: Uint8Array;
 }
 
 @CCCommand(SecurityCommand.NonceReport)
 export class SecurityCCNonceReport extends SecurityCC {
 	constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| SecurityCCNonceReportOptions,
+		options: WithAddress<SecurityCCNonceReportOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload.withReason("Invalid nonce length")(
-				this.payload.length === HALF_NONCE_SIZE,
+		super(options);
+		if (options.nonce.length !== HALF_NONCE_SIZE) {
+			throw new ZWaveError(
+				`Nonce must have length ${HALF_NONCE_SIZE}!`,
+				ZWaveErrorCodes.Argument_Invalid,
 			);
-			this.nonce = this.payload;
-		} else {
-			if (options.nonce.length !== HALF_NONCE_SIZE) {
-				throw new ZWaveError(
-					`Nonce must have length ${HALF_NONCE_SIZE}!`,
-					ZWaveErrorCodes.Argument_Invalid,
-				);
-			}
-			this.nonce = options.nonce;
 		}
+		this.nonce = options.nonce;
 	}
 
-	public nonce: Buffer;
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): SecurityCCNonceReport {
+		validatePayload.withReason("Invalid nonce length")(
+			raw.payload.length === HALF_NONCE_SIZE,
+		);
 
-	public serialize(): Buffer {
-		this.payload = this.nonce;
-		return super.serialize();
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			nonce: raw.payload,
+		});
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public nonce: Uint8Array;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.view(this.nonce);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: { nonce: buffer2hex(this.nonce) },
 		};
 	}
@@ -504,12 +599,18 @@ export class SecurityCCNonceReport extends SecurityCC {
 export class SecurityCCNonceGet extends SecurityCC {}
 
 // @publicAPI
-export interface SecurityCCCommandEncapsulationOptions
-	extends CCCommandOptions
-{
-	encapsulated: CommandClass;
-	alternativeNetworkKey?: Buffer;
-}
+export type SecurityCCCommandEncapsulationOptions =
+	& {
+		alternativeNetworkKey?: Uint8Array;
+	}
+	& ({
+		encapsulated: CommandClass;
+	} | {
+		decryptedCCBytes: Uint8Array;
+		sequenced: boolean;
+		secondFrame: boolean;
+		sequenceCounter: number;
+	});
 
 function getCCResponseForCommandEncapsulation(
 	sent: SecurityCCCommandEncapsulation,
@@ -526,109 +627,118 @@ function getCCResponseForCommandEncapsulation(
 )
 export class SecurityCCCommandEncapsulation extends SecurityCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| SecurityCCCommandEncapsulationOptions,
+		options: WithAddress<SecurityCCCommandEncapsulationOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		const verb = gotDeserializationOptions(options) ? "decoded" : "sent";
-		if (!(this.host.ownNodeId as unknown)) {
-			throw new ZWaveError(
-				`Secure commands (S0) can only be ${verb} when the controller's node id is known!`,
-				ZWaveErrorCodes.Driver_NotReady,
-			);
-		} else if (!(this.host.securityManager as unknown)) {
-			throw new ZWaveError(
-				`Secure commands (S0) can only be ${verb} when the network key for the applHost is set`,
-				ZWaveErrorCodes.Driver_NoSecurity,
-			);
+		if ("encapsulated" in options) {
+			this.encapsulated = options.encapsulated;
+			this.encapsulated.encapsulatingCC = this as any;
+		} else {
+			this.decryptedCCBytes = options.decryptedCCBytes;
+			this.sequenced = options.sequenced;
+			this.secondFrame = options.secondFrame;
+			this.sequenceCounter = options.sequenceCounter;
 		}
+		this.alternativeNetworkKey = options.alternativeNetworkKey;
+	}
 
-		if (gotDeserializationOptions(options)) {
-			// HALF_NONCE_SIZE bytes iv, 1 byte frame control, at least 1 CC byte, 1 byte nonce id, 8 bytes auth code
-			validatePayload(
-				this.payload.length >= HALF_NONCE_SIZE + 1 + 1 + 1 + 8,
-			);
-			const iv = this.payload.subarray(0, HALF_NONCE_SIZE);
-			const encryptedPayload = this.payload.subarray(HALF_NONCE_SIZE, -9);
-			const nonceId = this.payload.at(-9)!;
-			const authCode = this.payload.subarray(-8);
+	public static async from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): Promise<SecurityCCCommandEncapsulation> {
+		assertSecurityRX(ctx);
 
-			// Retrieve the used nonce from the nonce store
-			const nonce = this.host.securityManager.getNonce(nonceId);
-			// Only accept the message if the nonce hasn't expired
-			validatePayload.withReason(
+		// HALF_NONCE_SIZE bytes iv, 1 byte frame control, at least 1 CC byte, 1 byte nonce id, 8 bytes auth code
+		validatePayload(
+			raw.payload.length >= HALF_NONCE_SIZE + 1 + 1 + 1 + 8,
+		);
+		const iv = raw.payload.subarray(0, HALF_NONCE_SIZE);
+		const encryptedPayload = raw.payload.subarray(HALF_NONCE_SIZE, -9);
+		const nonceId = raw.payload.at(-9)!;
+		const authCode = raw.payload.subarray(-8);
+
+		// Retrieve the used nonce from the nonce store
+		const nonce = ctx.securityManager.getNonce(nonceId);
+		// Only accept the message if the nonce hasn't expired
+		if (!nonce) {
+			validatePayload.fail(
 				`Nonce ${
 					num2hex(
 						nonceId,
 					)
 				} expired, cannot decode security encapsulated command.`,
-			)(!!nonce);
-			// and mark the nonce as used
-			this.host.securityManager.deleteNonce(nonceId);
-
-			this.authKey = this.host.securityManager.authKey;
-			this.encryptionKey = this.host.securityManager.encryptionKey;
-
-			// Validate the encrypted data
-			const authData = getAuthenticationData(
-				iv,
-				nonce!,
-				this.ccCommand,
-				this.nodeId,
-				this.host.ownNodeId,
-				encryptedPayload,
 			);
-			const expectedAuthCode = computeMAC(authData, this.authKey);
-			// Only accept messages with a correct auth code
-			validatePayload.withReason(
-				"Invalid auth code, won't accept security encapsulated command.",
-			)(authCode.equals(expectedAuthCode));
-
-			// Decrypt the encapsulated CC
-			const frameControlAndDecryptedCC = decryptAES128OFB(
-				encryptedPayload,
-				this.encryptionKey,
-				Buffer.concat([iv, nonce!]),
-			);
-			const frameControl = frameControlAndDecryptedCC[0];
-			this.sequenceCounter = frameControl & 0b1111;
-			this.sequenced = !!(frameControl & 0b1_0000);
-			this.secondFrame = !!(frameControl & 0b10_0000);
-
-			this.decryptedCCBytes = frameControlAndDecryptedCC.subarray(1);
-		} else {
-			this.encapsulated = options.encapsulated;
-			options.encapsulated.encapsulatingCC = this as any;
-			if (options.alternativeNetworkKey) {
-				this.authKey = generateAuthKey(options.alternativeNetworkKey);
-				this.encryptionKey = generateEncryptionKey(
-					options.alternativeNetworkKey,
-				);
-			} else {
-				this.authKey = this.host.securityManager.authKey;
-				this.encryptionKey = this.host.securityManager.encryptionKey;
-			}
 		}
+		// and mark the nonce as used
+		ctx.securityManager.deleteNonce(nonceId);
+
+		// Validate the encrypted data
+		const authData = getAuthenticationData(
+			iv,
+			nonce,
+			SecurityCommand.CommandEncapsulation,
+			ctx.sourceNodeId,
+			ctx.ownNodeId,
+			encryptedPayload,
+		);
+		const expectedAuthCode = await computeMAC(
+			authData,
+			await ctx.securityManager.getAuthKey(),
+		);
+		// Only accept messages with a correct auth code
+		validatePayload.withReason(
+			"Invalid auth code, won't accept security encapsulated command.",
+		)(authCode.equals(expectedAuthCode));
+
+		// Decrypt the encapsulated CC
+		const frameControlAndDecryptedCC = await decryptAES128OFB(
+			encryptedPayload,
+			await ctx.securityManager.getEncryptionKey(),
+			Bytes.concat([iv, nonce]),
+		);
+		const frameControl = frameControlAndDecryptedCC[0];
+		const sequenceCounter = frameControl & 0b1111;
+		const sequenced = !!(frameControl & 0b1_0000);
+		const secondFrame = !!(frameControl & 0b10_0000);
+		const decryptedCCBytes: Uint8Array | undefined =
+			frameControlAndDecryptedCC
+				.subarray(1);
+
+		const ret = new SecurityCCCommandEncapsulation({
+			nodeId: ctx.sourceNodeId,
+			sequenceCounter,
+			sequenced,
+			secondFrame,
+			decryptedCCBytes,
+		});
+
+		ret.authData = authData;
+		ret.authCode = authCode;
+		ret.iv = iv;
+
+		return ret;
 	}
 
 	private sequenced: boolean | undefined;
 	private secondFrame: boolean | undefined;
 	private sequenceCounter: number | undefined;
 
-	private decryptedCCBytes: Buffer | undefined;
+	private decryptedCCBytes: Uint8Array | undefined;
 	public encapsulated!: CommandClass;
 
-	private authKey: Buffer;
-	private encryptionKey: Buffer;
+	private alternativeNetworkKey?: Uint8Array;
 
 	public get nonceId(): number | undefined {
-		if (!this.nonce) return undefined;
-		return this.host.securityManager.getNonceId(this.nonce);
+		return this.nonce?.[0];
 	}
-	public nonce: Buffer | undefined;
+	public nonce: Uint8Array | undefined;
+
+	// Only used testing/for debugging purposes
+	private iv?: Uint8Array;
+	private authData?: Uint8Array;
+	private authCode?: Uint8Array;
+	private ciphertext?: Uint8Array;
 
 	public getPartialCCSessionId(): Record<string, any> | undefined {
 		if (this.sequenced) {
@@ -649,57 +759,80 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		return !!this.sequenced && !this.secondFrame;
 	}
 
-	public mergePartialCCs(
-		applHost: ZWaveApplicationHost,
+	public async mergePartialCCs(
 		partials: SecurityCCCommandEncapsulation[],
-	): void {
+		ctx: CCParsingContext,
+	): Promise<void> {
 		// Concat the CC buffers
-		this.decryptedCCBytes = Buffer.concat(
+		this.decryptedCCBytes = Bytes.concat(
 			[...partials, this].map((cc) => cc.decryptedCCBytes!),
 		);
 		// make sure this contains a complete CC command that's worth splitting
 		validatePayload(this.decryptedCCBytes.length >= 2);
 		// and deserialize the CC
-		this.encapsulated = CommandClass.from(this.host, {
-			data: this.decryptedCCBytes,
-			fromEncapsulation: true,
-			encapCC: this,
-		});
+		this.encapsulated = await CommandClass.parse(
+			this.decryptedCCBytes,
+			ctx,
+		);
+		this.encapsulated.encapsulatingCC = this as any;
 	}
 
-	public serialize(): Buffer {
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (!this.nonce) throwNoNonce();
 		if (this.nonce.length !== HALF_NONCE_SIZE) {
 			throwNoNonce("Invalid nonce size");
 		}
+		assertSecurityTX(ctx);
 
-		const serializedCC = this.encapsulated.serialize();
-		const plaintext = Buffer.concat([
-			Buffer.from([0]), // TODO: frame control
+		let authKey: Uint8Array;
+		let encryptionKey: Uint8Array;
+		if (this.alternativeNetworkKey) {
+			authKey = await generateAuthKey(this.alternativeNetworkKey);
+			encryptionKey = await generateEncryptionKey(
+				this.alternativeNetworkKey,
+			);
+		} else {
+			authKey = await ctx.securityManager.getAuthKey();
+			encryptionKey = await ctx.securityManager.getEncryptionKey();
+		}
+
+		const serializedCC = await this.encapsulated.serialize(ctx);
+		const plaintext = Bytes.concat([
+			Bytes.from([0]), // TODO: frame control
 			serializedCC,
 		]);
 		// Encrypt the payload
 		const senderNonce = randomBytes(HALF_NONCE_SIZE);
-		const iv = Buffer.concat([senderNonce, this.nonce]);
-		const ciphertext = encryptAES128OFB(plaintext, this.encryptionKey, iv);
+		const iv = Bytes.concat([senderNonce, this.nonce]);
+		const ciphertext = await encryptAES128OFB(
+			plaintext,
+			encryptionKey,
+			iv,
+		);
 		// And generate the auth code
 		const authData = getAuthenticationData(
 			senderNonce,
 			this.nonce,
 			this.ccCommand,
-			this.host.ownNodeId,
+			ctx.ownNodeId,
 			this.nodeId,
 			ciphertext,
 		);
-		const authCode = computeMAC(authData, this.authKey);
+		const authCode = await computeMAC(authData, authKey);
 
-		this.payload = Buffer.concat([
+		// Remember for debugging purposes
+		this.iv = iv;
+		this.authData = authData;
+		this.authCode = authCode;
+		this.ciphertext = ciphertext;
+
+		this.payload = Bytes.concat([
 			senderNonce,
 			ciphertext,
-			Buffer.from([this.nonceId!]),
+			Bytes.from([this.nonceId!]),
 			authCode,
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
 	protected computeEncapsulationOverhead(): number {
@@ -707,7 +840,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		return super.computeEncapsulationOverhead() + 18;
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		if (this.nonceId != undefined) {
 			message["nonce id"] = this.nonceId;
@@ -723,8 +856,28 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 				}
 			}
 		}
+		// Log the plaintext in integration tests and development mode
+		if (
+			process.env.NODE_ENV === "test"
+			|| process.env.NODE_ENV === "development"
+		) {
+			if (this.iv) {
+				message.IV = buffer2hex(this.iv);
+			}
+			if (this.ciphertext) {
+				message.ciphertext = buffer2hex(this.ciphertext);
+			} else if (this.decryptedCCBytes) {
+				message.plaintext = buffer2hex(this.decryptedCCBytes);
+			}
+			if (this.authData) {
+				message["auth data"] = buffer2hex(this.authData);
+			}
+			if (this.authCode) {
+				message["auth code"] = buffer2hex(this.authCode);
+			}
+		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -738,36 +891,44 @@ export class SecurityCCCommandEncapsulationNonceGet
 
 @CCCommand(SecurityCommand.SchemeReport)
 export class SecurityCCSchemeReport extends SecurityCC {
-	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
-	) {
-		super(host, options);
-		validatePayload(this.payload.length >= 1);
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): SecurityCCSchemeReport {
+		validatePayload(raw.payload.length >= 1);
 		// The including controller MUST NOT perform any validation of the Supported Security Schemes byte
+		return new this({
+			nodeId: ctx.sourceNodeId,
+		});
+	}
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
+		this.payload = Bytes.from([0]);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
+		return {
+			...super.toLogEntry(ctx),
+			// Hide the default payload line
+			message: undefined,
+		};
 	}
 }
 
 @CCCommand(SecurityCommand.SchemeGet)
 @expectedCCResponse(SecurityCCSchemeReport)
 export class SecurityCCSchemeGet extends SecurityCC {
-	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | CCCommandOptions,
-	) {
-		super(host, options);
-		// Don't care, we won't get sent this and we have no options
-	}
-
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
-		this.payload = Buffer.from([0]);
-		return super.serialize();
+		this.payload = Bytes.from([0]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			// Hide the default payload line
 			message: undefined,
 		};
@@ -777,23 +938,15 @@ export class SecurityCCSchemeGet extends SecurityCC {
 @CCCommand(SecurityCommand.SchemeInherit)
 @expectedCCResponse(SecurityCCSchemeReport)
 export class SecurityCCSchemeInherit extends SecurityCC {
-	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | CCCommandOptions,
-	) {
-		super(host, options);
-		// Don't care, we won't get sent this and we have no options
-	}
-
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
-		this.payload = Buffer.from([0]);
-		return super.serialize();
+		this.payload = Bytes.from([0]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			// Hide the default payload line
 			message: undefined,
 		};
@@ -804,51 +957,56 @@ export class SecurityCCSchemeInherit extends SecurityCC {
 export class SecurityCCNetworkKeyVerify extends SecurityCC {}
 
 // @publicAPI
-export interface SecurityCCNetworkKeySetOptions extends CCCommandOptions {
-	networkKey: Buffer;
+export interface SecurityCCNetworkKeySetOptions {
+	networkKey: Uint8Array;
 }
 
 @CCCommand(SecurityCommand.NetworkKeySet)
 @expectedCCResponse(SecurityCCNetworkKeyVerify)
 export class SecurityCCNetworkKeySet extends SecurityCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| SecurityCCNetworkKeySetOptions,
+		options: WithAddress<SecurityCCNetworkKeySetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
+		super(options);
+		if (options.networkKey.length !== 16) {
 			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
+				`The network key must have length 16!`,
+				ZWaveErrorCodes.Argument_Invalid,
 			);
-		} else {
-			if (options.networkKey.length !== 16) {
-				throw new ZWaveError(
-					`The network key must have length 16!`,
-					ZWaveErrorCodes.Argument_Invalid,
-				);
-			}
-			this.networkKey = options.networkKey;
 		}
+		this.networkKey = options.networkKey;
 	}
 
-	public networkKey: Buffer;
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): SecurityCCNetworkKeySet {
+		validatePayload(raw.payload.length >= 16);
+		const networkKey: Uint8Array = raw.payload.subarray(0, 16);
 
-	public serialize(): Buffer {
-		this.payload = this.networkKey;
-		return super.serialize();
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			networkKey,
+		});
 	}
 
-	// @noLogEntry - The network key shouldn't be logged, so users can safely post their logs online
+	public networkKey: Uint8Array;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.view(this.networkKey);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
+		// The network key shouldn't be logged, so users can safely post their logs online
+		const { message, ...log } = super.toLogEntry(ctx);
+		return log;
+	}
 }
 
 // @publicAPI
-export interface SecurityCCCommandsSupportedReportOptions
-	extends CCCommandOptions
-{
+export interface SecurityCCCommandsSupportedReportOptions {
+	reportsToFollow?: number;
 	supportedCCs: CommandClasses[];
 	controlledCCs: CommandClasses[];
 }
@@ -856,36 +1014,37 @@ export interface SecurityCCCommandsSupportedReportOptions
 @CCCommand(SecurityCommand.CommandsSupportedReport)
 export class SecurityCCCommandsSupportedReport extends SecurityCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| SecurityCCCommandsSupportedReportOptions,
+		options: WithAddress<SecurityCCCommandsSupportedReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.reportsToFollow = this.payload[0];
-			const list = parseCCList(this.payload.subarray(1));
-			this.supportedCCs = list.supportedCCs;
-			this.controlledCCs = list.controlledCCs;
-		} else {
-			this.supportedCCs = options.supportedCCs;
-			this.controlledCCs = options.controlledCCs;
-			// TODO: properly split the CCs into multiple reports
-			this.reportsToFollow = 0;
-		}
+		this.supportedCCs = options.supportedCCs;
+		this.controlledCCs = options.controlledCCs;
+		// TODO: properly split the CCs into multiple reports
+		this.reportsToFollow = options.reportsToFollow ?? 0;
 	}
 
-	public readonly reportsToFollow: number;
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): SecurityCCCommandsSupportedReport {
+		validatePayload(raw.payload.length >= 1);
+		const reportsToFollow = raw.payload[0];
+		const list = parseCCList(raw.payload.subarray(1));
+		const supportedCCs: CommandClasses[] = list.supportedCCs;
+		const controlledCCs: CommandClasses[] = list.controlledCCs;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.concat([
-			Buffer.from([this.reportsToFollow]),
-			encodeCCList(this.supportedCCs, this.controlledCCs),
-		]);
-		return super.serialize();
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			reportsToFollow,
+			supportedCCs,
+			controlledCCs,
+		});
 	}
+
+	public reportsToFollow: number;
+	public supportedCCs: CommandClasses[];
+	public controlledCCs: CommandClasses[];
 
 	public getPartialCCSessionId(): Record<string, any> | undefined {
 		// Nothing special we can distinguish sessions with
@@ -896,13 +1055,9 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 		return this.reportsToFollow > 0;
 	}
 
-	public supportedCCs: CommandClasses[];
-	public controlledCCs: CommandClasses[];
-
 	public mergePartialCCs(
-		applHost: ZWaveApplicationHost,
 		partials: SecurityCCCommandsSupportedReport[],
-	): void {
+	): Promise<void> {
 		// Concat the lists of CCs
 		this.supportedCCs = [...partials, this]
 			.map((report) => report.supportedCCs)
@@ -910,11 +1065,20 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 		this.controlledCCs = [...partials, this]
 			.map((report) => report.controlledCCs)
 			.reduce((prev, cur) => prev.concat(...cur), []);
+		return Promise.resolve();
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			Bytes.from([this.reportsToFollow]),
+			encodeCCList(this.supportedCCs, this.controlledCCs),
+		]);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				reportsToFollow: this.reportsToFollow,
 				supportedCCs: this.supportedCCs

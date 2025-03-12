@@ -1,7 +1,8 @@
-import { red } from "ansi-colors";
-import { generateCCAPIInterface } from "./generateCCAPIInterface";
-import { generateCCExports } from "./generateCCExports";
-import { generateCCValuesInterface } from "./generateCCValuesInterface";
+import c from "ansi-colors";
+import { generateCCAPIInterface } from "./generateCCAPIInterface.js";
+import { generateCCExports } from "./generateCCExports.js";
+// import { generateCCValuesInterface } from "./generateCCValuesInterface.js";
+import { generateCCValueDefinitions } from "./generateCCValueDefinitions.js";
 // import { lintCCConstructors } from "./lintCCConstructor";
 
 const argv = process.argv.slice(2);
@@ -9,8 +10,9 @@ const argv = process.argv.slice(2);
 const codegen = () =>
 	Promise.all([
 		generateCCAPIInterface(),
-		generateCCValuesInterface(),
+		// generateCCValuesInterface(),
 		generateCCExports(),
+		generateCCValueDefinitions(),
 	]);
 
 (async () => {
@@ -18,7 +20,7 @@ const codegen = () =>
 		await codegen();
 	}
 })().catch((e) => {
-	console.error(red(e.message));
+	console.error(c.red(e.stack));
 	console.error(" ");
 	process.exit(1);
 });

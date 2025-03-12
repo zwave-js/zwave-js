@@ -1,36 +1,21 @@
 // tsconfig for IntelliSense - active in all files in the current package
 {
-	"extends": "../../tsconfig.json",
+	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"plugins": [
 			{
-				"transform": "@zwave-js/transformers"
+				"transform": "@zwave-js/transformers/validateArgs/program",
+				"transformProgram": true
+			},
+			{
+				"transform": "@zwave-js/transformers/validateArgs/decorators"
+			},
+			{
+				// This must come last or it breaks the validateArgs transformer
+				"transform": "@zwave-js/transformers/defineCCValues"
 			}
 		]
 	},
-	"references": [
-		{
-			"path": "../core"
-		},
-		{
-			"path": "../host"
-		},
-		{
-			"path": "../serial"
-		},
-		{
-			"path": "../shared"
-		},
-		{
-			"path": "../maintenance"
-		},
-		{
-			"path": "../testing"
-		},
-		{
-			"path": "../transformers"
-		}
-	],
-	"include": ["maintenance/**/*.ts", "src/**/*.ts"],
+	"include": ["maintenance/**/*.ts", "maintenance/**/*.mts", "src/**/*.ts"],
 	"exclude": ["build/**", "node_modules/**"]
 }

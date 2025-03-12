@@ -231,6 +231,45 @@
 			}
 		]
 	},
+	"led_indicator_color_extended_alternate_palette": {
+		"label": "LED Indicator Color",
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 6,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "White",
+				"value": 0
+			},
+			{
+				"label": "Purple",
+				"value": 1
+			},
+			{
+				"label": "Orange",
+				"value": 2
+			},
+			{
+				"label": "Cyan",
+				"value": 3
+			},
+			{
+				"label": "Red",
+				"value": 4
+			},
+			{
+				"label": "Green",
+				"value": 5
+			},
+			{
+				"label": "Blue",
+				"value": 6
+			}
+		]
+	},
 	"led_indicator_brightness": {
 		"label": "LED Indicator Brightness",
 		"valueSize": 1,
@@ -434,6 +473,22 @@
 			}
 		]
 	},
+	"zwave_on_dimmer_ramp_rate_match_manual_255": {
+		"$import": "~/templates/master_template.json#base_0-255_nounit",
+		"label": "Ramp Rate On (Z-Wave)",
+		"unit": "seconds",
+		"defaultValue": 255,
+		"options": [
+			{
+				"label": "Instant on",
+				"value": 0
+			},
+			{
+				"label": "Match ramp rate for manual control",
+				"value": 255
+			}
+		]
+	},
 	"zwave_off_dimmer_ramp_rate_match_manual": {
 		"$import": "~/templates/master_template.json#base_0-100_nounit",
 		"label": "Ramp Rate Off (Z-Wave)",
@@ -447,6 +502,22 @@
 			{
 				"label": "Match ramp rate for manual control",
 				"value": 100
+			}
+		]
+	},
+	"zwave_off_dimmer_ramp_rate_match_manual_255": {
+		"$import": "~/templates/master_template.json#base_0-255_nounit",
+		"label": "Ramp Rate Off (Z-Wave)",
+		"unit": "seconds",
+		"defaultValue": 255,
+		"options": [
+			{
+				"label": "Instant off",
+				"value": 0
+			},
+			{
+				"label": "Match ramp rate for manual control",
+				"value": 255
 			}
 		]
 	},
@@ -915,6 +986,110 @@
 			}
 		]
 	},
+	// zen16 and zen17 relay devices now (Zen16 FW >=2.0, Zen17 FW >= 1.04) share common definition for switch type (and value inversion) and input trigger duration
+	"multi_universal_relay_switch_type": {
+		"valueSize": 1,
+		"defaultValue": 2,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Momentary",
+				"value": 0
+			},
+			{
+				"label": "Toggle (Follow switch)",
+				"value": 1
+			},
+			{
+				"label": "Toggle (Change state on toggle)",
+				"value": 2
+			},
+			{
+				"label": "Garage door (Momentary mode for Z-Wave control)",
+				"value": 3
+			},
+			{
+				"label": "Leak alarm (Water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (Door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "On/Off report (Dry contact switch/sensor)",
+				"value": 10
+			},
+			{
+				"label": "Garage door mode (Relay), door sensor (Input)",
+				"value": 11
+			}
+		]
+	},
+	"multi_universal_relay_reverse_reported_value": {
+		"valueSize": 1,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Values not reversed",
+				"value": 0
+			},
+			{
+				"label": "Leak alarm (Water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (Door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "On/Off report (Dry contact switch/sensor)",
+				"value": 10
+			}
+		]
+	},
+	"multi_universal_relay_input_trigger_duration": {
+		"valueSize": 1,
+		"unit": "0.1 seconds",
+		"minValue": 1,
+		"maxValue": 100,
+		"defaultValue": 5
+	},
 	"zen16_manual_control": {
 		"valueSize": 1,
 		"defaultValue": 1,
@@ -951,10 +1126,14 @@
 			}
 		]
 	},
-	"zen5x_external_switch_multiple_click": {
-		"label": "External switch multiple click detection",
+	"on_off_switch_mode": {
 		"$import": "~/templates/master_template.json#base_enable_disable",
-		"description": "External switch multiple click detection"
+		"label": "On/Off Switch Mode",
+		"description": "Disables dimming, locks brightness at 100% and sets all ramp rates to instant on/off."
+	},
+	"zen5x_external_switch_multiple_click": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "External Switch: Multiple Click Detection"
 	},
 	"zen5x_metadata": {
 		"inclusion": "1. Initiate inclusion (pairing) in the app (or web interface).\n2. TAP UP 3 TIMES QUICKLY if using traditional Z-Wave inclusion. \nSCAN THE QR CODE / ENTER THE 5-DIGIT PIN if using the new SmartStart method. The SmartStart security PIN is located on the back of the relay, next to the Z-Wave Plus logo.\n3. The LED indicator will blink green to signal communication and turn green for 2 seconds if inclusion is successful or turn red for 2 seconds if the pairing attempt fails",

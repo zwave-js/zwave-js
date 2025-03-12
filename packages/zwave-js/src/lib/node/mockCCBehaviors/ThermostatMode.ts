@@ -9,9 +9,7 @@ import {
 import { CommandClasses } from "@zwave-js/core/safe";
 import {
 	type MockNodeBehavior,
-	MockZWaveFrameType,
 	type ThermostatModeCCCapabilities,
-	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: ThermostatModeCCCapabilities = {
@@ -25,28 +23,21 @@ const StateKeys = {
 } as const;
 
 const respondToThermostatModeSet: MockNodeBehavior = {
-	onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof ThermostatModeCCSet
-		) {
-			self.state.set(StateKeys.mode, frame.payload.mode);
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof ThermostatModeCCSet) {
+			self.state.set(StateKeys.mode, receivedCC.mode);
 			self.state.set(
 				StateKeys.manufacturerData,
-				frame.payload.manufacturerData,
+				receivedCC.manufacturerData,
 			);
-			return true;
+			return { action: "ok" };
 		}
-		return false;
 	},
 };
 
 const respondToThermostatModeGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof ThermostatModeCCGet
-		) {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof ThermostatModeCCGet) {
 			const mode = (self.state.get(StateKeys.mode)
 				?? ThermostatMode.Off) as ThermostatMode;
 			const manufacturerData =
@@ -54,50 +45,34 @@ const respondToThermostatModeGet: MockNodeBehavior = {
 					? self.state.get(StateKeys.manufacturerData)
 					: undefined;
 
-			const cc = new ThermostatModeCCReport(self.host, {
-				nodeId: controller.host.ownNodeId,
-				// @ts-expect-error yeah yeah...
+			const cc = new ThermostatModeCCReport({
+				nodeId: controller.ownNodeId,
 				mode,
 				// @ts-expect-error I know...
 				manufacturerData,
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			return true;
+			return { action: "sendCC", cc };
 		}
-		return false;
 	},
 };
 
 const respondToThermostatModeSupportedGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof ThermostatModeCCSupportedGet
-		) {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof ThermostatModeCCSupportedGet) {
 			const capabilities = {
 				...defaultCapabilities,
 				...self.getCCCapabilities(
 					CommandClasses["Thermostat Mode"],
-					frame.payload.endpointIndex,
+					receivedCC.endpointIndex,
 				),
 			};
 
-			const cc = new ThermostatModeCCSupportedReport(self.host, {
-				nodeId: controller.host.ownNodeId,
+			const cc = new ThermostatModeCCSupportedReport({
+				nodeId: controller.ownNodeId,
 				supportedModes: capabilities.supportedModes,
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			return true;
+			return { action: "sendCC", cc };
 		}
-		return false;
 	},
 };
 

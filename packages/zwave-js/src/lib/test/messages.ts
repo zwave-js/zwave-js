@@ -1,9 +1,10 @@
 import type { Message } from "@zwave-js/serial";
 import { MessageType } from "@zwave-js/serial";
+import { Bytes } from "@zwave-js/shared";
 
 const defaultImplementations = {
-	serialize: () => Buffer.from([1, 2, 3]),
-	getNodeUnsafe: () => undefined,
+	serialize: () => Promise.resolve(Bytes.from([1, 2, 3])),
+	tryGetNode: () => undefined,
 	getNodeId: () => undefined,
 	toLogEntry: () => ({ tags: [] }),
 	needsCallbackId: () => true,
@@ -11,6 +12,7 @@ const defaultImplementations = {
 	getCallbackTimeout: () => undefined,
 	markAsSent: () => void 0,
 	markAsCompleted: () => void 0,
+	expectsAck: () => true,
 };
 
 export const dummyResponseOK = {

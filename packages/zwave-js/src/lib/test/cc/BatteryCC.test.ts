@@ -1,118 +1,124 @@
 import {
 	BatteryCC,
 	BatteryCCGet,
-	type BatteryCCReport,
+	BatteryCCReport,
 	BatteryChargingStatus,
 	BatteryCommand,
 	BatteryReplacementStatus,
+	CommandClass,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-test("the Get command should serialize correctly", (t) => {
-	const batteryCC = new BatteryCCGet(host, { nodeId: 1 });
-	const expected = Buffer.from([
+test("the Get command should serialize correctly", async (t) => {
+	const batteryCC = new BatteryCCGet({ nodeId: 1 });
+	const expected = Bytes.from([
 		CommandClasses.Battery, // CC
 		BatteryCommand.Get, // CC Command
 	]);
-	t.deepEqual(batteryCC.serialize(), expected);
+	await t.expect(batteryCC.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command (v1) should be deserialized correctly: when the battery is not low", (t) => {
-	const ccData = Buffer.from([
+test("the Report command (v1) should be deserialized correctly: when the battery is not low", async (t) => {
+	const ccData = Uint8Array.from([
 		CommandClasses.Battery, // CC
 		BatteryCommand.Report, // CC Command
 		55, // current value
 	]);
-	const batteryCC = new BatteryCC(host, {
-		nodeId: 7,
-		data: ccData,
-	}) as BatteryCCReport;
+	const batteryCC = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 7 } as any,
+	) as BatteryCCReport;
+	t.expect(batteryCC.constructor).toBe(BatteryCCReport);
 
-	t.is(batteryCC.level, 55);
-	t.false(batteryCC.isLow);
+	t.expect(batteryCC.level).toBe(55);
+	t.expect(batteryCC.isLow).toBe(false);
 });
 
-test("the Report command (v1) should be deserialized correctly: when the battery is low", (t) => {
-	const ccData = Buffer.from([
+test("the Report command (v1) should be deserialized correctly: when the battery is low", async (t) => {
+	const ccData = Uint8Array.from([
 		CommandClasses.Battery, // CC
 		BatteryCommand.Report, // CC Command
 		0xff, // current value
 	]);
-	const batteryCC = new BatteryCC(host, {
-		nodeId: 7,
-		data: ccData,
-	}) as BatteryCCReport;
+	const batteryCC = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 7 } as any,
+	) as BatteryCCReport;
+	t.expect(batteryCC.constructor).toBe(BatteryCCReport);
 
-	t.is(batteryCC.level, 0);
-	t.true(batteryCC.isLow);
+	t.expect(batteryCC.level).toBe(0);
+	t.expect(batteryCC.isLow).toBe(true);
 });
 
-test("the Report command (v2) should be deserialized correctly: all flags set", (t) => {
-	const ccData = Buffer.from([
+test("the Report command (v2) should be deserialized correctly: all flags set", async (t) => {
+	const ccData = Uint8Array.from([
 		CommandClasses.Battery, // CC
 		BatteryCommand.Report, // CC Command
 		55, // current value
 		0b00_1111_00,
 		1, // disconnected
 	]);
-	const batteryCC = new BatteryCC(host, {
-		nodeId: 7,
-		data: ccData,
-	}) as BatteryCCReport;
+	const batteryCC = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 7 } as any,
+	) as BatteryCCReport;
+	t.expect(batteryCC.constructor).toBe(BatteryCCReport);
 
-	t.true(batteryCC.rechargeable);
-	t.true(batteryCC.backup);
-	t.true(batteryCC.overheating);
-	t.true(batteryCC.lowFluid);
-	t.true(batteryCC.disconnected);
+	t.expect(batteryCC.rechargeable).toBe(true);
+	t.expect(batteryCC.backup).toBe(true);
+	t.expect(batteryCC.overheating).toBe(true);
+	t.expect(batteryCC.lowFluid).toBe(true);
+	t.expect(batteryCC.disconnected).toBe(true);
 });
 
-test("the Report command (v2) should be deserialized correctly: charging status", (t) => {
-	const ccData = Buffer.from([
+test("the Report command (v2) should be deserialized correctly: charging status", async (t) => {
+	const ccData = Uint8Array.from([
 		CommandClasses.Battery, // CC
 		BatteryCommand.Report, // CC Command
 		55,
 		0b10_000000, // Maintaining
 		0,
 	]);
-	const batteryCC = new BatteryCC(host, {
-		nodeId: 7,
-		data: ccData,
-	}) as BatteryCCReport;
+	const batteryCC = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 7 } as any,
+	) as BatteryCCReport;
+	t.expect(batteryCC.constructor).toBe(BatteryCCReport);
 
-	t.is(batteryCC.chargingStatus, BatteryChargingStatus.Maintaining);
+	t.expect(batteryCC.chargingStatus).toBe(BatteryChargingStatus.Maintaining);
 });
 
-test("the Report command (v2) should be deserialized correctly: recharge or replace", (t) => {
-	const ccData = Buffer.from([
+test("the Report command (v2) should be deserialized correctly: recharge or replace", async (t) => {
+	const ccData = Uint8Array.from([
 		CommandClasses.Battery, // CC
 		BatteryCommand.Report, // CC Command
 		55,
 		0b11, // Maintaining
 		0,
 	]);
-	const batteryCC = new BatteryCC(host, {
-		nodeId: 7,
-		data: ccData,
-	}) as BatteryCCReport;
+	const batteryCC = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 7 } as any,
+	) as BatteryCCReport;
+	t.expect(batteryCC.constructor).toBe(BatteryCCReport);
 
-	t.is(batteryCC.rechargeOrReplace, BatteryReplacementStatus.Now);
+	t.expect(batteryCC.rechargeOrReplace).toBe(BatteryReplacementStatus.Now);
 });
 
-test("deserializing an unsupported command should return an unspecified version of BatteryCC", (t) => {
-	const serializedCC = Buffer.from([
+test("deserializing an unsupported command should return an unspecified version of BatteryCC", async (t) => {
+	const serializedCC = Uint8Array.from([
 		CommandClasses.Battery, // CC
 		255, // not a valid command
 	]);
-	const basicCC: any = new BatteryCC(host, {
-		nodeId: 7,
-		data: serializedCC,
-	});
-	t.is(basicCC.constructor, BatteryCC);
+	const batteryCC = await CommandClass.parse(
+		serializedCC,
+		{ sourceNodeId: 7 } as any,
+	) as BatteryCCReport;
+	t.expect(batteryCC.constructor).toBe(BatteryCC);
 });
 
 // describe.skip(`interview()`, () => {

@@ -1,9 +1,8 @@
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { num2hex } from "./strings";
+import { num2hex } from "./strings.js";
 
 /** Object.keys, but with `(keyof T)[]` as the return type */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function keysOf<T extends {}>(obj: T): (keyof T)[] {
+export function keysOf<T extends object>(obj: T): (keyof T)[] {
 	return Object.keys(obj) as unknown as (keyof T)[];
 }
 
@@ -47,15 +46,6 @@ export function pickDeep<T = unknown>(
 	return _pickDeep(object, path.split(".")) as T;
 }
 
-/** Calls the map function of the given array and flattens the result by one level */
-export function flatMap<U, T extends any[]>(
-	array: T[],
-	callbackfn: (value: T, index: number, array: T[]) => U[],
-): U[] {
-	const mapped = array.map(callbackfn);
-	return mapped.reduce((acc, cur) => [...acc, ...cur], [] as U[]);
-}
-
 /**
  * Returns a human-readable representation of the given enum value.
  * If the given value is not found in the enum object, `"unknown (<value-as-hex>)"` is returned.
@@ -75,11 +65,6 @@ export function getEnumMemberName(enumeration: unknown, value: number): string {
  */
 export function isEnumMember(enumeration: unknown, value: number): boolean {
 	return typeof (enumeration as any)[value] === "string";
-}
-
-/** Skips the first n bytes of a buffer and returns the rest */
-export function skipBytes(buf: Buffer, n: number): Buffer {
-	return Buffer.from(buf.subarray(n));
 }
 
 /**
@@ -235,4 +220,18 @@ export function sum(values: number[]): number {
 /** Does nothing. Can be used for empty `.catch(...)` calls. */
 export function noop(): void {
 	// intentionally empty
+}
+
+export type FnOrStatic<TArgs extends any[], TReturn> =
+	| ((...args: TArgs) => TReturn)
+	| TReturn;
+
+export type ReturnTypeOrStatic<T> = T extends (...args: any[]) => infer R ? R
+	: T;
+
+export function evalOrStatic<T>(
+	fnOrConst: T,
+	...args: any[]
+): ReturnTypeOrStatic<T> {
+	return typeof fnOrConst === "function" ? fnOrConst(...args) : fnOrConst;
 }

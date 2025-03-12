@@ -1,20 +1,31 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
+	type ControlsCC,
 	Duration,
+	type EndpointId,
+	type GetEndpoint,
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
+	type NodeId,
 	type SupervisionResult,
+	type SupportsCC,
 	type ValueID,
 	ValueMetadata,
+	type WithAddress,
 	maybeUnknownToString,
 	parseMaybeNumber,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
-import { type AllOrNone, pick } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared/safe";
+import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -26,64 +37,64 @@ import {
 	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type PersistValuesContext,
+	type RefreshValuesContext,
+	getEffectiveCCVersion,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { BasicCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { BasicCommand } from "../lib/_Types.js";
 
-export const BasicCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Basic, {
-		...V.staticProperty("currentValue", {
-			...ValueMetadata.ReadOnlyLevel,
-			label: "Current value" as const,
-		}),
-		...V.staticProperty("targetValue", {
-			...ValueMetadata.UInt8,
-			label: "Target value" as const,
-			forceCreation: true,
-		}),
-		...V.staticProperty("duration", {
-			...ValueMetadata.ReadOnlyDuration,
-			label: "Remaining duration" as const,
-			minVersion: 2,
-		}),
-
-		...V.staticProperty("restorePrevious", {
-			...ValueMetadata.WriteOnlyBoolean,
-			label: "Restore previous value" as const,
-			states: {
-				true: "Restore",
-			},
-		}),
-
-		...V.staticPropertyWithName(
-			"compatEvent",
-			"event",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Event value",
-			} as const,
-			{
-				stateful: false,
-				autoCreate: false,
-			},
-		),
+export const BasicCCValues = V.defineCCValues(CommandClasses.Basic, {
+	...V.staticProperty("currentValue", {
+		...ValueMetadata.ReadOnlyLevel,
+		label: "Current value",
 	}),
+	...V.staticProperty("targetValue", {
+		...ValueMetadata.UInt8,
+		label: "Target value",
+	}),
+	...V.staticProperty("duration", {
+		...ValueMetadata.ReadOnlyDuration,
+		label: "Remaining duration",
+	}, {
+		minVersion: 2,
+	}),
+
+	...V.staticProperty("restorePrevious", {
+		...ValueMetadata.WriteOnlyBoolean,
+		label: "Restore previous value",
+		states: {
+			true: "Restore",
+		},
+	}),
+
+	...V.staticPropertyWithName(
+		"compatEvent",
+		"event",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Event value",
+		},
+		{
+			stateful: false,
+			autoCreate: false,
+		},
+	),
 });
 
 @API(CommandClasses.Basic)
@@ -163,7 +174,7 @@ export class BasicCCAPI extends CCAPI {
 								);
 							// and optimistically update the currentValue
 							for (const node of affectedNodes) {
-								this.applHost
+								this.host
 									.tryGetValueDB(node.id)
 									?.setValue(currentValueValueId, value);
 							}
@@ -209,11 +220,11 @@ export class BasicCCAPI extends CCAPI {
 	public async get() {
 		this.assertSupportsCommand(BasicCommand, BasicCommand.Get);
 
-		const cc = new BasicCCGet(this.applHost, {
+		const cc = new BasicCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<BasicCCReport>(
+		const response = await this.host.sendCommand<BasicCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -232,12 +243,12 @@ export class BasicCCAPI extends CCAPI {
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(BasicCommand, BasicCommand.Set);
 
-		const cc = new BasicCCSet(this.applHost, {
+		const cc = new BasicCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			targetValue,
 		});
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -247,27 +258,32 @@ export class BasicCCAPI extends CCAPI {
 export class BasicCC extends CommandClass {
 	declare ccCommand: BasicCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		// try to query the current state
-		await this.refreshValues(applHost);
+		// Assume that the endpoint supports Basic CC, so the values get persisted correctly.
+		endpoint.addCC(CommandClasses.Basic, { isSupported: true });
 
-		// Remove Basic CC support when there was no response
+		// try to query the current state
+		await this.refreshValues(ctx);
+
+		// Remove Basic CC support again when there was no response
 		if (
-			this.getValue(applHost, BasicCCValues.currentValue) == undefined
+			this.getValue(ctx, BasicCCValues.currentValue) == undefined
 		) {
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message:
-					"No response to Basic Get command, assuming the node does not support Basic CC...",
+					"No response to Basic Get command, assuming Basic CC is unsupported...",
 			});
 			// SDS14223: A controlling node MUST conclude that the Basic Command Class is not supported by a node (or
 			// endpoint) if no Basic Report is returned.
@@ -278,22 +294,24 @@ export class BasicCC extends CommandClass {
 		}
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses.Basic,
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
 		// try to query the current state
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying Basic CC state...",
 			direction: "outbound",
@@ -308,7 +326,7 @@ current value:      ${basicResponse.currentValue}`;
 target value:       ${basicResponse.targetValue}
 remaining duration: ${basicResponse.duration?.toString() ?? "undefined"}`;
 			}
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
 				direction: "inbound",
@@ -317,24 +335,29 @@ remaining duration: ${basicResponse.duration?.toString() ?? "undefined"}`;
 	}
 
 	public override getDefinedValueIDs(
-		applHost: ZWaveApplicationHost,
+		ctx:
+			& GetValueDB
+			& GetSupportedCCVersion
+			& GetDeviceConfig
+			& GetNode<
+				NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
+			>,
 	): ValueID[] {
 		const ret: ValueID[] = [];
+		const endpoint = this.getEndpoint(ctx)!;
 
-		// Defer to the base implementation if Basic CC is supported
-		const endpoint = this.getEndpoint(applHost)!;
-		if (endpoint.supportsCC(this.ccId)) {
-			ret.push(...super.getDefinedValueIDs(applHost));
-		}
-
-		if (
-			!!applHost.getDeviceConfig?.(endpoint.nodeId)?.compat
-				?.treatBasicSetAsEvent
-		) {
+		const compat = ctx.getDeviceConfig?.(endpoint.nodeId)?.compat;
+		if (compat?.mapBasicSet === "event") {
 			// Add the compat event value if it should be exposed
 			ret.push(BasicCCValues.compatEvent.endpoint(endpoint.index));
+		}
+
+		if (endpoint.supportsCC(this.ccId)) {
+			// Defer to the base implementation if Basic CC is supported.
+			// This implies that no other actuator CC is supported.
+			ret.push(...super.getDefinedValueIDs(ctx));
 		} else if (endpoint.controlsCC(CommandClasses.Basic)) {
-			// Otherwise, only expose currentValue on devices that only control Basic CC
+			// During the interview, we mark Basic CC as controlled only if we want to expose currentValue
 			ret.push(BasicCCValues.currentValue.endpoint(endpoint.index));
 		}
 
@@ -343,7 +366,7 @@ remaining duration: ${basicResponse.duration?.toString() ?? "undefined"}`;
 }
 
 // @publicAPI
-export interface BasicCCSetOptions extends CCCommandOptions {
+export interface BasicCCSetOptions {
 	targetValue: number;
 }
 
@@ -351,105 +374,155 @@ export interface BasicCCSetOptions extends CCCommandOptions {
 @useSupervision()
 export class BasicCCSet extends BasicCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | BasicCCSetOptions,
+		options: WithAddress<BasicCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.targetValue = this.payload[0];
-		} else {
-			this.targetValue = options.targetValue;
-		}
+		super(options);
+		this.targetValue = options.targetValue;
+	}
+
+	public static from(raw: CCRaw, ctx: CCParsingContext): BasicCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const targetValue = raw.payload[0];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			targetValue,
+		});
 	}
 
 	public targetValue: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.targetValue]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.targetValue]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: { "target value": this.targetValue },
 		};
 	}
 }
 
 // @publicAPI
-export type BasicCCReportOptions =
-	& CCCommandOptions
-	& {
-		currentValue: number;
-	}
-	& AllOrNone<{
-		targetValue: number;
-		duration: Duration;
-	}>;
+export interface BasicCCReportOptions {
+	currentValue?: MaybeUnknown<number>;
+	targetValue?: MaybeUnknown<number>;
+	duration?: Duration;
+}
 
 @CCCommand(BasicCommand.Report)
+@ccValueProperty("currentValue", BasicCCValues.currentValue)
+@ccValueProperty("targetValue", BasicCCValues.targetValue)
+@ccValueProperty("duration", BasicCCValues.duration)
 export class BasicCCReport extends BasicCC {
 	// @noCCValues See comment in the constructor
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | BasicCCReportOptions,
+		options: WithAddress<BasicCCReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this._currentValue =
-				// 0xff is a legacy value for 100% (99)
-				this.payload[0] === 0xff
-					? 99
-					: parseMaybeNumber(this.payload[0]);
+		this.currentValue = options.currentValue;
+		this.targetValue = options.targetValue;
+		this.duration = options.duration;
+	}
 
-			if (this.payload.length >= 3) {
-				this.targetValue = parseMaybeNumber(this.payload[1]);
-				this.duration = Duration.parseReport(this.payload[2]);
-			}
-		} else {
-			this._currentValue = options.currentValue;
-			if ("targetValue" in options) {
-				this.targetValue = options.targetValue;
-				this.duration = options.duration;
-			}
+	public static from(raw: CCRaw, ctx: CCParsingContext): BasicCCReport {
+		validatePayload(raw.payload.length >= 1);
+		const currentValue: MaybeUnknown<number> | undefined =
+			// 0xff is a legacy value for 100% (99)
+			raw.payload[0] === 0xff
+				? 99
+				: parseMaybeNumber(raw.payload[0]);
+		validatePayload(currentValue !== undefined);
+
+		let targetValue: MaybeUnknown<number> | undefined;
+		let duration: Duration | undefined;
+
+		if (raw.payload.length >= 3) {
+			targetValue = parseMaybeNumber(raw.payload[1]);
+			duration = Duration.parseReport(raw.payload[2]);
 		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			currentValue,
+			targetValue,
+			duration,
+		});
 	}
 
-	private _currentValue: MaybeUnknown<number> | undefined;
-	@ccValue(BasicCCValues.currentValue)
-	public get currentValue(): MaybeUnknown<number> | undefined {
-		return this._currentValue;
-	}
+	public currentValue: MaybeUnknown<number> | undefined;
 
-	@ccValue(BasicCCValues.targetValue)
 	public readonly targetValue: MaybeUnknown<number> | undefined;
 
-	@ccValue(BasicCCValues.duration)
 	public readonly duration: Duration | undefined;
 
-	public serialize(): Buffer {
-		const payload: number[] = [
-			typeof this.currentValue !== "number" ? 0xfe : this.currentValue,
-		];
-		if (
-			this.version >= 2
-			&& this.targetValue !== undefined
-			&& this.duration
-		) {
-			payload.push(
-				this.targetValue ?? 0xfe,
-				this.duration.serializeReport(),
+	public persistValues(ctx: PersistValuesContext): boolean {
+		// Basic CC Report persists its values itself, since there are some
+		// specific rules when which value may be persisted.
+		// These rules are essentially encoded in the getDefinedValueIDs overload,
+		// so we simply reuse that here.
+
+		// Figure out which values may be persisted.
+		const definedValueIDs = this.getDefinedValueIDs(ctx);
+		const shouldPersistCurrentValue = definedValueIDs.some((vid) =>
+			BasicCCValues.currentValue.is(vid)
+		);
+		const shouldPersistTargetValue = definedValueIDs.some((vid) =>
+			BasicCCValues.targetValue.is(vid)
+		);
+		const shouldPersistDuration = definedValueIDs.some((vid) =>
+			BasicCCValues.duration.is(vid)
+		);
+
+		if (this.currentValue !== undefined && shouldPersistCurrentValue) {
+			this.setValue(
+				ctx,
+				BasicCCValues.currentValue,
+				this.currentValue,
 			);
 		}
-		this.payload = Buffer.from(payload);
-		return super.serialize();
+		if (this.targetValue !== undefined && shouldPersistTargetValue) {
+			this.setValue(
+				ctx,
+				BasicCCValues.targetValue,
+				this.targetValue,
+			);
+		}
+		if (this.duration !== undefined && shouldPersistDuration) {
+			this.setValue(
+				ctx,
+				BasicCCValues.duration,
+				this.duration,
+			);
+		}
+
+		return true;
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.currentValue ?? 0xfe,
+			this.targetValue ?? 0xfe,
+			(this.duration ?? Duration.unknown()).serializeReport(),
+		]);
+
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+		if (
+			ccVersion < 2 && ctx.getDeviceConfig?.(
+				this.nodeId as number,
+			)?.compat?.encodeCCsUsingTargetVersion
+		) {
+			// When forcing CC version 1, only send the current value
+			this.payload = this.payload.subarray(0, 1);
+		}
+
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"current value": maybeUnknownToString(this.currentValue),
 		};
@@ -460,7 +533,7 @@ export class BasicCCReport extends BasicCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}

@@ -4,14 +4,16 @@ import {
 	type CCAPIs,
 	type CCNameOrId,
 	PhysicalCCAPI,
+	type VirtualCCAPIEndpoint,
 	getAPI,
 	normalizeCCNameOrId,
 } from "@zwave-js/cc";
 import {
 	type CommandClasses,
-	type IVirtualEndpoint,
 	type MulticastDestination,
 	type SecurityClass,
+	type SupportsCC,
+	type VirtualEndpointId,
 	ZWaveError,
 	ZWaveErrorCodes,
 	getCCName,
@@ -19,10 +21,9 @@ import {
 } from "@zwave-js/core/safe";
 import { staticExtends } from "@zwave-js/shared/safe";
 import { distinct } from "alcalzone-shared/arrays";
-import type { Driver } from "../driver/Driver";
-import type { Endpoint } from "./Endpoint";
-import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper";
-import { VirtualNode } from "./VirtualNode";
+import type { Driver } from "../driver/Driver.js";
+import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper.js";
+import { VirtualNode } from "./VirtualNode.js";
 
 /**
  * Represents an endpoint of a virtual (broadcast, multicast) Z-Wave node.
@@ -30,9 +31,9 @@ import { VirtualNode } from "./VirtualNode";
  *
  * The endpoint's capabilities are determined by the capabilities of the individual nodes' endpoints.
  */
-export class VirtualEndpoint implements IVirtualEndpoint {
+export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 	public constructor(
-		/** The virtual node this endpoint belongs to (or undefined if it set later) */
+		/** The virtual node this endpoint belongs to */
 		node: VirtualNode | undefined,
 		/** The driver instance this endpoint belongs to */
 		protected readonly driver: Driver,
@@ -50,7 +51,6 @@ export class VirtualEndpoint implements IVirtualEndpoint {
 	public get node(): VirtualNode {
 		return this._node;
 	}
-	/** @internal */
 	protected setNode(node: VirtualNode): void {
 		this._node = node;
 	}
@@ -92,7 +92,7 @@ export class VirtualEndpoint implements IVirtualEndpoint {
 	 */
 	public createAPI(ccId: CommandClasses): CCAPI {
 		const createCCAPI = (
-			endpoint: IVirtualEndpoint,
+			endpoint: VirtualCCAPIEndpoint,
 			secClass: SecurityClass,
 		) => {
 			if (
@@ -101,12 +101,14 @@ export class VirtualEndpoint implements IVirtualEndpoint {
 				&& endpoint.node.physicalNodes.length > 1
 			) {
 				// The API for S2 needs to know the multicast group ID
+				const secMan = this.driver.getSecurityManager2(
+					endpoint.node.physicalNodes[0].id,
+				);
 				return CCAPI.create(ccId, this.driver, endpoint).withOptions({
-					s2MulticastGroupId: this.driver.securityManager2
-						?.createMulticastGroup(
-							endpoint.node.physicalNodes.map((n) => n.id),
-							secClass,
-						),
+					s2MulticastGroupId: secMan?.createMulticastGroup(
+						endpoint.node.physicalNodes.map((n) => n.id),
+						secClass,
+					),
 				});
 			} else {
 				return CCAPI.create(ccId, this.driver, endpoint);
@@ -184,7 +186,7 @@ export class VirtualEndpoint implements IVirtualEndpoint {
 		const allCCs = distinct(
 			this._node.physicalNodes
 				.map((n) => n.getEndpoint(this.index))
-				.filter((e): e is Endpoint => !!e)
+				.filter((e) => !!e)
 				.flatMap((e) => [...e.implementedCommandClasses.keys()]),
 		);
 		for (const cc of allCCs) {
@@ -252,16 +254,5 @@ export class VirtualEndpoint implements IVirtualEndpoint {
 			);
 		}
 		return apiMethod.apply(CCAPI, args);
-	}
-
-	/**
-	 * @internal
-	 * DO NOT CALL THIS!
-	 */
-	public getNodeUnsafe(): never {
-		throw new ZWaveError(
-			`The node of a virtual endpoint cannot be accessed this way!`,
-			ZWaveErrorCodes.CC_NoNodeID,
-		);
 	}
 }

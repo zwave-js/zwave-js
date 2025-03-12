@@ -20,9 +20,9 @@ import type {
 	ValueUpdatedArgs,
 } from "@zwave-js/core/safe";
 import { type AllOrNone } from "@zwave-js/shared";
-import { type Endpoint } from "./Endpoint";
-import type { ZWaveNode } from "./Node";
-import type { RouteStatistics } from "./NodeStatistics";
+import { type Endpoint } from "./Endpoint.js";
+import type { ZWaveNode } from "./Node.js";
+import type { RouteStatistics } from "./NodeStatistics.js";
 
 export {
 	EntryControlDataTypes,
@@ -43,14 +43,10 @@ export type NodeInterviewFailedEventArgs =
 		errorMessage: string;
 		isFinal: boolean;
 	}
-	& (
-		| {
-			attempt: number;
-			maxAttempts: number;
-		}
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		| {}
-	);
+	& AllOrNone<{
+		attempt: number;
+		maxAttempts: number;
+	}>;
 
 export type ZWaveNodeValueAddedArgs = ValueAddedArgs & TranslatedValueID;
 export type ZWaveNodeValueUpdatedArgs =
@@ -172,7 +168,7 @@ export interface ZWaveNotificationCallbackArgs_EntryControlCC {
 	dataType: EntryControlDataTypes;
 	/** A human-readable label for the data type */
 	dataTypeLabel: string;
-	eventData?: Buffer | string;
+	eventData?: Uint8Array | string;
 }
 
 /**
@@ -213,6 +209,7 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	ready: (node: ZWaveNode) => void;
 	"interview stage completed": (node: ZWaveNode, stageName: string) => void;
 	"interview started": (node: ZWaveNode) => void;
+	"node info received": (node: ZWaveNode) => void;
 }
 
 export type ZWaveNodeEvents = Extract<keyof ZWaveNodeEventCallbacks, string>;
@@ -251,10 +248,18 @@ export interface LifelineHealthCheckResult {
 	 * Will use the time in TX reports if available, otherwise fall back to measuring the round trip time.
 	 */
 	latency: number;
-	/** How many routing neighbors this node has. Higher = better, ideally > 2. */
-	numNeighbors: number;
-	/** How many pings were not ACKed by the node. Lower = better, ideally 0. */
+
+	/**
+	 * How many routing neighbors this node has (Z-Wave Classic only). Higher = better, ideally > 2.
+	 * For Z-Wave LR, this is undefined.
+	 */
+	numNeighbors?: number;
+
+	/**
+	 * How many pings were not ACKed by the node. Lower = better, ideally 0.
+	 */
 	failedPingsNode: number;
+
 	/**
 	 * The minimum powerlevel where all pings from the node were ACKed by the controller. Higher = better, ideally 6dBm or more.
 	 *
@@ -267,6 +272,7 @@ export interface LifelineHealthCheckResult {
 	 * Only available if the node supports Powerlevel CC
 	 */
 	failedPingsController?: number;
+
 	/**
 	 * An estimation of the Signal-to-Noise Ratio Margin in dBm.
 	 *
@@ -304,6 +310,7 @@ export interface LifelineHealthCheckSummary {
 	 * | ❌   0 |           10 |             - |                - |               - |          - |
 	 *
 	 * If the min. powerlevel or SNR margin can not be measured, the condition is assumed to be fulfilled.
+	 * The no. of neighbors is only relevant for Z-Wave Classic. The condition is assumed to be fulfilled for Z-Wave LR.
 	 */
 	rating: number;
 }
@@ -365,6 +372,49 @@ export interface RouteHealthCheckSummary {
 	 * | ❌   0 |           10 |                - |               - |
 	 */
 	rating: number;
+}
+
+export enum LinkReliabilityCheckMode {
+	BasicSetOnOff,
+}
+
+export interface LinkReliabilityCheckOptions {
+	mode: LinkReliabilityCheckMode;
+	interval: number;
+	rounds?: number;
+	onProgress?: (progress: LinkReliabilityCheckResult) => void;
+}
+
+export interface LinkReliabilityCheckResult {
+	rounds: number;
+
+	commandsSent: number;
+	commandErrors: number;
+	missingResponses?: number;
+
+	latency?: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	rtt: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	ackRSSI: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	responseRSSI?: {
+		min: number;
+		max: number;
+		average: number;
+	};
 }
 
 export interface RefreshInfoOptions {

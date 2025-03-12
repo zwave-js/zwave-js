@@ -1,7 +1,10 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import type {
+	GetValueDB,
 	MessageOrCCLogEntry,
 	MessageRecord,
 	SupervisionResult,
+	WithAddress,
 } from "@zwave-js/core/safe";
 import {
 	CommandClasses,
@@ -10,7 +13,7 @@ import {
 	ValueMetadata,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -18,27 +21,23 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
-import {
-	type CCCommandOptions,
-	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+} from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { SceneActivationCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { SceneActivationCommand } from "../lib/_Types.js";
 
-export const SceneActivationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Scene Activation"], {
+export const SceneActivationCCValues = V.defineCCValues(
+	CommandClasses["Scene Activation"],
+	{
 		...V.staticProperty(
 			"sceneId",
 			{
@@ -49,7 +48,6 @@ export const SceneActivationCCValues = Object.freeze({
 			} as const,
 			{ stateful: false },
 		),
-
 		...V.staticProperty(
 			"dimmingDuration",
 			{
@@ -57,8 +55,8 @@ export const SceneActivationCCValues = Object.freeze({
 				label: "Dimming duration",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 // @noInterview This CC is write-only
 
@@ -108,13 +106,13 @@ export class SceneActivationCCAPI extends CCAPI {
 			SceneActivationCommand.Set,
 		);
 
-		const cc = new SceneActivationCCSet(this.applHost, {
+		const cc = new SceneActivationCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			sceneId,
 			dimmingDuration,
 		});
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -126,57 +124,64 @@ export class SceneActivationCC extends CommandClass {
 }
 
 // @publicAPI
-export interface SceneActivationCCSetOptions extends CCCommandOptions {
+export interface SceneActivationCCSetOptions {
 	sceneId: number;
 	dimmingDuration?: Duration | string;
 }
 
 @CCCommand(SceneActivationCommand.Set)
 @useSupervision()
+@ccValueProperty("sceneId", SceneActivationCCValues.sceneId)
+@ccValueProperty("dimmingDuration", SceneActivationCCValues.dimmingDuration)
 export class SceneActivationCCSet extends SceneActivationCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| SceneActivationCCSetOptions,
+		options: WithAddress<SceneActivationCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.sceneId = this.payload[0];
-			// Per the specs, dimmingDuration is required, but as always the real world is different...
-			if (this.payload.length >= 2) {
-				this.dimmingDuration = Duration.parseSet(this.payload[1]);
-			}
-
-			validatePayload(this.sceneId >= 1, this.sceneId <= 255);
-		} else {
-			this.sceneId = options.sceneId;
-			this.dimmingDuration = Duration.from(options.dimmingDuration);
-		}
+		super(options);
+		this.sceneId = options.sceneId;
+		this.dimmingDuration = Duration.from(options.dimmingDuration);
 	}
 
-	@ccValue(SceneActivationCCValues.sceneId)
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): SceneActivationCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const sceneId = raw.payload[0];
+		validatePayload(sceneId >= 1, sceneId <= 255);
+
+		// Per the specs, dimmingDuration is required, but as always the real world is different...
+		let dimmingDuration: Duration | undefined;
+		if (raw.payload.length >= 2) {
+			dimmingDuration = Duration.parseSet(raw.payload[1]);
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			sceneId,
+			dimmingDuration,
+		});
+	}
+
 	public sceneId: number;
 
-	@ccValue(SceneActivationCCValues.dimmingDuration)
 	public dimmingDuration: Duration | undefined;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.sceneId,
 			this.dimmingDuration?.serializeSet() ?? 0xff,
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = { "scene id": this.sceneId };
 		if (this.dimmingDuration != undefined) {
 			message["dimming duration"] = this.dimmingDuration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}

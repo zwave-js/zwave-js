@@ -4,13 +4,9 @@ import {
 	SupervisionCCReport,
 } from "@zwave-js/cc";
 import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { type MockNodeBehavior } from "@zwave-js/testing";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"value updates work correctly when SupervisionReport is repeated",
@@ -44,25 +40,16 @@ integrationTest(
 		customSetup: async (driver, controller, mockNode) => {
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof SupervisionCCGet
-					) {
-						const cc = new SupervisionCCReport(controller.host, {
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof SupervisionCCGet) {
+						const cc = new SupervisionCCReport({
 							nodeId: self.id,
-							sessionId: frame.payload.sessionId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToSupervisionGet);
@@ -77,14 +64,14 @@ integrationTest(
 			let currentValue = node.getValue(
 				MultilevelSwitchCCValues.currentValue.id,
 			);
-			t.not(currentValue, 77);
+			t.expect(currentValue).not.toBe(77);
 
 			await promise;
 
 			currentValue = node.getValue(
 				MultilevelSwitchCCValues.currentValue.id,
 			);
-			t.is(currentValue, 77);
+			t.expect(currentValue).toBe(77);
 
 			// await node.commandClasses["Multilevel Switch"].startLevelChange({
 			// 	direction: "up",

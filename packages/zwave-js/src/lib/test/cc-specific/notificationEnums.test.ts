@@ -5,7 +5,7 @@ import {
 import { CommandClasses, type ValueMetadataNumeric } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"Notifications with enum event parameters are evaluated correctly",
@@ -40,7 +40,7 @@ integrationTest(
 					valveOperationStatusId,
 				) as ValueMetadataNumeric
 			).states;
-			t.deepEqual(states, {
+			t.expect(states).toStrictEqual({
 				// For the valve operation status variable, the embedded enum replaces its possible states
 				// since there is only one meaningless state, so it doesn't make sense to preserve it
 				// This is different from the "Door state" value which has multiple states AND enums
@@ -49,11 +49,11 @@ integrationTest(
 			});
 
 			// Send notifications to the node
-			let cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x0f,
 				notificationEvent: 0x01,
-				eventParameters: Buffer.from([0x00]), // Off / Closed
+				eventParameters: Uint8Array.from([0x00]), // Off / Closed
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, {
@@ -64,13 +64,13 @@ integrationTest(
 			await wait(100);
 
 			let value = node.getValue(valveOperationStatusId);
-			t.is(value, 0x00);
+			t.expect(value).toBe(0x00);
 
-			cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x0f,
 				notificationEvent: 0x01,
-				eventParameters: Buffer.from([0x01]), // On / Open
+				eventParameters: Uint8Array.from([0x01]), // On / Open
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, {
@@ -80,7 +80,7 @@ integrationTest(
 			await wait(100);
 
 			value = node.getValue(valveOperationStatusId);
-			t.is(value, 0x01);
+			t.expect(value).toBe(0x01);
 		},
 	},
 );
@@ -114,7 +114,7 @@ integrationTest(
 			const states = (
 				node.getValueMetadata(doorStateValueId) as ValueMetadataNumeric
 			).states;
-			t.deepEqual(states, {
+			t.expect(states).toStrictEqual({
 				[0x16]: "Window/door is open",
 				[0x17]: "Window/door is closed",
 				// The Door state notification type has an enum for the "open" state
@@ -124,11 +124,11 @@ integrationTest(
 			});
 
 			// Send notifications to the node
-			let cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x06,
 				notificationEvent: 0x16,
-				eventParameters: Buffer.from([0x00]), // open in regular position
+				eventParameters: Uint8Array.from([0x00]), // open in regular position
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, {
@@ -139,13 +139,13 @@ integrationTest(
 			await wait(100);
 
 			let value = node.getValue(doorStateValueId);
-			t.is(value, 0x1600);
+			t.expect(value).toBe(0x1600);
 
-			cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x06,
 				notificationEvent: 0x16,
-				eventParameters: Buffer.from([0x01]), // open in tilt position
+				eventParameters: Uint8Array.from([0x01]), // open in tilt position
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, {
@@ -155,10 +155,10 @@ integrationTest(
 			await wait(100);
 
 			value = node.getValue(doorStateValueId);
-			t.is(value, 0x1601);
+			t.expect(value).toBe(0x1601);
 
-			cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x06,
 				notificationEvent: 0x16, // open
 			});
@@ -170,10 +170,10 @@ integrationTest(
 			await wait(100);
 
 			value = node.getValue(doorStateValueId);
-			t.is(value, 0x16);
+			t.expect(value).toBe(0x16);
 
-			cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x06,
 				notificationEvent: 0x17, // closed
 			});
@@ -185,7 +185,7 @@ integrationTest(
 			await wait(100);
 
 			value = node.getValue(doorStateValueId);
-			t.is(value, 0x17);
+			t.expect(value).toBe(0x17);
 		},
 	},
 );
@@ -218,10 +218,10 @@ integrationTest("The 'simple' Door state value works correctly", {
 				vid.commandClass === CommandClasses.Notification
 				&& vid.propertyKey === "Door state (simple)",
 		);
-		t.truthy(simpleVID);
+		t.expect(simpleVID).toBeTruthy();
 
 		const meta = node.getValueMetadata(simpleVID!);
-		t.like(meta, {
+		t.expect(meta).toMatchObject({
 			ccSpecific: { notificationType: 6 },
 			label: "Door state (simple)",
 			readable: true,
@@ -240,11 +240,11 @@ integrationTest("The 'simple' Door state value works correctly", {
 		);
 		const valueSimple = NotificationCCValues.doorStateSimple;
 
-		let cc = new NotificationCCReport(mockNode.host, {
-			nodeId: mockController.host.ownNodeId,
+		let cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
 			notificationType: 0x06,
 			notificationEvent: 0x16, // Window/door is open
-			eventParameters: Buffer.from([0x01]), // ... in tilt position
+			eventParameters: Uint8Array.from([0x01]), // ... in tilt position
 		});
 		await mockNode.sendToController(
 			createMockZWaveRequestFrame(cc, {
@@ -254,16 +254,16 @@ integrationTest("The 'simple' Door state value works correctly", {
 		// wait a bit for the value to be updated
 		await wait(100);
 
-		t.is(node.getValue(valueWithEnum.id), 0x1601);
-		t.is(node.getValue(valueSimple.id), 0x16);
+		t.expect(node.getValue(valueWithEnum.id)).toBe(0x1601);
+		t.expect(node.getValue(valueSimple.id)).toBe(0x16);
 
 		// ===
 
-		cc = new NotificationCCReport(mockNode.host, {
-			nodeId: mockController.host.ownNodeId,
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
 			notificationType: 0x06,
 			notificationEvent: 0x16, // Window/door is open
-			eventParameters: Buffer.from([0x00]), // ... in regular position
+			eventParameters: Uint8Array.from([0x00]), // ... in regular position
 		});
 		await mockNode.sendToController(
 			createMockZWaveRequestFrame(cc, {
@@ -273,13 +273,13 @@ integrationTest("The 'simple' Door state value works correctly", {
 		// wait a bit for the value to be updated
 		await wait(100);
 
-		t.is(node.getValue(valueWithEnum.id), 0x1600);
-		t.is(node.getValue(valueSimple.id), 0x16);
+		t.expect(node.getValue(valueWithEnum.id)).toBe(0x1600);
+		t.expect(node.getValue(valueSimple.id)).toBe(0x16);
 
 		// ===
 
-		cc = new NotificationCCReport(mockNode.host, {
-			nodeId: mockController.host.ownNodeId,
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
 			notificationType: 0x06,
 			notificationEvent: 0x16, // Window/door is open
 		});
@@ -291,13 +291,13 @@ integrationTest("The 'simple' Door state value works correctly", {
 		// wait a bit for the value to be updated
 		await wait(100);
 
-		t.is(node.getValue(valueWithEnum.id), 0x16);
-		t.is(node.getValue(valueSimple.id), 0x16);
+		t.expect(node.getValue(valueWithEnum.id)).toBe(0x16);
+		t.expect(node.getValue(valueSimple.id)).toBe(0x16);
 
 		// ===
 
-		cc = new NotificationCCReport(mockNode.host, {
-			nodeId: mockController.host.ownNodeId,
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
 			notificationType: 0x06,
 			notificationEvent: 0x17, // Window/door is closed
 		});
@@ -309,8 +309,173 @@ integrationTest("The 'simple' Door state value works correctly", {
 		// wait a bit for the value to be updated
 		await wait(100);
 
-		t.is(node.getValue(valueWithEnum.id), 0x17);
-		t.is(node.getValue(valueSimple.id), 0x17);
+		t.expect(node.getValue(valueWithEnum.id)).toBe(0x17);
+		t.expect(node.getValue(valueSimple.id)).toBe(0x17);
+	},
+});
+
+integrationTest("The synthetic 'Door tilt state' value works correctly", {
+	// debug: true,
+
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			{
+				ccId: CommandClasses.Notification,
+				isSupported: true,
+				version: 8,
+				supportsV1Alarm: false,
+				notificationTypesAndEvents: {
+					// Access Control - Window open and Window closed
+					[0x06]: [0x16, 0x17],
+				},
+			},
+		],
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.commandClasses.Notification.getSupportedEvents(0x06);
+
+		const tiltVID = NotificationCCValues.doorTiltState.id;
+
+		const hasTiltVID = () =>
+			node.getDefinedValueIDs().some(
+				(vid) => NotificationCCValues.doorTiltState.is(vid),
+			);
+		// Before receiving any notifications with the tilt enum, the synthetic value should not exist
+		t.expect(hasTiltVID()).toBe(false);
+
+		// Send a notification to the node where the window is not tilted
+		let cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
+			notificationType: 0x06,
+			notificationEvent: 0x16, // Window/door is open
+			eventParameters: Uint8Array.from([0x00]), // ... in regular position
+		});
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		// wait a bit for the value to be updated
+		await wait(100);
+
+		// The value should still not exist
+		t.expect(hasTiltVID()).toBe(false);
+
+		// ===
+
+		// Again with tilt
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
+			notificationType: 0x06,
+			notificationEvent: 0x16, // Window/door is open
+			eventParameters: Uint8Array.from([0x01]), // ... in tilt position
+		});
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		// wait a bit for the value to be updated
+		await wait(100);
+
+		// The value should now exist
+		t.expect(hasTiltVID()).toBe(true);
+		t.expect(node.getValue(tiltVID)).toBe(0x01);
+
+		// ===
+
+		// Again without tilt
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
+			notificationType: 0x06,
+			notificationEvent: 0x16, // Window/door is open
+			eventParameters: Uint8Array.from([0x00]), // ... in regular position
+		});
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		// wait a bit for the value to be updated
+		await wait(100);
+
+		t.expect(node.getValue(tiltVID)).toBe(0x00);
+
+		// ===
+
+		// Again with tilt to be able to detect changes
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
+			notificationType: 0x06,
+			notificationEvent: 0x16, // Window/door is open
+			eventParameters: Uint8Array.from([0x01]), // ... in tilt position
+		});
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		// wait a bit for the value to be updated
+		await wait(100);
+
+		t.expect(node.getValue(tiltVID)).toBe(0x01);
+
+		// ===
+
+		// And now without the enum
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
+			notificationType: 0x06,
+			notificationEvent: 0x17, // Window/door is closed
+		});
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		// wait a bit for the value to be updated
+		await wait(100);
+
+		t.expect(node.getValue(tiltVID)).toBe(0x00);
+
+		// ===
+
+		// Again with tilt to be able to detect changes
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
+			notificationType: 0x06,
+			notificationEvent: 0x16, // Window/door is open
+			eventParameters: Uint8Array.from([0x01]), // ... in tilt position
+		});
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		// wait a bit for the value to be updated
+		await wait(100);
+
+		t.expect(node.getValue(tiltVID)).toBe(0x01);
+
+		// ===
+
+		// And again without the enum
+		cc = new NotificationCCReport({
+			nodeId: mockController.ownNodeId,
+			notificationType: 0x06,
+			notificationEvent: 0x16, // Window/door is open
+		});
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		// wait a bit for the value to be updated
+		await wait(100);
+
+		t.expect(node.getValue(tiltVID)).toBe(0x00);
 	},
 });
 
@@ -346,7 +511,7 @@ integrationTest(
 					waterPressureAlarmValueId,
 				) as ValueMetadataNumeric
 			).states;
-			t.deepEqual(states, {
+			t.expect(states).toStrictEqual({
 				[0x00]: "idle",
 				[0x01]: "No data",
 				[0x02]: "Below low threshold",
@@ -355,11 +520,11 @@ integrationTest(
 			});
 
 			// Send notifications to the node
-			let cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x05,
 				notificationEvent: 0x07,
-				eventParameters: Buffer.from([0x02]), // Below low threshold
+				eventParameters: Uint8Array.from([0x02]), // Below low threshold
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, {
@@ -370,11 +535,11 @@ integrationTest(
 			await wait(100);
 
 			let value = node.getValue(waterPressureAlarmValueId);
-			t.is(value, 0x02);
+			t.expect(value).toBe(0x02);
 
 			// Now send one without an event parameter
-			cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x05,
 				notificationEvent: 0x07,
 			});
@@ -386,10 +551,10 @@ integrationTest(
 			await wait(100);
 
 			value = node.getValue(waterPressureAlarmValueId);
-			t.is(value, 0x01);
+			t.expect(value).toBe(0x01);
 
-			// cc = new NotificationCCReport(mockNode.host, {
-			// 	nodeId: mockController.host.ownNodeId,
+			// cc = new NotificationCCReport({
+			// 	nodeId: mockController.ownNodeId,
 			// 	notificationType: 0x06,
 			// 	notificationEvent: 0x16, // open
 			// });
@@ -403,8 +568,8 @@ integrationTest(
 			// value = node.getValue(waterPressureAlarmValueId);
 			// t.is(value, 0x16);
 
-			// cc = new NotificationCCReport(mockNode.host, {
-			// 	nodeId: mockController.host.ownNodeId,
+			// cc = new NotificationCCReport({
+			// 	nodeId: mockController.ownNodeId,
 			// 	notificationType: 0x06,
 			// 	notificationEvent: 0x17, // closed
 			// });

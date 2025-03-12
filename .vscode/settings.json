@@ -21,6 +21,7 @@
 		}
 	],
 	"dprint.experimentalLsp": true,
+	"dprint.path": "./node_modules/dprint/bin.js",
 	"editor.defaultFormatter": "dprint.dprint",
 	"[jsonc]": {
 		"editor.formatOnSave": true,
@@ -105,6 +106,6 @@
 	"search.exclude": {
 		"**/.yarn": true
 	},
-	"git.ignoredRepositories": ["specs"],
+	"git.ignoredRepositories": ["specs", "vscode-config-editor"],
 	"search.followSymlinks": false
 }

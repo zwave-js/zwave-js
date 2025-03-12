@@ -11,11 +11,10 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
-	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"GET requests don't time out early if the response is split using the 'more to follow' flag",
@@ -35,15 +34,12 @@ integrationTest(
 
 		async customSetup(driver, mockController, mockNode) {
 			const respondToConfigurationNameGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof ConfigurationCCNameGet
-					) {
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof ConfigurationCCNameGet) {
 						await wait(700);
-						let cc = new ConfigurationCCNameReport(self.host, {
-							nodeId: controller.host.ownNodeId,
-							parameter: frame.payload.parameter,
+						let cc = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
 							name: "Test para",
 							reportsToFollow: 1,
 						});
@@ -55,9 +51,9 @@ integrationTest(
 
 						await wait(700);
 
-						cc = new ConfigurationCCNameReport(self.host, {
-							nodeId: controller.host.ownNodeId,
-							parameter: frame.payload.parameter,
+						cc = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
 							name: "meter",
 							reportsToFollow: 0,
 						});
@@ -66,9 +62,9 @@ integrationTest(
 								ackRequested: false,
 							}),
 						);
-						return true;
+
+						return { action: "stop" };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToConfigurationNameGet);
@@ -76,7 +72,7 @@ integrationTest(
 
 		async testBody(t, driver, node, mockController, mockNode) {
 			const name = await node.commandClasses.Configuration.getName(1);
-			t.is(name, "Test parameter");
+			t.expect(name).toBe("Test parameter");
 		},
 	},
 );
@@ -102,22 +98,18 @@ integrationTest(
 
 		async customSetup(driver, mockController, mockNode) {
 			const respondToConfigurationNameGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof ConfigurationCCNameGet
-					) {
-						const configCC = new ConfigurationCCNameReport(
-							self.host,
-							{
-								nodeId: controller.host.ownNodeId,
-								parameter: frame.payload.parameter,
-								name:
-									"Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooong parameter name",
-								reportsToFollow: 0,
-							},
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof ConfigurationCCNameGet) {
+						const configCC = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
+							name:
+								"Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooong parameter name",
+							reportsToFollow: 0,
+						});
+						const serialized = await configCC.serialize(
+							mockNode.encodingContext,
 						);
-						const serialized = configCC.serialize();
 						const segment1 = serialized.subarray(
 							0,
 							MAX_SEGMENT_SIZE,
@@ -126,25 +118,19 @@ integrationTest(
 
 						const sessionId = 7;
 
-						const tsFS = new TransportServiceCCFirstSegment(
-							self.host,
-							{
-								nodeId: controller.host.ownNodeId,
-								sessionId,
-								datagramSize: serialized.length,
-								partialDatagram: segment1,
-							},
-						);
-						const tsSS = new TransportServiceCCSubsequentSegment(
-							self.host,
-							{
-								nodeId: controller.host.ownNodeId,
-								sessionId,
-								datagramSize: serialized.length,
-								datagramOffset: segment1.length,
-								partialDatagram: segment2,
-							},
-						);
+						const tsFS = new TransportServiceCCFirstSegment({
+							nodeId: controller.ownNodeId,
+							sessionId,
+							datagramSize: serialized.length,
+							partialDatagram: segment1,
+						});
+						const tsSS = new TransportServiceCCSubsequentSegment({
+							nodeId: controller.ownNodeId,
+							sessionId,
+							datagramSize: serialized.length,
+							datagramOffset: segment1.length,
+							partialDatagram: segment2,
+						});
 
 						await wait(700);
 						await self.sendToController(
@@ -159,9 +145,8 @@ integrationTest(
 								ackRequested: false,
 							}),
 						);
-						return true;
+						return { action: "stop" };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToConfigurationNameGet);
@@ -169,7 +154,7 @@ integrationTest(
 
 		async testBody(t, driver, node, mockController, mockNode) {
 			const name = await node.commandClasses.Configuration.getName(1);
-			t.is(name, longName);
+			t.expect(name).toBe(longName);
 		},
 	},
 );
@@ -190,24 +175,15 @@ integrationTest("GET requests DO time out if there's no matching response", {
 
 	async customSetup(driver, mockController, mockNode) {
 		const respondToConfigurationNameGet: MockNodeBehavior = {
-			async onControllerFrame(controller, self, frame) {
-				if (
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof ConfigurationCCNameGet
-				) {
+			handleCC(controller, self, receivedCC) {
+				if (receivedCC instanceof ConfigurationCCNameGet) {
 					// This is not the response you're looking for
-					const cc = new BasicCCReport(self.host, {
-						nodeId: controller.host.ownNodeId,
+					const cc = new BasicCCReport({
+						nodeId: controller.ownNodeId,
 						currentValue: 1,
 					});
-					await self.sendToController(
-						createMockZWaveRequestFrame(cc, {
-							ackRequested: false,
-						}),
-					);
-					return true;
+					return { action: "sendCC", cc };
 				}
-				return false;
 			},
 		};
 		mockNode.defineBehavior(respondToConfigurationNameGet);
@@ -215,6 +191,6 @@ integrationTest("GET requests DO time out if there's no matching response", {
 
 	async testBody(t, driver, node, mockController, mockNode) {
 		const name = await node.commandClasses.Configuration.getName(1);
-		t.is(name, undefined);
+		t.expect(name).toBeUndefined();
 	},
 });

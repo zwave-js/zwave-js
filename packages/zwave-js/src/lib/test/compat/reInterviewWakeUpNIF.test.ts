@@ -3,7 +3,7 @@ import { CommandClasses } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"Re-interviews that wait for a wake-up start when receiving a NIF",
@@ -31,7 +31,7 @@ integrationTest(
 			await wait(500);
 
 			// Send a NIF to trigger the re-interview
-			const cc = new ZWaveProtocolCCNodeInformationFrame(mockNode.host, {
+			const cc = new ZWaveProtocolCCNodeInformationFrame({
 				nodeId: mockNode.id,
 				...mockNode.capabilities,
 				supportedCCs: [...mockNode.implementedCCs]
@@ -48,7 +48,6 @@ integrationTest(
 			await promise;
 
 			await wait(500);
-			t.pass();
 		},
 	},
 );

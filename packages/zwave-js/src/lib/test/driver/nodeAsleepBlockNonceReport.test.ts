@@ -12,7 +12,7 @@ import {
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"when a NonceReport does not get delivered, it does not block further nonce requests",
@@ -31,56 +31,49 @@ integrationTest(
 				networkKey: driver.options.securityKeys!.S0_Legacy!,
 				nonceTimeout: 100000,
 			});
-			mockNode.host.securityManager = sm0Node;
+			mockNode.securityManagers.securityManager = sm0Node;
 
 			// Create a security manager for the controller
 			const sm0Ctrlr = new SecurityManager({
-				ownNodeId: controller.host.ownNodeId,
+				ownNodeId: controller.ownNodeId,
 				networkKey: driver.options.securityKeys!.S0_Legacy!,
 				nonceTimeout: 100000,
 			});
-			controller.host.securityManager = sm0Ctrlr;
+			controller.securityManagers.securityManager = sm0Ctrlr;
 
 			// Respond to S0 Nonce Get
 			const respondToS0NonceGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof SecurityCCNonceGet
-					) {
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof SecurityCCNonceGet) {
 						const nonce = sm0Node.generateNonce(
-							controller.host.ownNodeId,
+							controller.ownNodeId,
 							8,
 						);
-						const cc = new SecurityCCNonceReport(self.host, {
-							nodeId: controller.host.ownNodeId,
+						const cc = new SecurityCCNonceReport({
+							nodeId: controller.ownNodeId,
 							nonce,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToS0NonceGet);
 
 			// Parse Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
 			const parseS0CC: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
+				async handleCC(controller, self, receivedCC) {
 					// We don't support sequenced commands here
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload
-							instanceof SecurityCCCommandEncapsulation
-					) {
-						frame.payload.mergePartialCCs(undefined as any, []);
+					if (receivedCC instanceof SecurityCCCommandEncapsulation) {
+						await receivedCC.mergePartialCCs([], {
+							sourceNodeId: controller.ownNodeId,
+							__internalIsMockNode: true,
+							frameType: "singlecast",
+							...self.encodingContext,
+							...self.securityManagers,
+						});
 					}
 					// This just decodes - we need to call further handlers
-					return false;
+					return undefined;
 				},
 			};
 			mockNode.defineBehavior(parseS0CC);
@@ -91,8 +84,8 @@ integrationTest(
 			node.markAsAsleep();
 			mockNode.autoAckControllerFrames = false;
 
-			let nonceRequest = new SecurityCCNonceGet(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let nonceRequest = new SecurityCCNonceGet({
+				nodeId: mockController.ownNodeId,
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(nonceRequest, {
@@ -129,8 +122,8 @@ integrationTest(
 			mockNode.autoAckControllerFrames = true;
 
 			// And subsequent requests must be answered
-			nonceRequest = new SecurityCCNonceGet(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			nonceRequest = new SecurityCCNonceGet({
+				nodeId: mockController.ownNodeId,
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(nonceRequest, {
@@ -147,8 +140,6 @@ integrationTest(
 					errorMessage: "Expected a Nonce Report to be sent",
 				},
 			);
-
-			t.pass();
 		},
 	},
 );

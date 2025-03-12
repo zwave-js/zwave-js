@@ -45,7 +45,7 @@
 	 *
 	 * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
 	 */
-	"mainEntryPointFilePath": "<projectFolder>/build/index.d.ts",
+	"mainEntryPointFilePath": "<projectFolder>/build/esm/index.d.ts",
 
 	/**
 	 * A list of NPM package names whose exports should be treated as part of this package.
@@ -145,7 +145,7 @@
 		 * SUPPORTED TOKENS: <packageName>, <unscopedPackageName>
 		 * DEFAULT VALUE: "<unscopedPackageName>.api.md"
 		 */
-		"reportFileName": "api.md",
+		// "reportFileName": "<unscopedPackageName>.api.md",
 
 		/**
 		 * Specifies the folder where the API report file is written.  The file name portion is determined by

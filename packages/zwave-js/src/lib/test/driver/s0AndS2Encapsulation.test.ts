@@ -19,14 +19,10 @@ import {
 	SupervisionStatus,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 	// debug: true,
@@ -39,22 +35,22 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 
 	customSetup: async (driver, controller, mockNode) => {
 		// Create a security manager for the node
-		const sm2Node = new SecurityManager2();
+		const sm2Node = await SecurityManager2.create();
 		// Copy keys from the driver
-		sm2Node.setKey(
+		await sm2Node.setKey(
 			SecurityClass.S2_AccessControl,
 			driver.options.securityKeys!.S2_AccessControl!,
 		);
-		sm2Node.setKey(
+		await sm2Node.setKey(
 			SecurityClass.S2_Authenticated,
 			driver.options.securityKeys!.S2_Authenticated!,
 		);
-		sm2Node.setKey(
+		await sm2Node.setKey(
 			SecurityClass.S2_Unauthenticated,
 			driver.options.securityKeys!.S2_Unauthenticated!,
 		);
-		mockNode.host.securityManager2 = sm2Node;
-		mockNode.host.getHighestSecurityClass = () =>
+		mockNode.securityManagers.securityManager2 = sm2Node;
+		mockNode.encodingContext.getHighestSecurityClass = () =>
 			SecurityClass.S2_Unauthenticated;
 
 		const sm0Node = new SecurityManager({
@@ -62,162 +58,136 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 			networkKey: driver.options.securityKeys!.S0_Legacy!,
 			nonceTimeout: 100000,
 		});
-		mockNode.host.securityManager = sm0Node;
+		mockNode.securityManagers.securityManager = sm0Node;
 
 		// Create a security manager for the controller
-		const smCtrlr = new SecurityManager2();
+		const smCtrlr = await SecurityManager2.create();
 		// Copy keys from the driver
-		smCtrlr.setKey(
+		await smCtrlr.setKey(
 			SecurityClass.S2_AccessControl,
 			driver.options.securityKeys!.S2_AccessControl!,
 		);
-		smCtrlr.setKey(
+		await smCtrlr.setKey(
 			SecurityClass.S2_Authenticated,
 			driver.options.securityKeys!.S2_Authenticated!,
 		);
-		smCtrlr.setKey(
+		await smCtrlr.setKey(
 			SecurityClass.S2_Unauthenticated,
 			driver.options.securityKeys!.S2_Unauthenticated!,
 		);
-		controller.host.securityManager2 = smCtrlr;
-		controller.host.getHighestSecurityClass = () =>
+		controller.securityManagers.securityManager2 = smCtrlr;
+		controller.encodingContext.getHighestSecurityClass = () =>
 			SecurityClass.S2_Unauthenticated;
 
 		const sm0Ctrlr = new SecurityManager({
-			ownNodeId: controller.host.ownNodeId,
+			ownNodeId: controller.ownNodeId,
 			networkKey: driver.options.securityKeys!.S0_Legacy!,
 			nonceTimeout: 100000,
 		});
-		controller.host.securityManager = sm0Ctrlr;
+		controller.securityManagers.securityManager = sm0Ctrlr;
 
 		// Respond to S0 Nonce Get
 		const respondToS0NonceGet: MockNodeBehavior = {
-			async onControllerFrame(controller, self, frame) {
-				if (
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof SecurityCCNonceGet
-				) {
+			handleCC(controller, self, receivedCC) {
+				if (receivedCC instanceof SecurityCCNonceGet) {
 					const nonce = sm0Node.generateNonce(
-						controller.host.ownNodeId,
+						controller.ownNodeId,
 						8,
 					);
-					const cc = new SecurityCCNonceReport(self.host, {
-						nodeId: controller.host.ownNodeId,
+					const cc = new SecurityCCNonceReport({
+						nodeId: controller.ownNodeId,
 						nonce,
 					});
-					await self.sendToController(
-						createMockZWaveRequestFrame(cc, {
-							ackRequested: false,
-						}),
-					);
-					return true;
+					return { action: "sendCC", cc };
 				}
-				return false;
 			},
 		};
 		mockNode.defineBehavior(respondToS0NonceGet);
 
 		// Parse Security CC commands
 		const parseS0CC: MockNodeBehavior = {
-			async onControllerFrame(controller, self, frame) {
+			async handleCC(controller, self, receivedCC) {
 				// We don't support sequenced commands here
-				if (
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof SecurityCCCommandEncapsulation
-				) {
-					frame.payload.mergePartialCCs(undefined as any, []);
+				if (receivedCC instanceof SecurityCCCommandEncapsulation) {
+					await receivedCC.mergePartialCCs([], {
+						sourceNodeId: controller.ownNodeId,
+						__internalIsMockNode: true,
+						frameType: "singlecast",
+						...self.encodingContext,
+						...self.securityManagers,
+					});
 				}
-				return false;
+				// This just decodes - we need to call further handlers
+				return undefined;
 			},
 		};
 		mockNode.defineBehavior(parseS0CC);
 
 		// Respond to S2 Nonce Get
 		const respondToS2NonceGet: MockNodeBehavior = {
-			async onControllerFrame(controller, self, frame) {
-				if (
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof Security2CCNonceGet
-				) {
-					const nonce = sm2Node.generateNonce(
-						controller.host.ownNodeId,
+			async handleCC(controller, self, receivedCC) {
+				if (receivedCC instanceof Security2CCNonceGet) {
+					const nonce = await sm2Node.generateNonce(
+						controller.ownNodeId,
 					);
-					const cc = new Security2CCNonceReport(self.host, {
-						nodeId: controller.host.ownNodeId,
+					const cc = new Security2CCNonceReport({
+						nodeId: controller.ownNodeId,
 						SOS: true,
 						MOS: false,
 						receiverEI: nonce,
 					});
-					await self.sendToController(
-						createMockZWaveRequestFrame(cc, {
-							ackRequested: false,
-						}),
-					);
-					return true;
+					return { action: "sendCC", cc };
 				}
-				return false;
 			},
 		};
 		mockNode.defineBehavior(respondToS2NonceGet);
 
 		// Handle decode errors
 		const handleInvalidCC: MockNodeBehavior = {
-			async onControllerFrame(controller, self, frame) {
-				if (
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof InvalidCC
-				) {
+			async handleCC(controller, self, receivedCC) {
+				if (receivedCC instanceof InvalidCC) {
 					if (
-						frame.payload.reason
+						receivedCC.reason
 							=== ZWaveErrorCodes.Security2CC_CannotDecode
-						|| frame.payload.reason
+						|| receivedCC.reason
 							=== ZWaveErrorCodes.Security2CC_NoSPAN
 					) {
-						const nonce = sm2Node.generateNonce(
-							controller.host.ownNodeId,
+						const nonce = await sm2Node.generateNonce(
+							controller.ownNodeId,
 						);
-						const cc = new Security2CCNonceReport(self.host, {
-							nodeId: controller.host.ownNodeId,
+						const cc = new Security2CCNonceReport({
+							nodeId: controller.ownNodeId,
 							SOS: true,
 							MOS: false,
 							receiverEI: nonce,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
 				}
-				return false;
 			},
 		};
 		mockNode.defineBehavior(handleInvalidCC);
 
 		// Just have the node respond to all Supervision Get positively
 		const respondToSupervisionGet: MockNodeBehavior = {
-			async onControllerFrame(controller, self, frame) {
+			handleCC(controller, self, receivedCC) {
 				if (
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof Security2CCMessageEncapsulation
-					&& frame.payload.encapsulated instanceof SupervisionCCGet
+					receivedCC instanceof Security2CCMessageEncapsulation
+					&& receivedCC.encapsulated instanceof SupervisionCCGet
 				) {
-					let cc: CommandClass = new SupervisionCCReport(self.host, {
-						nodeId: controller.host.ownNodeId,
-						sessionId: frame.payload.encapsulated.sessionId,
+					let cc: CommandClass = new SupervisionCCReport({
+						nodeId: controller.ownNodeId,
+						sessionId: receivedCC.encapsulated.sessionId,
 						moreUpdatesFollow: false,
 						status: SupervisionStatus.Success,
 					});
-					cc = Security2CC.encapsulate(self.host, cc);
-					await self.sendToController(
-						createMockZWaveRequestFrame(cc, {
-							ackRequested: false,
-						}),
+					cc = Security2CC.encapsulate(
+						cc,
+						self.id,
+						self.securityManagers,
 					);
-					return true;
+					return { action: "sendCC", cc };
 				}
-				return false;
 			},
 		};
 		mockNode.defineBehavior(respondToSupervisionGet);
@@ -234,7 +204,5 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 				&& f.payload.encapsulated
 					instanceof SecurityCCCommandsSupportedGet,
 		);
-
-		t.pass();
 	},
 });

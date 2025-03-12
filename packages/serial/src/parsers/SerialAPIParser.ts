@@ -1,41 +1,61 @@
-import { num2hex } from "@zwave-js/shared";
-import { Transform, type TransformCallback } from "node:stream";
-import type { SerialLogger } from "../Logger";
-import { MessageHeaders } from "../MessageHeaders";
+import { Bytes, num2hex } from "@zwave-js/shared";
+import { type Transformer } from "node:stream/web";
+import type { SerialLogger } from "../log/Logger.js";
+import { MessageHeaders } from "../message/MessageHeaders.js";
+import {
+	type SerialAPIChunk,
+	type ZWaveSerialFrame,
+	ZWaveSerialFrameType,
+} from "./ZWaveSerialFrame.js";
 
 /**
  * Checks if there's enough data in the buffer to deserialize a complete message
  */
-function containsCompleteMessage(data?: Buffer): boolean {
+function containsCompleteMessage(data?: Uint8Array): boolean {
 	return !!data && data.length >= 5 && data.length >= getMessageLength(data);
 }
 
 /** Given a buffer that starts with SOF, this method returns the number of bytes the first message occupies in the buffer */
-function getMessageLength(data: Buffer): number {
+function getMessageLength(data: Uint8Array): number {
 	const remainingLength = data[1];
 	return remainingLength + 2;
 }
 
-export class SerialAPIParser extends Transform {
-	constructor(
-		private logger?: SerialLogger,
-		private onDiscarded?: (data: Buffer) => void,
-	) {
-		// We read byte streams but emit messages
-		super({ readableObjectMode: true });
-	}
+type SerialAPIParserTransformerOutput = ZWaveSerialFrame & {
+	type:
+		| ZWaveSerialFrameType.SerialAPI
+		| ZWaveSerialFrameType.Discarded;
+};
 
-	private receiveBuffer = Buffer.allocUnsafe(0);
+function wrapSerialAPIChunk(
+	chunk: SerialAPIChunk,
+): SerialAPIParserTransformerOutput {
+	return {
+		type: ZWaveSerialFrameType.SerialAPI,
+		data: chunk,
+	};
+}
+
+class SerialAPIParserTransformer implements
+	Transformer<
+		Uint8Array,
+		SerialAPIParserTransformerOutput
+	>
+{
+	constructor(private logger?: SerialLogger) {}
+
+	private receiveBuffer = new Bytes();
 
 	// Allow ignoring the high nibble of an ACK once to work around an issue in the 700 series firmware
 	public ignoreAckHighNibble: boolean = false;
 
-	_transform(
-		chunk: any,
-		encoding: string,
-		callback: TransformCallback,
-	): void {
-		this.receiveBuffer = Buffer.concat([this.receiveBuffer, chunk]);
+	transform(
+		chunk: Uint8Array,
+		controller: TransformStreamDefaultController<
+			SerialAPIParserTransformerOutput
+		>,
+	) {
+		this.receiveBuffer = Bytes.concat([this.receiveBuffer, chunk]);
 
 		while (this.receiveBuffer.length > 0) {
 			if (this.receiveBuffer[0] !== MessageHeaders.SOF) {
@@ -45,18 +65,24 @@ export class SerialAPIParser extends Transform {
 					// Emit the single-byte messages directly
 					case MessageHeaders.ACK: {
 						this.logger?.ACK("inbound");
-						this.push(MessageHeaders.ACK);
+						controller.enqueue(
+							wrapSerialAPIChunk(MessageHeaders.ACK),
+						);
 						this.ignoreAckHighNibble = false;
 						break;
 					}
 					case MessageHeaders.NAK: {
 						this.logger?.NAK("inbound");
-						this.push(MessageHeaders.NAK);
+						controller.enqueue(
+							wrapSerialAPIChunk(MessageHeaders.NAK),
+						);
 						break;
 					}
 					case MessageHeaders.CAN: {
 						this.logger?.CAN("inbound");
-						this.push(MessageHeaders.CAN);
+						controller.enqueue(
+							wrapSerialAPIChunk(MessageHeaders.CAN),
+						);
 						break;
 					}
 					default: {
@@ -76,7 +102,9 @@ export class SerialAPIParser extends Transform {
 								}`,
 							);
 							this.logger?.ACK("inbound");
-							this.push(MessageHeaders.ACK);
+							controller.enqueue(
+								wrapSerialAPIChunk(MessageHeaders.ACK),
+							);
 							this.ignoreAckHighNibble = false;
 							break;
 						}
@@ -97,11 +125,14 @@ export class SerialAPIParser extends Transform {
 						}
 						const discarded = this.receiveBuffer.subarray(0, skip);
 						this.logger?.discarded(discarded);
-						this.onDiscarded?.(discarded);
+						controller.enqueue({
+							type: ZWaveSerialFrameType.Discarded,
+							data: discarded,
+						});
 					}
 				}
 				// Continue with the next valid byte
-				this.receiveBuffer = skipBytes(this.receiveBuffer, skip);
+				this.receiveBuffer = this.receiveBuffer.subarray(skip);
 				continue;
 			}
 
@@ -113,17 +144,29 @@ export class SerialAPIParser extends Transform {
 				const msgLength = getMessageLength(this.receiveBuffer);
 				// emit it and slice the read bytes from the buffer
 				const msg = this.receiveBuffer.subarray(0, msgLength);
-				this.receiveBuffer = skipBytes(this.receiveBuffer, msgLength);
+				this.receiveBuffer = this.receiveBuffer.subarray(msgLength);
 
 				this.logger?.data("inbound", msg);
-				this.push(msg);
+				controller.enqueue(wrapSerialAPIChunk(msg));
 			}
 		}
-		callback();
 	}
 }
+export class SerialAPIParser extends TransformStream {
+	constructor(
+		logger?: SerialLogger,
+	) {
+		const transformer = new SerialAPIParserTransformer(logger);
+		super(transformer);
+		this.#transformer = transformer;
+	}
 
-/** Skips the first n bytes of a buffer and returns the rest */
-export function skipBytes(buf: Buffer, n: number): Buffer {
-	return Buffer.from(buf.subarray(n));
+	#transformer: SerialAPIParserTransformer;
+
+	public get ignoreAckHighNibble(): boolean {
+		return this.#transformer.ignoreAckHighNibble;
+	}
+	public set ignoreAckHighNibble(value: boolean) {
+		this.#transformer.ignoreAckHighNibble = value;
+	}
 }

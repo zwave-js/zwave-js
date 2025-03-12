@@ -1,17 +1,15 @@
-import type {
-	MessageOrCCLogEntry,
-	SupervisionResult,
-} from "@zwave-js/core/safe";
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
 	MessagePriority,
-	ValueMetadata,
-	ZWaveError,
-	ZWaveErrorCodes,
+	type SupervisionResult,
+	type WithAddress,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -19,53 +17,27 @@ import {
 	POLL_VALUE,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type RefreshValuesContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
-	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
 import {
 	type SetbackState,
 	SetbackType,
 	ThermostatSetbackCommand,
-} from "../lib/_Types";
-import { decodeSetbackState, encodeSetbackState } from "../lib/serializers";
-
-export const ThermostatSetbackCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Setback"], {
-		...V.staticProperty(
-			"setbackType",
-			{
-				// TODO: This should be a value list
-				...ValueMetadata.Any,
-				label: "Setback type",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"setbackState",
-			{
-				...ValueMetadata.Int8,
-				min: -12.8,
-				max: 12,
-				label: "Setback state",
-			} as const,
-		),
-	}),
-});
+} from "../lib/_Types.js";
+import { decodeSetbackState, encodeSetbackState } from "../lib/serializers.js";
 
 // @noSetValueAPI
 // The setback state consist of two values that must be set together
@@ -104,11 +76,11 @@ export class ThermostatSetbackCCAPI extends CCAPI {
 			ThermostatSetbackCommand.Get,
 		);
 
-		const cc = new ThermostatSetbackCCGet(this.applHost, {
+		const cc = new ThermostatSetbackCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			ThermostatSetbackCCReport
 		>(
 			cc,
@@ -129,50 +101,53 @@ export class ThermostatSetbackCCAPI extends CCAPI {
 			ThermostatSetbackCommand.Get,
 		);
 
-		const cc = new ThermostatSetbackCCSet(this.applHost, {
+		const cc = new ThermostatSetbackCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			setbackType,
 			setbackState,
 		});
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
 @commandClass(CommandClasses["Thermostat Setback"])
 @implementedVersion(1)
-@ccValues(ThermostatSetbackCCValues)
 export class ThermostatSetbackCC extends CommandClass {
 	declare ccCommand: ThermostatSetbackCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Thermostat Setback"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
 		// Query the thermostat state
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying the current thermostat state...",
 			direction: "outbound",
@@ -182,7 +157,7 @@ export class ThermostatSetbackCC extends CommandClass {
 			const logMessage = `received current state:
 setback type:  ${getEnumMemberName(SetbackType, setbackResp.setbackType)}
 setback state: ${setbackResp.setbackState}`;
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
 				direction: "inbound",
@@ -192,7 +167,7 @@ setback state: ${setbackResp.setbackState}`;
 }
 
 // @publicAPI
-export interface ThermostatSetbackCCSetOptions extends CCCommandOptions {
+export interface ThermostatSetbackCCSetOptions {
 	setbackType: SetbackType;
 	setbackState: SetbackState;
 }
@@ -201,81 +176,117 @@ export interface ThermostatSetbackCCSetOptions extends CCCommandOptions {
 @useSupervision()
 export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ThermostatSetbackCCSetOptions,
+		options: WithAddress<ThermostatSetbackCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.setbackType = options.setbackType;
-			this.setbackState = options.setbackState;
-		}
+		super(options);
+		this.setbackType = options.setbackType;
+		this.setbackState = options.setbackState;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ThermostatSetbackCCSet {
+		validatePayload(raw.payload.length >= 2);
+		const setbackType: SetbackType = raw.payload[0] & 0b11;
+
+		const setbackState: SetbackState = decodeSetbackState(raw.payload, 1)
+			// If we receive an unknown setback state, return the raw value
+			|| raw.payload.readInt8(1);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			setbackType,
+			setbackState,
+		});
 	}
 
 	public setbackType: SetbackType;
 	/** The offset from the setpoint in 0.1 Kelvin or a special mode */
 	public setbackState: SetbackState;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
-			this.setbackType & 0b11,
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.setbackType & 0b11],
 			encodeSetbackState(this.setbackState),
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"setback type": getEnumMemberName(
 					SetbackType,
 					this.setbackType,
 				),
-				"setback state": this.setbackState,
+				"setback state": typeof this.setbackState === "number"
+					? `${this.setbackState} K`
+					: this.setbackState,
 			},
 		};
 	}
 }
 
+// @publicAPI
+export interface ThermostatSetbackCCReportOptions {
+	setbackType: SetbackType;
+	setbackState: SetbackState;
+}
+
 @CCCommand(ThermostatSetbackCommand.Report)
 export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<ThermostatSetbackCCReportOptions>,
 	) {
-		super(host, options);
+		super(options);
 
-		validatePayload(this.payload.length >= 2);
-		this.setbackType = this.payload[0] & 0b11;
-		// If we receive an unknown setback state, return the raw value
-		this.setbackState = decodeSetbackState(this.payload[1])
-			|| this.payload[1];
+		this.setbackType = options.setbackType;
+		this.setbackState = options.setbackState;
 	}
 
-	@ccValue(ThermostatSetbackCCValues.setbackType)
-	public readonly setbackType: SetbackType;
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ThermostatSetbackCCReport {
+		validatePayload(raw.payload.length >= 2);
+		const setbackType: SetbackType = raw.payload[0] & 0b11;
 
-	@ccValue(ThermostatSetbackCCValues.setbackState)
+		const setbackState: SetbackState = decodeSetbackState(raw.payload, 1)
+			// If we receive an unknown setback state, return the raw value
+			|| raw.payload.readInt8(1);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			setbackType,
+			setbackState,
+		});
+	}
+
+	public readonly setbackType: SetbackType;
 	/** The offset from the setpoint in 0.1 Kelvin or a special mode */
 	public readonly setbackState: SetbackState;
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.setbackType & 0b11],
+			encodeSetbackState(this.setbackState),
+		]);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"setback type": getEnumMemberName(
 					SetbackType,
 					this.setbackType,
 				),
-				"setback state": this.setbackState,
+				"setback state": typeof this.setbackState === "number"
+					? `${this.setbackState} K`
+					: this.setbackState,
 			},
 		};
 	}

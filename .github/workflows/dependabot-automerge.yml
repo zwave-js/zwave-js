@@ -22,13 +22,13 @@ jobs:
 
       - name: Dependabot metadata
         id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v1
+        uses: dependabot/fetch-metadata@v2
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           alert-lookup: true
 
       - name: Check if PR should be auto-merged
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         id: should-automerge
         env:
           updatedDependenciesJson: ${{ steps.dependabot-metadata.outputs.updated-dependencies-json }}
@@ -36,12 +36,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }} # This doesn't need special permissions
           result-encoding: string
           script: |
-            const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.js`);
+            const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
             return bot.shouldAutomerge({github, context});
 
       - name: Approve PR
         if: ${{ steps.should-automerge.outputs.result == 'true' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
           script: |

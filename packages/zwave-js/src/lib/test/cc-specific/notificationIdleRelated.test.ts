@@ -5,7 +5,7 @@ import {
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"When receiving a NotificationCC::Report with an event that has idleVariables configured, the referenced variables get idled",
@@ -22,8 +22,8 @@ integrationTest(
 				"Lock state",
 			).id;
 
-			let cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x06, // Access Control,
 				notificationEvent: 0x0b, // Lock jammed
 			});
@@ -35,10 +35,12 @@ integrationTest(
 			// wait a bit for the value to be updated
 			await wait(100);
 
-			t.is(node.getValue(lockStateValueId), 0x0b /* Lock jammed */);
+			t.expect(node.getValue(lockStateValueId) /* Lock jammed */).toBe(
+				0x0b,
+			);
 
-			cc = new NotificationCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
 				notificationType: 0x06, // Access Control,
 				notificationEvent: 0x06, // Keypad Unlock Operation
 			});
@@ -50,7 +52,7 @@ integrationTest(
 			// wait a bit for the value to be updated
 			await wait(100);
 
-			t.is(node.getValue(lockStateValueId), 0x00 /* Idle */);
+			t.expect(node.getValue(lockStateValueId) /* Idle */).toBe(0x00);
 		},
 	},
 );

@@ -2,7 +2,7 @@ import { WakeUpCCWakeUpNotification } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Assume a node to be awake at the start of a re-interview", {
 	// debug: true,
@@ -25,8 +25,8 @@ integrationTest("Assume a node to be awake at the start of a re-interview", {
 			await wait(100);
 
 			// Send a WakeUpNotification to the node to trigger the interview
-			const cc = new WakeUpCCWakeUpNotification(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			const cc = new WakeUpCCWakeUpNotification({
+				nodeId: mockController.ownNodeId,
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, {
@@ -47,8 +47,8 @@ integrationTest("Assume a node to be awake at the start of a re-interview", {
 			waitForWakeup: true,
 		});
 
-		const cc = new WakeUpCCWakeUpNotification(mockNode.host, {
-			nodeId: mockController.host.ownNodeId,
+		const cc = new WakeUpCCWakeUpNotification({
+			nodeId: mockController.ownNodeId,
 		});
 		await mockNode.sendToController(
 			createMockZWaveRequestFrame(cc, {
@@ -62,7 +62,5 @@ integrationTest("Assume a node to be awake at the start of a re-interview", {
 		});
 		const wait10s = wait(10000, true);
 		await Promise.race([interviewCompleted, wait10s]);
-
-		t.pass();
 	},
 });

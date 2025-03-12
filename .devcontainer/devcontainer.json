@@ -1,8 +1,13 @@
 {
 	"image": "mcr.microsoft.com/devcontainers/javascript-node:0-18",
-
-	"updateContentCommand": "yarn && yarn build",
-
+	"containerEnv": {
+		// Avoids cross-link issues due to different filesystems between /home and /workspaces
+		"YARN_GLOBAL_FOLDER": "/workspaces/zwave-js/.yarn/global",
+		"YARN_ENABLE_GLOBAL_CACHE": "false",
+		// Avoids interactive prompt causing container creation to hang
+		"COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+	},
+	"updateContentCommand": "sudo corepack enable && yarn && yarn bootstrap",
 	"customizations": {
 		"vscode": {
 			"extensions": [

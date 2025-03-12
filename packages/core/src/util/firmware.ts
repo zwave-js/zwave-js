@@ -1,18 +1,22 @@
-import { getErrorMessage } from "@zwave-js/shared";
-import * as crypto from "node:crypto";
-// @ts-expect-error There are no type definitions for nrf-intel-hex
-import MemoryMap from "nrf-intel-hex";
-import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError";
-import type { Firmware, FirmwareFileFormat } from "./_Types";
-import { CRC16_CCITT } from "./crc";
+import { Bytes, getErrorMessage, isUint8Array } from "@zwave-js/shared/safe";
+import { unzipSync } from "fflate";
+import { decryptAES256CBC } from "../crypto/index.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
+import type { Firmware, FirmwareFileFormat } from "./_Types.js";
+import { CRC16_CCITT } from "./crc.js";
+
+// This package has an incorrect type declaration
+import MemoryMap_ from "nrf-intel-hex";
+const MemoryMap =
+	MemoryMap_ as unknown as typeof import("nrf-intel-hex").default;
 
 const firmwareIndicators = {
 	// All aeotec updater exes contain this text
-	aeotec: Buffer.from("Zensys.ZWave", "utf8"),
+	aeotec: Bytes.from("Zensys.ZWave", "utf8"),
 	// This seems to be the standard beginning of a gecko bootloader firmware
 	gecko: 0xeb17a603,
 	// Encrypted HEC firmware files
-	hec: Buffer.from("HSENC2", "ascii"),
+	hec: Bytes.from("HSENC2", "ascii"),
 };
 
 /**
@@ -23,36 +27,70 @@ const firmwareIndicators = {
  */
 export function guessFirmwareFileFormat(
 	filename: string,
-	rawData: Buffer,
+	rawData: Uint8Array,
 ): FirmwareFileFormat {
 	filename = filename.toLowerCase();
+	const rawBuffer = Bytes.view(rawData);
 
 	if (filename.endsWith(".bin")) {
 		return "bin";
 	} else if (
 		(filename.endsWith(".exe") || filename.endsWith(".ex_"))
-		&& rawData.includes(firmwareIndicators.aeotec)
+		&& rawBuffer.includes(firmwareIndicators.aeotec)
 	) {
 		return "aeotec";
 	} else if (/\.(hex|ota|otz)$/.test(filename)) {
 		return filename.slice(-3) as FirmwareFileFormat;
 	} else if (
 		filename.endsWith(".gbl")
-		&& rawData.readUInt32BE(0) === firmwareIndicators.gecko
+		&& rawBuffer.readUInt32BE(0) === firmwareIndicators.gecko
 	) {
 		return "gecko";
 	} else if (
 		filename.endsWith(".hec")
-		&& rawData
+		&& rawBuffer
 			.subarray(0, firmwareIndicators.hec.length)
 			.equals(firmwareIndicators.hec)
 	) {
 		return "hec";
-	} else {
-		throw new ZWaveError(
-			"Could not detect firmware format",
-			ZWaveErrorCodes.Invalid_Firmware_File,
-		);
+	}
+
+	throw new ZWaveError(
+		"Could not detect firmware format",
+		ZWaveErrorCodes.Invalid_Firmware_File,
+	);
+}
+
+/**
+ * Given the contents of a ZIP archive with a compatible firmware file,
+ * this function extracts the firmware data and guesses the firmware format
+ * using {@link guessFirmwareFileFormat}.
+ *
+ * @returns An object containing the filename, guessed format and unzipped data
+ * of the firmware file from the ZIP archive, or `undefined` if no compatible
+ * firmware file could be extracted.
+ */
+export function tryUnzipFirmwareFile(zipData: Uint8Array): {
+	filename: string;
+	format: FirmwareFileFormat;
+	rawData: Uint8Array;
+} | undefined {
+	// Extract files we can work with
+	const unzipped = unzipSync(zipData, {
+		filter: (file) => {
+			return /\.(hex|exe|ex_|ota|otz|hec|gbl|bin)$/.test(file.name);
+		},
+	});
+	if (Object.keys(unzipped).length === 1) {
+		// Exactly one file was extracted, inspect that
+		const filename = Object.keys(unzipped)[0];
+		const rawData = unzipped[filename];
+		try {
+			const format = guessFirmwareFileFormat(filename, rawData);
+			return { filename, format, rawData };
+		} catch {
+			return;
+		}
 	}
 }
 
@@ -66,10 +104,10 @@ export function guessFirmwareFileFormat(
  *
  * The returned firmware data and target can be used to start a firmware update process with `node.beginFirmwareUpdate`
  */
-export function extractFirmware(
-	rawData: Buffer,
+export async function extractFirmware(
+	rawData: Uint8Array,
 	format: FirmwareFileFormat,
-): Firmware {
+): Promise<Firmware> {
 	switch (format) {
 		case "aeotec":
 			return extractFirmwareAeotec(rawData);
@@ -107,13 +145,14 @@ export function extractFirmware(
 	}
 }
 
-function extractFirmwareRAW(data: Buffer): Firmware {
+function extractFirmwareRAW(data: Uint8Array): Firmware {
 	return { data };
 }
 
-function extractFirmwareAeotec(data: Buffer): Firmware {
+function extractFirmwareAeotec(data: Uint8Array): Firmware {
+	const buffer = Bytes.view(data);
 	// Check if this is an EXE file
-	if (data.readUInt16BE(0) !== 0x4d5a) {
+	if (buffer.readUInt16BE(0) !== 0x4d5a) {
 		throw new ZWaveError(
 			"This does not appear to be a valid Aeotec updater (not an executable)!",
 			ZWaveErrorCodes.Argument_Invalid,
@@ -121,22 +160,22 @@ function extractFirmwareAeotec(data: Buffer): Firmware {
 	}
 
 	// The exe file contains the firmware data and filename at the end
-	const firmwareStart = data.readUInt32BE(data.length - 8);
-	const firmwareLength = data.readUInt32BE(data.length - 4);
+	const firmwareStart = buffer.readUInt32BE(buffer.length - 8);
+	const firmwareLength = buffer.readUInt32BE(buffer.length - 4);
 	let numControlBytes = 8;
 
 	// Some exe files also contain a 2-byte checksum. The method "ImageCalcCrc16" is used to compute the checksum
-	if (data.includes(Buffer.from("ImageCalcCrc16", "ascii"))) {
+	if (buffer.includes(Bytes.from("ImageCalcCrc16", "ascii"))) {
 		numControlBytes += 2;
 	}
 
 	// Some files don't have such a strict alignment - in that case fall back to ignoring the non-aligned control bytes
 	switch (true) {
 		case firmwareStart + firmwareLength
-			=== data.length - 256 - numControlBytes:
+			=== buffer.length - 256 - numControlBytes:
 			// all good
 			break;
-		case firmwareStart + firmwareLength === data.length - 256 - 8:
+		case firmwareStart + firmwareLength === buffer.length - 256 - 8:
 			numControlBytes = 8;
 			break;
 		default:
@@ -146,20 +185,20 @@ function extractFirmwareAeotec(data: Buffer): Firmware {
 			);
 	}
 
-	const firmwareData = data.subarray(
+	const firmwareData = buffer.subarray(
 		firmwareStart,
 		firmwareStart + firmwareLength,
 	);
 
-	const firmwareNameBytes = data
-		.subarray(data.length - 256 - numControlBytes)
+	const firmwareNameBytes = buffer
+		.subarray(buffer.length - 256 - numControlBytes)
 		.subarray(0, 256);
 
 	// Some exe files contain a CRC-16 checksum, extract that too and check it
 	if (numControlBytes === 10) {
-		const checksum = data.readUInt16BE(data.length - 10);
+		const checksum = buffer.readUInt16BE(buffer.length - 10);
 		const actualChecksum = CRC16_CCITT(
-			Buffer.concat([firmwareData, firmwareNameBytes]),
+			Bytes.concat([firmwareData, firmwareNameBytes]),
 			0xfe95,
 		);
 		if (checksum !== actualChecksum) {
@@ -206,18 +245,18 @@ function extractFirmwareAeotec(data: Buffer): Firmware {
 	return ret;
 }
 
-function extractFirmwareHEX(dataHEX: Buffer | string): Firmware {
+function extractFirmwareHEX(dataHEX: Uint8Array | string): Firmware {
 	try {
-		if (Buffer.isBuffer(dataHEX)) {
-			dataHEX = dataHEX.toString("ascii");
+		if (isUint8Array(dataHEX)) {
+			dataHEX = Bytes.view(dataHEX).toString("ascii");
 		}
 		const memMap: Map<number, Uint8Array> = MemoryMap.fromHex(dataHEX);
 		// A memory map can be sparse - we'll have to fill the gaps with 0xFF
-		let data: Buffer = Buffer.from([]);
+		let data: Bytes = new Bytes();
 		for (const [offset, chunk] of memMap.entries()) {
-			data = Buffer.concat([
+			data = Bytes.concat([
 				data,
-				Buffer.alloc(offset - data.length, 0xff),
+				Bytes.alloc(offset - data.length, 0xff),
 				chunk,
 			]);
 		}
@@ -234,24 +273,22 @@ function extractFirmwareHEX(dataHEX: Buffer | string): Firmware {
 	}
 }
 
-function extractFirmwareHEC(data: Buffer): Firmware {
+async function extractFirmwareHEC(data: Uint8Array): Promise<Firmware> {
 	const key =
 		"d7a68def0f4a1241940f6cb8017121d15f0e2682e258c9f7553e706e834923b7";
 	const iv = "0e6519297530583708612a2823663844";
-	const decipher = crypto.createDecipheriv(
-		"aes-256-cbc",
-		Buffer.from(key, "hex"),
-		Buffer.from(iv, "hex"),
-	);
 
-	const ciphertext = Buffer.from(
-		data.subarray(6).toString("ascii"),
+	const ciphertext = Bytes.from(
+		Bytes.view(data.subarray(6)).toString("ascii"),
 		"base64",
 	);
-	const plaintext = Buffer.concat([
-		decipher.update(ciphertext),
-		decipher.final(),
-	])
+	const plaintext = Bytes.view(
+		await decryptAES256CBC(
+			ciphertext,
+			Bytes.from(key, "hex"),
+			Bytes.from(iv, "hex"),
+		),
+	)
 		.toString("ascii")
 		.replaceAll(" ", "\n");
 

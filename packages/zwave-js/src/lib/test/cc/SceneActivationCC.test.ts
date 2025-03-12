@@ -1,80 +1,84 @@
 import {
+	CommandClass,
 	SceneActivationCC,
 	SceneActivationCCSet,
 	SceneActivationCommand,
 } from "@zwave-js/cc";
 import { CommandClasses, Duration } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Scene Activation"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the Set command (without Duration) should serialize correctly", (t) => {
-	const cc = new SceneActivationCCSet(host, {
+test("the Set command (without Duration) should serialize correctly", async (t) => {
+	const cc = new SceneActivationCCSet({
 		nodeId: 2,
 		sceneId: 55,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			SceneActivationCommand.Set, // CC Command
 			55, // id
 			0xff, // default duration
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command (with Duration) should serialize correctly", (t) => {
-	const cc = new SceneActivationCCSet(host, {
+test("the Set command (with Duration) should serialize correctly", async (t) => {
+	const cc = new SceneActivationCCSet({
 		nodeId: 2,
 		sceneId: 56,
 		dimmingDuration: new Duration(1, "minutes"),
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			SceneActivationCommand.Set, // CC Command
 			56, // id
 			0x80, // 1 minute
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should be deserialized correctly", (t) => {
+test("the Set command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			SceneActivationCommand.Set, // CC Command
 			15, // id
 			0x00, // 0 seconds
 		]),
 	);
-	const cc = new SceneActivationCCSet(host, {
-		nodeId: 2,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 2 } as any,
+	) as SceneActivationCCSet;
+	t.expect(cc.constructor).toBe(SceneActivationCCSet);
 
-	t.is(cc.sceneId, 15);
-	t.deepEqual(cc.dimmingDuration, new Duration(0, "seconds"));
+	t.expect(cc.sceneId).toBe(15);
+	t.expect(cc.dimmingDuration).toStrictEqual(new Duration(0, "seconds"));
 });
 
-test("deserializing an unsupported command should return an unspecified version of SceneActivationCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of SceneActivationCC", async (t) => {
 	const serializedCC = buildCCBuffer(
-		Buffer.from([255]), // not a valid command
+		Uint8Array.from([255]), // not a valid command
 	);
-	const cc: any = new SceneActivationCC(host, {
-		nodeId: 2,
-		data: serializedCC,
-	});
-	t.is(cc.constructor, SceneActivationCC);
+	const cc = await CommandClass.parse(
+		serializedCC,
+		{ sourceNodeId: 2 } as any,
+	) as SceneActivationCC;
+	t.expect(cc.constructor).toBe(SceneActivationCC);
 });
 
 // test("the CC values should have the correct metadata", (t) => {

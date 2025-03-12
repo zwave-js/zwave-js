@@ -1,10 +1,12 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
-	type IZWaveEndpoint,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
 	type SupervisionResult,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	encodeBitMask,
@@ -13,34 +15,34 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host";
+import { type EndpointId, type MaybeNotKnown } from "@zwave-js/core/safe";
 import {
 	type AllOrNone,
+	Bytes,
 	formatDate,
 	formatTime,
 	getEnumMemberName,
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type PersistValuesContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ScheduleEntryLockCommand,
 	type ScheduleEntryLockDailyRepeatingSchedule,
@@ -51,20 +53,18 @@ import {
 	ScheduleEntryLockWeekday,
 	type ScheduleEntryLockYearDaySchedule,
 	type Timezone,
-} from "../lib/_Types";
-import { encodeTimezone, parseTimezone } from "../lib/serializers";
-import { UserCodeCC } from "./UserCodeCC";
+} from "../lib/_Types.js";
+import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import { UserCodeCC } from "./UserCodeCC.js";
 
-export const ScheduleEntryLockCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Schedule Entry Lock"], {
+export const ScheduleEntryLockCCValues = V.defineCCValues(
+	CommandClasses["Schedule Entry Lock"],
+	{
 		...V.staticProperty("numWeekDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numYearDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numDailyRepeatingSlots", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Schedule Entry Lock"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"userEnabled",
 			"userEnabled",
@@ -74,7 +74,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"scheduleKind",
 			"scheduleKind",
@@ -84,7 +83,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
 			"schedule",
@@ -92,27 +90,19 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 				scheduleKind: ScheduleEntryLockScheduleKind,
 				userId: number,
 				slotId: number,
-			) => toPropertyKey(scheduleKind, userId, slotId),
+			) => (scheduleKind << 16) | (userId << 8) | slotId,
 			({ property, propertyKey }) =>
 				property === "schedule" && typeof propertyKey === "number",
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
-
-function toPropertyKey(
-	scheduleKind: ScheduleEntryLockScheduleKind,
-	userId: number,
-	slotId: number,
-): number {
-	return (scheduleKind << 16) | (userId << 8) | slotId;
-}
+	},
+);
 
 /** Caches information about a schedule */
 function persistSchedule(
 	this: ScheduleEntryLockCC,
-	applHost: ZWaveApplicationHost,
+	ctx: GetValueDB,
 	scheduleKind: ScheduleEntryLockScheduleKind,
 	userId: number,
 	slotId: number,
@@ -130,20 +120,20 @@ function persistSchedule(
 	);
 
 	if (schedule != undefined) {
-		this.setValue(applHost, scheduleValue, schedule);
+		this.setValue(ctx, scheduleValue, schedule);
 	} else {
-		this.removeValue(applHost, scheduleValue);
+		this.removeValue(ctx, scheduleValue);
 	}
 }
 
 /** Updates the schedule kind assumed to be active for user in the cache */
 function setUserCodeScheduleKindCached(
-	applHost: ZWaveApplicationHost,
-	endpoint: IZWaveEndpoint,
+	ctx: GetValueDB,
+	endpoint: EndpointId,
 	userId: number,
 	scheduleKind: ScheduleEntryLockScheduleKind,
 ): void {
-	applHost
+	ctx
 		.getValueDB(endpoint.nodeId)
 		.setValue(
 			ScheduleEntryLockCCValues.scheduleKind(userId).endpoint(
@@ -155,13 +145,13 @@ function setUserCodeScheduleKindCached(
 
 /** Updates whether scheduling is active for one or all user(s) in the cache */
 function setUserCodeScheduleEnabledCached(
-	applHost: ZWaveApplicationHost,
-	endpoint: IZWaveEndpoint,
+	ctx: GetValueDB,
+	endpoint: EndpointId,
 	userId: number | undefined,
 	enabled: boolean,
 ): void {
 	const setEnabled = (userId: number) => {
-		applHost
+		ctx
 			.getValueDB(endpoint.nodeId)
 			.setValue(
 				ScheduleEntryLockCCValues.userEnabled(userId).endpoint(
@@ -173,7 +163,7 @@ function setUserCodeScheduleEnabledCached(
 
 	if (userId == undefined) {
 		// Enable/disable all users
-		const numUsers = UserCodeCC.getSupportedUsersCached(applHost, endpoint)
+		const numUsers = UserCodeCC.getSupportedUsersCached(ctx, endpoint)
 			?? 0;
 
 		for (let userId = 1; userId <= numUsers; userId++) {
@@ -227,33 +217,33 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 				ScheduleEntryLockCommand.EnableSet,
 			);
 
-			const cc = new ScheduleEntryLockCCEnableSet(this.applHost, {
+			const cc = new ScheduleEntryLockCCEnableSet({
 				nodeId: this.endpoint.nodeId,
-				endpoint: this.endpoint.index,
+				endpointIndex: this.endpoint.index,
 				userId,
 				enabled,
 			});
 
-			result = await this.applHost.sendCommand(cc, this.commandOptions);
+			result = await this.host.sendCommand(cc, this.commandOptions);
 		} else {
 			this.assertSupportsCommand(
 				ScheduleEntryLockCommand,
 				ScheduleEntryLockCommand.EnableAllSet,
 			);
 
-			const cc = new ScheduleEntryLockCCEnableAllSet(this.applHost, {
+			const cc = new ScheduleEntryLockCCEnableAllSet({
 				nodeId: this.endpoint.nodeId,
-				endpoint: this.endpoint.index,
+				endpointIndex: this.endpoint.index,
 				enabled,
 			});
 
-			result = await this.applHost.sendCommand(cc, this.commandOptions);
+			result = await this.host.sendCommand(cc, this.commandOptions);
 		}
 
 		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
 			// Remember the new state in the cache
 			setUserCodeScheduleEnabledCached(
-				this.applHost,
+				this.host,
 				this.endpoint,
 				userId,
 				enabled,
@@ -270,12 +260,12 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			ScheduleEntryLockCommand.SupportedGet,
 		);
 
-		const cc = new ScheduleEntryLockCCSupportedGet(this.applHost, {
+		const cc = new ScheduleEntryLockCCSupportedGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
 
-		const result = await this.applHost.sendCommand<
+		const result = await this.host.sendCommand<
 			ScheduleEntryLockCCSupportedReport
 		>(
 			cc,
@@ -303,7 +293,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 
 		if (this.isSinglecast()) {
 			const numSlots = ScheduleEntryLockCC.getNumWeekDaySlotsCached(
-				this.applHost,
+				this.host,
 				this.endpoint,
 			);
 
@@ -328,9 +318,9 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			}
 		}
 
-		const cc = new ScheduleEntryLockCCWeekDayScheduleSet(this.applHost, {
+		const cc = new ScheduleEntryLockCCWeekDayScheduleSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...slot,
 			...(schedule
 				? {
@@ -342,20 +332,20 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 				}),
 		});
 
-		const result = await this.applHost.sendCommand(cc, this.commandOptions);
+		const result = await this.host.sendCommand(cc, this.commandOptions);
 
 		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
 			// Editing (but not erasing) a schedule will enable scheduling for that user
 			// and switch it to the current scheduling kind
 			if (!!schedule) {
 				setUserCodeScheduleEnabledCached(
-					this.applHost,
+					this.host,
 					this.endpoint,
 					slot.userId,
 					true,
 				);
 				setUserCodeScheduleKindCached(
-					this.applHost,
+					this.host,
 					this.endpoint,
 					slot.userId,
 					ScheduleEntryLockScheduleKind.WeekDay,
@@ -365,7 +355,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			// And cache the schedule
 			persistSchedule.call(
 				cc,
-				this.applHost,
+				this.host,
 				ScheduleEntryLockScheduleKind.WeekDay,
 				slot.userId,
 				slot.slotId,
@@ -385,12 +375,12 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			ScheduleEntryLockCommand.WeekDayScheduleSet,
 		);
 
-		const cc = new ScheduleEntryLockCCWeekDayScheduleGet(this.applHost, {
+		const cc = new ScheduleEntryLockCCWeekDayScheduleGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...slot,
 		});
-		const result = await this.applHost.sendCommand<
+		const result = await this.host.sendCommand<
 			ScheduleEntryLockCCWeekDayScheduleReport
 		>(
 			cc,
@@ -420,7 +410,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 
 		if (this.isSinglecast()) {
 			const numSlots = ScheduleEntryLockCC.getNumYearDaySlotsCached(
-				this.applHost,
+				this.host,
 				this.endpoint,
 			);
 
@@ -455,9 +445,9 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			}
 		}
 
-		const cc = new ScheduleEntryLockCCYearDayScheduleSet(this.applHost, {
+		const cc = new ScheduleEntryLockCCYearDayScheduleSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...slot,
 			...(schedule
 				? {
@@ -469,20 +459,20 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 				}),
 		});
 
-		const result = await this.applHost.sendCommand(cc, this.commandOptions);
+		const result = await this.host.sendCommand(cc, this.commandOptions);
 
 		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
 			// Editing (but not erasing) a schedule will enable scheduling for that user
 			// and switch it to the current scheduling kind
 			if (!!schedule) {
 				setUserCodeScheduleEnabledCached(
-					this.applHost,
+					this.host,
 					this.endpoint,
 					slot.userId,
 					true,
 				);
 				setUserCodeScheduleKindCached(
-					this.applHost,
+					this.host,
 					this.endpoint,
 					slot.userId,
 					ScheduleEntryLockScheduleKind.YearDay,
@@ -492,7 +482,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			// And cache the schedule
 			persistSchedule.call(
 				cc,
-				this.applHost,
+				this.host,
 				ScheduleEntryLockScheduleKind.YearDay,
 				slot.userId,
 				slot.slotId,
@@ -512,12 +502,12 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			ScheduleEntryLockCommand.YearDayScheduleSet,
 		);
 
-		const cc = new ScheduleEntryLockCCYearDayScheduleGet(this.applHost, {
+		const cc = new ScheduleEntryLockCCYearDayScheduleGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...slot,
 		});
-		const result = await this.applHost.sendCommand<
+		const result = await this.host.sendCommand<
 			ScheduleEntryLockCCYearDayScheduleReport
 		>(
 			cc,
@@ -553,7 +543,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 		if (this.isSinglecast()) {
 			const numSlots = ScheduleEntryLockCC
 				.getNumDailyRepeatingSlotsCached(
-					this.applHost,
+					this.host,
 					this.endpoint,
 				);
 
@@ -565,37 +555,34 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			}
 		}
 
-		const cc = new ScheduleEntryLockCCDailyRepeatingScheduleSet(
-			this.applHost,
-			{
-				nodeId: this.endpoint.nodeId,
-				endpoint: this.endpoint.index,
-				...slot,
-				...(schedule
-					? {
-						action: ScheduleEntryLockSetAction.Set,
-						...schedule,
-					}
-					: {
-						action: ScheduleEntryLockSetAction.Erase,
-					}),
-			},
-		);
+		const cc = new ScheduleEntryLockCCDailyRepeatingScheduleSet({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...slot,
+			...(schedule
+				? {
+					action: ScheduleEntryLockSetAction.Set,
+					...schedule,
+				}
+				: {
+					action: ScheduleEntryLockSetAction.Erase,
+				}),
+		});
 
-		const result = await this.applHost.sendCommand(cc, this.commandOptions);
+		const result = await this.host.sendCommand(cc, this.commandOptions);
 
 		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
 			// Editing (but not erasing) a schedule will enable scheduling for that user
 			// and switch it to the current scheduling kind
 			if (!!schedule) {
 				setUserCodeScheduleEnabledCached(
-					this.applHost,
+					this.host,
 					this.endpoint,
 					slot.userId,
 					true,
 				);
 				setUserCodeScheduleKindCached(
-					this.applHost,
+					this.host,
 					this.endpoint,
 					slot.userId,
 					ScheduleEntryLockScheduleKind.DailyRepeating,
@@ -605,7 +592,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			// And cache the schedule
 			persistSchedule.call(
 				cc,
-				this.applHost,
+				this.host,
 				ScheduleEntryLockScheduleKind.DailyRepeating,
 				slot.userId,
 				slot.slotId,
@@ -625,15 +612,12 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			ScheduleEntryLockCommand.DailyRepeatingScheduleSet,
 		);
 
-		const cc = new ScheduleEntryLockCCDailyRepeatingScheduleGet(
-			this.applHost,
-			{
-				nodeId: this.endpoint.nodeId,
-				endpoint: this.endpoint.index,
-				...slot,
-			},
-		);
-		const result = await this.applHost.sendCommand<
+		const cc = new ScheduleEntryLockCCDailyRepeatingScheduleGet({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...slot,
+		});
+		const result = await this.host.sendCommand<
 			ScheduleEntryLockCCDailyRepeatingScheduleReport
 		>(
 			cc,
@@ -657,11 +641,11 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			ScheduleEntryLockCommand.TimeOffsetGet,
 		);
 
-		const cc = new ScheduleEntryLockCCTimeOffsetGet(this.applHost, {
+		const cc = new ScheduleEntryLockCCTimeOffsetGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const result = await this.applHost.sendCommand<
+		const result = await this.host.sendCommand<
 			ScheduleEntryLockCCTimeOffsetReport
 		>(
 			cc,
@@ -682,13 +666,13 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			ScheduleEntryLockCommand.TimeOffsetSet,
 		);
 
-		const cc = new ScheduleEntryLockCCTimeOffsetSet(this.applHost, {
+		const cc = new ScheduleEntryLockCCTimeOffsetSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			...timezone,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -698,24 +682,26 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 export class ScheduleEntryLockCC extends CommandClass {
 	declare ccCommand: ScheduleEntryLockCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Schedule Entry Lock"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "Querying supported number of schedule slots...",
 			direction: "outbound",
@@ -729,7 +715,7 @@ day of year:     ${slotsResp.numYearDaySlots}`;
 				logMessage += `
 daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 			}
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
 				direction: "inbound",
@@ -742,7 +728,7 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 			&& (!endpoint.supportsCC(CommandClasses.Time)
 				|| endpoint.getCCVersion(CommandClasses.Time) < 2)
 		) {
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: "setting timezone information...",
 				direction: "outbound",
@@ -753,7 +739,7 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 		}
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
 	/**
@@ -761,18 +747,16 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 	 * This only works AFTER the interview process
 	 */
 	public static getNumWeekDaySlotsCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 	): number {
-		return (
-			applHost
-				.getValueDB(endpoint.nodeId)
-				.getValue(
-					ScheduleEntryLockCCValues.numWeekDaySlots.endpoint(
-						endpoint.index,
-					),
-				) || 0
-		);
+		return ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				ScheduleEntryLockCCValues.numWeekDaySlots.endpoint(
+					endpoint.index,
+				),
+			) || 0;
 	}
 
 	/**
@@ -780,18 +764,16 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 	 * This only works AFTER the interview process
 	 */
 	public static getNumYearDaySlotsCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 	): number {
-		return (
-			applHost
-				.getValueDB(endpoint.nodeId)
-				.getValue(
-					ScheduleEntryLockCCValues.numYearDaySlots.endpoint(
-						endpoint.index,
-					),
-				) || 0
-		);
+		return ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				ScheduleEntryLockCCValues.numYearDaySlots.endpoint(
+					endpoint.index,
+				),
+			) || 0;
 	}
 
 	/**
@@ -799,18 +781,16 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 	 * This only works AFTER the interview process
 	 */
 	public static getNumDailyRepeatingSlotsCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 	): number {
-		return (
-			applHost
-				.getValueDB(endpoint.nodeId)
-				.getValue(
-					ScheduleEntryLockCCValues.numDailyRepeatingSlots.endpoint(
-						endpoint.index,
-					),
-				) || 0
-		);
+		return ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				ScheduleEntryLockCCValues.numDailyRepeatingSlots.endpoint(
+					endpoint.index,
+				),
+			) || 0;
 	}
 
 	/**
@@ -822,11 +802,11 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 	 * only the desired ones.
 	 */
 	public static getUserCodeScheduleEnabledCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 		userId: number,
 	): boolean {
-		return !!applHost
+		return !!ctx
 			.getValueDB(endpoint.nodeId)
 			.getValue(
 				ScheduleEntryLockCCValues.userEnabled(userId).endpoint(
@@ -844,11 +824,11 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 	 * which will automatically switch the user to that scheduling kind.
 	 */
 	public static getUserCodeScheduleKindCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 		userId: number,
 	): MaybeNotKnown<ScheduleEntryLockScheduleKind> {
-		return applHost
+		return ctx
 			.getValueDB(endpoint.nodeId)
 			.getValue<ScheduleEntryLockScheduleKind>(
 				ScheduleEntryLockCCValues.scheduleKind(userId).endpoint(
@@ -858,24 +838,24 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 	}
 
 	public static getScheduleCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 		scheduleKind: ScheduleEntryLockScheduleKind.WeekDay,
 		userId: number,
 		slotId: number,
 	): MaybeNotKnown<ScheduleEntryLockWeekDaySchedule | false>;
 
 	public static getScheduleCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 		scheduleKind: ScheduleEntryLockScheduleKind.YearDay,
 		userId: number,
 		slotId: number,
 	): MaybeNotKnown<ScheduleEntryLockYearDaySchedule | false>;
 
 	public static getScheduleCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 		scheduleKind: ScheduleEntryLockScheduleKind.DailyRepeating,
 		userId: number,
 		slotId: number,
@@ -883,8 +863,8 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 
 	// Catch-all overload for applications which haven't narrowed `scheduleKind`
 	public static getScheduleCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 		scheduleKind: ScheduleEntryLockScheduleKind,
 		userId: number,
 		slotId: number,
@@ -904,8 +884,8 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 	 * This only works AFTER the interview process.
 	 */
 	public static getScheduleCached(
-		applHost: ZWaveApplicationHost,
-		endpoint: IZWaveEndpoint,
+		ctx: GetValueDB,
+		endpoint: EndpointId,
 		scheduleKind: ScheduleEntryLockScheduleKind,
 		userId: number,
 		slotId: number,
@@ -915,7 +895,7 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 		| ScheduleEntryLockDailyRepeatingSchedule
 		| false
 	> {
-		return applHost
+		return ctx
 			.getValueDB(endpoint.nodeId)
 			.getValue(
 				ScheduleEntryLockCCValues.schedule(
@@ -928,7 +908,7 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 }
 
 // @publicAPI
-export interface ScheduleEntryLockCCEnableSetOptions extends CCCommandOptions {
+export interface ScheduleEntryLockCCEnableSetOptions {
 	userId: number;
 	enabled: boolean;
 }
@@ -937,33 +917,39 @@ export interface ScheduleEntryLockCCEnableSetOptions extends CCCommandOptions {
 @useSupervision()
 export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCEnableSetOptions,
+		options: WithAddress<ScheduleEntryLockCCEnableSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.userId = this.payload[0];
-			this.enabled = this.payload[1] === 0x01;
-		} else {
-			this.userId = options.userId;
-			this.enabled = options.enabled;
-		}
+		super(options);
+		this.userId = options.userId;
+		this.enabled = options.enabled;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCEnableSet {
+		validatePayload(raw.payload.length >= 2);
+		const userId = raw.payload[0];
+		const enabled: boolean = raw.payload[1] === 0x01;
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			userId,
+			enabled,
+		});
 	}
 
 	public userId: number;
 	public enabled: boolean;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.userId, this.enabled ? 0x01 : 0x00]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.enabled ? 0x01 : 0x00]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"user ID": this.userId,
 				action: this.enabled ? "enable" : "disable",
@@ -973,9 +959,7 @@ export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
 }
 
 // @publicAPI
-export interface ScheduleEntryLockCCEnableAllSetOptions
-	extends CCCommandOptions
-{
+export interface ScheduleEntryLockCCEnableAllSetOptions {
 	enabled: boolean;
 }
 
@@ -983,30 +967,35 @@ export interface ScheduleEntryLockCCEnableAllSetOptions
 @useSupervision()
 export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCEnableAllSetOptions,
+		options: WithAddress<ScheduleEntryLockCCEnableAllSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.enabled = this.payload[0] === 0x01;
-		} else {
-			this.enabled = options.enabled;
-		}
+		super(options);
+		this.enabled = options.enabled;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCEnableAllSet {
+		validatePayload(raw.payload.length >= 1);
+		const enabled: boolean = raw.payload[0] === 0x01;
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			enabled,
+		});
 	}
 
 	public enabled: boolean;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.enabled ? 0x01 : 0x00]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.enabled ? 0x01 : 0x00]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				action: this.enabled ? "enable all" : "disable all",
 			},
@@ -1015,59 +1004,65 @@ export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
 }
 
 // @publicAPI
-export interface ScheduleEntryLockCCSupportedReportOptions
-	extends CCCommandOptions
-{
+export interface ScheduleEntryLockCCSupportedReportOptions {
 	numWeekDaySlots: number;
 	numYearDaySlots: number;
 	numDailyRepeatingSlots?: number;
 }
 
 @CCCommand(ScheduleEntryLockCommand.SupportedReport)
+@ccValueProperty("numWeekDaySlots", ScheduleEntryLockCCValues.numWeekDaySlots)
+@ccValueProperty("numYearDaySlots", ScheduleEntryLockCCValues.numYearDaySlots)
+@ccValueProperty(
+	"numDailyRepeatingSlots",
+	ScheduleEntryLockCCValues.numDailyRepeatingSlots,
+)
 export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCSupportedReportOptions,
+		options: WithAddress<ScheduleEntryLockCCSupportedReportOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.numWeekDaySlots = this.payload[0];
-			this.numYearDaySlots = this.payload[1];
-			if (this.payload.length >= 3) {
-				this.numDailyRepeatingSlots = this.payload[2];
-			}
-		} else {
-			this.numWeekDaySlots = options.numWeekDaySlots;
-			this.numYearDaySlots = options.numYearDaySlots;
-			this.numDailyRepeatingSlots = options.numDailyRepeatingSlots;
-		}
+		super(options);
+		this.numWeekDaySlots = options.numWeekDaySlots;
+		this.numYearDaySlots = options.numYearDaySlots;
+		this.numDailyRepeatingSlots = options.numDailyRepeatingSlots;
 	}
 
-	@ccValue(ScheduleEntryLockCCValues.numWeekDaySlots)
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCSupportedReport {
+		validatePayload(raw.payload.length >= 2);
+		const numWeekDaySlots = raw.payload[0];
+		const numYearDaySlots = raw.payload[1];
+		let numDailyRepeatingSlots: number | undefined;
+		if (raw.payload.length >= 3) {
+			numDailyRepeatingSlots = raw.payload[2];
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			numWeekDaySlots,
+			numYearDaySlots,
+			numDailyRepeatingSlots,
+		});
+	}
+
 	public numWeekDaySlots: number;
-	@ccValue(ScheduleEntryLockCCValues.numYearDaySlots)
+
 	public numYearDaySlots: number;
-	@ccValue(ScheduleEntryLockCCValues.numDailyRepeatingSlots)
+
 	public numDailyRepeatingSlots: number | undefined;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.numWeekDaySlots,
 			this.numYearDaySlots,
+			this.numDailyRepeatingSlots ?? 0,
 		]);
-		if (this.version >= 3 && this.numDailyRepeatingSlots != undefined) {
-			this.payload = Buffer.concat([
-				this.payload,
-				Buffer.from([this.numDailyRepeatingSlots]),
-			]);
-		}
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"no. of weekday schedule slots": this.numWeekDaySlots,
 			"no. of day-of-year schedule slots": this.numYearDaySlots,
@@ -1077,7 +1072,7 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 				this.numDailyRepeatingSlots;
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -1089,7 +1084,6 @@ export class ScheduleEntryLockCCSupportedGet extends ScheduleEntryLockCC {}
 
 /** @publicAPI */
 export type ScheduleEntryLockCCWeekDayScheduleSetOptions =
-	& CCCommandOptions
 	& ScheduleEntryLockSlotId
 	& (
 		| {
@@ -1104,41 +1098,62 @@ export type ScheduleEntryLockCCWeekDayScheduleSetOptions =
 @useSupervision()
 export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCWeekDayScheduleSetOptions,
+		options: WithAddress<ScheduleEntryLockCCWeekDayScheduleSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 3);
-			this.action = this.payload[0];
-			validatePayload(
-				this.action === ScheduleEntryLockSetAction.Set
-					|| this.action === ScheduleEntryLockSetAction.Erase,
-			);
-			this.userId = this.payload[1];
-			this.slotId = this.payload[2];
-			if (this.action === ScheduleEntryLockSetAction.Set) {
-				validatePayload(this.payload.length >= 8);
-				this.weekday = this.payload[3];
-				this.startHour = this.payload[4];
-				this.startMinute = this.payload[5];
-				this.stopHour = this.payload[6];
-				this.stopMinute = this.payload[7];
-			}
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-			this.action = options.action;
-			if (options.action === ScheduleEntryLockSetAction.Set) {
-				this.weekday = options.weekday;
-				this.startHour = options.startHour;
-				this.startMinute = options.startMinute;
-				this.stopHour = options.stopHour;
-				this.stopMinute = options.stopMinute;
-			}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+		this.action = options.action;
+		if (options.action === ScheduleEntryLockSetAction.Set) {
+			this.weekday = options.weekday;
+			this.startHour = options.startHour;
+			this.startMinute = options.startMinute;
+			this.stopHour = options.stopHour;
+			this.stopMinute = options.stopMinute;
 		}
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCWeekDayScheduleSet {
+		validatePayload(raw.payload.length >= 3);
+		const action: ScheduleEntryLockSetAction = raw.payload[0];
+
+		validatePayload(
+			action === ScheduleEntryLockSetAction.Set
+				|| action === ScheduleEntryLockSetAction.Erase,
+		);
+		const userId = raw.payload[1];
+		const slotId = raw.payload[2];
+
+		if (action !== ScheduleEntryLockSetAction.Set) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				action,
+				userId,
+				slotId,
+			});
+		}
+
+		validatePayload(raw.payload.length >= 8);
+		const weekday: ScheduleEntryLockWeekday = raw.payload[3];
+		const startHour = raw.payload[4];
+		const startMinute = raw.payload[5];
+		const stopHour = raw.payload[6];
+		const stopMinute = raw.payload[7];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			action,
+			userId,
+			slotId,
+			weekday,
+			startHour,
+			startMinute,
+			stopHour,
+			stopMinute,
+		});
 	}
 
 	public userId: number;
@@ -1152,8 +1167,8 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.action,
 			this.userId,
 			this.slotId,
@@ -1166,10 +1181,10 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		let message: MessageRecord;
 		if (this.action === ScheduleEntryLockSetAction.Erase) {
 			message = {
@@ -1197,7 +1212,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 			};
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -1205,7 +1220,6 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 
 // @publicAPI
 export type ScheduleEntryLockCCWeekDayScheduleReportOptions =
-	& CCCommandOptions
 	& ScheduleEntryLockSlotId
 	& AllOrNone<ScheduleEntryLockWeekDaySchedule>;
 
@@ -1214,42 +1228,76 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 	extends ScheduleEntryLockCC
 {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCWeekDayScheduleReportOptions,
+		options: WithAddress<ScheduleEntryLockCCWeekDayScheduleReportOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.userId = this.payload[0];
-			this.slotId = this.payload[1];
-			if (this.payload.length >= 7) {
-				if (this.payload[2] !== 0xff) {
-					this.weekday = this.payload[2];
-				}
-				if (this.payload[3] !== 0xff) {
-					this.startHour = this.payload[3];
-				}
-				if (this.payload[4] !== 0xff) {
-					this.startMinute = this.payload[4];
-				}
-				if (this.payload[5] !== 0xff) {
-					this.stopHour = this.payload[5];
-				}
-				if (this.payload[6] !== 0xff) {
-					this.stopMinute = this.payload[6];
-				}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+		this.weekday = options.weekday;
+		this.startHour = options.startHour;
+		this.startMinute = options.startMinute;
+		this.stopHour = options.stopHour;
+		this.stopMinute = options.stopMinute;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCWeekDayScheduleReport {
+		validatePayload(raw.payload.length >= 2);
+		const userId = raw.payload[0];
+		const slotId = raw.payload[1];
+
+		let ccOptions: ScheduleEntryLockCCWeekDayScheduleReportOptions = {
+			userId,
+			slotId,
+		};
+
+		let weekday: ScheduleEntryLockWeekday | undefined;
+		let startHour: number | undefined;
+		let startMinute: number | undefined;
+		let stopHour: number | undefined;
+		let stopMinute: number | undefined;
+
+		if (raw.payload.length >= 7) {
+			if (raw.payload[2] !== 0xff) {
+				weekday = raw.payload[2];
 			}
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-			this.weekday = options.weekday;
-			this.startHour = options.startHour;
-			this.startMinute = options.startMinute;
-			this.stopHour = options.stopHour;
-			this.stopMinute = options.stopMinute;
+			if (raw.payload[3] !== 0xff) {
+				startHour = raw.payload[3];
+			}
+			if (raw.payload[4] !== 0xff) {
+				startMinute = raw.payload[4];
+			}
+			if (raw.payload[5] !== 0xff) {
+				stopHour = raw.payload[5];
+			}
+			if (raw.payload[6] !== 0xff) {
+				stopMinute = raw.payload[6];
+			}
 		}
+
+		if (
+			weekday != undefined
+			&& startHour != undefined
+			&& startMinute != undefined
+			&& stopHour != undefined
+			&& stopMinute != undefined
+		) {
+			ccOptions = {
+				...ccOptions,
+				weekday,
+				startHour,
+				startMinute,
+				stopHour,
+				stopMinute,
+			};
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			...ccOptions,
+		});
 	}
 
 	public userId: number;
@@ -1260,12 +1308,12 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
-		if (!super.persistValues(applHost)) return false;
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
 
 		persistSchedule.call(
 			this,
-			applHost,
+			ctx,
 			ScheduleEntryLockScheduleKind.WeekDay,
 			this.userId,
 			this.slotId,
@@ -1283,8 +1331,8 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 		return true;
 	}
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.userId,
 			this.slotId,
 			this.weekday ?? 0xff,
@@ -1293,10 +1341,10 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		let message: MessageRecord;
 		if (this.weekday == undefined) {
 			message = {
@@ -1323,7 +1371,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 			};
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -1331,40 +1379,45 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 
 // @publicAPI
 export type ScheduleEntryLockCCWeekDayScheduleGetOptions =
-	& CCCommandOptions
-	& ScheduleEntryLockSlotId;
+	ScheduleEntryLockSlotId;
 
 @CCCommand(ScheduleEntryLockCommand.WeekDayScheduleGet)
 @expectedCCResponse(ScheduleEntryLockCCWeekDayScheduleReport)
 export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCWeekDayScheduleGetOptions,
+		options: WithAddress<ScheduleEntryLockCCWeekDayScheduleGetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.userId = this.payload[0];
-			this.slotId = this.payload[1];
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-		}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCWeekDayScheduleGet {
+		validatePayload(raw.payload.length >= 2);
+		const userId = raw.payload[0];
+		const slotId = raw.payload[1];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			userId,
+			slotId,
+		});
 	}
 
 	public userId: number;
 	public slotId: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"user ID": this.userId,
 				"slot #": this.slotId,
@@ -1375,7 +1428,6 @@ export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
 
 /** @publicAPI */
 export type ScheduleEntryLockCCYearDayScheduleSetOptions =
-	& CCCommandOptions
 	& ScheduleEntryLockSlotId
 	& (
 		| {
@@ -1390,51 +1442,77 @@ export type ScheduleEntryLockCCYearDayScheduleSetOptions =
 @useSupervision()
 export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCYearDayScheduleSetOptions,
+		options: WithAddress<ScheduleEntryLockCCYearDayScheduleSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 3);
-			this.action = this.payload[0];
-			validatePayload(
-				this.action === ScheduleEntryLockSetAction.Set
-					|| this.action === ScheduleEntryLockSetAction.Erase,
-			);
-			this.userId = this.payload[1];
-			this.slotId = this.payload[2];
-			if (this.action === ScheduleEntryLockSetAction.Set) {
-				validatePayload(this.payload.length >= 13);
-				this.startYear = this.payload[3];
-				this.startMonth = this.payload[4];
-				this.startDay = this.payload[5];
-				this.startHour = this.payload[6];
-				this.startMinute = this.payload[7];
-				this.stopYear = this.payload[8];
-				this.stopMonth = this.payload[9];
-				this.stopDay = this.payload[10];
-				this.stopHour = this.payload[11];
-				this.stopMinute = this.payload[12];
-			}
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-			this.action = options.action;
-			if (options.action === ScheduleEntryLockSetAction.Set) {
-				this.startYear = options.startYear;
-				this.startMonth = options.startMonth;
-				this.startDay = options.startDay;
-				this.startHour = options.startHour;
-				this.startMinute = options.startMinute;
-				this.stopYear = options.stopYear;
-				this.stopMonth = options.stopMonth;
-				this.stopDay = options.stopDay;
-				this.stopHour = options.stopHour;
-				this.stopMinute = options.stopMinute;
-			}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+		this.action = options.action;
+		if (options.action === ScheduleEntryLockSetAction.Set) {
+			this.startYear = options.startYear;
+			this.startMonth = options.startMonth;
+			this.startDay = options.startDay;
+			this.startHour = options.startHour;
+			this.startMinute = options.startMinute;
+			this.stopYear = options.stopYear;
+			this.stopMonth = options.stopMonth;
+			this.stopDay = options.stopDay;
+			this.stopHour = options.stopHour;
+			this.stopMinute = options.stopMinute;
 		}
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCYearDayScheduleSet {
+		validatePayload(raw.payload.length >= 3);
+		const action: ScheduleEntryLockSetAction = raw.payload[0];
+
+		validatePayload(
+			action === ScheduleEntryLockSetAction.Set
+				|| action === ScheduleEntryLockSetAction.Erase,
+		);
+		const userId = raw.payload[1];
+		const slotId = raw.payload[2];
+
+		if (action !== ScheduleEntryLockSetAction.Set) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				action,
+				userId,
+				slotId,
+			});
+		}
+
+		validatePayload(raw.payload.length >= 13);
+		const startYear = raw.payload[3];
+		const startMonth = raw.payload[4];
+		const startDay = raw.payload[5];
+		const startHour = raw.payload[6];
+		const startMinute = raw.payload[7];
+		const stopYear = raw.payload[8];
+		const stopMonth = raw.payload[9];
+		const stopDay = raw.payload[10];
+		const stopHour = raw.payload[11];
+		const stopMinute = raw.payload[12];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			action,
+			userId,
+			slotId,
+			startYear,
+			startMonth,
+			startDay,
+			startHour,
+			startMinute,
+			stopYear,
+			stopMonth,
+			stopDay,
+			stopHour,
+			stopMinute,
+		});
 	}
 
 	public userId: number;
@@ -1453,8 +1531,8 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.action,
 			this.userId,
 			this.slotId,
@@ -1472,10 +1550,10 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		let message: MessageRecord;
 		if (this.action === ScheduleEntryLockSetAction.Erase) {
 			message = {
@@ -1505,7 +1583,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 			};
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -1513,7 +1591,6 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 
 // @publicAPI
 export type ScheduleEntryLockCCYearDayScheduleReportOptions =
-	& CCCommandOptions
 	& ScheduleEntryLockSlotId
 	& AllOrNone<ScheduleEntryLockYearDaySchedule>;
 
@@ -1522,62 +1599,111 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 	extends ScheduleEntryLockCC
 {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCYearDayScheduleReportOptions,
+		options: WithAddress<ScheduleEntryLockCCYearDayScheduleReportOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.userId = this.payload[0];
-			this.slotId = this.payload[1];
-			if (this.payload.length >= 12) {
-				if (this.payload[2] !== 0xff) {
-					this.startYear = this.payload[2];
-				}
-				if (this.payload[3] !== 0xff) {
-					this.startMonth = this.payload[3];
-				}
-				if (this.payload[4] !== 0xff) {
-					this.startDay = this.payload[4];
-				}
-				if (this.payload[5] !== 0xff) {
-					this.startHour = this.payload[5];
-				}
-				if (this.payload[6] !== 0xff) {
-					this.startMinute = this.payload[6];
-				}
-				if (this.payload[7] !== 0xff) {
-					this.stopYear = this.payload[7];
-				}
-				if (this.payload[8] !== 0xff) {
-					this.stopMonth = this.payload[8];
-				}
-				if (this.payload[9] !== 0xff) {
-					this.stopDay = this.payload[9];
-				}
-				if (this.payload[10] !== 0xff) {
-					this.stopHour = this.payload[10];
-				}
-				if (this.payload[11] !== 0xff) {
-					this.stopMinute = this.payload[11];
-				}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+		this.startYear = options.startYear;
+		this.startMonth = options.startMonth;
+		this.startDay = options.startDay;
+		this.startHour = options.startHour;
+		this.startMinute = options.startMinute;
+		this.stopYear = options.stopYear;
+		this.stopMonth = options.stopMonth;
+		this.stopDay = options.stopDay;
+		this.stopHour = options.stopHour;
+		this.stopMinute = options.stopMinute;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCYearDayScheduleReport {
+		validatePayload(raw.payload.length >= 2);
+		const userId = raw.payload[0];
+		const slotId = raw.payload[1];
+
+		let ccOptions: ScheduleEntryLockCCYearDayScheduleReportOptions = {
+			userId,
+			slotId,
+		};
+
+		let startYear: number | undefined;
+		let startMonth: number | undefined;
+		let startDay: number | undefined;
+		let startHour: number | undefined;
+		let startMinute: number | undefined;
+		let stopYear: number | undefined;
+		let stopMonth: number | undefined;
+		let stopDay: number | undefined;
+		let stopHour: number | undefined;
+		let stopMinute: number | undefined;
+
+		if (raw.payload.length >= 12) {
+			if (raw.payload[2] !== 0xff) {
+				startYear = raw.payload[2];
 			}
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-			this.startYear = options.startYear;
-			this.startMonth = options.startMonth;
-			this.startDay = options.startDay;
-			this.startHour = options.startHour;
-			this.startMinute = options.startMinute;
-			this.stopYear = options.stopYear;
-			this.stopMonth = options.stopMonth;
-			this.stopDay = options.stopDay;
-			this.stopHour = options.stopHour;
-			this.stopMinute = options.stopMinute;
+			if (raw.payload[3] !== 0xff) {
+				startMonth = raw.payload[3];
+			}
+			if (raw.payload[4] !== 0xff) {
+				startDay = raw.payload[4];
+			}
+			if (raw.payload[5] !== 0xff) {
+				startHour = raw.payload[5];
+			}
+			if (raw.payload[6] !== 0xff) {
+				startMinute = raw.payload[6];
+			}
+			if (raw.payload[7] !== 0xff) {
+				stopYear = raw.payload[7];
+			}
+			if (raw.payload[8] !== 0xff) {
+				stopMonth = raw.payload[8];
+			}
+			if (raw.payload[9] !== 0xff) {
+				stopDay = raw.payload[9];
+			}
+			if (raw.payload[10] !== 0xff) {
+				stopHour = raw.payload[10];
+			}
+			if (raw.payload[11] !== 0xff) {
+				stopMinute = raw.payload[11];
+			}
 		}
+
+		if (
+			startYear != undefined
+			&& startMonth != undefined
+			&& startDay != undefined
+			&& startHour != undefined
+			&& startMinute != undefined
+			&& stopYear != undefined
+			&& stopMonth != undefined
+			&& stopDay != undefined
+			&& stopHour != undefined
+			&& stopMinute != undefined
+		) {
+			ccOptions = {
+				...ccOptions,
+				startYear,
+				startMonth,
+				startDay,
+				startHour,
+				startMinute,
+				stopYear,
+				stopMonth,
+				stopDay,
+				stopHour,
+				stopMinute,
+			};
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			...ccOptions,
+		});
 	}
 
 	public userId: number;
@@ -1593,12 +1719,12 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
-		if (!super.persistValues(applHost)) return false;
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
 
 		persistSchedule.call(
 			this,
-			applHost,
+			ctx,
 			ScheduleEntryLockScheduleKind.YearDay,
 			this.userId,
 			this.slotId,
@@ -1621,8 +1747,8 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 		return true;
 	}
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
 			this.userId,
 			this.slotId,
 			this.startYear ?? 0xff,
@@ -1636,10 +1762,10 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		let message: MessageRecord;
 		if (this.startYear !== undefined) {
 			message = {
@@ -1669,7 +1795,7 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 			};
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -1677,40 +1803,45 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 
 // @publicAPI
 export type ScheduleEntryLockCCYearDayScheduleGetOptions =
-	& CCCommandOptions
-	& ScheduleEntryLockSlotId;
+	ScheduleEntryLockSlotId;
 
 @CCCommand(ScheduleEntryLockCommand.YearDayScheduleGet)
 @expectedCCResponse(ScheduleEntryLockCCYearDayScheduleReport)
 export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCYearDayScheduleGetOptions,
+		options: WithAddress<ScheduleEntryLockCCYearDayScheduleGetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.userId = this.payload[0];
-			this.slotId = this.payload[1];
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-		}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCYearDayScheduleGet {
+		validatePayload(raw.payload.length >= 2);
+		const userId = raw.payload[0];
+		const slotId = raw.payload[1];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			userId,
+			slotId,
+		});
 	}
 
 	public userId: number;
 	public slotId: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"user ID": this.userId,
 				"slot #": this.slotId,
@@ -1720,9 +1851,7 @@ export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
 }
 
 // @publicAPI
-export interface ScheduleEntryLockCCTimeOffsetSetOptions
-	extends CCCommandOptions
-{
+export interface ScheduleEntryLockCCTimeOffsetSetOptions {
 	standardOffset: number;
 	dstOffset: number;
 }
@@ -1731,36 +1860,40 @@ export interface ScheduleEntryLockCCTimeOffsetSetOptions
 @useSupervision()
 export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCTimeOffsetSetOptions,
+		options: WithAddress<ScheduleEntryLockCCTimeOffsetSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			const { standardOffset, dstOffset } = parseTimezone(this.payload);
-			this.standardOffset = standardOffset;
-			this.dstOffset = dstOffset;
-		} else {
-			this.standardOffset = options.standardOffset;
-			this.dstOffset = options.dstOffset;
-		}
+		super(options);
+		this.standardOffset = options.standardOffset;
+		this.dstOffset = options.dstOffset;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCTimeOffsetSet {
+		const { standardOffset, dstOffset } = parseTimezone(raw.payload);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			standardOffset,
+			dstOffset,
+		});
 	}
 
 	public standardOffset: number;
 	public dstOffset: number;
 
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeTimezone({
 			standardOffset: this.standardOffset,
 			dstOffset: this.dstOffset,
 		});
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"standard time offset": `${this.standardOffset} minutes`,
 				"DST offset": `${this.dstOffset} minutes`,
@@ -1770,9 +1903,7 @@ export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
 }
 
 // @publicAPI
-export interface ScheduleEntryLockCCTimeOffsetReportOptions
-	extends CCCommandOptions
-{
+export interface ScheduleEntryLockCCTimeOffsetReportOptions {
 	standardOffset: number;
 	dstOffset: number;
 }
@@ -1780,36 +1911,40 @@ export interface ScheduleEntryLockCCTimeOffsetReportOptions
 @CCCommand(ScheduleEntryLockCommand.TimeOffsetReport)
 export class ScheduleEntryLockCCTimeOffsetReport extends ScheduleEntryLockCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCTimeOffsetReportOptions,
+		options: WithAddress<ScheduleEntryLockCCTimeOffsetReportOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			const { standardOffset, dstOffset } = parseTimezone(this.payload);
-			this.standardOffset = standardOffset;
-			this.dstOffset = dstOffset;
-		} else {
-			this.standardOffset = options.standardOffset;
-			this.dstOffset = options.dstOffset;
-		}
+		super(options);
+		this.standardOffset = options.standardOffset;
+		this.dstOffset = options.dstOffset;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCTimeOffsetReport {
+		const { standardOffset, dstOffset } = parseTimezone(raw.payload);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			standardOffset,
+			dstOffset,
+		});
 	}
 
 	public standardOffset: number;
 	public dstOffset: number;
 
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeTimezone({
 			standardOffset: this.standardOffset,
 			dstOffset: this.dstOffset,
 		});
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"standard time offset": `${this.standardOffset} minutes`,
 				"DST offset": `${this.dstOffset} minutes`,
@@ -1824,7 +1959,6 @@ export class ScheduleEntryLockCCTimeOffsetGet extends ScheduleEntryLockCC {}
 
 /** @publicAPI */
 export type ScheduleEntryLockCCDailyRepeatingScheduleSetOptions =
-	& CCCommandOptions
 	& ScheduleEntryLockSlotId
 	& (
 		| {
@@ -1841,44 +1975,67 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 	extends ScheduleEntryLockCC
 {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCDailyRepeatingScheduleSetOptions,
+		options: WithAddress<
+			ScheduleEntryLockCCDailyRepeatingScheduleSetOptions
+		>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 3);
-			this.action = this.payload[0];
-			validatePayload(
-				this.action === ScheduleEntryLockSetAction.Set
-					|| this.action === ScheduleEntryLockSetAction.Erase,
-			);
-			this.userId = this.payload[1];
-			this.slotId = this.payload[2];
-			if (this.action === ScheduleEntryLockSetAction.Set) {
-				validatePayload(this.payload.length >= 8);
-				this.weekdays = parseBitMask(
-					this.payload.subarray(3, 4),
-					ScheduleEntryLockWeekday.Sunday,
-				);
-				this.startHour = this.payload[4];
-				this.startMinute = this.payload[5];
-				this.durationHour = this.payload[6];
-				this.durationMinute = this.payload[7];
-			}
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-			this.action = options.action;
-			if (options.action === ScheduleEntryLockSetAction.Set) {
-				this.weekdays = options.weekdays;
-				this.startHour = options.startHour;
-				this.startMinute = options.startMinute;
-				this.durationHour = options.durationHour;
-				this.durationMinute = options.durationMinute;
-			}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+		this.action = options.action;
+		if (options.action === ScheduleEntryLockSetAction.Set) {
+			this.weekdays = options.weekdays;
+			this.startHour = options.startHour;
+			this.startMinute = options.startMinute;
+			this.durationHour = options.durationHour;
+			this.durationMinute = options.durationMinute;
 		}
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCDailyRepeatingScheduleSet {
+		validatePayload(raw.payload.length >= 3);
+		const action: ScheduleEntryLockSetAction = raw.payload[0];
+
+		validatePayload(
+			action === ScheduleEntryLockSetAction.Set
+				|| action === ScheduleEntryLockSetAction.Erase,
+		);
+		const userId = raw.payload[1];
+		const slotId = raw.payload[2];
+
+		if (action !== ScheduleEntryLockSetAction.Set) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				action,
+				userId,
+				slotId,
+			});
+		}
+
+		validatePayload(raw.payload.length >= 8);
+		const weekdays: ScheduleEntryLockWeekday[] = parseBitMask(
+			raw.payload.subarray(3, 4),
+			ScheduleEntryLockWeekday.Sunday,
+		);
+		const startHour = raw.payload[4];
+		const startMinute = raw.payload[5];
+		const durationHour = raw.payload[6];
+		const durationMinute = raw.payload[7];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			action,
+			userId,
+			slotId,
+			weekdays,
+			startHour,
+			startMinute,
+			durationHour,
+			durationMinute,
+		});
 	}
 
 	public userId: number;
@@ -1892,17 +2049,17 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 	public durationHour?: number;
 	public durationMinute?: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.action, this.userId, this.slotId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.action, this.userId, this.slotId]);
 		if (this.action === ScheduleEntryLockSetAction.Set) {
-			this.payload = Buffer.concat([
+			this.payload = Bytes.concat([
 				this.payload,
 				encodeBitMask(
 					this.weekdays!,
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Buffer.from([
+				Bytes.from([
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
@@ -1911,13 +2068,13 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 			]);
 		} else {
 			// Not sure if this is correct
-			this.payload = Buffer.concat([this.payload, Buffer.alloc(5, 0xff)]);
+			this.payload = Bytes.concat([this.payload, Bytes.alloc(5, 0xff)]);
 		}
 
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		let message: MessageRecord;
 		if (this.action === ScheduleEntryLockSetAction.Erase) {
 			message = {
@@ -1944,7 +2101,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 			};
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -1960,38 +2117,55 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 	extends ScheduleEntryLockCC
 {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| (
-				& CCCommandOptions
-				& ScheduleEntryLockCCDailyRepeatingScheduleReportOptions
-			),
+		options: WithAddress<
+			ScheduleEntryLockCCDailyRepeatingScheduleReportOptions
+		>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.userId = this.payload[0];
-			this.slotId = this.payload[1];
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+		this.weekdays = options.weekdays;
+		this.startHour = options.startHour;
+		this.startMinute = options.startMinute;
+		this.durationHour = options.durationHour;
+		this.durationMinute = options.durationMinute;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCDailyRepeatingScheduleReport {
+		validatePayload(raw.payload.length >= 2);
+		const userId = raw.payload[0];
+		const slotId = raw.payload[1];
+
+		if (raw.payload.length >= 7 && raw.payload[2] !== 0) {
 			// Only parse the schedule if it is present and some weekday is selected
-			if (this.payload.length >= 7 && this.payload[2] !== 0) {
-				this.weekdays = parseBitMask(
-					this.payload.subarray(2, 3),
-					ScheduleEntryLockWeekday.Sunday,
-				);
-				this.startHour = this.payload[3];
-				this.startMinute = this.payload[4];
-				this.durationHour = this.payload[5];
-				this.durationMinute = this.payload[6];
-			}
+			const weekdays: ScheduleEntryLockWeekday[] = parseBitMask(
+				raw.payload.subarray(2, 3),
+				ScheduleEntryLockWeekday.Sunday,
+			);
+			const startHour = raw.payload[3];
+			const startMinute = raw.payload[4];
+			const durationHour = raw.payload[5];
+			const durationMinute = raw.payload[6];
+
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				userId,
+				slotId,
+				weekdays,
+				startHour,
+				startMinute,
+				durationHour,
+				durationMinute,
+			});
 		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-			this.weekdays = options.weekdays;
-			this.startHour = options.startHour;
-			this.startMinute = options.startMinute;
-			this.durationHour = options.durationHour;
-			this.durationMinute = options.durationMinute;
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				userId,
+				slotId,
+			});
 		}
 	}
 
@@ -2004,12 +2178,12 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 	public durationHour?: number;
 	public durationMinute?: number;
 
-	public persistValues(applHost: ZWaveApplicationHost): boolean {
-		if (!super.persistValues(applHost)) return false;
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
 
 		persistSchedule.call(
 			this,
-			applHost,
+			ctx,
 			ScheduleEntryLockScheduleKind.DailyRepeating,
 			this.userId,
 			this.slotId,
@@ -2027,17 +2201,17 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 		return true;
 	}
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
 		if (this.weekdays) {
-			this.payload = Buffer.concat([
+			this.payload = Bytes.concat([
 				this.payload,
 				encodeBitMask(
 					this.weekdays,
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Buffer.from([
+				Bytes.from([
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
@@ -2046,13 +2220,13 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 			]);
 		} else {
 			// Not sure if this is correct, but at least we won't parse it incorrectly ourselves when setting everything to 0
-			this.payload = Buffer.concat([this.payload, Buffer.alloc(5, 0)]);
+			this.payload = Bytes.concat([this.payload, Bytes.alloc(5, 0)]);
 		}
 
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		let message: MessageRecord;
 		if (!this.weekdays) {
 			message = {
@@ -2079,7 +2253,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 			};
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
@@ -2087,8 +2261,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 
 // @publicAPI
 export type ScheduleEntryLockCCDailyRepeatingScheduleGetOptions =
-	& CCCommandOptions
-	& ScheduleEntryLockSlotId;
+	ScheduleEntryLockSlotId;
 
 @CCCommand(ScheduleEntryLockCommand.DailyRepeatingScheduleGet)
 @expectedCCResponse(ScheduleEntryLockCCDailyRepeatingScheduleReport)
@@ -2096,33 +2269,41 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleGet
 	extends ScheduleEntryLockCC
 {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| ScheduleEntryLockCCDailyRepeatingScheduleGetOptions,
+		options: WithAddress<
+			ScheduleEntryLockCCDailyRepeatingScheduleGetOptions
+		>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 2);
-			this.userId = this.payload[0];
-			this.slotId = this.payload[1];
-		} else {
-			this.userId = options.userId;
-			this.slotId = options.slotId;
-		}
+		super(options);
+		this.userId = options.userId;
+		this.slotId = options.slotId;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): ScheduleEntryLockCCDailyRepeatingScheduleGet {
+		validatePayload(raw.payload.length >= 2);
+		const userId = raw.payload[0];
+		const slotId = raw.payload[1];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			userId,
+			slotId,
+		});
 	}
 
 	public userId: number;
 	public slotId: number;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.userId, this.slotId]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.userId, this.slotId]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"user ID": this.userId,
 				"slot #": this.slotId,

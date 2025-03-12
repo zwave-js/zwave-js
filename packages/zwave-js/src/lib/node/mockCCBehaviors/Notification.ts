@@ -6,11 +6,7 @@ import {
 } from "@zwave-js/cc/NotificationCC";
 import { CommandClasses } from "@zwave-js/core";
 import type { NotificationCCCapabilities } from "@zwave-js/testing";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { type MockNodeBehavior } from "@zwave-js/testing";
 
 const defaultCapabilities: NotificationCCCapabilities = {
 	supportsV1Alarm: false,
@@ -18,69 +14,52 @@ const defaultCapabilities: NotificationCCCapabilities = {
 };
 
 const respondToNotificationSupportedGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof NotificationCCSupportedGet
-		) {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof NotificationCCSupportedGet) {
 			const capabilities = {
 				...defaultCapabilities,
 				...self.getCCCapabilities(
 					CommandClasses.Notification,
-					frame.payload.endpointIndex,
+					receivedCC.endpointIndex,
 				),
 			};
-			const cc = new NotificationCCSupportedReport(self.host, {
-				nodeId: controller.host.ownNodeId,
+			const cc = new NotificationCCSupportedReport({
+				nodeId: controller.ownNodeId,
 				supportsV1Alarm: capabilities.supportsV1Alarm,
 				supportedNotificationTypes: Object.keys(
 					capabilities.notificationTypesAndEvents,
 				).map((t) => parseInt(t)),
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			return true;
+			return { action: "sendCC", cc };
 		}
-		return false;
 	},
 };
 
 const respondToNotificationEventSupportedGet: MockNodeBehavior = {
-	async onControllerFrame(controller, self, frame) {
-		if (
-			frame.type === MockZWaveFrameType.Request
-			&& frame.payload instanceof NotificationCCEventSupportedGet
-		) {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof NotificationCCEventSupportedGet) {
 			const capabilities = {
 				...defaultCapabilities,
 				...self.getCCCapabilities(
 					CommandClasses.Notification,
-					frame.payload.endpointIndex,
+					receivedCC.endpointIndex,
 				),
 			};
 			if (
-				frame.payload.notificationType
+				receivedCC.notificationType
 					in capabilities.notificationTypesAndEvents
 			) {
-				const cc = new NotificationCCEventSupportedReport(self.host, {
-					nodeId: controller.host.ownNodeId,
-					notificationType: frame.payload.notificationType,
+				const cc = new NotificationCCEventSupportedReport({
+					nodeId: controller.ownNodeId,
+					notificationType: receivedCC.notificationType,
 					supportedEvents: capabilities.notificationTypesAndEvents[
-						frame.payload.notificationType
+						receivedCC.notificationType
 					],
 				});
-				await self.sendToController(
-					createMockZWaveRequestFrame(cc, {
-						ackRequested: false,
-					}),
-				);
-				return true;
+				return { action: "sendCC", cc };
 			}
+			return { action: "stop" };
 		}
-		return false;
 	},
 };
 

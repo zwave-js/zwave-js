@@ -1,25 +1,35 @@
 import {
 	type AssociationAddress,
 	AssociationCC,
+	type AssociationCheckResult,
 	type AssociationGroup,
 	ECDHProfiles,
 	FLiRS2WakeUpTime,
+	type FirmwareUpdateOptions,
 	type FirmwareUpdateResult,
 	InclusionControllerCCComplete,
-	InclusionControllerCCInitiate,
+	type InclusionControllerCCInitiate,
 	InclusionControllerStatus,
 	InclusionControllerStep,
 	KEXFailType,
 	KEXSchemes,
 	ManufacturerSpecificCCValues,
 	MultiChannelAssociationCC,
+	Powerlevel,
 	Security2CCKEXFail,
+	Security2CCKEXGet,
+	type Security2CCKEXReport,
 	Security2CCKEXSet,
 	Security2CCNetworkKeyGet,
+	Security2CCNetworkKeyReport,
 	Security2CCNetworkKeyVerify,
 	Security2CCPublicKeyReport,
 	Security2CCTransferEnd,
 	Security2Command,
+	SecurityCCNetworkKeySet,
+	SecurityCCNonceGet,
+	SecurityCCSchemeGet,
+	SecurityCCSchemeInherit,
 	VersionCCValues,
 	VersionCommand,
 	ZWaveProtocolCCAssignReturnRoute,
@@ -29,8 +39,13 @@ import {
 	inclusionTimeouts,
 	utils as ccUtils,
 } from "@zwave-js/cc";
+import { type IndicatorObject } from "@zwave-js/cc/IndicatorCC";
 import {
+	BasicDeviceClass,
+	type CCId,
 	CommandClasses,
+	type ControllerCapabilities,
+	ControllerRole,
 	ControllerStatus,
 	EMPTY_ROUTE,
 	type Firmware,
@@ -39,6 +54,7 @@ import {
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	NODE_ID_BROADCAST,
+	NODE_ID_BROADCAST_LR,
 	NOT_KNOWN,
 	NodeIDType,
 	NodeType,
@@ -46,129 +62,112 @@ import {
 	ProtocolType,
 	Protocols,
 	RFRegion,
+	type RFRegionInfo,
 	type RSSI,
 	type Route,
 	RouteKind,
 	SecurityClass,
-	type SinglecastCC,
+	SecurityManager,
+	SecurityManager2,
+	type SerialApiInitData,
 	TransmitStatus,
 	UNKNOWN_STATE,
+	type UnknownZWaveChipType,
 	ValueDB,
+	type ZWaveApiVersion,
 	type ZWaveDataRate,
 	ZWaveError,
 	ZWaveErrorCodes,
+	ZWaveLibraryTypes,
 	authHomeIdFromDSK,
 	averageRSSI,
 	computePRK,
-	decodeX25519KeyDER,
+	deriveSharedECDHSecret,
 	deriveTempKeys,
 	dskFromString,
 	dskToString,
-	encodeX25519KeyDERSPKI,
+	generateECDHKeyPair,
+	getChipTypeAndVersion,
+	getHighestSecurityClass,
 	indexDBsByNode,
 	isEmptyRoute,
 	isLongRangeNodeId,
 	isValidDSK,
 	isZWaveError,
 	nwiHomeIdFromDSK,
+	parseBitMask,
+	sdkVersionGt,
+	sdkVersionGte,
+	sdkVersionLt,
+	sdkVersionLte,
 	securityClassIsS2,
 	securityClassOrder,
 } from "@zwave-js/core";
-import { migrateNVM } from "@zwave-js/nvmedit";
 import {
-	type BootloaderChunk,
-	BootloaderChunkType,
+	BufferedNVMReader,
+	NVM3,
+	NVM3Adapter,
+	NVM500,
+	NVM500Adapter,
+	type NVMAdapter,
+	migrateNVM,
+} from "@zwave-js/nvmedit";
+import {
 	FunctionType,
 	type Message,
 	type SuccessIndicator,
-	XModemMessageHeaders,
 } from "@zwave-js/serial";
-import {
-	Mixin,
-	type ReadonlyObjectKeyMap,
-	type ReadonlyThrowingMap,
-	type ThrowingMap,
-	TypedEventEmitter,
-	createThrowingMap,
-	flatMap,
-	getEnumMemberName,
-	getErrorMessage,
-	noop,
-	num2hex,
-	pick,
-} from "@zwave-js/shared";
-import { distinct } from "alcalzone-shared/arrays";
-import { wait } from "alcalzone-shared/async";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
-import { roundTo } from "alcalzone-shared/math";
-import { isObject } from "alcalzone-shared/typeguards";
-import crypto from "node:crypto";
-import util from "node:util";
-import type { Driver } from "../driver/Driver";
-import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache";
-import type { StatisticsEventCallbacks } from "../driver/Statistics";
-import { DeviceClass } from "../node/DeviceClass";
-import { ZWaveNode } from "../node/Node";
-import { VirtualNode } from "../node/VirtualNode";
-import {
-	InterviewStage,
-	type LifelineRoutes,
-	NodeStatus,
-} from "../node/_Types";
-import { type ZWaveApiVersion, ZWaveLibraryTypes } from "../serialapi/_Types";
 import {
 	type ApplicationUpdateRequest,
 	ApplicationUpdateRequestNodeAdded,
 	ApplicationUpdateRequestNodeInfoReceived,
 	ApplicationUpdateRequestNodeRemoved,
+	ApplicationUpdateRequestSUCIdChanged,
 	ApplicationUpdateRequestSmartStartHomeIDReceived,
 	ApplicationUpdateRequestSmartStartLongRangeHomeIDReceived,
-} from "../serialapi/application/ApplicationUpdateRequest";
-import {
-	type SerialAPIStartedRequest,
-	SerialAPIWakeUpReason,
-} from "../serialapi/application/SerialAPIStartedRequest";
+} from "@zwave-js/serial/serialapi";
 import {
 	ShutdownRequest,
 	type ShutdownResponse,
-} from "../serialapi/application/ShutdownMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetControllerCapabilitiesRequest,
 	type GetControllerCapabilitiesResponse,
-} from "../serialapi/capability/GetControllerCapabilitiesMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetControllerVersionRequest,
 	type GetControllerVersionResponse,
-} from "../serialapi/capability/GetControllerVersionMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetLongRangeNodesRequest,
 	type GetLongRangeNodesResponse,
-} from "../serialapi/capability/GetLongRangeNodesMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetProtocolVersionRequest,
 	type GetProtocolVersionResponse,
-} from "../serialapi/capability/GetProtocolVersionMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetSerialApiCapabilitiesRequest,
 	type GetSerialApiCapabilitiesResponse,
-} from "../serialapi/capability/GetSerialApiCapabilitiesMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetSerialApiInitDataRequest,
 	type GetSerialApiInitDataResponse,
-} from "../serialapi/capability/GetSerialApiInitDataMessages";
-import { HardResetRequest } from "../serialapi/capability/HardResetRequest";
+} from "@zwave-js/serial/serialapi";
+import { HardResetRequest } from "@zwave-js/serial/serialapi";
 import {
 	GetLongRangeChannelRequest,
 	type GetLongRangeChannelResponse,
-} from "../serialapi/capability/LongRangeSetupMessages";
+	SetLongRangeChannelRequest,
+	type SetLongRangeChannelResponse,
+} from "@zwave-js/serial/serialapi";
 import {
 	SerialAPISetupCommand,
 	SerialAPISetup_CommandUnsupportedResponse,
 	SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest,
 	type SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse,
+	SerialAPISetup_GetLongRangeMaximumTxPowerRequest,
+	type SerialAPISetup_GetLongRangeMaximumTxPowerResponse,
 	SerialAPISetup_GetMaximumPayloadSizeRequest,
 	type SerialAPISetup_GetMaximumPayloadSizeResponse,
 	SerialAPISetup_GetPowerlevel16BitRequest,
@@ -177,8 +176,14 @@ import {
 	type SerialAPISetup_GetPowerlevelResponse,
 	SerialAPISetup_GetRFRegionRequest,
 	type SerialAPISetup_GetRFRegionResponse,
+	SerialAPISetup_GetRegionInfoRequest,
+	type SerialAPISetup_GetRegionInfoResponse,
 	SerialAPISetup_GetSupportedCommandsRequest,
 	type SerialAPISetup_GetSupportedCommandsResponse,
+	SerialAPISetup_GetSupportedRegionsRequest,
+	type SerialAPISetup_GetSupportedRegionsResponse,
+	SerialAPISetup_SetLongRangeMaximumTxPowerRequest,
+	type SerialAPISetup_SetLongRangeMaximumTxPowerResponse,
 	SerialAPISetup_SetNodeIDTypeRequest,
 	type SerialAPISetup_SetNodeIDTypeResponse,
 	SerialAPISetup_SetPowerlevel16BitRequest,
@@ -189,24 +194,28 @@ import {
 	type SerialAPISetup_SetRFRegionResponse,
 	SerialAPISetup_SetTXStatusReportRequest,
 	type SerialAPISetup_SetTXStatusReportResponse,
-} from "../serialapi/capability/SerialAPISetupMessages";
-import { SetApplicationNodeInformationRequest } from "../serialapi/capability/SetApplicationNodeInformationRequest";
+} from "@zwave-js/serial/serialapi";
+import { SetApplicationNodeInformationRequest } from "@zwave-js/serial/serialapi";
 import {
 	GetControllerIdRequest,
 	type GetControllerIdResponse,
-} from "../serialapi/memory/GetControllerIdMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetBackgroundRSSIRequest,
 	type GetBackgroundRSSIResponse,
-} from "../serialapi/misc/GetBackgroundRSSIMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	SetRFReceiveModeRequest,
 	type SetRFReceiveModeResponse,
-} from "../serialapi/misc/SetRFReceiveModeMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	SetSerialApiTimeoutsRequest,
 	type SetSerialApiTimeoutsResponse,
-} from "../serialapi/misc/SetSerialApiTimeoutsMessages";
+} from "@zwave-js/serial/serialapi";
+import {
+	StartWatchdogRequest,
+	StopWatchdogRequest,
+} from "@zwave-js/serial/serialapi";
 import {
 	AddNodeDSKToNetworkRequest,
 	AddNodeStatus,
@@ -215,87 +224,102 @@ import {
 	AddNodeType,
 	EnableSmartStartListenRequest,
 	computeNeighborDiscoveryTimeout,
-} from "../serialapi/network-mgmt/AddNodeToNetworkRequest";
-import { AssignPriorityReturnRouteRequest } from "../serialapi/network-mgmt/AssignPriorityReturnRouteMessages";
+} from "@zwave-js/serial/serialapi";
+import { AssignPriorityReturnRouteRequest } from "@zwave-js/serial/serialapi";
 import {
 	AssignPrioritySUCReturnRouteRequest,
 	type AssignPrioritySUCReturnRouteRequestTransmitReport,
-} from "../serialapi/network-mgmt/AssignPrioritySUCReturnRouteMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	AssignReturnRouteRequest,
 	type AssignReturnRouteRequestTransmitReport,
-} from "../serialapi/network-mgmt/AssignReturnRouteMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	AssignSUCReturnRouteRequest,
 	AssignSUCReturnRouteRequestTransmitReport,
-} from "../serialapi/network-mgmt/AssignSUCReturnRouteMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	DeleteReturnRouteRequest,
 	type DeleteReturnRouteRequestTransmitReport,
-} from "../serialapi/network-mgmt/DeleteReturnRouteMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	DeleteSUCReturnRouteRequest,
 	DeleteSUCReturnRouteRequestTransmitReport,
-} from "../serialapi/network-mgmt/DeleteSUCReturnRouteMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetPriorityRouteRequest,
 	type GetPriorityRouteResponse,
-} from "../serialapi/network-mgmt/GetPriorityRouteMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetRoutingInfoRequest,
 	type GetRoutingInfoResponse,
-} from "../serialapi/network-mgmt/GetRoutingInfoMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetSUCNodeIdRequest,
 	type GetSUCNodeIdResponse,
-} from "../serialapi/network-mgmt/GetSUCNodeIdMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	IsFailedNodeRequest,
 	type IsFailedNodeResponse,
-} from "../serialapi/network-mgmt/IsFailedNodeMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	RemoveFailedNodeRequest,
 	type RemoveFailedNodeRequestStatusReport,
 	RemoveFailedNodeResponse,
 	RemoveFailedNodeStartFlags,
 	RemoveFailedNodeStatus,
-} from "../serialapi/network-mgmt/RemoveFailedNodeMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	RemoveNodeFromNetworkRequest,
 	type RemoveNodeFromNetworkRequestStatusReport,
 	RemoveNodeStatus,
 	RemoveNodeType,
-} from "../serialapi/network-mgmt/RemoveNodeFromNetworkRequest";
+} from "@zwave-js/serial/serialapi";
 import {
 	ReplaceFailedNodeRequest,
 	type ReplaceFailedNodeRequestStatusReport,
 	type ReplaceFailedNodeResponse,
 	ReplaceFailedNodeStartFlags,
 	ReplaceFailedNodeStatus,
-} from "../serialapi/network-mgmt/ReplaceFailedNodeRequest";
+} from "@zwave-js/serial/serialapi";
 import {
 	NodeNeighborUpdateStatus,
 	type RequestNodeNeighborUpdateReport,
 	RequestNodeNeighborUpdateRequest,
-} from "../serialapi/network-mgmt/RequestNodeNeighborUpdateMessages";
-import { SetPriorityRouteRequest } from "../serialapi/network-mgmt/SetPriorityRouteMessages";
-import { SetSUCNodeIdRequest } from "../serialapi/network-mgmt/SetSUCNodeIDMessages";
+} from "@zwave-js/serial/serialapi";
+import {
+	LearnModeIntent,
+	LearnModeStatus,
+	type SetLearnModeCallback,
+	SetLearnModeRequest,
+} from "@zwave-js/serial/serialapi";
+import { SetPriorityRouteRequest } from "@zwave-js/serial/serialapi";
+import { SetSUCNodeIdRequest } from "@zwave-js/serial/serialapi";
 import {
 	ExtNVMReadLongBufferRequest,
 	type ExtNVMReadLongBufferResponse,
-} from "../serialapi/nvm/ExtNVMReadLongBufferMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	ExtNVMReadLongByteRequest,
 	type ExtNVMReadLongByteResponse,
-} from "../serialapi/nvm/ExtNVMReadLongByteMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	ExtNVMWriteLongBufferRequest,
 	type ExtNVMWriteLongBufferResponse,
-} from "../serialapi/nvm/ExtNVMWriteLongBufferMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	ExtNVMWriteLongByteRequest,
 	type ExtNVMWriteLongByteResponse,
-} from "../serialapi/nvm/ExtNVMWriteLongByteMessages";
+} from "@zwave-js/serial/serialapi";
+import {
+	ExtendedNVMOperationStatus,
+	ExtendedNVMOperationsCloseRequest,
+	ExtendedNVMOperationsCommand,
+	ExtendedNVMOperationsOpenRequest,
+	ExtendedNVMOperationsReadRequest,
+	type ExtendedNVMOperationsResponse,
+	ExtendedNVMOperationsWriteRequest,
+} from "@zwave-js/serial/serialapi";
 import {
 	FirmwareUpdateNVM_GetNewImageRequest,
 	type FirmwareUpdateNVM_GetNewImageResponse,
@@ -309,13 +333,13 @@ import {
 	type FirmwareUpdateNVM_UpdateCRC16Response,
 	FirmwareUpdateNVM_WriteRequest,
 	type FirmwareUpdateNVM_WriteResponse,
-} from "../serialapi/nvm/FirmwareUpdateNVMMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	GetNVMIdRequest,
 	type GetNVMIdResponse,
 	type NVMId,
 	nvmSizeToBufferSize,
-} from "../serialapi/nvm/GetNVMIdMessages";
+} from "@zwave-js/serial/serialapi";
 import {
 	NVMOperationStatus,
 	NVMOperationsCloseRequest,
@@ -323,55 +347,92 @@ import {
 	NVMOperationsReadRequest,
 	type NVMOperationsResponse,
 	NVMOperationsWriteRequest,
-} from "../serialapi/nvm/NVMOperationsMessages";
-import type { TransmitReport } from "../serialapi/transport/SendDataShared";
+} from "@zwave-js/serial/serialapi";
+import type { TransmitReport } from "@zwave-js/serial/serialapi";
+import {
+	Bytes,
+	Mixin,
+	type ReadonlyObjectKeyMap,
+	type ReadonlyThrowingMap,
+	type ThrowingMap,
+	TypedEventTarget,
+	areUint8ArraysEqual,
+	cloneDeep,
+	createThrowingMap,
+	getEnumMemberName,
+	getErrorMessage,
+	noop,
+	num2hex,
+	pick,
+} from "@zwave-js/shared";
+import { distinct } from "alcalzone-shared/arrays";
+import { wait } from "alcalzone-shared/async";
+import {
+	type DeferredPromise,
+	createDeferredPromise,
+} from "alcalzone-shared/deferred-promise";
+import { isObject } from "alcalzone-shared/typeguards";
+import type { Driver } from "../driver/Driver.js";
+import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache.js";
+import type { StatisticsEventCallbacks } from "../driver/Statistics.js";
+import { type TaskBuilder, TaskPriority } from "../driver/Task.js";
+import { DeviceClass } from "../node/DeviceClass.js";
+import { ZWaveNode } from "../node/Node.js";
+import { VirtualNode } from "../node/VirtualNode.js";
+import {
+	InterviewStage,
+	type LifelineRoutes,
+	NodeStatus,
+} from "../node/_Types.js";
 import {
 	type ControllerStatistics,
 	ControllerStatisticsHost,
-} from "./ControllerStatistics";
-import { ZWaveFeature, minFeatureVersions } from "./Features";
+} from "./ControllerStatistics.js";
+import { ZWaveFeature, minFeatureVersions } from "./Features.js";
 import {
 	downloadFirmwareUpdate,
 	getAvailableFirmwareUpdates,
-} from "./FirmwareUpdateService";
+} from "./FirmwareUpdateService.js";
 import {
 	type ExclusionOptions,
 	ExclusionStrategy,
 	type FoundNode,
+	type InclusionGrant,
 	type InclusionOptions,
 	type InclusionOptionsInternal,
 	type InclusionResult,
 	InclusionState,
 	InclusionStrategy,
 	type InclusionUserCallbacks,
+	type JoinNetworkOptions,
+	JoinNetworkResult,
+	JoinNetworkStrategy,
+	type JoinNetworkUserCallbacks,
+	LeaveNetworkResult,
 	type PlannedProvisioningEntry,
 	ProvisioningEntryStatus,
 	RemoveNodeReason,
 	type ReplaceNodeOptions,
 	SecurityBootstrapFailure,
 	type SmartStartProvisioningEntry,
-} from "./Inclusion";
-import { determineNIF } from "./NodeInformationFrame";
-import type { UnknownZWaveChipType } from "./ZWaveChipTypes";
-import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions";
+} from "./Inclusion.js";
+import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
+import { determineNIF } from "./NodeInformationFrame.js";
 import {
-	type ControllerFirmwareUpdateProgress,
-	type ControllerFirmwareUpdateResult,
-	ControllerFirmwareUpdateStatus,
+	type ProxyInclusionMachine,
+	type ProxyInclusionMachineInput,
+	createProxyInclusionMachine,
+} from "./ProxyInclusionMachine.js";
+import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions.js";
+import {
 	type FirmwareUpdateDeviceID,
 	type FirmwareUpdateInfo,
 	type GetFirmwareUpdatesOptions,
 	type RebuildRoutesOptions,
 	type RebuildRoutesStatus,
 	type SDKVersion,
-} from "./_Types";
-import {
-	assertProvisioningEntry,
-	sdkVersionGt,
-	sdkVersionGte,
-	sdkVersionLt,
-	sdkVersionLte,
-} from "./utils";
+} from "./_Types.js";
+import { assertProvisioningEntry, isRebuildRoutesTask } from "./utils.js";
 
 // Strongly type the event emitter events
 interface ControllerEventCallbacks
@@ -379,24 +440,24 @@ interface ControllerEventCallbacks
 {
 	"inclusion failed": () => void;
 	"exclusion failed": () => void;
-	"inclusion started": (secure: boolean, strategy: InclusionStrategy) => void;
+	"inclusion started": (strategy: InclusionStrategy) => void;
 	"exclusion started": () => void;
 	"inclusion stopped": () => void;
 	"exclusion stopped": () => void;
+	"inclusion state changed": (state: InclusionState) => void;
 	"node found": (node: FoundNode) => void;
 	"node added": (node: ZWaveNode, result: InclusionResult) => void;
 	"node removed": (node: ZWaveNode, reason: RemoveNodeReason) => void;
+	"network found": (homeId: number, ownNodeId: number) => void;
+	"joining network failed": () => void;
+	"network joined": () => void;
+	"network left": () => void;
+	"leaving network failed": () => void;
 	"rebuild routes progress": (
 		progress: ReadonlyMap<number, RebuildRoutesStatus>,
 	) => void;
 	"rebuild routes done": (
 		result: ReadonlyMap<number, RebuildRoutesStatus>,
-	) => void;
-	"firmware update progress": (
-		progress: ControllerFirmwareUpdateProgress,
-	) => void;
-	"firmware update finished": (
-		result: ControllerFirmwareUpdateResult,
 	) => void;
 	identify: (node: ZWaveNode) => void;
 	"status changed": (status: ControllerStatus) => void;
@@ -404,18 +465,20 @@ interface ControllerEventCallbacks
 
 export type ControllerEvents = Extract<keyof ControllerEventCallbacks, string>;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ZWaveController extends ControllerStatisticsHost {}
 
 @Mixin([ControllerStatisticsHost])
 export class ZWaveController
-	extends TypedEventEmitter<ControllerEventCallbacks>
+	extends TypedEventTarget<ControllerEventCallbacks>
 {
 	/** @internal */
-	public constructor(
-		private readonly driver: Driver,
-		bootloaderOnly: boolean = false,
-	) {
+	public constructor(driver: Driver) {
 		super();
+
+		debugger;
+
+		this.driver = driver;
 
 		this._nodes = createThrowingMap((nodeId) => {
 			throw new ZWaveError(
@@ -424,9 +487,6 @@ export class ZWaveController
 				nodeId,
 			);
 		});
-
-		// Limit interaction with the controller in bootloader-only mode
-		if (bootloaderOnly) return;
 
 		// register message handlers
 		driver.registerRequestHandler(
@@ -442,10 +502,12 @@ export class ZWaveController
 			this.handleReplaceNodeStatusReport.bind(this),
 		);
 		driver.registerRequestHandler(
-			FunctionType.SerialAPIStarted,
-			this.handleSerialAPIStartedUnexpectedly.bind(this),
+			FunctionType.SetLearnMode,
+			this.handleLearnModeCallback.bind(this),
 		);
 	}
+
+	private readonly driver: Driver;
 
 	private _type: MaybeNotKnown<ZWaveLibraryTypes>;
 	public get type(): MaybeNotKnown<ZWaveLibraryTypes> {
@@ -484,12 +546,39 @@ export class ZWaveController
 		return this._ownNodeId;
 	}
 
-	private _isPrimary: MaybeNotKnown<boolean>;
-	public get isPrimary(): MaybeNotKnown<boolean> {
-		return this._isPrimary;
+	private _dsk: Uint8Array | undefined;
+	/**
+	 * The device specific key (DSK) of the controller in binary format.
+	 */
+	public async getDSK(): Promise<Uint8Array> {
+		if (this._dsk == undefined) {
+			const { publicKey } = await this.driver
+				.getLearnModeAuthenticatedKeyPair();
+			this._dsk = publicKey.subarray(0, 16);
+		}
+		return this._dsk;
 	}
 
+	/** @deprecated Use {@link role} instead */
+	public get isPrimary(): MaybeNotKnown<boolean> {
+		switch (this.role) {
+			case NOT_KNOWN:
+				return NOT_KNOWN;
+			case ControllerRole.Primary:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	// This seems odd, but isPrimary comes from the Serial API init data command,
+	// while isSecondary comes from the GetControllerCapabilities command. They don't really do what their name implies
+	// and sometimes contradict each other...
+	private _isPrimary: MaybeNotKnown<boolean>;
+	private _isSecondary: MaybeNotKnown<boolean>;
+
 	private _isUsingHomeIdFromOtherNetwork: MaybeNotKnown<boolean>;
+	/** @deprecated Use {@link role} instead */
 	public get isUsingHomeIdFromOtherNetwork(): MaybeNotKnown<boolean> {
 		return this._isUsingHomeIdFromOtherNetwork;
 	}
@@ -500,6 +589,7 @@ export class ZWaveController
 	}
 
 	private _wasRealPrimary: MaybeNotKnown<boolean>;
+	/** @deprecated Use {@link role} instead */
 	public get wasRealPrimary(): MaybeNotKnown<boolean> {
 		return this._wasRealPrimary;
 	}
@@ -513,6 +603,8 @@ export class ZWaveController
 	public get isSUC(): MaybeNotKnown<boolean> {
 		return this._isSUC;
 	}
+
+	private _noNodesIncluded: MaybeNotKnown<boolean>;
 
 	private _nodeType: MaybeNotKnown<NodeType>;
 	public get nodeType(): MaybeNotKnown<NodeType> {
@@ -678,6 +770,14 @@ export class ZWaveController
 		return this._supportsTimers;
 	}
 
+	private _supportedRegions: MaybeNotKnown<Map<RFRegion, RFRegionInfo>>;
+	/** Which RF regions are supported by the controller, including information about them */
+	public get supportedRegions(): MaybeNotKnown<
+		ReadonlyMap<RFRegion, Readonly<RFRegionInfo>>
+	> {
+		return this._supportedRegions;
+	}
+
 	private _rfRegion: MaybeNotKnown<RFRegion>;
 	/** Which RF region the controller is currently set to, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setRFRegion}. */
 	public get rfRegion(): MaybeNotKnown<RFRegion> {
@@ -688,6 +788,36 @@ export class ZWaveController
 	/** Whether the controller supports the Z-Wave Long Range protocol */
 	public get supportsLongRange(): MaybeNotKnown<boolean> {
 		return this._supportsLongRange;
+	}
+
+	private _maxLongRangePowerlevel: MaybeNotKnown<number>;
+	/** The maximum powerlevel to use for Z-Wave Long Range, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setMaxLongRangePowerlevel}. */
+	public get maxLongRangePowerlevel(): MaybeNotKnown<number> {
+		return this._maxLongRangePowerlevel;
+	}
+
+	private _longRangeChannel: MaybeNotKnown<LongRangeChannel>;
+	/** The channel to use for Z-Wave Long Range, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setLongRangeChannel}. */
+	public get longRangeChannel(): MaybeNotKnown<LongRangeChannel> {
+		return this._longRangeChannel;
+	}
+
+	private _supportsLongRangeAutoChannelSelection: MaybeNotKnown<boolean>;
+	/** Whether automatic LR channel selection is supported, or `undefined` if it could not be determined (yet). */
+	public get supportsLongRangeAutoChannelSelection(): MaybeNotKnown<boolean> {
+		return this._supportsLongRangeAutoChannelSelection;
+	}
+
+	private _maxPayloadSize: MaybeNotKnown<number>;
+	/** The maximum payload size that can be transmitted with a Z-Wave explorer frame */
+	public get maxPayloadSize(): MaybeNotKnown<number> {
+		return this._maxPayloadSize;
+	}
+
+	private _maxPayloadSizeLR: MaybeNotKnown<number>;
+	/** The maximum payload size that can be transmitted with a Z-Wave Long Range frame */
+	public get maxPayloadSizeLR(): MaybeNotKnown<number> {
+		return this._maxPayloadSizeLR;
 	}
 
 	private _nodes: ThrowingMap<number, ZWaveNode>;
@@ -701,9 +831,13 @@ export class ZWaveController
 	public get nodeIdType(): NodeIDType {
 		return this._nodeIdType;
 	}
+	/** @internal */
+	public set nodeIdType(value: NodeIDType) {
+		this._nodeIdType = value;
+	}
 
 	/** Returns the node with the given DSK */
-	public getNodeByDSK(dsk: Buffer | string): ZWaveNode | undefined {
+	public getNodeByDSK(dsk: Uint8Array | string): ZWaveNode | undefined {
 		try {
 			if (typeof dsk === "string") dsk = dskFromString(dsk);
 		} catch (e) {
@@ -716,7 +850,7 @@ export class ZWaveController
 			throw e;
 		}
 		for (const node of this._nodes.values()) {
-			if (node.dsk?.equals(dsk)) return node;
+			if (node.dsk && Bytes.view(node.dsk).equals(dsk)) return node;
 		}
 	}
 
@@ -725,10 +859,73 @@ export class ZWaveController
 		return this._nodes.get(this._ownNodeId!)!.valueDB;
 	}
 
-	private _isRebuildingRoutes: boolean = false;
+	/** @internal Which associations are currently configured */
+	public get associations(): readonly AssociationAddress[] {
+		return (
+			this.driver.cacheGet(cacheKeys.controller.associations(1)) ?? []
+		);
+	}
+
+	/** @internal */
+	public set associations(value: readonly AssociationAddress[]) {
+		this.driver.cacheSet(cacheKeys.controller.associations(1), value);
+	}
+
+	private _powerlevel: { powerlevel: Powerlevel; until: Date } | undefined;
+	/**
+	 * @internal
+	 * Remembers which powerlevel was set by another node.
+	 */
+	public get powerlevel(): { powerlevel: Powerlevel; until: Date } {
+		return this._powerlevel ?? {
+			powerlevel: Powerlevel["Normal Power"],
+			until: new Date(),
+		};
+	}
+
+	/** @internal */
+	public set powerlevel(value: { powerlevel: Powerlevel; until: Date }) {
+		this._powerlevel = value;
+	}
+
+	/** The role of the controller on the network */
+	public get role(): MaybeNotKnown<ControllerRole> {
+		if (this._wasRealPrimary) return ControllerRole.Primary;
+		// Ideally we'd rely on wasRealPrimary, but there are some older controllers out there where this flag isn't set.
+		if (this._isPrimary && this._isSIS && this._isSecondary === false) {
+			return ControllerRole.Primary;
+		}
+
+		switch (this._isSecondary) {
+			case true:
+				return ControllerRole.Secondary;
+			case false:
+				return ControllerRole.Inclusion;
+			default:
+				return NOT_KNOWN;
+		}
+	}
+
+	/** Returns whether learn mode may be enabled on this controller */
+	public get isLearnModePermitted(): boolean {
+		// The primary controller may only enter learn mode, if hasn't included nodes yet
+		if (this.role === ControllerRole.Primary) {
+			return !!this._noNodesIncluded;
+		} else {
+			// Secondary controllers may only enter learn mode if they are not the SUC
+			return this._isSUC === false;
+		}
+	}
+
+	/**
+	 * @internal
+	 * Remembers the indicator values set by another node
+	 */
+	public readonly indicatorValues = new Map<number, IndicatorObject[]>();
+
 	/** Returns whether the routes are currently being rebuilt for one or more nodes. */
 	public get isRebuildingRoutes(): boolean {
-		return this._isRebuildingRoutes;
+		return !!this.driver.scheduler.findTask(isRebuildRoutesTask);
 	}
 
 	/**
@@ -738,6 +935,18 @@ export class ZWaveController
 	public getBroadcastNode(): VirtualNode {
 		return new VirtualNode(
 			NODE_ID_BROADCAST,
+			this.driver,
+			this.nodes.values(),
+		);
+	}
+
+	/**
+	 * Returns a reference to the (virtual) broadcast node for Z-Wave Long Range, which allows sending commands to all LR nodes.
+	 * This automatically groups nodes by security class, ignores nodes that cannot be controlled via multicast/broadcast, and will fall back to multicast(s) if necessary.
+	 */
+	public getBroadcastNodeLR(): VirtualNode {
+		return new VirtualNode(
+			NODE_ID_BROADCAST_LR,
 			this.driver,
 			this.nodes.values(),
 		);
@@ -788,7 +997,6 @@ export class ZWaveController
 		assertProvisioningEntry(entry);
 
 		const provisioningList = [...this.provisioningList];
-
 		const index = provisioningList.findIndex((e) => e.dsk === entry.dsk);
 		if (index === -1) {
 			provisioningList.push(entry);
@@ -924,7 +1132,7 @@ export class ZWaveController
 		const apiCaps = await this.driver.sendMessage<
 			GetSerialApiCapabilitiesResponse
 		>(
-			new GetSerialApiCapabilitiesRequest(this.driver),
+			new GetSerialApiCapabilitiesRequest(),
 			{
 				supportCheck: false,
 			},
@@ -948,53 +1156,14 @@ export class ZWaveController
 		);
 
 		// Request additional information about the controller/Z-Wave chip
-		this.driver.controllerLog.print(
-			`querying additional controller information...`,
-		);
-		const initData = await this.driver.sendMessage<
-			GetSerialApiInitDataResponse
-		>(
-			new GetSerialApiInitDataRequest(this.driver),
-		);
-		// and remember the new info
-		this._zwaveApiVersion = initData.zwaveApiVersion;
-		this._zwaveChipType = initData.zwaveChipType;
-		this._isPrimary = initData.isPrimary;
-		this._isSIS = initData.isSIS;
-		this._nodeType = initData.nodeType;
-		this._supportsTimers = initData.supportsTimers;
-		// ignore the initVersion, no clue what to do with it
-		this.driver.controllerLog.print(
-			`received additional controller information:
-  Z-Wave API version:         ${this._zwaveApiVersion.version} (${this._zwaveApiVersion.kind})${
-				this._zwaveChipType
-					? `
-  Z-Wave chip type:           ${
-						typeof this._zwaveChipType === "string"
-							? this._zwaveChipType
-							: `unknown (type: ${
-								num2hex(
-									this._zwaveChipType.type,
-								)
-							}, version: ${
-								num2hex(this._zwaveChipType.version)
-							})`
-					}`
-					: ""
-			}
-  node type                   ${getEnumMemberName(NodeType, this._nodeType)}
-  controller role:            ${this._isPrimary ? "primary" : "secondary"}
-  controller is the SIS:      ${this._isSIS}
-  controller supports timers: ${this._supportsTimers}
-  Z-Wave Classic nodes:       ${initData.nodeIds.join(", ")}`,
-		);
+		const initData = await this.getSerialApiInitData();
 
 		// Get basic controller version info
 		this.driver.controllerLog.print(`querying version info...`);
 		const version = await this.driver.sendMessage<
 			GetControllerVersionResponse
 		>(
-			new GetControllerVersionRequest(this.driver),
+			new GetControllerVersionRequest(),
 			{
 				supportCheck: false,
 			},
@@ -1015,7 +1184,7 @@ export class ZWaveController
 			const protocol = await this.driver.sendMessage<
 				GetProtocolVersionResponse
 			>(
-				new GetProtocolVersionRequest(this.driver),
+				new GetProtocolVersionRequest(),
 			);
 
 			this._protocolVersion = protocol.protocolVersion;
@@ -1044,29 +1213,7 @@ export class ZWaveController
 		this._sdkVersion = protocolVersionToSDKVersion(this._protocolVersion);
 
 		// find out what the controller can do
-		this.driver.controllerLog.print(`querying controller capabilities...`);
-		const ctrlCaps = await this.driver.sendMessage<
-			GetControllerCapabilitiesResponse
-		>(
-			new GetControllerCapabilitiesRequest(this.driver),
-			{
-				supportCheck: false,
-			},
-		);
-		this._isPrimary = !ctrlCaps.isSecondary;
-		this._isUsingHomeIdFromOtherNetwork =
-			ctrlCaps.isUsingHomeIdFromOtherNetwork;
-		this._isSISPresent = ctrlCaps.isSISPresent;
-		this._wasRealPrimary = ctrlCaps.wasRealPrimary;
-		this._isSUC = ctrlCaps.isStaticUpdateController;
-		this.driver.controllerLog.print(
-			`received controller capabilities:
-  controller role:      ${this._isPrimary ? "primary" : "secondary"}
-  is the SUC:           ${this._isSUC}
-  started this network: ${!this._isUsingHomeIdFromOtherNetwork}
-  SIS is present:       ${this._isSISPresent}
-  was real primary:     ${this._wasRealPrimary}`,
-		);
+		await this.getControllerCapabilities();
 
 		// If the serial API can be configured, figure out which sub commands are supported
 		// This MUST be done after querying the SDK version due to a bug in some 7.xx firmwares, which incorrectly encode the bitmask
@@ -1077,7 +1224,7 @@ export class ZWaveController
 			const setupCaps = await this.driver.sendMessage<
 				SerialAPISetup_GetSupportedCommandsResponse
 			>(
-				new SerialAPISetup_GetSupportedCommandsRequest(this.driver),
+				new SerialAPISetup_GetSupportedCommandsRequest(),
 			);
 			this._supportedSerialAPISetupCommands = setupCaps.supportedCommands;
 			this.driver.controllerLog.print(
@@ -1100,18 +1247,23 @@ export class ZWaveController
 		}
 
 		// Figure out the maximum payload size for outgoing commands
-		let maxPayloadSize: number | undefined;
 		if (
 			this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.GetMaximumPayloadSize,
 			)
 		) {
 			this.driver.controllerLog.print(`querying max. payload size...`);
-			maxPayloadSize = await this.getMaxPayloadSize();
+			this._maxPayloadSize = await this.getMaxPayloadSize();
 			this.driver.controllerLog.print(
-				`maximum payload size: ${maxPayloadSize} bytes`,
+				`maximum payload size: ${this._maxPayloadSize} bytes`,
 			);
-			// TODO: cache this information
+		}
+
+		// On older controllers with soft-reset disabled, supportsLongRange is not automatically reported by the controller
+		// so we should set it manually
+		if (!this.isLongRangeCapable()) {
+			this._supportsLongRange = false;
+			this._supportsLongRangeAutoChannelSelection = false;
 		}
 
 		this.driver.controllerLog.print(
@@ -1147,36 +1299,17 @@ export class ZWaveController
 		// Fetch the list of Long Range nodes
 		const lrNodeIds = await this.getLongRangeNodes();
 
-		let maxPayloadSizeLR: number | undefined;
 		if (
 			this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.GetLongRangeMaximumPayloadSize,
 			)
 		) {
-			maxPayloadSizeLR = await this.getMaxPayloadSizeLongRange();
-
-			// TODO: cache this information
-		}
-
-		let lrChannel: LongRangeChannel | undefined;
-		if (
-			this.isFunctionSupported(FunctionType.GetLongRangeChannel)
-		) {
-			// TODO: restore/set the channel
-			const lrChannelResp = await this.driver.sendMessage<
-				GetLongRangeChannelResponse
-			>(new GetLongRangeChannelRequest(this.driver));
-			lrChannel = lrChannelResp.longRangeChannel;
+			this._maxPayloadSizeLR = await this.getMaxPayloadSizeLongRange();
 		}
 
 		this.driver.controllerLog.print(
 			`received Z-Wave Long Range capabilities:
-  max. payload size: ${maxPayloadSizeLR} bytes
-  channel:           ${
-				lrChannel
-					? getEnumMemberName(LongRangeChannel, lrChannel)
-					: "(unknown)"
-			}
+  max. payload size: ${this._maxPayloadSizeLR} bytes
   nodes:             ${lrNodeIds.join(", ")}`,
 		);
 
@@ -1185,11 +1318,95 @@ export class ZWaveController
 		};
 	}
 
+	private isLongRangeCapable(): MaybeNotKnown<boolean> {
+		// Z-Wave Long Range is supported if the controller supports changing the node ID type to 16 bit
+		// FIXME: Consider using the ZWaveFeature enum for this instead
+		return this.isSerialAPISetupCommandSupported(
+			SerialAPISetupCommand.SetNodeIDType,
+		);
+	}
+
+	/** Tries to determine the LR capable replacement of the given region. If none is found, the given region is returned. */
+	private tryGetLRCapableRegion(region: RFRegion): RFRegion {
+		if (this._supportedRegions) {
+			// If the region supports LR, use it
+			if (this._supportedRegions.get(region)?.supportsLongRange) {
+				return region;
+			}
+
+			// Find a possible LR capable superset for this region
+			for (const info of this._supportedRegions.values()) {
+				if (info.supportsLongRange && info.includesRegion === region) {
+					return info.region;
+				}
+			}
+		}
+
+		// US_LR is the first supported LR region, so if the controller supports LR, US_LR is supported
+		if (region === RFRegion.USA && this.isLongRangeCapable()) {
+			return RFRegion["USA (Long Range)"];
+		}
+
+		return region;
+	}
+
 	/**
 	 * @internal
 	 * Queries the region and powerlevel settings and configures them if necessary
 	 */
 	public async queryAndConfigureRF(): Promise<void> {
+		// Figure out which regions are supported
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.GetSupportedRegions,
+			)
+		) {
+			this.driver.controllerLog.print(
+				`Querying supported RF regions and their information...`,
+			);
+			const supportedRegions = await this.querySupportedRFRegions().catch(
+				() => [],
+			);
+			this._supportedRegions = new Map();
+
+			for (const region of supportedRegions) {
+				try {
+					const info = await this.queryRFRegionInfo(region);
+					if (info.region === RFRegion.Unknown) continue;
+					this._supportedRegions.set(region, info);
+				} catch {
+					continue;
+				}
+			}
+
+			this.driver.controllerLog.print(
+				`supported regions:${
+					[...this._supportedRegions.values()]
+						.map((info) => {
+							let ret = `\n· ${
+								getEnumMemberName(RFRegion, info.region)
+							}`;
+							if (info.includesRegion != undefined) {
+								ret += ` · superset of ${
+									getEnumMemberName(
+										RFRegion,
+										info.includesRegion,
+									)
+								}`;
+							}
+							if (info.supportsLongRange) {
+								ret += " · ZWLR";
+								if (!info.supportsZWave) {
+									ret += " only";
+								}
+							}
+							return ret;
+						})
+						.join("")
+				}`,
+			);
+		}
+
 		// Check and possibly update the RF region to the desired value
 		if (
 			this.isSerialAPISetupCommandSupported(
@@ -1215,14 +1432,26 @@ export class ZWaveController
 			}
 		}
 
+		let desiredRFRegion: RFRegion | undefined;
+		// If the user has set a region in the options, use that
+		if (this.driver.options.rf?.region != undefined) {
+			desiredRFRegion = this.driver.options.rf.region;
+		}
+		// Unless preferring LR regions is disabled, try to find a suitable replacement region
+		if (this.driver.options.rf?.preferLRRegion !== false) {
+			desiredRFRegion ??= this.rfRegion;
+			if (desiredRFRegion != undefined) {
+				desiredRFRegion = this.tryGetLRCapableRegion(desiredRFRegion);
+			}
+		}
+
 		if (
 			this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.SetRFRegion,
 			)
-			&& this.driver.options.rf?.region != undefined
-			&& this.rfRegion != this.driver.options.rf.region
+			&& desiredRFRegion != undefined
+			&& this.rfRegion != desiredRFRegion
 		) {
-			const desiredRegion = this.driver.options.rf.region;
 			this.driver.controllerLog.print(
 				`Current RF region (${
 					getEnumMemberName(
@@ -1232,12 +1461,12 @@ export class ZWaveController
 				}) differs from desired region (${
 					getEnumMemberName(
 						RFRegion,
-						desiredRegion,
+						desiredRFRegion,
 					)
 				}), configuring it...`,
 			);
 			const resp = await this.setRFRegionInternal(
-				desiredRegion,
+				desiredRFRegion,
 				// Do not soft reset here, we'll do it later
 				false,
 			).catch((e) => (e as Error).message);
@@ -1246,7 +1475,7 @@ export class ZWaveController
 					`Changed RF region to ${
 						getEnumMemberName(
 							RFRegion,
-							desiredRegion,
+							desiredRFRegion,
 						)
 					}`,
 				);
@@ -1306,6 +1535,139 @@ export class ZWaveController
 				);
 			}
 		}
+
+		// Check and possibly update the Long Range powerlevel settings
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.GetLongRangeMaximumTxPower,
+			)
+		) {
+			this.driver.controllerLog.print(
+				`Querying configured max. Long Range powerlevel...`,
+			);
+			const resp = await this.getMaxLongRangePowerlevel().catch(() =>
+				undefined
+			);
+			if (resp != undefined) {
+				this.driver.controllerLog.print(
+					`The max. LR powerlevel is ${resp.toFixed(1)} dBm`,
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Querying the max. Long Range powerlevel failed!`,
+					"warn",
+				);
+			}
+		}
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.SetLongRangeMaximumTxPower,
+			)
+			&& this.driver.options.rf?.maxLongRangePowerlevel != undefined
+			&& this.maxLongRangePowerlevel
+				!== this.driver.options.rf.maxLongRangePowerlevel
+		) {
+			const desired = this.driver.options.rf.maxLongRangePowerlevel;
+			this.driver.controllerLog.print(
+				`Current max. Long Range powerlevel ${
+					this.maxLongRangePowerlevel?.toFixed(1)
+				} dBm differs from desired powerlevel ${desired} dBm, configuring it...`,
+			);
+
+			const resp = await this.setMaxLongRangePowerlevel(desired)
+				.catch((e) => (e as Error).message);
+			if (resp === true) {
+				this.driver.controllerLog.print(
+					`max. Long Range powerlevel updated`,
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Changing the max. Long Range powerlevel failed!${
+						resp ? ` Reason: ${resp}` : ""
+					}`,
+					"warn",
+				);
+			}
+		}
+
+		// Check and possibly update the Long Range channel settings
+		if (
+			this.isFunctionSupported(FunctionType.GetLongRangeChannel)
+		) {
+			this.driver.controllerLog.print(
+				`Querying configured Long Range channel information...`,
+			);
+			const resp = await this.getLongRangeChannel().catch(() =>
+				undefined
+			);
+			if (resp != undefined) {
+				this.driver.controllerLog.print(
+					`received Z-Wave Long Range channel information:
+  channel:                         ${
+						resp.channel != undefined
+							? getEnumMemberName(LongRangeChannel, resp.channel)
+							: "(unknown)"
+					}
+  supports auto channel selection: ${resp.supportsAutoChannelSelection}
+`,
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Querying the Long Range channel information failed!`,
+					"warn",
+				);
+			}
+		} else {
+			this._supportsLongRangeAutoChannelSelection = false;
+		}
+		if (
+			this.isFunctionSupported(FunctionType.SetLongRangeChannel)
+			&& this.driver.options.rf?.longRangeChannel != undefined
+			&& this.longRangeChannel
+				!== this.driver.options.rf.longRangeChannel
+		) {
+			const desired = this.driver.options.rf.longRangeChannel;
+			if (
+				desired === LongRangeChannel.Auto
+				&& !this._supportsLongRangeAutoChannelSelection
+			) {
+				this.driver.controllerLog.print(
+					`Cannot set desired LR channel to Auto because the controller does not support it!`,
+					"warn",
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Current LR channel ${
+						this.longRangeChannel != undefined
+							? getEnumMemberName(
+								LongRangeChannel,
+								this.longRangeChannel,
+							)
+							: "(unknown)"
+					} differs from desired channel ${
+						getEnumMemberName(
+							LongRangeChannel,
+							desired,
+						)
+					}, configuring it...`,
+				);
+
+				const resp = await this.setLongRangeChannel(desired)
+					.catch((e) => (e as Error).message);
+				if (resp === true) {
+					this.driver.controllerLog.print(
+						`LR channel updated`,
+					);
+				} else {
+					this.driver.controllerLog.print(
+						`Changing the LR channel failed!${
+							resp ? ` Reason: ${resp}` : ""
+						}`,
+						"warn",
+					);
+				}
+			}
+		}
 	}
 
 	/**
@@ -1315,7 +1677,7 @@ export class ZWaveController
 	public async identify(): Promise<void> {
 		this.driver.controllerLog.print(`querying controller IDs...`);
 		const ids = await this.driver.sendMessage<GetControllerIdResponse>(
-			new GetControllerIdRequest(this.driver),
+			new GetControllerIdRequest(),
 			{ supportCheck: false },
 		);
 		this._homeId = ids.homeId;
@@ -1342,7 +1704,7 @@ export class ZWaveController
 			const resp = await this.driver.sendMessage<
 				SerialAPISetup_SetTXStatusReportResponse
 			>(
-				new SerialAPISetup_SetTXStatusReportRequest(this.driver, {
+				new SerialAPISetup_SetTXStatusReportRequest({
 					enabled: true,
 				}),
 			);
@@ -1356,7 +1718,7 @@ export class ZWaveController
 		// find the SUC
 		this.driver.controllerLog.print(`finding SUC...`);
 		const suc = await this.driver.sendMessage<GetSUCNodeIdResponse>(
-			new GetSUCNodeIdRequest(this.driver),
+			new GetSUCNodeIdRequest(),
 			{ supportCheck: false },
 		);
 		this._sucNodeId = suc.sucNodeId;
@@ -1371,9 +1733,10 @@ export class ZWaveController
 		}
 
 		// There needs to be a SUC/SIS in the network. If not, we promote ourselves to one if the following conditions are met:
-		// We are the primary controller, but we are not SUC, there is no SUC and there is no SIS
+		// We are the primary controller, but we are not SUC, there is no SUC and there is no SIS, and there are no nodes in the network yet
 		if (
-			this._isPrimary
+			this.role === ControllerRole.Primary
+			&& this._noNodesIncluded
 			&& this._sucNodeId === 0
 			&& !this._isSUC
 			&& !this._isSISPresent
@@ -1389,6 +1752,8 @@ export class ZWaveController
 				);
 				if (result) {
 					this._sucNodeId = this._ownNodeId;
+					this._isSUC = true;
+					this._isSISPresent = true;
 				}
 				this.driver.controllerLog.print(
 					`Promotion to SUC/SIS ${result ? "succeeded" : "failed"}.`,
@@ -1402,15 +1767,7 @@ export class ZWaveController
 			}
 		}
 
-		// if it's a bridge controller, request the virtual nodes
-		if (
-			this.type === ZWaveLibraryTypes["Bridge Controller"]
-			&& this.isFunctionSupported(
-				FunctionType.FUNC_ID_ZW_GET_VIRTUAL_NODES,
-			)
-		) {
-			// TODO: send FUNC_ID_ZW_GET_VIRTUAL_NODES message
-		}
+		// TODO: if it's a bridge controller, request the virtual nodes
 
 		if (
 			this.type !== ZWaveLibraryTypes["Bridge Controller"]
@@ -1423,7 +1780,7 @@ export class ZWaveController
 			const resp = await this.driver.sendMessage<
 				SetSerialApiTimeoutsResponse
 			>(
-				new SetSerialApiTimeoutsRequest(this.driver, {
+				new SetSerialApiTimeoutsRequest({
 					ackTimeout: ack,
 					byteTimeout: byte,
 				}),
@@ -1548,8 +1905,6 @@ export class ZWaveController
 
 	/**
 	 * Gets the list of long range nodes from the controller.
-	 * Warning: This only works when followed up by a hard-reset, so don't call this directly
-	 * @internal
 	 */
 	public async getLongRangeNodes(): Promise<readonly number[]> {
 		const nodeIds: number[] = [];
@@ -1559,7 +1914,7 @@ export class ZWaveController
 				const nodesResponse = await this.driver.sendMessage<
 					GetLongRangeNodesResponse
 				>(
-					new GetLongRangeNodesRequest(this.driver, {
+					new GetLongRangeNodesRequest({
 						segmentNumber: segment,
 					}),
 				);
@@ -1579,7 +1934,7 @@ export class ZWaveController
 	public async setControllerNIF(): Promise<void> {
 		this.driver.controllerLog.print("Updating the controller NIF...");
 		await this.driver.sendMessage(
-			new SetApplicationNodeInformationRequest(this.driver, {
+			new SetApplicationNodeInformationRequest({
 				isListening: true,
 				...determineNIF(),
 			}),
@@ -1594,23 +1949,24 @@ export class ZWaveController
 	public async hardReset(): Promise<void> {
 		// begin the reset process
 		try {
-			const associations = this.nodes.get(this._ownNodeId!)?.associations;
+			const associations = this.associations;
 			if (associations?.length) {
 				this.driver.controllerLog.print(
 					"Notifying associated nodes about reset...",
 				);
-				for (const nodeId of associations) {
+				const nodeIdDestinations = distinct(
+					associations.map(({ nodeId }) => nodeId),
+				);
+				for (const nodeId of nodeIdDestinations) {
 					const node = this.nodes.get(nodeId);
 					if (!node) continue;
 
-					void node.sendResetLocallyNotification().catch(() => {
-						// ignore
-					});
+					await node.sendResetLocallyNotification().catch(noop);
 				}
 			}
 
 			this.driver.controllerLog.print("performing hard reset...");
-			await this.driver.sendMessage(new HardResetRequest(this.driver), {
+			await this.driver.sendMessage(new HardResetRequest(), {
 				supportCheck: false,
 			});
 
@@ -1635,7 +1991,7 @@ export class ZWaveController
 		try {
 			this.driver.controllerLog.print("Shutting down the Z-Wave API...");
 			const response = await this.driver.sendMessage<ShutdownResponse>(
-				new ShutdownRequest(this.driver),
+				new ShutdownRequest(),
 			);
 			if (response.success) {
 				this.driver.controllerLog.print("Z-Wave API was shut down");
@@ -1654,6 +2010,63 @@ export class ZWaveController
 		}
 	}
 
+	/**
+	 * Starts the hardware watchdog on supporting 700+ series controllers.
+	 * Returns whether the operation was successful.
+	 */
+	public async startWatchdog(): Promise<boolean> {
+		if (
+			this.sdkVersionGte("7.0")
+			&& this.isFunctionSupported(FunctionType.StartWatchdog)
+		) {
+			try {
+				this.driver.controllerLog.print(
+					"Starting hardware watchdog...",
+				);
+				await this.driver.sendMessage(
+					new StartWatchdogRequest(),
+				);
+
+				return true;
+			} catch (e) {
+				this.driver.controllerLog.print(
+					`Starting the hardware watchdog failed: ${
+						getErrorMessage(e)
+					}`,
+					"error",
+				);
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Stops the hardware watchdog on supporting controllers.
+	 * Returns whether the operation was successful.
+	 */
+	public async stopWatchdog(): Promise<boolean> {
+		if (this.isFunctionSupported(FunctionType.StopWatchdog)) {
+			try {
+				this.driver.controllerLog.print(
+					"Stopping hardware watchdog...",
+				);
+				await this.driver.sendMessage(
+					new StopWatchdogRequest(),
+				);
+
+				return true;
+			} catch (e) {
+				this.driver.controllerLog.print(
+					`Stopping the hardware watchdog failed: ${
+						getErrorMessage(e)
+					}`,
+					"error",
+				);
+			}
+		}
+		return false;
+	}
+
 	private _inclusionState: InclusionState = InclusionState.Idle;
 	public get inclusionState(): InclusionState {
 		return this._inclusionState;
@@ -1663,6 +2076,7 @@ export class ZWaveController
 	public setInclusionState(state: InclusionState): void {
 		if (this._inclusionState === state) return;
 		this._inclusionState = state;
+		this.emit("inclusion state changed", state);
 		if (
 			state === InclusionState.Idle
 			&& this._smartStartEnabled
@@ -1733,7 +2147,7 @@ export class ZWaveController
 
 			// kick off the inclusion process
 			await this.driver.sendMessage(
-				new AddNodeToNetworkRequest(this.driver, {
+				new AddNodeToNetworkRequest({
 					addNodeType: AddNodeType.Any,
 					highPower: true,
 					networkWide: true,
@@ -1744,12 +2158,7 @@ export class ZWaveController
 				`The controller is now ready to add nodes`,
 			);
 
-			this.emit(
-				"inclusion started",
-				// TODO: Remove first parameter in next major version
-				options.strategy !== InclusionStrategy.Insecure,
-				options.strategy,
-			);
+			this.emit("inclusion started", options.strategy);
 		} catch (e) {
 			this.setInclusionState(InclusionState.Idle);
 			if (
@@ -1809,7 +2218,7 @@ export class ZWaveController
 			);
 
 			await this.driver.sendMessage(
-				new AddNodeDSKToNetworkRequest(this.driver, {
+				new AddNodeDSKToNetworkRequest({
 					nwiHomeId: nwiHomeIdFromDSK(dskBuffer),
 					authHomeId: authHomeIdFromDSK(dskBuffer),
 					protocol,
@@ -1818,12 +2227,7 @@ export class ZWaveController
 				}),
 			);
 
-			this.emit(
-				"inclusion started",
-				// TODO: Remove first parameter in next major version
-				true,
-				InclusionStrategy.SmartStart,
-			);
+			this.emit("inclusion started", InclusionStrategy.SmartStart);
 		} catch (e) {
 			this.setInclusionState(InclusionState.Idle);
 			// Error handling for this happens at the call site
@@ -1839,7 +2243,7 @@ export class ZWaveController
 	 */
 	public async stopInclusionNoCallback(): Promise<void> {
 		await this.driver.sendMessage(
-			new AddNodeToNetworkRequest(this.driver, {
+			new AddNodeToNetworkRequest({
 				callbackId: 0, // disable callbacks
 				addNodeType: AddNodeType.Stop,
 				highPower: true,
@@ -1860,7 +2264,7 @@ export class ZWaveController
 		const response = await this.driver.sendMessage<
 			AddNodeToNetworkRequestStatusReport
 		>(
-			new AddNodeToNetworkRequest(this.driver, {
+			new AddNodeToNetworkRequest({
 				addNodeType: AddNodeType.Stop,
 				highPower: true,
 				networkWide: true,
@@ -1894,7 +2298,7 @@ export class ZWaveController
 		try {
 			// stop the inclusion process
 			await this.driver.sendMessage(
-				new AddNodeToNetworkRequest(this.driver, {
+				new AddNodeToNetworkRequest({
 					addNodeType: AddNodeType.Stop,
 					highPower: true,
 					networkWide: true,
@@ -1948,7 +2352,7 @@ export class ZWaveController
 			);
 			try {
 				await this.driver.sendMessage(
-					new EnableSmartStartListenRequest(this.driver, {}),
+					new EnableSmartStartListenRequest({}),
 				);
 				this.driver.controllerLog.print(
 					`Smart Start listening mode enabled`,
@@ -1992,7 +2396,7 @@ export class ZWaveController
 			);
 			try {
 				await this.driver.sendMessage(
-					new AddNodeToNetworkRequest(this.driver, {
+					new AddNodeToNetworkRequest({
 						callbackId: 0, // disable callbacks
 						addNodeType: AddNodeType.Stop,
 						highPower: true,
@@ -2034,7 +2438,7 @@ export class ZWaveController
 			);
 			try {
 				await this.driver.sendMessage(
-					new AddNodeToNetworkRequest(this.driver, {
+					new AddNodeToNetworkRequest({
 						callbackId: 0, // disable callbacks
 						addNodeType: AddNodeType.Stop,
 						highPower: true,
@@ -2089,7 +2493,7 @@ export class ZWaveController
 		try {
 			// kick off the inclusion process
 			await this.driver.sendMessage(
-				new RemoveNodeFromNetworkRequest(this.driver, {
+				new RemoveNodeFromNetworkRequest({
 					removeNodeType: RemoveNodeType.Any,
 					highPower: true,
 					networkWide: true,
@@ -2126,7 +2530,7 @@ export class ZWaveController
 	 */
 	public async stopExclusionNoCallback(): Promise<void> {
 		await this.driver.sendMessage(
-			new RemoveNodeFromNetworkRequest(this.driver, {
+			new RemoveNodeFromNetworkRequest({
 				callbackId: 0, // disable callbacks
 				removeNodeType: RemoveNodeType.Stop,
 				highPower: true,
@@ -2151,7 +2555,7 @@ export class ZWaveController
 		try {
 			// kick off the inclusion process
 			await this.driver.sendMessage(
-				new RemoveNodeFromNetworkRequest(this.driver, {
+				new RemoveNodeFromNetworkRequest({
 					removeNodeType: RemoveNodeType.Stop,
 					highPower: true,
 					networkWide: true,
@@ -2181,6 +2585,177 @@ export class ZWaveController
 		}
 	}
 
+	private _proxyInclusionMachine: ProxyInclusionMachine | undefined;
+	private _proxyInclusionInitiateTimeout: NodeJS.Timeout | undefined;
+
+	private async updateProxyInclusionMachine(
+		input: ProxyInclusionMachineInput,
+	): Promise<void> {
+		// Make sure the machine runs and if not, create a new one
+		this._proxyInclusionMachine ??= createProxyInclusionMachine();
+
+		const newState = this._proxyInclusionMachine.next(input)?.newState;
+		if (!newState) return;
+
+		this._proxyInclusionMachine.transition(newState);
+
+		switch (newState.value) {
+			case "hasNIF": {
+				this.setInclusionState(InclusionState.Busy);
+
+				this.driver.controllerLog.logNode(
+					newState.nodeInfo.nodeId,
+					"Waiting for initiate command to bootstrap node...",
+				);
+
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+				}
+				this._proxyInclusionInitiateTimeout = setTimeout(() => {
+					void this.updateProxyInclusionMachine({
+						value: "INITIATE_TIMEOUT",
+					}).catch(noop);
+				}, 10000).unref();
+
+				return;
+			}
+
+			case "hasInitiate": {
+				this.setInclusionState(InclusionState.Busy);
+
+				// Wait up to 10 seconds for a NIF before giving up
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+				}
+				this._proxyInclusionInitiateTimeout = setTimeout(() => {
+					void this.updateProxyInclusionMachine({
+						value: "NIF_TIMEOUT",
+					}).catch(noop);
+				}, 10000).unref();
+
+				return;
+			}
+
+			case "bootstrapping": {
+				// Avoid triggering timeouts once we're here
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+					this._proxyInclusionInitiateTimeout = undefined;
+				}
+
+				const nodeId = newState.includedNodeId;
+				// We might end up here after only receiving an Initiate command, but no NIF
+				// For this case, just create an empty shell for the node and replace it later
+				let newNode = newState.newNode
+					?? new ZWaveNode(nodeId, this.driver);
+				this._nodes.set(nodeId, newNode);
+
+				const inclCtrlr = this.nodes.getOrThrow(
+					newState.inclusionControllerNodeId,
+				);
+
+				this.driver.controllerLog.logNode(
+					nodeId,
+					`Initiate command received from node ${inclCtrlr.id}`,
+				);
+
+				// Inclusion is handled by the inclusion controller, which (hopefully) sets the SUC return route
+				newNode.hasSUCReturnRoute = true;
+
+				// SIS, A, MUST request a Node Info Frame from Joining Node, B
+				const nodeInfo = await newNode
+					.requestNodeInfo()
+					.catch(() => undefined);
+				if (nodeInfo) {
+					if (newState.newNode) {
+						// We had a proper instance of the node before, just update the node info
+						newNode.updateNodeInfo(nodeInfo);
+					} else {
+						// We now have all the info we need to create a proper node instance
+						const deviceClass = new DeviceClass(
+							nodeInfo.basicDeviceClass,
+							nodeInfo.genericDeviceClass,
+							nodeInfo.specificDeviceClass,
+						);
+
+						newNode = new ZWaveNode(
+							nodeId,
+							this.driver,
+							deviceClass,
+							nodeInfo.supportedCCs,
+							undefined,
+							// Create an empty value DB and specify that it contains no values
+							// to avoid indexing the existing values
+							this.createValueDBForNode(nodeId, new Set()),
+						);
+						this._nodes.set(nodeId, newNode);
+					}
+				}
+
+				// Assume the device is alive
+				// If it is actually a sleeping device, it will be marked as such later
+				newNode.markAsAlive();
+
+				// Perform S0/S2 bootstrapping
+				const bootstrapFailure = await this.proxyBootstrap(
+					newNode,
+					inclCtrlr,
+				);
+
+				// We're done adding this node, notify listeners
+				const result: InclusionResult = bootstrapFailure != undefined
+					? {
+						lowSecurity: true,
+						lowSecurityReason: bootstrapFailure,
+					}
+					: { lowSecurity: false };
+
+				this.setInclusionState(InclusionState.Idle);
+				this.emit("node added", newNode, result);
+				this._proxyInclusionMachine = undefined;
+
+				if (inclCtrlr && newState.step != undefined) {
+					const step = newState.step;
+					newNode.once("ready", () => {
+						this.driver.controllerLog.logNode(
+							inclCtrlr.nodeId,
+							`Notifying inclusion controller of finished inclusion`,
+						);
+						// Create API without checking for support
+						const api = inclCtrlr.createAPI(
+							CommandClasses["Inclusion Controller"],
+							false,
+						);
+						void api
+							.completeStep(step, InclusionControllerStatus.OK)
+							.catch(noop);
+					});
+				}
+
+				return;
+			}
+
+			case "interview": {
+				// We end up here after we received a NIF but no initiate command
+				// Just emit the "node added" event so the interview can start
+				// Clean up
+				this._proxyInclusionMachine = undefined;
+				if (this._proxyInclusionInitiateTimeout) {
+					clearTimeout(this._proxyInclusionInitiateTimeout);
+					this._proxyInclusionInitiateTimeout = undefined;
+				}
+
+				this.setInclusionState(InclusionState.Idle);
+				this.emit("node added", newState.newNode, {
+					lowSecurity: false,
+				});
+				this._proxyInclusionMachine = undefined;
+
+				return;
+			}
+		}
+	}
+
 	/** @internal */
 	public async handleApplicationUpdateRequest(
 		msg: ApplicationUpdateRequest,
@@ -2204,6 +2779,8 @@ export class ZWaveController
 
 				// Resolve active pings that would fail otherwise
 				this.driver.resolvePendingPings(node.id);
+
+				node.emit("node info received", node);
 
 				if (
 					node.canSleep
@@ -2240,9 +2817,10 @@ export class ZWaveController
 			}
 
 			// Check if the node is on the provisioning list
-			const provisioningEntry = this.provisioningList.find((entry) => {
+			const entry = this.provisioningList.find((entry) => {
 				if (
-					!nwiHomeIdFromDSK(dskFromString(entry.dsk)).equals(
+					!areUint8ArraysEqual(
+						nwiHomeIdFromDSK(dskFromString(entry.dsk)),
 						msg.nwiHomeId,
 					)
 				) {
@@ -2255,16 +2833,49 @@ export class ZWaveController
 				return (entryProtocol === Protocols.ZWaveLongRange)
 					=== isLongRange;
 			});
-			if (!provisioningEntry) {
+			if (!entry) {
 				this.driver.controllerLog.print(
 					"NWI Home ID not found in provisioning list, ignoring request...",
 				);
 				return;
 			} else if (
-				provisioningEntry.status === ProvisioningEntryStatus.Inactive
+				entry.status === ProvisioningEntryStatus.Inactive
 			) {
 				this.driver.controllerLog.print(
 					"The provisioning entry for this node is inactive, ignoring request...",
+				);
+				return;
+			}
+
+			// Discard any invalid security classes that may have been granted. This can happen
+			// when switching the protocol to ZWLR for a device that requests S2 Unauthenticated
+			// for Z-Wave Classic.
+			const provisioningEntry = cloneDeep(entry);
+			if (isLongRange) {
+				provisioningEntry.securityClasses = provisioningEntry
+					.securityClasses.filter((sc) =>
+						sc === SecurityClass.S2_AccessControl
+						|| sc === SecurityClass.S2_Authenticated
+					);
+			}
+
+			// Ignore provisioning entries where some of the granted keys are not configured
+			const securityManager = isLongRange
+				? this.driver.securityManagerLR
+				: this.driver.securityManager2;
+			const missingKeys = provisioningEntry.securityClasses.filter(
+				(sc) => !securityManager?.hasKeysForSecurityClass(sc),
+			);
+			if (missingKeys.length > 0) {
+				this.driver.controllerLog.print(
+					`Ignoring inclusion request because the following security classes were granted but have no key configured:${
+						missingKeys.map((sc) =>
+							`\n· ${getEnumMemberName(SecurityClass, sc)}${
+								isLongRange ? " (Long Range)" : ""
+							}`
+						).join("")
+					}`,
+					"error",
 				);
 				return;
 			}
@@ -2309,7 +2920,7 @@ export class ZWaveController
 			const nodeInfo = msg.nodeInformation;
 
 			// It can happen that this is received for a node that is already part of the network:
-			// https://github.com/zwave-js/node-zwave-js/issues/5781
+			// https://github.com/zwave-js/zwave-js/issues/5781
 			// In this case, ignore this message to prevent chaos.
 
 			if (this._nodes.has(nodeId)) {
@@ -2320,10 +2931,7 @@ export class ZWaveController
 				return;
 			}
 
-			this.setInclusionState(InclusionState.Busy);
-
 			const deviceClass = new DeviceClass(
-				this.driver.configManager,
 				nodeInfo.basicDeviceClass,
 				nodeInfo.genericDeviceClass,
 				nodeInfo.specificDeviceClass,
@@ -2348,11 +2956,20 @@ export class ZWaveController
 			});
 
 			this.driver.controllerLog.print(
-				`Node ${newNode.id} was included by another controller:
-basic device class:    ${newNode.deviceClass?.basic.label}
-generic device class:  ${newNode.deviceClass?.generic.label}
-specific device class: ${newNode.deviceClass?.specific.label}
-supported CCs: ${
+				`Node ${newNode.id} was included by another controller:${
+					newNode.deviceClass
+						? `
+  basic device class:    ${
+							getEnumMemberName(
+								BasicDeviceClass,
+								newNode.deviceClass.basic,
+							)
+						}
+  generic device class:  ${newNode.deviceClass.generic.label}
+  specific device class: ${newNode.deviceClass.specific.label}`
+						: ""
+				}
+  supported CCs: ${
 					nodeInfo.supportedCCs
 						.map((cc) =>
 							`\n  · ${CommandClasses[cc]} (${num2hex(cc)})`
@@ -2361,154 +2978,37 @@ supported CCs: ${
 				}`,
 			);
 
-			this.driver.controllerLog.logNode(
-				nodeId,
-				"Waiting for initiate command to bootstrap node...",
-			);
-
-			// Handle inclusion in the background
-			process.nextTick(async () => {
-				// If an Inclusion Controller that does not support the Inclusion Controller Command Class includes a
-				// new node in a network, the SIS will never receive an Inclusion Controller Initiate Command. If no
-				// Initiate Command has been received approximately 10 seconds after a new node has been added to a
-				// network, the SIS SHOULD start interviewing the newly included node
-
-				const initiate = await this.driver
-					.waitForCommand<
-						SinglecastCC<InclusionControllerCCInitiate>
-					>(
-						(cc) =>
-							cc instanceof InclusionControllerCCInitiate
-							&& cc.isSinglecast()
-							&& cc.includedNodeId === nodeId
-							&& cc.step
-								=== InclusionControllerStep.ProxyInclusion,
-						10000,
-					)
-					.catch(() => undefined);
-
-				// Assume the device is alive
-				// If it is actually a sleeping device, it will be marked as such later
-				newNode.markAsAlive();
-
-				let inclCtrlr: ZWaveNode | undefined;
-				let bootstrapFailure: SecurityBootstrapFailure | undefined;
-
-				if (initiate) {
-					inclCtrlr = this.nodes.getOrThrow(initiate.nodeId);
-
-					this.driver.controllerLog.logNode(
-						nodeId,
-						`Initiate command received from node ${inclCtrlr.id}`,
-					);
-
-					// Inclusion is handled by the inclusion controller, which (hopefully) sets the SUC return route
-					newNode.hasSUCReturnRoute = true;
-
-					// SIS, A, MUST request a Node Info Frame from Joining Node, B
-					const requestedNodeInfo = await newNode
-						.requestNodeInfo()
-						.catch(() => undefined);
-					if (requestedNodeInfo) {
-						newNode.updateNodeInfo(requestedNodeInfo);
-					}
-
-					// Perform S0/S2 bootstrapping
-					bootstrapFailure = await this.proxyBootstrap(
-						newNode,
-						inclCtrlr,
-					);
-				} else {
-					// No command received, bootstrap node by ourselves
-					this.driver.controllerLog.logNode(
-						nodeId,
-						"no initiate command received, bootstrapping node...",
-					);
-
-					if (newNode.protocol == Protocols.ZWave) {
-						// Assign SUC return route to make sure the node knows where to get its routes from
-						newNode.hasSUCReturnRoute = await this
-							.assignSUCReturnRoutes(newNode.id);
-					}
-
-					// Include using the default inclusion strategy:
-					// * Use S2 if possible,
-					// * only use S0 if necessary,
-					// * use no encryption otherwise
-					if (newNode.supportsCC(CommandClasses["Security 2"])) {
-						bootstrapFailure = await this.secureBootstrapS2(
-							newNode,
-						);
-						if (bootstrapFailure == undefined) {
-							const actualSecurityClass = newNode
-								.getHighestSecurityClass();
-							if (
-								actualSecurityClass == undefined
-								|| actualSecurityClass
-									< SecurityClass.S2_Unauthenticated
-							) {
-								bootstrapFailure =
-									SecurityBootstrapFailure.Unknown;
-							}
-						}
-					} else if (
-						newNode.supportsCC(CommandClasses.Security)
-						&& (deviceClass.specific ?? deviceClass.generic)
-							.requiresSecurity
-					) {
-						bootstrapFailure = await this.secureBootstrapS0(
-							newNode,
-						);
-						if (bootstrapFailure == undefined) {
-							const actualSecurityClass = newNode
-								.getHighestSecurityClass();
-							if (
-								actualSecurityClass == undefined
-								|| actualSecurityClass < SecurityClass.S0_Legacy
-							) {
-								bootstrapFailure =
-									SecurityBootstrapFailure.Unknown;
-							}
-						}
-					} else {
-						// Remember that no security classes were granted
-						for (const secClass of securityClassOrder) {
-							newNode.securityClasses.set(secClass, false);
-						}
-					}
-				}
-
-				// We're done adding this node, notify listeners
-				const result: InclusionResult = bootstrapFailure != undefined
-					? {
-						lowSecurity: true,
-						lowSecurityReason: bootstrapFailure,
-					}
-					: { lowSecurity: false };
-
-				this.setInclusionState(InclusionState.Idle);
-				this.emit("node added", newNode, result);
-
-				if (inclCtrlr && initiate) {
-					const inclCtrlrId = inclCtrlr.id;
-					const step = initiate.step;
-					newNode.once("ready", () => {
-						this.driver.controllerLog.logNode(
-							nodeId,
-							`Notifying node ${inclCtrlrId} of finished inclusion`,
-						);
-						// Create API without checking for support
-						const api = inclCtrlr.createAPI(
-							CommandClasses["Inclusion Controller"],
-							false,
-						);
-						void api
-							.completeStep(step, InclusionControllerStatus.OK)
-							.catch(noop);
-					});
-				}
+			await this.updateProxyInclusionMachine({
+				value: "NIF",
+				nodeInfo,
+				newNode,
 			});
+		} else if (msg instanceof ApplicationUpdateRequestSUCIdChanged) {
+			this._sucNodeId = msg.sucNodeID;
+			// TODO: Emit event or what?
 		}
+	}
+
+	/**
+	 * @internal
+	 * Handles proxy inclusion requests from an inclusion controller
+	 */
+	public handleInclusionControllerCCInitiateProxyInclusion(
+		initiate: InclusionControllerCCInitiate,
+	): void {
+		if (initiate.step !== InclusionControllerStep.ProxyInclusion) {
+			throw new ZWaveError(
+				"Expected an inclusion controller proxy inclusion request, but got a different step",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		void this.updateProxyInclusionMachine({
+			value: "INITIATE",
+			step: initiate.step,
+			inclusionControllerNodeId: initiate.nodeId as number,
+			includedNodeId: initiate.includedNodeId,
+		}).catch(noop);
 	}
 
 	/**
@@ -2569,13 +3069,12 @@ supported CCs: ${
 				newNode.updateNodeInfo(requestedNodeInfo);
 
 				// TODO: Check if this stuff works for a normal replace too
-				const deviceClass = new DeviceClass(
-					this.driver.configManager,
+				// eslint-disable-next-line @typescript-eslint/dot-notation
+				newNode["deviceClass"] = new DeviceClass(
 					requestedNodeInfo.basicDeviceClass,
 					requestedNodeInfo.genericDeviceClass,
 					requestedNodeInfo.specificDeviceClass,
 				);
-				newNode["applyDeviceClass"](deviceClass);
 			}
 
 			// Perform S0/S2 bootstrapping
@@ -2775,6 +3274,12 @@ supported CCs: ${
 
 			// Remember that the node was granted the S0 security class
 			node.securityClasses.set(SecurityClass.S0_Legacy, true);
+
+			this.driver.controllerLog.logNode(node.id, {
+				message: `Security S0 bootstrapping successful`,
+			});
+
+			// success 🎉
 		} catch (e) {
 			let errorMessage =
 				`Security S0 bootstrapping failed, the node was not granted the S0 security class`;
@@ -2969,6 +3474,16 @@ supported CCs: ${
 			}
 
 			// Validate the response
+			// Echo flag must be false
+			if (kexParams.echo) {
+				this.driver.controllerLog.logNode(node.id, {
+					message:
+						`Security S2 bootstrapping failed: KEX Report unexpectedly has the echo flag set.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.NoVerify);
+				return SecurityBootstrapFailure.ParameterMismatch;
+			}
 			// At the time of implementation, only KEXScheme1 and Curve25519 are defined.
 			// The certification testing ensures that no other bits are set, so we need to check that too.
 			// Not sure why this choice is made, since it essentially breaks any forwards compatibility
@@ -2998,7 +3513,18 @@ supported CCs: ${
 				});
 				await abort(KEXFailType.NoSupportedCurve);
 				return SecurityBootstrapFailure.ParameterMismatch;
+			} else if (kexParams.requestCSA) {
+				// We do not support CSA at the moment, so it is never granted.
+				// Alternatively, filter out S2 Authenticated and S2 Access Control
+				this.driver.controllerLog.logNode(node.id, {
+					message:
+						`Security S2 bootstrapping failed: CSA requested but not granted.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.BootstrappingCanceled);
+				return SecurityBootstrapFailure.ParameterMismatch;
 			}
+
 			const supportedKeys = kexParams.requestedKeys.filter((k) =>
 				securityClassOrder.includes(k as any)
 			);
@@ -3076,23 +3602,15 @@ supported CCs: ${
 				await abort();
 				return SecurityBootstrapFailure.NodeCanceled;
 			}
-			const nodePublicKey = pubKeyResponse.publicKey;
+			const nodePublicKey = Bytes.from(pubKeyResponse.publicKey);
 
 			// This is the starting point of the timer TAI2.
 			const timerStartTAI2 = Date.now();
 
 			// Generate ECDH key pair. We need to immediately send the other node our public key,
 			// so it won't abort bootstrapping
-			const keyPair = await util.promisify(crypto.generateKeyPair)(
-				"x25519",
-			);
-			const publicKey = decodeX25519KeyDER(
-				keyPair.publicKey.export({
-					type: "spki",
-					format: "der",
-				}),
-			);
-			await api.sendPublicKey(publicKey);
+			const keyPair = await generateECDHKeyPair();
+			await api.sendPublicKey(keyPair.publicKey);
 			// After this, the node will start sending us a KEX SET every 10 seconds.
 			// We won't be able to decode it until the DSK was verified
 
@@ -3144,19 +3662,18 @@ supported CCs: ${
 			}
 
 			// After the user has verified the DSK, we can derive the shared secret
-			// Z-Wave works with the "raw" keys, so this is a tad complicated
-			const sharedSecret = crypto.diffieHellman({
-				publicKey: crypto.createPublicKey({
-					key: encodeX25519KeyDERSPKI(nodePublicKey),
-					format: "der",
-					type: "spki",
-				}),
+			const sharedSecret = await deriveSharedECDHSecret({
+				publicKey: nodePublicKey,
 				privateKey: keyPair.privateKey,
 			});
 
 			// Derive temporary key from ECDH key pair - this will allow us to receive the node's KEX SET commands
-			const tempKeys = deriveTempKeys(
-				computePRK(sharedSecret, publicKey, nodePublicKey),
+			const tempKeys = await deriveTempKeys(
+				await computePRK(
+					sharedSecret,
+					keyPair.publicKey,
+					nodePublicKey,
+				),
 			);
 			securityManager.deleteNonce(node.id);
 			securityManager.tempKeys.set(node.id, {
@@ -3213,6 +3730,15 @@ supported CCs: ${
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
 				return SecurityBootstrapFailure.NodeCanceled;
+			} else if (kexSetEcho._reserved !== 0) {
+				this.driver.controllerLog.logNode(node.id, {
+					message:
+						`Security S2 bootstrapping failed: Invalid KEXSet received`,
+					direction: "inbound",
+					level: "warn",
+				});
+				await abort(KEXFailType.WrongSecurityLevel);
+				return SecurityBootstrapFailure.NodeCanceled;
 			} else if (
 				!kexSetEcho.isEncapsulatedWith(
 					CommandClasses["Security 2"],
@@ -3240,7 +3766,7 @@ supported CCs: ${
 				return SecurityBootstrapFailure.S2WrongSecurityLevel;
 			}
 			// Confirm the keys - the node will start requesting the granted keys in response
-			await api.confirmGrantedKeys({
+			await api.confirmRequestedKeys({
 				requestCSA: kexParams.requestCSA,
 				requestedKeys: [...kexParams.requestedKeys],
 				supportedECDHProfiles: [...kexParams.supportedECDHProfiles],
@@ -3258,8 +3784,9 @@ supported CCs: ${
 						|| cc instanceof Security2CCKEXFail,
 					inclusionTimeouts.TA3,
 				).catch(() => "timeout" as const);
-				if (keyRequest === "timeout") return abortTimeout();
-				if (keyRequest instanceof Security2CCKEXFail) {
+				if (keyRequest === "timeout") {
+					return abortTimeout();
+				} else if (keyRequest instanceof Security2CCKEXFail) {
 					this.driver.controllerLog.logNode(node.id, {
 						message:
 							`The joining node canceled the Security S2 bootstrapping.`,
@@ -3268,6 +3795,20 @@ supported CCs: ${
 					});
 					await abort();
 					return SecurityBootstrapFailure.NodeCanceled;
+				} else if (
+					!keyRequest.isEncapsulatedWith(
+						CommandClasses["Security 2"],
+						Security2Command.MessageEncapsulation,
+					)
+				) {
+					this.driver.controllerLog.logNode(node.id, {
+						message:
+							`Security S2 bootstrapping failed: Command received without encryption`,
+						direction: "inbound",
+						level: "warn",
+					});
+					await abort(KEXFailType.WrongSecurityLevel);
+					return SecurityBootstrapFailure.S2WrongSecurityLevel;
 				}
 
 				const securityClass = keyRequest.requestedKey;
@@ -3296,6 +3837,11 @@ supported CCs: ${
 					return SecurityBootstrapFailure.S2WrongSecurityLevel;
 				}
 
+				// We need to temporarily mark this security class as granted, so the following exchange will use this
+				// key for decryption
+				// FIXME: Is this actually necessary?
+				node.securityClasses.set(securityClass, true);
+
 				// Send the node the requested key
 				await api.sendNetworkKey(
 					securityClass,
@@ -3303,9 +3849,6 @@ supported CCs: ${
 						securityClass,
 					).pnk,
 				);
-				// We need to temporarily mark this security class as granted, so the following exchange will use this
-				// key for decryption
-				node.securityClasses.set(securityClass, true);
 
 				// And wait for verification
 				const verify = await this.driver.waitForCommand<
@@ -3317,6 +3860,7 @@ supported CCs: ${
 					inclusionTimeouts.TA4,
 				).catch(() => "timeout" as const);
 				if (verify === "timeout") return abortTimeout();
+
 				if (verify instanceof Security2CCKEXFail) {
 					this.driver.controllerLog.logNode(node.id, {
 						message:
@@ -3473,7 +4017,6 @@ supported CCs: ${
 					msg.statusContext!.nodeId,
 					this.driver,
 					new DeviceClass(
-						this.driver.configManager,
 						msg.statusContext!.basicDeviceClass!,
 						msg.statusContext!.genericDeviceClass!,
 						msg.statusContext!.specificDeviceClass!,
@@ -3513,10 +4056,13 @@ supported CCs: ${
 					this.setInclusionState(InclusionState.Idle);
 					this._nodePendingInclusion = undefined;
 					return true;
-				} else if (nodeId === NODE_ID_BROADCAST) {
+				} else if (
+					nodeId === NODE_ID_BROADCAST
+					|| nodeId === NODE_ID_BROADCAST_LR
+				) {
 					// No idea how this can happen but it dit at least once
 					this.driver.controllerLog.print(
-						`Cannot add a node with the Node ID ${NODE_ID_BROADCAST}, aborting...`,
+						`Cannot add a node with the broadcast node ID, aborting...`,
 						"warn",
 					);
 					this.setInclusionState(InclusionState.Idle);
@@ -3559,10 +4105,19 @@ supported CCs: ${
 				});
 
 				this.driver.controllerLog.print(
-					`finished adding node ${newNode.id}:
-  basic device class:    ${newNode.deviceClass?.basic.label}
-  generic device class:  ${newNode.deviceClass?.generic.label}
-  specific device class: ${newNode.deviceClass?.specific.label}
+					`finished adding node ${newNode.id}:${
+						newNode.deviceClass
+							? `
+  basic device class:    ${
+								getEnumMemberName(
+									BasicDeviceClass,
+									newNode.deviceClass.basic,
+								)
+							}
+  generic device class:  ${newNode.deviceClass.generic.label}
+  specific device class: ${newNode.deviceClass.specific.label}`
+							: ""
+					}
   supported CCs: ${
 						supportedCCs
 							.map((cc) =>
@@ -3807,13 +4362,7 @@ supported CCs: ${
 				this.driver.controllerLog.print(
 					`The failed node is ready to be replaced, inclusion started...`,
 				);
-				this.emit(
-					"inclusion started",
-					// TODO: Remove first parameter in next major version
-					this._inclusionOptions.strategy
-						!== InclusionStrategy.Insecure,
-					this._inclusionOptions.strategy,
-				);
+				this.emit("inclusion started", this._inclusionOptions.strategy);
 				this.setInclusionState(InclusionState.Including);
 				this._replaceFailedPromise?.resolve(true);
 
@@ -4040,43 +4589,6 @@ supported CCs: ${
 		return false;
 	}
 
-	/**
-	 * Is called when the Serial API restart unexpectedly.
-	 */
-	private async handleSerialAPIStartedUnexpectedly(
-		msg: SerialAPIStartedRequest,
-	): Promise<boolean> {
-		// Normally, the soft reset command includes waiting for this message.
-		// If we end up here, it is unexpected.
-
-		switch (msg.wakeUpReason) {
-			// All wakeup reasons that indicate a reset of the Serial API
-			// need to be handled here, so we interpret node IDs correctly.
-			case SerialAPIWakeUpReason.Reset:
-			case SerialAPIWakeUpReason.WatchdogReset:
-			case SerialAPIWakeUpReason.SoftwareReset:
-			case SerialAPIWakeUpReason.EmergencyWatchdogReset:
-			case SerialAPIWakeUpReason.BrownoutCircuit: {
-				// The Serial API restarted unexpectedly
-				if (this._nodeIdType === NodeIDType.Long) {
-					this.driver.controllerLog.print(
-						`Serial API restarted unexpectedly.`,
-						"warn",
-					);
-
-					// We previously used 16 bit node IDs, but the controller was reset.
-					// Remember this and try to go back to 16 bit.
-					this._nodeIdType = NodeIDType.Short;
-					await this.trySetNodeIDType(NodeIDType.Long);
-				}
-
-				return true; // Don't invoke any more handlers
-			}
-		}
-
-		return false; // Not handled
-	}
-
 	private _rebuildRoutesProgress = new Map<number, RebuildRoutesStatus>();
 	/**
 	 * If routes are currently being rebuilt for the entire network, this returns the current progress.
@@ -4089,7 +4601,7 @@ supported CCs: ${
 		>
 		| undefined
 	{
-		if (!this._isRebuildingRoutes) return undefined;
+		if (!this.isRebuildingRoutes) return undefined;
 		return new Map(this._rebuildRoutesProgress);
 	}
 
@@ -4103,10 +4615,13 @@ supported CCs: ${
 	 */
 	public beginRebuildingRoutes(options: RebuildRoutesOptions = {}): boolean {
 		// Don't start the process twice
-		if (this._isRebuildingRoutes) return false;
-		this._isRebuildingRoutes = true;
+		const existingTask = this.driver.scheduler.findTask(
+			(t) => t.tag?.id === "rebuild-routes",
+		);
+		if (existingTask) return false;
 
 		options.includeSleeping ??= true;
+		options.deletePriorityReturnRoutes ??= false;
 
 		this.driver.controllerLog.print(
 			`rebuilding routes${
@@ -4133,6 +4648,21 @@ supported CCs: ${
 				);
 				this._rebuildRoutesProgress.set(id, "skipped");
 			} else if (!options.includeSleeping && node.canSleep) {
+				this.driver.controllerLog.logNode(
+					id,
+					`Skipping route rebuild because the node is sleeping.`,
+				);
+				this._rebuildRoutesProgress.set(id, "skipped");
+			} else if (
+				!options.deletePriorityReturnRoutes
+				&& (this.getPrioritySUCReturnRouteCached(id)
+					|| Object.keys(this.getPriorityReturnRoutesCached(id))
+							.length > 0)
+			) {
+				this.driver.controllerLog.logNode(
+					id,
+					`Skipping route rebuild because the node has priority return routes.`,
+				);
 				this._rebuildRoutesProgress.set(id, "skipped");
 			} else {
 				this._rebuildRoutesProgress.set(id, "pending");
@@ -4140,9 +4670,7 @@ supported CCs: ${
 		}
 
 		// Rebuild routes in the background
-		void this.rebuildRoutes(options).catch(() => {
-			/* ignore errors */
-		});
+		void this.rebuildRoutesInternal(options).catch(noop);
 
 		// And update the progress once at the start
 		this.emit(
@@ -4153,7 +4681,17 @@ supported CCs: ${
 		return true;
 	}
 
-	private async rebuildRoutes(options: RebuildRoutesOptions): Promise<void> {
+	private rebuildRoutesInternal(
+		options: RebuildRoutesOptions,
+	): Promise<void> {
+		return this.driver.scheduler.queueTask(
+			this.getRebuildRoutesTask(options),
+		);
+	}
+
+	private getRebuildRoutesTask(
+		options: RebuildRoutesOptions,
+	): TaskBuilder<void> {
 		const pendingNodes = new Set(
 			[...this._rebuildRoutesProgress]
 				.filter(([, status]) => status === "pending")
@@ -4188,88 +4726,149 @@ supported CCs: ${
 			}
 		};
 
-		// We work our way outwards from the controller and start with non-sleeping nodes, one by one
-		try {
-			const neighbors = await this.getNodeNeighbors(this._ownNodeId!);
-			neighbors.forEach((id) => addTodo(id));
-		} catch {
-			// ignore
-		}
+		const self = this;
 
-		const doRebuildRoutes = async (nodeId: number) => {
-			// await the process for each node and convert errors to a non-successful result
-			const result = await this.rebuildNodeRoutesInternal(nodeId).catch(
-				() => false,
-			);
-			if (!this._isRebuildingRoutes) return;
+		return {
+			priority: TaskPriority.Lower,
+			tag: { id: "rebuild-routes" },
+			task: async function* rebuildRoutesTask() {
+				// We work our way outwards from the controller and start with non-sleeping nodes, one by one
+				try {
+					const neighbors = await self.getNodeNeighbors(
+						self._ownNodeId!,
+					);
+					neighbors.forEach((id) => addTodo(id));
+				} catch {
+					// ignore
+				}
 
-			// Track the success in a map
-			this._rebuildRoutesProgress.set(nodeId, result ? "done" : "failed");
-			// Notify listeners about the progress
-			this.emit(
-				"rebuild routes progress",
-				new Map(this._rebuildRoutesProgress),
-			);
+				yield; // Give the task scheduler time to do something else
 
-			// Figure out which nodes to do next
-			try {
-				const neighbors = await this.getNodeNeighbors(nodeId);
-				neighbors.forEach((id) => addTodo(id));
-			} catch {
-				// ignore
-			}
+				async function* doRebuildRoutes(nodeId: number) {
+					// Await the process for each node and convert errors to a non-successful result
+					let result: boolean;
+					try {
+						const node = self.nodes.getOrThrow(nodeId);
+						result = yield () =>
+							self.getRebuildNodeRoutesTask(node);
+					} catch {
+						result = false;
+					}
+
+					// Track the success in a map
+					self._rebuildRoutesProgress.set(
+						nodeId,
+						result ? "done" : "failed",
+					);
+					// Notify listeners about the progress
+					self.emit(
+						"rebuild routes progress",
+						new Map(self._rebuildRoutesProgress),
+					);
+
+					yield; // Give the task scheduler time to do something else
+
+					// Figure out which nodes to do next
+					try {
+						const neighbors = await self.getNodeNeighbors(nodeId);
+						neighbors.forEach((id) => addTodo(id));
+					} catch {
+						// ignore
+					}
+
+					yield; // Give the task scheduler time to do something else
+				}
+
+				// First try to rebuild routes for as many nodes as possible one by one
+				while (todoListening.length > 0) {
+					const nodeId = todoListening.shift()!;
+					yield* doRebuildRoutes(nodeId);
+				}
+
+				// We might end up with a few unconnected listening nodes, try to rebuild routes for them too
+				pendingNodes.forEach((nodeId) => addTodo(nodeId));
+				while (todoListening.length > 0) {
+					const nodeId = todoListening.shift()!;
+					yield* doRebuildRoutes(nodeId);
+				}
+
+				if (options.includeSleeping) {
+					// Now do all sleeping nodes at once
+					self.driver.controllerLog.print(
+						"Rebuilding routes for sleeping nodes when they wake up",
+					);
+
+					const sleepingNodes = todoSleeping.map((nodeId) =>
+						self.nodes.get(nodeId)
+					).filter((node) => node != undefined);
+
+					const wakeupPromises = new Map(
+						sleepingNodes.map((node) =>
+							[
+								node.id,
+								node.waitForWakeup().then(() => node),
+							] as const
+						),
+					);
+
+					// As long as there are sleeping nodes that haven't had their routes rebuilt yet,
+					// wait for any of them to wake up
+					while (wakeupPromises.size > 0) {
+						const wakeUpPromise = Promise.race(
+							wakeupPromises.values(),
+						);
+						const wokenUpNode = (
+							yield () => wakeUpPromise
+						) as Awaited<typeof wakeUpPromise>;
+						if (wokenUpNode.status === NodeStatus.Asleep) {
+							// The node has gone to sleep again since the promise was resolved. Wait again
+							wakeupPromises.set(
+								wokenUpNode.id,
+								wokenUpNode.waitForWakeup().then(() =>
+									wokenUpNode
+								),
+							);
+							continue;
+						}
+						// Once the node has woken up, remove it from the list and rebuild its routes
+						wakeupPromises.delete(wokenUpNode.id);
+						yield* doRebuildRoutes(wokenUpNode.id);
+					}
+				}
+
+				self.driver.controllerLog.print(
+					"rebuilding routes completed",
+				);
+
+				self.emit(
+					"rebuild routes done",
+					new Map(self._rebuildRoutesProgress),
+				);
+
+				// We're done!
+				self._rebuildRoutesProgress.clear();
+			},
 		};
-
-		// First try to rebuild routes for as many nodes as possible one by one
-		while (todoListening.length > 0) {
-			const nodeId = todoListening.shift()!;
-			await doRebuildRoutes(nodeId);
-			if (!this._isRebuildingRoutes) return;
-		}
-
-		// We might end up with a few unconnected listening nodes, try to rebuild routes for them too
-		pendingNodes.forEach((nodeId) => addTodo(nodeId));
-		while (todoListening.length > 0) {
-			const nodeId = todoListening.shift()!;
-			await doRebuildRoutes(nodeId);
-			if (!this._isRebuildingRoutes) return;
-		}
-
-		if (options.includeSleeping) {
-			// Now do all sleeping nodes at once
-			this.driver.controllerLog.print(
-				"Rebuilding routes for sleeping nodes when they wake up",
-			);
-
-			const tasks = todoSleeping.map((nodeId) => doRebuildRoutes(nodeId));
-			await Promise.all(tasks);
-		}
-
-		// Only emit the done event when the process wasn't stopped in the meantime
-		if (this._isRebuildingRoutes) {
-			this.driver.controllerLog.print("rebuilding routes completed");
-
-			this.emit(
-				"rebuild routes done",
-				new Map(this._rebuildRoutesProgress),
-			);
-		} else {
-			this.driver.controllerLog.print("rebuilding routes aborted");
-		}
-		// We're done!
-		this._isRebuildingRoutes = false;
-		this._rebuildRoutesProgress.clear();
 	}
 
 	/**
 	 * Stops the route rebuilding process. Resolves false if the process was not active, true otherwise.
 	 */
 	public stopRebuildingRoutes(): boolean {
+		const hasTasks = !!this.driver.scheduler.findTask(isRebuildRoutesTask);
+
 		// don't stop it twice
-		if (!this._isRebuildingRoutes) return false;
-		this._isRebuildingRoutes = false;
+		if (!hasTasks) return false;
 
 		this.driver.controllerLog.print(`stopping route rebuilding process...`);
+
+		// Stop all tasks that are part of the route rebuilding process
+		// FIXME: This should be an async function that waits for the task removal
+		void this.driver.scheduler.removeTasks(isRebuildRoutesTask).then(() => {
+			this.driver.controllerLog.print(
+				"rebuilding routes aborted",
+			);
+		});
 
 		// Cancel all transactions that were created by the route rebuilding process
 		this.driver.rejectTransactions(
@@ -4309,16 +4908,6 @@ supported CCs: ${
 			);
 		}
 
-		// Don't start the process twice
-		if (this._isRebuildingRoutes) {
-			this.driver.controllerLog.logNode(
-				nodeId,
-				`Cannot rebuild routes because another rebuilding process is in progress.`,
-			);
-			return false;
-		}
-		this._isRebuildingRoutes = true;
-
 		// Figure out if nodes are responsive before attempting to rebuild routes
 		if (
 			// The node is known to be dead
@@ -4337,166 +4926,218 @@ supported CCs: ${
 			}
 		}
 
-		try {
-			return await this.rebuildNodeRoutesInternal(nodeId);
-		} finally {
-			this._isRebuildingRoutes = false;
-		}
+		return this.rebuildNodeRoutesInternal(nodeId);
 	}
 
-	private async rebuildNodeRoutesInternal(nodeId: number): Promise<boolean> {
+	private rebuildNodeRoutesInternal(
+		nodeId: number,
+	): Promise<boolean> {
 		const node = this.nodes.getOrThrow(nodeId);
+		const task = this.getRebuildNodeRoutesTask(node);
+		if (task instanceof Promise) return task;
 
-		// Keep battery powered nodes awake during the process
-		// and make sure that the flag gets reset at the end
-		const keepAwake = node.keepAwake;
-		try {
-			node.keepAwake = true;
+		return this.driver.scheduler.queueTask(task);
+	}
 
-			this.driver.controllerLog.logNode(nodeId, {
-				message: `Rebuilding routes...`,
-				direction: "none",
-			});
+	private getRebuildNodeRoutesTask(
+		node: ZWaveNode,
+	): Promise<boolean> | TaskBuilder<boolean> {
+		// This task should only run once at a time
+		const existingTask = this.driver.scheduler.findTask<boolean>((t) =>
+			t.tag?.id === "rebuild-node-routes" && t.tag.nodeId === node.id
+		);
+		if (existingTask) return existingTask;
 
-			// The process consists of four steps, each step is tried up to 5 times before i is considered failed
-			const maxAttempts = 5;
+		const self = this;
+		let keepAwake: boolean;
 
-			// 1. command the node to refresh its neighbor list
-			for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-				// If the process was stopped in the meantime, cancel
-				if (!this._isRebuildingRoutes) return false;
+		return {
+			// This task is executed by users and by the network-wide route rebuilding process.
+			priority: TaskPriority.Lower,
+			tag: { id: "rebuild-node-routes", nodeId: node.id },
+			task: async function* rebuildNodeRoutesTask() {
+				// Keep battery powered nodes awake during the process
+				keepAwake = node.keepAwake;
+				node.keepAwake = true;
 
-				this.driver.controllerLog.logNode(nodeId, {
-					message: `refreshing neighbor list (attempt ${attempt})...`,
-					direction: "outbound",
+				if (
+					node.canSleep && node.supportsCC(CommandClasses["Wake Up"])
+				) {
+					yield () => node.waitForWakeup();
+				}
+
+				self.driver.controllerLog.logNode(node.id, {
+					message: `Rebuilding routes...`,
+					direction: "none",
 				});
 
-				try {
-					const result = await this.discoverNodeNeighbors(nodeId);
-					if (result) {
-						this.driver.controllerLog.logNode(nodeId, {
-							message: "neighbor list refreshed...",
-							direction: "inbound",
-						});
-						// this step was successful, continue with the next
-						break;
-					} else {
-						this.driver.controllerLog.logNode(nodeId, {
-							message: "refreshing neighbor list failed...",
-							direction: "inbound",
-							level: "warn",
-						});
-					}
-				} catch (e) {
-					this.driver.controllerLog.logNode(
-						nodeId,
-						`refreshing neighbor list failed: ${
-							getErrorMessage(
-								e,
-							)
-						}`,
-						"warn",
-					);
-				}
-				if (attempt === maxAttempts) {
-					this.driver.controllerLog.logNode(nodeId, {
-						message:
-							`rebuilding routes failed: could not update the neighbor list after ${maxAttempts} attempts`,
-						level: "warn",
-						direction: "none",
-					});
-					return false;
-				}
-			}
+				// The process consists of four steps, each step is tried up to 5 times before it is considered failed
+				const maxAttempts = 5;
 
-			// 2. re-create the SUC return route, just in case
-			node.hasSUCReturnRoute = await this.assignSUCReturnRoutes(nodeId);
-
-			// 3. delete all return routes to get rid of potential priority return routes
-			for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-				this.driver.controllerLog.logNode(nodeId, {
-					message: `deleting return routes (attempt ${attempt})...`,
-					direction: "outbound",
-				});
-
-				if (await this.deleteReturnRoutes(nodeId)) {
-					break;
-				}
-
-				if (attempt === maxAttempts) {
-					this.driver.controllerLog.logNode(nodeId, {
-						message:
-							`rebuilding routes failed: failed to delete return routes after ${maxAttempts} attempts`,
-						level: "warn",
-						direction: "none",
-					});
-					return false;
-				}
-			}
-
-			// 4. Assign return routes to all association destinations...
-			let associatedNodes: number[] = [];
-			try {
-				associatedNodes = distinct(
-					flatMap<number, AssociationAddress[]>(
-						[...(this.getAssociations({ nodeId }).values() as any)],
-						(assocs: AssociationAddress[]) =>
-							assocs.map((a) => a.nodeId),
-					),
-				)
-					// ...except the controller itself, which was handled by step 2
-					.filter((id) => id !== this._ownNodeId!)
-					.sort();
-			} catch {
-				/* ignore */
-			}
-
-			this.driver.controllerLog.logNode(nodeId, {
-				message: `assigning return routes to the following nodes:
-${associatedNodes.join(", ")}`,
-				direction: "outbound",
-			});
-			for (const destinationNodeId of associatedNodes) {
+				// 1. command the node to refresh its neighbor list
 				for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-					this.driver.controllerLog.logNode(nodeId, {
+					yield; // Give the task scheduler time to do something else
+
+					self.driver.controllerLog.logNode(node.id, {
 						message:
-							`assigning return route to node ${destinationNodeId} (attempt ${attempt})...`,
+							`refreshing neighbor list (attempt ${attempt})...`,
 						direction: "outbound",
 					});
 
-					if (
-						await this.assignReturnRoutes(nodeId, destinationNodeId)
-					) {
-						// this step was successful, continue with the next
-						break;
+					try {
+						const result = await self.discoverNodeNeighbors(
+							node.id,
+						);
+						if (result) {
+							self.driver.controllerLog.logNode(node.id, {
+								message: "neighbor list refreshed...",
+								direction: "inbound",
+							});
+							// this step was successful, continue with the next
+							break;
+						} else {
+							self.driver.controllerLog.logNode(node.id, {
+								message: "refreshing neighbor list failed...",
+								direction: "inbound",
+								level: "warn",
+							});
+						}
+					} catch (e) {
+						self.driver.controllerLog.logNode(
+							node.id,
+							`refreshing neighbor list failed: ${
+								getErrorMessage(
+									e,
+								)
+							}`,
+							"warn",
+						);
 					}
-
 					if (attempt === maxAttempts) {
-						this.driver.controllerLog.logNode(nodeId, {
+						self.driver.controllerLog.logNode(node.id, {
 							message:
-								`rebuilding routes failed: failed to assign return route after ${maxAttempts} attempts`,
+								`rebuilding routes failed: could not update the neighbor list after ${maxAttempts} attempts`,
 							level: "warn",
 							direction: "none",
 						});
 						return false;
 					}
 				}
-			}
 
-			this.driver.controllerLog.logNode(nodeId, {
-				message: `rebuilt routes successfully`,
-				direction: "none",
-			});
+				yield; // Give the task scheduler time to do something else
 
-			return true;
-		} finally {
-			node.keepAwake = keepAwake;
-			if (!keepAwake) {
-				setImmediate(() => {
-					this.driver.debounceSendNodeToSleep(node);
+				// 2. re-create the SUC return route, just in case
+				node.hasSUCReturnRoute = await self.assignSUCReturnRoutes(
+					node.id,
+				);
+
+				// 3. delete all return routes to get rid of potential priority return routes
+				for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+					yield; // Give the task scheduler time to do something else
+
+					self.driver.controllerLog.logNode(node.id, {
+						message:
+							`deleting return routes (attempt ${attempt})...`,
+						direction: "outbound",
+					});
+
+					if (await self.deleteReturnRoutes(node.id)) {
+						break;
+					}
+
+					if (attempt === maxAttempts) {
+						self.driver.controllerLog.logNode(node.id, {
+							message:
+								`rebuilding routes failed: failed to delete return routes after ${maxAttempts} attempts`,
+							level: "warn",
+							direction: "none",
+						});
+						return false;
+					}
+				}
+
+				// 4. Assign return routes to all association destinations...
+				let associatedNodes: number[] = [];
+				try {
+					associatedNodes = distinct(
+						[
+							...(self.getAssociations({ nodeId: node.id })
+								.values() as any),
+						].flatMap((assocs: AssociationAddress[]) =>
+							assocs.map((a) => a.nodeId)
+						),
+					)
+						// ...except the controller itself, which was handled by step 2
+						.filter((id) => id !== self._ownNodeId!)
+						// ...and the node itself
+						.filter((id) => id !== node.id)
+						.sort();
+				} catch {
+					// ignore
+				}
+
+				if (associatedNodes.length > 0) {
+					self.driver.controllerLog.logNode(node.id, {
+						message:
+							`assigning return routes to the following nodes:
+	${associatedNodes.join(", ")}`,
+						direction: "outbound",
+					});
+					for (const destinationNodeId of associatedNodes) {
+						for (
+							let attempt = 1;
+							attempt <= maxAttempts;
+							attempt++
+						) {
+							yield; // Give the task scheduler time to do something else
+
+							self.driver.controllerLog.logNode(node.id, {
+								message:
+									`assigning return route to node ${destinationNodeId} (attempt ${attempt})...`,
+								direction: "outbound",
+							});
+
+							if (
+								await self.assignReturnRoutes(
+									node.id,
+									destinationNodeId,
+								)
+							) {
+								// this step was successful, continue with the next
+								break;
+							}
+
+							if (attempt === maxAttempts) {
+								self.driver.controllerLog.logNode(node.id, {
+									message:
+										`rebuilding routes failed: failed to assign return route after ${maxAttempts} attempts`,
+									level: "warn",
+									direction: "none",
+								});
+								return false;
+							}
+						}
+					}
+				}
+
+				self.driver.controllerLog.logNode(node.id, {
+					message: `rebuilt routes successfully`,
+					direction: "none",
 				});
-			}
-		}
+
+				return true;
+			},
+			cleanup: () => {
+				// Make sure that the keepAwake flag gets reset at the end
+				node.keepAwake = keepAwake;
+				if (!keepAwake) {
+					setImmediate(() => {
+						this.driver.debounceSendNodeToSleep(node);
+					});
+				}
+				return Promise.resolve();
+			},
+		};
 	}
 
 	/** Configures the given Node to be SUC/SIS or not */
@@ -4508,7 +5149,8 @@ ${associatedNodes.join(", ")}`,
 		const result = await this.driver.sendMessage<
 			Message & SuccessIndicator
 		>(
-			new SetSUCNodeIdRequest(this.driver, {
+			new SetSUCNodeIdRequest({
+				ownNodeId: this.ownNodeId!,
 				sucNodeId: nodeId,
 				enableSUC,
 				enableSIS,
@@ -4563,9 +5205,17 @@ ${associatedNodes.join(", ")}`,
 		await this.deleteSUCReturnRoutes(nodeId);
 
 		try {
+			// Some controllers have a bug where they incorrectly respond
+			// to an AssignSUCReturnRouteRequest with DeleteSUCReturnRoute
+			const disableCallbackFunctionTypeCheck = !!this.driver
+				.getDeviceConfig?.(this.ownNodeId!)
+				?.compat
+				?.disableCallbackFunctionTypeCheck
+				?.includes(FunctionType.AssignSUCReturnRoute);
 			const result = await this.driver.sendMessage(
-				new AssignSUCReturnRouteRequest(this.driver, {
+				new AssignSUCReturnRouteRequest({
 					nodeId,
+					disableCallbackFunctionTypeCheck,
 				}),
 			);
 
@@ -4677,7 +5327,7 @@ ${associatedNodes.join(", ")}`,
 			// We are always listening
 			const targetWakeup = false;
 
-			const cc = new ZWaveProtocolCCAssignSUCReturnRoute(this.driver, {
+			const cc = new ZWaveProtocolCCAssignSUCReturnRoute({
 				nodeId,
 				// Empty routes are marked with a nodeId of 0
 				destinationNodeId: isEmpty ? 0 : this.ownNodeId ?? 1,
@@ -4692,7 +5342,7 @@ ${associatedNodes.join(", ")}`,
 
 				// Remember that this route has been assigned
 				if (i !== priorityRouteIndex) assignedRoutes[i] = route;
-			} catch (e) {
+			} catch {
 				this.driver.controllerLog.logNode(nodeId, {
 					message: `Assigning custom SUC return route #${i} failed`,
 					direction: "outbound",
@@ -4705,17 +5355,14 @@ ${associatedNodes.join(", ")}`,
 
 		// If a priority route was passed, tell the node to use it
 		if (priorityRouteIndex >= 0) {
-			const cc = new ZWaveProtocolCCAssignSUCReturnRoutePriority(
-				this.driver,
-				{
-					nodeId,
-					targetNodeId: this.ownNodeId ?? 1,
-					routeNumber: priorityRouteIndex,
-				},
-			);
+			const cc = new ZWaveProtocolCCAssignSUCReturnRoutePriority({
+				nodeId,
+				targetNodeId: this.ownNodeId ?? 1,
+				routeNumber: priorityRouteIndex,
+			});
 			try {
 				await this.driver.sendZWaveProtocolCC(cc);
-			} catch (e) {
+			} catch {
 				this.driver.controllerLog.logNode(nodeId, {
 					message:
 						`Marking custom SUC return route as priority failed`,
@@ -4763,9 +5410,17 @@ ${associatedNodes.join(", ")}`,
 		});
 
 		try {
+			// Some controllers have a bug where they incorrectly respond
+			// to an DeleteSUCReturnRouteRequest with a different function type
+			const disableCallbackFunctionTypeCheck = !!this.driver
+				.getDeviceConfig?.(this.ownNodeId!)
+				?.compat
+				?.disableCallbackFunctionTypeCheck
+				?.includes(FunctionType.DeleteSUCReturnRoute);
 			const result = await this.driver.sendMessage(
-				new DeleteSUCReturnRouteRequest(this.driver, {
+				new DeleteSUCReturnRouteRequest({
 					nodeId,
+					disableCallbackFunctionTypeCheck,
 				}),
 			);
 
@@ -4876,7 +5531,7 @@ ${associatedNodes.join(", ")}`,
 			const result = await this.driver.sendMessage<
 				AssignReturnRouteRequestTransmitReport
 			>(
-				new AssignReturnRouteRequest(this.driver, {
+				new AssignReturnRouteRequest({
 					nodeId,
 					destinationNodeId,
 				}),
@@ -4982,7 +5637,7 @@ ${associatedNodes.join(", ")}`,
 				? this.nodes.get(destinationNodeId)?.isFrequentListening
 				: undefined;
 
-			const cc = new ZWaveProtocolCCAssignReturnRoute(this.driver, {
+			const cc = new ZWaveProtocolCCAssignReturnRoute({
 				nodeId,
 				// Empty routes are marked with a nodeId of 0
 				destinationNodeId: isEmpty ? 0 : destinationNodeId,
@@ -4997,7 +5652,7 @@ ${associatedNodes.join(", ")}`,
 
 				// Remember that this route has been assigned
 				if (i !== priorityRouteIndex) assignedRoutes[i] = route;
-			} catch (e) {
+			} catch {
 				this.driver.controllerLog.logNode(nodeId, {
 					message: `Assigning custom return route #${i} failed`,
 					direction: "outbound",
@@ -5010,17 +5665,14 @@ ${associatedNodes.join(", ")}`,
 
 		// If a priority route was passed, tell the node to use it
 		if (priorityRouteIndex >= 0) {
-			const cc = new ZWaveProtocolCCAssignReturnRoutePriority(
-				this.driver,
-				{
-					nodeId,
-					targetNodeId: destinationNodeId,
-					routeNumber: priorityRouteIndex,
-				},
-			);
+			const cc = new ZWaveProtocolCCAssignReturnRoutePriority({
+				nodeId,
+				targetNodeId: destinationNodeId,
+				routeNumber: priorityRouteIndex,
+			});
 			try {
 				await this.driver.sendZWaveProtocolCC(cc);
-			} catch (e) {
+			} catch {
 				this.driver.controllerLog.logNode(nodeId, {
 					message: `Marking custom return route as priority failed`,
 					direction: "outbound",
@@ -5089,7 +5741,7 @@ ${associatedNodes.join(", ")}`,
 			const result = await this.driver.sendMessage<
 				DeleteReturnRouteRequestTransmitReport
 			>(
-				new DeleteReturnRouteRequest(this.driver, {
+				new DeleteReturnRouteRequest({
 					nodeId,
 				}),
 			);
@@ -5145,7 +5797,7 @@ ${associatedNodes.join(", ")}`,
 			const result = await this.driver.sendMessage<
 				AssignReturnRouteRequestTransmitReport
 			>(
-				new AssignPriorityReturnRouteRequest(this.driver, {
+				new AssignPriorityReturnRouteRequest({
 					nodeId,
 					destinationNodeId,
 					repeaters,
@@ -5220,6 +5872,29 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
+	 * For the given node, returns all end node destinations and the priority routes to them.
+	 *
+	 * **Note:** This is using cached information, since there's no way to query priority routes from a node.
+	 * If another controller has assigned routes in the meantime, this information may be out of date.
+	 */
+	public getPriorityReturnRoutesCached(
+		nodeId: number,
+	): Record<number, Route> {
+		const ret: Record<number, Route> = {};
+
+		const routes = this.driver.cacheList<Route>(
+			cacheKeys.node(nodeId)._priorityReturnRouteBaseKey,
+		);
+		for (const [key, route] of Object.entries(routes)) {
+			const destination = cacheKeyUtils
+				.destinationFromPriorityReturnRouteKey(key);
+			if (destination !== undefined) ret[destination] = route;
+		}
+
+		return ret;
+	}
+
+	/**
 	 * Assigns a priority route from an end node to the SUC. This route will always be used for the first transmission attempt.
 	 * @param nodeId The ID of the end node for which to assign the route
 	 * @param repeaters The IDs of the nodes that should be used as repeaters, or an empty array for direct connection
@@ -5239,7 +5914,7 @@ ${associatedNodes.join(", ")}`,
 			const result = await this.driver.sendMessage<
 				AssignPrioritySUCReturnRouteRequestTransmitReport
 			>(
-				new AssignPrioritySUCReturnRouteRequest(this.driver, {
+				new AssignPrioritySUCReturnRouteRequest({
 					nodeId,
 					repeaters,
 					routeSpeed,
@@ -5344,7 +6019,7 @@ ${associatedNodes.join(", ")}`,
 			const result = await this.driver.sendMessage<
 				Message & SuccessIndicator
 			>(
-				new SetPriorityRouteRequest(this.driver, {
+				new SetPriorityRouteRequest({
 					destinationNodeId,
 					repeaters,
 					routeSpeed,
@@ -5381,7 +6056,7 @@ ${associatedNodes.join(", ")}`,
 			const result = await this.driver.sendMessage<
 				Message & SuccessIndicator
 			>(
-				new SetPriorityRouteRequest(this.driver, {
+				new SetPriorityRouteRequest({
 					destinationNodeId,
 					// no repeaters = remove
 				}),
@@ -5423,7 +6098,7 @@ ${associatedNodes.join(", ")}`,
 			const result = await this.driver.sendMessage<
 				GetPriorityRouteResponse
 			>(
-				new GetPriorityRouteRequest(this.driver, {
+				new GetPriorityRouteRequest({
 					destinationNodeId,
 				}),
 			);
@@ -5525,15 +6200,15 @@ ${associatedNodes.join(", ")}`,
 	/**
 	 * Checks if a given association is allowed.
 	 */
-	public isAssociationAllowed(
+	public checkAssociation(
 		source: AssociationAddress,
 		group: number,
 		destination: AssociationAddress,
-	): boolean {
+	): AssociationCheckResult {
 		const node = this.nodes.getOrThrow(source.nodeId);
 		const endpoint = node.getEndpointOrThrow(source.endpoint ?? 0);
 
-		return ccUtils.isAssociationAllowed(
+		return ccUtils.checkAssociation(
 			this.driver,
 			endpoint,
 			group,
@@ -5542,7 +6217,22 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
-	 * Adds associations to a node or endpoint
+	 * Adds associations to a node or endpoint.
+	 *
+	 * **Note:** This method will throw if:
+	 * * the source node, endpoint or association group does not exist,
+	 * * the source node is a ZWLR node and the destination is not the SIS
+	 * * the destination node is a ZWLR node
+	 * * the association is not allowed for other reasons. In this case, the error's
+	 * `context` property will contain an array with all forbidden destinations, each with an added `checkResult` property
+	 * which contains the reason why the association is forbidden:
+	 *     ```ts
+	 *     {
+	 *         checkResult: AssociationCheckResult;
+	 *         nodeId: number;
+	 *         endpoint?: number | undefined;
+	 *     }[]
+	 *     ```
 	 */
 	public async addAssociations(
 		source: AssociationAddress,
@@ -5558,6 +6248,8 @@ ${associatedNodes.join(", ")}`,
 			group,
 			destinations,
 		);
+
+		if (isLongRangeNodeId(source.nodeId)) return;
 
 		// Nodes need a return route to be able to send commands to other nodes
 		const destinationNodeIDs = distinct(
@@ -5658,7 +6350,7 @@ ${associatedNodes.join(", ")}`,
 	 */
 	public async isFailedNode(nodeId: number): Promise<boolean> {
 		const result = await this.driver.sendMessage<IsFailedNodeResponse>(
-			new IsFailedNodeRequest(this.driver, { failedNodeId: nodeId }),
+			new IsFailedNodeRequest({ failedNodeId: nodeId }),
 		);
 		return result.result;
 	}
@@ -5703,7 +6395,7 @@ ${associatedNodes.join(", ")}`,
 
 		const result = await this.driver.sendMessage<
 			RemoveFailedNodeRequestStatusReport | RemoveFailedNodeResponse
-		>(new RemoveFailedNodeRequest(this.driver, { failedNodeId: nodeId }));
+		>(new RemoveFailedNodeRequest({ failedNodeId: nodeId }));
 
 		if (result instanceof RemoveFailedNodeResponse) {
 			// This implicates that the process was unsuccessful.
@@ -5812,7 +6504,7 @@ ${associatedNodes.join(", ")}`,
 		this._inclusionOptions = options;
 
 		const result = await this.driver.sendMessage<ReplaceFailedNodeResponse>(
-			new ReplaceFailedNodeRequest(this.driver, {
+			new ReplaceFailedNodeRequest({
 				failedNodeId: nodeId,
 			}),
 		);
@@ -5870,6 +6562,14 @@ ${associatedNodes.join(", ")}`,
 
 	/** Configure the RF region at the Z-Wave API Module */
 	public async setRFRegion(region: RFRegion): Promise<boolean> {
+		// Setting the "default" region is not possible. Controllers are supposed to
+		// default to the EU region, so we do just that.
+		if (region === RFRegion["Default (EU)"]) region = RFRegion.Europe;
+
+		// Unless auto-upgrade to LR regions is disabled, try to find a suitable LR replacement region
+		if (this.driver.options.rf?.preferLRRegion !== false) {
+			region = this.tryGetLRCapableRegion(region);
+		}
 		return this.setRFRegionInternal(region, true);
 	}
 
@@ -5881,7 +6581,7 @@ ${associatedNodes.join(", ")}`,
 		const result = await this.driver.sendMessage<
 			| SerialAPISetup_SetRFRegionResponse
 			| SerialAPISetup_CommandUnsupportedResponse
-		>(new SerialAPISetup_SetRFRegionRequest(this.driver, { region }));
+		>(new SerialAPISetup_SetRFRegionRequest({ region }));
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
 				`Your hardware does not support setting the RF region!`,
@@ -5899,7 +6599,7 @@ ${associatedNodes.join(", ")}`,
 		const result = await this.driver.sendMessage<
 			| SerialAPISetup_GetRFRegionResponse
 			| SerialAPISetup_CommandUnsupportedResponse
-		>(new SerialAPISetup_GetRFRegionRequest(this.driver));
+		>(new SerialAPISetup_GetRFRegionRequest());
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
 				`Your hardware does not support getting the RF region!`,
@@ -5908,6 +6608,120 @@ ${associatedNodes.join(", ")}`,
 		}
 		this._rfRegion = result.region;
 		return result.region;
+	}
+
+	/**
+	 * Query the supported regions of the Z-Wave API Module
+	 *
+	 * **Note:** Applications should prefer using {@link getSupportedRFRegions} instead
+	 */
+	public async querySupportedRFRegions(): Promise<RFRegion[]> {
+		const result = await this.driver.sendMessage<
+			| SerialAPISetup_GetSupportedRegionsResponse
+			| SerialAPISetup_CommandUnsupportedResponse
+		>(new SerialAPISetup_GetSupportedRegionsRequest());
+		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
+			throw new ZWaveError(
+				`Your hardware does not support getting the supported RF regions!`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+		return result.supportedRegions;
+	}
+
+	/**
+	 * Query the supported regions of the Z-Wave API Module
+	 *
+	 * **Note:** Applications should prefer reading the cached value from {@link supportedRFRegions} instead
+	 */
+	public async queryRFRegionInfo(
+		region: RFRegion,
+	): Promise<{
+		region: RFRegion;
+		supportsZWave: boolean;
+		supportsLongRange: boolean;
+		includesRegion?: RFRegion;
+	}> {
+		const result = await this.driver.sendMessage<
+			| SerialAPISetup_GetRegionInfoResponse
+			| SerialAPISetup_CommandUnsupportedResponse
+		>(new SerialAPISetup_GetRegionInfoRequest({ region }));
+		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
+			throw new ZWaveError(
+				`Your hardware does not support getting the RF region info!`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+		return pick(result, [
+			"region",
+			"supportsZWave",
+			"supportsLongRange",
+			"includesRegion",
+		]);
+	}
+
+	/**
+	 * Returns the RF regions supported by this controller, or `undefined` if the information is not known yet.
+	 *
+	 * @param filterSubsets Whether to exclude regions that are subsets of other regions,
+	 * for example `USA` which is a subset of `USA (Long Range)`
+	 */
+	public getSupportedRFRegions(
+		filterSubsets: boolean = true,
+	): MaybeNotKnown<readonly RFRegion[]> {
+		// If supported by the firmware, rely on the queried information
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.GetSupportedRegions,
+			)
+		) {
+			if (this._supportedRegions == NOT_KNOWN) return NOT_KNOWN;
+			const allRegions = new Set(this._supportedRegions.keys());
+			if (filterSubsets) {
+				for (const region of this._supportedRegions.values()) {
+					if (region.includesRegion != undefined) {
+						allRegions.delete(region.includesRegion);
+					}
+				}
+			}
+			return [...allRegions].sort((a, b) => a - b);
+		}
+
+		// Fallback: Hardcoded list of known supported regions
+		const ret = new Set([
+			// Always supported
+			RFRegion.Europe,
+			RFRegion.USA,
+			RFRegion["Australia/New Zealand"],
+			RFRegion["Hong Kong"],
+			RFRegion.India,
+			RFRegion.Israel,
+			RFRegion.Russia,
+			RFRegion.China,
+			RFRegion.Japan,
+			RFRegion.Korea,
+			RFRegion["Default (EU)"],
+		]);
+
+		if (this.isLongRangeCapable()) {
+			// All LR capable controllers support USA Long Range
+			ret.add(RFRegion["USA (Long Range)"]);
+			if (filterSubsets) ret.delete(RFRegion.USA);
+
+			// EU Long Range was added in SDK 7.22 for 800 series chips
+			// 7.22.1 adds support for querying the supported regions, so the following
+			// is really only necessary for 7.22.0.
+			if (
+				typeof this._zwaveChipType === "string"
+				&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
+				&& this.sdkVersionGte("7.22")
+			) {
+				ret.add(RFRegion["Europe (Long Range)"]);
+				if (filterSubsets) ret.delete(RFRegion.Europe);
+			}
+		}
+
+		return [...ret].sort((a, b) => a - b);
 	}
 
 	/** Configure the Powerlevel setting of the Z-Wave API */
@@ -5921,15 +6735,12 @@ ${associatedNodes.join(", ")}`,
 				SerialAPISetupCommand.SetPowerlevel16Bit,
 			)
 		) {
-			request = new SerialAPISetup_SetPowerlevel16BitRequest(
-				this.driver,
-				{
-					powerlevel,
-					measured0dBm,
-				},
-			);
+			request = new SerialAPISetup_SetPowerlevel16BitRequest({
+				powerlevel,
+				measured0dBm,
+			});
 		} else {
-			request = new SerialAPISetup_SetPowerlevelRequest(this.driver, {
+			request = new SerialAPISetup_SetPowerlevelRequest({
 				powerlevel,
 				measured0dBm,
 			});
@@ -5963,9 +6774,9 @@ ${associatedNodes.join(", ")}`,
 				SerialAPISetupCommand.GetPowerlevel16Bit,
 			)
 		) {
-			request = new SerialAPISetup_GetPowerlevel16BitRequest(this.driver);
+			request = new SerialAPISetup_GetPowerlevel16BitRequest();
 		} else {
-			request = new SerialAPISetup_GetPowerlevelRequest(this.driver);
+			request = new SerialAPISetup_GetPowerlevelRequest();
 		}
 		const result = await this.driver.sendMessage<
 			| SerialAPISetup_GetPowerlevelResponse
@@ -5980,6 +6791,107 @@ ${associatedNodes.join(", ")}`,
 			);
 		}
 		return pick(result, ["powerlevel", "measured0dBm"]);
+	}
+
+	/** Configure the maximum TX powerlevel for Z-Wave Long Range */
+	public async setMaxLongRangePowerlevel(
+		limit: number,
+	): Promise<boolean> {
+		const request = new SerialAPISetup_SetLongRangeMaximumTxPowerRequest({
+			limit,
+		});
+
+		const result = await this.driver.sendMessage<
+			| SerialAPISetup_SetLongRangeMaximumTxPowerResponse
+			| SerialAPISetup_CommandUnsupportedResponse
+		>(request);
+
+		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
+			throw new ZWaveError(
+				`Your hardware does not support setting the max. Long Range powerlevel!`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+
+		if (result.success) {
+			this._maxLongRangePowerlevel = limit;
+		}
+		return result.success;
+	}
+
+	/** Request the maximum TX powerlevel setting for Z-Wave Long Range */
+	public async getMaxLongRangePowerlevel(): Promise<number> {
+		const request = new SerialAPISetup_GetLongRangeMaximumTxPowerRequest();
+		const result = await this.driver.sendMessage<
+			| SerialAPISetup_GetLongRangeMaximumTxPowerResponse
+			| SerialAPISetup_CommandUnsupportedResponse
+		>(request);
+
+		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
+			throw new ZWaveError(
+				`Your hardware does not support getting the max. Long Range powerlevel!`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+
+		this._maxLongRangePowerlevel = result.limit;
+		return result.limit;
+	}
+
+	/**
+	 * Configure channel to use for Z-Wave Long Range.
+	 */
+	public async setLongRangeChannel(
+		channel:
+			| LongRangeChannel.A
+			| LongRangeChannel.B
+			| LongRangeChannel.Auto,
+	): Promise<boolean> {
+		if (
+			!this._supportsLongRangeAutoChannelSelection
+			&& channel === LongRangeChannel.Auto
+		) {
+			throw new ZWaveError(
+				`Your hardware does not support automatic Long Range channel selection!`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+
+		const result = await this.driver.sendMessage<
+			SetLongRangeChannelResponse
+		>(
+			new SetLongRangeChannelRequest({ channel }),
+		);
+
+		if (result.success) {
+			this._longRangeChannel = channel;
+		}
+		return result.success;
+	}
+
+	/** Request the channel setting and capabilities for Z-Wave Long Range */
+	public async getLongRangeChannel(): Promise<
+		{ channel: LongRangeChannel; supportsAutoChannelSelection: boolean }
+	> {
+		const result = await this.driver.sendMessage<
+			GetLongRangeChannelResponse
+		>(
+			new GetLongRangeChannelRequest(),
+		);
+
+		const channel = result.autoChannelSelectionActive
+				&& result.supportsAutoChannelSelection
+			? LongRangeChannel.Auto
+			: result.channel;
+
+		this._longRangeChannel = channel;
+		this._supportsLongRangeAutoChannelSelection =
+			result.supportsAutoChannelSelection;
+
+		return {
+			channel,
+			supportsAutoChannelSelection: result.supportsAutoChannelSelection,
+		};
 	}
 
 	/**
@@ -5997,7 +6909,7 @@ ${associatedNodes.join(", ")}`,
 			| SerialAPISetup_SetNodeIDTypeResponse
 			| SerialAPISetup_CommandUnsupportedResponse
 		>(
-			new SerialAPISetup_SetNodeIDTypeRequest(this.driver, {
+			new SerialAPISetup_SetNodeIDTypeRequest({
 				nodeIdType,
 			}),
 		);
@@ -6043,7 +6955,7 @@ ${associatedNodes.join(", ")}`,
 		const result = await this.driver.sendMessage<
 			| SerialAPISetup_GetMaximumPayloadSizeResponse
 			| SerialAPISetup_CommandUnsupportedResponse
-		>(new SerialAPISetup_GetMaximumPayloadSizeRequest(this.driver), {
+		>(new SerialAPISetup_GetMaximumPayloadSizeRequest(), {
 			supportCheck: false,
 		});
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
@@ -6064,9 +6976,7 @@ ${associatedNodes.join(", ")}`,
 			| SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse
 			| SerialAPISetup_CommandUnsupportedResponse
 		>(
-			new SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest(
-				this.driver,
-			),
+			new SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest(),
 		);
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
@@ -6109,7 +7019,7 @@ ${associatedNodes.join(", ")}`,
 		const resp = await this.driver.sendMessage<
 			RequestNodeNeighborUpdateReport
 		>(
-			new RequestNodeNeighborUpdateRequest(this.driver, {
+			new RequestNodeNeighborUpdateRequest({
 				nodeId,
 				discoveryTimeout,
 			}),
@@ -6127,19 +7037,28 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
-	 * Returns the known list of neighbors for a node
+	 * Returns the known list of neighbors for a node.
+	 *
+	 * Throws when the node is a Long Range node.
 	 */
 	public async getNodeNeighbors(
 		nodeId: number,
 		onlyRepeaters: boolean = false,
 	): Promise<readonly number[]> {
+		if (isLongRangeNodeId(nodeId)) {
+			throw new ZWaveError(
+				`Cannot request node neighbors for Long Range node ${nodeId}`,
+				ZWaveErrorCodes.Controller_NotSupportedForLongRange,
+			);
+		}
+
 		this.driver.controllerLog.logNode(nodeId, {
 			message: "requesting node neighbors...",
 			direction: "outbound",
 		});
 		try {
 			const resp = await this.driver.sendMessage<GetRoutingInfoResponse>(
-				new GetRoutingInfoRequest(this.driver, {
+				new GetRoutingInfoRequest({
 					nodeId,
 					removeBadLinks: false,
 					removeNonRepeaters: onlyRepeaters,
@@ -6180,6 +7099,102 @@ ${associatedNodes.join(", ")}`,
 		return ret;
 	}
 
+	/** Request additional information about the controller/Z-Wave chip */
+	public async getSerialApiInitData(): Promise<SerialApiInitData> {
+		this.driver.controllerLog.print(
+			`querying additional controller information...`,
+		);
+		const initData = await this.driver.sendMessage<
+			GetSerialApiInitDataResponse
+		>(
+			new GetSerialApiInitDataRequest(),
+		);
+
+		this.driver.controllerLog.print(
+			`received additional controller information:
+  Z-Wave API version:         ${initData.zwaveApiVersion.version} (${initData.zwaveApiVersion.kind})${
+				initData.zwaveChipType
+					? `
+  Z-Wave chip type:           ${
+						typeof initData.zwaveChipType === "string"
+							? initData.zwaveChipType
+							: `unknown (type: ${
+								num2hex(initData.zwaveChipType.type)
+							}, version: ${
+								num2hex(initData.zwaveChipType.version)
+							})`
+					}`
+					: ""
+			}
+  node type                   ${getEnumMemberName(NodeType, initData.nodeType)}
+  controller role:            ${initData.isPrimary ? "primary" : "secondary"}
+  controller is the SIS:      ${initData.isSIS}
+  controller supports timers: ${initData.supportsTimers}
+  Z-Wave Classic nodes:       ${initData.nodeIds.join(", ")}`,
+		);
+
+		const ret: SerialApiInitData = {
+			...pick(initData, [
+				"zwaveApiVersion",
+				"zwaveChipType",
+				"isPrimary",
+				"isSIS",
+				"nodeType",
+				"supportsTimers",
+			]),
+			nodeIds: [...initData.nodeIds],
+			// ignore the initVersion, no clue what to do with it
+		};
+
+		// and remember the new info
+		this._zwaveApiVersion = initData.zwaveApiVersion;
+		this._zwaveChipType = initData.zwaveChipType;
+		this._isPrimary = initData.isPrimary;
+		this._isSIS = initData.isSIS;
+		this._nodeType = initData.nodeType;
+		this._supportsTimers = initData.supportsTimers;
+
+		return ret;
+	}
+
+	/** Determines the controller's network role/capabilities */
+	public async getControllerCapabilities(): Promise<ControllerCapabilities> {
+		this.driver.controllerLog.print(`querying controller capabilities...`);
+		const result = await this.driver.sendMessage<
+			GetControllerCapabilitiesResponse
+		>(
+			new GetControllerCapabilitiesRequest(),
+			{ supportCheck: false },
+		);
+
+		const ret: ControllerCapabilities = {
+			isSecondary: result.isSecondary,
+			isUsingHomeIdFromOtherNetwork: result.isUsingHomeIdFromOtherNetwork,
+			isSISPresent: result.isSISPresent,
+			wasRealPrimary: result.wasRealPrimary,
+			isSUC: result.isStaticUpdateController,
+			noNodesIncluded: result.noNodesIncluded,
+		};
+
+		this._isSecondary = ret.isSecondary;
+		this._isUsingHomeIdFromOtherNetwork = ret.isUsingHomeIdFromOtherNetwork;
+		this._isSISPresent = ret.isSISPresent;
+		this._wasRealPrimary = ret.wasRealPrimary;
+		this._isSUC = ret.isSUC;
+		this._noNodesIncluded = ret.noNodesIncluded;
+
+		this.driver.controllerLog.print(
+			`received controller capabilities:
+  controller role:      ${getEnumMemberName(ControllerRole, this.role!)}
+  is the SUC:           ${ret.isSUC}
+  started this network: ${!ret.isUsingHomeIdFromOtherNetwork}
+  SIS is present:       ${ret.isSISPresent}
+  was real primary:     ${ret.wasRealPrimary}`,
+		);
+
+		return ret;
+	}
+
 	/**
 	 * @internal
 	 * Deserializes the controller information and all nodes from the cache.
@@ -6210,7 +7225,7 @@ ${associatedNodes.join(", ")}`,
 				`Turning RF ${enabled ? "on" : "off"}...`,
 			);
 			const ret = await this.driver.sendMessage<SetRFReceiveModeResponse>(
-				new SetRFReceiveModeRequest(this.driver, { enabled }),
+				new SetRFReceiveModeRequest({ enabled }),
 			);
 			return ret.isOK();
 		} catch (e) {
@@ -6226,16 +7241,35 @@ ${associatedNodes.join(", ")}`,
 		}
 	}
 
+	private _nvm: NVMAdapter | undefined;
+	/** Provides access to the controller's non-volatile memory */
+	public get nvm(): NVMAdapter {
+		if (!this._nvm) {
+			if (this.sdkVersionGte("7.0")) {
+				const io = new BufferedNVMReader(new SerialNVMIO700(this));
+				const nvm3 = new NVM3(io);
+				this._nvm = new NVM3Adapter(nvm3);
+			} else {
+				const io = new BufferedNVMReader(new SerialNVMIO500(this));
+				const nvm = new NVM500(io);
+				this._nvm = new NVM500Adapter(nvm);
+			}
+		}
+
+		return this._nvm;
+	}
+
 	/**
 	 * **Z-Wave 500 series only**
 	 *
 	 * Initialize the Firmware Update functionality and determine if the firmware can be updated.
+	 * @internal
 	 */
-	private async firmwareUpdateNVMInit(): Promise<boolean> {
+	public async firmwareUpdateNVMInit(): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_InitResponse
 		>(
-			new FirmwareUpdateNVM_InitRequest(this.driver),
+			new FirmwareUpdateNVM_InitRequest(),
 		);
 		return ret.supported;
 	}
@@ -6244,12 +7278,13 @@ ${associatedNodes.join(", ")}`,
 	 * **Z-Wave 500 series only**
 	 *
 	 * Set the NEWIMAGE marker in the NVM (to the given value), which is used to signal that a new firmware image is present
+	 * @internal
 	 */
-	private async firmwareUpdateNVMSetNewImage(
+	public async firmwareUpdateNVMSetNewImage(
 		value: boolean = true,
 	): Promise<void> {
 		await this.driver.sendMessage<FirmwareUpdateNVM_SetNewImageResponse>(
-			new FirmwareUpdateNVM_SetNewImageRequest(this.driver, {
+			new FirmwareUpdateNVM_SetNewImageRequest({
 				newImage: value,
 			}),
 		);
@@ -6264,7 +7299,7 @@ ${associatedNodes.join(", ")}`,
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_GetNewImageResponse
 		>(
-			new FirmwareUpdateNVM_GetNewImageRequest(this.driver),
+			new FirmwareUpdateNVM_GetNewImageRequest(),
 		);
 		return ret.newImage;
 	}
@@ -6282,7 +7317,7 @@ ${associatedNodes.join(", ")}`,
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_UpdateCRC16Response
 		>(
-			new FirmwareUpdateNVM_UpdateCRC16Request(this.driver, {
+			new FirmwareUpdateNVM_UpdateCRC16Request({
 				offset,
 				blockLength,
 				crcSeed,
@@ -6295,13 +7330,14 @@ ${associatedNodes.join(", ")}`,
 	 * **Z-Wave 500 series only**
 	 *
 	 * Writes the given data into the firmware update region of the NVM.
+	 * @internal
 	 */
-	private async firmwareUpdateNVMWrite(
+	public async firmwareUpdateNVMWrite(
 		offset: number,
-		buffer: Buffer,
+		buffer: Uint8Array,
 	): Promise<void> {
 		await this.driver.sendMessage<FirmwareUpdateNVM_WriteResponse>(
-			new FirmwareUpdateNVM_WriteRequest(this.driver, {
+			new FirmwareUpdateNVM_WriteRequest({
 				offset,
 				buffer,
 			}),
@@ -6312,12 +7348,13 @@ ${associatedNodes.join(", ")}`,
 	 * **Z-Wave 500 series only**
 	 *
 	 * Checks if the firmware present in the NVM is valid
+	 * @internal
 	 */
-	private async firmwareUpdateNVMIsValidCRC16(): Promise<boolean> {
+	public async firmwareUpdateNVMIsValidCRC16(): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			FirmwareUpdateNVM_IsValidCRC16Response
 		>(
-			new FirmwareUpdateNVM_IsValidCRC16Request(this.driver),
+			new FirmwareUpdateNVM_IsValidCRC16Request(),
 		);
 		return ret.isValid;
 	}
@@ -6329,7 +7366,7 @@ ${associatedNodes.join(", ")}`,
 	 */
 	public async getNVMId(): Promise<NVMId> {
 		const ret = await this.driver.sendMessage<GetNVMIdResponse>(
-			new GetNVMIdRequest(this.driver),
+			new GetNVMIdRequest(),
 		);
 		return pick(ret, ["nvmManufacturerId", "memoryType", "memorySize"]);
 	}
@@ -6341,7 +7378,7 @@ ${associatedNodes.join(", ")}`,
 	 */
 	public async externalNVMReadByte(offset: number): Promise<number> {
 		const ret = await this.driver.sendMessage<ExtNVMReadLongByteResponse>(
-			new ExtNVMReadLongByteRequest(this.driver, { offset }),
+			new ExtNVMReadLongByteRequest({ offset }),
 		);
 		return ret.byte;
 	}
@@ -6360,7 +7397,7 @@ ${associatedNodes.join(", ")}`,
 		data: number,
 	): Promise<boolean> {
 		const ret = await this.driver.sendMessage<ExtNVMWriteLongByteResponse>(
-			new ExtNVMWriteLongByteRequest(this.driver, { offset, byte: data }),
+			new ExtNVMWriteLongByteRequest({ offset, byte: data }),
 		);
 		return ret.success;
 	}
@@ -6373,9 +7410,9 @@ ${associatedNodes.join(", ")}`,
 	public async externalNVMReadBuffer(
 		offset: number,
 		length: number,
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		const ret = await this.driver.sendMessage<ExtNVMReadLongBufferResponse>(
-			new ExtNVMReadLongBufferRequest(this.driver, {
+			new ExtNVMReadLongBufferRequest({
 				offset,
 				length,
 			}),
@@ -6384,16 +7421,18 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
-	 * **Z-Wave 700 series only**
+	 * **Z-Wave 700+ series only**
 	 *
 	 * Reads a buffer from the external NVM at the given offset
+	 *
+	 * **Note:** Prefer {@link externalNVMReadBufferExt} if supported, as that command supports larger NVMs than 64 KiB.
 	 */
 	public async externalNVMReadBuffer700(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Buffer; endOfFile: boolean }> {
+	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
-			new NVMOperationsReadRequest(this.driver, {
+			new NVMOperationsReadRequest({
 				offset,
 				length,
 			}),
@@ -6420,6 +7459,50 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
+	 * **Z-Wave 700+ series only**
+	 *
+	 * Reads a buffer from the external NVM at the given offset
+	 *
+	 * **Note:** If supported, this command should be preferred over {@link externalNVMReadBuffer700} as it supports larger NVMs than 64 KiB.
+	 */
+	public async externalNVMReadBufferExt(
+		offset: number,
+		length: number,
+	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+		const ret = await this.driver.sendMessage<
+			ExtendedNVMOperationsResponse
+		>(
+			new ExtendedNVMOperationsReadRequest({
+				offset,
+				length,
+			}),
+		);
+		if (!ret.isOK()) {
+			let message = "Could not read from the external NVM";
+			if (
+				ret.status
+					=== ExtendedNVMOperationStatus.Error_OperationInterference
+			) {
+				message += ": interference between read and write operation.";
+			} else if (
+				ret.status
+					=== ExtendedNVMOperationStatus.Error_OperationMismatch
+			) {
+				message += ": wrong operation requested.";
+			}
+			throw new ZWaveError(
+				message,
+				ZWaveErrorCodes.Controller_CommandError,
+			);
+		}
+
+		return {
+			buffer: ret.bufferOrBitmask,
+			endOfFile: ret.status === ExtendedNVMOperationStatus.EndOfFile,
+		};
+	}
+
+	/**
 	 * **Z-Wave 500 series only**
 	 *
 	 * Writes a buffer to the external NVM at the given offset
@@ -6430,12 +7513,12 @@ ${associatedNodes.join(", ")}`,
 	 */
 	public async externalNVMWriteBuffer(
 		offset: number,
-		buffer: Buffer,
+		buffer: Uint8Array,
 	): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			ExtNVMWriteLongBufferResponse
 		>(
-			new ExtNVMWriteLongBufferRequest(this.driver, {
+			new ExtNVMWriteLongBufferRequest({
 				offset,
 				buffer,
 			}),
@@ -6444,18 +7527,21 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
-	 * **Z-Wave 700 series only**
+	 * **Z-Wave 700+ series only**
 	 *
 	 * Writes a buffer to the external NVM at the given offset
+	 *
+	 * **Note:** Prefer {@link externalNVMWriteBufferExt} if supported, as that command supports larger NVMs than 64 KiB.
+	 *
 	 * **WARNING:** This function can write in the full NVM address space and is not offset to start at the application area.
 	 * Take care not to accidentally overwrite the protocol NVM area!
 	 */
 	public async externalNVMWriteBuffer700(
 		offset: number,
-		buffer: Buffer,
+		buffer: Uint8Array,
 	): Promise<{ endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
-			new NVMOperationsWriteRequest(this.driver, {
+			new NVMOperationsWriteRequest({
 				offset,
 				buffer,
 			}),
@@ -6482,13 +7568,67 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
-	 * **Z-Wave 700 series only**
+	 * **Z-Wave 700+ series only**
+	 *
+	 * Writes a buffer to the external NVM at the given offset
+	 *
+	 * **Note:** If supported, this command should be preferred over {@link externalNVMWriteBuffer700} as it supports larger NVMs than 64 KiB.
+	 *
+	 * **WARNING:** This function can write in the full NVM address space and is not offset to start at the application area.
+	 * Take care not to accidentally overwrite the protocol NVM area!
+	 */
+	public async externalNVMWriteBufferExt(
+		offset: number,
+		buffer: Uint8Array,
+	): Promise<{ endOfFile: boolean }> {
+		const ret = await this.driver.sendMessage<
+			ExtendedNVMOperationsResponse
+		>(
+			new ExtendedNVMOperationsWriteRequest({
+				offset,
+				buffer,
+			}),
+		);
+
+		if (!ret.isOK()) {
+			let message = "Could not write to the external NVM";
+			if (
+				ret.status
+					=== ExtendedNVMOperationStatus.Error_OperationInterference
+			) {
+				message += ": interference between read and write operation.";
+			} else if (
+				ret.status
+					=== ExtendedNVMOperationStatus.Error_OperationMismatch
+			) {
+				message += ": wrong operation requested.";
+			} else if (
+				ret.status
+					=== ExtendedNVMOperationStatus.Error_SubCommandNotSupported
+			) {
+				message += ": sub-command not supported.";
+			}
+			throw new ZWaveError(
+				message,
+				ZWaveErrorCodes.Controller_CommandError,
+			);
+		}
+
+		return {
+			endOfFile: ret.status === ExtendedNVMOperationStatus.EndOfFile,
+		};
+	}
+
+	/**
+	 * **Z-Wave 700+ series only**
 	 *
 	 * Opens the controller's external NVM for reading/writing and returns the NVM size
+	 *
+	 * **Note:** Prefer {@link externalNVMOpenExt} if supported, as that command supports larger NVMs than 64 KiB.
 	 */
 	public async externalNVMOpen(): Promise<number> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
-			new NVMOperationsOpenRequest(this.driver),
+			new NVMOperationsOpenRequest(),
 		);
 		if (!ret.isOK()) {
 			throw new ZWaveError(
@@ -6500,13 +7640,69 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	/**
-	 * **Z-Wave 700 series only**
+	 * **Z-Wave 700+ series only**
+	 *
+	 * Opens the controller's external NVM for reading/writing and returns the NVM size and supported operations.
+	 *
+	 * **Note:** If supported, this command should be preferred over {@link externalNVMOpen} as it supports larger NVMs than 64 KiB.
+	 */
+	public async externalNVMOpenExt(): Promise<{
+		size: number;
+		supportedOperations: ExtendedNVMOperationsCommand[];
+	}> {
+		const ret = await this.driver.sendMessage<
+			ExtendedNVMOperationsResponse
+		>(
+			new ExtendedNVMOperationsOpenRequest(),
+		);
+		if (!ret.isOK()) {
+			throw new ZWaveError(
+				"Failed to open the external NVM",
+				ZWaveErrorCodes.Controller_CommandError,
+			);
+		}
+		const size = ret.offsetOrSize;
+		const supportedOperations = parseBitMask(
+			ret.bufferOrBitmask,
+			ExtendedNVMOperationsCommand.Open,
+		);
+		return {
+			size,
+			supportedOperations,
+		};
+	}
+
+	/**
+	 * **Z-Wave 700+ series only**
 	 *
 	 * Closes the controller's external NVM
+	 *
+	 * **Note:** Prefer {@link externalNVMCloseExt} if supported, as that command supports larger NVMs than 64 KiB.
 	 */
 	public async externalNVMClose(): Promise<void> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
-			new NVMOperationsCloseRequest(this.driver),
+			new NVMOperationsCloseRequest(),
+		);
+		if (!ret.isOK()) {
+			throw new ZWaveError(
+				"Failed to close the external NVM",
+				ZWaveErrorCodes.Controller_CommandError,
+			);
+		}
+	}
+
+	/**
+	 * **Z-Wave 700+ series only**
+	 *
+	 * Closes the controller's external NVM
+	 *
+	 * **Note:** If supported, this command should be preferred over {@link externalNVMClose} as it supports larger NVMs than 64 KiB.
+	 */
+	public async externalNVMCloseExt(): Promise<void> {
+		const ret = await this.driver.sendMessage<
+			ExtendedNVMOperationsResponse
+		>(
+			new ExtendedNVMOperationsCloseRequest(),
 		);
 		if (!ret.isOK()) {
 			throw new ZWaveError(
@@ -6523,7 +7719,7 @@ ${associatedNodes.join(", ")}`,
 	 */
 	public async backupNVMRaw(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		this.driver.controllerLog.print("Backing up NVM...");
 
 		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
@@ -6534,13 +7730,17 @@ ${associatedNodes.join(", ")}`,
 			);
 		}
 
-		let ret: Buffer;
+		// Disable watchdog to prevent resets during NVM access
+		await this.stopWatchdog();
+
+		let ret: Uint8Array;
 		try {
 			if (this.sdkVersionGte("7.0")) {
 				ret = await this.backupNVMRaw700(onProgress);
 				// All 7.xx versions so far seem to have a bug where the NVM is not properly closed after reading
 				// resulting in extremely strange controller behavior after a backup. To work around this, restart the stick if possible
 				await this.driver.trySoftReset();
+				// Soft-resetting will enable the watchdog again
 			} else {
 				ret = await this.backupNVMRaw500(onProgress);
 			}
@@ -6559,7 +7759,7 @@ ${associatedNodes.join(", ")}`,
 
 	private async backupNVMRaw500(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Buffer> {
+	): Promise<Uint8Array> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
 		if (!size) {
 			throw new ZWaveError(
@@ -6568,7 +7768,7 @@ ${associatedNodes.join(", ")}`,
 			);
 		}
 
-		const ret = Buffer.allocUnsafe(size);
+		const ret = new Bytes(size);
 		let offset = 0;
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
@@ -6584,7 +7784,7 @@ ${associatedNodes.join(", ")}`,
 				chunkSize = 48;
 				continue;
 			}
-			chunk.copy(ret, offset);
+			ret.set(chunk, offset);
 			offset += chunk.length;
 			if (chunkSize > chunk.length) chunkSize = chunk.length;
 
@@ -6596,29 +7796,54 @@ ${associatedNodes.join(", ")}`,
 
 	private async backupNVMRaw700(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Buffer> {
-		// Open NVM for reading
-		const size = await this.externalNVMOpen();
+	): Promise<Uint8Array> {
+		let open: () => Promise<number>;
+		let read: (
+			offset: number,
+			length: number,
+		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+		let close: () => Promise<void>;
 
-		const ret = Buffer.allocUnsafe(size);
+		if (
+			this.supportedFunctionTypes?.includes(
+				FunctionType.ExtendedNVMOperations,
+			)
+		) {
+			open = async () => {
+				const { size } = await this.externalNVMOpenExt();
+				return size;
+			};
+			read = (offset, length) =>
+				this.externalNVMReadBufferExt(offset, length);
+			close = () => this.externalNVMCloseExt();
+		} else {
+			open = () => this.externalNVMOpen();
+			read = (offset, length) =>
+				this.externalNVMReadBuffer700(offset, length);
+			close = () => this.externalNVMClose();
+		}
+
+		// Open NVM for reading
+		const size = await open();
+
+		const ret = new Bytes(size);
 		let offset = 0;
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
 		let chunkSize: number = Math.min(0xff, ret.length);
 		try {
 			while (offset < ret.length) {
-				const { buffer: chunk, endOfFile } = await this
-					.externalNVMReadBuffer700(
-						offset,
-						Math.min(chunkSize, ret.length - offset),
-					);
+				const { buffer: chunk, endOfFile } = await read(
+					offset,
+					Math.min(chunkSize, ret.length - offset),
+				);
 				if (chunkSize === 0xff && chunk.length === 0) {
 					// Some SDK versions return an empty buffer when trying to read a buffer that is too long
 					// Fallback to a sane (but maybe slow) size
 					chunkSize = 48;
 					continue;
 				}
-				chunk.copy(ret, offset);
+				ret.set(chunk, offset);
 				offset += chunk.length;
 				if (chunkSize > chunk.length) chunkSize = chunk.length;
 
@@ -6629,7 +7854,7 @@ ${associatedNodes.join(", ")}`,
 			}
 		} finally {
 			// Whatever happens, close the NVM
-			await this.externalNVMClose();
+			await close();
 		}
 
 		return ret;
@@ -6648,7 +7873,7 @@ ${associatedNodes.join(", ")}`,
 	 * @param restoreProgress Can be used to monitor the progress of the restore operation, which may take several seconds up to a few minutes depending on the NVM size
 	 */
 	public async restoreNVM(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		convertProgress?: (bytesRead: number, total: number) => void,
 		restoreProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
@@ -6660,6 +7885,9 @@ ${associatedNodes.join(", ")}`,
 			);
 		}
 
+		// Disable watchdog to prevent resets during NVM access
+		await this.stopWatchdog();
+
 		// Restoring a potentially incompatible NVM happens in three steps:
 		// 1. the current NVM is read
 		// 2. the given NVM data is converted to match the current format
@@ -6669,13 +7897,13 @@ ${associatedNodes.join(", ")}`,
 			this.driver.controllerLog.print(
 				"Converting NVM to target format...",
 			);
-			let targetNVM: Buffer;
+			let targetNVM: Uint8Array;
 			if (this.sdkVersionGte("7.0")) {
 				targetNVM = await this.backupNVMRaw700(convertProgress);
 			} else {
 				targetNVM = await this.backupNVMRaw500(convertProgress);
 			}
-			const convertedNVM = migrateNVM(nvmData, targetNVM);
+			const convertedNVM = await migrateNVM(nvmData, targetNVM);
 
 			this.driver.controllerLog.print("Restoring NVM backup...");
 			if (this.sdkVersionGte("7.0")) {
@@ -6713,7 +7941,7 @@ ${associatedNodes.join(", ")}`,
 	 * @param onProgress Can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size
 	 */
 	public async restoreNVMRaw(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		this.driver.controllerLog.print("Restoring NVM...");
@@ -6773,7 +8001,7 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	private async restoreNVMRaw500(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
@@ -6785,7 +8013,7 @@ ${associatedNodes.join(", ")}`,
 		} else if (size !== nvmData.length) {
 			// This might be a converted NVM buffer which contains only the first relevant part.
 			// The first two bytes must point to the last byte in the buffer then
-			const actualSize = 1 + nvmData.readUInt16BE(0);
+			const actualSize = 1 + Bytes.view(nvmData).readUInt16BE(0);
 			if (actualSize !== nvmData.length) {
 				throw new ZWaveError(
 					"The given data does not match the NVM size - cannot restore!",
@@ -6794,13 +8022,15 @@ ${associatedNodes.join(", ")}`,
 			}
 
 			// Now we only need to figure out which part of the NVM needs to be overwritten when restoring
-			const oldSize = 1
-				+ (await this.externalNVMReadBuffer(0, 2)).readUInt16BE(0);
+			const firstTwoNVMBytes = Bytes.view(
+				await this.externalNVMReadBuffer(0, 2),
+			);
+			const oldSize = 1 + firstTwoNVMBytes.readUInt16BE(0);
 			if (oldSize > actualSize) {
 				// Pad the rest with 0xff
-				nvmData = Buffer.concat([
+				nvmData = Bytes.concat([
 					nvmData,
-					Buffer.alloc(oldSize - actualSize, 0xff),
+					Bytes.alloc(oldSize - actualSize, 0xff),
 				]);
 			}
 		}
@@ -6824,11 +8054,45 @@ ${associatedNodes.join(", ")}`,
 	}
 
 	private async restoreNVMRaw700(
-		nvmData: Buffer,
+		nvmData: Uint8Array,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
+		let open: () => Promise<number>;
+		let read: (
+			offset: number,
+			length: number,
+		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+		let write: (
+			offset: number,
+			buffer: Uint8Array,
+		) => Promise<{ endOfFile: boolean }>;
+		let close: () => Promise<void>;
+
+		if (
+			this.supportedFunctionTypes?.includes(
+				FunctionType.ExtendedNVMOperations,
+			)
+		) {
+			open = async () => {
+				const { size } = await this.externalNVMOpenExt();
+				return size;
+			};
+			read = (offset, length) =>
+				this.externalNVMReadBufferExt(offset, length);
+			write = (offset, buffer) =>
+				this.externalNVMWriteBufferExt(offset, buffer);
+			close = () => this.externalNVMCloseExt();
+		} else {
+			open = () => this.externalNVMOpen();
+			read = (offset, length) =>
+				this.externalNVMReadBuffer700(offset, length);
+			write = (offset, buffer) =>
+				this.externalNVMWriteBuffer700(offset, buffer);
+			close = () => this.externalNVMClose();
+		}
+
 		// Open NVM for reading
-		const size = await this.externalNVMOpen();
+		const size = await open();
 
 		if (size !== nvmData.length) {
 			throw new ZWaveError(
@@ -6841,15 +8105,14 @@ ${associatedNodes.join(", ")}`,
 		// For some reason, there is no documentation and no official command for this
 		// The write requests have the same size as the read response - if this yields no
 		// data, default to a sane (but maybe slow) size
-		const chunkSize =
-			(await this.externalNVMReadBuffer700(0, 0xff)).buffer.length || 48;
+		const chunkSize = (await read(0, 0xff)).buffer.length || 48;
 
 		// Close NVM and re-open again for writing
-		await this.externalNVMClose();
-		await this.externalNVMOpen();
+		await close();
+		await open();
 
 		for (let offset = 0; offset < nvmData.length; offset += chunkSize) {
-			const { endOfFile } = await this.externalNVMWriteBuffer700(
+			const { endOfFile } = await write(
 				offset,
 				nvmData.subarray(offset, offset + chunkSize),
 			);
@@ -6860,7 +8123,7 @@ ${associatedNodes.join(", ")}`,
 			if (endOfFile) break;
 		}
 		// Close NVM
-		await this.externalNVMClose();
+		await close();
 	}
 
 	/**
@@ -6875,7 +8138,7 @@ ${associatedNodes.join(", ")}`,
 		rssiChannel3?: RSSI;
 	}> {
 		const ret = await this.driver.sendMessage<GetBackgroundRSSIResponse>(
-			new GetBackgroundRSSIRequest(this.driver),
+			new GetBackgroundRSSIRequest(),
 		);
 		const rssi = pick(ret, [
 			"rssiChannel0",
@@ -6985,7 +8248,7 @@ ${associatedNodes.join(", ")}`,
 					productType,
 					productId,
 					firmwareVersion,
-					rfRegion: this.rfRegion,
+					rfRegion: this.rfRegion ?? options?.rfRegion,
 				},
 				{
 					userAgent: this.driver.getUserAgentStringWithComponents(
@@ -7028,6 +8291,7 @@ ${associatedNodes.join(", ")}`,
 	): Promise<void> {
 		if (
 			deviceId.rfRegion !== undefined
+			&& this.rfRegion !== NOT_KNOWN
 			&& deviceId.rfRegion !== this.rfRegion
 		) {
 			throw new ZWaveError(
@@ -7101,6 +8365,7 @@ ${associatedNodes.join(", ")}`,
 	public async firmwareUpdateOTA(
 		nodeId: number,
 		updateInfo: FirmwareUpdateInfo,
+		options?: FirmwareUpdateOptions,
 	): Promise<FirmwareUpdateResult> {
 		// Don't let two firmware updates happen in parallel
 		if (this.isAnyOTAFirmwareUpdateInProgress()) {
@@ -7112,8 +8377,9 @@ ${associatedNodes.join(", ")}`,
 				ZWaveErrorCodes.FirmwareUpdateCC_NetworkBusy,
 			);
 		}
+
 		// Don't allow updating firmware when the controller is currently updating its own firmware
-		if (this.isFirmwareUpdateInProgress()) {
+		if (this.driver.isOTWFirmwareUpdateInProgress()) {
 			const message =
 				`Failed to start the update: The controller is currently being updated!`;
 			this.driver.controllerLog.print(message, "error");
@@ -7207,365 +8473,1065 @@ ${associatedNodes.join(", ")}`,
 			);
 		}
 
-		return node.updateFirmware(firmwares);
+		return node.updateFirmware(firmwares, options);
 	}
 
-	private _firmwareUpdateInProgress: boolean = false;
+	private _currentLearnMode: LearnModeIntent | undefined;
+	private _joinNetworkOptions: JoinNetworkOptions | undefined;
 
-	/**
-	 * Returns whether a firmware update is in progress for the controller.
-	 */
-	public isFirmwareUpdateInProgress(): boolean {
-		return this._firmwareUpdateInProgress;
-	}
-
-	/**
-	 * Updates the firmware of the controller using the given firmware file.
-	 *
-	 * The return value indicates whether the update was successful.
-	 * **WARNING:** After a successful update, the Z-Wave driver will destroy itself so it can be restarted.
-	 *
-	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
-	 */
-	public async firmwareUpdateOTW(
-		data: Buffer,
-	): Promise<ControllerFirmwareUpdateResult> {
-		// Don't let two firmware updates happen in parallel
-		if (this.isAnyOTAFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: A firmware update is already in progress on this network!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
-		}
-		// Don't allow updating firmware when the controller is currently updating its own firmware
-		if (this.isFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: The controller is currently being updated!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
+	public async beginJoiningNetwork(
+		options?: JoinNetworkOptions,
+	): Promise<JoinNetworkResult> {
+		if (this._currentLearnMode != undefined) {
+			return JoinNetworkResult.Error_Busy;
+		} else if (!this.isLearnModePermitted) {
+			return JoinNetworkResult.Error_NotPermitted;
 		}
 
-		if (this.driver.isInBootloader() || this.sdkVersionGte("7.0")) {
-			// If the controller is stuck in bootloader mode, always use the 700 series update method
-			return this.firmwareUpdateOTW700(data);
-		} else if (
-			this.sdkVersionGte("6.50.0")
-			&& this.supportedFunctionTypes?.includes(
-				FunctionType.FirmwareUpdateNVM,
-			)
-		) {
-			// This is 500 series
-			const wasUpdated = await this.firmwareUpdateOTW500(data);
-			if (wasUpdated.success) {
-				// After updating the firmware on 500 series sticks, we MUST soft-reset them
-				await this.driver.softResetAndRestart(
-					"Activating new firmware and restarting driver...",
-					"Controller firmware updates require a driver restart!",
-				);
+		// FIXME: If the join strategy says S0, remove S2 from the NIF before joining
+
+		try {
+			const result = await this.driver.sendMessage<
+				Message & SuccessIndicator
+			>(
+				new SetLearnModeRequest({
+					intent: LearnModeIntent.Inclusion,
+				}),
+			);
+
+			if (result.isOK()) {
+				this._currentLearnMode = LearnModeIntent.Inclusion;
+				this._joinNetworkOptions = options;
+				return JoinNetworkResult.OK;
 			}
-			return wasUpdated;
-		} else {
-			throw new ZWaveError(
-				`Firmware updates are not supported on this controller`,
-				ZWaveErrorCodes.Controller_NotSupported,
+		} catch (e) {
+			this.driver.controllerLog.print(
+				`Joining a network failed: ${getErrorMessage(e)}`,
+				"error",
 			);
 		}
+
+		this._currentLearnMode = undefined;
+		return JoinNetworkResult.Error_Failed;
 	}
 
-	private async firmwareUpdateOTW500(
-		data: Buffer,
-	): Promise<ControllerFirmwareUpdateResult> {
-		this._firmwareUpdateInProgress = true;
-		let turnedRadioOff = false;
+	public async stopJoiningNetwork(): Promise<boolean> {
+		if (
+			this._currentLearnMode !== LearnModeIntent.LegacyInclusionExclusion
+			// FIXME: ^ only for actual exclusion
+			&& this._currentLearnMode !== LearnModeIntent.Inclusion
+		) {
+			return false;
+		}
+
 		try {
-			this.driver.controllerLog.print("Beginning firmware update");
+			const result = await this.driver.sendMessage<
+				Message & SuccessIndicator
+			>(
+				new SetLearnModeRequest({
+					// TODO: We should be using .Stop here for the non-legacy
+					// inclusion/exclusion, but that command results in a
+					// negative response on current firmwares, even though it works.
+					// Using LegacyStop avoids that, but results in an unexpected
+					// LearnModeFailed callback.
+					intent: LearnModeIntent.LegacyStop,
+				}),
+			);
 
-			const canUpdate = await this.firmwareUpdateNVMInit();
-			if (!canUpdate) {
-				this.driver.controllerLog.print(
-					"OTW update failed: This controller does not support firmware updates",
-					"error",
-				);
-
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_NotSupported,
-				};
-				this.emit("firmware update finished", result);
-				return result;
+			if (result.isOK()) {
+				this._currentLearnMode = undefined;
+				this._joinNetworkOptions = undefined;
+				return true;
 			}
+		} catch (e) {
+			this.driver.controllerLog.print(
+				`Failed to stop joining a network: ${getErrorMessage(e)}`,
+				"error",
+			);
+		}
 
-			// Avoid interruption by incoming messages
-			await this.toggleRF(false);
-			turnedRadioOff = true;
+		return false;
+	}
 
-			// Upload the firmware data
-			const BLOCK_SIZE = 64;
-			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
-			for (let fragment = 0; fragment < numFragments; fragment++) {
-				const fragmentData = data.subarray(
-					fragment * BLOCK_SIZE,
-					(fragment + 1) * BLOCK_SIZE,
-				);
-				await this.firmwareUpdateNVMWrite(
-					fragment * BLOCK_SIZE,
-					fragmentData,
-				);
+	public async beginLeavingNetwork(): Promise<LeaveNetworkResult> {
+		if (this._currentLearnMode != undefined) {
+			return LeaveNetworkResult.Error_Busy;
+		} else if (!this.isLearnModePermitted) {
+			return LeaveNetworkResult.Error_NotPermitted;
+		}
 
-				// This progress is technically too low, but we can keep 100% for after CRC checking this way
-				const progress: ControllerFirmwareUpdateProgress = {
-					sentFragments: fragment,
-					totalFragments: numFragments,
-					progress: roundTo((fragment / numFragments) * 100, 2),
-				};
-				this.emit("firmware update progress", progress);
+		try {
+			const result = await this.driver.sendMessage<
+				Message & SuccessIndicator
+			>(
+				new SetLearnModeRequest({
+					intent: LearnModeIntent.NetworkWideExclusion,
+				}),
+			);
+
+			if (result.isOK()) {
+				this._currentLearnMode = LearnModeIntent.NetworkWideExclusion;
+				return LeaveNetworkResult.OK;
 			}
+		} catch (e) {
+			this.driver.controllerLog.print(
+				`Leaving the current network failed: ${getErrorMessage(e)}`,
+				"error",
+			);
+		}
 
-			// Check if a valid image was written
-			const isValidCRC = await this.firmwareUpdateNVMIsValidCRC16();
-			if (!isValidCRC) {
-				this.driver.controllerLog.print(
-					"OTW update failed: The firmware image is invalid",
-					"error",
-				);
+		this._currentLearnMode = undefined;
+		return LeaveNetworkResult.Error_Failed;
+	}
 
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Aborted,
-				};
-				this.emit("firmware update finished", result);
-				return result;
+	public async stopLeavingNetwork(): Promise<boolean> {
+		if (
+			this._currentLearnMode !== LearnModeIntent.LegacyInclusionExclusion
+			// FIXME: ^ only for actual exclusion
+			&& this._currentLearnMode
+				!== LearnModeIntent.LegacyNetworkWideExclusion
+			&& this._currentLearnMode !== LearnModeIntent.DirectExclusion
+			&& this._currentLearnMode !== LearnModeIntent.NetworkWideExclusion
+		) {
+			return false;
+		}
+
+		try {
+			const result = await this.driver.sendMessage<
+				Message & SuccessIndicator
+			>(
+				new SetLearnModeRequest({
+					// TODO: We should be using .Stop here for the non-legacy
+					// inclusion/exclusion, but that command results in a
+					// negative response on current firmwares, even though it works.
+					// Using LegacyStop avoids that, but results in an unexpected
+					// LearnModeFailed callback.
+					intent: LearnModeIntent.LegacyStop,
+				}),
+			);
+
+			if (result.isOK()) {
+				this._currentLearnMode = undefined;
+				return true;
 			}
+		} catch (e) {
+			this.driver.controllerLog.print(
+				`Failed to stop leaving a network: ${getErrorMessage(e)}`,
+				"error",
+			);
+		}
 
-			this.emit("firmware update progress", {
-				sentFragments: numFragments,
-				totalFragments: numFragments,
-				progress: 100,
+		return false;
+	}
+
+	/**
+	 * Is called when a RemoveNode request is received from the controller.
+	 * Handles and controls the exclusion process.
+	 */
+	private async handleLearnModeCallback(
+		msg: SetLearnModeCallback,
+	): Promise<boolean> {
+		// not sure what to do with this message, we're not in learn mode
+		if (this._currentLearnMode == undefined) return false;
+
+		// FIXME: Reset security manager on successful join or leave
+
+		const wasJoining = this._currentLearnMode === LearnModeIntent.Inclusion
+			|| this._currentLearnMode === LearnModeIntent.SmartStart
+			|| this._currentLearnMode
+				=== LearnModeIntent.LegacyNetworkWideInclusion
+			|| (this._currentLearnMode
+					=== LearnModeIntent.LegacyInclusionExclusion
+				// TODO: Secondary controller may also use this to accept controller shift
+				// Figure out how to detect that.
+				&& this.role === ControllerRole.Primary);
+		const wasLeaving =
+			this._currentLearnMode === LearnModeIntent.DirectExclusion
+			|| this._currentLearnMode
+				=== LearnModeIntent.NetworkWideExclusion
+			|| this._currentLearnMode
+				=== LearnModeIntent.LegacyNetworkWideExclusion
+			|| (this._currentLearnMode
+					=== LearnModeIntent.LegacyInclusionExclusion
+				&& this.role !== ControllerRole.Primary);
+
+		if (msg.status === LearnModeStatus.Started) {
+			// cool, cool, cool...
+			return true;
+		} else if (msg.status === LearnModeStatus.Failed) {
+			if (wasJoining) {
+				this._currentLearnMode = undefined;
+				this._joinNetworkOptions = undefined;
+				this.emit("joining network failed");
+				return true;
+			} else if (wasLeaving) {
+				this._currentLearnMode = undefined;
+				this.emit("leaving network failed");
+				return true;
+			}
+		} else if (
+			msg.status === LearnModeStatus.Completed
+			|| (this._currentLearnMode >= LearnModeIntent.Inclusion
+				&& msg.status === LearnModeStatus.ProtocolDone)
+		) {
+			if (wasJoining) {
+				this._currentLearnMode = undefined;
+				this.driver["_securityManager"] = undefined;
+				this.driver["_securityManager2"] = await SecurityManager2
+					.create();
+				this.driver["_securityManagerLR"] = await SecurityManager2
+					.create();
+				this._nodes.clear();
+
+				process.nextTick(() => this.afterJoiningNetwork().catch(noop));
+				return true;
+			} else if (wasLeaving) {
+				this._currentLearnMode = undefined;
+				this.emit("network left");
+				return true;
+			}
+		}
+
+		// not sure what to do with this message
+		return false;
+	}
+
+	private async expectSecurityBootstrapS0(
+		bootstrappingNode: ZWaveNode,
+	): Promise<SecurityBootstrapFailure | undefined> {
+		// When bootstrapping with S0, no other keys are granted
+		for (const secClass of securityClassOrder) {
+			if (secClass !== SecurityClass.S0_Legacy) {
+				bootstrappingNode.securityClasses.set(secClass, false);
+			}
+		}
+
+		const unGrantSecurityClass = () => {
+			this.driver["_securityManager"] = undefined;
+			bootstrappingNode.securityClasses.set(
+				SecurityClass.S0_Legacy,
+				false,
+			);
+		};
+
+		const abortTimeout = () => {
+			this.driver.controllerLog.logNode(bootstrappingNode.id, {
+				message:
+					`Security S0 bootstrapping failed: a secure inclusion timer has elapsed`,
+				level: "warn",
 			});
 
-			// Enable the image
-			await this.firmwareUpdateNVMSetNewImage();
+			unGrantSecurityClass();
+			return SecurityBootstrapFailure.Timeout;
+		};
 
-			this.driver.controllerLog.print("Firmware update succeeded");
+		try {
+			const api = bootstrappingNode.commandClasses.Security;
 
-			const result: ControllerFirmwareUpdateResult = {
-				success: true,
-				status: ControllerFirmwareUpdateStatus.OK,
-			};
-			this.emit("firmware update finished", result);
+			// For the first part of the bootstrapping, a temporary key needs to be used
+			this.driver["_securityManager"] = new SecurityManager({
+				ownNodeId: this._ownNodeId!,
+				networkKey: new Uint8Array(16).fill(0),
+				nonceTimeout: this.driver.options.timeouts.nonce,
+			});
+
+			// Report the supported schemes
+			await api.reportSecurityScheme(false);
+
+			// Expect a NonceGet within 10 seconds
+			let nonceGet = await this.driver.waitForCommand<SecurityCCNonceGet>(
+				(cc) => cc instanceof SecurityCCNonceGet,
+				10000,
+			).catch(() => "timeout" as const);
+			if (nonceGet === "timeout") return abortTimeout();
+
+			// Send nonce
+			await api.sendNonce();
+
+			// Expect NetworkKeySet within 10 seconds
+			const networkKeySet = await this.driver.waitForCommand<
+				SecurityCCNetworkKeySet
+			>(
+				(cc) => cc instanceof SecurityCCNetworkKeySet,
+				10000,
+			).catch(() => "timeout" as const);
+			if (networkKeySet === "timeout") return abortTimeout();
+
+			// Now that the key is known, we can create the real security manager
+			this.driver["_securityManager"] = new SecurityManager({
+				ownNodeId: this._ownNodeId!,
+				networkKey: networkKeySet.networkKey,
+				nonceTimeout: this.driver.options.timeouts.nonce,
+			});
+
+			// Request a new nonce to respond, which should be answered within 10 seconds
+			let nonce = await api.withOptions({ reportTimeoutMs: 10000 })
+				.getNonce();
+			if (!nonce) return abortTimeout();
+
+			// Verify the key
+			await api.verifyNetworkKey();
+
+			// We are a controller, so continue with scheme inherit
+
+			// Expect a NonceGet within 10 seconds
+			nonceGet = await this.driver.waitForCommand<SecurityCCNonceGet>(
+				(cc) => cc instanceof SecurityCCNonceGet,
+				10000,
+			).catch(() => "timeout" as const);
+			if (nonceGet === "timeout") return abortTimeout();
+
+			// Send nonce
+			await api.sendNonce();
+
+			// Expect SchemeInherit within 10 seconds
+			const schemeInherit = await this.driver.waitForCommand<
+				SecurityCCSchemeInherit
+			>(
+				(cc) => cc instanceof SecurityCCSchemeInherit,
+				10000,
+			).catch(() => "timeout" as const);
+			if (schemeInherit === "timeout") return abortTimeout();
+
+			// Request a new nonce to respond, which should be answered within 10 seconds
+			nonce = await api.withOptions({ reportTimeoutMs: 10000 })
+				.getNonce();
+			if (!nonce) return abortTimeout();
+
+			// Report the supported schemes. This isn't technically correct, but since
+			// S0 won't get any extensions, we can just report the default scheme again
+			await api.reportSecurityScheme(true);
+
+			// Remember that the S0 key was granted
+			bootstrappingNode.securityClasses.set(
+				SecurityClass.S0_Legacy,
+				true,
+			);
+
+			// Store the key
+			this.driver.cacheSet(
+				cacheKeys.controller.securityKeys(SecurityClass.S0_Legacy),
+				networkKeySet.networkKey,
+			);
+
+			this.driver.driverLog.print(
+				`Security S0 bootstrapping successful`,
+			);
+
+			// success 🎉
+		} catch (e) {
+			let errorMessage = `Security S0 bootstrapping failed`;
+			let result = SecurityBootstrapFailure.Unknown;
+			if (!isZWaveError(e)) {
+				errorMessage += `: ${e as any}`;
+			} else if (e.code === ZWaveErrorCodes.Controller_MessageExpired) {
+				errorMessage += ": a secure inclusion timer has elapsed.";
+				result = SecurityBootstrapFailure.Timeout;
+			} else if (
+				e.code !== ZWaveErrorCodes.Controller_MessageDropped
+				&& e.code !== ZWaveErrorCodes.Controller_NodeTimeout
+			) {
+				errorMessage += `: ${e.message}`;
+			}
+			this.driver.controllerLog.logNode(
+				bootstrappingNode.id,
+				errorMessage,
+				"warn",
+			);
+			unGrantSecurityClass();
+
 			return result;
-		} finally {
-			this._firmwareUpdateInProgress = false;
-			if (turnedRadioOff) await this.toggleRF(true);
 		}
 	}
 
-	private async firmwareUpdateOTW700(
-		data: Buffer,
-	): Promise<ControllerFirmwareUpdateResult> {
-		this._firmwareUpdateInProgress = true;
-		let destroy = false;
+	private async expectSecurityBootstrapS2(
+		bootstrappingNode: ZWaveNode,
+		requested: InclusionGrant,
+		userCallbacks: JoinNetworkUserCallbacks | undefined =
+			this.driver.options.joinNetworkUserCallbacks,
+	): Promise<
+		SecurityBootstrapFailure | undefined
+	> {
+		const api = bootstrappingNode.commandClasses["Security 2"]
+			.withOptions({
+				// Do not wait for Nonce Reports after SET-type commands.
+				// Timing is critical here
+				s2VerifyDelivery: false,
+			});
+
+		const unGrantSecurityClasses = () => {
+			for (const secClass of securityClassOrder) {
+				bootstrappingNode.securityClasses.set(secClass, false);
+			}
+		};
+
+		// FIXME: Abstract this out so it can be reused as primary and secondary
+		const securityManager = isLongRangeNodeId(this._ownNodeId!)
+			? this.driver.securityManagerLR
+			: this.driver.securityManager2;
+
+		if (!securityManager) {
+			// This should not happen when joining a network.
+			unGrantSecurityClasses();
+			return SecurityBootstrapFailure.NoKeysConfigured;
+		}
+
+		const receivedKeys = new Map<SecurityClass, Uint8Array>();
+
+		const deleteTempKey = () => {
+			// Whatever happens, no further communication needs the temporary key
+			securityManager.deleteNonce(bootstrappingNode.id);
+			securityManager.tempKeys.delete(bootstrappingNode.id);
+		};
+
+		let dskHidden = false;
+		const applicationHideDSK = () => {
+			if (dskHidden) return;
+			dskHidden = true;
+			try {
+				userCallbacks?.done();
+			} catch {
+				// ignore application-level errors
+			}
+		};
+
+		const abort = async (failType?: KEXFailType): Promise<void> => {
+			applicationHideDSK();
+			if (failType != undefined) {
+				try {
+					await api.abortKeyExchange(failType);
+				} catch {
+					// ignore
+				}
+			}
+			// Un-grant S2 security classes we might have granted
+			unGrantSecurityClasses();
+			deleteTempKey();
+		};
+
+		const abortTimeout = async () => {
+			this.driver.controllerLog.logNode(bootstrappingNode.id, {
+				message:
+					`Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
+				level: "warn",
+			});
+
+			await abort();
+			return SecurityBootstrapFailure.Timeout;
+		};
+
+		const abortCanceled = async () => {
+			this.driver.controllerLog.logNode(bootstrappingNode.id, {
+				message:
+					`The including node canceled the Security S2 bootstrapping.`,
+				direction: "inbound",
+				level: "warn",
+			});
+			await abort();
+			return SecurityBootstrapFailure.NodeCanceled;
+		};
 
 		try {
-			if (!this.driver.isInBootloader()) {
-				await this.driver.enterBootloader();
+			// Send with our desired keys
+			await api.requestKeys({
+				requestedKeys: requested.securityClasses,
+				requestCSA: false,
+				supportedECDHProfiles: [ECDHProfiles.Curve25519],
+				supportedKEXSchemes: [KEXSchemes.KEXScheme1],
+			});
+
+			// Wait for including node to grant keys
+			const kexSet = await this.driver.waitForCommand<
+				Security2CCKEXSet | Security2CCKEXFail
+			>(
+				(cc) =>
+					cc instanceof Security2CCKEXSet
+					|| cc instanceof Security2CCKEXFail,
+				inclusionTimeouts.TB2,
+			).catch(() => "timeout" as const);
+
+			if (kexSet === "timeout") return abortTimeout();
+			if (kexSet instanceof Security2CCKEXFail) {
+				return abortCanceled();
 			}
 
-			// Start the update process
-			this.driver.controllerLog.print("Beginning firmware upload");
-			await this.driver.bootloader.beginUpload();
-
-			// Wait for the bootloader to accept fragments
-			try {
-				await this.driver.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.Message
-						&& c.message === "begin upload",
-					5000,
-				);
-				await this.driver.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.FlowControl
-						&& c.command === XModemMessageHeaders.C,
-					1000,
-				);
-			} catch {
-				this.driver.controllerLog.print(
-					"OTW update failed: Expected response not received from the bootloader",
-					"error",
-				);
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Timeout,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			}
-
-			const BLOCK_SIZE = 128;
-			if (data.length % BLOCK_SIZE !== 0) {
-				// Pad the data to a multiple of BLOCK_SIZE
-				data = Buffer.concat([
-					data,
-					Buffer.alloc(BLOCK_SIZE - (data.length % BLOCK_SIZE), 0xff),
-				]);
-			}
-			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
-
-			let aborted = false;
-
-			transfer: for (
-				let fragment = 1;
-				fragment <= numFragments;
-				fragment++
+			// Validate the command
+			// Echo flag must be false
+			if (kexSet.echo) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: KEX Set unexpectedly has the echo flag set.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.NoVerify);
+				return SecurityBootstrapFailure.ParameterMismatch;
+			} else if (
+				kexSet.selectedKEXScheme !== KEXSchemes.KEXScheme1
 			) {
-				const fragmentData = data.subarray(
-					(fragment - 1) * BLOCK_SIZE,
-					fragment * BLOCK_SIZE,
-				);
-
-				retry: for (let retry = 0; retry < 3; retry++) {
-					await this.driver.bootloader.uploadFragment(
-						fragment,
-						fragmentData,
-					);
-					let result: BootloaderChunk & {
-						type: BootloaderChunkType.FlowControl;
-					};
-					try {
-						result = await this.driver.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.FlowControl,
-							1000,
-						);
-					} catch (e) {
-						this.driver.controllerLog.print(
-							"OTW update failed: The bootloader did not acknowledge the start of transfer.",
-							"error",
-						);
-
-						const result: ControllerFirmwareUpdateResult = {
-							success: false,
-							status:
-								ControllerFirmwareUpdateStatus.Error_Timeout,
-						};
-						this.emit("firmware update finished", result);
-						return result;
-					}
-
-					switch (result.command) {
-						case XModemMessageHeaders.ACK: {
-							// The fragment was accepted
-							const progress: ControllerFirmwareUpdateProgress = {
-								sentFragments: fragment,
-								totalFragments: numFragments,
-								progress: roundTo(
-									(fragment / numFragments) * 100,
-									2,
-								),
-							};
-							this.emit("firmware update progress", progress);
-
-							// we've transmitted at least one fragment, so we need to destroy the driver afterwards
-							destroy = true;
-
-							continue transfer;
-						}
-						case XModemMessageHeaders.NAK:
-							// The fragment was rejected, try again
-							continue retry;
-						case XModemMessageHeaders.CAN:
-							// The bootloader aborted the update. We'll receive the reason afterwards as a message
-							aborted = true;
-							break transfer;
-					}
-				}
-
-				this.driver.controllerLog.print(
-					"OTW update failed: Maximum retry attempts reached",
-					"error",
-				);
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status:
-						ControllerFirmwareUpdateStatus.Error_RetryLimitReached,
-				};
-				this.emit("firmware update finished", result);
-				return result;
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: Unsupported key exchange scheme.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.NoSupportedScheme);
+				return SecurityBootstrapFailure.ParameterMismatch;
+			} else if (
+				kexSet.selectedECDHProfile !== ECDHProfiles.Curve25519
+			) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: Unsupported ECDH profile.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.NoSupportedCurve);
+				return SecurityBootstrapFailure.ParameterMismatch;
+			} else if (kexSet.permitCSA !== false) {
+				// We do not support CSA at the moment, so it is never requested.
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: CSA granted but not requested.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.BootstrappingCanceled);
+				return SecurityBootstrapFailure.ParameterMismatch;
 			}
 
-			if (aborted) {
-				// wait for the reason to craft a good error message
-				const error = await this.driver
-					.waitForBootloaderChunk<
-						BootloaderChunk & { type: BootloaderChunkType.Message }
-					>(
-						(c) =>
-							c.type === BootloaderChunkType.Message
-							&& c.message.includes("error 0x"),
-						1000,
-					)
-					.catch(() => undefined);
+			const matchingKeys = kexSet.grantedKeys.filter((k) =>
+				securityClassOrder.includes(k as any)
+				&& requested.securityClasses.includes(k)
+			);
+			if (!matchingKeys.length) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: None of the requested security classes are granted.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.NoKeyMatch);
+				return SecurityBootstrapFailure.ParameterMismatch;
+			}
 
-				// wait for the menu screen so it doesn't show up in logs
-				await this.driver
-					.waitForBootloaderChunk(
-						(c) => c.type === BootloaderChunkType.Menu,
-						1000,
-					)
-					.catch(() => undefined);
+			const highestGranted = getHighestSecurityClass(matchingKeys);
+			const requiresAuthentication =
+				highestGranted === SecurityClass.S2_AccessControl
+				|| highestGranted === SecurityClass.S2_Authenticated;
 
-				let message = `OTW update was aborted by the bootloader.`;
-				if (error) {
-					message += ` ${error.message}`;
-					// TODO: parse error code
-				}
-				this.driver.controllerLog.print(message, "error");
+			// If authentication is required, use the (static) authenticated ECDH key pair,
+			// otherwise generate a new one
+			const keyPair = requiresAuthentication
+				? await this.driver.getLearnModeAuthenticatedKeyPair()
+				: await generateECDHKeyPair();
+			const transmittedPublicKey = Bytes.from(keyPair.publicKey);
+			if (requiresAuthentication) {
+				// Authentication requires obfuscating the public key
+				transmittedPublicKey.writeUInt16BE(0x0000, 0);
 
-				const result: ControllerFirmwareUpdateResult = {
-					success: false,
-					status: ControllerFirmwareUpdateStatus.Error_Aborted,
-				};
-				this.emit("firmware update finished", result);
-				return result;
-			} else {
-				// We're done, send EOT and wait for the menu screen
-				await this.driver.bootloader.finishUpload();
+				// Show the DSK to the user
+				const dsk = dskToString(keyPair.publicKey.subarray(0, 16));
 				try {
-					await this.driver.waitForBootloaderChunk(
-						(c) =>
-							c.type === BootloaderChunkType.Message
-							&& c.message.includes("upload complete"),
-						1000,
-					);
-					await this.driver.waitForBootloaderChunk(
-						(c) => c.type === BootloaderChunkType.Menu,
-						1000,
-					);
-				} catch (e) {
-					this.driver.controllerLog.print(
-						"OTW update failed: The bootloader did not acknowledge the end of transfer.",
-						"error",
-					);
-					const result: ControllerFirmwareUpdateResult = {
-						success: false,
-						status: ControllerFirmwareUpdateStatus.Error_Timeout,
-					};
-					this.emit("firmware update finished", result);
-					return result;
+					userCallbacks?.showDSK(dsk);
+				} catch {
+					// ignore application-level errors
+				}
+			}
+			await api.sendPublicKey(transmittedPublicKey, false);
+
+			// Wait for including node to send its public key
+			const pubKeyReport = await this.driver.waitForCommand<
+				Security2CCPublicKeyReport | Security2CCKEXFail
+			>(
+				(cc) =>
+					cc instanceof Security2CCPublicKeyReport
+					|| cc instanceof Security2CCKEXFail,
+				inclusionTimeouts.TB3,
+			).catch(() => "timeout" as const);
+
+			if (pubKeyReport === "timeout") return abortTimeout();
+			if (pubKeyReport instanceof Security2CCKEXFail) {
+				return abortCanceled();
+			}
+
+			const includingNodePubKey = pubKeyReport.publicKey;
+			const sharedSecret = await deriveSharedECDHSecret({
+				publicKey: includingNodePubKey,
+				privateKey: keyPair.privateKey,
+			});
+
+			// Derive temporary key from ECDH key pair - this will allow us to receive the node's KEX SET commands
+			const tempKeys = await deriveTempKeys(
+				await computePRK(
+					sharedSecret,
+					includingNodePubKey,
+					keyPair.publicKey,
+				),
+			);
+			securityManager.deleteNonce(bootstrappingNode.id);
+			securityManager.tempKeys.set(bootstrappingNode.id, {
+				keyCCM: tempKeys.tempKeyCCM,
+				personalizationString: tempKeys.tempPersonalizationString,
+			});
+
+			// Wait for the confirmation of the requested keys and
+			// retransmit the KEXSet echo every 10 seconds until a response is
+			// received or the process timed out.
+			const confirmKeysStartTime = Date.now();
+			let kexReportEcho:
+				| Security2CCKEXReport
+				| Security2CCKEXFail
+				| "timeout"
+				| undefined;
+			for (let i = 0; i <= 25; i++) {
+				try {
+					kexReportEcho = await api.withOptions({
+						reportTimeoutMs: 10000,
+					}).confirmGrantedKeys({
+						grantedKeys: kexSet.grantedKeys,
+						permitCSA: kexSet.permitCSA,
+						selectedECDHProfile: kexSet.selectedECDHProfile,
+						selectedKEXScheme: kexSet.selectedKEXScheme,
+						_reserved: kexSet._reserved,
+					});
+				} catch {
+					// ignore
+				}
+				if (kexReportEcho != undefined) break;
+				if (Date.now() - confirmKeysStartTime > 240000) break;
+			}
+
+			if (!kexReportEcho || kexReportEcho === "timeout") {
+				return abortTimeout();
+			} else if (kexReportEcho instanceof Security2CCKEXFail) {
+				return abortCanceled();
+			}
+
+			// The application no longer needs to show the DSK
+			applicationHideDSK();
+
+			// Validate the response
+			if (!kexReportEcho.echo) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: KEXReport received without echo flag`,
+					direction: "inbound",
+					level: "warn",
+				});
+				await abort(KEXFailType.WrongSecurityLevel);
+				return SecurityBootstrapFailure.NodeCanceled;
+			} else if (kexReportEcho.requestCSA !== false) {
+				// We don't request CSA
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: Invalid KEXReport received`,
+					level: "warn",
+				});
+				await abort(KEXFailType.WrongSecurityLevel);
+				return SecurityBootstrapFailure.NodeCanceled;
+			} else if (kexReportEcho._reserved !== 0) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: Invalid KEXReport received`,
+					direction: "inbound",
+					level: "warn",
+				});
+				await abort(KEXFailType.WrongSecurityLevel);
+				return SecurityBootstrapFailure.NodeCanceled;
+			} else if (
+				!kexReportEcho.isEncapsulatedWith(
+					CommandClasses["Security 2"],
+					Security2Command.MessageEncapsulation,
+				)
+			) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: Command received without encryption`,
+					direction: "inbound",
+					level: "warn",
+				});
+				await abort(KEXFailType.WrongSecurityLevel);
+				return SecurityBootstrapFailure.S2WrongSecurityLevel;
+			} else if (
+				kexReportEcho.requestedKeys.length
+					!== requested.securityClasses.length
+				|| !kexReportEcho.requestedKeys.every((k) =>
+					requested.securityClasses.includes(k)
+				)
+			) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message:
+						`Security S2 bootstrapping failed: Granted key mismatch.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.WrongSecurityLevel);
+				return SecurityBootstrapFailure.S2WrongSecurityLevel;
+			}
+
+			for (const key of kexSet.grantedKeys) {
+				// Request network key and wait for including node to respond
+				const keyReportPromise = this.driver.waitForCommand<
+					Security2CCNetworkKeyReport | Security2CCKEXFail
+				>(
+					(cc) =>
+						cc instanceof Security2CCNetworkKeyReport
+						|| cc instanceof Security2CCKEXFail,
+					inclusionTimeouts.TB4,
+				).catch(() => "timeout" as const);
+
+				await api.requestNetworkKey(key);
+				const keyReport = await keyReportPromise;
+
+				if (keyReport === "timeout") return abortTimeout();
+				if (keyReport instanceof Security2CCKEXFail) {
+					return abortCanceled();
+				}
+
+				if (
+					!keyReport.isEncapsulatedWith(
+						CommandClasses["Security 2"],
+						Security2Command.MessageEncapsulation,
+					)
+				) {
+					this.driver.controllerLog.logNode(bootstrappingNode.id, {
+						message:
+							`Security S2 bootstrapping failed: Command received without encryption`,
+						direction: "inbound",
+						level: "warn",
+					});
+					await abort(KEXFailType.WrongSecurityLevel);
+					return SecurityBootstrapFailure.S2WrongSecurityLevel;
+				}
+
+				// Ensure it was received encrypted with the temporary key
+				if (
+					!securityManager.hasUsedSecurityClass(
+						bootstrappingNode.id,
+						SecurityClass.Temporary,
+					)
+				) {
+					this.driver.controllerLog.logNode(bootstrappingNode.id, {
+						message:
+							`Security S2 bootstrapping failed: Node used wrong key to communicate.`,
+						level: "warn",
+					});
+					await abort(KEXFailType.WrongSecurityLevel);
+					return SecurityBootstrapFailure.S2WrongSecurityLevel;
+				}
+
+				const securityClass = keyReport.grantedKey;
+				if (securityClass !== key) {
+					// and that the granted key is the requested key
+					this.driver.controllerLog.logNode(bootstrappingNode.id, {
+						message:
+							`Security S2 bootstrapping failed: Received key for wrong security class`,
+						direction: "inbound",
+						level: "warn",
+					});
+					await abort(KEXFailType.DifferentKey);
+					return SecurityBootstrapFailure.ParameterMismatch;
+				}
+
+				// Store the network key
+				receivedKeys.set(securityClass, keyReport.networkKey);
+				await securityManager.setKey(
+					securityClass,
+					keyReport.networkKey,
+				);
+				if (securityClass === SecurityClass.S0_Legacy) {
+					// TODO: This is awkward to have here
+					this.driver["_securityManager"] = new SecurityManager({
+						ownNodeId: this._ownNodeId!,
+						networkKey: keyReport.networkKey,
+						nonceTimeout: this.driver.options.timeouts.nonce,
+					});
+				}
+
+				// Force nonce synchronization, then verify the network key
+				securityManager.deleteNonce(bootstrappingNode.id);
+				await api.withOptions({
+					s2OverrideSecurityClass: securityClass,
+				}).verifyNetworkKey();
+
+				// Force nonce synchronization again for the temporary key
+				securityManager.deleteNonce(bootstrappingNode.id);
+
+				// Wait for including node to send its public key
+				const transferEnd = await this.driver.waitForCommand<
+					Security2CCTransferEnd | Security2CCKEXFail
+				>(
+					(cc) =>
+						cc instanceof Security2CCTransferEnd
+						|| cc instanceof Security2CCKEXFail,
+					inclusionTimeouts.TB5,
+				).catch(() => "timeout" as const);
+
+				if (transferEnd === "timeout") return abortTimeout();
+				if (transferEnd instanceof Security2CCKEXFail) {
+					return abortCanceled();
+				}
+
+				if (
+					!keyReport.isEncapsulatedWith(
+						CommandClasses["Security 2"],
+						Security2Command.MessageEncapsulation,
+					)
+				) {
+					this.driver.controllerLog.logNode(bootstrappingNode.id, {
+						message:
+							`Security S2 bootstrapping failed: Command received without encryption`,
+						direction: "inbound",
+						level: "warn",
+					});
+					await abort(KEXFailType.WrongSecurityLevel);
+					return SecurityBootstrapFailure.S2WrongSecurityLevel;
+				} else if (
+					!transferEnd.keyVerified || transferEnd.keyRequestComplete
+				) {
+					this.driver.controllerLog.logNode(bootstrappingNode.id, {
+						message:
+							`Security S2 bootstrapping failed: Invalid TransferEnd received`,
+						direction: "inbound",
+						level: "warn",
+					});
+					await abort(KEXFailType.WrongSecurityLevel);
+					return SecurityBootstrapFailure.NodeCanceled;
 				}
 			}
 
-			this.driver.controllerLog.print("Firmware update succeeded");
+			// Confirm end of bootstrapping
+			await api.endKeyExchange();
 
-			const result: ControllerFirmwareUpdateResult = {
-				success: true,
-				status: ControllerFirmwareUpdateStatus.OK,
-			};
-			this.emit("firmware update finished", result);
+			// Remember all security classes we were granted
+			for (const securityClass of securityClassOrder) {
+				bootstrappingNode.securityClasses.set(
+					securityClass,
+					kexSet.grantedKeys.includes(securityClass),
+				);
+			}
+			// And store the keys
+			for (const [secClass, key] of receivedKeys) {
+				this.driver.cacheSet(
+					cacheKeys.controller.securityKeys(secClass),
+					key,
+				);
+			}
+
+			this.driver.driverLog.print(
+				`Security S2 bootstrapping successful with these security classes:${
+					[
+						...bootstrappingNode.securityClasses.entries(),
+					]
+						.filter(([, v]) => v)
+						.map(([k]) =>
+							`\n· ${getEnumMemberName(SecurityClass, k)}`
+						)
+						.join("")
+				}`,
+			);
+
+			// success 🎉
+		} catch (e) {
+			let errorMessage =
+				`Security S2 bootstrapping failed, no S2 security classes were granted`;
+			let result = SecurityBootstrapFailure.Unknown;
+			if (!isZWaveError(e)) {
+				errorMessage += `: ${e as any}`;
+			} else if (e.code === ZWaveErrorCodes.Controller_MessageExpired) {
+				errorMessage += ": a secure inclusion timer has elapsed.";
+				result = SecurityBootstrapFailure.Timeout;
+			} else if (
+				e.code !== ZWaveErrorCodes.Controller_MessageDropped
+				&& e.code !== ZWaveErrorCodes.Controller_NodeTimeout
+			) {
+				errorMessage += `: ${e.message}`;
+			}
+			this.driver.controllerLog.logNode(
+				bootstrappingNode.id,
+				errorMessage,
+				"warn",
+			);
+			// Remember that we were NOT granted any S2 security classes
+			unGrantSecurityClasses();
+			bootstrappingNode.removeCC(CommandClasses["Security 2"]);
+
 			return result;
 		} finally {
-			await this.driver.leaveBootloader(destroy);
-			this._firmwareUpdateInProgress = false;
+			// Whatever happens, no further communication needs the temporary key
+			deleteTempKey();
 		}
+	}
+
+	private async afterJoiningNetwork(): Promise<void> {
+		this.driver.driverLog.print("waiting for security bootstrapping...");
+
+		const bootstrapInitStart = Date.now();
+		const supportedCCs = determineNIF().supportedCCs;
+		const supportsS0 = supportedCCs.includes(CommandClasses.Security);
+		const supportsS2 = supportedCCs.includes(CommandClasses["Security 2"]);
+
+		let initTimeout: number;
+		let initPredicate: (cc: CCId) => boolean;
+
+		// KEX Get must be received:
+		// - no later than 10..30 seconds after the inclusion if S0 is supported
+		// - no later than 30 seconds after the inclusion if only S2 is supported
+		//   For simplicity, we wait the full 30s.
+		// SecurityCCSchemeGet must be received no later than 10 seconds
+		//   after the inclusion if S0 is supported
+		if (supportsS0 && supportsS2) {
+			initTimeout = inclusionTimeouts.TB1;
+			initPredicate = (cc) =>
+				cc instanceof SecurityCCSchemeGet
+				|| cc instanceof Security2CCKEXGet;
+		} else if (supportsS2) {
+			initTimeout = inclusionTimeouts.TB1;
+			initPredicate = (cc) => cc instanceof Security2CCKEXGet;
+		} else if (supportsS0) {
+			initTimeout = 10000;
+			initPredicate = (cc) => cc instanceof SecurityCCSchemeGet;
+		} else {
+			initTimeout = 0;
+			initPredicate = () => false;
+		}
+
+		const bootstrapInitPromise = this.driver.waitForCommand<
+			Security2CCKEXGet | SecurityCCSchemeGet
+		>(initPredicate, initTimeout).catch(() => "timeout" as const);
+
+		const identifySelf = async () => {
+			// Update own node ID and other controller flags.
+			await this.identify().catch(noop);
+
+			// Notify applications that we're now part of a new network
+			// The driver will point the databases to the new home ID
+			this.emit("network found", this._homeId!, this._ownNodeId!);
+
+			// Figure out the controller's network role
+			await this.getControllerCapabilities().catch(noop);
+
+			// Create new node instances
+			const { nodeIds } = await this.getSerialApiInitData();
+			await this.initNodes(nodeIds, [], () => Promise.resolve());
+		};
+
+		// Do the self-identification while waiting for the bootstrap init command
+		const [bootstrapInit] = await Promise.all([
+			bootstrapInitPromise,
+			identifySelf(),
+		]);
+
+		if (bootstrapInit === "timeout") {
+			this.driver.controllerLog.print(
+				"No security bootstrapping command received, continuing without encryption...",
+			);
+		} else if (bootstrapInit instanceof SecurityCCSchemeGet) {
+			const nodeId = bootstrapInit.nodeId;
+			const bootstrappingNode = this.nodes.get(nodeId);
+			if (!bootstrappingNode) {
+				this.driver.controllerLog.logNode(nodeId, {
+					message:
+						"Received S2 bootstrap initiation from unknown node, ignoring...",
+					level: "warn",
+				});
+			} else if (Date.now() - bootstrapInitStart > 10000) {
+				// Received too late, S0 bootstrapping must not continue
+				this.driver.controllerLog.print(
+					"Security S0 bootstrapping command received too late, continuing without encryption...",
+				);
+			} else {
+				// We definitely know that the node supports S0
+				bootstrappingNode.addCC(CommandClasses.Security, {
+					secure: true,
+					isSupported: true,
+				});
+
+				this.driver.controllerLog.logNode(nodeId, {
+					message: `Received S0 bootstrap initiation`,
+				});
+
+				const bootstrapResult = await this.expectSecurityBootstrapS0(
+					bootstrappingNode,
+				);
+				if (bootstrapResult !== undefined) {
+					// If there was a failure, mark S0 as not supported
+					bootstrappingNode.removeCC(CommandClasses.Security);
+				}
+			}
+		} else if (bootstrapInit instanceof Security2CCKEXGet) {
+			const nodeId = bootstrapInit.nodeId as number;
+			const bootstrappingNode = this.nodes.get(nodeId);
+			if (!bootstrappingNode) {
+				this.driver.controllerLog.logNode(nodeId, {
+					message:
+						"Received S2 bootstrap initiation from unknown node, ignoring...",
+					level: "warn",
+				});
+			} else {
+				// We definitely know that the node supports S2
+				bootstrappingNode.addCC(CommandClasses["Security 2"], {
+					secure: true,
+					isSupported: true,
+				});
+
+				let grant: InclusionGrant | undefined;
+
+				switch (this._joinNetworkOptions?.strategy) {
+					// case JoinNetworkStrategy.Security_S2: {
+					// 	grant = this._joinNetworkOptions.requested;
+					// 	break;
+					// }
+					// case JoinNetworkStrategy.SmartStart:
+					case JoinNetworkStrategy.Default:
+					default: {
+						// No options given, just request all keys
+						grant = {
+							securityClasses: [...securityClassOrder],
+							clientSideAuth: false,
+						};
+						break;
+					}
+				}
+
+				if (grant) {
+					this.driver.controllerLog.logNode(nodeId, {
+						message:
+							`Received S2 bootstrap initiation, requesting keys: ${
+								grant.securityClasses.map((sc) =>
+									`\n· ${
+										getEnumMemberName(SecurityClass, sc)
+									}\n`
+								).join("")
+							}
+  client-side auth: ${grant.clientSideAuth}`,
+					});
+
+					const bootstrapResult = await this
+						.expectSecurityBootstrapS2(
+							bootstrappingNode,
+							grant,
+						);
+					if (bootstrapResult !== undefined) {
+						// If there was a failure, mark S2 as not supported
+						bootstrappingNode.removeCC(
+							CommandClasses["Security 2"],
+						);
+					}
+				}
+			}
+		}
+
+		this._joinNetworkOptions = undefined;
+
+		// Read protocol information of all nodes
+		for (const node of this.nodes.values()) {
+			if (node.isControllerNode) continue;
+			await node["queryProtocolInfo"]();
+		}
+
+		// Notify applications that joining the network is complete
+		this.emit("network joined");
+	}
+
+	public destroy(): void {
+		this._nodes.forEach((node) => node.destroy());
+		this._nodes.clear();
+		this.removeAllListeners();
 	}
 }

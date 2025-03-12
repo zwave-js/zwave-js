@@ -1,11 +1,10 @@
-import { bold, gray, green, red } from "ansi-colors";
-import cp from "child_process";
+import c from "ansi-colors";
 import chokidar from "chokidar";
-import crypto from "crypto";
-import fs from "fs";
-
-// @ts-expect-error This is available in Node 16, but we're targeting Node 14
-import stream from "stream/promises";
+import cp from "node:child_process";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import { basename, relative, sep } from "node:path";
+import stream from "node:stream/promises";
 
 import type PQueue from "p-queue";
 
@@ -22,21 +21,44 @@ let hashQueue: PQueue | undefined;
 let ready = false;
 let child: cp.ChildProcess | undefined;
 
+const cwd = process.cwd();
 const watcher = chokidar.watch(
-	[
-		"packages/**/*.ts",
-		"packages/**/tsconfig.json",
-		"packages/**/tsconfig.build.json",
-		"packages/**/package.json",
-		"package.json",
-		"tsconfig.json",
-		"tsconfig.*.json",
-		"turbo.json",
-		"yarn.lock",
-	],
+	".",
 	{
-		ignored: ["**/build/**", "**/node_modules/**"],
-		cwd: process.cwd(),
+		ignored: (path, stat) => {
+			const relativePath = relative(cwd, path);
+			const pathPortions = relativePath.split(sep);
+			// Ignore build and node_modules directories
+			if (
+				pathPortions.includes("build")
+				|| pathPortions.includes("node_modules")
+			) {
+				return true;
+			}
+			if (stat?.isFile()) {
+				const filename = basename(path);
+				// Watch .ts files
+				if (relativePath.endsWith(".ts")) return false;
+				// Watch tsconfig files
+				if (
+					filename.startsWith("tsconfig.")
+					&& filename.endsWith(".json")
+				) {
+					return false;
+				}
+				// Watch npm package files
+				if (filename === "package.json" || filename === "yarn.lock") {
+					return false;
+				}
+				// Watch turbo.json
+				if (filename === "turbo.json") return false;
+				// Ignore all other files
+				return true;
+			}
+			// Watch all directories
+			return false;
+		},
+		cwd, //
 		atomic: true,
 	},
 );
@@ -79,7 +101,7 @@ async function exec(): Promise<void> {
 	if (child) child.kill("SIGTERM");
 
 	console.log();
-	console.log(`👀 ${bold(task)}: starting...`);
+	console.log(`👀 ${c.bold(task)}: starting...`);
 	console.log();
 
 	child = cp.spawn("yarn", [task, ...taskArgs], {
@@ -89,15 +111,15 @@ async function exec(): Promise<void> {
 	});
 	child.on("exit", (code) => {
 		if (code === 0) {
-			console.log(green(`👀 ${bold(task)}: completed successfully!`));
+			console.log(c.green(`👀 ${c.bold(task)}: completed successfully!`));
 			prevHash = totalHash;
 		} else {
-			console.log(red(`👀 ${bold(task)}: failed with code ${code}`));
+			console.log(c.red(`👀 ${c.bold(task)}: failed with code ${code}`));
 		}
 		child = undefined;
 
 		console.log(
-			gray(`   Waiting for file changes... Press Ctrl+C to exit.`),
+			c.gray(`   Waiting for file changes... Press Ctrl+C to exit.`),
 		);
 	});
 }

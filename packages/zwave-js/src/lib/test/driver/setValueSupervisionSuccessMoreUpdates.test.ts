@@ -5,14 +5,10 @@ import {
 	ThermostatSetpointType,
 } from "@zwave-js/cc";
 import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { type MockNodeBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import sinon from "sinon";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	`Regression test for #4957: Treat Supervision Report with Success but "more updates follow" as final`,
@@ -33,26 +29,17 @@ integrationTest(
 		customSetup: async (_driver, _controller, mockNode) => {
 			// Just have the node respond to all Supervision Get positively, but claim that more updates follow
 			const respondToSupervisionGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof SupervisionCCGet
-					) {
-						const cc = new SupervisionCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
-							sessionId: frame.payload.sessionId,
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof SupervisionCCGet) {
+						const cc = new SupervisionCCReport({
+							nodeId: controller.ownNodeId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: true, // <-- this is the important part
 							status: SupervisionStatus.Success,
 						});
 						await wait(500);
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToSupervisionGet);
@@ -73,7 +60,7 @@ integrationTest(
 			await wait(500);
 
 			const setpoint = node.getValue(setpointValueId);
-			t.is(setpoint, 20);
+			t.expect(setpoint).toBe(20);
 
 			// And make sure the value event handlers are called
 			sinon.assert.calledWith(

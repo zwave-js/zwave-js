@@ -1,23 +1,24 @@
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type CommandClassInfo,
 	type CommandClasses,
 	type MaybeNotKnown,
 	NOT_KNOWN,
 	SecurityClass,
+	type SecurityManagers,
+	isCCInfoEqual,
 	securityClassOrder,
 } from "@zwave-js/core";
-import type { ZWaveHost } from "@zwave-js/host";
 import { TimedExpectation } from "@zwave-js/shared";
-import { isDeepStrictEqual } from "node:util";
-import type { CCIdToCapabilities } from "./CCSpecificCapabilities";
-import type { MockController } from "./MockController";
+import type { CCIdToCapabilities } from "./CCSpecificCapabilities.js";
+import type { MockController } from "./MockController.js";
 import {
 	type MockEndpointCapabilities,
 	type MockNodeCapabilities,
 	type PartialCCCapabilities,
 	getDefaultMockEndpointCapabilities,
 	getDefaultMockNodeCapabilities,
-} from "./MockNodeCapabilities";
+} from "./MockNodeCapabilities.js";
 import {
 	type LazyMockZWaveFrame,
 	MOCK_FRAME_ACK_TIMEOUT,
@@ -26,7 +27,8 @@ import {
 	MockZWaveFrameType,
 	type MockZWaveRequestFrame,
 	createMockZWaveAckFrame,
-} from "./MockZWaveFrame";
+	createMockZWaveRequestFrame,
+} from "./MockZWaveFrame.js";
 
 const defaultCCInfo: CommandClassInfo = {
 	isSupported: true,
@@ -92,7 +94,7 @@ export class MockEndpoint {
 	public addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void {
 		const original = this.implementedCCs.get(cc);
 		const updated = Object.assign({}, original ?? defaultCCInfo, info);
-		if (!isDeepStrictEqual(original, updated)) {
+		if (original == undefined || !isCCInfoEqual(original, updated)) {
 			this.implementedCCs.set(cc, updated);
 		}
 	}
@@ -109,14 +111,44 @@ export class MockNode {
 		this.id = options.id;
 		this.controller = options.controller;
 
-		// A node's host is a bit more specialized than the controller's host.
 		const securityClasses = new Map<number, Map<SecurityClass, boolean>>();
-		this.host = {
-			...this.controller.host,
-			ownNodeId: this.id,
-			__internalIsMockNode: true,
 
-			// Mimic the behavior of ZWaveNode, but for arbitrary node IDs
+		const {
+			commandClasses = [],
+			endpoints = [],
+			...capabilities
+		} = options.capabilities ?? {};
+		this.capabilities = {
+			...getDefaultMockNodeCapabilities(),
+			...capabilities,
+		};
+
+		for (const cc of commandClasses) {
+			if (typeof cc === "number") {
+				this.addCC(cc, {});
+			} else {
+				const { ccId, ...ccInfo } = cc;
+				this.addCC(ccId, ccInfo);
+			}
+		}
+
+		let index = 0;
+		for (const endpoint of endpoints) {
+			index++;
+			this.endpoints.set(
+				index,
+				new MockEndpoint({
+					index,
+					node: this,
+					capabilities: endpoint,
+				}),
+			);
+		}
+
+		const self = this;
+		this.encodingContext = {
+			homeId: this.controller.homeId,
+			ownNodeId: this.id,
 			hasSecurityClass(
 				nodeId: number,
 				securityClass: SecurityClass,
@@ -150,45 +182,36 @@ export class MockNode {
 				// If we don't have the info for every security class, we don't know the highest one yet
 				return missingSome ? undefined : SecurityClass.None;
 			},
+			getSupportedCCVersion: (cc, nodeId, endpointIndex = 0) => {
+				// Mock endpoints only care about the version they implement
+				const endpoint = this.endpoints.get(endpointIndex);
+				return (endpoint ?? this).implementedCCs.get(cc)?.version ?? 0;
+			},
+			// Mock nodes don't care about device configuration files
+			getDeviceConfig: () => undefined,
+			get securityManager() {
+				return self.securityManagers.securityManager;
+			},
+			get securityManager2() {
+				return self.securityManagers.securityManager2;
+			},
+			get securityManagerLR() {
+				return self.securityManagers.securityManagerLR;
+			},
 		};
-
-		const {
-			commandClasses = [],
-			endpoints = [],
-			...capabilities
-		} = options.capabilities ?? {};
-		this.capabilities = {
-			...getDefaultMockNodeCapabilities(),
-			...capabilities,
-		};
-
-		for (const cc of commandClasses) {
-			if (typeof cc === "number") {
-				this.addCC(cc, {});
-			} else {
-				const { ccId, ...ccInfo } = cc;
-				this.addCC(ccId, ccInfo);
-			}
-		}
-
-		let index = 0;
-		for (const endpoint of endpoints) {
-			index++;
-			this.endpoints.set(
-				index,
-				new MockEndpoint({
-					index,
-					node: this,
-					capabilities: endpoint,
-				}),
-			);
-		}
 	}
 
-	public readonly host: ZWaveHost;
 	public readonly id: number;
 	public readonly controller: MockController;
 	public readonly capabilities: MockNodeCapabilities;
+
+	public securityManagers: SecurityManagers = {
+		securityManager: undefined,
+		securityManager2: undefined,
+		securityManagerLR: undefined,
+	};
+
+	public encodingContext: CCEncodingContext;
 
 	private behaviors: MockNodeBehavior[] = [];
 
@@ -202,7 +225,7 @@ export class MockNode {
 	/** Can be used by behaviors to store controller related state */
 	public readonly state = new Map<string, unknown>();
 
-	/** Controls whether the controller automatically ACKs node frames before handling them */
+	/** Controls whether the node automatically ACKs CCs from the controller before handling them */
 	public autoAckControllerFrames: boolean = true;
 
 	private expectedControllerFrames: TimedExpectation<
@@ -293,17 +316,56 @@ export class MockNode {
 		);
 		if (handler) {
 			handler.resolve(frame);
-		} else {
+		} else if (frame.type === MockZWaveFrameType.Request) {
+			let cc = frame.payload;
+			let response: MockNodeResponse | undefined;
+
+			// Transform incoming frames with hooks, e.g. to support unwrapping encapsulated CCs
 			for (const behavior of this.behaviors) {
-				if (
-					await behavior.onControllerFrame?.(
+				if (behavior.transformIncomingCC) {
+					cc = await behavior.transformIncomingCC(
 						this.controller,
 						this,
-						frame,
-					)
-				) {
-					return;
+						cc,
+					);
 				}
+			}
+
+			// Figure out what to do with the frame
+			for (const behavior of this.behaviors) {
+				response = await behavior.handleCC?.(
+					this.controller,
+					this,
+					cc,
+				);
+				if (response) break;
+			}
+
+			// If no behavior handled the frame, or we're supposed to stop, stop
+			if (!response || response.action === "stop") return;
+
+			// Transform responses with hooks, e.g. to support Supervision or other encapsulation
+			for (const behavior of this.behaviors) {
+				if (behavior.transformResponse) {
+					response = await behavior.transformResponse(
+						this.controller,
+						this,
+						cc,
+						response,
+					);
+				}
+			}
+
+			// Finally send a CC to the controller if we're supposed to
+			if (response.action === "sendCC") {
+				await this.sendToController(
+					createMockZWaveRequestFrame(response.cc, {
+						ackRequested: response.ackRequested,
+					}),
+				);
+			} else if (response.action === "ack") {
+				// Or ack the frame
+				await this.ackControllerRequestFrame(frame);
 			}
 		}
 	}
@@ -325,7 +387,7 @@ export class MockNode {
 	public addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void {
 		const original = this.implementedCCs.get(cc);
 		const updated = Object.assign({}, original ?? defaultCCInfo, info);
-		if (!isDeepStrictEqual(original, updated)) {
+		if (original == undefined || !isCCInfoEqual(original, updated)) {
 			this.implementedCCs.set(cc, updated);
 		}
 	}
@@ -419,11 +481,46 @@ export class MockNode {
 	}
 }
 
+/** What the mock node should do after receiving a controller frame */
+export type MockNodeResponse = {
+	// Send a CC
+	action: "sendCC";
+	cc: CommandClass;
+	ackRequested?: boolean; // Defaults to false
+} | {
+	// Acknowledge the incoming frame
+	action: "ack";
+} | {
+	// do nothing
+	action: "stop";
+} | {
+	// indicate success to the sending node
+	action: "ok";
+} | {
+	// indicate failure to the sending node
+	action: "fail";
+};
+
 export interface MockNodeBehavior {
-	/** Gets called when a message from the controller is received. Return `true` to indicate that the message has been handled. */
-	onControllerFrame?: (
+	/** Gets called before the `handleCC` handlers and can transform an incoming `CommandClass` into another */
+	transformIncomingCC?: (
 		controller: MockController,
 		self: MockNode,
-		frame: MockZWaveFrame,
-	) => Promise<boolean | undefined> | boolean | undefined;
+		cc: CommandClass,
+	) => Promise<CommandClass> | CommandClass;
+
+	/** Gets called when a CC from the controller is received. Returns an action to be performed in response, or `undefined` if there is nothing to do. */
+	handleCC?: (
+		controller: MockController,
+		self: MockNode,
+		receivedCC: CommandClass,
+	) => Promise<MockNodeResponse | undefined> | MockNodeResponse | undefined;
+
+	/** Gets called after the `onControllerFrame` handlers and can transform one `MockNodeResponse` into another */
+	transformResponse?: (
+		controller: MockController,
+		self: MockNode,
+		receivedCC: CommandClass,
+		response: MockNodeResponse,
+	) => Promise<MockNodeResponse> | MockNodeResponse;
 }

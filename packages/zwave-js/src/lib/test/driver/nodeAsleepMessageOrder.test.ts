@@ -13,7 +13,7 @@ import {
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuiteMulti";
+import { integrationTest } from "../integrationTestSuiteMulti.js";
 
 // Repro from #1107
 // Node 10's awake timer elapses before its ping is rejected,
@@ -86,7 +86,7 @@ integrationTest(
 			mockNode10.ackControllerRequestFrame();
 
 			// Ping for 10 should be failed now
-			t.false(await pingPromise10);
+			t.expect(await pingPromise10).toBe(false);
 
 			// Now the ping for 17 should go out
 			await wait(500);
@@ -100,10 +100,11 @@ integrationTest(
 			);
 
 			// Ping 17 does not get resolved by the other callback
-			t.is(await Promise.race([pingPromise17, wait(50)]), undefined);
+			t.expect(await Promise.race([pingPromise17, wait(50)]))
+				.toBeUndefined();
 
 			// And it should fail since we don't ack:
-			t.false(await pingPromise17);
+			t.expect(await pingPromise17).toBe(false);
 		},
 	},
 );
@@ -142,8 +143,10 @@ integrationTest(
 			const [mockNode10] = mockNodes;
 
 			const doNotAnswerWhenAsleep: MockNodeBehavior = {
-				onControllerFrame(controller, self, frame) {
-					if (!mockNode10.autoAckControllerFrames) return true;
+				handleCC(controller, self, receivedCC) {
+					if (!mockNode10.autoAckControllerFrames) {
+						return { action: "stop" };
+					}
 				},
 			};
 			mockNode10.defineBehavior(doNotAnswerWhenAsleep);
@@ -169,12 +172,9 @@ integrationTest(
 
 			// Node 10 wakes up
 			mockNode10.autoAckControllerFrames = true;
-			const cc: CommandClass = new WakeUpCCWakeUpNotification(
-				mockNode10.host,
-				{
-					nodeId: mockController.host.ownNodeId,
-				},
-			);
+			const cc: CommandClass = new WakeUpCCWakeUpNotification({
+				nodeId: mockController.ownNodeId,
+			});
 			mockNode10.sendToController(createMockZWaveRequestFrame(cc, {
 				ackRequested: false,
 			}));
@@ -196,7 +196,7 @@ integrationTest(
 				&& f.payload instanceof BasicCCGet
 			);
 			// and return a number
-			t.is(typeof result?.currentValue, "number");
+			t.expect(typeof result?.currentValue).toBe("number");
 
 			// Query the node's BASIC state again. This should be handled relatively quickly
 			mockNode10.clearReceivedControllerFrames();
@@ -218,7 +218,105 @@ integrationTest(
 				&& f.payload instanceof BasicCCGet
 			);
 			// and return a number
-			t.is(typeof result?.currentValue, "number");
+			t.expect(typeof result?.currentValue).toBe("number");
+		},
+	},
+);
+
+integrationTest(
+	"When a command to a sleeping node is pending, other commands are still handled",
+	{
+		// debug: true,
+
+		provisioningDirectory: path.join(
+			__dirname,
+			"fixtures/nodeAsleepMessageOrder",
+		),
+
+		nodeCapabilities: [
+			{
+				id: 10,
+				capabilities: {
+					commandClasses: [
+						CommandClasses.Basic,
+						CommandClasses["Wake Up"],
+					],
+					isListening: false,
+					isFrequentListening: false,
+				},
+			},
+			{
+				id: 17,
+				capabilities: {
+					commandClasses: [CommandClasses.Basic],
+				},
+			},
+		],
+
+		customSetup: async (driver, mockController, mockNodes) => {
+			const [mockNode10] = mockNodes;
+
+			const doNotAnswerWhenAsleep: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (!mockNode10.autoAckControllerFrames) {
+						return { action: "stop" };
+					}
+				},
+			};
+			mockNode10.defineBehavior(doNotAnswerWhenAsleep);
+		},
+
+		testBody: async (t, driver, nodes, mockController, mockNodes) => {
+			const [node10, node17] = nodes;
+			const [mockNode10, mockNode17] = mockNodes;
+
+			// Node 10 is sleeping
+			node10.markAsAsleep();
+			mockNode10.autoAckControllerFrames = false;
+
+			// Queue a command to node 10
+			const commandToNode10 = node10.commandClasses.Basic.set(60);
+
+			// Queue a command to node 17
+			const commandToNode17 = node17.commandClasses.Basic.set(99);
+
+			driver.driverLog.print("BEFORE wakeup");
+			driver.driverLog.sendQueue(driver["queue"]);
+
+			let result = await Promise.race([
+				wait(500).then(() => "timeout"),
+				commandToNode17.then(() => "ok"),
+			]);
+			t.expect(result).toBe("ok");
+
+			// The first command should not have been sent
+			mockNode10.assertReceivedControllerFrame(
+				(f) =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof BasicCCGet,
+				{
+					noMatch: true,
+				},
+			);
+
+			driver.driverLog.print("AFTER first command");
+			driver.driverLog.sendQueue(driver["queue"]);
+
+			// Node 10 wakes up
+			mockNode10.autoAckControllerFrames = true;
+			const cc: CommandClass = new WakeUpCCWakeUpNotification({
+				nodeId: mockController.ownNodeId,
+			});
+			mockNode10.sendToController(createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}));
+
+			// And the first command should be sent
+			result = await Promise.race([
+				wait(500).then(() => "timeout"),
+				commandToNode10.then(() => "ok"),
+			]);
+			t.expect(result).toBe("ok");
 		},
 	},
 );

@@ -1,5 +1,5 @@
 import type { ProtocolDataRate, RSSI } from "@zwave-js/core";
-import { StatisticsHost } from "../driver/Statistics";
+import { StatisticsHost } from "../driver/Statistics.js";
 
 export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
 	getAdditionalEventArgs(): any[] {
@@ -55,7 +55,7 @@ export interface NodeStatistics {
 
 export interface RouteStatistics {
 	/** The protocol and used data rate for this route */
-	protocolDataRate: ProtocolDataRate;
+	protocolDataRate?: ProtocolDataRate;
 	/** Which nodes are repeaters for this route */
 	repeaters: number[];
 

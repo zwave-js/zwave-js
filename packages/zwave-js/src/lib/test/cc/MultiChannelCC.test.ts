@@ -1,4 +1,4 @@
-import type { CommandClass } from "@zwave-js/cc";
+import { CommandClass } from "@zwave-js/cc";
 import {
 	BasicCCGet,
 	BasicCCReport,
@@ -16,14 +16,12 @@ import {
 	isEncapsulatingCommandClass,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Multi Channel"], // CC
 		]),
 		payload,
@@ -31,63 +29,69 @@ function buildCCBuffer(payload: Buffer): Buffer {
 }
 
 test("is an encapsulating CommandClass", (t) => {
-	let cc: CommandClass = new BasicCCSet(host, {
+	let cc: CommandClass = new BasicCCSet({
 		nodeId: 1,
 		targetValue: 50,
 	});
-	cc = MultiChannelCC.encapsulate(host, cc);
-	t.true(isEncapsulatingCommandClass(cc));
+	cc = MultiChannelCC.encapsulate(cc);
+	t.expect(isEncapsulatingCommandClass(cc)).toBe(true);
 });
 
-test("the EndPointGet command should serialize correctly", (t) => {
-	const cc = new MultiChannelCCEndPointGet(host, { nodeId: 1 });
+test("the EndPointGet command should serialize correctly", async (t) => {
+	const cc = new MultiChannelCCEndPointGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelCommand.EndPointGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the CapabilityGet command should serialize correctly", (t) => {
-	const cc = new MultiChannelCCCapabilityGet(host, {
+test("the CapabilityGet command should serialize correctly", async (t) => {
+	const cc = new MultiChannelCCCapabilityGet({
 		nodeId: 2,
 		requestedEndpoint: 7,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelCommand.CapabilityGet, // CC Command
 			7, // EndPoint
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the EndPointFind command should serialize correctly", (t) => {
-	const cc = new MultiChannelCCEndPointFind(host, {
+test("the EndPointFind command should serialize correctly", async (t) => {
+	const cc = new MultiChannelCCEndPointFind({
 		nodeId: 2,
 		genericClass: 0x01,
 		specificClass: 0x02,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelCommand.EndPointFind, // CC Command
 			0x01, // genericClass
 			0x02, // specificClass
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the CommandEncapsulation command should serialize correctly", (t) => {
-	let cc: CommandClass = new BasicCCSet(host, {
+test("the CommandEncapsulation command should serialize correctly", async (t) => {
+	let cc: CommandClass = new BasicCCSet({
 		nodeId: 2,
 		targetValue: 5,
-		endpoint: 7,
+		endpointIndex: 7,
 	});
-	cc = MultiChannelCC.encapsulate(host, cc);
+	cc = MultiChannelCC.encapsulate(cc);
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelCommand.CommandEncapsulation, // CC Command
 			0, // source EP
 			7, // destination
@@ -96,52 +100,56 @@ test("the CommandEncapsulation command should serialize correctly", (t) => {
 			5, // target value
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the AggregatedMembersGet command should serialize correctly", (t) => {
-	const cc = new MultiChannelCCAggregatedMembersGet(host, {
+test("the AggregatedMembersGet command should serialize correctly", async (t) => {
+	const cc = new MultiChannelCCAggregatedMembersGet({
 		nodeId: 2,
 		requestedEndpoint: 6,
 	});
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			MultiChannelCommand.AggregatedMembersGet, // CC Command
 			6, // EndPoint
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
 test("the CommandEncapsulation command should also accept V1CommandEncapsulation as a response", (t) => {
 	// GH#938
-	const sent = new MultiChannelCCCommandEncapsulation(host, {
+	const sent = new MultiChannelCCCommandEncapsulation({
 		nodeId: 2,
 		destination: 2,
-		encapsulated: new BasicCCGet(host, { nodeId: 2 }),
+		encapsulated: new BasicCCGet({ nodeId: 2 }),
 	});
-	const received = new MultiChannelCCV1CommandEncapsulation(host, {
+	const received = new MultiChannelCCV1CommandEncapsulation({
 		nodeId: 2,
-		encapsulated: new BasicCCReport(host, {
+		encapsulated: new BasicCCReport({
 			nodeId: 2,
 			currentValue: 50,
 		}),
 	});
 	received.endpointIndex = sent.destination as any;
-	t.true(sent.isExpectedCCResponse(received));
+	t.expect(sent.isExpectedCCResponse(received)).toBe(true);
 });
 
 // test("the Report command (v2) should be deserialized correctly", (t) => {
 // 	const ccData = buildCCBuffer(
 // 		1,
-// 		Buffer.from([
+// 		Uint8Array.from([
 // 			MultiChannelCommand.Report, // CC Command
 // 			55, // current value
 // 			66, // target value
 // 			1, // duration
 // 		]),
 // 	);
-// 	const cc = new MultiChannelCCReport(host, { data: ccData });
+// 	const cc = new MultiChannelCCReport({ data: ccData });
 
 // 	t.is(cc.currentValue, 55);
 // 	t.is(cc.targetValue, 66);
@@ -149,15 +157,15 @@ test("the CommandEncapsulation command should also accept V1CommandEncapsulation
 // 	t.is(cc.duration!.value, 1);
 // });
 
-test("deserializing an unsupported command should return an unspecified version of MultiChannelCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of MultiChannelCC", async (t) => {
 	const serializedCC = buildCCBuffer(
-		Buffer.from([255]), // not a valid command
+		Uint8Array.from([255]), // not a valid command
 	);
-	const cc: any = new MultiChannelCC(host, {
-		nodeId: 1,
-		data: serializedCC,
-	});
-	t.is(cc.constructor, MultiChannelCC);
+	const cc = await CommandClass.parse(
+		serializedCC,
+		{ sourceNodeId: 1 } as any,
+	) as MultiChannelCC;
+	t.expect(cc.constructor).toBe(MultiChannelCC);
 });
 
 // test("the CC values should have the correct metadata", (t) => {
@@ -188,95 +196,87 @@ test("deserializing an unsupported command should return an unspecified version 
 
 test("MultiChannelCC/BasicCCGet should expect a response", (t) => {
 	const ccRequest = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCGet(host, {
+		new BasicCCGet({
 			nodeId: 2,
-			endpoint: 2,
+			endpointIndex: 2,
 		}),
 	);
-	t.true(ccRequest.expectsCCResponse());
+	t.expect(ccRequest.expectsCCResponse()).toBe(true);
 });
 
 test("MultiChannelCC/BasicCCGet (multicast) should expect NO response", (t) => {
 	const ccRequest = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCGet(host, {
+		new BasicCCGet({
 			nodeId: 2,
-			endpoint: 2,
+			endpointIndex: 2,
 		}),
-	) as MultiChannelCCCommandEncapsulation;
+	);
 	// A multicast request never expects a response
 	ccRequest.destination = [1, 2, 3];
-	t.false(ccRequest.expectsCCResponse());
+	t.expect(ccRequest.expectsCCResponse()).toBe(false);
 });
 
 test("MultiChannelCC/BasicCCSet should expect NO response", (t) => {
 	const ccRequest = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCSet(host, {
+		new BasicCCSet({
 			nodeId: 2,
-			endpoint: 2,
+			endpointIndex: 2,
 			targetValue: 7,
 		}),
 	);
-	t.false(ccRequest.expectsCCResponse());
+	t.expect(ccRequest.expectsCCResponse()).toBe(false);
 });
 
 test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCReport = expected", (t) => {
 	const ccRequest = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCGet(host, {
+		new BasicCCGet({
 			nodeId: 2,
-			endpoint: 2,
+			endpointIndex: 2,
 		}),
 	);
 	const ccResponse = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCReport(host, {
+		new BasicCCReport({
 			nodeId: ccRequest.nodeId,
 			currentValue: 7,
 		}),
 	);
 	ccResponse.endpointIndex = 2;
 
-	t.true(ccRequest.isExpectedCCResponse(ccResponse));
+	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(true);
 });
 
 test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCGet = unexpected", (t) => {
 	const ccRequest = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCGet(host, {
+		new BasicCCGet({
 			nodeId: 2,
-			endpoint: 2,
+			endpointIndex: 2,
 		}),
 	);
 	const ccResponse = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCGet(host, {
+		new BasicCCGet({
 			nodeId: ccRequest.nodeId,
-			endpoint: 2,
+			endpointIndex: 2,
 		}),
 	);
 	ccResponse.endpointIndex = 2;
 
-	t.false(ccRequest.isExpectedCCResponse(ccResponse));
+	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
 });
 
 test("MultiChannelCC/BasicCCGet => MultiCommandCC/BasicCCReport = unexpected", (t) => {
 	const ccRequest = MultiChannelCC.encapsulate(
-		host,
-		new BasicCCGet(host, {
+		new BasicCCGet({
 			nodeId: 2,
-			endpoint: 2,
+			endpointIndex: 2,
 		}),
 	);
-	const ccResponse = MultiCommandCC.encapsulate(host, [
-		new BasicCCReport(host, {
+	const ccResponse = MultiCommandCC.encapsulate([
+		new BasicCCReport({
 			nodeId: ccRequest.nodeId,
 			currentValue: 7,
 		}),
 	]);
 	ccResponse.endpointIndex = 2;
 
-	t.false(ccRequest.isExpectedCCResponse(ccResponse));
+	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
 });

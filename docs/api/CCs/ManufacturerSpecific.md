@@ -18,6 +18,14 @@ async deviceSpecificGet(
 ): Promise<MaybeNotKnown<string>>;
 ```
 
+### `sendReport`
+
+```ts
+async sendReport(
+	options: ManufacturerSpecificCCReportOptions,
+): Promise<void>;
+```
+
 ## Manufacturer Specific CC values
 
 ### `deviceId(type: DeviceIdType)`
@@ -31,7 +39,7 @@ async deviceSpecificGet(
 }
 ```
 
-- **label:** _(dynamic)_
+- **label:** `Device ID (${string})`
 - **min. CC version:** 2
 - **readable:** true
 - **writeable:** false
@@ -44,7 +52,7 @@ async deviceSpecificGet(
 ```ts
 {
 	commandClass: CommandClasses["Manufacturer Specific"],
-	endpoint: number,
+	endpoint: 0,
 	property: "manufacturerId",
 }
 ```
@@ -64,7 +72,7 @@ async deviceSpecificGet(
 ```ts
 {
 	commandClass: CommandClasses["Manufacturer Specific"],
-	endpoint: number,
+	endpoint: 0,
 	property: "productId",
 }
 ```
@@ -84,7 +92,7 @@ async deviceSpecificGet(
 ```ts
 {
 	commandClass: CommandClasses["Manufacturer Specific"],
-	endpoint: number,
+	endpoint: 0,
 	property: "productType",
 }
 ```

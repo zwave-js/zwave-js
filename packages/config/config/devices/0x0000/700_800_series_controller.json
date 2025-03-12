@@ -1,0 +1,36 @@
+// Note: This device file is shared by multiple manufacturers
+{
+	"manufacturer": "Silicon Labs",
+	"manufacturerId": "0x0000",
+	"label": "700/800 Series",
+	"description": "USB Controller",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0004"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		// 700/800 series firmware bugs that affect multiple controllers
+		"comments": [
+			{
+				"$if": "firmwareVersion < 7.17.2",
+				"$import": "~/templates/master_template.json#7xx_firmware_bug_pre_7_17_2"
+			},
+			{
+				// Not sure if this is a 700 or 800 series controller. Show the generic warning
+				"$if": "firmwareVersion >= 7.19.1 && firmwareVersion <= 7.21.3",
+				"$import": "~/templates/master_template.json#7xx_8xx_firmware_bug_7_19_to_7_21_3_or_7_22_1"
+			},
+			{
+				// 7.22.x is limited to 800 series
+				"$if": "firmwareVersion === 7.22.0",
+				"$import": "~/templates/master_template.json#8xx_firmware_bug_pre_7_22_1"
+			}
+		]
+	}
+}

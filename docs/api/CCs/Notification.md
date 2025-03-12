@@ -8,7 +8,7 @@
 
 ```ts
 async getInternal(
-	options: NotificationCCGetSpecificOptions,
+	options: NotificationCCGetOptions,
 ): Promise<NotificationCCReport | undefined>;
 ```
 
@@ -25,7 +25,7 @@ async sendReport(
 ### `get`
 
 ```ts
-async get(options: NotificationCCGetSpecificOptions): Promise<Pick<NotificationCCReport, "notificationStatus" | "notificationEvent" | "alarmLevel" | "zensorNetSourceNodeId" | "eventParameters" | "sequenceNumber"> | undefined>;
+async get(options: NotificationCCGetOptions): Promise<Pick<NotificationCCReport, "notificationStatus" | "notificationEvent" | "alarmLevel" | "eventParameters" | "sequenceNumber"> | undefined>;
 ```
 
 ### `set`
@@ -105,6 +105,27 @@ async getSupportedEvents(
 ```
 
 - **label:** Door state (simple)
+- **min. CC version:** 1
+- **readable:** true
+- **writeable:** false
+- **stateful:** true
+- **secret:** false
+- **value type:** `"number"`
+- **min. value:** 0
+- **max. value:** 255
+
+### `doorTiltState`
+
+```ts
+{
+	commandClass: CommandClasses.Notification,
+	endpoint: number,
+	property: "Access Control",
+	propertyKey: "Door tilt state",
+}
+```
+
+- **label:** Door tilt state
 - **min. CC version:** 1
 - **readable:** true
 - **writeable:** false

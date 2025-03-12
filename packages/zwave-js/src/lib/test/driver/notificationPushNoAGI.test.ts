@@ -4,13 +4,8 @@ import {
 	NotificationCCValues,
 } from "@zwave-js/cc/NotificationCC";
 import { CommandClasses } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	MockZWaveFrameType,
-	ccCaps,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
-import { integrationTest } from "../integrationTestSuite";
+import { type MockNodeBehavior, ccCaps } from "@zwave-js/testing";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"Notification CC: Push nodes without AGI support are detected as push, not pull",
@@ -36,28 +31,19 @@ integrationTest(
 
 		customSetup: async (driver, controller, mockNode) => {
 			const respondToNotificationGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof NotificationCCGet
-					) {
-						const notificationType = frame.payload.notificationType
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof NotificationCCGet) {
+						const notificationType = receivedCC.notificationType
 							|| 0x06;
-						const cc = new NotificationCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
+						const cc = new NotificationCCReport({
+							nodeId: controller.ownNodeId,
 							notificationType,
 							notificationEvent: notificationType === 0x06
 								? 0x06 /* Keypad unlock */
 								: 0xfe,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToNotificationGet);
@@ -67,7 +53,7 @@ integrationTest(
 			const notificationMode = node.getValue(
 				NotificationCCValues.notificationMode.id,
 			);
-			t.is(notificationMode, "push");
+			t.expect(notificationMode).toBe("push");
 		},
 	},
 );

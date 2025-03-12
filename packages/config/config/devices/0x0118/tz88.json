@@ -20,7 +20,7 @@
 	},
 	"associations": {
 		"1": {
-			"label": "Target for automatic reports",
+			"label": "Lifeline",
 			"maxNodes": 1,
 			"isLifeline": true
 		}
@@ -28,38 +28,108 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Watt Meter Report Interval (5s)",
-			"description": "Interval (x5 seconds) to send out watt meter report",
+			"label": "Power (W) Report Interval",
 			"valueSize": 2,
+			"unit": "5 seconds",
 			"minValue": 1,
 			"maxValue": 32767,
 			"defaultValue": 720
 		},
 		{
 			"#": "2",
-			"label": "KWH Meter Report Interval (10min)",
-			"description": "Interval (x10 minutes) to send out KWH Meter Report",
+			"label": "Energy (kWh) Report Interval",
 			"valueSize": 2,
+			"unit": "10 minutes",
 			"minValue": 1,
 			"maxValue": 32767,
 			"defaultValue": 6
 		},
 		{
 			"#": "3",
-			"label": "Threshold for Load Caution (10mA)",
-			"description": "Threshold (x0.01A) of current for Load Caution",
+			"label": "Overload (A) Warning Threshold",
+			"description": "A meter report will be sent when the current is above this value",
 			"valueSize": 2,
-			"minValue": 1,
+			"unit": "0.01 A",
+			"minValue": 10,
 			"maxValue": 1300,
 			"defaultValue": 1300
 		},
 		{
 			"#": "4",
-			"label": "Threshold of kWh for Load Caution",
+			"label": "Overload (kWh) Warning Threshold",
+			"description": "A meter report will be sent when the accumulated power consumption is above this value",
 			"valueSize": 2,
+			"unit": "kWh",
 			"minValue": 1,
 			"maxValue": 10000,
 			"defaultValue": 10000
+		},
+		{
+			"#": "5",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev_on"
+		},
+		{
+			"#": "6",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Switch Off Function",
+			"defaultValue": 1
+		},
+		{
+			"#": "7",
+			"label": "LED Indication",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"value": 1,
+					"label": "Switch state"
+				},
+				{
+					"value": 2,
+					"label": "Night mode"
+				}
+			]
+		},
+		{
+			"#": "8",
+			"label": "Auto Off Timer",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0,
+			"options": [
+				{
+					"value": 0,
+					"label": "Disable"
+				}
+			]
+		},
+		{
+			"#": "9",
+			"label": "Reaction to Z-Wave Off Command",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"value": 0,
+					"label": "Turn off"
+				},
+				{
+					"value": 1,
+					"label": "Ignore"
+				},
+				{
+					"value": 2,
+					"label": "Toggle"
+				},
+				{
+					"value": 3,
+					"label": "Tzrn on"
+				}
+			]
 		}
 	]
 }

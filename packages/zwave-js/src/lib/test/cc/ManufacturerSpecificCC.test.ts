@@ -1,36 +1,37 @@
 import {
+	CommandClass,
 	ManufacturerSpecificCCGet,
 	ManufacturerSpecificCCReport,
 	ManufacturerSpecificCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { createTestingHost } from "@zwave-js/host";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared/safe";
+import { test } from "vitest";
 
-const host = createTestingHost();
-
-function buildCCBuffer(payload: Buffer): Buffer {
-	return Buffer.concat([
-		Buffer.from([
+function buildCCBuffer(payload: Uint8Array): Uint8Array {
+	return Bytes.concat([
+		Uint8Array.from([
 			CommandClasses["Manufacturer Specific"], // CC
 		]),
 		payload,
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
-	const cc = new ManufacturerSpecificCCGet(host, { nodeId: 1 });
+test("the Get command should serialize correctly", async (t) => {
+	const cc = new ManufacturerSpecificCCGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ManufacturerSpecificCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize(), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command (v1) should be deserialized correctly", (t) => {
+test("the Report command (v1) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
-		Buffer.from([
+		Uint8Array.from([
 			ManufacturerSpecificCommand.Report, // CC Command
 			0x01,
 			0x02,
@@ -40,12 +41,13 @@ test("the Report command (v1) should be deserialized correctly", (t) => {
 			0x06,
 		]),
 	);
-	const cc = new ManufacturerSpecificCCReport(host, {
-		nodeId: 2,
-		data: ccData,
-	});
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 2 } as any,
+	) as ManufacturerSpecificCCReport;
+	t.expect(cc.constructor).toBe(ManufacturerSpecificCCReport);
 
-	t.is(cc.manufacturerId, 0x0102);
-	t.is(cc.productType, 0x0304);
-	t.is(cc.productId, 0x0506);
+	t.expect(cc.manufacturerId).toBe(0x0102);
+	t.expect(cc.productType).toBe(0x0304);
+	t.expect(cc.productId).toBe(0x0506);
 });

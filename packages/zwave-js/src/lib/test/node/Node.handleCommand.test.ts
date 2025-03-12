@@ -1,16 +1,17 @@
-import { BinarySwitchCommand, EntryControlCommand } from "@zwave-js/cc";
+import { CommandClass, EntryControlCommand } from "@zwave-js/cc";
 import { BinarySwitchCCReport } from "@zwave-js/cc/BinarySwitchCC";
-import { EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
+import { type EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
 import { type CommandClassInfo, CommandClasses } from "@zwave-js/core";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
 import sinon from "sinon";
-import type { Driver } from "../../driver/Driver";
-import { ZWaveNode } from "../../node/Node";
+import { beforeEach, test } from "vitest";
+import type { Driver } from "../../driver/Driver.js";
+import { ZWaveNode } from "../../node/Node.js";
 import {
 	EntryControlDataTypes,
 	EntryControlEventTypes,
-} from "../../node/_Types";
-import { createEmptyMockDriver } from "../mocks";
+} from "../../node/_Types.js";
+import { createEmptyMockDriver } from "../mocks.js";
 
 const fakeDriver = createEmptyMockDriver();
 
@@ -25,9 +26,9 @@ function makeNode(
 	return node;
 }
 
-test.beforeEach(() => fakeDriver.sendMessage.resetHistory());
+beforeEach(() => fakeDriver.sendMessage.resetHistory());
 
-test.serial(
+test.sequential(
 	"should map commands from the root endpoint to endpoint 1 if configured",
 	async (t) => {
 		const node = makeNode([
@@ -64,32 +65,25 @@ test.serial(
 		} as any;
 
 		// Handle a command for the root endpoint
-		const command = new BinarySwitchCCReport(
-			fakeDriver as unknown as Driver,
-			{
-				nodeId: 2,
-				data: Buffer.from([
-					CommandClasses["Binary Switch"],
-					BinarySwitchCommand.Report,
-					0xff,
-				]),
-			},
-		);
+		const command = new BinarySwitchCCReport({
+			nodeId: 2,
+			currentValue: true,
+		});
 		await node.handleCommand(command);
 
-		t.true(
+		t.expect(
 			node.getValue({
 				commandClass: CommandClasses["Binary Switch"],
 				endpoint: 1,
 				property: "currentValue",
 			}),
-		);
+		).toBe(true);
 
 		node.destroy();
 	},
 );
 
-test.serial(
+test.sequential(
 	"a notification event is sent when receiving an EntryControlNotification",
 	async (t) => {
 		const node = makeNode([
@@ -102,8 +96,8 @@ test.serial(
 		const spy = sinon.spy();
 		node.on("notification", spy);
 
-		const buf = Buffer.concat([
-			Buffer.from([
+		const buf = Bytes.concat([
+			[
 				CommandClasses["Entry Control"],
 				EntryControlCommand.Notification, // CC Command
 				0x5,
@@ -114,18 +108,15 @@ test.serial(
 				50,
 				51,
 				52,
-			]),
+			],
 			// Required padding for ASCII
-			Buffer.alloc(12, 0xff),
+			new Uint8Array(12).fill(0xff),
 		]);
 
-		const command = new EntryControlCCNotification(
-			fakeDriver as unknown as Driver,
-			{
-				nodeId: node.id,
-				data: buf,
-			},
-		);
+		const command = await CommandClass.parse(
+			buf,
+			{ sourceNodeId: node.id } as any,
+		) as EntryControlCCNotification;
 
 		await node.handleCommand(command);
 
@@ -142,7 +133,6 @@ test.serial(
 				eventData: "1234",
 			},
 		);
-		t.pass();
 
 		node.destroy();
 	},

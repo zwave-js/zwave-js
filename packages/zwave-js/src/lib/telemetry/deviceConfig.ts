@@ -1,15 +1,14 @@
 // import got from "@esm2cjs/got";
 // import { AssociationGroupInfoCC, ConfigurationCC } from "@zwave-js/cc";
 // import { CommandClasses } from "@zwave-js/core";
-import type { ZWaveApplicationHost } from "@zwave-js/host";
 // import { formatId } from "@zwave-js/shared";
 // import { isObject } from "alcalzone-shared/typeguards";
-import type { ZWaveNode } from "../node/Node";
+import type { ZWaveNode } from "../node/Node.js";
 
 // const missingDeviceConfigCache = new Set<string>();
 
 export async function reportMissingDeviceConfig(
-	_applHost: ZWaveApplicationHost,
+	_ctx: any,
 	_node: ZWaveNode & {
 		manufacturerId: number;
 		productType: number;
@@ -32,9 +31,9 @@ export async function reportMissingDeviceConfig(
 	// // If we tried to report this file earlier, we can skip the report
 	// if (missingDeviceConfigCache.has(configFingerprint)) return;
 	// // Otherwise ask our device DB if it exists
-	// const { got } = await import("got");
+	// const { default: ky } = await import("ky");
 	// try {
-	// 	const data = await got
+	// 	const data = await ky
 	// 		.get(
 	// 			`https://devices.zwave-js.io/public_api/getdeviceinfo/${configFingerprint.replace(
 	// 				/:/g,

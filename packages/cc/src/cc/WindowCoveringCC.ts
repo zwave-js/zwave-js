@@ -1,19 +1,20 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
-	ZWaveError,
-	ZWaveErrorCodes,
+	type WithAddress,
 	encodeBitMask,
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
 import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host";
+import { Bytes } from "@zwave-js/shared/safe";
 import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -28,91 +29,41 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	windowCoveringParameterToLevelChangeLabel,
+	windowCoveringParameterToMetadataStates,
+} from "../lib/CCValueUtils.js";
+import {
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	type LevelChangeDirection,
 	WindowCoveringCommand,
 	WindowCoveringParameter,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-function parameterToMetadataStates(
-	parameter: WindowCoveringParameter,
-): Record<number, string> {
-	switch (parameter) {
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return {
-				0: "Closed (right inside)",
-				50: "Open",
-				99: "Closed (left inside)",
-			};
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			return {
-				0: "Closed (up inside)",
-				50: "Open",
-				99: "Closed (down inside)",
-			};
-	}
-
-	return {
-		0: "Closed",
-		99: "Open",
-	};
-}
-
-function parameterToLevelChangeLabel(
-	parameter: WindowCoveringParameter,
-	direction: "up" | "down",
-): string {
-	switch (parameter) {
-		// For angle control, both directions are closed, so we specify it explicitly
-		case WindowCoveringParameter["Vertical Slats Angle (no position)"]:
-		case WindowCoveringParameter["Vertical Slats Angle"]:
-			return `Change tilt (${
-				direction === "up" ? "left inside" : "right inside"
-			})`;
-
-		case WindowCoveringParameter["Horizontal Slats Angle (no position)"]:
-		case WindowCoveringParameter["Horizontal Slats Angle"]:
-			// Horizontal slats refer to the position of the inner side of the slats
-			// where a high level (99) actually means they face down
-			return `Change tilt (${
-				direction === "up" ? "down inside" : "up inside"
-			})`;
-	}
-	// For all other parameters, refer to the amount of light that is let in
-	return direction === "up" ? "Open" : "Close";
-}
-
-export const WindowCoveringCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Window Covering"], {
+export const WindowCoveringCCValues = V.defineCCValues(
+	CommandClasses["Window Covering"],
+	{
 		...V.staticProperty(
 			"supportedParameters",
 			undefined, // meta
 			{ internal: true }, // value options
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Window Covering"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"currentValue",
 			"currentValue",
@@ -128,12 +79,11 @@ export const WindowCoveringCCValues = Object.freeze({
 							parameter,
 						)
 					}`,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					ccSpecific: { parameter },
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"targetValue",
 			"targetValue",
@@ -153,14 +103,13 @@ export const WindowCoveringCCValues = Object.freeze({
 					}`,
 					// Only odd-numbered parameters have position support and are writable
 					writeable: parameter % 2 === 1,
-					states: parameterToMetadataStates(parameter),
+					states: windowCoveringParameterToMetadataStates(parameter),
 					allowManualEntry: writeable,
 					ccSpecific: { parameter },
 					valueChangeOptions: ["transitionDuration"],
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"duration",
 			"duration",
@@ -180,7 +129,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				},
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeUp",
 			// The direction refers to the change in level, not the physical location
@@ -192,7 +140,7 @@ export const WindowCoveringCCValues = Object.freeze({
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"up",
 						)
@@ -211,7 +159,6 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeDown",
 			// The direction refers to the change in level, not the physical location
@@ -224,7 +171,7 @@ export const WindowCoveringCCValues = Object.freeze({
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `${
-						parameterToLevelChangeLabel(
+						windowCoveringParameterToLevelChangeLabel(
 							parameter,
 							"down",
 						)
@@ -243,8 +190,8 @@ export const WindowCoveringCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Window Covering"])
 export class WindowCoveringCCAPI extends CCAPI {
@@ -416,7 +363,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 								);
 							// and optimistically update the currentValue
 							for (const node of affectedNodes) {
-								this.applHost
+								this.host
 									.tryGetValueDB(node.id)
 									?.setValue(currentValueValueId, value);
 							}
@@ -471,11 +418,11 @@ export class WindowCoveringCCAPI extends CCAPI {
 			WindowCoveringCommand.SupportedGet,
 		);
 
-		const cc = new WindowCoveringCCSupportedGet(this.applHost, {
+		const cc = new WindowCoveringCCSupportedGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			WindowCoveringCCSupportedReport
 		>(
 			cc,
@@ -492,12 +439,12 @@ export class WindowCoveringCCAPI extends CCAPI {
 			WindowCoveringCommand.Get,
 		);
 
-		const cc = new WindowCoveringCCGet(this.applHost, {
+		const cc = new WindowCoveringCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			parameter,
 		});
-		const response = await this.applHost.sendCommand<
+		const response = await this.host.sendCommand<
 			WindowCoveringCCReport
 		>(
 			cc,
@@ -521,14 +468,14 @@ export class WindowCoveringCCAPI extends CCAPI {
 			WindowCoveringCommand.StartLevelChange,
 		);
 
-		const cc = new WindowCoveringCCSet(this.applHost, {
+		const cc = new WindowCoveringCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			targetValues,
 			duration,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	@validateArgs({ strictEnums: true })
@@ -542,15 +489,15 @@ export class WindowCoveringCCAPI extends CCAPI {
 			WindowCoveringCommand.StartLevelChange,
 		);
 
-		const cc = new WindowCoveringCCStartLevelChange(this.applHost, {
+		const cc = new WindowCoveringCCStartLevelChange({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			parameter,
 			direction,
 			duration,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
 	@validateArgs({ strictEnums: true })
@@ -562,13 +509,13 @@ export class WindowCoveringCCAPI extends CCAPI {
 			WindowCoveringCommand.StopLevelChange,
 		);
 
-		const cc = new WindowCoveringCCStopLevelChange(this.applHost, {
+		const cc = new WindowCoveringCCStopLevelChange({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			parameter,
 		});
 
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -578,24 +525,26 @@ export class WindowCoveringCCAPI extends CCAPI {
 export class WindowCoveringCC extends CommandClass {
 	declare ccCommand: WindowCoveringCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses["Window Covering"],
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying supported window covering parameters...",
 			direction: "outbound",
@@ -610,7 +559,7 @@ ${
 					)
 					.join("\n")
 			}`;
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
 				direction: "inbound",
@@ -620,31 +569,31 @@ ${
 			for (const param of supported) {
 				// Default values
 				this.setMetadata(
-					applHost,
+					ctx,
 					WindowCoveringCCValues.currentValue(param),
 				);
 				this.setMetadata(
-					applHost,
+					ctx,
 					WindowCoveringCCValues.targetValue(param),
 				);
 				this.setMetadata(
-					applHost,
+					ctx,
 					WindowCoveringCCValues.duration(param),
 				);
 
 				// Level change values
 				this.setMetadata(
-					applHost,
+					ctx,
 					WindowCoveringCCValues.levelChangeUp(param),
 				);
 				this.setMetadata(
-					applHost,
+					ctx,
 					WindowCoveringCCValues.levelChangeDown(param),
 				);
 
 				// And for the odd parameters (with position support), query the position
 				if (param % 2 === 1) {
-					applHost.controllerLog.logNode(node.id, {
+					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
 						message: `querying position for parameter ${
 							getEnumMemberName(
@@ -660,57 +609,62 @@ ${
 		}
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
 	public translatePropertyKey(
-		_applHost: ZWaveApplicationHost,
-		_property: string | number,
+		ctx: GetValueDB,
+		property: string | number,
 		propertyKey: string | number,
 	): string | undefined {
 		if (typeof propertyKey === "number") {
 			return getEnumMemberName(WindowCoveringParameter, propertyKey);
 		}
-		return super.translatePropertyKey(_applHost, _property, propertyKey);
+		return super.translatePropertyKey(ctx, property, propertyKey);
 	}
 }
 
 // @publicAPI
-export interface WindowCoveringCCSupportedReportOptions
-	extends CCCommandOptions
-{
+export interface WindowCoveringCCSupportedReportOptions {
 	supportedParameters: readonly WindowCoveringParameter[];
 }
 
 @CCCommand(WindowCoveringCommand.SupportedReport)
+@ccValueProperty(
+	"supportedParameters",
+	WindowCoveringCCValues.supportedParameters,
+)
 export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| WindowCoveringCCSupportedReportOptions,
+		options: WithAddress<WindowCoveringCCSupportedReportOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-
-			const numBitmaskBytes = this.payload[0] & 0b1111;
-			validatePayload(this.payload.length >= 1 + numBitmaskBytes);
-			const bitmask = this.payload.subarray(1, 1 + numBitmaskBytes);
-
-			this.supportedParameters = parseBitMask(
-				bitmask,
-				WindowCoveringParameter["Outbound Left (no position)"],
-			);
-		} else {
-			this.supportedParameters = options.supportedParameters;
-		}
+		super(options);
+		this.supportedParameters = options.supportedParameters;
 	}
 
-	@ccValue(WindowCoveringCCValues.supportedParameters)
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): WindowCoveringCCSupportedReport {
+		validatePayload(raw.payload.length >= 1);
+
+		const numBitmaskBytes = raw.payload[0] & 0b1111;
+		validatePayload(raw.payload.length >= 1 + numBitmaskBytes);
+		const bitmask = raw.payload.subarray(1, 1 + numBitmaskBytes);
+		const supportedParameters: WindowCoveringParameter[] = parseBitMask(
+			bitmask,
+			WindowCoveringParameter["Outbound Left (no position)"],
+		);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			supportedParameters,
+		});
+	}
+
 	public readonly supportedParameters: readonly WindowCoveringParameter[];
 
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const bitmask = encodeBitMask(
 			this.supportedParameters,
 			undefined,
@@ -718,17 +672,17 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 		).subarray(0, 15);
 		const numBitmaskBytes = bitmask.length & 0b1111;
 
-		this.payload = Buffer.concat([
-			Buffer.from([numBitmaskBytes]),
+		this.payload = Bytes.concat([
+			Bytes.from([numBitmaskBytes]),
 			bitmask.subarray(0, numBitmaskBytes),
 		]);
 
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				"supported parameters": this.supportedParameters
 					.map(
@@ -750,42 +704,74 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 @expectedCCResponse(WindowCoveringCCSupportedReport)
 export class WindowCoveringCCSupportedGet extends WindowCoveringCC {}
 
+// @publicAPI
+export interface WindowCoveringCCReportOptions {
+	parameter: WindowCoveringParameter;
+	currentValue: number;
+	targetValue: number;
+	duration: Duration;
+}
+
 @CCCommand(WindowCoveringCommand.Report)
+@ccValueProperty(
+	"currentValue",
+	WindowCoveringCCValues.currentValue,
+	(self) => [self.parameter],
+)
+@ccValueProperty(
+	"targetValue",
+	WindowCoveringCCValues.targetValue,
+	(self) => [self.parameter],
+)
+@ccValueProperty(
+	"duration",
+	WindowCoveringCCValues.duration,
+	(self) => [self.parameter],
+)
 export class WindowCoveringCCReport extends WindowCoveringCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<WindowCoveringCCReportOptions>,
 	) {
-		super(host, options);
-		validatePayload(this.payload.length >= 4);
-		this.parameter = this.payload[0];
-		this.currentValue = this.payload[1];
-		this.targetValue = this.payload[2];
-		this.duration = Duration.parseReport(this.payload[3])
+		super(options);
+
+		// TODO: Check implementation:
+		this.parameter = options.parameter;
+		this.currentValue = options.currentValue;
+		this.targetValue = options.targetValue;
+		this.duration = options.duration;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): WindowCoveringCCReport {
+		validatePayload(raw.payload.length >= 4);
+		const parameter: WindowCoveringParameter = raw.payload[0];
+		const currentValue = raw.payload[1];
+		const targetValue = raw.payload[2];
+		const duration = Duration.parseReport(raw.payload[3])
 			?? Duration.unknown();
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameter,
+			currentValue,
+			targetValue,
+			duration,
+		});
 	}
 
 	public readonly parameter: WindowCoveringParameter;
 
-	@ccValue(
-		WindowCoveringCCValues.currentValue,
-		(self: WindowCoveringCCReport) => [self.parameter] as const,
-	)
 	public readonly currentValue: number;
-	@ccValue(
-		WindowCoveringCCValues.targetValue,
-		(self: WindowCoveringCCReport) => [self.parameter] as const,
-	)
+
 	public readonly targetValue: number;
-	@ccValue(
-		WindowCoveringCCValues.duration,
-		(self: WindowCoveringCCReport) => [self.parameter] as const,
-	)
+
 	public readonly duration: Duration;
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				parameter: getEnumMemberName(
 					WindowCoveringParameter,
@@ -800,7 +786,7 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 }
 
 // @publicAPI
-export interface WindowCoveringCCGetOptions extends CCCommandOptions {
+export interface WindowCoveringCCGetOptions {
 	parameter: WindowCoveringParameter;
 }
 
@@ -815,30 +801,32 @@ function testResponseForWindowCoveringGet(
 @expectedCCResponse(WindowCoveringCCReport, testResponseForWindowCoveringGet)
 export class WindowCoveringCCGet extends WindowCoveringCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| WindowCoveringCCGetOptions,
+		options: WithAddress<WindowCoveringCCGetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			validatePayload(this.payload.length >= 1);
-			this.parameter = this.payload[0];
-		} else {
-			this.parameter = options.parameter;
-		}
+		super(options);
+		this.parameter = options.parameter;
+	}
+
+	public static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCGet {
+		validatePayload(raw.payload.length >= 1);
+		const parameter: WindowCoveringParameter = raw.payload[0];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameter,
+		});
 	}
 
 	public parameter: WindowCoveringParameter;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.parameter]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.parameter]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				parameter: getEnumMemberName(
 					WindowCoveringParameter,
@@ -850,7 +838,7 @@ export class WindowCoveringCCGet extends WindowCoveringCC {
 }
 
 // @publicAPI
-export interface WindowCoveringCCSetOptions extends CCCommandOptions {
+export interface WindowCoveringCCSetOptions {
 	targetValues: {
 		parameter: WindowCoveringParameter;
 		value: number;
@@ -862,22 +850,41 @@ export interface WindowCoveringCCSetOptions extends CCCommandOptions {
 @useSupervision()
 export class WindowCoveringCCSet extends WindowCoveringCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| WindowCoveringCCSetOptions,
+		options: WithAddress<WindowCoveringCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.targetValues = options.targetValues;
-			this.duration = Duration.from(options.duration);
+		super(options);
+		this.targetValues = options.targetValues;
+		this.duration = Duration.from(options.duration);
+	}
+
+	public static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const numEntries = raw.payload[0] & 0b11111;
+
+		validatePayload(raw.payload.length >= 1 + numEntries * 2);
+		const targetValues: WindowCoveringCCSetOptions["targetValues"] = [];
+
+		for (let i = 0; i < numEntries; i++) {
+			const offset = 1 + i * 2;
+			targetValues.push({
+				parameter: raw.payload[offset],
+				value: raw.payload[offset + 1],
+			});
 		}
+
+		let duration: Duration | undefined;
+
+		if (raw.payload.length >= 2 + numEntries * 2) {
+			duration = Duration.parseSet(
+				raw.payload[1 + numEntries * 2],
+			);
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			targetValues,
+			duration,
+		});
 	}
 
 	public targetValues: {
@@ -886,9 +893,9 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 	}[];
 	public duration: Duration | undefined;
 
-	public serialize(): Buffer {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const numEntries = this.targetValues.length & 0b11111;
-		this.payload = Buffer.allocUnsafe(2 + numEntries * 2);
+		this.payload = new Bytes(2 + numEntries * 2);
 
 		this.payload[0] = numEntries;
 		for (let i = 0; i < numEntries; i++) {
@@ -901,10 +908,10 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 			this.duration ?? Duration.default()
 		).serializeSet();
 
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		for (const { parameter, value } of this.targetValues) {
 			message[getEnumMemberName(WindowCoveringParameter, parameter)] =
@@ -914,16 +921,14 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
 }
 
 // @publicAPI
-export interface WindowCoveringCCStartLevelChangeOptions
-	extends CCCommandOptions
-{
+export interface WindowCoveringCCStartLevelChangeOptions {
 	parameter: WindowCoveringParameter;
 	direction: keyof typeof LevelChangeDirection;
 	duration?: Duration | string;
@@ -933,39 +938,51 @@ export interface WindowCoveringCCStartLevelChangeOptions
 @useSupervision()
 export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| WindowCoveringCCStartLevelChangeOptions,
+		options: WithAddress<WindowCoveringCCStartLevelChangeOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.parameter = options.parameter;
-			this.direction = options.direction;
-			this.duration = Duration.from(options.duration);
+		super(options);
+		this.parameter = options.parameter;
+		this.direction = options.direction;
+		this.duration = Duration.from(options.duration);
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): WindowCoveringCCStartLevelChange {
+		validatePayload(raw.payload.length >= 2);
+		const direction = !!(raw.payload[0] & 0b0100_0000)
+			? "down"
+			: "up";
+		const parameter: WindowCoveringParameter = raw.payload[1];
+		let duration: Duration | undefined;
+
+		if (raw.payload.length >= 3) {
+			duration = Duration.parseSet(raw.payload[2]);
 		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			direction,
+			parameter,
+			duration,
+		});
 	}
 
 	public parameter: WindowCoveringParameter;
 	public direction: keyof typeof LevelChangeDirection;
 	public duration: Duration | undefined;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([
-			this.direction === "up" ? 0b0100_0000 : 0b0000_0000,
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.direction === "down" ? 0b0100_0000 : 0b0000_0000,
 			this.parameter,
 			(this.duration ?? Duration.default()).serializeSet(),
 		]);
-		return super.serialize();
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			parameter: getEnumMemberName(
 				WindowCoveringParameter,
@@ -977,16 +994,14 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 			message.duration = this.duration.toString();
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
 }
 
 // @publicAPI
-export interface WindowCoveringCCStopLevelChangeOptions
-	extends CCCommandOptions
-{
+export interface WindowCoveringCCStopLevelChangeOptions {
 	parameter: WindowCoveringParameter;
 }
 
@@ -994,33 +1009,35 @@ export interface WindowCoveringCCStopLevelChangeOptions
 @useSupervision()
 export class WindowCoveringCCStopLevelChange extends WindowCoveringCC {
 	public constructor(
-		host: ZWaveHost,
-		options:
-			| CommandClassDeserializationOptions
-			| WindowCoveringCCStopLevelChangeOptions,
+		options: WithAddress<WindowCoveringCCStopLevelChangeOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			this.parameter = options.parameter;
-		}
+		super(options);
+		this.parameter = options.parameter;
+	}
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): WindowCoveringCCStopLevelChange {
+		validatePayload(raw.payload.length >= 1);
+		const parameter: WindowCoveringParameter = raw.payload[0];
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameter,
+		});
 	}
 
 	public parameter: WindowCoveringParameter;
 
-	public serialize(): Buffer {
-		this.payload = Buffer.from([this.parameter]);
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.parameter]);
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message: {
 				parameter: getEnumMemberName(
 					WindowCoveringParameter,

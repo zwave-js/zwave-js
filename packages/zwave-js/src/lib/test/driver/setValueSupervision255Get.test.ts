@@ -13,7 +13,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"successful supervised setValue(255) with duration: expect validation GET",
@@ -30,51 +30,41 @@ integrationTest(
 		customSetup: async (driver, controller, mockNode) => {
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof SupervisionCCGet
-					) {
-						const cc = new SupervisionCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
-							sessionId: frame.payload.sessionId,
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof SupervisionCCGet) {
+						const cc = new SupervisionCCReport({
+							nodeId: controller.ownNodeId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToSupervisionGet);
 
 			// Except the ones with a duration in the command, those need special handling
 			const respondToSupervisionGetWithDuration: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
+				handleCC(controller, self, receivedCC) {
 					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof SupervisionCCGet
-						&& frame.payload.encapsulated
+						receivedCC instanceof SupervisionCCGet
+						&& receivedCC.encapsulated
 							instanceof MultilevelSwitchCCSet
-						&& !!frame.payload.encapsulated.duration
+						&& !!receivedCC.encapsulated.duration
 							?.toMilliseconds()
 					) {
-						const cc1 = new SupervisionCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
-							sessionId: frame.payload.sessionId,
+						const cc1 = new SupervisionCCReport({
+							nodeId: controller.ownNodeId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: true,
 							status: SupervisionStatus.Working,
-							duration: frame.payload.encapsulated.duration,
+							duration: receivedCC.encapsulated.duration,
 						});
 
-						const cc2 = new SupervisionCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
-							sessionId: frame.payload.sessionId,
+						const cc2 = new SupervisionCCReport({
+							nodeId: controller.ownNodeId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
@@ -93,13 +83,12 @@ integrationTest(
 									}),
 								);
 							},
-							frame.payload.encapsulated.duration
+							receivedCC.encapsulated.duration
 								.toMilliseconds(),
 						);
 
-						return true;
+						return { action: "stop" };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToSupervisionGetWithDuration);
@@ -107,12 +96,9 @@ integrationTest(
 			let lastBrightness = 88;
 			let currentBrightness = 0;
 			const respondToMultilevelSwitchSet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof MultilevelSwitchCCSet
-					) {
-						const targetValue = frame.payload.targetValue;
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof MultilevelSwitchCCSet) {
+						const targetValue = receivedCC.targetValue;
 						if (targetValue === 255) {
 							currentBrightness = lastBrightness;
 						} else {
@@ -122,33 +108,23 @@ integrationTest(
 							}
 						}
 
-						return true;
+						return { action: "ok" };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToMultilevelSwitchSet);
 
 			// Report Multilevel Switch status
 			const respondToMultilevelSwitchGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof MultilevelSwitchCCGet
-					) {
-						const cc = new MultilevelSwitchCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof MultilevelSwitchCCGet) {
+						const cc = new MultilevelSwitchCCReport({
+							nodeId: controller.ownNodeId,
 							targetValue: 88,
 							currentValue: 88,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToMultilevelSwitchGet);
@@ -195,7 +171,7 @@ integrationTest(
 			const currentValue = node.getValue(
 				MultilevelSwitchCCValues.currentValue.id,
 			);
-			t.is(currentValue, 88);
+			t.expect(currentValue).toBe(88);
 		},
 	},
 );

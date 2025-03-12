@@ -5,11 +5,9 @@ import { CommandClasses, NodeStatus } from "@zwave-js/core";
 import {
 	MOCK_FRAME_ACK_TIMEOUT,
 	type MockNodeBehavior,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro for https://github.com/home-assistant/core/issues/98491
 
@@ -37,36 +35,29 @@ integrationTest(
 		async customSetup(driver, mockController, mockNode) {
 			// The default mock implementation does not support endpoints
 			const respondToBasicGet: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
+				handleCC(controller, self, receivedCC) {
 					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload
+						receivedCC
 							instanceof MultiChannelCCCommandEncapsulation
-						&& frame.payload.encapsulated instanceof BasicCCGet
+						&& receivedCC.encapsulated instanceof BasicCCGet
 					) {
 						// Do not respond if BasicCC is not explicitly listed as supported
 						if (!self.implementedCCs.has(CommandClasses.Basic)) {
-							return false;
+							return { action: "stop" };
 						}
 
-						let cc: CommandClass = new BasicCCReport(self.host, {
-							nodeId: controller.host.ownNodeId,
+						let cc: CommandClass = new BasicCCReport({
+							nodeId: controller.ownNodeId,
 							currentValue: Math.round(Math.random() * 99),
 						});
-						cc = new MultiChannelCCCommandEncapsulation(self.host, {
-							nodeId: controller.host.ownNodeId,
-							destination: frame.payload.endpointIndex,
-							endpoint: frame.payload.destination as number,
+						cc = new MultiChannelCCCommandEncapsulation({
+							nodeId: controller.ownNodeId,
+							destination: receivedCC.endpointIndex,
+							endpoint: receivedCC.destination as number,
 							encapsulated: cc,
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-						return true;
+						return { action: "sendCC", cc };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToBasicGet);
@@ -85,7 +76,7 @@ integrationTest(
 				},
 			};
 
-			t.is(node2.status, NodeStatus.Alive);
+			t.expect(node2.status).toBe(NodeStatus.Alive);
 
 			const basicSetPromise0 = node2.setValue(
 				BasicCCValues.targetValue.endpoint(0),
@@ -127,7 +118,7 @@ integrationTest(
 			mockNode.autoAckControllerFrames = true;
 
 			await basicSetPromise2;
-			t.is(node2.status, NodeStatus.Alive);
+			t.expect(node2.status).toBe(NodeStatus.Alive);
 
 			await wait(10000);
 		},

@@ -1,3 +1,4 @@
+import { Bytes, isUint8Array } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import createMDNSServer from "mdns-server";
 
@@ -15,6 +16,7 @@ export function discoverRemoteSerialPorts(
 		reuseAddr: true,
 		loopback: false,
 		noInit: true,
+		ttl: 10,
 	});
 	let timer: NodeJS.Timeout | undefined;
 
@@ -31,8 +33,12 @@ export function discoverRemoteSerialPorts(
 					return {
 						txt: resp.answers.find(
 							(n) => n.type === "TXT" && n.name === data,
+						) ?? resp.additionals.find(
+							(n) => n.type === "TXT" && n.name === data,
 						),
 						srv: resp.answers.find(
+							(n) => n.type === "SRV" && n.name === data,
+						) ?? resp.additionals.find(
 							(n) => n.type === "SRV" && n.name === data,
 						),
 					};
@@ -48,8 +54,8 @@ export function discoverRemoteSerialPorts(
 					const info: Record<string, string> = {};
 					if (!!txt && isArray(txt.data)) {
 						const strings = (txt.data as unknown[])
-							.filter((d): d is Buffer => Buffer.isBuffer(d))
-							.map((d) => d.toString())
+							.filter((d) => isUint8Array(d))
+							.map((d) => Bytes.view(d).toString("utf8"))
 							.filter((d) => d.includes("="));
 
 						for (const string of strings) {

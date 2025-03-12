@@ -12,16 +12,45 @@ async getMetaData(): Promise<MaybeNotKnown<FirmwareUpdateMetaData>>;
 
 Requests information about the current firmware on the device.
 
+### `reportMetaData`
+
+```ts
+async reportMetaData(
+	options: FirmwareUpdateMetaDataCCMetaDataReportOptions,
+): Promise<void>;
+```
+
 ### `requestUpdate`
 
 ```ts
-async requestUpdate(
+requestUpdate(
 	options: FirmwareUpdateMetaDataCCRequestGetOptions,
-): Promise<FirmwareUpdateRequestStatus>;
+): Promise<FirmwareUpdateMetaDataCCRequestReport | undefined>;
 ```
 
-Requests the device to start the firmware update process.
-WARNING: This method may wait up to 60 seconds for a reply.
+Requests the device to start the firmware update process and waits for a response.
+This response may time out on some devices, in which case the caller of this method
+should wait manually.
+
+### `respondToUpdateRequest`
+
+```ts
+async respondToUpdateRequest(
+	options: FirmwareUpdateMetaDataCCRequestReportOptions,
+): Promise<void>;
+```
+
+Responds to a firmware update request.
+
+### `respondToDownloadRequest`
+
+```ts
+async respondToDownloadRequest(
+	options: FirmwareUpdateMetaDataCCPrepareReportOptions,
+): Promise<void>;
+```
+
+Responds to a firmware download request.
 
 ### `sendFirmwareFragment`
 
@@ -29,7 +58,7 @@ WARNING: This method may wait up to 60 seconds for a reply.
 async sendFirmwareFragment(
 	fragmentNumber: number,
 	isLastFragment: boolean,
-	data: Buffer,
+	data: Uint8Array,
 ): Promise<void>;
 ```
 

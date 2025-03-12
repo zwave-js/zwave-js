@@ -1,12 +1,11 @@
 import { BasicCCGet, BasicCCReport } from "@zwave-js/cc";
 import {
 	type MockNodeBehavior,
-	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"Correctly capture node updates that arrive before the SendData callback",
@@ -29,12 +28,9 @@ integrationTest(
 			mockNode.autoAckControllerFrames = false;
 
 			const respondToBasicGetWithDelayedAck: MockNodeBehavior = {
-				async onControllerFrame(controller, self, frame) {
-					if (
-						frame.type === MockZWaveFrameType.Request
-						&& frame.payload instanceof BasicCCGet
-					) {
-						const cc = new BasicCCReport(controller.host, {
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof BasicCCGet) {
+						const cc = new BasicCCReport({
 							nodeId: self.id,
 							currentValue: 55,
 						});
@@ -46,16 +42,14 @@ integrationTest(
 
 						await wait(100);
 
-						await self.ackControllerRequestFrame(frame);
-						return true;
+						return { action: "ack" };
 					}
-					return false;
 				},
 			};
 			mockNode.defineBehavior(respondToBasicGetWithDelayedAck);
 
 			const result = await node.commandClasses.Basic.get();
-			t.is(result?.currentValue, 55);
+			t.expect(result?.currentValue).toBe(55);
 		},
 	},
 );

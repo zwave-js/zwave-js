@@ -1,63 +1,62 @@
 {
   "name": "@zwave-js/host",
-  "version": "12.5.2",
+  "version": "15.0.0-beta.2",
   "description": "zwave-js: Host abstractions",
   "keywords": [],
   "publishConfig": {
     "access": "public"
   },
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
-      "types": "./build/index.d.ts",
-      "default": "./build/index.js"
-    },
-    "./safe": {
-      "types": "./build/index_safe.d.ts",
-      "default": "./build/index_safe.js"
+      "@@dev": "./src/index.ts",
+      "import": "./build/esm/index.js",
+      "require": "./build/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "build/**/*.{js,d.ts,map}"
+    "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
+    "build/**/package.json"
   ],
   "author": {
     "name": "AlCalzone",
     "email": "d.griesel@gmx.net"
   },
   "license": "MIT",
-  "homepage": "https://github.com/AlCalzone/node-zwave-js#readme",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AlCalzone/node-zwave-js.git"
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
   },
   "bugs": {
-    "url": "https://github.com/AlCalzone/node-zwave-js/issues"
+    "url": "https://github.com/zwave-js/zwave-js/issues"
   },
   "funding": {
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 18"
+    "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty",
+    "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
+    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:ts": "eslint --cache --ext .ts \"src/**/*.ts\"",
+    "lint:ts": "eslint --cache \"src/**/*.ts\"",
     "lint:ts:fix": "yarn run lint:ts --fix"
   },
   "dependencies": {
     "@zwave-js/config": "workspace:*",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/shared": "workspace:*",
-    "alcalzone-shared": "^4.0.8"
+    "alcalzone-shared": "^5.0.0"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.43.0",
-    "@types/node": "^18.19.29",
-    "del-cli": "^5.1.0",
-    "typescript": "5.4.4"
+    "@alcalzone/esm2cjs": "^1.4.1",
+    "@microsoft/api-extractor": "^7.48.0",
+    "@types/node": "^20.17.16",
+    "del-cli": "^6.0.0",
+    "typescript": "5.7.3"
   }
 }

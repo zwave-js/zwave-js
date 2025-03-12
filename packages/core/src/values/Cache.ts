@@ -1,12 +1,21 @@
-import type { JSONObject } from "@zwave-js/shared";
-import { composeObject } from "alcalzone-shared/objects";
+import {
+	type JSONObject,
+	hexToUint8Array,
+	isUint8Array,
+	uint8ArrayToHex,
+} from "@zwave-js/shared/safe";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { Duration } from "./Duration";
-import type { ValueMetadata } from "./Metadata";
-import type { ValueID } from "./_Types";
+import { Duration } from "./Duration.js";
+import type { ValueMetadata } from "./Metadata.js";
+import type { ValueID } from "./_Types.js";
 
 // export type SerializableValue = number | string | boolean | Map<string | number, any> | JSONObject;
-type SerializedValue = number | string | boolean | JSONObject | undefined;
+export type SerializedValue =
+	| number
+	| string
+	| boolean
+	| JSONObject
+	| undefined;
 
 export interface CacheValue
 	extends Pick<ValueID, "endpoint" | "property" | "propertyKey">
@@ -27,7 +36,7 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 	if (value instanceof Map) {
 		// We mark maps with a special key, so they can be detected by the deserialization routine
 		return {
-			...composeObject(
+			...Object.fromEntries(
 				[...value.entries()].map(([k, v]) => [
 					k,
 					serializeCacheValue(v),
@@ -35,7 +44,7 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 			),
 			[SPECIAL_TYPE_KEY]: "map",
 		};
-	} else if (value instanceof Duration) {
+	} else if (Duration.isDuration(value)) {
 		const valueAsJSON = value.toJSON();
 		return {
 			...(typeof valueAsJSON === "string"
@@ -43,10 +52,10 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 				: valueAsJSON),
 			[SPECIAL_TYPE_KEY]: "duration",
 		};
-	} else if (Buffer.isBuffer(value)) {
+	} else if (isUint8Array(value)) {
 		return {
 			[SPECIAL_TYPE_KEY]: "buffer",
-			data: value.toString("hex"),
+			data: uint8ArrayToHex(value),
 		};
 	} else if (
 		typeof value === "number"
@@ -81,7 +90,7 @@ export function deserializeCacheValue(value: SerializedValue): unknown {
 		} else if (specialType === "duration") {
 			return new Duration(value.value ?? 1, value.unit);
 		} else if (specialType === "buffer") {
-			return Buffer.from(value.data, "hex");
+			return hexToUint8Array(value.data);
 		}
 	}
 	return value;

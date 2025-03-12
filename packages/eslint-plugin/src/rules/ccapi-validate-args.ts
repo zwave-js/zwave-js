@@ -4,14 +4,13 @@ import {
 	ESLintUtils,
 } from "@typescript-eslint/utils";
 import {
-	type Rule,
 	findDecoratorContainingCCId,
 	getCCNameFromDecorator,
-} from "../utils";
+} from "../utils.js";
 
 const isFixMode = process.argv.some((arg) => arg.startsWith("--fix"));
 
-export const ccAPIValidateArgs: Rule = ESLintUtils.RuleCreator.withoutDocs({
+export const ccAPIValidateArgs = ESLintUtils.RuleCreator.withoutDocs({
 	create(context) {
 		let currentAPIClassCCName: string | undefined;
 		let validateArgsImport: string | undefined;
@@ -27,6 +26,7 @@ export const ccAPIValidateArgs: Rule = ESLintUtils.RuleCreator.withoutDocs({
 						s.type
 							=== AST_NODE_TYPES.ImportSpecifier
 						&& s.importKind === "value"
+						&& s.imported.type === AST_NODE_TYPES.Identifier
 						&& s.imported.name === "validateArgs"
 					);
 					validateArgsImport = importSpecifier?.local.name;

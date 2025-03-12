@@ -10,7 +10,7 @@ import {
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"Discard Multilevel Sensor and Meter CC Reports on nodes and/or endpoints that do not support them",
@@ -24,8 +24,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// Unsupported report from root endpoint
-			let cc: CommandClass = new MultilevelSensorCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			let cc: CommandClass = new MultilevelSensorCCReport({
+				nodeId: mockController.ownNodeId,
 				type: 0x01, // Temperature
 				scale: 0x00, // Celsius
 				value: 1.001,
@@ -37,15 +37,15 @@ integrationTest(
 			);
 
 			// Report from endpoint 1, unsupported on root
-			cc = new MultilevelSensorCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new MultilevelSensorCCReport({
+				nodeId: mockController.ownNodeId,
 				type: 0x01, // Temperature
 				scale: 0x00, // Celsius
 				value: 25.12,
 			});
-			cc = new MultiChannelCCCommandEncapsulation(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
-				endpoint: 1,
+			cc = new MultiChannelCCCommandEncapsulation({
+				nodeId: mockController.ownNodeId,
+				endpointIndex: 1,
 				destination: 0,
 				encapsulated: cc,
 			});
@@ -56,15 +56,15 @@ integrationTest(
 			);
 
 			// Unsupported Report from endpoint 1, supported on root
-			cc = new MeterCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new MeterCCReport({
+				nodeId: mockController.ownNodeId,
 				type: 0x01, // Electric
 				scale: 0x00, // kWh
 				value: 1.234,
 			});
-			cc = new MultiChannelCCCommandEncapsulation(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
-				endpoint: 1,
+			cc = new MultiChannelCCCommandEncapsulation({
+				nodeId: mockController.ownNodeId,
+				endpointIndex: 1,
 				destination: 0,
 				encapsulated: cc,
 			});
@@ -75,8 +75,8 @@ integrationTest(
 			);
 
 			// Supported report from root endpoint
-			cc = new MeterCCReport(mockNode.host, {
-				nodeId: mockController.host.ownNodeId,
+			cc = new MeterCCReport({
+				nodeId: mockController.ownNodeId,
 				type: 0x01, // Electric
 				scale: 0x00, // kWh
 				value: 2.34,
@@ -95,10 +95,10 @@ integrationTest(
 			const temperature0 = node.getValue(
 				sensorValue.id,
 			);
-			t.is(temperature0, undefined);
+			t.expect(temperature0).toBeUndefined();
 
 			const temperature1 = node.getValue(sensorValue.endpoint(1));
-			t.is(temperature1, 25.12);
+			t.expect(temperature1).toBe(25.12);
 
 			const meterValue = MeterCCValues.value(
 				0x01,
@@ -106,10 +106,10 @@ integrationTest(
 				0x00,
 			);
 			const meter0 = node.getValue(meterValue.id);
-			t.is(meter0, 2.34);
+			t.expect(meter0).toBe(2.34);
 
 			const meter1 = node.getValue(meterValue.endpoint(1));
-			t.is(meter1, undefined);
+			t.expect(meter1).toBeUndefined();
 		},
 	},
 );

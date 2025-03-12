@@ -1,7 +1,10 @@
+import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import type {
+	GetValueDB,
 	MessageOrCCLogEntry,
 	MessageRecord,
 	SupervisionResult,
+	WithAddress,
 } from "@zwave-js/core/safe";
 import {
 	CommandClasses,
@@ -12,47 +15,44 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core/safe";
-import type { ZWaveApplicationHost, ZWaveHost } from "@zwave-js/host/safe";
+import { Bytes } from "@zwave-js/shared/safe";
 import { pick } from "@zwave-js/shared/safe";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
-	type CCCommandOptions,
+	type CCRaw,
 	CommandClass,
-	type CommandClassDeserializationOptions,
-	gotDeserializationOptions,
-} from "../lib/CommandClass";
+	type InterviewContext,
+	type RefreshValuesContext,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { LanguageCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { LanguageCommand } from "../lib/_Types.js";
 
-export const LanguageCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Language, {
-		...V.staticProperty(
-			"language",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Language code",
-			} as const,
-		),
-
-		...V.staticProperty(
-			"country",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Country code",
-			} as const,
-		),
-	}),
+export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
+	...V.staticProperty(
+		"language",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Language code",
+		} as const,
+	),
+	...V.staticProperty(
+		"country",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Country code",
+		} as const,
+	),
 });
 
 // @noSetValueAPI It doesn't make sense
@@ -73,11 +73,11 @@ export class LanguageCCAPI extends CCAPI {
 	public async get() {
 		this.assertSupportsCommand(LanguageCommand, LanguageCommand.Get);
 
-		const cc = new LanguageCCGet(this.applHost, {
+		const cc = new LanguageCCGet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.applHost.sendCommand<LanguageCCReport>(
+		const response = await this.host.sendCommand<LanguageCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -93,13 +93,13 @@ export class LanguageCCAPI extends CCAPI {
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(LanguageCommand, LanguageCommand.Set);
 
-		const cc = new LanguageCCSet(this.applHost, {
+		const cc = new LanguageCCSet({
 			nodeId: this.endpoint.nodeId,
-			endpoint: this.endpoint.index,
+			endpointIndex: this.endpoint.index,
 			language,
 			country,
 		});
-		return this.applHost.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 }
 
@@ -109,33 +109,37 @@ export class LanguageCCAPI extends CCAPI {
 export class LanguageCC extends CommandClass {
 	declare ccCommand: LanguageCommand;
 
-	public async interview(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
+	public async interview(
+		ctx: InterviewContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
 
-		await this.refreshValues(applHost);
+		await this.refreshValues(ctx);
 
 		// Remember that the interview is complete
-		this.setInterviewComplete(applHost, true);
+		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(applHost: ZWaveApplicationHost): Promise<void> {
-		const node = this.getNode(applHost)!;
-		const endpoint = this.getEndpoint(applHost)!;
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
 			CommandClasses.Language,
-			applHost,
+			ctx,
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
 		});
 
-		applHost.controllerLog.logNode(node.id, {
+		ctx.logNode(node.id, {
 			message: "requesting language setting...",
 			direction: "outbound",
 		});
@@ -145,7 +149,7 @@ export class LanguageCC extends CommandClass {
 			const logMessage = `received current language setting: ${language}${
 				country != undefined ? `-${country}` : ""
 			}`;
-			applHost.controllerLog.logNode(node.id, {
+			ctx.logNode(node.id, {
 				message: logMessage,
 				direction: "inbound",
 			});
@@ -154,7 +158,7 @@ export class LanguageCC extends CommandClass {
 }
 
 // @publicAPI
-export interface LanguageCCSetOptions extends CCCommandOptions {
+export interface LanguageCCSetOptions {
 	language: string;
 	country?: string;
 }
@@ -163,21 +167,24 @@ export interface LanguageCCSetOptions extends CCCommandOptions {
 @useSupervision()
 export class LanguageCCSet extends LanguageCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions | LanguageCCSetOptions,
+		options: WithAddress<LanguageCCSetOptions>,
 	) {
-		super(host, options);
-		if (gotDeserializationOptions(options)) {
-			// TODO: Deserialize payload
-			throw new ZWaveError(
-				`${this.constructor.name}: deserialization not implemented`,
-				ZWaveErrorCodes.Deserialization_NotImplemented,
-			);
-		} else {
-			// Populate properties from options object
-			this._language = options.language;
-			this._country = options.country;
-		}
+		super(options);
+		// Populate properties from options object
+		this._language = options.language;
+		this._country = options.country;
+	}
+
+	public static from(_raw: CCRaw, _ctx: CCParsingContext): LanguageCCSet {
+		// TODO: Deserialize payload
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
+		);
+
+		// return new LanguageCCSet({
+		// 	nodeId: ctx.sourceNodeId,
+		// });
 	}
 
 	private _language: string;
@@ -211,54 +218,73 @@ export class LanguageCCSet extends LanguageCC {
 		this._country = value;
 	}
 
-	public serialize(): Buffer {
-		this.payload = Buffer.allocUnsafe(!!this._country ? 5 : 3);
-		this.payload.write(this._language, 0, "ascii");
-		if (!!this._country) this.payload.write(this._country, 3, "ascii");
-		return super.serialize();
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from(this._language, "ascii");
+		if (this._country) {
+			this.payload = Bytes.concat([
+				this.payload,
+				Bytes.from(this._country, "ascii"),
+			]);
+		}
+		return super.serialize(ctx);
 	}
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = { language: this.language };
 		if (this._country != undefined) {
 			message.country = this._country;
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
 }
 
+// @publicAPI
+export interface LanguageCCReportOptions {
+	language: string;
+	country: MaybeNotKnown<string>;
+}
+
 @CCCommand(LanguageCommand.Report)
+@ccValueProperty("language", LanguageCCValues.language)
+@ccValueProperty("country", LanguageCCValues.country)
 export class LanguageCCReport extends LanguageCC {
 	public constructor(
-		host: ZWaveHost,
-		options: CommandClassDeserializationOptions,
+		options: WithAddress<LanguageCCReportOptions>,
 	) {
-		super(host, options);
-		// if (gotDeserializationOptions(options)) {
-		validatePayload(this.payload.length >= 3);
-		this.language = this.payload.toString("ascii", 0, 3);
-		if (this.payload.length >= 5) {
-			this.country = this.payload.toString("ascii", 3, 5);
-		}
-		// }
+		super(options);
+		this.language = options.language;
+		this.country = options.country;
 	}
 
-	@ccValue(LanguageCCValues.language)
+	public static from(raw: CCRaw, ctx: CCParsingContext): LanguageCCReport {
+		validatePayload(raw.payload.length >= 3);
+		const language = raw.payload.subarray(0, 3).toString("ascii");
+		let country: MaybeNotKnown<string>;
+		if (raw.payload.length >= 5) {
+			country = raw.payload.subarray(3, 5).toString("ascii");
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			language,
+			country,
+		});
+	}
+
 	public readonly language: string;
 
-	@ccValue(LanguageCCValues.country)
 	public readonly country: MaybeNotKnown<string>;
 
-	public toLogEntry(applHost: ZWaveApplicationHost): MessageOrCCLogEntry {
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = { language: this.language };
 		if (this.country != undefined) {
 			message.country = this.country;
 		}
 		return {
-			...super.toLogEntry(applHost),
+			...super.toLogEntry(ctx),
 			message,
 		};
 	}
