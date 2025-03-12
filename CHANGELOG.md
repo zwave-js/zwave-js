@@ -4,21 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## 15.0.0-beta.2 (2025-03-06)
-### Breaking changes · [Migration guide](https://zwave-js.github.io/zwave-js/#/getting-started/migrating/v15)
-* Move OTW firmware update functionality to the `Driver` class (#7662)
-
-### Bugfixes
-* Harden end device CLI detection (#7661)
-
-### Config file changes
-* Add fingerprint for ZVIDAR Z-TRV-V01 (#7660)
-
-## 15.0.0-beta.1 (2025-03-05)
-### Changes under the hood
-* Split documentation generation into separate tasks, fix CCValues types generation (#7644)
-
-## 15.0.0-beta.0 (2025-02-27)
+## __WORK IN PROGRESS__
 Z-Wave JS is now able to run in the browser! This allows for new use-cases like interactive usage examples in the documentation, and building web-based Z-Wave tools.
 
 To celebrate this achievement, we've renamed the repository to `zwave-js`, dropping the `node-` prefix. The package names will remain the same.
@@ -27,14 +13,21 @@ To celebrate this achievement, we've renamed the repository to `zwave-js`, dropp
 * Require Node.js 20 or higher
 * Remove non-portable sync-versions of methods, require Node 20 (#7580)
 * Support communicating with SoC end device firmwares via their CLI (#7628)
+* Move OTW firmware update functionality to the `Driver` class (#7662)
 
 ### Features
 * Browser support (#7586, #7587, #7592, #7631)
 * Support staying in the bootloader instead of recovering (#7444)
+* Implement new Zniffer commands for LR channel configs (#7665)
+* Expose manufacturer name as a node property, even when config file does not exist (#7669)
 
 ### Bugfixes
 * Correctly handle being queried with Firmware Update CC correctly (#7620, #7627)
 * Handle proxy inclusion when NIF and Initiate command are switched (#7621)
+* Harden end device CLI detection (#7661)
+
+### Config file changes
+* Add fingerprint for ZVIDAR Z-TRV-V01 (#7660)
 
 ### Changes under the hood
 * Replace `xstate` with a simple built-in state machine (#7460)
@@ -48,6 +41,7 @@ To celebrate this achievement, we've renamed the repository to `zwave-js`, dropp
 * Remove dependency on `isDeepStrictEqual` (#7584)
 * Decouple logging from `winston` (#7585)
 * Lots of dependency updates
+* Split documentation generation into separate tasks, fix CCValues types generation (#7644)
 
 ## 14.3.13 (2025-03-12)
 ### Config file changes
