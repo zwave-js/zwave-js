@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Config file changes
+* Add missing parameters to Qubino Smart Plug 16A (#7409)
+* Add missing parameters for the MCO MH-C221 shutter (#7672)
+* Correct Fibaro FGMS001 association groups (#7463)
+* Add multi-click detection parameter to Zooz ZEN51/52 (#6730)
+
 ## 14.3.12 (2025-03-11)
 ### Config file changes
 * Add Shelly Door/Window Sensor, Wave Plug S, Wave PRO Dimmer 1PM/2PM  (#7641)
