@@ -1,3 +1,3 @@
-import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
+import { DeviceConfigMixin } from "./80_DeviceConfig.js";
 
-export abstract class ZWaveNodeMixins extends FirmwareUpdateMixin {}
+export abstract class ZWaveNodeMixins extends DeviceConfigMixin {}

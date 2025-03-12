@@ -81,10 +81,7 @@ import {
 } from "@zwave-js/cc/FirmwareUpdateMetaDataCC";
 import { HailCC } from "@zwave-js/cc/HailCC";
 import { LockCCValues } from "@zwave-js/cc/LockCC";
-import {
-	ManufacturerSpecificCCGet,
-	ManufacturerSpecificCCValues,
-} from "@zwave-js/cc/ManufacturerSpecificCC";
+import { ManufacturerSpecificCCGet } from "@zwave-js/cc/ManufacturerSpecificCC";
 import {
 	MultilevelSwitchCC,
 	MultilevelSwitchCCSet,
@@ -128,19 +125,18 @@ import {
 	VersionCCCapabilitiesGet,
 	VersionCCCommandClassGet,
 	VersionCCGet,
-	VersionCCValues,
 } from "@zwave-js/cc/VersionCC";
 import {
 	WakeUpCCValues,
 	WakeUpCCWakeUpNotification,
 } from "@zwave-js/cc/WakeUpCC";
-import { ZWavePlusCCGet, ZWavePlusCCValues } from "@zwave-js/cc/ZWavePlusCC";
+import { ZWavePlusCCGet } from "@zwave-js/cc/ZWavePlusCC";
 import {
 	type SetValueResult,
 	SetValueStatus,
 	supervisionResultToSetValueResult,
 } from "@zwave-js/cc/safe";
-import { type DeviceConfig, embeddedDevicesDir } from "@zwave-js/config";
+import { embeddedDevicesDir } from "@zwave-js/config";
 import {
 	BasicDeviceClass,
 	CommandClasses,
@@ -215,7 +211,6 @@ import {
 } from "@zwave-js/serial/serialapi";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import {
-	Bytes,
 	Mixin,
 	type Timer,
 	TypedEventTarget,
@@ -347,73 +342,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		this.driver.cacheSet(cacheKey, value);
 	}
 
-	public get manufacturerId(): MaybeNotKnown<number> {
-		return this.getValue(ManufacturerSpecificCCValues.manufacturerId.id);
-	}
-
-	public get productId(): MaybeNotKnown<number> {
-		return this.getValue(ManufacturerSpecificCCValues.productId.id);
-	}
-
-	public get productType(): MaybeNotKnown<number> {
-		return this.getValue(ManufacturerSpecificCCValues.productType.id);
-	}
-
-	public get firmwareVersion(): MaybeNotKnown<string> {
-		// On supporting nodes, use the applicationVersion, which MUST be
-		// same as the first (main) firmware, plus the patch version.
-		const firmware0Version = this.getValue<string[]>(
-			VersionCCValues.firmwareVersions.id,
-		)?.[0];
-		const applicationVersion = this.getValue<string>(
-			VersionCCValues.applicationVersion.id,
-		);
-
-		let ret = firmware0Version;
-		if (applicationVersion) {
-			// If the application version is set, we cannot blindly trust that it is the firmware version.
-			// Some nodes incorrectly set this field to the Z-Wave Application Framework API Version
-			if (!ret || applicationVersion.startsWith(`${ret}.`)) {
-				ret = applicationVersion;
-			}
-		}
-
-		// Special case for the official 700 series firmwares which are aligned with the SDK version
-		// We want to work with the full x.y.z firmware version here.
-		if (ret && this.isControllerNode) {
-			const sdkVersion = this.sdkVersion;
-			if (sdkVersion && sdkVersion.startsWith(`${ret}.`)) {
-				return sdkVersion;
-			}
-		}
-		// For all others, just return the simple x.y firmware version
-		return ret;
-	}
-
-	public get hardwareVersion(): MaybeNotKnown<number> {
-		return this.getValue(VersionCCValues.hardwareVersion.id);
-	}
-
-	public get sdkVersion(): MaybeNotKnown<string> {
-		return this.getValue(VersionCCValues.sdkVersion.id);
-	}
-
-	public get zwavePlusVersion(): MaybeNotKnown<number> {
-		return this.getValue(ZWavePlusCCValues.zwavePlusVersion.id);
-	}
-
-	public get zwavePlusNodeType(): MaybeNotKnown<ZWavePlusNodeType> {
-		return this.getValue(ZWavePlusCCValues.nodeType.id);
-	}
-
-	public get zwavePlusRoleType(): MaybeNotKnown<ZWavePlusRoleType> {
-		return this.getValue(ZWavePlusCCValues.roleType.id);
-	}
-
-	public get supportsWakeUpOnDemand(): MaybeNotKnown<boolean> {
-		return this.getValue(WakeUpCCValues.wakeUpOnDemandSupported.id);
-	}
-
 	/**
 	 * The user-defined name of this node. Uses the value reported by `Node Naming and Location CC` if it exists.
 	 *
@@ -464,46 +392,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	}
 	public set hasSUCReturnRoute(value: boolean) {
 		this.driver.cacheSet(cacheKeys.node(this.id).hasSUCReturnRoute, value);
-	}
-
-	private _deviceConfig: DeviceConfig | undefined;
-	/**
-	 * Contains additional information about this node, loaded from a config file
-	 */
-	public get deviceConfig(): DeviceConfig | undefined {
-		return this._deviceConfig;
-	}
-
-	/**
-	 * Returns the manufacturer/brand name defined in the device configuration,
-	 * or looks it up from the manufacturer database if no config is available
-	 */
-	public get manufacturer(): string | undefined {
-		if (this._deviceConfig) return this._deviceConfig.manufacturer;
-		if (this.manufacturerId != undefined) {
-			return this.driver.lookupManufacturer(this.manufacturerId);
-		}
-	}
-
-	/**
-	 * Returns the device label defined in the device configuration.
-	 */
-	public get label(): string | undefined {
-		return this._deviceConfig?.label;
-	}
-
-	public get deviceDatabaseUrl(): MaybeNotKnown<string> {
-		if (
-			this.manufacturerId != undefined
-			&& this.productType != undefined
-			&& this.productId != undefined
-		) {
-			const manufacturerId = formatId(this.manufacturerId);
-			const productType = formatId(this.productType);
-			const productId = formatId(this.productId);
-			const firmwareVersion = this.firmwareVersion || "0.0";
-			return `https://devices.zwave-js.io/?jumpTo=${manufacturerId}:${productType}:${productId}:${firmwareVersion}`;
-		}
 	}
 
 	/** The last time a message was received from this node */
@@ -557,27 +445,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			cacheKeys.node(this.id).defaultTransitionDuration,
 			value,
 		);
-	}
-
-	/**
-	 * @internal
-	 * The hash of the device config that was applied during the last interview.
-	 */
-	public get cachedDeviceConfigHash(): Uint8Array | undefined {
-		return this.driver.cacheGet(cacheKeys.node(this.id).deviceConfigHash);
-	}
-
-	private set cachedDeviceConfigHash(value: Uint8Array | undefined) {
-		this.driver.cacheSet(cacheKeys.node(this.id).deviceConfigHash, value);
-	}
-
-	private _currentDeviceConfigHash: Uint8Array | undefined;
-	/**
-	 * @internal
-	 * The hash of the currently used device config
-	 */
-	public get currentDeviceConfigHash(): Uint8Array | undefined {
-		return this._currentDeviceConfigHash;
 	}
 
 	/** Returns a list of all value names that are defined on all endpoints of this node */
@@ -990,8 +857,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		this.nodeType = undefined;
 		this.supportsSecurity = undefined;
 		this.supportsBeaming = undefined;
-		this._deviceConfig = undefined;
-		this._currentDeviceConfigHash = undefined;
+		this.deviceConfig = undefined;
+		this.currentDeviceConfigHash = undefined;
 		this.cachedDeviceConfigHash = undefined;
 		this._hasEmittedNoS0NetworkKeyError = false;
 		this._hasEmittedNoS2NetworkKeyError = false;
@@ -1126,7 +993,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		}
 
 		// Remember the state of the device config that is used for this node
-		this.cachedDeviceConfigHash = await this._deviceConfig?.getHash();
+		this.cachedDeviceConfigHash = await this.deviceConfig?.getHash();
 
 		this.setInterviewStage(InterviewStage.Complete);
 		this.updateReadyMachine({ value: "INTERVIEW_DONE" });
@@ -1351,51 +1218,6 @@ protocol version:      ${this.protocolVersion}`;
 			`Received unexpected response to RequestNodeInfoRequest`,
 			ZWaveErrorCodes.Controller_CommandError,
 		);
-	}
-
-	/**
-	 * Loads the device configuration for this node from a config file
-	 */
-	protected async loadDeviceConfig(): Promise<void> {
-		// But the configuration definitions might change
-		if (
-			this.manufacturerId != undefined
-			&& this.productType != undefined
-			&& this.productId != undefined
-		) {
-			// Try to load the config file
-			this._deviceConfig = await this.driver.configManager.lookupDevice(
-				this.manufacturerId,
-				this.productType,
-				this.productId,
-				this.firmwareVersion,
-			);
-			if (this._deviceConfig) {
-				// Also remember the current hash of the device config
-				if (this.cachedDeviceConfigHash?.length === 16) {
-					// legacy hash using MD5
-					this._currentDeviceConfigHash = await this._deviceConfig
-						.getHash("md5");
-				} else {
-					this._currentDeviceConfigHash = await this._deviceConfig
-						.getHash();
-				}
-				this.driver.controllerLog.logNode(
-					this.id,
-					`${
-						this._deviceConfig.isEmbedded
-							? "Embedded"
-							: "User-provided"
-					} device config loaded`,
-				);
-			} else {
-				this.driver.controllerLog.logNode(
-					this.id,
-					"No device config found",
-					"warn",
-				);
-			}
-		}
 	}
 
 	/** Step #? of the node interview */
@@ -2385,10 +2207,10 @@ protocol version:      ${this.protocolVersion}`;
 			&& command.constructor.name.endsWith("Report")
 			&& this.getEndpointCount() >= 1
 			// Only map reports from the root device to an endpoint if we know which one
-			&& this._deviceConfig?.compat?.mapRootReportsToEndpoint != undefined
+			&& this.deviceConfig?.compat?.mapRootReportsToEndpoint != undefined
 		) {
 			const endpoint = this.getEndpoint(
-				this._deviceConfig?.compat?.mapRootReportsToEndpoint,
+				this.deviceConfig?.compat?.mapRootReportsToEndpoint,
 			);
 			if (endpoint && endpoint.supportsCC(command.ccId)) {
 				// Force the CC to store its values again under the supporting endpoint
@@ -2927,9 +2749,9 @@ protocol version:      ${this.protocolVersion}`;
 		this.lastWakeUp = now;
 
 		// Some legacy devices expect us to query them on wake up in order to function correctly
-		if (this._deviceConfig?.compat?.queryOnWakeup) {
+		if (this.deviceConfig?.compat?.queryOnWakeup) {
 			void this.compatDoWakeupQueries();
-		} else if (!this._deviceConfig?.compat?.disableAutoRefresh) {
+		} else if (!this.deviceConfig?.compat?.disableAutoRefresh) {
 			// For other devices we may have to refresh their values from time to time
 			void this.autoRefreshValues().catch(() => {
 				// ignore
@@ -2941,14 +2763,14 @@ protocol version:      ${this.protocolVersion}`;
 	}
 
 	private async compatDoWakeupQueries(): Promise<void> {
-		if (!this._deviceConfig?.compat?.queryOnWakeup) return;
+		if (!this.deviceConfig?.compat?.queryOnWakeup) return;
 		this.driver.controllerLog.logNode(this.id, {
 			message: `expects some queries after wake up, so it shall receive`,
 			direction: "none",
 		});
 
 		for (
-			const [ccName, apiMethod, ...args] of this._deviceConfig.compat
+			const [ccName, apiMethod, ...args] of this.deviceConfig.compat
 				.queryOnWakeup
 		) {
 			this.driver.controllerLog.logNode(this.id, {
@@ -3287,7 +3109,7 @@ protocol version:      ${this.protocolVersion}`;
 		// Treat BinarySwitchCCSet as a report if desired
 		if (
 			command instanceof BinarySwitchCCSet
-			&& this._deviceConfig?.compat?.treatSetAsReport?.has(
+			&& this.deviceConfig?.compat?.treatSetAsReport?.has(
 				command.constructor.name,
 			)
 		) {
@@ -3308,7 +3130,7 @@ protocol version:      ${this.protocolVersion}`;
 		// Treat ThermostatModeCCSet as a report if desired
 		if (
 			command instanceof ThermostatModeCCSet
-			&& this._deviceConfig?.compat?.treatSetAsReport?.has(
+			&& this.deviceConfig?.compat?.treatSetAsReport?.has(
 				command.constructor.name,
 			)
 		) {
@@ -4569,7 +4391,7 @@ protocol version:      ${this.protocolVersion}`;
 			// timer if the `forceNotificationIdleReset` compat flag is set.
 			if (
 				allowIdleReset
-				&& !!this._deviceConfig?.compat?.forceNotificationIdleReset
+				&& !!this.deviceConfig?.compat?.forceNotificationIdleReset
 			) {
 				this.driver.controllerLog.logNode(this.id, {
 					message: `[handleNotificationReport] scheduling idle reset`,
@@ -4899,7 +4721,7 @@ protocol version:      ${this.protocolVersion}`;
 		command: EntryControlCCNotification,
 	): void {
 		if (
-			!this._deviceConfig?.compat?.disableStrictEntryControlDataValidation
+			!this.deviceConfig?.compat?.disableStrictEntryControlDataValidation
 		) {
 			if (
 				this.recentEntryControlNotificationSequenceNumbers.includes(
@@ -6303,31 +6125,6 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		);
 
 		await api.sendNotification();
-	}
-
-	/**
-	 * Returns whether the device config for this node has changed since the last interview.
-	 * If it has, the node likely needs to be re-interviewed for the changes to be picked up.
-	 */
-	public hasDeviceConfigChanged(): MaybeNotKnown<boolean> {
-		// We can't know if the node is not fully interviewed
-		if (this.interviewStage !== InterviewStage.Complete) return NOT_KNOWN;
-
-		// The controller cannot be re-interviewed
-		if (this.isControllerNode) return false;
-
-		// If the hash was never stored, we can only (very likely) know if the config has not changed
-		if (this.cachedDeviceConfigHash == undefined) {
-			return this.deviceConfig == undefined ? false : NOT_KNOWN;
-		}
-
-		// If it was, a change in hash means the config has changed
-		if (this._currentDeviceConfigHash) {
-			return !Bytes.view(this._currentDeviceConfigHash).equals(
-				this.cachedDeviceConfigHash,
-			);
-		}
-		return true;
 	}
 
 	/** Returns a dump of this node's information for debugging purposes */
