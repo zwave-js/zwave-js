@@ -1,3 +1,3 @@
-import { DeviceConfigMixin } from "./80_DeviceConfig.js";
+import { DeviceConfigMixin } from "./080_DeviceConfig.js";
 
 export abstract class ZWaveNodeMixins extends DeviceConfigMixin {}

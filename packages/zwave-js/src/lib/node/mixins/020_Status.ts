@@ -14,7 +14,7 @@ import {
 	nodeStatusMachineStateToNodeStatus,
 } from "../NodeStatusMachine.js";
 import { NodeStatus } from "../_Types.js";
-import { NodeEventsMixin } from "./10_Events.js";
+import { NodeEventsMixin } from "./010_Events.js";
 
 export interface NodeWithStatus {
 	/**
