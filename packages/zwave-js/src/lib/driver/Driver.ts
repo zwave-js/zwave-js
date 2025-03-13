@@ -230,10 +230,10 @@ import {
 	type ZWaveNotificationCallback,
 	zWaveNodeEvents,
 } from "../node/_Types.js";
-import { type ZWaveNodeBase } from "../node/mixins/000_Base.js";
-import { type NodeWakeup } from "../node/mixins/030_Wakeup.js";
-import { type NodeValues } from "../node/mixins/040_Values.js";
-import { type NodeSchedulePoll } from "../node/mixins/060_ScheduledPoll.js";
+import { type ZWaveNodeBase } from "../node/mixins/00_Base.js";
+import { type NodeWakeup } from "../node/mixins/30_Wakeup.js";
+import { type NodeValues } from "../node/mixins/40_Values.js";
+import { type NodeSchedulePoll } from "../node/mixins/60_ScheduledPoll.js";
 import { reportMissingDeviceConfig } from "../telemetry/deviceConfig.js";
 import {
 	type AppInfo,

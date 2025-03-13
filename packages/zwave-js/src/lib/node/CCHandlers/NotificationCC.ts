@@ -32,7 +32,7 @@ import {
 	stringify,
 } from "@zwave-js/shared";
 import { type ZWaveNode } from "../Node.js";
-import { type NodeValues } from "../mixins/040_Values.js";
+import { type NodeValues } from "../mixins/40_Values.js";
 
 export interface NotificationHandlerStore {
 	idleTimeouts: Map<string, Timer>;

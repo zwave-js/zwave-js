@@ -4,7 +4,7 @@ import {
 	StateMachine,
 	type StateMachineTransition,
 } from "@zwave-js/core";
-import { type NodeNetworkRole } from "./mixins/001_NetworkRole.js";
+import { type NodeNetworkRole } from "./mixins/01_NetworkRole.js";
 
 export type NodeStatusState = {
 	value: "unknown" | "dead" | "alive" | "asleep" | "awake";

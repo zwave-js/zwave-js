@@ -46,7 +46,7 @@ import {
 	TaskPriority,
 } from "../../driver/Task.js";
 import { type Transaction } from "../../driver/Transaction.js";
-import { SchedulePollMixin } from "./060_ScheduledPoll.js";
+import { SchedulePollMixin } from "./60_ScheduledPoll.js";
 
 interface AbortFirmwareUpdateContext {
 	abort: boolean;

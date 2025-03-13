@@ -10,7 +10,7 @@ import {
 import { ObjectKeyMap, type Timer, setTimer } from "@zwave-js/shared";
 import { type Driver } from "../../driver/Driver.js";
 import { type DeviceClass } from "../DeviceClass.js";
-import { EndpointsMixin } from "./050_Endpoints.js";
+import { EndpointsMixin } from "./50_Endpoints.js";
 
 export interface ScheduledPoll {
 	timeout: Timer;

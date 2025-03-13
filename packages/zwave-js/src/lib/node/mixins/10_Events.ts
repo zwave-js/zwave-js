@@ -3,7 +3,7 @@ import { type StatisticsEventCallbacksWithSelf } from "../../driver/Statistics.j
 import { type ZWaveNode } from "../Node.js";
 import { type NodeStatistics } from "../NodeStatistics.js";
 import { type ZWaveNodeEventCallbacks } from "../_Types.js";
-import { NodeSecurityMixin } from "./005_Security.js";
+import { NodeSecurityMixin } from "./05_Security.js";
 
 // This mixin is a slightly ugly workaround to allow other mixins to
 // interact with events which would normally take an instance of ZWaveNode
