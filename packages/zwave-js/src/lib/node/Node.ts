@@ -3,9 +3,6 @@ import {
 	ClockCommand,
 	CommandClass,
 	DeviceResetLocallyCCNotification,
-	EntryControlDataTypes,
-	InclusionControllerCCInitiate,
-	InclusionControllerStep,
 	IndicatorCCDescriptionGet,
 	IndicatorCCGet,
 	IndicatorCCSet,
@@ -27,7 +24,6 @@ import {
 	TimeParametersCommand,
 	UserCodeCCValues,
 	type ValueIDProperties,
-	entryControlEventTypeLabels,
 	getImplementedVersion,
 	utils as ccUtils,
 } from "@zwave-js/cc";
@@ -164,7 +160,6 @@ import {
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
-import { isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
 import { type Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
@@ -192,6 +187,10 @@ import {
 	handleClockReport,
 } from "./CCHandlers/ClockCC.js";
 import { handleDeviceResetLocallyNotification } from "./CCHandlers/DeviceResetLocallyCC.js";
+import {
+	getDefaultEntryControlHandlerStore,
+	handleEntryControlNotification,
+} from "./CCHandlers/EntryControlCC.js";
 import { getDefaultHailHandlerStore, handleHail } from "./CCHandlers/HailCC.js";
 import {
 	handleIndicatorDescriptionGet,
@@ -2192,6 +2191,7 @@ protocol version:      ${this.protocolVersion}`;
 	private hailHandlerStore = getDefaultHailHandlerStore();
 	private notificationHandlerStore = getDefaultNotificationHandlerStore();
 	private wakeUpHandlerStore = getDefaultWakeUpHandlerStore();
+	private entryControlHandlerStore = getDefaultEntryControlHandlerStore();
 
 	/**
 	 * @internal
@@ -2299,7 +2299,12 @@ protocol version:      ${this.protocolVersion}`;
 		} else if (command instanceof FirmwareUpdateMetaDataCCPrepareGet) {
 			return this.handleFirmwareUpdatePrepareGet(command);
 		} else if (command instanceof EntryControlCCNotification) {
-			return this.handleEntryControlNotification(command);
+			return handleEntryControlNotification(
+				this.driver,
+				this,
+				command,
+				this.entryControlHandlerStore,
+			);
 		} else if (command instanceof TimeCCTimeGet) {
 			return handleTimeGet(this.driver, this, command);
 		} else if (command instanceof TimeCCDateGet) {
@@ -2443,23 +2448,6 @@ protocol version:      ${this.protocolVersion}`;
 				this,
 				command,
 			);
-		} else if (command instanceof InclusionControllerCCInitiate) {
-			// Inclusion controller commands are handled by the controller class
-			if (
-				command.step === InclusionControllerStep.ProxyInclusion
-			) {
-				return this.driver.controller
-					.handleInclusionControllerCCInitiateProxyInclusion(
-						command,
-					);
-			} else if (
-				command.step === InclusionControllerStep.ProxyInclusionReplace
-			) {
-				return this.driver.controller
-					.handleInclusionControllerCCInitiateReplace(
-						command,
-					);
-			}
 		} else if (command instanceof MultiCommandCCCommandEncapsulation) {
 			// Handle each encapsulated command individually
 			for (const cmd of command.encapsulated) {
@@ -2492,104 +2480,6 @@ protocol version:      ${this.protocolVersion}`;
 				"No handler for application command",
 				ZWaveErrorCodes.CC_NotSupported,
 			);
-		}
-	}
-
-	/** @internal */
-	public async compatDoWakeupQueries(): Promise<void> {
-		if (!this.deviceConfig?.compat?.queryOnWakeup) return;
-		this.driver.controllerLog.logNode(this.id, {
-			message: `expects some queries after wake up, so it shall receive`,
-			direction: "none",
-		});
-
-		for (
-			const [ccName, apiMethod, ...args] of this.deviceConfig.compat
-				.queryOnWakeup
-		) {
-			this.driver.controllerLog.logNode(this.id, {
-				message: `compat query "${ccName}"::${apiMethod}(${
-					args
-						.map((arg) => JSON.stringify(arg))
-						.join(", ")
-				})`,
-				direction: "none",
-			});
-
-			// Try to access the API - if it doesn't work, skip this option
-			let API: CCAPI;
-			try {
-				API = (
-					(this.commandClasses as any)[ccName] as CCAPI
-				).withOptions({
-					// Tag the resulting transactions as compat queries
-					tag: "compat",
-					// Do not retry them or they may cause congestion if the node is asleep again
-					maxSendAttempts: 1,
-					// This is for a sleeping node - there's no point in keeping the transactions when the node is asleep
-					expire: 10000,
-				});
-			} catch {
-				this.driver.controllerLog.logNode(this.id, {
-					message: `could not access API, skipping query`,
-					direction: "none",
-					level: "warn",
-				});
-				continue;
-			}
-			if (!API.isSupported()) {
-				this.driver.controllerLog.logNode(this.id, {
-					message: `API not supported, skipping query`,
-					direction: "none",
-					level: "warn",
-				});
-				continue;
-			} else if (!(API as any)[apiMethod]) {
-				this.driver.controllerLog.logNode(this.id, {
-					message:
-						`method ${apiMethod} not found on API, skipping query`,
-					direction: "none",
-					level: "warn",
-				});
-				continue;
-			}
-
-			// Retrieve the method
-			// eslint-disable-next-line
-			const method = (API as any)[apiMethod].bind(API) as Function;
-			// And replace "smart" arguments with their corresponding value
-			const methodArgs = args.map<unknown>((arg) => {
-				if (isObject(arg)) {
-					const valueId = {
-						commandClass: API.ccId,
-						...arg,
-					};
-					return this.getValue(valueId);
-				}
-				return arg;
-			});
-
-			// Do the API call and ignore/log any errors
-			try {
-				await method(...methodArgs);
-				this.driver.controllerLog.logNode(this.id, {
-					message: `API call successful`,
-					direction: "none",
-				});
-			} catch (e) {
-				this.driver.controllerLog.logNode(this.id, {
-					message: `error during API call: ${getErrorMessage(e)}`,
-					direction: "none",
-					level: "warn",
-				});
-				if (
-					isZWaveError(e)
-					&& e.code === ZWaveErrorCodes.Controller_MessageExpired
-				) {
-					// A compat query expired - no point in trying the others too
-					return;
-				}
-			}
 		}
 	}
 
@@ -2642,47 +2532,6 @@ protocol version:      ${this.protocolVersion}`;
 			prevValue!,
 			endpointIndex,
 		);
-	}
-
-	private recentEntryControlNotificationSequenceNumbers: number[] = [];
-	private handleEntryControlNotification(
-		command: EntryControlCCNotification,
-	): void {
-		if (
-			!this.deviceConfig?.compat?.disableStrictEntryControlDataValidation
-		) {
-			if (
-				this.recentEntryControlNotificationSequenceNumbers.includes(
-					command.sequenceNumber,
-				)
-			) {
-				this.driver.controllerLog.logNode(
-					this.id,
-					`Received duplicate Entry Control Notification (sequence number ${command.sequenceNumber}), ignoring...`,
-					"warn",
-				);
-				return;
-			}
-
-			// Keep track of the last 5 sequence numbers
-			this.recentEntryControlNotificationSequenceNumbers.unshift(
-				command.sequenceNumber,
-			);
-			if (this.recentEntryControlNotificationSequenceNumbers.length > 5) {
-				this.recentEntryControlNotificationSequenceNumbers.pop();
-			}
-		}
-
-		// Notify listeners
-		const endpoint = this.getEndpoint(command.endpointIndex) ?? this;
-		this.emit("notification", endpoint, CommandClasses["Entry Control"], {
-			...pick(command, ["eventType", "dataType", "eventData"]),
-			eventTypeLabel: entryControlEventTypeLabels[command.eventType],
-			dataTypeLabel: getEnumMemberName(
-				EntryControlDataTypes,
-				command.dataType,
-			),
-		});
 	}
 
 	/**

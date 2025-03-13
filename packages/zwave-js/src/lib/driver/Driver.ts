@@ -7,6 +7,8 @@ import {
 	CRC16CCCommandEncapsulation,
 	CommandClass,
 	type FirmwareUpdateResult,
+	InclusionControllerCCInitiate,
+	InclusionControllerStep,
 	type InterviewContext,
 	type InterviewOptions,
 	InvalidCC,
@@ -5459,6 +5461,37 @@ ${handlers.length} left`,
 				// Unsupervised, reply is a no-op
 				reply = () => Promise.resolve();
 			}
+
+			const trySupervised = async (
+				action: () => void | Promise<void>,
+			): Promise<void> => {
+				try {
+					await action();
+					await reply(SupervisionStatus.Success);
+				} catch (e) {
+					let handled = false;
+					if (isZWaveError(e)) {
+						if (e.code === ZWaveErrorCodes.CC_OperationFailed) {
+							// The sending node tried to do something that didn't work
+							await reply(SupervisionStatus.Fail);
+							handled = true;
+						} else if (e.code === ZWaveErrorCodes.CC_NotSupported) {
+							// The sending node sent a command we could not handle
+							await reply(SupervisionStatus.NoSupport);
+							handled = true;
+						}
+					}
+
+					if (!handled) {
+						// Something unexpected happened.
+						// Report failure, then re-throw the error, so it can be handled accordingly
+						await reply(SupervisionStatus.Fail);
+
+						throw e;
+					}
+				}
+			};
+
 			// DO NOT force-add support for the Supervision CC here. Some devices only support Supervision when sending,
 			// so we need to trust the information we already have.
 
@@ -5489,35 +5522,39 @@ ${handlers.length} left`,
 				msg.command instanceof Security2CCMessageEncapsulation
 				&& msg.command.encapsulated == undefined
 			) {
+				// possibly reply to a supervised command
+				await reply(SupervisionStatus.Success);
 				return;
 			}
 
-			// No one is waiting, dispatch the command to the node itself
-			try {
-				await node.handleCommand(msg.command);
-				await reply(SupervisionStatus.Success);
-			} catch (e) {
-				let handled = false;
-				if (isZWaveError(e)) {
-					if (e.code === ZWaveErrorCodes.CC_OperationFailed) {
-						// The sending node tried to do something that didn't work
-						await reply(SupervisionStatus.Fail);
-						handled = true;
-					} else if (e.code === ZWaveErrorCodes.CC_NotSupported) {
-						// The sending node sent a command we could not handle
-						await reply(SupervisionStatus.NoSupport);
-						handled = true;
-					}
-				}
-
-				if (!handled) {
-					// Something unexpected happened.
-					// Report failure, then re-throw the error, so it can be handled accordingly
-					await reply(SupervisionStatus.Fail);
-
-					throw e;
+			// Inclusion controller commands are handled by the controller class
+			if (msg.command instanceof InclusionControllerCCInitiate) {
+				const command = msg.command;
+				if (
+					msg.command.step === InclusionControllerStep.ProxyInclusion
+				) {
+					await trySupervised(() =>
+						this.controller
+							.handleInclusionControllerCCInitiateProxyInclusion(
+								command,
+							)
+					);
+					return;
+				} else if (
+					msg.command.step
+						=== InclusionControllerStep.ProxyInclusionReplace
+				) {
+					await trySupervised(() =>
+						this.controller
+							.handleInclusionControllerCCInitiateReplace(
+								command,
+							)
+					);
 				}
 			}
+
+			// No one is waiting, dispatch the command to the node itself
+			await trySupervised(() => node.handleCommand(msg.command));
 
 			return;
 		} else if (msg instanceof ApplicationUpdateRequest) {
