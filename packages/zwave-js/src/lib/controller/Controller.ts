@@ -476,8 +476,6 @@ export class ZWaveController
 	public constructor(driver: Driver) {
 		super();
 
-		debugger;
-
 		this.driver = driver;
 
 		this._nodes = createThrowingMap((nodeId) => {
