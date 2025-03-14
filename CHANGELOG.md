@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.0.1 (2025-03-14)
 ### Features
 * Add API to query supported `notification` events of a node (#7682)
 
