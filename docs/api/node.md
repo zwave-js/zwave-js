@@ -65,6 +65,43 @@ getDefinedValueIDs(): TranslatedValueID[]
 
 When building a user interface for a Z-Wave application, you might need to know all possible values in advance. This method returns an array of all ValueIDs that are available for this node.
 
+### `getSupportedNotificationEvents`
+
+```ts
+getSupportedNotificationEvents(): ZWaveNotificationCapability[]
+```
+
+Likewise, this method allows querying information about all events that might be emitted using the `"notification"` event. It returns a list of notification capabilities that are either
+
+<!-- #import ZWaveNotificationCapability_NotificationCC from "zwave-js" -->
+
+```ts
+interface ZWaveNotificationCapability_NotificationCC {
+	commandClass: CommandClasses.Notification;
+	endpoint: number;
+	/** A dictionary of supported event types and information */
+	supportedNotificationTypes: Record<number, {
+		/** The human-readable label for the notification type */
+		label: string;
+		/** A dictionary of supported events for this notification type and their human-readable labels */
+		supportedEvents: Record<number, string>;
+	}>;
+}
+```
+
+or
+
+<!-- #import ZWaveNotificationCapability_EntryControlCC from "zwave-js" -->
+
+```ts
+interface ZWaveNotificationCapability_EntryControlCC {
+	commandClass: (typeof CommandClasses)["Entry Control"];
+	endpoint: number;
+	/** A dictionary of supported event types and their human-readable labels */
+	supportedEventTypes: Record<EntryControlEventTypes, string>;
+}
+```
+
 ### `interview`
 
 ```ts

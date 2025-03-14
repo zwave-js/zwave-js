@@ -259,6 +259,7 @@ import {
 	type RouteHealthCheckResult,
 	type RouteHealthCheckSummary,
 	type ZWaveNodeEventCallbacks,
+	type ZWaveNotificationCapability,
 } from "./_Types.js";
 import { InterviewStage, NodeStatus } from "./_Types.js";
 import { ZWaveNodeMixins } from "./mixins/index.js";
@@ -737,6 +738,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			property: valueId.property,
 			propertyKey: valueId.propertyKey,
 		});
+	}
+
+	/** Returns a list of all `"notification"` event arguments that are known to be supported by this node */
+	public getSupportedNotificationEvents(): ZWaveNotificationCapability[] {
+		return nodeUtils.getSupportedNotificationEvents(this.driver, this);
 	}
 
 	private _interviewAttempts: number = 0;

@@ -1,4 +1,10 @@
-import { CommandClass } from "@zwave-js/cc";
+import {
+	CommandClass,
+	EntryControlCCValues,
+	type EntryControlEventTypes,
+	NotificationCCValues,
+	entryControlEventTypeLabels,
+} from "@zwave-js/cc";
 import { MultiChannelCCValues } from "@zwave-js/cc/MultiChannelCC";
 import { type GetDeviceConfig } from "@zwave-js/config";
 import {
@@ -21,7 +27,13 @@ import {
 	allCCs,
 	applicationCCs,
 	getCCName,
+	getNotification,
 } from "@zwave-js/core";
+import {
+	type ZWaveNotificationCapability,
+	type ZWaveNotificationCapability_EntryControlCC,
+	type ZWaveNotificationCapability_NotificationCC,
+} from "./_Types.js";
 
 function getValue<T>(
 	ctx: GetValueDB,
@@ -394,4 +406,92 @@ export function getDefinedValueIDsInternal(
 
 	// Translate the remaining value IDs before exposing them to applications
 	return ret.map((id) => translateValueID(ctx, node, id));
+}
+
+export function getSupportedNotificationEvents(
+	ctx:
+		& GetValueDB
+		& GetNode<
+			NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
+		>,
+	node:
+		& NodeId
+		& SupportsCC
+		& ControlsCC
+		& GetEndpoint<EndpointId & SupportsCC & ControlsCC>,
+): ZWaveNotificationCapability[] {
+	const ret: ZWaveNotificationCapability[] = [];
+	const valueDB = ctx.getValueDB(node.id);
+	for (
+		const endpoint of getAllEndpoints<EndpointId & SupportsCC & ControlsCC>(
+			ctx,
+			node,
+		)
+	) {
+		// This list is hardcoded since there is just a small list of CCs
+		// that can send notifications
+		if (endpoint.supportsCC(CommandClasses["Entry Control"])) {
+			const eventTypes = valueDB.getValue<EntryControlEventTypes[]>(
+				EntryControlCCValues.supportedEventTypes.endpoint(
+					endpoint.index,
+				),
+			);
+			if (eventTypes) {
+				const capability: ZWaveNotificationCapability_EntryControlCC = {
+					commandClass: CommandClasses["Entry Control"],
+					endpoint: endpoint.index,
+					supportedEventTypes: Object.fromEntries(
+						eventTypes.map((et) =>
+							[
+								et,
+								entryControlEventTypeLabels[et],
+							] as const
+						),
+					) as any,
+				};
+				ret.push(capability);
+			}
+		}
+
+		if (endpoint.supportsCC(CommandClasses.Notification)) {
+			const notificationTypes = valueDB.getValue<number[]>(
+				NotificationCCValues.supportedNotificationTypes.endpoint(
+					endpoint.index,
+				),
+			) ?? [];
+
+			const capability: ZWaveNotificationCapability_NotificationCC = {
+				commandClass: CommandClasses.Notification,
+				endpoint: endpoint.index,
+				supportedNotificationTypes: {},
+			};
+			let hasEvent = false;
+			for (const notificationType of notificationTypes) {
+				const notification = getNotification(notificationType);
+				if (!notification) continue;
+
+				const notificationEvents = valueDB.getValue<number[]>(
+					NotificationCCValues
+						.supportedNotificationEvents(notificationType)
+						.endpoint(endpoint.index),
+				)
+					?.map((e) => notification.events.get(e))
+					.filter((e) => e != undefined);
+				if (!notificationEvents || notificationEvents.length === 0) {
+					continue;
+				}
+
+				capability.supportedNotificationTypes[notificationType] = {
+					label: notification.name,
+					supportedEvents: Object.fromEntries(
+						notificationEvents.map((e) => [e.value, e.label]),
+					),
+				};
+				hasEvent = true;
+			}
+
+			if (hasEvent) ret.push(capability);
+		}
+	}
+	return ret;
 }
