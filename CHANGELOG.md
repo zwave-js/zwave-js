@@ -4,6 +4,17 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Add API to query supported `notification` events of a node (#7682)
+
+### Config file changes
+* Add alarmType 132 mapping for `Yale YRD4x0` locks (#7677)
+
+### Changes under the hood
+* Refactored the `ZWaveNode` class into smaller parts (#7679, #7681)
+* Remove stray `debugger` statement from `ZWaveController` constructor (#7680)
+
 ## 15.0.0 (2025-03-12)
 Z-Wave JS is now able to run in the browser! This allows for new use-cases like interactive usage examples in the documentation, and building web-based Z-Wave tools.
 
