@@ -5,7 +5,7 @@
 	"description": "Smart Roller Curtain Motor",
 	"devices": [
 		{
-			"productType": "0x004",
+			"productType": "0x0004",
 			"productId": "0x0507"
 		}
 	],
