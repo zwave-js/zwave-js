@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixed an issue where `Indicator` was not defined when bundling with `esbuild` (#7687)
+
 ## 15.0.1 (2025-03-14)
 ### Features
 * Add API to query supported `notification` events of a node (#7682)
