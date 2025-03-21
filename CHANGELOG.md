@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.0.2 (2025-03-21)
 ### Bugfixes
 * Fixed an issue where `Indicator` was not defined when bundling with `esbuild` (#7687)
 
