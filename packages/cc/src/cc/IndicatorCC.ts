@@ -1,9 +1,9 @@
 import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import { Indicator } from "@zwave-js/core";
 import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
-	Indicator,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
