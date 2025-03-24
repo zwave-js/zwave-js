@@ -18,10 +18,6 @@ export interface RGB {
 	b: number;
 }
 
-export interface IndexedRGB extends RGB {
-	index: number;
-}
-
 export interface Vector {
 	x: number;
 	y: number;
@@ -69,9 +65,9 @@ export class ControllerProprietary_NabuCasa {
 		return parseBitMask(supported, NabuCasaCommand.GetSupportedCommands);
 	}
 
-	public async getLED(): Promise<IndexedRGB[]> {
+	public async getLED(): Promise<RGB> {
 		// HOST->ZW: NABU_CASA_LED_GET
-		// ZW->HOST: NABU_CASA_LED_GET | num_leds | r_0 | g_0 | b_0 | ... | r_n | g_n | b_n |
+		// ZW->HOST: NABU_CASA_LED_GET | r | g | b |
 
 		const getLEDStateCmd = new Message({
 			type: MessageType.Request,
@@ -92,35 +88,24 @@ export class ControllerProprietary_NabuCasa {
 		});
 		const { payload: result } = await resultPromise;
 
-		const numLEDs = result[1];
-		const ledStates: IndexedRGB[] = [];
-		for (let i = 0; i < numLEDs; i++) {
-			const offset = 2 + i * 3;
-			ledStates.push({
-				index: i,
-				r: result[offset],
-				g: result[offset + 1],
-				b: result[offset + 2],
-			});
-		}
-
-		return ledStates;
+		return {
+			r: result[1],
+			g: result[2],
+			b: result[3],
+		};
 	}
 
-	public async setLED(leds: IndexedRGB[]): Promise<boolean> {
-		// HOST->ZW: NABU_CASA_LED_SET | num_entries | idx_0 | r | g | b | ... | idx_n | r | g | b |
+	public async setLED(rgb: RGB): Promise<boolean> {
+		// HOST->ZW: NABU_CASA_LED_SET | r | g | b |
 		// ZW->HOST: NABU_CASA_LED_SET | success
 
-		const payload = Bytes.alloc(1 + 1 + leds.length * 4);
-		payload[0] = NabuCasaCommand.SetLED;
-		payload[1] = leds.length;
-		for (let i = 0; i < leds.length; i++) {
-			const offset = 2 + i * 4;
-			payload[offset] = leds[i].index;
-			payload[offset + 1] = leds[i].r;
-			payload[offset + 2] = leds[i].g;
-			payload[offset + 3] = leds[i].b;
-		}
+		const payload = Bytes.from([
+			NabuCasaCommand.SetLED,
+			rgb.r,
+			rgb.g,
+			rgb.b,
+		]);
+
 		const setLEDStateCmd = new Message({
 			type: MessageType.Request,
 			functionType: FUNC_ID_NABUCASA,

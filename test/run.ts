@@ -4,12 +4,7 @@ import "reflect-metadata";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared/safe";
 import _os from "node:os";
 import { fileURLToPath } from "node:url";
-import {
-	Driver,
-	type IndexedRGB,
-	NabuCasaCommand,
-	type Vector,
-} from "zwave-js";
+import { Driver, NabuCasaCommand, type RGB, type Vector } from "zwave-js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,26 +17,9 @@ process.on("unhandledRejection", (_r) => {
 
 const port = "/dev/ttyACM0";
 
-const red: IndexedRGB[] = [
-	{ index: 0, r: 255, g: 0, b: 0 },
-	{ index: 1, r: 255, g: 0, b: 0 },
-	{ index: 2, r: 255, g: 0, b: 0 },
-	{ index: 3, r: 255, g: 0, b: 0 },
-];
-
-const yellow: IndexedRGB[] = [
-	{ index: 0, r: 200, g: 140, b: 0 },
-	{ index: 1, r: 200, g: 140, b: 0 },
-	{ index: 2, r: 200, g: 140, b: 0 },
-	{ index: 3, r: 200, g: 140, b: 0 },
-];
-
-const green: IndexedRGB[] = [
-	{ index: 0, r: 0, g: 255, b: 0 },
-	{ index: 1, r: 0, g: 255, b: 0 },
-	{ index: 2, r: 0, g: 255, b: 0 },
-	{ index: 3, r: 0, g: 255, b: 0 },
-];
+const red: RGB = { r: 255, g: 0, b: 0 };
+const yellow: RGB = { r: 200, g: 140, b: 0 };
+const green: RGB = { r: 0, g: 255, b: 0 };
 
 const driver = new Driver(port, {
 	// logConfig: {
