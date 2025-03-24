@@ -1551,10 +1551,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					)
 				) {
 					message =
-						`Failed to create the cache directory. When using Yarn PnP, you need to change the location with the "storage.cacheDir" driver option.`;
+						`Failed to create the cache directory ${this.cacheDir}. When using Yarn PnP, you need to change the location with the "storage.cacheDir" driver option.`;
 				} else {
 					message =
-						`Failed to create the cache directory. Please make sure that it is writable or change the location with the "storage.cacheDir" driver option.`;
+						`Failed to create the cache directory ${this.cacheDir}. Please make sure that it is writable or change the location with the "storage.cacheDir" driver option.`;
 				}
 
 				void this.destroyWithMessage(message);
