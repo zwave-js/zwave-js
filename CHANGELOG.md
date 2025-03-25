@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Commands are now retried again when a serial collision happens (#7695)
+
 ## 15.0.2 (2025-03-21)
 ### Bugfixes
 * Fixed an issue where `Indicator` was not defined when bundling with `esbuild` (#7687)
