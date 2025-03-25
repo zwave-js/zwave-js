@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.0.3 (2025-03-25)
 ### Bugfixes
 * Commands are now retried again when a serial collision happens (#7695)
 
