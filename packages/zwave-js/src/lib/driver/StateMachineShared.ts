@@ -35,9 +35,9 @@ export function serialAPICommandErrorToZWaveError(
 		case "CAN":
 		case "NAK":
 			return new ZWaveError(
-				`Failed to send the message after 3 attempts`,
+				`Failed to execute controller command`,
 				ZWaveErrorCodes.Controller_MessageDropped,
-				undefined,
+				reason,
 				transactionSource,
 			);
 		case "ACK timeout":
@@ -64,7 +64,7 @@ export function serialAPICommandErrorToZWaveError(
 		case "response NOK": {
 			if (isSendData(sentMessage)) {
 				return new ZWaveError(
-					`Failed to send the command after ${sentMessage.maxSendAttempts} attempts. Transmission queue full`,
+					`Failed to send the command: Transmission queue full`,
 					ZWaveErrorCodes.Controller_MessageDropped,
 					receivedMessage,
 					transactionSource,
@@ -102,7 +102,7 @@ export function serialAPICommandErrorToZWaveError(
 						| SendDataBridgeRequestTransmitReport
 				).transmitStatus;
 				return new ZWaveError(
-					`Failed to send the command after ${sentMessage.maxSendAttempts} attempts (Status ${
+					`Failed to send the command (Status ${
 						getEnumMemberName(
 							TransmitStatus,
 							status,

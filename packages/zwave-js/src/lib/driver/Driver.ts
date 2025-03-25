@@ -6402,16 +6402,33 @@ ${handlers.length} left`,
 	private async drainSerialAPIQueue(): Promise<void> {
 		for await (const item of this.serialAPIQueue) {
 			const { msg, transactionSource, result } = item;
-			try {
-				const ret = await this.executeSerialAPICommand(
-					msg,
-					transactionSource,
-				);
-				result.resolve(ret);
-			} catch (e) {
-				result.reject(e as Error);
-			} finally {
-				this._currentSerialAPICommandPromise = undefined;
+
+			// Attempt the command multiple times if necessary
+			attempts: for (let attempt = 1;; attempt++) {
+				try {
+					const ret = await this.executeSerialAPICommand(
+						msg,
+						transactionSource,
+					);
+					result.resolve(ret);
+				} catch (e) {
+					if (
+						isZWaveError(e)
+						&& e.code === ZWaveErrorCodes.Controller_MessageDropped
+						&& e.context === "CAN"
+						&& attempt < 3
+					) {
+						// Retry up to 3 times if there are serial collisions
+						await wait(100);
+						continue;
+					}
+
+					// In all other cases, reject the transaction
+					result.reject(e as Error);
+				} finally {
+					this._currentSerialAPICommandPromise = undefined;
+				}
+				break attempts;
 			}
 		}
 	}
