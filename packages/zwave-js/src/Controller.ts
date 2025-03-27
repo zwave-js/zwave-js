@@ -28,11 +28,7 @@ export type {
 	RebuildRoutesStatus,
 	SDKVersion,
 } from "./lib/controller/_Types.js";
-export type {
-	IndexedRGB,
-	RGB,
-	Vector,
-} from "./lib/controller/proprietary/NabuCasa.js";
+export type { RGB, Vector } from "./lib/controller/proprietary/NabuCasa.js";
 export {
 	ControllerProprietary_NabuCasa,
 	FUNC_ID_NABUCASA,

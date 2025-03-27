@@ -338,8 +338,9 @@ export class VirtualNode extends VirtualEndpoint {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		// Zero is the root endpoint - i.e. this node
-		if (index === 0) return this;
+		// Zero is the root endpoint - i.e. this node. Also accept undefined if an application misbehaves
+		if (!index) return this;
+
 		// Check if the Multi Channel CC interviews for all nodes are completed,
 		// because we don't have all the information before that
 		if (!this.isMultiChannelInterviewComplete) {
