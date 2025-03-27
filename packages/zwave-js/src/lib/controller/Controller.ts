@@ -1793,6 +1793,15 @@ export class ZWaveController
 		}
 	}
 
+	/** @internal */
+	public async interviewProprietary(): Promise<void> {
+		for (const impl of Object.values(this.proprietary)) {
+			if (typeof impl.interview === "function") {
+				await impl.interview();
+			}
+		}
+	}
+
 	/**
 	 * @internal
 	 * Interviews the controller for the necessary information.
@@ -1892,8 +1901,6 @@ export class ZWaveController
 			VersionCCValues.sdkVersion.id,
 			this._sdkVersion,
 		);
-
-		this.driver.controllerLog.print("Interview completed");
 	}
 
 	private createValueDBForNode(nodeId: number, ownKeys?: Set<string>) {

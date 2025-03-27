@@ -1,7 +1,26 @@
-import { MessagePriority, parseBitMask } from "@zwave-js/core";
+import {
+	ColorComponent,
+	ColorSwitchCCValues,
+	MultilevelSensorCCValues,
+	type SetValueResult,
+	SetValueStatus,
+} from "@zwave-js/cc";
+import {
+	MessagePriority,
+	type TranslatedValueID,
+	type ValueDB,
+	type ValueID,
+	getCCName,
+	getSensor,
+	getSensorScale,
+	parseBitMask,
+} from "@zwave-js/core";
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, noop } from "@zwave-js/shared";
+import { roundTo } from "alcalzone-shared/math";
 import { type Driver } from "../../driver/Driver.js";
+import { type ZWaveController } from "../Controller.js";
+import { type ControllerProprietaryCommon } from "../Proprietary.js";
 
 export const FUNC_ID_NABUCASA = FunctionType.Proprietary_F0;
 
@@ -24,17 +43,182 @@ export interface Vector {
 	z: number;
 }
 
-export class ControllerProprietary_NabuCasa {
+const colorSwitchCurrentColorRed =
+	ColorSwitchCCValues.currentColorChannel(ColorComponent.Red).id;
+const colorSwitchCurrentColorRedTranslated = {
+	...colorSwitchCurrentColorRed,
+	commandClassName: getCCName(colorSwitchCurrentColorRed.commandClass),
+	propertyName: colorSwitchCurrentColorRed.property,
+	propertyKeyName: "Red",
+};
+
+const colorSwitchCurrentColorGreen =
+	ColorSwitchCCValues.currentColorChannel(ColorComponent.Green).id;
+const colorSwitchCurrentColorGreenTranslated = {
+	...colorSwitchCurrentColorGreen,
+	commandClassName: getCCName(colorSwitchCurrentColorGreen.commandClass),
+	propertyName: colorSwitchCurrentColorGreen.property,
+	propertyKeyName: "Green",
+};
+
+const colorSwitchCurrentColorBlue =
+	ColorSwitchCCValues.currentColorChannel(ColorComponent.Blue).id;
+const colorSwitchCurrentColorBlueTranslated = {
+	...colorSwitchCurrentColorBlue,
+	commandClassName: getCCName(colorSwitchCurrentColorBlue.commandClass),
+	propertyName: colorSwitchCurrentColorBlue.property,
+	propertyKeyName: "Blue",
+};
+
+const colorSwitchCurrentColor = ColorSwitchCCValues.currentColor.id;
+const colorSwitchCurrentColorTranslated = {
+	...colorSwitchCurrentColor,
+	commandClassName: getCCName(colorSwitchCurrentColor.commandClass),
+	propertyName: colorSwitchCurrentColor.property,
+};
+
+const colorSwitchTargetColor = ColorSwitchCCValues.targetColor.id;
+const colorSwitchTargetColorTranslated = {
+	...colorSwitchTargetColor,
+	commandClassName: getCCName(colorSwitchTargetColor.commandClass),
+	propertyName: colorSwitchTargetColor.property,
+};
+
+const colorSwitchHexColor = ColorSwitchCCValues.hexColor.id;
+const colorSwitchHexColorTranslated = {
+	...colorSwitchHexColor,
+	commandClassName: getCCName(colorSwitchHexColor.commandClass),
+	propertyName: colorSwitchHexColor.property,
+};
+
+const multilevelSensorX =
+	MultilevelSensorCCValues.value("Acceleration X-axis").id;
+const multilevelSensorXTranslated = {
+	...multilevelSensorX,
+	commandClassName: getCCName(multilevelSensorX.commandClass),
+	propertyName: multilevelSensorX.property,
+};
+
+const multilevelSensorY =
+	MultilevelSensorCCValues.value("Acceleration Y-axis").id;
+const multilevelSensorYTranslated = {
+	...multilevelSensorY,
+	commandClassName: getCCName(multilevelSensorY.commandClass),
+	propertyName: multilevelSensorY.property,
+};
+
+const multilevelSensorZ =
+	MultilevelSensorCCValues.value("Acceleration Z-axis").id;
+const multilevelSensorZTranslated = {
+	...multilevelSensorZ,
+	commandClassName: getCCName(multilevelSensorZ.commandClass),
+	propertyName: multilevelSensorZ.property,
+};
+
+export class ControllerProprietary_NabuCasa
+	implements ControllerProprietaryCommon
+{
 	constructor(
 		driver: Driver,
-		// controller: ZWaveController,
+		controller: ZWaveController,
 	) {
 		this.driver = driver;
-		// this.controller = controller;
+		this.controller = controller;
 	}
 
 	private driver: Driver;
-	// private controller: ZWaveController;
+	private controller: ZWaveController;
+
+	public async interview(): Promise<void> {
+		const valueDB = this.controller.valueDB;
+
+		const supported = await this.getSupportedCommands();
+
+		if (supported.includes(NabuCasaCommand.GetLED)) {
+			const rgb = await this.getLED();
+
+			valueDB.setMetadata(
+				ColorSwitchCCValues.currentColor.id,
+				ColorSwitchCCValues.currentColor.meta,
+			);
+			valueDB.setMetadata(
+				ColorSwitchCCValues.targetColor.id,
+				ColorSwitchCCValues.targetColor.meta,
+			);
+			valueDB.setMetadata(
+				ColorSwitchCCValues
+					.currentColorChannel(ColorComponent.Red).id,
+				ColorSwitchCCValues
+					.currentColorChannel(ColorComponent.Red).meta,
+			);
+			valueDB.setMetadata(
+				ColorSwitchCCValues
+					.currentColorChannel(ColorComponent.Green).id,
+				ColorSwitchCCValues
+					.currentColorChannel(ColorComponent.Green).meta,
+			);
+			valueDB.setMetadata(
+				ColorSwitchCCValues
+					.currentColorChannel(ColorComponent.Blue).id,
+				ColorSwitchCCValues
+					.currentColorChannel(ColorComponent.Blue).meta,
+			);
+
+			this.persistRGBValue(valueDB, rgb);
+		}
+
+		if (supported.includes(NabuCasaCommand.ReadGyro)) {
+			this.readGyro().then((gyro) => {
+				if (gyro) {
+					for (const sensorType of [0x34, 0x35, 0x36]) {
+						const sensor = getSensor(sensorType)!;
+						const scale = getSensorScale(
+							sensorType,
+							0x00,
+						)!;
+						const sensorName = sensor.label;
+						const sensorValue = MultilevelSensorCCValues.value(
+							sensorName,
+						);
+
+						valueDB.setMetadata(sensorValue.id, {
+							...sensorValue.meta,
+							unit: scale.unit,
+							ccSpecific: {
+								sensorType,
+								scale: scale.key,
+							},
+						});
+					}
+
+					this.persistGyroValues(valueDB, gyro);
+				}
+			}).catch(noop);
+		}
+	}
+
+	private persistRGBValue(
+		valueDB: ValueDB,
+		rgb: RGB,
+	) {
+		valueDB.setValue(colorSwitchCurrentColorRed, rgb.r);
+		valueDB.setValue(colorSwitchCurrentColorBlue, rgb.b);
+		valueDB.setValue(colorSwitchCurrentColorGreen, rgb.g);
+		valueDB.setValue(colorSwitchCurrentColor, {
+			red: rgb.r,
+			green: rgb.g,
+			blue: rgb.b,
+		});
+	}
+
+	private persistGyroValues(
+		valueDB: ValueDB,
+		gyro: Vector,
+	) {
+		valueDB.setValue(multilevelSensorX, gyro.x);
+		valueDB.setValue(multilevelSensorY, gyro.y);
+		valueDB.setValue(multilevelSensorZ, gyro.z);
+	}
 
 	public async getSupportedCommands(): Promise<NabuCasaCommand[]> {
 		// HOST->ZW: NABU_CASA_CMD_SUPPORTED
@@ -167,10 +351,104 @@ export class ControllerProprietary_NabuCasa {
 
 		const callback = await callbackPromise;
 
-		const x = callback.payload.readInt16BE(1);
-		const y = callback.payload.readInt16BE(3);
-		const z = callback.payload.readInt16BE(5);
+		// According to datasheet: 8g range => 977 µg/LSB
+		const x = roundTo(callback.payload.readInt16BE(1) / 1024 * 9.77, 2);
+		const y = roundTo(callback.payload.readInt16BE(3) / 1024 * 9.77, 2);
+		const z = roundTo(callback.payload.readInt16BE(5) / 1024 * 9.77, 2);
 
 		return { x, y, z };
+	}
+
+	public getDefinedValueIDs(): TranslatedValueID[] {
+		// TODO: Make dynamic
+
+		return [
+			// RGB light: Color Switch
+			colorSwitchCurrentColorRedTranslated,
+			colorSwitchCurrentColorGreenTranslated,
+			colorSwitchCurrentColorBlueTranslated,
+			colorSwitchCurrentColorTranslated,
+			colorSwitchTargetColorTranslated,
+			colorSwitchHexColorTranslated,
+			// Gyro: Multilevel Sensor (X, Y, Z accel)
+			multilevelSensorXTranslated,
+			multilevelSensorYTranslated,
+			multilevelSensorZTranslated,
+		];
+	}
+
+	public async pollValue(valueId: ValueID): Promise<unknown> {
+		if (
+			ColorSwitchCCValues.targetColor.is(valueId)
+			|| ColorSwitchCCValues.currentColor.is(valueId)
+		) {
+			const rgb = await this.getLED();
+			this.persistRGBValue(this.controller.valueDB, rgb);
+			return rgb;
+		}
+
+		if (
+			ColorSwitchCCValues.currentColorChannel.is(valueId)
+			|| ColorSwitchCCValues.targetColorChannel.is(valueId)
+		) {
+			const rgb = await this.getLED();
+			this.persistRGBValue(this.controller.valueDB, rgb);
+			switch (valueId.propertyKey as ColorComponent) {
+				case ColorComponent.Red:
+					return rgb.r;
+				case ColorComponent.Green:
+					return rgb.g;
+				case ColorComponent.Blue:
+					return rgb.b;
+			}
+			return undefined;
+		}
+
+		if (MultilevelSensorCCValues.value.is(valueId)) {
+			switch (valueId.property) {
+				case "Acceleration X-axis":
+				case "Acceleration Y-axis":
+				case "Acceleration Z-axis":
+					// OK
+					break;
+				default:
+					return undefined;
+			}
+			const gyro = await this.readGyro();
+			if (gyro) {
+				this.persistGyroValues(this.controller.valueDB, gyro);
+				switch (valueId.property) {
+					case "Acceleration X-axis":
+						return gyro.x;
+					case "Acceleration Y-axis":
+						return gyro.y;
+					case "Acceleration Z-axis":
+						return gyro.z;
+				}
+			}
+		}
+	}
+
+	public async setValue(
+		valueId: ValueID,
+		value: unknown,
+	): Promise<SetValueResult> {
+		if (
+			ColorSwitchCCValues.targetColor.is(valueId)
+			&& typeof value === "object"
+			&& value !== null
+		) {
+			const rgb: RGB = {
+				r: (value as any).red ?? 0,
+				g: (value as any).green ?? 0,
+				b: (value as any).blue ?? 0,
+			};
+			await this.setLED(rgb);
+			this.persistRGBValue(this.controller.valueDB, rgb);
+
+			return { status: SetValueStatus.Success };
+		}
+
+		return { status: SetValueStatus.NoDeviceSupport };
 	}
 }
