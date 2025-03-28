@@ -9212,7 +9212,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "supportedIndicatorIds";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
@@ -9237,7 +9237,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "value";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Indicator value";
             readonly ccSpecific: {
@@ -9268,7 +9268,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "identify";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Identify";
             readonly states: {
@@ -9297,7 +9297,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "timeout";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Timeout";
             readonly type: "string";
@@ -9331,7 +9331,7 @@ export const IndicatorCCValues: Readonly<{
             readonly writeable: true;
         }>;
     }) & {
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         options: {
             readonly internal: true;
             readonly minVersion: 1;
@@ -9363,7 +9363,7 @@ export const IndicatorCCValues: Readonly<{
             readonly writeable: true;
         };
     }) & {
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         options: {
             readonly internal: false;
             readonly minVersion: 2;
@@ -9389,7 +9389,7 @@ export const IndicatorCCValues: Readonly<{
             readonly writeable: true;
         }>;
     }) & {
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         options: {
             readonly internal: true;
             readonly minVersion: 4;
