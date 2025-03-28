@@ -28,12 +28,190 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Watt Meter Report Period",
+			"label": "Power (W) Report Interval",
 			"valueSize": 2,
 			"unit": "5 seconds",
 			"minValue": 1,
 			"maxValue": 32767,
 			"defaultValue": 720
+		},
+		{
+			"#": "2",
+			"label": "Energy (kWh) Report Interval",
+			"valueSize": 2,
+			"unit": "10 minutes",
+			"minValue": 1,
+			"maxValue": 32767,
+			"defaultValue": 6
+		},
+		{
+			"#": "3",
+			"label": "Power (W) Load Caution Threshold",
+			"valueSize": 2,
+			"unit": "0.01 A",
+			"minValue": 10,
+			"maxValue": 500,
+			"defaultValue": 500
+		},
+		{
+			"#": "4",
+			"label": "Energy (kWh) Load Caution Threshold",
+			"valueSize": 2,
+			"unit": "kWh",
+			"minValue": 1,
+			"maxValue": 10000,
+			"defaultValue": 10000
+		},
+		{
+			"#": "5",
+			"label": "Level Report Mode",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Report destination in 5s interval",
+					"value": 1
+				},
+				{
+					"label": "Report every 10% level charge",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "7",
+			"label": "Demo Trip",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Idle",
+					"value": 0
+				},
+				{
+					"label": "Activate with first press of the button",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "9",
+			"label": "Demo Trip and Calibration",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Idle",
+					"value": 0
+				},
+				{
+					"label": "Activate with first press of the button",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Auto Calibration",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Idle",
+					"value": 0
+				},
+				{
+					"label": "Activate",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "11",
+			"label": "Minimum Shutter Position (Closed)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 98,
+			"defaultValue": 0
+		},
+		{
+			"#": "12",
+			"label": "Maximum Shutter Position (Open)",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 99
+		},
+		{
+			"#": "13",
+			"label": "External Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switches",
+					"value": 0
+				},
+				{
+					"label": "Toggle switches: On = open shutter, off = close shutter",
+					"value": 1
+				},
+				{
+					"label": "Toggle switches: On = close shutter, off = open shutter",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "14",
+			"label": "External Switch Input",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No external switch",
+					"value": 0
+				},
+				{
+					"label": "S1 only: Momentary or toggle switches",
+					"value": 1
+				},
+				{
+					"label": "S2 only: Momentary or toggle switches",
+					"value": 2
+				},
+				{
+					"label": "S1 & S2: Momentary or toggle switches, each switch controls both directions",
+					"value": 3
+				},
+				{
+					"label": "S1 & S2: Momentary switches, each switch controls one directions",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "255",
+			"label": "Factory Reset",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Idle",
+					"value": 0
+				},
+				{
+					"label": "Restore factory setting",
+					"value": 85
+				}
+			]
 		}
 	],
 	"compat": {

@@ -143,6 +143,18 @@ export type ZWaveNotificationCallbackParams_NotificationCC = [
 	args: ZWaveNotificationCallbackArgs_NotificationCC,
 ];
 
+export interface ZWaveNotificationCapability_NotificationCC {
+	commandClass: CommandClasses.Notification;
+	endpoint: number;
+	/** A dictionary of supported event types and information */
+	supportedNotificationTypes: Record<number, {
+		/** The human-readable label for the notification type */
+		label: string;
+		/** A dictionary of supported events for this notification type and their human-readable labels */
+		supportedEvents: Record<number, string>;
+	}>;
+}
+
 /**
  * This is emitted when an unsolicited powerlevel test report is received
  */
@@ -180,6 +192,13 @@ export type ZWaveNotificationCallbackParams_EntryControlCC = [
 	args: ZWaveNotificationCallbackArgs_EntryControlCC,
 ];
 
+export interface ZWaveNotificationCapability_EntryControlCC {
+	commandClass: (typeof CommandClasses)["Entry Control"];
+	endpoint: number;
+	/** A dictionary of supported event types and their human-readable labels */
+	supportedEventTypes: Record<EntryControlEventTypes, string>;
+}
+
 export type ZWaveNotificationCallback = (
 	...args:
 		| ZWaveNotificationCallbackParams_NotificationCC
@@ -187,6 +206,10 @@ export type ZWaveNotificationCallback = (
 		| ZWaveNotificationCallbackParams_PowerlevelCC
 		| ZWaveNotificationCallbackParams_MultilevelSwitchCC
 ) => void;
+
+export type ZWaveNotificationCapability =
+	| ZWaveNotificationCapability_NotificationCC
+	| ZWaveNotificationCapability_EntryControlCC;
 
 export interface ZWaveNodeValueEventCallbacks {
 	"value added": ZWaveNodeValueAddedCallback;

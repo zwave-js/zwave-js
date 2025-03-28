@@ -140,6 +140,7 @@ function rfRegionToUpdateServiceRegion(
 	switch (rfRegion) {
 		case RFRegion["Default (EU)"]:
 		case RFRegion.Europe:
+		case RFRegion["Europe (Long Range)"]:
 			return "europe";
 		case RFRegion.USA:
 		case RFRegion["USA (Long Range)"]:

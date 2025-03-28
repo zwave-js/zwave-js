@@ -15,31 +15,6 @@
 	},
 	"paramInformation": [
 		{
-			"#": "10",
-			"label": "Activate / Deactivate Functions ALL ON / ALL OFF",
-			"valueSize": 2,
-			"defaultValue": 255,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "All on disabled, all off disabled",
-					"value": 0
-				},
-				{
-					"label": "All on disabled, al off active",
-					"value": 1
-				},
-				{
-					"label": "All on active, all off disabled",
-					"value": 2
-				},
-				{
-					"label": "All on active, all off active",
-					"value": 255
-				}
-			]
-		},
-		{
 			"#": "11",
 			"label": "Auto-Off Timer",
 			"description": "When the relay is turned ON, it automatically turns OFF after the defined time",
@@ -71,23 +46,6 @@
 			]
 		},
 		{
-			"#": "15",
-			"label": "Timer Unit",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Seconds",
-					"value": 0
-				},
-				{
-					"label": "Milliseconds",
-					"value": 1
-				}
-			]
-		},
-		{
 			"#": "30",
 			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off"
 		},
@@ -108,6 +66,121 @@
 			"minValue": 0,
 			"maxValue": 32535,
 			"defaultValue": 0
+		},
+		{
+			"#": "50",
+			"label": "Group 3: Lower Power Threshold",
+			"valueSize": 2,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 4000,
+			"defaultValue": 30
+		},
+		{
+			"#": "51",
+			"label": "Group 3: Upper Power Threshold",
+			"valueSize": 2,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 4000,
+			"defaultValue": 50
+		},
+		{
+			"#": "52",
+			"label": "Group 3: Action When Crossing Thresholds",
+			"description": "Which commands to send to devices in group 3 when the power thresholds are crossed.",
+			"valueSize": 1,
+			"defaultValue": 6,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Turn on below lower threshold",
+					"value": 1
+				},
+				{
+					"label": "Turn off below lower threshold",
+					"value": 2
+				},
+				{
+					"label": "Turn on above upper threshold",
+					"value": 3
+				},
+				{
+					"label": "Turn off above upper threshold",
+					"value": 4
+				},
+				{
+					"label": "Turn on below lower threshold, turn off above upper threshold",
+					"value": 5
+				},
+				{
+					"label": "Turn off below lower threshold, turn on above upper threshold",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "70",
+			"label": "Overload Protection",
+			"description": "Device will be turned off when this power is exceeded for more than 3 seconds",
+			"valueSize": 2,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 4000,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "71",
+			"label": "Program Notifications: Power Threshold",
+			"description": "When the power consumption reaches this threshold, a program started notification will be sent to the controller.",
+			"valueSize": 2,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 4000,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "72",
+			"label": "Program Notifications: Time Interval",
+			"description": "When the power consumption drops below the power threshold for this long, a program completed notification will be sent to the controller.",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 125,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Immediately",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "73",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Program Notifications: Turn Plug Off After Completion"
+		},
+		{
+			"#": "74",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indicator",
+			"defaultValue": 1
 		}
 	]
 }

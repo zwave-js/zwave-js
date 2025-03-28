@@ -4,21 +4,26 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## 15.0.0-beta.2 (2025-03-06)
-### Breaking changes · [Migration guide](https://zwave-js.github.io/zwave-js/#/getting-started/migrating/v15)
-* Move OTW firmware update functionality to the `Driver` class (#7662)
-
+## 15.0.3 (2025-03-25)
 ### Bugfixes
-* Harden end device CLI detection (#7661)
+* Commands are now retried again when a serial collision happens (#7695)
+
+## 15.0.2 (2025-03-21)
+### Bugfixes
+* Fixed an issue where `Indicator` was not defined when bundling with `esbuild` (#7687)
+
+## 15.0.1 (2025-03-14)
+### Features
+* Add API to query supported `notification` events of a node (#7682)
 
 ### Config file changes
-* Add fingerprint for ZVIDAR Z-TRV-V01 (#7660)
+* Add alarmType 132 mapping for `Yale YRD4x0` locks (#7677)
 
-## 15.0.0-beta.1 (2025-03-05)
 ### Changes under the hood
-* Split documentation generation into separate tasks, fix CCValues types generation (#7644)
+* Refactored the `ZWaveNode` class into smaller parts (#7679, #7681)
+* Remove stray `debugger` statement from `ZWaveController` constructor (#7680)
 
-## 15.0.0-beta.0 (2025-02-27)
+## 15.0.0 (2025-03-12)
 Z-Wave JS is now able to run in the browser! This allows for new use-cases like interactive usage examples in the documentation, and building web-based Z-Wave tools.
 
 To celebrate this achievement, we've renamed the repository to `zwave-js`, dropping the `node-` prefix. The package names will remain the same.
@@ -27,14 +32,21 @@ To celebrate this achievement, we've renamed the repository to `zwave-js`, dropp
 * Require Node.js 20 or higher
 * Remove non-portable sync-versions of methods, require Node 20 (#7580)
 * Support communicating with SoC end device firmwares via their CLI (#7628)
+* Move OTW firmware update functionality to the `Driver` class (#7662)
 
 ### Features
 * Browser support (#7586, #7587, #7592, #7631)
 * Support staying in the bootloader instead of recovering (#7444)
+* Implement new Zniffer commands for LR channel configs (#7665)
+* Expose manufacturer name as a node property, even when config file does not exist (#7669)
 
 ### Bugfixes
 * Correctly handle being queried with Firmware Update CC correctly (#7620, #7627)
 * Handle proxy inclusion when NIF and Initiate command are switched (#7621)
+* Harden end device CLI detection (#7661)
+
+### Config file changes
+* Add fingerprint for ZVIDAR Z-TRV-V01 (#7660)
 
 ### Changes under the hood
 * Replace `xstate` with a simple built-in state machine (#7460)
@@ -48,6 +60,40 @@ To celebrate this achievement, we've renamed the repository to `zwave-js`, dropp
 * Remove dependency on `isDeepStrictEqual` (#7584)
 * Decouple logging from `winston` (#7585)
 * Lots of dependency updates
+* Split documentation generation into separate tasks, fix CCValues types generation (#7644)
+
+## 14.3.13 (2025-03-12)
+### Config file changes
+* Add missing parameters to Qubino Smart Plug 16A (#7409)
+* Add missing parameters for the MCO MH-C221 shutter (#7672)
+* Correct Fibaro FGMS001 association groups (#7463)
+* Add multi-click detection parameter to Zooz ZEN51/52 (#6730)
+
+## 14.3.12 (2025-03-11)
+### Config file changes
+* Add Shelly Door/Window Sensor, Wave Plug S, Wave PRO Dimmer 1PM/2PM  (#7641)
+* Add SmartWings WB04V (#7659)
+* Add new parameters for Zooz ZEN72 firmware 3.40 and 3.50 (#7651)
+* Add new Zooz ZEN32 parameter 27 (#7629)
+* Update New One N4002 to correct parameters and other information (#7600)
+* Update Zooz ZSE44 based on latest docs (#7588)
+* Add SmartWings WM25L Smart Motor (#7565)
+* Update Zooz ZEN04 to firmware 2.30 (#7538)
+* Update Zooz ZEN30 to Firmware v4.20 (#7539)
+* Update Zooz ZEN20 to firmware 4.20 (#7541)
+* Update Zooz ZEN17 800LR to firmware 2.0 (#7542)
+* Update to TKB Home TZ88 (#7523)
+* Add missing and new parameters for Zooz ZEN15 (#7495)
+* Add fingerprint to Yale YRL210 (#7455)
+* Add Springs Window Fashions CRBZ motorized blinds (#7416)
+* Add Jasco ZWN4015 In-Wall Smart Switch (#7668)
+* Add config parameters to Schlage PIR Motion Sensor (#7413)
+* Add Lockly Secure Plus (#7382)
+* Update Zooz ZEN74 to firmware 2.10 (#7328)
+
+## 14.3.11 (2025-03-10)
+### Bugfixes
+* Fixes an issue where no firmware updates would show as available when the region is set to EU_LR (#7667)
 
 ## 14.3.10 (2025-02-27)
 ### Bugfixes
