@@ -133,6 +133,25 @@
 			"skipFiles": ["<node_internals>/**"],
 			"sourceMaps": true
 			// "preLaunchTask": "npm: build"
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Run RCP Host",
+			"runtimeExecutable": "yarn",
+			"runtimeArgs": [
+				"tsx",
+				"--async-stack-traces",
+				"--conditions=@@dev",
+				"${workspaceFolder}/test/run_rcp.ts"
+			],
+			"env": {
+				"NODE_ENV": "development"
+			},
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**"],
+			"sourceMaps": true
+			// "preLaunchTask": "npm: build"
 		}
 	]
 }

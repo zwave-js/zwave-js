@@ -4,13 +4,18 @@ import {
 	type StateMachineTransition,
 } from "@zwave-js/core";
 import {
-	type Message,
 	isMultiStageCallback,
 	isSendData,
 	isSuccessIndicator,
 } from "@zwave-js/serial";
 
-export type SerialAPICommandState =
+export interface SerialAPICommand {
+	expectsAck(): boolean;
+	expectsResponse(): boolean;
+	expectsCallback(): boolean;
+}
+
+export type SerialAPICommandState<T extends SerialAPICommand> =
 	| { value: "initial" }
 	| { value: "sending" }
 	| { value: "waitingForACK" }
@@ -21,44 +26,44 @@ export type SerialAPICommandState =
 	}
 	| {
 		value: "success";
-		result?: Message;
+		result?: T;
 		done: true;
 	}
 	| ({
 		value: "failure";
-	} & SerialAPICommandMachineFailure);
+	} & SerialAPICommandMachineFailure<T>);
 
-export type SerialAPICommandMachineFailure =
+export type SerialAPICommandMachineFailure<T extends SerialAPICommand> =
 	| { reason: "ACK timeout"; result?: undefined }
 	| { reason: "CAN"; result?: undefined }
 	| { reason: "NAK"; result?: undefined }
 	| { reason: "response timeout"; result?: undefined }
 	| { reason: "callback timeout"; result?: undefined }
-	| { reason: "response NOK"; result: Message }
-	| { reason: "callback NOK"; result: Message };
+	| { reason: "response NOK"; result: T }
+	| { reason: "callback NOK"; result: T };
 
-export type SerialAPICommandMachineInput =
+export type SerialAPICommandMachineInput<T extends SerialAPICommand> =
 	| { value: "start" }
 	| { value: "message sent" }
 	| { value: "ACK" }
 	| { value: "CAN" }
 	| { value: "NAK" }
 	| { value: "timeout" }
-	| { value: "response" | "response NOK"; response: Message }
-	| { value: "callback" | "callback NOK"; callback: Message };
+	| { value: "response" | "response NOK"; response: T }
+	| { value: "callback" | "callback NOK"; callback: T };
 
-export type SerialAPICommandMachine = StateMachine<
-	SerialAPICommandState,
-	SerialAPICommandMachineInput
+export type SerialAPICommandMachine<T extends SerialAPICommand> = StateMachine<
+	SerialAPICommandState<T>,
+	SerialAPICommandMachineInput<T>
 >;
 
-function to(
-	state: SerialAPICommandState,
-): StateMachineTransition<SerialAPICommandState> {
+function to<T extends SerialAPICommand>(
+	state: SerialAPICommandState<T>,
+): StateMachineTransition<SerialAPICommandState<T>> {
 	return { newState: state };
 }
 
-function callbackIsFinal(callback: Message): boolean {
+function callbackIsFinal(callback: unknown): boolean {
 	return (
 		// assume callbacks without success indication to be OK
 		(!isSuccessIndicator(callback) || callback.isOK())
@@ -67,14 +72,17 @@ function callbackIsFinal(callback: Message): boolean {
 	);
 }
 
-export function createSerialAPICommandMachine(
-	message: Message,
-): SerialAPICommandMachine {
-	const initialState: SerialAPICommandState = {
+export function createSerialAPICommandMachine<T extends SerialAPICommand>(
+	message: T,
+): SerialAPICommandMachine<T> {
+	const initialState: SerialAPICommandState<T> = {
 		value: "initial",
 	};
 
-	const transitions: InferStateMachineTransitions<SerialAPICommandMachine> =
+	const transitions: InferStateMachineTransitions<
+		SerialAPICommandMachine<T>
+	> =
+		// @ts-expect-error TODO: Fix the type declaration
 		(state) => (input) => {
 			switch (state.value) {
 				case "initial":
