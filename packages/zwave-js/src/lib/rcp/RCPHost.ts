@@ -1,13 +1,14 @@
 import {
 	type LogConfig,
 	type LogContainer,
+	type MaybeNotKnown,
 	ZWaveError,
 	ZWaveErrorCodes,
 	isZWaveError,
 } from "@zwave-js/core";
 import {
 	MessageHeaders,
-	type RCPFunctionType,
+	RCPFunctionType,
 	RCPMessage,
 	RCPMessageType,
 	RCPSerialFrameType,
@@ -22,6 +23,10 @@ import {
 import {
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
+	ReceiveCallback,
+	TransmitCallback,
+	TransmitRequest,
+	TransmitResponse,
 } from "@zwave-js/serial/rcp";
 import {
 	AsyncQueue,
@@ -29,9 +34,11 @@ import {
 	type Expand,
 	type Timer,
 	TypedEventTarget,
+	buffer2hex,
 	cloneDeep,
 	isAbortError,
 	mergeDeep,
+	num2hex,
 	pick,
 	setTimer,
 } from "@zwave-js/shared";
@@ -217,7 +224,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	/** A list of awaited messages */
 	private awaitedMessages: AwaitedMessageEntry[] = [];
 
-	private supportedFunctionTypes: RCPFunctionType[] = [];
+	private supportedFunctionTypes: MaybeNotKnown<RCPFunctionType[]>;
+	private firmwareVersion: MaybeNotKnown<string>;
 
 	// #region Initialization
 
@@ -295,8 +303,22 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	}
 
 	private async interview(): Promise<void> {
+		this.rcpLog.print(`Querying firmware information...`);
 		const firmwareInfo = await this.getFirmwareInfo();
-		console.dir(firmwareInfo);
+		this.supportedFunctionTypes = firmwareInfo.supportedFunctionTypes;
+		this.firmwareVersion = firmwareInfo.firmwareVersion;
+
+		this.rcpLog.print(
+			`Received firmware information:
+  version: ${this.firmwareVersion}
+  supported commands: ${
+				this.supportedFunctionTypes.map((ft) =>
+					`\n  · ${(RCPFunctionType as any)[ft] ?? "unknown"} (${
+						num2hex(ft)
+					})`
+				).join("")
+			}`,
+		);
 	}
 
 	// #region Serialport interaction
@@ -768,6 +790,32 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		]);
 	}
 
+	public async transmit(
+		channel: number,
+		data: Uint8Array,
+	): Promise<number> {
+		const msg = new TransmitRequest({
+			channel,
+			data,
+		});
+		try {
+			const result = await this.sendMessage<TransmitCallback>(msg);
+			// Successful transmission
+			return result.status;
+		} catch (e) {
+			if (isZWaveError(e)) {
+				if (e.context instanceof TransmitResponse) {
+					// The transmission failed
+					return e.context.status;
+				} else if (e.context instanceof TransmitCallback) {
+					return e.context.status;
+				}
+			}
+
+			throw e;
+		}
+	}
+
 	// #region RCPMessage handling
 
 	/**
@@ -780,8 +828,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		try {
 			if (msg.type === RCPMessageType.Request) {
 				await this.handleRequest(msg);
-			} else {
+			} else if (msg.type === RCPMessageType.Response) {
 				await this.handleResponse(msg);
+			} else if (msg.type === RCPMessageType.Callback) {
+				await this.handleCallback(msg);
 			}
 		} catch (e) {
 			if (
@@ -814,6 +864,40 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		// this.rcpLog.transactionResponse(msg, undefined, "unexpected");
 		this.rcpLog.print("unexpected response, discarding...", "warn");
 
+		return Promise.resolve();
+	}
+
+	/**
+	 * Is called when a Callback-type message was received
+	 */
+	private handleCallback(msg: RCPMessage): Promise<void> {
+		// Check if we have a dynamic handler waiting for this message
+		for (const entry of this.awaitedMessages) {
+			if (entry.predicate(msg)) {
+				// We do
+				entry.handler(msg);
+				return Promise.resolve();
+			}
+		}
+
+		if (msg instanceof ReceiveCallback) {
+			return this.handleReceiveCallback(msg);
+		}
+
+		// this.rcpLog.transactionResponse(msg, undefined, "unexpected");
+		this.rcpLog.print(
+			`TODO: Handle callback: ${buffer2hex(msg.payload)}`,
+			"warn",
+		);
+
+		return Promise.resolve();
+	}
+
+	private async handleReceiveCallback(msg: ReceiveCallback): Promise<void> {
+		this.rcpLog.print(
+			`TODO: Handle received data: ${buffer2hex(msg.data)}`,
+			"warn",
+		);
 		return Promise.resolve();
 	}
 
