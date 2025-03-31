@@ -241,3 +241,13 @@ export enum ZnifferFrameType {
 	BeamStart = 0x04,
 	BeamStop = 0x05,
 }
+
+export enum RCPMessageType {
+	Request = 0x00,
+	Response = 0x01,
+	Callback = 0x02,
+}
+
+export enum RCPFunctionType {
+	GetFirmwareInfo = 0x01,
+}
