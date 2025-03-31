@@ -250,4 +250,7 @@ export enum RCPMessageType {
 
 export enum RCPFunctionType {
 	GetFirmwareInfo = 0x01,
+	SetupRadio = 0x02,
+	Transmit = 0x03,
+	Receive = 0x04,
 }

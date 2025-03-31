@@ -209,7 +209,8 @@ export class RCPMessage {
 	 * Tests whether this message needs a callback ID to match its response
 	 */
 	public needsCallbackId(): boolean {
-		return true;
+		return false;
+		// return true;
 	}
 
 	/** Returns the response timeout for this message in case the default settings do not apply. */
@@ -309,12 +310,12 @@ export class RCPMessage {
 
 	/** Checks if a message is an expected callback for this message */
 	public isExpectedCallback(msg: RCPMessage): boolean {
-		if (msg.type !== RCPMessageType.Request) return false;
+		if (msg.type !== RCPMessageType.Callback) return false;
 
-		// If a received request included a callback id, enforce that the response contains the same
-		if (this.callbackId !== msg.callbackId) {
-			return false;
-		}
+		// // If a received request included a callback id, enforce that the response contains the same
+		// if (this.callbackId !== msg.callbackId) {
+		// 	return false;
+		// }
 
 		return this.testMessage(msg, this.expectedCallback);
 	}
