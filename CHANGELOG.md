@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixed a crash that could be caused by writing to the serialport in quick succession (#7716)
+
+### Config file changes
+* Declare fingerprint `0x0000:0x0003:0x0008` as 500 series controller (#7697)
+
 ## 15.0.3 (2025-03-25)
 ### Bugfixes
 * Commands are now retried again when a serial collision happens (#7695)
