@@ -1,0 +1,143 @@
+{
+	"manufacturer": "Jasco Products",
+	"manufacturerId": "0x0063",
+	"label": "58446/ZWA4013",
+	"description": "Enbrighten Z-Wave In-Wall Smart Fan Control,White and Light Almond Paddles, 700S",
+	"devices": [
+		{
+			"productType": "0x4944",
+			"productId": "0x3533",
+			"zwaveAllianceId": 4931
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Single Press",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"label": "Led Light Mode",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 3,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "4",
+			"label": "Invert Switch",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "5",
+			"label": "Select 3-way Type",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "19",
+			"label": "Alternate Exclusion",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "34",
+			"label": "Led Light Color",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 8,
+			"defaultValue": 5,
+			"unsigned": true
+		},
+		{
+			"#": "35",
+			"label": "Led Light Intensity",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 7,
+			"defaultValue": 4,
+			"unsigned": true
+		},
+		{
+			"#": "36",
+			"label": "Guidelight Mode Intensity",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 7,
+			"defaultValue": 4,
+			"unsigned": true
+		},
+		{
+			"#": "39",
+			"label": "Power Up Status",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "40",
+			"label": "Fan Speed Ramp Rate",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "84",
+			"label": "Reset Factory Default",
+			"description": "0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Adding your device to a Z-Wave network\n1. Follow the instructions for your Z-Wave certified Controller to add a device to the Z-Wave network.\n\n2. Once the controller is ready to add your device, press the top of bottom of the wireless smart Fan controller",
+		"exclusion": "To remove and reset the device\n1. Follow the instructions for your Z-Wave certified controller to remove a device from the Z-wave network\n\n2. Once the controller is ready to remove your device, press the top or bottom of the wireless smart Fan controller",
+		"reset": "To return your switch to factory defaults: \nPull the airgap switch. Press and hold the bottom button, push the airgap switch in and continue holding the bottom button for 10 seconds. The LED will flash once each of the 8 colors then stop"
+	}
+}
