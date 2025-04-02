@@ -113,6 +113,10 @@ export class MPDU {
 			}`,
 		);
 	}
+
+	public serialize(_ctx: MPDUEncodingContext): Bytes {
+		return this.payload;
+	}
 }
 
 export interface MPDUParsingContext {
@@ -301,10 +305,12 @@ export class ZWaveMPDU extends MPDU {
 			+ (ctx.protocolDataRate < ProtocolDataRate.ZWave_100k ? 1 : 2);
 		payload[payload.length - 1] = length;
 
-		return Bytes.concat([
+		this.payload = Bytes.concat([
 			payload,
 			this.payload,
 		]);
+
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -1210,7 +1216,12 @@ export class LongRangeMPDU extends MPDU {
 		payload.writeInt8(this.txPower, 11);
 		// TODO: Once extensions are defined, add them here
 
-		return Bytes.concat([payload, this.payload]);
+		this.payload = Bytes.concat([
+			payload,
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
