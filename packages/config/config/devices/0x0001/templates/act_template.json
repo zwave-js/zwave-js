@@ -86,5 +86,9 @@
 		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 		"label": "Enable / Disable Group 4 Dimming",
 		"description": "Controls whether dimming commands are transmitted to Group 4"
+	},
+	"load_sensing": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Load Sensing"
 	}
 }

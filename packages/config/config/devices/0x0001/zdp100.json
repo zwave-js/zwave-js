@@ -13,5 +13,11 @@
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
-	}
+	},
+	"paramInformation": [
+		{
+			"#": "29",
+			"$import": "templates/act_template.json#load_sensing"
+		}
+	]
 }
