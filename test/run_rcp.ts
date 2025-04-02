@@ -2,13 +2,24 @@ import { wait as _wait } from "alcalzone-shared/async";
 import path from "node:path";
 import "reflect-metadata";
 import {
+	type MPDUEncodingContext,
+	ProtocolDataRate,
+	RFRegion,
+	SecurityClass,
+	SinglecastZWaveMPDU,
+} from "@zwave-js/core";
+import {
 	TransmitCallbackStatus,
 	TransmitResponseStatus,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared";
 import _os from "node:os";
 import { fileURLToPath } from "node:url";
-import { RCPHost } from "zwave-js";
+import {
+	BinarySwitchCCSet,
+	type CCEncodingContext,
+	RCPHost,
+	getImplementedVersion,
+} from "zwave-js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,18 +41,59 @@ const driver = new RCPHost(port, {
 	.on("error", console.error)
 	.once("ready", async () => {
 		// Test code goes here
-		const ONN = Bytes.from("ecab54510141040f032501ffff", "hex");
-		const OFF = Bytes.from("ecab54510141040f03250100ff", "hex");
+		// const ONN = Bytes.from("ecab54510141040f032501ffff", "hex");
+		// const OFF = Bytes.from("ecab54510141040f03250100ff", "hex");
+		// const ROUTED_ON = Bytes.from(
+		// 	"ecab545101810812030010022501ffffc9ff00",
+		// 	"hex",
+		// );
 
-		const nope = Bytes.from("ecab54510141040f03250100ff", "hex");
-		const result = await driver.transmit(3, nope);
+		const ownNodeId = 1;
+		const homeId = 0xecab5451;
+
+		const mpductx: MPDUEncodingContext = {
+			channel: 2,
+			protocolDataRate: ProtocolDataRate.ZWave_100k,
+			region: RFRegion["Europe (Long Range)"],
+		};
+
+		const ccctx: CCEncodingContext = {
+			ownNodeId: 1,
+			homeId,
+			getDeviceConfig: () => undefined,
+			getHighestSecurityClass: () => SecurityClass.None,
+			hasSecurityClass: () => false,
+			securityManager: undefined,
+			securityManager2: undefined,
+			securityManagerLR: undefined,
+			setSecurityClass: () => {},
+			getSupportedCCVersion: (cc) => getImplementedVersion(cc),
+		};
+
+		const mpdu = new SinglecastZWaveMPDU({
+			homeId,
+			ackRequested: true,
+			sourceNodeId: ownNodeId,
+			destinationNodeId: 3,
+			sequenceNumber: 1,
+		});
+		const cc = new BinarySwitchCCSet({
+			nodeId: mpdu.destinationNodeId,
+			targetValue: true,
+		});
+		mpdu.payload = await cc.serialize(ccctx);
+
+		const SC_ON = mpdu.serialize(mpductx);
+
+		// const nope = Bytes.from("ecab54510141040f03250100ff", "hex");
+		const result = await driver.transmit(mpductx.channel, SC_ON);
 		console.log(
 			TransmitResponseStatus[result]
 				|| TransmitCallbackStatus[result]
 				|| "Unknown result",
 		);
 
-		await wait(500);
+		await wait(2500);
 		process.exit(0);
 
 		// for (let i = 0; i < 2; i++) {

@@ -1,3 +1,5 @@
+import { Bytes } from "@zwave-js/shared";
+
 /** A number between -128 and +124 dBm or one of the special values in {@link RssiError} indicating an error */
 export type RSSI = number | RssiError;
 
@@ -5,6 +7,27 @@ export enum RssiError {
 	NotAvailable = 127,
 	ReceiverSaturated = 126,
 	NoSignalDetected = 125,
+}
+
+export function parseRSSI(payload: Uint8Array, offset: number = 0): RSSI {
+	const ret = Bytes.view(payload).readInt8(offset);
+	// Filter out reserved values
+	// TODO: Figure out for which controllers this is relevant
+	// if (
+	// 	ret >= RSSI_RESERVED_START &&
+	// 	ret < RssiError.NoSignalDetected
+	// ) {
+	// 	ret = RssiError.NotAvailable;
+	// }
+	return ret;
+}
+
+export function tryParseRSSI(
+	payload: Uint8Array,
+	offset: number = 0,
+): RSSI | undefined {
+	if (payload.length <= offset) return;
+	return parseRSSI(payload, offset);
 }
 
 export function isRssiError(rssi: RSSI): rssi is RssiError {
