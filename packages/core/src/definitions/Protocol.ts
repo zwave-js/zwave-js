@@ -1,4 +1,5 @@
 import { num2hex } from "@zwave-js/shared";
+import { RFRegion, ZnifferRegion } from "./RFRegion.js";
 
 export enum Protocols {
 	ZWave = 0,
@@ -62,6 +63,12 @@ export enum ZnifferProtocolDataRate {
 	LongRange_100k = 0x03,
 }
 
+export function znifferProtocolDataRateToProtocolDataRate(
+	rate: ZnifferProtocolDataRate,
+): ProtocolDataRate {
+	return rate + 1;
+}
+
 /**
  * Converts a ZnifferProtocolDataRate into a human-readable string.
  * @param includeProtocol - Whether to include the protocol name in the output
@@ -95,6 +102,23 @@ export function znifferProtocolDataRateToString(
 	return `Unknown (${num2hex(rate)})`;
 }
 
+export function channelToZnifferProtocolDataRate(
+	channel: number,
+): ZnifferProtocolDataRate {
+	switch (channel) {
+		case 0:
+			return ZnifferProtocolDataRate.ZWave_100k;
+		case 1:
+			return ZnifferProtocolDataRate.ZWave_40k;
+		case 2:
+			return ZnifferProtocolDataRate.ZWave_9k6;
+		case 3:
+		case 4:
+			return ZnifferProtocolDataRate.LongRange_100k;
+	}
+	throw new Error(`Invalid channel: ${channel}`);
+}
+
 export const protocolDataRateMask = 0b111;
 
 export enum ProtocolType {
@@ -122,4 +146,70 @@ export enum ProtocolVersion {
 	"2.0" = 1,
 	"4.2x / 5.0x" = 2,
 	"4.5x / 6.0x" = 3,
+}
+
+export enum RadioProtocolMode {
+	Classic2Channel = 0,
+	Classic3Channel = 1,
+	Classic2ChannelPlusLongRange = 2,
+	LongRange2Channel = 3,
+}
+
+export enum ProtocolHeaderFormat {
+	Classic2Channel = 0,
+	Classic3Channel = 1,
+	LongRange,
+}
+
+export function znifferRegionToChannelConfiguration(
+	region: ZnifferRegion,
+): "1/2" | "3" | "4" {
+	switch (region) {
+		case ZnifferRegion.Japan:
+		case ZnifferRegion.Korea:
+			return "3";
+		case ZnifferRegion["USA (Long Range)"]:
+		case ZnifferRegion["USA (Long Range, backup)"]:
+		case ZnifferRegion["USA (Long Range, end device)"]:
+		case ZnifferRegion["Europe (Long Range)"]:
+			return "4";
+		default:
+			return "1/2";
+	}
+}
+
+export function rfRegionToRadioProtocolMode(
+	region: RFRegion,
+): RadioProtocolMode {
+	switch (region) {
+		case RFRegion.Japan:
+		case RFRegion.Korea:
+			return RadioProtocolMode.Classic3Channel;
+
+		case RFRegion["USA (Long Range)"]:
+		case RFRegion["Europe (Long Range)"]:
+			return RadioProtocolMode.Classic2ChannelPlusLongRange;
+
+		default:
+			return RadioProtocolMode.Classic2Channel;
+	}
+	// End device configurations (two LR channels also exist, but they don't have a corresponding RF region)
+}
+
+export function getProtocolHeaderFormat(
+	mode: RadioProtocolMode,
+	channel: number,
+): ProtocolHeaderFormat {
+	switch (mode) {
+		case RadioProtocolMode.Classic2Channel:
+			return ProtocolHeaderFormat.Classic2Channel;
+		case RadioProtocolMode.Classic3Channel:
+			return ProtocolHeaderFormat.Classic3Channel;
+		case RadioProtocolMode.Classic2ChannelPlusLongRange:
+			return channel >= 3
+				? ProtocolHeaderFormat.LongRange
+				: ProtocolHeaderFormat.Classic2Channel;
+		case RadioProtocolMode.LongRange2Channel:
+			return ProtocolHeaderFormat.LongRange;
+	}
 }
