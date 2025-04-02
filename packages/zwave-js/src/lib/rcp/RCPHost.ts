@@ -2,8 +2,10 @@ import {
 	type LogConfig,
 	type LogContainer,
 	type MaybeNotKnown,
+	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
+	channelToZnifferProtocolDataRate,
 	isZWaveError,
 } from "@zwave-js/core";
 import {
@@ -16,6 +18,7 @@ import {
 	RCPSerialStreamFactory,
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
+	ZnifferFrameType,
 	isSuccessIndicator,
 	isZWaveSerialPortImplementation,
 	wrapLegacySerialBinding,
@@ -30,6 +33,7 @@ import {
 } from "@zwave-js/serial/rcp";
 import {
 	AsyncQueue,
+	Bytes,
 	type DeepPartial,
 	type Expand,
 	type Timer,
@@ -54,6 +58,7 @@ import {
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
 import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
+import { ZWaveMPDU } from "../zniffer/MPDU.js";
 import { RCPTransaction } from "./RCPTransaction.js";
 
 const logo: string = `
@@ -894,10 +899,24 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	}
 
 	private async handleReceiveCallback(msg: ReceiveCallback): Promise<void> {
+		// FIXME: Make sure that channel 2 parses correctly
+		const mpdu = new ZWaveMPDU({
+			data: Bytes.view(msg.data),
+			frameInfo: {
+				channel: msg.channel,
+				frameType: ZnifferFrameType.Data,
+				protocolDataRate: channelToZnifferProtocolDataRate(msg.channel),
+				region: RFRegion.Europe,
+				rssiRaw: msg.rssi,
+			},
+		});
+
 		this.rcpLog.print(
-			`TODO: Handle received data: ${buffer2hex(msg.data)}`,
+			`TODO: Handle received frame:`,
 			"warn",
 		);
+		this.rcpLog.mpdu(mpdu);
+
 		return Promise.resolve();
 	}
 
