@@ -100,6 +100,7 @@ export class RCPSerialStream implements
 	public async close(): Promise<void> {
 		this._isOpen = false;
 		// Close the underlying stream
+		this._writer?.releaseLock();
 		this.#abort.abort();
 
 		return Promise.resolve();
@@ -113,6 +114,8 @@ export class RCPSerialStream implements
 		return this._isOpen;
 	}
 
+	private _writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
+
 	public async writeAsync(data: Uint8Array): Promise<void> {
 		if (!this.isOpen) {
 			throw new Error("The serial port is not open!");
@@ -120,11 +123,10 @@ export class RCPSerialStream implements
 
 		this.logger.data("outbound", data);
 
-		const writer = this.writable.getWriter();
-		try {
-			await writer.write(data);
-		} finally {
-			writer.releaseLock();
-		}
+		// Keep a writer instance to avoid locking and unlocking the
+		// writable stream for every write, as this can cause errors
+		// when writing in quick succession.
+		this._writer ??= this.writable.getWriter();
+		await this._writer.write(data);
 	}
 }

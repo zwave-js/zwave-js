@@ -1,13 +1,7 @@
 import { wait as _wait } from "alcalzone-shared/async";
 import path from "node:path";
 import "reflect-metadata";
-import {
-	type MPDUEncodingContext,
-	ProtocolDataRate,
-	RFRegion,
-	SecurityClass,
-	SinglecastZWaveMPDU,
-} from "@zwave-js/core";
+import { SecurityClass, SinglecastZWaveMPDU } from "@zwave-js/core";
 import {
 	TransmitCallbackStatus,
 	TransmitResponseStatus,
@@ -51,12 +45,6 @@ const driver = new RCPHost(port, {
 		const ownNodeId = 1;
 		const homeId = 0xecab5451;
 
-		const mpductx: MPDUEncodingContext = {
-			channel: 2,
-			protocolDataRate: ProtocolDataRate.ZWave_100k,
-			region: RFRegion["Europe (Long Range)"],
-		};
-
 		const ccctx: CCEncodingContext = {
 			ownNodeId: 1,
 			homeId,
@@ -79,14 +67,12 @@ const driver = new RCPHost(port, {
 		});
 		const cc = new BinarySwitchCCSet({
 			nodeId: mpdu.destinationNodeId,
-			targetValue: true,
+			targetValue: false,
 		});
 		mpdu.payload = await cc.serialize(ccctx);
 
-		const SC_ON = mpdu.serialize(mpductx);
-
 		// const nope = Bytes.from("ecab54510141040f03250100ff", "hex");
-		const result = await driver.transmit(mpductx.channel, SC_ON);
+		const result = await driver.transmit(mpdu, 2);
 		console.log(
 			TransmitResponseStatus[result]
 				|| TransmitCallbackStatus[result]

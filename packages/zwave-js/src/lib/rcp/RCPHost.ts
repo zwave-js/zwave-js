@@ -1,12 +1,14 @@
 import {
 	type LogConfig,
 	type LogContainer,
+	type MPDU,
 	type MaybeNotKnown,
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
 	channelToZnifferProtocolDataRate,
 	isZWaveError,
+	protocolDataRateToString,
 } from "@zwave-js/core";
 import {
 	MessageHeaders,
@@ -24,9 +26,14 @@ import {
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
+	ChannelConfiguration,
+	type ChannelInfo,
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
+	RadioLibrary,
 	ReceiveCallback,
+	SetupRadio_GetRegionRequest,
+	type SetupRadio_GetRegionResponse,
 	TransmitCallback,
 	TransmitRequest,
 	TransmitResponse,
@@ -40,6 +47,7 @@ import {
 	TypedEventTarget,
 	buffer2hex,
 	cloneDeep,
+	getEnumMemberName,
 	isAbortError,
 	mergeDeep,
 	num2hex,
@@ -100,15 +108,15 @@ export interface RCPHostOptions {
 	/** Specify timeouts in milliseconds */
 	timeouts: {
 		/** how long to wait for an ACK */
-		ack: number; // >=1, default: 200 ms
+		ack: number; // >=1, default: 500 ms
 
 		/**
 		 * How long to wait for a controller response. Usually this should never elapse, but when it does,
 		 * the driver will abort the transmission and try to recover the controller if it is unresponsive.
 		 */
-		response: number; // [100...10000], default: 500 ms
+		response: number; // [100...10000], default: 1000 ms
 
-		callback: number; // [500...10000], default: 1000 ms
+		callback: number; // [500...10000], default: 2000 ms
 	};
 }
 
@@ -133,9 +141,9 @@ export type PartialRCPHostOptions = Expand<
 
 const defaultOptions: RCPHostOptions = {
 	timeouts: {
-		ack: 200,
-		response: 500,
-		callback: 1000,
+		ack: 500,
+		response: 1000,
+		callback: 2000,
 	},
 };
 
@@ -230,7 +238,13 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	private awaitedMessages: AwaitedMessageEntry[] = [];
 
 	private supportedFunctionTypes: MaybeNotKnown<RCPFunctionType[]>;
-	private firmwareVersion: MaybeNotKnown<string>;
+	private rcpFirmwareVersion: MaybeNotKnown<string>;
+	private radioLibraryVersion: MaybeNotKnown<string>;
+	private radioLibrary: MaybeNotKnown<RadioLibrary>;
+
+	private region: MaybeNotKnown<RFRegion>;
+	private channelConfig: MaybeNotKnown<ChannelConfiguration>;
+	private channels: MaybeNotKnown<ChannelInfo[]>;
 
 	// #region Initialization
 
@@ -310,18 +324,48 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	private async interview(): Promise<void> {
 		this.rcpLog.print(`Querying firmware information...`);
 		const firmwareInfo = await this.getFirmwareInfo();
+		this.rcpFirmwareVersion = firmwareInfo.rcpFirmwareVersion;
+		this.radioLibrary = firmwareInfo.radioLibrary;
+		this.radioLibraryVersion = firmwareInfo.radioLibraryVersion;
 		this.supportedFunctionTypes = firmwareInfo.supportedFunctionTypes;
-		this.firmwareVersion = firmwareInfo.firmwareVersion;
 
 		this.rcpLog.print(
 			`Received firmware information:
-  version: ${this.firmwareVersion}
+  RCP firmware:  v${this.rcpFirmwareVersion}
+  radio library: ${
+				getEnumMemberName(RadioLibrary, this.radioLibrary)
+			} v${this.radioLibraryVersion}
   supported commands: ${
 				this.supportedFunctionTypes.map((ft) =>
 					`\n  · ${(RCPFunctionType as any)[ft] ?? "unknown"} (${
 						num2hex(ft)
 					})`
 				).join("")
+			}`,
+		);
+
+		this.rcpLog.print(`Querying region info...`);
+		const regionInfo = await this.getRegion();
+		this.region = regionInfo.region;
+		this.channelConfig = regionInfo.channelConfig;
+		this.channels = regionInfo.channels;
+
+		this.rcpLog.print(
+			`Received region information:
+  region: ${getEnumMemberName(RFRegion, this.region)}
+  channel config: ${
+				getEnumMemberName(
+					ChannelConfiguration,
+					this.channelConfig,
+				)
+			}
+  channels: ${
+				this.channels
+					.map((ch) =>
+						`\n  · ${ch.channel} (${
+							(ch.frequency / 1e6).toFixed(2)
+						} MHz): ${protocolDataRateToString(ch.dataRate)}`
+					).join("")
 			}`,
 		);
 	}
@@ -781,24 +825,66 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	// #region RCP Serial API methods
 
 	private async getFirmwareInfo(): Promise<{
-		firmwareType: number;
-		firmwareVersion: string;
+		rcpFirmwareVersion: string;
+		radioLibrary: RadioLibrary;
+		radioLibraryVersion: string;
 		supportedFunctionTypes: RCPFunctionType[];
 	}> {
 		const msg = new GetFirmwareInfoRequest();
 		const result = await this.sendMessage<GetFirmwareInfoResponse>(msg);
 
 		return pick(result, [
-			"firmwareType",
-			"firmwareVersion",
+			"rcpFirmwareVersion",
+			"radioLibrary",
+			"radioLibraryVersion",
 			"supportedFunctionTypes",
 		]);
 	}
 
+	private async getRegion(): Promise<{
+		region: RFRegion;
+		channelConfig: ChannelConfiguration;
+		channels: ChannelInfo[];
+	}> {
+		const msg = new SetupRadio_GetRegionRequest();
+		const result = await this.sendMessage<SetupRadio_GetRegionResponse>(
+			msg,
+		);
+
+		return pick(result, [
+			"region",
+			"channelConfig",
+			"channels",
+		]);
+	}
+
 	public async transmit(
+		mpdu: MPDU,
 		channel: number,
-		data: Uint8Array,
 	): Promise<number> {
+		if (this.region == undefined) {
+			throw new ZWaveError(
+				`The current region is not known yet`,
+				ZWaveErrorCodes.Driver_NotReady,
+			);
+		}
+
+		const protocolDataRate = this.channels?.find((ch) =>
+			ch.channel === channel
+		)?.dataRate;
+		if (protocolDataRate == undefined) {
+			throw new ZWaveError(
+				`The channel ${channel} is not supported in the current region`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+
+		const data = mpdu.serialize({
+			channel,
+			protocolDataRate,
+			region: this.region,
+		});
+
 		const msg = new TransmitRequest({
 			channel,
 			data,
