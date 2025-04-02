@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.0.4 (2025-04-02)
 ### Bugfixes
 * Fixed a crash that could be caused by writing to the serialport in quick succession (#7716)
 
