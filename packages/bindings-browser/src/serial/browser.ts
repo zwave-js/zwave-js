@@ -3,17 +3,16 @@ import { type ZWaveSerialBindingFactory } from "@zwave-js/serial";
 export function createWebSerialPortFactory(
 	port: SerialPort,
 ): ZWaveSerialBindingFactory {
+	let writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
+
 	const sink: UnderlyingSink<Uint8Array> = {
 		close() {
+			writer?.releaseLock();
 			port.close();
 		},
 		async write(chunk) {
-			const writer = port.writable!.getWriter();
-			try {
-				await writer.write(chunk);
-			} finally {
-				writer.releaseLock();
-			}
+			writer ??= port.writable!.getWriter();
+			await writer.write(chunk);
 		},
 	};
 
