@@ -419,6 +419,10 @@ import {
 import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
 import { determineNIF } from "./NodeInformationFrame.js";
 import {
+	type ControllerProprietary,
+	getControllerProprietary,
+} from "./Proprietary.js";
+import {
 	type ProxyInclusionMachine,
 	type ProxyInclusionMachineInput,
 	createProxyInclusionMachine,
@@ -1789,6 +1793,15 @@ export class ZWaveController
 		}
 	}
 
+	/** @internal */
+	public async interviewProprietary(): Promise<void> {
+		for (const impl of Object.values(this.proprietary)) {
+			if (typeof impl.interview === "function") {
+				await impl.interview();
+			}
+		}
+	}
+
 	/**
 	 * @internal
 	 * Interviews the controller for the necessary information.
@@ -1888,8 +1901,6 @@ export class ZWaveController
 			VersionCCValues.sdkVersion.id,
 			this._sdkVersion,
 		);
-
-		this.driver.controllerLog.print("Interview completed");
 	}
 
 	private createValueDBForNode(nodeId: number, ownKeys?: Set<string>) {
@@ -9525,6 +9536,15 @@ export class ZWaveController
 
 		// Notify applications that joining the network is complete
 		this.emit("network joined");
+	}
+
+	private _proprietary: ControllerProprietary | undefined;
+	/** Provides access to hardware-specific Serial API functionality */
+	public get proprietary(): ControllerProprietary {
+		if (!this._proprietary) {
+			this._proprietary = getControllerProprietary(this.driver, this);
+		}
+		return this._proprietary;
 	}
 
 	public destroy(): void {
