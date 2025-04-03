@@ -1,11 +1,12 @@
 import { wait as _wait } from "alcalzone-shared/async";
 import path from "node:path";
 import "reflect-metadata";
-import { SecurityClass, SinglecastZWaveMPDU } from "@zwave-js/core";
 import {
-	TransmitCallbackStatus,
-	TransmitResponseStatus,
-} from "@zwave-js/serial";
+	MPDUHeaderType,
+	SecurityClass,
+	SinglecastZWaveMPDU,
+} from "@zwave-js/core";
+import { TransmitCallbackStatus } from "@zwave-js/serial";
 import _os from "node:os";
 import { fileURLToPath } from "node:url";
 import {
@@ -16,7 +17,6 @@ import {
 } from "zwave-js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 const wait = _wait;
 const os = _os;
 
@@ -27,6 +27,9 @@ process.on("unhandledRejection", (_r) => {
 const port = "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_D83BDA7524E4-if00";
 
 const driver = new RCPHost(port, {
+	logConfig: {
+		level: "verbose",
+	},
 	// logConfig: {
 	// 	logToFile: true,
 	// 	forceConsole: true,
@@ -73,11 +76,19 @@ const driver = new RCPHost(port, {
 
 		// const nope = Bytes.from("ecab54510141040f03250100ff", "hex");
 		const result = await driver.transmit(mpdu, 0);
-		console.log(
-			TransmitResponseStatus[result]
-				|| TransmitCallbackStatus[result]
-				|| "Unknown result",
-		);
+		if (result === TransmitCallbackStatus.Completed) {
+			const ackPromise = driver.waitForMPDU(
+				(m) =>
+					m.headerType === MPDUHeaderType.Acknowledgement
+					&& m.sourceNodeId === mpdu.destinationNodeId
+					&& m.sequenceNumber === mpdu.sequenceNumber,
+				150,
+			);
+			const ack = await ackPromise.catch(() => undefined);
+			if (!ack) {
+				console.log("No ACK received");
+			}
+		}
 
 		// await wait(2500);
 		// process.exit(0);

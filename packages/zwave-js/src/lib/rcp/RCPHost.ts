@@ -3,6 +3,7 @@ import {
 	type LogConfig,
 	type LogContainer,
 	MPDU,
+	type MPDULogContext,
 	type MPDUParsingContext,
 	type MaybeNotKnown,
 	NOT_KNOWN,
@@ -36,8 +37,10 @@ import {
 	SetupRadio_GetRegionRequest,
 	type SetupRadio_GetRegionResponse,
 	TransmitCallback,
+	type TransmitCallbackStatus,
 	TransmitRequest,
 	TransmitResponse,
+	type TransmitResponseStatus,
 } from "@zwave-js/serial/rcp";
 import {
 	AsyncQueue,
@@ -87,6 +90,7 @@ interface AwaitedThing<T> {
 
 type AwaitedMessageHeader = AwaitedThing<MessageHeaders>;
 type AwaitedMessageEntry = AwaitedThing<RCPMessage>;
+type AwaitedMPDUEntry = AwaitedThing<MPDU>;
 
 export interface RCPHostEventCallbacks {
 	ready: () => void;
@@ -236,6 +240,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	private awaitedMessageHeaders: AwaitedMessageHeader[] = [];
 	/** A list of awaited messages */
 	private awaitedMessages: AwaitedMessageEntry[] = [];
+	/** A list of awaited MPDUs */
+	private awaitedMPDUs: AwaitedMPDUEntry[] = [];
 
 	private supportedFunctionTypes: MaybeNotKnown<RCPFunctionType[]>;
 	private rcpFirmwareVersion: MaybeNotKnown<string>;
@@ -356,7 +362,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 
 		this.rcpLog.print(
 			`Received region information:
-  region: ${getEnumMemberName(RFRegion, this.region)}
+  region:         ${getEnumMemberName(RFRegion, this.region)}
   channel config: ${
 				getEnumMemberName(
 					ChannelConfiguration,
@@ -366,7 +372,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
   channels: ${
 				this.channels
 					.map((ch) =>
-						`\n  · ${ch.channel} (${
+						`\n    · ${ch.channel} (${
 							(ch.frequency / 1e6).toFixed(2)
 						} MHz): ${protocolDataRateToString(ch.dataRate)}`
 					).join("")
@@ -639,9 +645,9 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 					);
 
 				case "sending": {
-					// this.rcpLog.logMessage(msg, {
-					// 	direction: "outbound",
-					// });
+					this.rcpLog.logMessage(msg, {
+						direction: "outbound",
+					});
 
 					// Mark the message as sent immediately before actually sending
 					msg.markAsSent();
@@ -865,7 +871,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	public async transmit(
 		mpdu: MPDU,
 		channel: number,
-	): Promise<number> {
+	): Promise<TransmitResponseStatus | TransmitCallbackStatus> {
 		if (this.region == undefined) {
 			throw new ZWaveError(
 				`The current region is not known yet`,
@@ -882,6 +888,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
+
+		const logCtx: MPDULogContext = {
+			channel,
+			protocolDataRate,
+			region: this.region,
+		};
+
+		this.rcpLog.mpdu(mpdu, logCtx, "outbound");
 
 		const data = mpdu.serialize({
 			channel,
@@ -907,6 +921,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 				}
 			}
 
+			// Unexpected error
 			throw e;
 		}
 	}
@@ -918,9 +933,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	 * @param msg The decoded message
 	 */
 	private async handleReceivedMessage(msg: RCPMessage): Promise<void> {
-		// FIXME: Rename this - msg might not be unsolicited
 		// This is a message we might have registered handlers for
 		try {
+			this.rcpLog.logMessage(msg, {
+				direction: "inbound",
+			});
+
 			if (msg.type === RCPMessageType.Request) {
 				await this.handleRequest(msg);
 			} else if (msg.type === RCPMessageType.Response) {
@@ -1025,14 +1043,30 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		const mpdu = MPDU.parse(Bytes.view(msg.data), ctx);
 		const rssi = convertRawRSSI(msg.rssi, this.channelConfig, msg.channel);
 
+		// Check if we have a dynamic handler waiting for this mpdu
+		for (const entry of this.awaitedMPDUs) {
+			if (entry.predicate(mpdu)) {
+				// We do
+				this.rcpLog.mpdu(
+					mpdu,
+					{ ...ctx, rssi },
+					"inbound",
+				);
+				entry.handler(mpdu);
+				return Promise.resolve();
+			}
+		}
+
+		// We don't...
 		this.rcpLog.print(
 			`TODO: Handle received frame:`,
 			"warn",
 		);
-		this.rcpLog.mpdu(mpdu, {
-			...ctx,
-			rssi,
-		});
+		this.rcpLog.mpdu(
+			mpdu,
+			{ ...ctx, rssi },
+			"inbound",
+		);
 
 		return Promise.resolve();
 	}
@@ -1147,6 +1181,52 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		});
 	}
 
+	/**
+	 * Waits until an MPDU matching the predicate is received or a timeout has elapsed. Returns the received message.
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param predicate A predicate function to test all incoming messages.
+	 * @param refreshPredicate A predicate function to test partial messages. If this returns `true` for a message, the timer will be restarted.
+	 */
+	public waitForMPDU<T extends MPDU>(
+		predicate: (mpdu: MPDU) => boolean,
+		timeout: number,
+		abortSignal?: AbortSignal,
+	): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			const promise = createDeferredPromise<MPDU>();
+			const entry: AwaitedMPDUEntry = {
+				predicate,
+				handler: (msg) => promise.resolve(msg),
+				timeout: undefined,
+			};
+			this.awaitedMPDUs.push(entry);
+			const removeEntry = () => {
+				entry.timeout?.clear();
+				const index = this.awaitedMPDUs.indexOf(entry);
+				if (index !== -1) this.awaitedMPDUs.splice(index, 1);
+			};
+			// When the timeout elapses, remove the wait entry and reject the returned Promise
+			entry.timeout = setTimer(() => {
+				removeEntry();
+				reject(
+					new ZWaveError(
+						`Received no matching message within the provided timeout!`,
+						ZWaveErrorCodes.Controller_Timeout,
+					),
+				);
+			}, timeout);
+			// When the promise is resolved, remove the wait entry and resolve the returned Promise
+			void promise.then((cc) => {
+				removeEntry();
+				resolve(cc as T);
+			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", () => {
+				removeEntry();
+			});
+		});
+	}
+
 	// #region destroy()
 
 	private async destroyWithMessage(message: string): Promise<void> {
@@ -1185,6 +1265,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		// Remove all timeouts
 		for (
 			const timeout of [
+				...this.awaitedMPDUs.map((m) => m.timeout),
 				...this.awaitedMessages.map((m) => m.timeout),
 				...this.awaitedMessageHeaders.map((h) => h.timeout),
 			]
