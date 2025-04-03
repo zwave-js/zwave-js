@@ -72,15 +72,15 @@ const driver = new RCPHost(port, {
 		mpdu.payload = await cc.serialize(ccctx);
 
 		// const nope = Bytes.from("ecab54510141040f03250100ff", "hex");
-		const result = await driver.transmit(mpdu, 2);
+		const result = await driver.transmit(mpdu, 0);
 		console.log(
 			TransmitResponseStatus[result]
 				|| TransmitCallbackStatus[result]
 				|| "Unknown result",
 		);
 
-		await wait(2500);
-		process.exit(0);
+		// await wait(2500);
+		// process.exit(0);
 
 		// for (let i = 0; i < 2; i++) {
 		// 	const result = await driver.transmit(0, i % 2 === 0 ? ONN : OFF);

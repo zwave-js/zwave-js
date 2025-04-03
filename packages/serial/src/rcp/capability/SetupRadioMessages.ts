@@ -1,4 +1,5 @@
 import {
+	ChannelConfiguration,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
@@ -25,13 +26,6 @@ import { type SuccessIndicator } from "../../message/SuccessIndicator.js";
 export enum SetupRadioCommand {
 	SetRegion = 1,
 	GetRegion = 2,
-}
-
-export enum ChannelConfiguration {
-	"Classic" = 0,
-	"Classic & LR A" = 1,
-	"Classic & LR B" = 2,
-	"LR A & B" = 3,
 }
 
 export interface ChannelInfo {

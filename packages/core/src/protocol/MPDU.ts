@@ -26,8 +26,8 @@ export interface MPDUOptions {
 }
 
 /** Common information shared by all MPDUs */
-export class MPDU {
-	public constructor(options: MPDUOptions) {
+export abstract class MPDU {
+	protected constructor(options: MPDUOptions) {
 		this.homeId = options.homeId;
 		this.sourceNodeId = options.sourceNodeId;
 		this.ackRequested = options.ackRequested;
@@ -117,6 +117,8 @@ export class MPDU {
 	public serialize(_ctx: MPDUEncodingContext): Bytes {
 		return this.payload;
 	}
+
+	public abstract toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
 }
 
 export interface MPDUParsingContext {
