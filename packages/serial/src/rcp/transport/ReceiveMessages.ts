@@ -1,4 +1,4 @@
-import { type RSSI } from "@zwave-js/core";
+import { type MessageOrCCLogEntry, type RSSI } from "@zwave-js/core";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -52,29 +52,15 @@ export class ReceiveCallback extends RCPMessage {
 	public lqi: number;
 	public channel: number;
 
-	// public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
-	// 	const firmwareBytes = this.firmwareVersion
-	// 		.split(".", 2)
-	// 		.map((str) => parseInt(str));
-	// 	const functionTypeBitmask = encodeBitMask(this.supportedFunctionTypes);
-
-	// 	this.payload = Bytes.concat([
-	// 		[1], // firmware type RCP
-	// 		firmwareBytes,
-	// 		[functionTypeBitmask.length],
-	// 		functionTypeBitmask,
-	// 	]);
-
-	// 	return super.serialize(ctx);
-	// }
-
-	// public toLogEntry(): MessageOrCCLogEntry {
-	// 	return {
-	// 		...super.toLogEntry(),
-	// 		message: {
-	// 			"firmware version": this.firmwareVersion,
-	// 			"supported function types": this.supportedFunctionTypes,
-	// 		 },
-	// 	};
-	// }
+	public toLogEntry(): MessageOrCCLogEntry {
+		return {
+			...super.toLogEntry(),
+			message: {
+				channel: this.channel,
+				RSSI: this.rssi, // FIXME: convert to actual dBm in firmware
+				lqi: this.lqi,
+				data: `(${this.data.length} bytes)`,
+			},
+		};
+	}
 }

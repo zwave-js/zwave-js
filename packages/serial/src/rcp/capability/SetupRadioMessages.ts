@@ -6,7 +6,6 @@ import {
 	type ProtocolDataRate,
 	RFRegion,
 	createSimpleReflectionDecorator,
-	protocolDataRateToString,
 	znifferProtocolDataRateToProtocolDataRate,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
@@ -236,22 +235,22 @@ export class SetupRadio_GetRegionResponse extends SetupRadioResponse {
 	public channelConfig: ChannelConfiguration;
 	public channels: ChannelInfo[];
 
-	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.region = getEnumMemberName(RFRegion, this.region);
-		message["channel config"] = getEnumMemberName(
-			ChannelConfiguration,
-			this.channelConfig,
-		);
-		message.channels = this.channels.map((ch) =>
-			`\n  channel ${ch.channel} (${
-				(ch.frequency / 1e6).toFixed(2)
-			} MHz): ${protocolDataRateToString(ch.dataRate)}`
-		).join("");
-		delete message.payload;
-		return ret;
-	}
+	// public toLogEntry(): MessageOrCCLogEntry {
+	// 	const ret = { ...super.toLogEntry() };
+	// 	const message = ret.message!;
+	// 	message.region = getEnumMemberName(RFRegion, this.region);
+	// 	message["channel config"] = getEnumMemberName(
+	// 		ChannelConfiguration,
+	// 		this.channelConfig,
+	// 	);
+	// 	message.channels = this.channels.map((ch) =>
+	// 		`\n  channel ${ch.channel} (${
+	// 			(ch.frequency / 1e6).toFixed(2)
+	// 		} MHz): ${protocolDataRateToString(ch.dataRate)}`
+	// 	).join("");
+	// 	delete message.payload;
+	// 	return ret;
+	// }
 }
 
 // =============================================================================
@@ -362,18 +361,18 @@ export class SetupRadio_SetRegionResponse extends SetupRadioResponse
 	public success: boolean;
 	public channels: MaybeNotKnown<ChannelInfo[]>;
 
-	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.success = this.success;
-		if (this.channels) {
-			message.channels = this.channels.map((ch) =>
-				`\n  channel ${ch.channel} (${
-					(ch.frequency / 1e6).toFixed(2)
-				} MHz): ${protocolDataRateToString(ch.dataRate)}`
-			).join("");
-		}
-		delete message.payload;
-		return ret;
-	}
+	// public toLogEntry(): MessageOrCCLogEntry {
+	// 	const ret = { ...super.toLogEntry() };
+	// 	const message = ret.message!;
+	// 	message.success = this.success;
+	// 	if (this.channels) {
+	// 		message.channels = this.channels.map((ch) =>
+	// 			`\n  channel ${ch.channel} (${
+	// 				(ch.frequency / 1e6).toFixed(2)
+	// 			} MHz): ${protocolDataRateToString(ch.dataRate)}`
+	// 		).join("");
+	// 	}
+	// 	delete message.payload;
+	// 	return ret;
+	// }
 }

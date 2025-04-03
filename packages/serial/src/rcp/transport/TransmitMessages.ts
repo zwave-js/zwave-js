@@ -1,4 +1,5 @@
-import { Bytes } from "@zwave-js/shared";
+import { type MessageOrCCLogEntry } from "@zwave-js/core";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -67,6 +68,16 @@ export class TransmitRequest extends RCPMessage {
 
 		return super.serialize(ctx);
 	}
+
+	public toLogEntry(): MessageOrCCLogEntry {
+		return {
+			...super.toLogEntry(),
+			message: {
+				channel: this.channel,
+				data: `(${this.data.length} bytes)`,
+			},
+		};
+	}
 }
 
 export interface TransmitResponseOptions {
@@ -99,31 +110,15 @@ export class TransmitResponse extends RCPMessage implements SuccessIndicator {
 		// A successful response is indicated by the "Queued" status
 		return this.status === TransmitResponseStatus.Queued;
 	}
-	// public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
-	// 	const firmwareBytes = this.firmwareVersion
-	// 		.split(".", 2)
-	// 		.map((str) => parseInt(str));
-	// 	const functionTypeBitmask = encodeBitMask(this.supportedFunctionTypes);
 
-	// 	this.payload = Bytes.concat([
-	// 		[1], // firmware type RCP
-	// 		firmwareBytes,
-	// 		[functionTypeBitmask.length],
-	// 		functionTypeBitmask,
-	// 	]);
-
-	// 	return super.serialize(ctx);
-	// }
-
-	// public toLogEntry(): MessageOrCCLogEntry {
-	// 	return {
-	// 		...super.toLogEntry(),
-	// 		message: {
-	// 			"firmware version": this.firmwareVersion,
-	// 			"supported function types": this.supportedFunctionTypes,
-	// 		 },
-	// 	};
-	// }
+	public toLogEntry(): MessageOrCCLogEntry {
+		return {
+			...super.toLogEntry(),
+			message: {
+				status: getEnumMemberName(TransmitResponseStatus, this.status),
+			},
+		};
+	}
 }
 
 export interface TransmitCallbackOptions {
@@ -155,29 +150,13 @@ export class TransmitCallback extends RCPMessage implements SuccessIndicator {
 	isOK(): boolean {
 		return this.status === TransmitCallbackStatus.Completed;
 	}
-	// public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
-	// 	const firmwareBytes = this.firmwareVersion
-	// 		.split(".", 2)
-	// 		.map((str) => parseInt(str));
-	// 	const functionTypeBitmask = encodeBitMask(this.supportedFunctionTypes);
 
-	// 	this.payload = Bytes.concat([
-	// 		[1], // firmware type RCP
-	// 		firmwareBytes,
-	// 		[functionTypeBitmask.length],
-	// 		functionTypeBitmask,
-	// 	]);
-
-	// 	return super.serialize(ctx);
-	// }
-
-	// public toLogEntry(): MessageOrCCLogEntry {
-	// 	return {
-	// 		...super.toLogEntry(),
-	// 		message: {
-	// 			"firmware version": this.firmwareVersion,
-	// 			"supported function types": this.supportedFunctionTypes,
-	// 		 },
-	// 	};
-	// }
+	public toLogEntry(): MessageOrCCLogEntry {
+		return {
+			...super.toLogEntry(),
+			message: {
+				status: getEnumMemberName(TransmitCallbackStatus, this.status),
+			},
+		};
+	}
 }
