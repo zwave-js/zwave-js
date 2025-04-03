@@ -17,6 +17,7 @@ import type {
 	UnderlyingSource,
 } from "node:stream/web";
 import { SerialLogger } from "../log/Logger.js";
+import { MessageHeaders } from "../message/MessageHeaders.js";
 import { RCPParser } from "../parsers/RCPParser.js";
 import { type RCPSerialFrame } from "../parsers/RCPSerialFrame.js";
 import { type ZWaveSerialBindingFactory } from "../serialport/ZWaveSerialStream.js";
@@ -121,8 +122,21 @@ export class RCPSerialStream implements
 			throw new Error("The serial port is not open!");
 		}
 
-		this.logger.data("outbound", data);
-
+		if (data.length === 1) {
+			switch (data[0]) {
+				case MessageHeaders.ACK:
+					this.logger.ACK("outbound");
+					break;
+				case MessageHeaders.CAN:
+					this.logger.CAN("outbound");
+					break;
+				case MessageHeaders.NAK:
+					this.logger.NAK("outbound");
+					break;
+			}
+		} else {
+			this.logger.data("outbound", data);
+		}
 		// Keep a writer instance to avoid locking and unlocking the
 		// writable stream for every write, as this can cause errors
 		// when writing in quick succession.
