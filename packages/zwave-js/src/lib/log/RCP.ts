@@ -2,15 +2,14 @@ import {
 	type DataDirection,
 	type LogContainer,
 	type LogContext,
+	type MPDU,
+	type MPDULogContext,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 	messageRecordToLines,
 	tagify,
 } from "@zwave-js/core";
-
-import { type CommandClass } from "@zwave-js/cc";
 import { type RCPHost } from "../rcp/RCPHost.js";
-import { type LongRangeMPDU, type ZWaveMPDU } from "../zniffer/MPDU.js";
 
 export const RCP_LABEL = "DRIVER";
 const RCP_LOGLEVEL = "info";
@@ -51,13 +50,14 @@ export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
 	}
 
 	public mpdu(
-		mpdu: ZWaveMPDU | LongRangeMPDU,
-		payloadCC?: CommandClass,
+		mpdu: MPDU,
+		logContext: MPDULogContext,
+		// payloadCC?: CommandClass,
 	): void {
 		if (!this.isLogVisible()) return;
 
-		const hasPayload = !!payloadCC || mpdu.payload.length > 0;
-		const logEntry = mpdu.toLogEntry();
+		const hasPayload = /*!!payloadCC ||*/ mpdu.payload.length > 0;
+		const logEntry = mpdu.toLogEntry(logContext);
 
 		const msg: string[] = [tagify(logEntry.tags)];
 		if (logEntry.message) {
