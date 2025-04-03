@@ -1,12 +1,15 @@
 import {
+	ChannelConfiguration,
 	type LogConfig,
 	type LogContainer,
-	type MPDU,
+	MPDU,
+	type MPDUParsingContext,
 	type MaybeNotKnown,
+	NOT_KNOWN,
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
-	channelToZnifferProtocolDataRate,
+	convertRawRSSI,
 	isZWaveError,
 	protocolDataRateToString,
 } from "@zwave-js/core";
@@ -20,13 +23,11 @@ import {
 	RCPSerialStreamFactory,
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
-	ZnifferFrameType,
 	isSuccessIndicator,
 	isZWaveSerialPortImplementation,
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
-	ChannelConfiguration,
 	type ChannelInfo,
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
@@ -66,7 +67,6 @@ import {
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
 import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
-import { ZWaveMPDU } from "../zniffer/MPDU.js";
 import { RCPTransaction } from "./RCPTransaction.js";
 
 const logo: string = `
@@ -315,6 +315,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		void this.drainTransactionQueue();
 
 		this.rcpLog.print(logo, "info");
+
+		// Re-sync communication
+		await this.writeHeader(MessageHeaders.NAK);
+		await wait(250);
 
 		await this.interview();
 
@@ -985,23 +989,50 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	}
 
 	private async handleReceiveCallback(msg: ReceiveCallback): Promise<void> {
-		// FIXME: Make sure that channel 2 parses correctly
-		const mpdu = new ZWaveMPDU({
-			data: Bytes.view(msg.data),
-			frameInfo: {
-				channel: msg.channel,
-				frameType: ZnifferFrameType.Data,
-				protocolDataRate: channelToZnifferProtocolDataRate(msg.channel),
-				region: RFRegion.Europe,
-				rssiRaw: msg.rssi,
-			},
-		});
+		if (this.channelConfig == NOT_KNOWN) {
+			this.rcpLog.print(
+				`Cannot parse received frame: The current channel configuration is not known yet.`,
+				"error",
+			);
+			return;
+		}
+
+		const protocolDataRate = this.channels?.find((ch) =>
+			ch.channel === msg.channel
+		)?.dataRate;
+		if (protocolDataRate == undefined) {
+			this.rcpLog.print(
+				`Cannot parse received frame: The channel ${msg.channel} is not supported in the current region.`,
+				"error",
+			);
+			return;
+		}
+
+		if (this.region == NOT_KNOWN) {
+			this.rcpLog.print(
+				`Cannot parse received frame: The region is not known yet.`,
+				"error",
+			);
+			return;
+		}
+
+		const ctx: MPDUParsingContext = {
+			channel: msg.channel,
+			protocolDataRate,
+			region: this.region,
+		};
+
+		const mpdu = MPDU.parse(Bytes.view(msg.data), ctx);
+		const rssi = convertRawRSSI(msg.rssi, this.channelConfig, msg.channel);
 
 		this.rcpLog.print(
 			`TODO: Handle received frame:`,
 			"warn",
 		);
-		this.rcpLog.mpdu(mpdu);
+		this.rcpLog.mpdu(mpdu, {
+			...ctx,
+			rssi,
+		});
 
 		return Promise.resolve();
 	}
