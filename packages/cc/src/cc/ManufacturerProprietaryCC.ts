@@ -10,8 +10,8 @@ import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, type CCAPIEndpoint, type CCAPIHost } from "../lib/API.js";
 import {
 	type CCRaw,
-	type CommandClassOptions,
 	CommandClass,
+	type CommandClassOptions,
 	type InterviewContext,
 	type RefreshValuesContext,
 } from "../lib/CommandClass.js";
