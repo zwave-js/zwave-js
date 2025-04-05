@@ -1,7 +1,6 @@
 import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
-	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
@@ -11,6 +10,7 @@ import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, type CCAPIEndpoint, type CCAPIHost } from "../lib/API.js";
 import {
 	type CCRaw,
+	type CommandClassOptions,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
@@ -104,7 +104,7 @@ export class ManufacturerProprietaryCCAPI extends CCAPI {
 }
 
 // @publicAPI
-export interface ManufacturerProprietaryCCOptions {
+export interface ManufacturerProprietaryCCOptions extends CommandClassOptions {
 	manufacturerId?: number;
 	unspecifiedExpectsResponse?: boolean;
 }
@@ -133,7 +133,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 	declare ccCommand: undefined;
 
 	public constructor(
-		options: WithAddress<ManufacturerProprietaryCCOptions>,
+		options: ManufacturerProprietaryCCOptions,
 	) {
 		super(options);
 
@@ -155,9 +155,10 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		const PCConstructor = getManufacturerProprietaryCCConstructor(
 			manufacturerId,
 		);
+		const payload = raw.payload.subarray(2);
 		if (PCConstructor) {
 			return PCConstructor.from(
-				raw.withPayload(raw.payload.subarray(2)),
+				raw.withPayload(payload),
 				ctx,
 			);
 		}
@@ -165,6 +166,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		return new ManufacturerProprietaryCC({
 			nodeId: ctx.sourceNodeId,
 			manufacturerId,
+			payload,
 		});
 	}
 
