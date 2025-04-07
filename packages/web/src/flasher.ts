@@ -41,6 +41,11 @@ const btnEraseNVM = document.getElementById("erase_nvm") as HTMLButtonElement;
 const btnGetDSK = document.getElementById("get_dsk") as HTMLButtonElement;
 const btnGetRegion = document.getElementById("get_region") as HTMLButtonElement;
 
+const ledRed = document.getElementById("led_red") as HTMLInputElement;
+const ledGreen = document.getElementById("led_green") as HTMLInputElement;
+const ledBlue = document.getElementById("led_blue") as HTMLInputElement;
+const btnLED = document.getElementById("set_led") as HTMLButtonElement;
+
 let driver!: Driver;
 let port!: SerialPort;
 let serialBinding!: ZWaveSerialBindingFactory;
@@ -82,6 +87,11 @@ function resetUI() {
 	btnGetRegion.disabled = true;
 	btnBootloader.disabled = true;
 	btnBootloaderHw.disabled = true;
+
+	ledRed.disabled = true;
+	ledGreen.disabled = true;
+	ledBlue.disabled = true;
+	btnLED.disabled = true;
 
 	flashProgress.style.display = "none";
 	flashError.innerText = "";
@@ -167,6 +177,11 @@ function checkApp() {
 	btnRunApp.disabled = driver.mode !== DriverMode.Bootloader;
 	btnGetDSK.disabled = driver.mode !== DriverMode.CLI;
 	btnGetRegion.disabled = driver.mode !== DriverMode.CLI;
+
+	btnLED.disabled = driver.mode !== DriverMode.SerialAPI;
+	ledRed.disabled = driver.mode !== DriverMode.SerialAPI;
+	ledGreen.disabled = driver.mode !== DriverMode.SerialAPI;
+	ledBlue.disabled = driver.mode !== DriverMode.SerialAPI;
 }
 
 fileInput.addEventListener("change", (event) => {
@@ -310,6 +325,14 @@ async function resetToBootloader() {
 	await createDriver();
 }
 
+async function setLED() {
+	const r = parseInt(ledRed.value, 10);
+	const g = parseInt(ledGreen.value, 10);
+	const b = parseInt(ledBlue.value, 10);
+
+	await driver.controller.proprietary["Nabu Casa"]!.setLED({ r, g, b });
+}
+
 document.getElementById("connect").addEventListener("click", init);
 flashButton.addEventListener("click", flash);
 btnEraseNVM.addEventListener("click", eraseNVM);
@@ -318,3 +341,4 @@ btnGetDSK.addEventListener("click", getDSK);
 btnGetRegion.addEventListener("click", getRegion);
 btnBootloader.addEventListener("click", enterBootloader);
 btnBootloaderHw.addEventListener("click", resetToBootloader);
+btnLED.addEventListener("click", setLED);
