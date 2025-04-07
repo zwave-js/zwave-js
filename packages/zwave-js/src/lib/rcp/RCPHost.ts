@@ -279,6 +279,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 
 		// Open the serial port
 		let binding: ZWaveSerialBindingFactory;
+		const baudrate = 460800;
 		if (typeof this.port === "string") {
 			if (
 				typeof this.bindings.serial.createFactoryByPath === "function"
@@ -286,6 +287,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 				this.rcpLog.print(`opening serial port ${this.port}`);
 				binding = await this.bindings.serial.createFactoryByPath(
 					this.port,
+					{ baudrate },
 				);
 			} else {
 				throw new ZWaveError(

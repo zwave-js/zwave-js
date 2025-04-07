@@ -1194,7 +1194,7 @@ export class LongRangeMPDU extends MPDU {
 	public noiseFloor: RSSI;
 	public txPower: number;
 
-	public serialize(_ctx: MPDUEncodingContext): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		const payload = new Bytes(12);
 
 		payload.writeUInt32BE(this.homeId, 0);
