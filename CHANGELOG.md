@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixed an issue where updating the driver options before starting would cause custom host bindings to be discarded, causing config sync errors in `pkg` bundles (#7722)
+
 ## 15.0.4 (2025-04-02)
 ### Bugfixes
 * Fixed a crash that could be caused by writing to the serialport in quick succession (#7716)
