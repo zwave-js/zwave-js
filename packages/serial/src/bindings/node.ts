@@ -8,7 +8,7 @@ import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
 
 /** An implementation of the Serial bindings for Node.js */
 export const serial: Serial = {
-	createFactoryByPath(path) {
+	createFactoryByPath(path, options) {
 		if (path.startsWith("tcp://")) {
 			const url = new URL(path);
 			return Promise.resolve(createNodeSocketFactory({
@@ -18,6 +18,8 @@ export const serial: Serial = {
 		} else {
 			return Promise.resolve(createNodeSerialPortFactory(
 				path,
+				undefined,
+				options,
 			));
 		}
 	},
