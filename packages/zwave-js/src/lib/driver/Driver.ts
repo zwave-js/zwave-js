@@ -1314,14 +1314,18 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		]);
 
 		// Create a new deep-merged copy of the options so we can check them for validity
-		// without affecting our own options. logConfig is potentially unsafe to clone, so just preserve it.
-		const { logConfig, ...rest } = this._options;
+		// without affecting our own options.
+		// The following options are potentially unsafe to clone, so just preserve them:
+		// - logConfig
+		// - host (could contain classes)
+		const { logConfig, host, ...rest } = this._options;
 		const newOptions = mergeDeep(
 			cloneDeep(rest),
 			safeOptions,
 			true,
 		) as ZWaveOptions;
 		newOptions.logConfig = logConfig;
+		newOptions.host = host;
 		checkOptions(newOptions);
 
 		if (options.userAgent && !isObject(options.userAgent)) {
