@@ -2,32 +2,36 @@ import {
 	type DataDirection,
 	type LogContainer,
 	type LogContext,
+	type MPDU,
+	type MPDULogContext,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 	messageRecordToLines,
 	tagify,
 } from "@zwave-js/core";
-import { type RCPMessage } from "@zwave-js/serial";
-import { type RCPHost } from "../rcp/RCPHost.js";
 
-export const RCP_LABEL = "DRIVER";
+export const PROTOCOL_LABEL = "PROTCL";
 const MSG_LOGLEVEL = "info";
-const RCP_LOGLEVEL = "debug";
+const MPDU_LOGLEVEL = "verbose";
 
-export interface RCPLogContext extends LogContext<"rcp"> {
+export interface ProtocolLogContext extends LogContext<"protocol"> {
 	direction?: DataDirection;
 }
 
-export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
+export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 	constructor(
-		private readonly driver: RCPHost,
+		// private readonly driver: RCPHost,
 		loggers: LogContainer,
 	) {
-		super(loggers, RCP_LABEL);
+		super(loggers, PROTOCOL_LABEL);
 	}
 
-	private isRCPLogVisible(): boolean {
-		return this.container.isLoglevelVisible(RCP_LOGLEVEL);
+	private isProtocolLogVisible(): boolean {
+		return this.container.isLoglevelVisible(PROTOCOL_LABEL);
+	}
+
+	private isMPDULogVisible(): boolean {
+		return this.container.isLoglevelVisible(MPDU_LOGLEVEL);
 	}
 
 	/**
@@ -45,53 +49,40 @@ export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
 			level: actualLevel,
 			message,
 			direction: getDirectionPrefix("none"),
-			context: { source: "rcp", direction: "none" },
+			context: { source: "protocol", direction: "none" },
 		});
 	}
 
-	public logMessage(
-		message: RCPMessage,
-		{
-			// Used to relate this log message to a node
-			// nodeId,
-			secondaryTags,
-			direction = "none",
-		}: {
-			// nodeId?: number;
-			secondaryTags?: string[];
-			direction?: DataDirection;
-		} = {},
+	public mpdu(
+		mpdu: MPDU,
+		logContext: MPDULogContext,
+		direction: DataDirection,
+		// payloadCC?: CommandClass,
 	): void {
-		if (!this.isRCPLogVisible()) return;
-		// if (nodeId == undefined) nodeId = message.getNodeId();
-		// if (
-		// 	nodeId != undefined && !this.container.isNodeLoggingVisible(nodeId)
-		// ) {
-		// 	return;
-		// }
+		if (!this.isMPDULogVisible()) return;
 
-		const isCCContainer = false; // containsCC(message);
-		const logEntry = message.toLogEntry();
+		const hasPayload = false; // !!payloadCC || mpdu.payload.length > 0;
+		const logEntry = mpdu.toLogEntry(logContext);
 
 		const msg: string[] = [tagify(logEntry.tags)];
 		if (logEntry.message) {
 			msg.push(
 				...messageRecordToLines(logEntry.message).map(
-					(line) => (isCCContainer ? "│ " : "  ") + line,
+					(line) => (hasPayload ? "│ " : "  ") + line,
 				),
 			);
 		}
 
 		try {
-			// If possible, include information about the CCs
-			// if (isCCContainer) {
+			// // If possible, include information about the CCs
+			// if (!!payloadCC) {
 			// 	// Remove the default payload message and draw a bracket
 			// 	msg = msg.filter((line) => !line.startsWith("│ payload:"));
 
 			// 	const logCC = (cc: CommandClass, indent: number = 0) => {
 			// 		const isEncapCC = isEncapsulatingCommandClass(cc)
 			// 			|| isMultiEncapsulatingCommandClass(cc);
-			// 		const loggedCC = cc.toLogEntry(this.driver);
+			// 		const loggedCC = cc.toLogEntry(this.zniffer as any);
 			// 		msg.push(
 			// 			" ".repeat(indent * 2) + "└─" + tagify(loggedCC.tags),
 			// 		);
@@ -117,19 +108,18 @@ export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
 			// 		}
 			// 	};
 
-			// 	logCC(message.command);
+			// 	logCC(payloadCC);
 			// }
 
+			const homeId = mpdu.homeId.toString(16).padStart(8, "0")
+				.toLowerCase();
+
 			this.logger.log({
-				level: RCP_LOGLEVEL,
-				secondaryTags: secondaryTags && secondaryTags.length > 0
-					? tagify(secondaryTags)
-					: undefined,
+				level: MPDU_LOGLEVEL,
+				secondaryTags: tagify([homeId]),
 				message: msg,
-				// Since we are programming a controller, responses are always inbound
-				// (not to confuse with the message type, which may be Request or Response)
 				direction: getDirectionPrefix(direction),
-				context: { source: "rcp", direction },
+				context: { source: "protocol", direction },
 			});
 		} catch {}
 	}
