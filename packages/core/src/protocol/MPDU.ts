@@ -1268,7 +1268,20 @@ export class LongRangeMPDU extends MPDU {
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SinglecastLongRangeMPDUOptions
+	extends Omit<LongRangeMPDUOptions, "headerType">
+{
+}
+
 export class SinglecastLongRangeMPDU extends LongRangeMPDU {
+	public constructor(options: SinglecastLongRangeMPDUOptions) {
+		super({
+			...options,
+			headerType: MPDUHeaderType.Singlecast,
+		});
+	}
+
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry(ctx);
 
@@ -1283,13 +1296,18 @@ export class SinglecastLongRangeMPDU extends LongRangeMPDU {
 	}
 }
 
-export interface AckLongRangeMPDUOptions extends LongRangeMPDUOptions {
+export interface AckLongRangeMPDUOptions
+	extends Omit<LongRangeMPDUOptions, "headerType">
+{
 	incomingRSSI: RSSI;
 }
 
 export class AckLongRangeMPDU extends LongRangeMPDU {
 	public constructor(options: AckLongRangeMPDUOptions) {
-		super(options);
+		super({
+			...options,
+			headerType: MPDUHeaderType.Acknowledgement,
+		});
 		this.incomingRSSI = options.incomingRSSI;
 	}
 
