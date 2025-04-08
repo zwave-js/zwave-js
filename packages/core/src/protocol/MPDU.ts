@@ -1297,7 +1297,7 @@ export class SinglecastLongRangeMPDU extends LongRangeMPDU {
 }
 
 export interface AckLongRangeMPDUOptions
-	extends Omit<LongRangeMPDUOptions, "headerType">
+	extends Omit<LongRangeMPDUOptions, "headerType" | "ackRequested">
 {
 	incomingRSSI: RSSI;
 }
@@ -1307,6 +1307,7 @@ export class AckLongRangeMPDU extends LongRangeMPDU {
 		super({
 			...options,
 			headerType: MPDUHeaderType.Acknowledgement,
+			ackRequested: false,
 		});
 		this.incomingRSSI = options.incomingRSSI;
 	}
