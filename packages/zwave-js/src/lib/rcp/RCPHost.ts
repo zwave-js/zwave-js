@@ -2,27 +2,17 @@ import {
 	ChannelConfiguration,
 	type LogConfig,
 	type LogContainer,
-	MAX_NODES,
 	MPDU,
-	MPDUHeaderType,
-	type MPDULogContext,
 	type MPDUParsingContext,
 	type MaybeNotKnown,
-	NODE_ID_BROADCAST,
-	NODE_ID_BROADCAST_LR,
 	NOT_KNOWN,
-	ProtocolHeaderFormat,
-	Protocols,
+	type ProtocolDataRate,
 	RFRegion,
-	SinglecastLongRangeMPDU,
-	SinglecastZWaveMPDU,
 	ZWaveError,
 	ZWaveErrorCodes,
 	convertRawRSSI,
-	getProtocolHeaderFormat,
 	isZWaveError,
 	protocolDataRateToString,
-	rfRegionToRadioProtocolMode,
 } from "@zwave-js/core";
 import {
 	MessageHeaders,
@@ -46,11 +36,13 @@ import {
 	ReceiveCallback,
 	SetupRadio_GetRegionRequest,
 	type SetupRadio_GetRegionResponse,
+	SetupRadio_SetRegionRequest,
+	type SetupRadio_SetRegionResponse,
 	TransmitCallback,
-	TransmitCallbackStatus,
+	type TransmitCallbackStatus,
 	TransmitRequest,
 	TransmitResponse,
-	TransmitResponseStatus,
+	type TransmitResponseStatus,
 } from "@zwave-js/serial/rcp";
 import {
 	AsyncQueue,
@@ -80,12 +72,12 @@ import {
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
 import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
-import { RCPTransaction } from "./RCPTransaction.js";
 import {
-	RCPTransmitKind,
-	type RCPTransmitOptions,
-	RCPTransmitResult,
-} from "./_Types.js";
+	type MpduRxInfo,
+	type PHYLayer,
+	type RegionConfig,
+} from "./PHYLayer.js";
+import { RCPTransaction } from "./RCPTransaction.js";
 
 const logo: string = `
 ███████╗     ██╗    ██╗  █████╗  ██╗   ██╗ ██████╗   ██████╗   █████╗ ██████╗
@@ -105,11 +97,11 @@ interface AwaitedThing<T> {
 
 type AwaitedMessageHeader = AwaitedThing<MessageHeaders>;
 type AwaitedMessageEntry = AwaitedThing<RCPMessage>;
-type AwaitedMPDUEntry = AwaitedThing<MPDU>;
 
 export interface RCPHostEventCallbacks {
 	ready: () => void;
 	error: (err: Error) => void;
+	"mpdu received": (mpdu: MPDU, info: MpduRxInfo) => void;
 	// frame: (frame: Frame, rawData: Uint8Array) => void;
 	// "corrupted frame": (err: CorruptedFrame, rawData: Uint8Array) => void;
 }
@@ -188,7 +180,11 @@ function checkOptions(options: RCPHostOptions): void {
 	}
 }
 
-export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
+// FIXME: Split out MAC layer functionality
+
+export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
+	implements PHYLayer
+{
 	public constructor(
 		private port:
 			| string
@@ -255,19 +251,26 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	private awaitedMessageHeaders: AwaitedMessageHeader[] = [];
 	/** A list of awaited messages */
 	private awaitedMessages: AwaitedMessageEntry[] = [];
-	/** A list of awaited MPDUs */
-	private awaitedMPDUs: AwaitedMPDUEntry[] = [];
 
 	private supportedFunctionTypes: MaybeNotKnown<RCPFunctionType[]>;
 	private rcpFirmwareVersion: MaybeNotKnown<string>;
 	private radioLibraryVersion: MaybeNotKnown<string>;
 	private radioLibrary: MaybeNotKnown<RadioLibrary>;
 
-	private region: MaybeNotKnown<RFRegion>;
+	private rfRegion: MaybeNotKnown<RFRegion>;
 	private channelConfig: MaybeNotKnown<ChannelConfiguration>;
 	private channels: MaybeNotKnown<ChannelInfo[]>;
 
-	private sequenceNumber: number | undefined;
+	public get regionConfig(): MaybeNotKnown<RegionConfig> {
+		if (this.rfRegion == NOT_KNOWN) return NOT_KNOWN;
+		if (this.channelConfig == NOT_KNOWN) return NOT_KNOWN;
+		if (this.channels == NOT_KNOWN) return NOT_KNOWN;
+		return {
+			region: this.rfRegion,
+			channelConfig: this.channelConfig,
+			channels: this.channels,
+		};
+	}
 
 	// #region Initialization
 
@@ -293,6 +296,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		// Initialize logging
 		this._logContainer = this.bindings.log(this._options.logConfig);
 		this.rcpLog = new RCPLogger(this, this._logContainer);
+
+		this.rcpLog.print(logo, "info");
 
 		// Open the serial port
 		let binding: ZWaveSerialBindingFactory;
@@ -339,8 +344,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		// Start draining the queue
 		void this.drainTransactionQueue();
 
-		this.rcpLog.print(logo, "info");
-
 		// Re-sync communication
 		await this.writeHeader(MessageHeaders.NAK);
 		await wait(250);
@@ -374,14 +377,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		);
 
 		this.rcpLog.print(`Querying region info...`);
-		const regionInfo = await this.getRegion();
-		this.region = regionInfo.region;
+		const regionInfo = await this.queryRegion();
+		this.rfRegion = regionInfo.region;
 		this.channelConfig = regionInfo.channelConfig;
 		this.channels = regionInfo.channels;
 
 		this.rcpLog.print(
 			`Received region information:
-  region:         ${getEnumMemberName(RFRegion, this.region)}
+  region:         ${getEnumMemberName(RFRegion, this.rfRegion)}
   channel config: ${
 				getEnumMemberName(
 					ChannelConfiguration,
@@ -874,11 +877,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		]);
 	}
 
-	private async getRegion(): Promise<{
-		region: RFRegion;
-		channelConfig: ChannelConfiguration;
-		channels: ChannelInfo[];
-	}> {
+	public async queryRegion(): Promise<RegionConfig> {
 		const msg = new SetupRadio_GetRegionRequest();
 		const result = await this.queueSerialApiCommand<
 			SetupRadio_GetRegionResponse
@@ -893,21 +892,31 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		]);
 	}
 
-	/**
-	 * Transmits an MPDU on the given channel and returns whether the transmit has successfully been executed.
-	 * Does not wait for an ACK or anything else.
-	 */
-	public async transmitMPDU(
-		mpdu: MPDU,
-		channel: number,
-	): Promise<TransmitResponseStatus | TransmitCallbackStatus> {
-		if (this.region == undefined) {
+	public async setRegion(
+		region: RFRegion,
+		channelConfig: ChannelConfiguration,
+	): Promise<ChannelInfo[]> {
+		const msg = new SetupRadio_SetRegionRequest({
+			region,
+			channelConfig,
+		});
+		const result = await this.queueSerialApiCommand<
+			SetupRadio_SetRegionResponse
+		>(
+			msg,
+		);
+
+		if (result.success) {
+			return result.channels!;
+		} else {
 			throw new ZWaveError(
-				`The current region is not known yet`,
-				ZWaveErrorCodes.Driver_NotReady,
+				"Failed to set region",
+				ZWaveErrorCodes.Controller_ResponseNOK,
 			);
 		}
+	}
 
+	private getProtocolDataRateOrThrow(channel: number): ProtocolDataRate {
 		const protocolDataRate = this.channels?.find((ch) =>
 			ch.channel === channel
 		)?.dataRate;
@@ -917,21 +926,17 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
+		return protocolDataRate;
+	}
 
-		const logCtx: MPDULogContext = {
-			channel,
-			protocolDataRate,
-			region: this.region,
-		};
-
-		this.rcpLog.mpdu(mpdu, logCtx, "outbound");
-
-		const data = mpdu.serialize({
-			channel,
-			protocolDataRate,
-			region: this.region,
-		});
-
+	/**
+	 * Transmits an MPDU on the given channel and returns whether the transmit has successfully been executed.
+	 * Does not wait for an ACK or anything else.
+	 */
+	public async transmit(
+		data: Uint8Array,
+		channel: number,
+	): Promise<TransmitResponseStatus | TransmitCallbackStatus> {
 		const msg = new TransmitRequest({
 			channel,
 			data,
@@ -975,7 +980,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 			} else if (msg.type === RCPMessageType.Response) {
 				await this.handleResponse(msg);
 			} else if (msg.type === RCPMessageType.Callback) {
-				await this.handleCallback(msg);
+				this.handleCallback(msg);
 			}
 		} catch (e) {
 			if (
@@ -1014,18 +1019,19 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 	/**
 	 * Is called when a Callback-type message was received
 	 */
-	private handleCallback(msg: RCPMessage): Promise<void> {
+	private handleCallback(msg: RCPMessage): void {
 		// Check if we have a dynamic handler waiting for this message
 		for (const entry of this.awaitedMessages) {
 			if (entry.predicate(msg)) {
 				// We do
 				entry.handler(msg);
-				return Promise.resolve();
+				return;
 			}
 		}
 
 		if (msg instanceof ReceiveCallback) {
-			return this.handleReceiveCallback(msg);
+			this.handleReceiveCallback(msg);
+			return;
 		}
 
 		// this.rcpLog.transactionResponse(msg, undefined, "unexpected");
@@ -1034,10 +1040,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 			"warn",
 		);
 
-		return Promise.resolve();
+		return;
 	}
 
-	private async handleReceiveCallback(msg: ReceiveCallback): Promise<void> {
+	private handleReceiveCallback(msg: ReceiveCallback): void {
 		if (this.channelConfig == NOT_KNOWN) {
 			this.rcpLog.print(
 				`Cannot parse received frame: The current channel configuration is not known yet.`,
@@ -1046,10 +1052,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 			return;
 		}
 
-		const protocolDataRate = this.channels?.find((ch) =>
-			ch.channel === msg.channel
-		)?.dataRate;
-		if (protocolDataRate == undefined) {
+		let protocolDataRate: ProtocolDataRate;
+		try {
+			protocolDataRate = this.getProtocolDataRateOrThrow(msg.channel);
+		} catch {
 			this.rcpLog.print(
 				`Cannot parse received frame: The channel ${msg.channel} is not supported in the current region.`,
 				"error",
@@ -1057,7 +1063,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 			return;
 		}
 
-		if (this.region == NOT_KNOWN) {
+		if (this.rfRegion == NOT_KNOWN) {
 			this.rcpLog.print(
 				`Cannot parse received frame: The region is not known yet.`,
 				"error",
@@ -1068,38 +1074,21 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		const ctx: MPDUParsingContext = {
 			channel: msg.channel,
 			protocolDataRate,
-			region: this.region,
+			region: this.rfRegion,
 		};
 
 		const mpdu = MPDU.parse(Bytes.view(msg.data), ctx);
 		const rssi = convertRawRSSI(msg.rssi, this.channelConfig, msg.channel);
 
-		// Check if we have a dynamic handler waiting for this mpdu
-		for (const entry of this.awaitedMPDUs) {
-			if (entry.predicate(mpdu)) {
-				// We do
-				this.rcpLog.mpdu(
-					mpdu,
-					{ ...ctx, rssi },
-					"inbound",
-				);
-				entry.handler(mpdu);
-				return Promise.resolve();
-			}
-		}
-
-		// We don't...
-		this.rcpLog.print(
-			`TODO: Handle received frame:`,
-			"warn",
-		);
-		this.rcpLog.mpdu(
+		this.emit(
+			"mpdu received",
 			mpdu,
-			{ ...ctx, rssi },
-			"inbound",
+			{
+				channel: msg.channel,
+				rssi,
+				protocolDataRate,
+			},
 		);
-
-		return Promise.resolve();
 	}
 
 	/**
@@ -1212,322 +1201,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		});
 	}
 
-	/**
-	 * Waits until an MPDU matching the predicate is received or a timeout has elapsed. Returns the received message.
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
-	 * @param predicate A predicate function to test all incoming messages.
-	 * @param refreshPredicate A predicate function to test partial messages. If this returns `true` for a message, the timer will be restarted.
-	 */
-	public waitForMPDU<T extends MPDU>(
-		predicate: (mpdu: MPDU) => boolean,
-		timeout: number,
-		abortSignal?: AbortSignal,
-	): Promise<T> {
-		return new Promise<T>((resolve, reject) => {
-			const promise = createDeferredPromise<MPDU>();
-			const entry: AwaitedMPDUEntry = {
-				predicate,
-				handler: (msg) => promise.resolve(msg),
-				timeout: undefined,
-			};
-			this.awaitedMPDUs.push(entry);
-			const removeEntry = () => {
-				entry.timeout?.clear();
-				const index = this.awaitedMPDUs.indexOf(entry);
-				if (index !== -1) this.awaitedMPDUs.splice(index, 1);
-			};
-			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching message within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
-			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then((cc) => {
-				removeEntry();
-				resolve(cc as T);
-			});
-			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
-		});
-	}
-
-	// #region MAC Layer
-
-	private nextSequenceNumber(headerFormat: ProtocolHeaderFormat): number {
-		if (headerFormat === ProtocolHeaderFormat.Classic2Channel) {
-			// 4 bits, 0x01..0x0f
-			this.sequenceNumber ??= 0x00;
-			this.sequenceNumber++;
-			if (this.sequenceNumber > 0x0f) {
-				this.sequenceNumber = 0x01;
-			}
-			return this.sequenceNumber;
-		} else {
-			// 8 bits, 0x00..0xff
-			this.sequenceNumber ??= 0xff;
-			this.sequenceNumber = (this.sequenceNumber + 1) & 0xff;
-			return this.sequenceNumber;
-		}
-	}
-
-	private async waitBeforeRetransmit(): Promise<void> {
-		// Before retransmitting, we must wait for
-		// aMacMinRetransmitDelay (10ms) .. aMacMaxRetransmitDelay (40 ms)
-		const delay = 10 + Math.round(Math.random() * 30);
-		await wait(delay);
-	}
-
-	public async transmit(
-		data: Uint8Array,
-		options: RCPTransmitOptions,
-	): Promise<RCPTransmitResult> {
-		if (this.region == undefined) {
-			throw new ZWaveError(
-				`The current region is not known yet`,
-				ZWaveErrorCodes.Driver_NotReady,
-			);
-		}
-
-		const radioProtocolMode = rfRegionToRadioProtocolMode(this.region);
-
-		// If no protocol is specified, make an assumption based on the node ID
-		let protocol: Protocols | undefined = options.protocol;
-		if (protocol == undefined) {
-			switch (options.destination.kind) {
-				case RCPTransmitKind.Singlecast: {
-					const nodeId = options.destination.nodeId;
-					if (nodeId <= MAX_NODES || nodeId === NODE_ID_BROADCAST) {
-						protocol = Protocols.ZWave;
-					} else if (nodeId >= 256) {
-						protocol = Protocols.ZWaveLongRange;
-					} else {
-						throw new ZWaveError(
-							`Unable to determine protocol for node ID ${nodeId}`,
-							ZWaveErrorCodes.Argument_Invalid,
-						);
-					}
-					break;
-				}
-				case RCPTransmitKind.Multicast: {
-					throw new Error("No multicast support yet!");
-				}
-				case RCPTransmitKind.Broadcast: {
-					throw new ZWaveError(
-						`The protocol must be specified for broadcast transmissions`,
-						ZWaveErrorCodes.Argument_Invalid,
-					);
-				}
-			}
-		}
-
-		let initialChannel: number;
-		if (protocol === Protocols.ZWave) {
-			initialChannel = 0;
-		} else {
-			// TODO: Figure out if this is correct for LR-only configurations
-			initialChannel = 3;
-		}
-
-		const headerFormat = getProtocolHeaderFormat(
-			radioProtocolMode,
-			initialChannel,
-		);
-
-		const sequenceNumber = this.nextSequenceNumber(headerFormat);
-
-		let mpdu: MPDU;
-		if (protocol == Protocols.ZWave) {
-			switch (options.destination.kind) {
-				case RCPTransmitKind.Singlecast: {
-					mpdu = new SinglecastZWaveMPDU({
-						homeId: options.homeId,
-						ackRequested: options.ackRequested ?? true,
-						sourceNodeId: options.sourceNodeId,
-						destinationNodeId: options.destination.nodeId,
-						sequenceNumber,
-						speedModified: false,
-					});
-					break;
-				}
-				case RCPTransmitKind.Multicast: {
-					throw new Error("No multicast support yet!");
-				}
-				case RCPTransmitKind.Broadcast: {
-					mpdu = new SinglecastZWaveMPDU({
-						homeId: options.homeId,
-						ackRequested: false,
-						sourceNodeId: options.sourceNodeId,
-						destinationNodeId: NODE_ID_BROADCAST,
-						sequenceNumber,
-						speedModified: false,
-					});
-					break;
-				}
-			}
-		} else {
-			// Long Range
-			switch (options.destination.kind) {
-				case RCPTransmitKind.Singlecast: {
-					mpdu = new SinglecastLongRangeMPDU({
-						homeId: options.homeId,
-						ackRequested: options.ackRequested ?? true,
-						sourceNodeId: options.sourceNodeId,
-						destinationNodeId: options.destination.nodeId,
-						sequenceNumber,
-
-						// FIXME: Measure those:
-						txPower: -6,
-						noiseFloor: -110,
-					});
-					break;
-				}
-				case RCPTransmitKind.Multicast: {
-					throw new Error("No multicast support yet!");
-				}
-				case RCPTransmitKind.Broadcast: {
-					mpdu = new SinglecastLongRangeMPDU({
-						homeId: options.homeId,
-						ackRequested: false,
-						sourceNodeId: options.sourceNodeId,
-						destinationNodeId: NODE_ID_BROADCAST_LR,
-						sequenceNumber,
-
-						// FIXME: Measure those:
-						txPower: -6,
-						noiseFloor: -110,
-					});
-					break;
-				}
-			}
-		}
-
-		// FIXME: Find a good heuristic
-		let maxAttempts: number;
-		let settingsForAttempt: {
-			channel: number;
-			speedModified: boolean;
-		}[] | undefined;
-		switch (headerFormat) {
-			case ProtocolHeaderFormat.Classic2Channel:
-				// FIXME: aMacMaxFrameRetries = 2, we retry 3x
-				// Try twice on channel 0,
-				// once with speed modified (ch. 1)
-				// once with speed modified (ch. 2)
-				// FIXME: Skip attempts if we start on another channel
-				maxAttempts = 4;
-				settingsForAttempt = [
-					{
-						channel: 0,
-						speedModified: false,
-					},
-					{
-						channel: 0,
-						speedModified: false,
-					},
-					{
-						channel: 1,
-						speedModified: true,
-					},
-					{
-						channel: 2,
-						speedModified: true,
-					},
-				];
-				break;
-			case ProtocolHeaderFormat.Classic3Channel:
-				throw new Error("3-channel regions are not supported yet");
-			case ProtocolHeaderFormat.LongRange:
-				// Try 3 times on the same channel
-				maxAttempts = 3;
-				break;
-			default:
-				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-				throw new Error(`Unsupported header format ${headerFormat}`);
-		}
-
-		attempts: for (let attempt = 0; attempt < maxAttempts; attempt++) {
-			// Serializing an MPDU changes its payload property, so we set it here
-			// to the original data
-			mpdu.payload = Bytes.view(data);
-
-			// Update MPDU settings if necessary
-			const { speedModified, channel } = settingsForAttempt?.[attempt]
-				?? {
-					channel: initialChannel,
-					speedModified: false,
-				};
-			if ("speedModified" in mpdu) {
-				mpdu.speedModified = speedModified;
-			}
-
-			const result = await this.transmitMPDU(mpdu, channel);
-
-			switch (result) {
-				case TransmitCallbackStatus.Completed:
-					// TODO: Wait for ACK
-					break;
-
-				case TransmitCallbackStatus.ChannelBusy:
-					// TODO: Wait for channel to be free, try again
-					return RCPTransmitResult.ChannelBusy;
-
-				case TransmitResponseStatus.Busy:
-					return RCPTransmitResult.Error_QueueBusy;
-
-				case TransmitResponseStatus.Overflow:
-				case TransmitCallbackStatus.Underflow:
-					return RCPTransmitResult.Error_FrameLength;
-
-				case TransmitCallbackStatus.Aborted:
-					return RCPTransmitResult.Error_Aborted;
-
-				case TransmitCallbackStatus.Blocked:
-					// This one should not happen, since we're not blocking TX
-				case TransmitResponseStatus.InvalidChannel:
-				case TransmitResponseStatus.InvalidParam:
-					// These two should not happen, since we're checking it all beforehand
-				case TransmitCallbackStatus.UnknownError:
-				default:
-					return RCPTransmitResult.Error_Unknown;
-			}
-
-			// Transmit was successful
-			if (!mpdu.ackRequested) return RCPTransmitResult.OK;
-
-			// Wait for the ACK.
-			// If an Ack MPDU is received within the random backoﬀ period (10..40ms)
-			// and contains the correct HomeID, source NodeID and a matching sequence number,
-			// the transmission is considered successful.
-			const ackTimeout = 10 + Math.round(Math.random() * 30);
-
-			const ack = await this.waitForMPDU(
-				(m) =>
-					m.headerType === MPDUHeaderType.Acknowledgement
-					&& m.homeId === mpdu.homeId
-					// TODO: This cast is not sound
-					&& m.sourceNodeId
-						=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
-					&& (m.sequenceNumber === mpdu.sequenceNumber
-						// For 2-channel configurations, seq-no 0 must also be accepted
-						|| (m.sequenceNumber === 0
-							&& headerFormat
-								=== ProtocolHeaderFormat.Classic2Channel)),
-				ackTimeout,
-			).then(() => true, () => false);
-
-			if (ack) return RCPTransmitResult.OK;
-		}
-
-		return RCPTransmitResult.NoAck;
-	}
-
 	// #region destroy()
 
 	private async destroyWithMessage(message: string): Promise<void> {
@@ -1566,7 +1239,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> {
 		// Remove all timeouts
 		for (
 			const timeout of [
-				...this.awaitedMPDUs.map((m) => m.timeout),
 				...this.awaitedMessages.map((m) => m.timeout),
 				...this.awaitedMessageHeaders.map((h) => h.timeout),
 			]

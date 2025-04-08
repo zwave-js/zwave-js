@@ -1,6 +1,6 @@
 import { type Protocols } from "@zwave-js/core";
 
-export enum RCPTransmitResult {
+export enum MACTransmitResult {
 	/** The frame was successfully sent. If an ACK was requested, it was received. */
 	OK = 0x00,
 
@@ -21,26 +21,37 @@ export enum RCPTransmitResult {
 	Error_Unknown = 0xfe,
 }
 
-export interface RCPTransmitOptions {
+export interface MACTransmitOptions {
+	// TODO: Make home id and node id optional
 	homeId: number;
 	sourceNodeId: number;
-	destination: RCPTransmitDestination;
+	destination: MACTransmitDestination;
 	protocol?: Protocols;
 	ackRequested?: boolean;
 }
 
-export enum RCPTransmitKind {
+export interface MACTransmitAckOptions {
+	// TODO: Make home id and node id optional
+	homeId: number;
+	sourceNodeId: number;
+	destinationNodeId: number;
+	protocol: Protocols;
+	channel: number;
+	sequenceNumber: number;
+}
+
+export enum MACTransmitKind {
 	Singlecast,
 	Multicast,
 	Broadcast,
 }
 
-export type RCPTransmitDestination = {
-	kind: RCPTransmitKind.Singlecast;
+export type MACTransmitDestination = {
+	kind: MACTransmitKind.Singlecast;
 	nodeId: number;
 } | {
-	kind: RCPTransmitKind.Multicast;
+	kind: MACTransmitKind.Multicast;
 	nodeIds: number[];
 } | {
-	kind: RCPTransmitKind.Broadcast;
+	kind: MACTransmitKind.Broadcast;
 };
