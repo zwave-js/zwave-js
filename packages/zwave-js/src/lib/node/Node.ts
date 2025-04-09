@@ -1445,8 +1445,8 @@ protocol version:      ${this.protocolVersion}`;
 			// After the version CC interview of the root endpoint, we have enough info to load the correct device config file
 			await this.loadDeviceConfig();
 
-			// At this point we may need to make some changes to the CCs the device reports
-			this.applyCommandClassesCompatFlag();
+			// At this point we may need to make some changes to the CCs the device reports for the root endpoint
+			this.applyCommandClassesCompatFlag(0);
 		} else {
 			this.driver.controllerLog.logNode(
 				this.id,
