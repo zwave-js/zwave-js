@@ -706,6 +706,11 @@ supported CCs:`;
 	private async interviewV1(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+		const removeEndpoints = ctx.getDeviceConfig?.(node.id)?.compat
+			?.removeEndpoints;
+		if (removeEndpoints === "*") {
+			return;
+		}
 		const api = CCAPI.create(
 			CommandClasses["Multi Channel"],
 			ctx,
@@ -778,17 +783,40 @@ supported CCs:`;
 			false,
 		);
 
-		for (let endpoint = 1; endpoint <= numEndpoints; endpoint++) {
-			// Check which CCs exist on this endpoint
-			const endpointCCs = [...endpointCounts.entries()]
-				.filter(([, ccEndpoints]) => ccEndpoints >= endpoint)
-				.map(([ccId]) => ccId);
-			// And store it per endpoint
-			valueDB.setValue(
-				MultiChannelCCValues.endpointCCs.endpoint(endpoint),
-				endpointCCs,
-			);
+		if (removeEndpoints?.length) {
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message:
+					`The following endpoints are ignored through the config file: ${
+						removeEndpoints.join(
+							", ",
+						)
+					}`,
+				direction: "none",
+			});
 		}
+
+		const allEndpoints: number[] = [];
+		for (let endpoint = 1; endpoint <= numEndpoints; endpoint++) {
+			// Skip this endpoint if flagged for removal
+			if (!removeEndpoints?.includes(endpoint)) {
+				// Check which CCs exist on this endpoint
+				const endpointCCs = [...endpointCounts.entries()]
+					.filter(([, ccEndpoints]) => ccEndpoints >= endpoint)
+					.map(([ccId]) => ccId);
+				// And store it per endpoint
+				valueDB.setValue(
+					MultiChannelCCValues.endpointCCs.endpoint(endpoint),
+					endpointCCs,
+				);
+				allEndpoints.push(endpoint);
+			};
+		}
+		this.setValue(
+			ctx,
+			MultiChannelCCValues.endpointIndizes,
+			allEndpoints,
+		);
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
