@@ -810,7 +810,7 @@ supported CCs:`;
 					endpointCCs,
 				);
 				allEndpoints.push(endpoint);
-			};
+			}
 		}
 		this.setValue(
 			ctx,
