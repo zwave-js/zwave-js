@@ -43,6 +43,14 @@
 			<button id="get_region" disabled>Get Region</button> 
 		</div>
 
+		<div>
+			<h2>LED Control</h2>
+			<input type="number" disabled min="0" max="255" id="led_red" value="0" />
+			<input type="number" disabled min="0" max="255" id="led_green" value="0" />
+			<input type="number" disabled min="0" max="255" id="led_blue" value="0" />
+			<button id="set_led" disabled>Set LED</button>
+		</div>
+
 		<script type="module" src="build/flasher.js"></script>
 	</body>
 </html>

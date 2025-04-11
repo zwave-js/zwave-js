@@ -1891,6 +1891,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				},
 			);
 
+			// For controllers with proprietary implementations, interview them too
+			await this.controller.interviewProprietary();
+
+			this.controllerLog.print("Interview completed");
+
 			if (this.controller.role === ControllerRole.Primary) {
 				// Auto-enable smart start inclusion
 				this.controller.autoProvisionSmartStart();

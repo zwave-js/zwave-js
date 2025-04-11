@@ -442,7 +442,18 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 	/** Returns a list of all value names that are defined on all endpoints of this node */
 	public getDefinedValueIDs(): TranslatedValueID[] {
-		return nodeUtils.getDefinedValueIDs(this.driver, this);
+		if (this.isControllerNode) {
+			// For the controller, look at proprietary implementations to get the value IDs
+			const proprietary = this.driver.controller.proprietary;
+			for (const impl of Object.values(proprietary)) {
+				if (typeof impl.getDefinedValueIDs === "function") {
+					return impl.getDefinedValueIDs();
+				}
+			}
+			return [];
+		} else {
+			return nodeUtils.getDefinedValueIDs(this.driver, this);
+		}
 	}
 
 	/**
@@ -456,6 +467,14 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	): Promise<SetValueResult> {
 		// Ensure we're dealing with a valid value ID, with no extra properties
 		valueId = normalizeValueID(valueId);
+
+		// For the controller, look at proprietary implementations to set the value
+		const proprietary = this.driver.controller.proprietary;
+		for (const impl of Object.values(proprietary)) {
+			if (typeof impl.setValue === "function") {
+				return impl.setValue(valueId, value);
+			}
+		}
 
 		const loglevel = this.driver.getLogConfig().level;
 
@@ -699,6 +718,14 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	): Promise<MaybeNotKnown<T>> {
 		// Ensure we're dealing with a valid value ID, with no extra properties
 		valueId = normalizeValueID(valueId);
+
+		// For the controller, look at proprietary implementations to poll the value
+		const proprietary = this.driver.controller.proprietary;
+		for (const impl of Object.values(proprietary)) {
+			if (typeof impl.pollValue === "function") {
+				return impl.pollValue(valueId);
+			}
+		}
 
 		// Try to retrieve the corresponding CC API
 		const endpointInstance = this.getEndpoint(valueId.endpoint || 0);
