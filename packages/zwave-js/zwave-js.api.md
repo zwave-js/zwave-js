@@ -189,6 +189,7 @@ import { SetbackState } from '@zwave-js/cc';
 import { SetSecurityClass } from '@zwave-js/core';
 import { SetValueAPIOptions } from '@zwave-js/cc';
 import { SetValueResult } from '@zwave-js/cc/safe';
+import { SetValueResult as SetValueResult_2 } from '@zwave-js/cc';
 import { SpecificDeviceClass } from '@zwave-js/core/safe';
 import type { SupportsCC } from '@zwave-js/core';
 import { SupportsCC as SupportsCC_2 } from '@zwave-js/core/safe';
@@ -293,6 +294,38 @@ export type ControllerEvents = Extract<keyof ControllerEventCallbacks, string>;
 export { ControllerLogContext }
 
 export { ControllerNodeLogContext }
+
+// Warning: (ae-missing-release-tag) "ControllerProprietary" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ControllerProprietary {
+    // (undocumented)
+    "Nabu Casa"?: ControllerProprietary_NabuCasa;
+}
+
+// Warning: (ae-forgotten-export) The symbol "ControllerProprietaryCommon" needs to be exported by the entry point index.d.ts
+// Warning: (ae-missing-release-tag) "ControllerProprietary_NabuCasa" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ControllerProprietary_NabuCasa implements ControllerProprietaryCommon {
+    constructor(driver: Driver, controller: ZWaveController);
+    // (undocumented)
+    getDefinedValueIDs(): TranslatedValueID_2[];
+    // (undocumented)
+    getLED(): Promise<RGB>;
+    // (undocumented)
+    getSupportedCommands(): Promise<NabuCasaCommand[]>;
+    // (undocumented)
+    interview(): Promise<void>;
+    // (undocumented)
+    pollValue(valueId: ValueID_2): Promise<unknown>;
+    // (undocumented)
+    readGyro(): Promise<Vector | undefined>;
+    // (undocumented)
+    setLED(rgb: RGB): Promise<boolean>;
+    // (undocumented)
+    setValue(valueId: ValueID_2, value: unknown): Promise<SetValueResult_2>;
+}
 
 export { ControllerSelfLogContext }
 
@@ -769,6 +802,11 @@ export interface FoundNode {
 // @public (undocumented)
 export type Frame = ZWaveFrame | LongRangeFrame | BeamFrame;
 
+// Warning: (ae-missing-release-tag) "FUNC_ID_NABUCASA" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const FUNC_ID_NABUCASA = FunctionType.Proprietary_F0;
+
 export { FunctionType }
 
 export { getEnumMemberName }
@@ -1137,6 +1175,20 @@ export { MPDUHeaderType }
 
 export { MultilevelSwitchCommand }
 
+// Warning: (ae-missing-release-tag) "NabuCasaCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum NabuCasaCommand {
+    // (undocumented)
+    GetLED = 1,
+    // (undocumented)
+    GetSupportedCommands = 0,
+    // (undocumented)
+    ReadGyro = 3,
+    // (undocumented)
+    SetLED = 2
+}
+
 export { NODE_ID_BROADCAST }
 
 export { NODE_ID_BROADCAST_LR }
@@ -1387,6 +1439,18 @@ export { ResponseRole }
 
 export { RFRegion }
 
+// Warning: (ae-missing-release-tag) "RGB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RGB {
+    // (undocumented)
+    b: number;
+    // (undocumented)
+    g: number;
+    // (undocumented)
+    r: number;
+}
+
 // Warning: (ae-missing-release-tag) "RouteHealthCheckResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -1486,6 +1550,18 @@ export { ValueMetadataNumeric }
 export { ValueMetadataString }
 
 export { ValueType }
+
+// Warning: (ae-missing-release-tag) "Vector" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface Vector {
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+    // (undocumented)
+    z: number;
+}
 
 // Warning: (ae-missing-release-tag) "VirtualEndpoint" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1775,6 +1851,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     get productId(): MaybeNotKnown<number>;
     // (undocumented)
     get productType(): MaybeNotKnown<number>;
+    get proprietary(): ControllerProprietary;
     // (undocumented)
     get protocolVersion(): MaybeNotKnown<string>;
     provisionSmartStartNode(entry: PlannedProvisioningEntry): void;
@@ -2037,21 +2114,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     get defaultVolume(): number | undefined;
     set defaultVolume(value: number | undefined);
     destroy(): void;
-    get deviceConfig(): DeviceConfig | undefined;
-    // (undocumented)
-    get deviceDatabaseUrl(): MaybeNotKnown<string>;
     get dsk(): Uint8Array | undefined;
     // (undocumented)
     protected _emit<TEvent extends keyof AllNodeEvents>(event: TEvent, ...args: Parameters<AllNodeEvents[TEvent]>): boolean;
-    // (undocumented)
-    get firmwareVersion(): MaybeNotKnown<string>;
     getDateAndTime(): Promise<DateAndTime>;
     getDefinedValueIDs(): TranslatedValueID_2[];
-    getFirmwareUpdateCapabilities(): Promise<FirmwareUpdateCapabilities>;
-    getFirmwareUpdateCapabilitiesCached(): FirmwareUpdateCapabilities;
-    // (undocumented)
-    get hardwareVersion(): MaybeNotKnown<number>;
-    hasDeviceConfigChanged(): MaybeNotKnown<boolean>;
+    getSupportedNotificationEvents(): ZWaveNotificationCapability[];
     get hasSUCReturnRoute(): boolean;
     set hasSUCReturnRoute(value: boolean);
     interview(): Promise<void>;
@@ -2061,17 +2129,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     protected interviewNodeInfo(): Promise<void>;
     isHealthCheckInProgress(): boolean;
     isLinkReliabilityCheckInProgress(): boolean;
-    get label(): string | undefined;
     get lastSeen(): MaybeNotKnown<Date>;
-    protected loadDeviceConfig(): Promise<void>;
     get location(): MaybeNotKnown<string>;
     set location(value: string | undefined);
     manuallyIdleNotificationValue(valueId: ValueID_2): void;
     // (undocumented)
     manuallyIdleNotificationValue(notificationType: number, prevValue: number, endpointIndex?: number): void;
-    get manufacturer(): string | undefined;
-    // (undocumented)
-    get manufacturerId(): MaybeNotKnown<number>;
     get name(): MaybeNotKnown<string>;
     set name(value: string | undefined);
     // (undocumented)
@@ -2081,10 +2144,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     protected overwriteConfig(): Promise<void>;
     ping(): Promise<boolean>;
     pollValue<T = unknown>(valueId: ValueID_2, sendCommandOptions?: SendCommandOptions): Promise<MaybeNotKnown<T>>;
-    // (undocumented)
-    get productId(): MaybeNotKnown<number>;
-    // (undocumented)
-    get productType(): MaybeNotKnown<number>;
     protected queryProtocolInfo(): Promise<void>;
     refreshCCValues(cc: CommandClasses_2): Promise<void>;
     refreshInfo(options?: RefreshInfoOptions): Promise<void>;
@@ -2092,20 +2151,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     // (undocumented)
     requestNodeInfo(): Promise<NodeUpdatePayload>;
     // (undocumented)
-    get sdkVersion(): MaybeNotKnown<string>;
-    // (undocumented)
     sendResetLocallyNotification(): Promise<void>;
     setDateAndTime(now?: Date): Promise<boolean>;
     setValue(valueId: ValueID_2, value: unknown, options?: SetValueAPIOptions): Promise<SetValueResult>;
-    // (undocumented)
-    get supportsWakeUpOnDemand(): MaybeNotKnown<boolean>;
     testPowerlevel(testNodeId: number, powerlevel: Powerlevel_2, healthCheckTestFrameCount: number, onProgress?: (acknowledged: number, total: number) => void): Promise<number>;
-    // (undocumented)
-    get zwavePlusNodeType(): MaybeNotKnown<ZWavePlusNodeType>;
-    // (undocumented)
-    get zwavePlusRoleType(): MaybeNotKnown<ZWavePlusRoleType>;
-    // (undocumented)
-    get zwavePlusVersion(): MaybeNotKnown<number>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveNodeEventCallbacks" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2318,6 +2367,36 @@ ccId: CommandClasses.Powerlevel,
 args: ZWaveNotificationCallbackArgs_PowerlevelCC
 ];
 
+// Warning: (ae-missing-release-tag) "ZWaveNotificationCapability" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ZWaveNotificationCapability = ZWaveNotificationCapability_NotificationCC | ZWaveNotificationCapability_EntryControlCC;
+
+// Warning: (ae-missing-release-tag) "ZWaveNotificationCapability_EntryControlCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZWaveNotificationCapability_EntryControlCC {
+    // (undocumented)
+    commandClass: (typeof CommandClasses)["Entry Control"];
+    // (undocumented)
+    endpoint: number;
+    supportedEventTypes: Record<EntryControlEventTypes, string>;
+}
+
+// Warning: (ae-missing-release-tag) "ZWaveNotificationCapability_NotificationCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZWaveNotificationCapability_NotificationCC {
+    // (undocumented)
+    commandClass: CommandClasses.Notification;
+    // (undocumented)
+    endpoint: number;
+    supportedNotificationTypes: Record<number, {
+        label: string;
+        supportedEvents: Record<number, string>;
+    }>;
+}
+
 // Warning: (ae-missing-release-tag) "ZWaveOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2426,40 +2505,19 @@ export * from "@zwave-js/cc";
 
 // Warnings were encountered during analysis:
 //
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ColorSwitchCC.ts:471:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
-//   Type 'string | undefined' is not assignable to type 'string | number | symbol'.
-//     Type 'undefined' is not assignable to type 'string | number | symbol'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1276:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1283:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1407:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:549:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:557:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1709:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1712:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1862:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:69:17 - (TS2345) Argument of type 'LogFormat | undefined' is not assignable to parameter of type 'LogFormat'.
-//   Type 'undefined' is not assignable to type 'LogFormat'.
-// /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:434:20 - (TS18048) 'h' is possibly 'undefined'.
-// /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:437:33 - (TS18048) 'header' is possibly 'undefined'.
-// /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:438:54 - (TS18048) 'header' is possibly 'undefined'.
-// /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:440:48 - (TS18048) 'header' is possibly 'undefined'.
-// /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:443:11 - (TS18048) 'header' is possibly 'undefined'.
-// /home/runner/work/zwave-js/zwave-js/packages/nvmedit/src/lib/NVM3.ts:444:12 - (TS18048) 'header' is possibly 'undefined'.
-// src/lib/controller/Controller.ts:985:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
-// src/lib/driver/Driver.ts:887:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:4932:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6105:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
-// src/lib/driver/Driver.ts:6583:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6584:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6626:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6627:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6773:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:8:47 - (TS2307) Cannot find module 'winston/lib/winston/transports' or its corresponding type declarations.
+// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
+// src/lib/controller/Controller.ts:987:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// src/lib/driver/Driver.ts:895:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/driver/Driver.ts:4955:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6499:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
+// src/lib/driver/Driver.ts:6977:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6978:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7020:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7021:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7167:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:321:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:570:2 - (ae-missing-getter) The property "cachedDeviceConfigHash" has a setter but no getter.
-// src/lib/node/Node.ts:2274:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2121:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:865:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:866:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 

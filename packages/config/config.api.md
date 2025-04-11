@@ -638,7 +638,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.0.0-beta.2";
+export const PACKAGE_VERSION = "15.0.4";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -666,6 +666,10 @@ export function parseConditionalParamInformationMap(definition: JSONObject_2, pa
 //
 // @public
 export function saveManufacturersInternal(fs: WriteFile, manufacturers: ManufacturersMap): Promise<void>;
+
+// Warnings were encountered during analysis:
+//
+// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 
