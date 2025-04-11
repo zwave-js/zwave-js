@@ -22,13 +22,16 @@ import {
 	isSendDataTransmitReport,
 } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName } from "@zwave-js/shared";
-import { type SerialAPICommandMachineFailure } from "./SerialAPICommandMachine.js";
+import {
+	type SerialAPICommand,
+	type SerialAPICommandMachineFailure,
+} from "./SerialAPICommandMachine.js";
 import type { Transaction } from "./Transaction.js";
 
-export function serialAPICommandErrorToZWaveError(
-	reason: SerialAPICommandMachineFailure["reason"],
-	sentMessage: Message,
-	receivedMessage: Message | undefined,
+export function serialAPICommandErrorToZWaveError<T extends SerialAPICommand>(
+	reason: SerialAPICommandMachineFailure<T>["reason"],
+	sentMessage: T,
+	receivedMessage: T | undefined,
 	transactionSource: string | undefined,
 ): ZWaveError {
 	switch (reason) {
@@ -97,7 +100,7 @@ export function serialAPICommandErrorToZWaveError(
 				|| sentMessage instanceof SendDataBridgeRequest
 			) {
 				const status = (
-					receivedMessage as
+					receivedMessage as unknown as
 						| SendDataRequestTransmitReport
 						| SendDataBridgeRequestTransmitReport
 				).transmitStatus;
@@ -119,7 +122,7 @@ export function serialAPICommandErrorToZWaveError(
 				|| sentMessage instanceof SendDataMulticastBridgeRequest
 			) {
 				const status = (
-					receivedMessage as
+					receivedMessage as unknown as
 						| SendDataMulticastRequestTransmitReport
 						| SendDataMulticastBridgeRequestTransmitReport
 				).transmitStatus;
