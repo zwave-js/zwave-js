@@ -6958,10 +6958,6 @@ ${handlers.length} left`,
 		// Specify transmit options for the request
 		if (options.transmitOptions != undefined) {
 			msg.transmitOptions = options.transmitOptions;
-			if (!(options.transmitOptions & TransmitOptions.ACK)) {
-				// If no ACK is requested, set the callback ID to zero, because we won't get a controller callback
-				msg.callbackId = 0;
-			}
 		}
 
 		if (!!options.reportTimeoutMs) {

@@ -20,7 +20,7 @@ export enum TransmitOptions {
 	Explore = 1 << 5,
 
 	DEFAULT = ACK | AutoRoute | Explore,
-	DEFAULT_NOACK = DEFAULT & ~ACK,
+	DEFAULT_NOACK = NotSet,
 }
 
 export enum TransmitStatus {
