@@ -417,6 +417,7 @@ export class MultiChannelCC extends CommandClass {
 	): MultiChannelCCV1CommandEncapsulation {
 		const ret = new MultiChannelCCV1CommandEncapsulation({
 			nodeId: cc.nodeId,
+			endpointIndex: cc.endpointIndex,
 			encapsulated: cc,
 		});
 
@@ -1614,8 +1615,6 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 	) {
 		super(options);
 		this.encapsulated = options.encapsulated;
-		// No need to distinguish between source and destination in V1
-		this.endpointIndex = this.encapsulated.endpointIndex;
 	}
 
 	public static async from(
@@ -1635,6 +1634,7 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 			raw.payload.subarray(isV2withV1Header ? 2 : 1),
 			ctx,
 		);
+		encapsulated.endpointIndex = endpointIndex;
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
