@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.0.6 (2025-04-14)
 ### Bugfixes
 * Avoid radio TX queue overflows by waiting for complete transmission, even when no ACK is requested (#7732)
 
