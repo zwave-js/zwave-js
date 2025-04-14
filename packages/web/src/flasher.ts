@@ -46,6 +46,13 @@ const ledGreen = document.getElementById("led_green") as HTMLInputElement;
 const ledBlue = document.getElementById("led_blue") as HTMLInputElement;
 const btnLED = document.getElementById("set_led") as HTMLButtonElement;
 
+const selectSystemIndication = document.getElementById(
+	"system_indication",
+) as HTMLSelectElement;
+const btnSetSystemIndication = document.getElementById(
+	"set_system_indication",
+) as HTMLButtonElement;
+
 let driver!: Driver;
 let port!: SerialPort;
 let serialBinding!: ZWaveSerialBindingFactory;
@@ -92,6 +99,9 @@ function resetUI() {
 	ledGreen.disabled = true;
 	ledBlue.disabled = true;
 	btnLED.disabled = true;
+
+	selectSystemIndication.disabled = true;
+	btnSetSystemIndication.disabled = true;
 
 	flashProgress.style.display = "none";
 	flashError.innerText = "";
@@ -182,6 +192,9 @@ function checkApp() {
 	ledRed.disabled = driver.mode !== DriverMode.SerialAPI;
 	ledGreen.disabled = driver.mode !== DriverMode.SerialAPI;
 	ledBlue.disabled = driver.mode !== DriverMode.SerialAPI;
+
+	btnSetSystemIndication.disabled = driver.mode !== DriverMode.SerialAPI;
+	selectSystemIndication.disabled = driver.mode !== DriverMode.SerialAPI;
 }
 
 fileInput.addEventListener("change", (event) => {
@@ -333,6 +346,13 @@ async function setLED() {
 	await driver.controller.proprietary["Nabu Casa"]!.setLED({ r, g, b });
 }
 
+async function setSystemIndication() {
+	const indication = selectSystemIndication.value;
+	await driver.controller.proprietary["Nabu Casa"]!.setSystemIndication(
+		indication,
+	);
+}
+
 document.getElementById("connect").addEventListener("click", init);
 flashButton.addEventListener("click", flash);
 btnEraseNVM.addEventListener("click", eraseNVM);
@@ -342,3 +362,4 @@ btnGetRegion.addEventListener("click", getRegion);
 btnBootloader.addEventListener("click", enterBootloader);
 btnBootloaderHw.addEventListener("click", resetToBootloader);
 btnLED.addEventListener("click", setLED);
+btnSetSystemIndication.addEventListener("click", setSystemIndication);

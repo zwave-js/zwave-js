@@ -29,6 +29,7 @@ export enum NabuCasaCommand {
 	GetLED = 0x01,
 	SetLED = 0x02,
 	ReadGyro = 0x03,
+	SetSystemIndication = 0x04,
 }
 
 export interface RGB {
@@ -41,6 +42,12 @@ export interface Vector {
 	x: number;
 	y: number;
 	z: number;
+}
+
+export enum IndicationSeverity {
+	None,
+	Warning,
+	Error,
 }
 
 const colorSwitchCurrentColorRed =
@@ -280,7 +287,7 @@ export class ControllerProprietary_NabuCasa
 	}
 
 	public async setLED(rgb: RGB): Promise<boolean> {
-		// HOST->ZW: NABU_CASA_LED_SET | r | g | b |
+		// HOST->ZW: NABU_CASA_LED_SET | r | g | b | [ effect | [ speed ]]
 		// ZW->HOST: NABU_CASA_LED_SET | success
 
 		const payload = Bytes.from([
@@ -288,6 +295,7 @@ export class ControllerProprietary_NabuCasa
 			rgb.r,
 			rgb.g,
 			rgb.b,
+			1, // SOLID
 		]);
 
 		const setLEDStateCmd = new Message({
@@ -357,6 +365,38 @@ export class ControllerProprietary_NabuCasa
 		const z = roundTo(callback.payload.readInt16BE(5) / 1024 * 9.77, 2);
 
 		return { x, y, z };
+	}
+
+	public async setSystemIndication(
+		severity: IndicationSeverity,
+	): Promise<boolean> {
+		// HOST->ZW: NABU_CASA_SET_SYSTEM_INDICATION | severity
+		// ZW->HOST: NABU_CASA_SET_SYSTEM_INDICATION | success
+
+		const payload = Bytes.from([
+			NabuCasaCommand.SetSystemIndication,
+			severity,
+		]);
+
+		const systemIndicationCmd = new Message({
+			type: MessageType.Request,
+			functionType: FUNC_ID_NABUCASA,
+			payload,
+			expectedResponse: (self, msg) => {
+				return (
+					msg.functionType === FUNC_ID_NABUCASA
+					&& msg.type === MessageType.Response
+					&& msg.payload[0] === NabuCasaCommand.SetSystemIndication
+				);
+			},
+		});
+		const result = await this.driver.sendMessage(systemIndicationCmd, {
+			priority: MessagePriority.Controller,
+			supportCheck: false,
+		});
+		const success = !!result.payload[1];
+
+		return success;
 	}
 
 	public getDefinedValueIDs(): TranslatedValueID[] {
