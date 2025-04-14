@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Avoid radio TX queue overflows by waiting for complete transmission, even when no ACK is requested (#7732)
+
+### Changes under the hood
+* Implement framework for using proprietary Serial API commands (#7663)
+
 ## 15.0.5 (2025-04-07)
 ### Bugfixes
 * Fixed an issue where updating the driver options before starting would cause custom host bindings to be discarded, causing config sync errors in `pkg` bundles (#7722)
