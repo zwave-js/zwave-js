@@ -1594,6 +1594,7 @@ export interface VersionFileOptions extends NVMFileCreationOptions {
 // src/lib/common/definitions.ts:208:2 - (ae-forgotten-export) The symbol "ControllerNVMPropertyTypes" needs to be exported by the entry point index.d.ts
 // src/lib/common/definitions.ts:217:2 - (ae-forgotten-export) The symbol "NodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
 // src/lib/common/definitions.ts:228:2 - (ae-forgotten-export) The symbol "LRNodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
+// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 
