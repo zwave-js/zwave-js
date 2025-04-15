@@ -14,6 +14,41 @@
 		"min": "0.3",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 10,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Basic Set",
+					"maxNodes": 10
+				},
+				"3": {
+					"label": "Switch Multilevel Set",
+					"maxNodes": 10
+				},
+				"4": {
+					"label": "Switch Multilevel Start/Stop",
+					"maxNodes": 10
+				},
+				"5": {
+					"label": "Double-tap Basic Set",
+					"maxNodes": 10
+				},
+				"6": {
+					"label": "Triple-tap Basic Set",
+					"maxNodes": 10
+				},
+				"7": {
+					"label": "Config Multilevel Set",
+					"maxNodes": 10
+				}
+			}
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
@@ -697,8 +732,7 @@
 			"#": "130",
 			"$if": "firmwareVersion >= 1.4",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Group 7 Enable",
-			"description": "Use config button triggers association group 7"
+			"label": "Group 7 Enable"
 		},
 		{
 			"#": "131",
@@ -735,7 +769,7 @@
 			"$if": "firmwareVersion >= 1.4",
 			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
 			"label": "Group 7 LED Color",
-			"description": "Color to use for the LED bar while briefly indicating group 7 activity",
+			"description": "Color to use for the LED bar while briefly indicating group 7 command transmission",
 			"valueSize": 1,
 			"defaultValue": 255
 		},
