@@ -23,27 +23,27 @@
 					"isLifeline": true
 				},
 				"2": {
-					"label": "Basic Set",
+					"label": "Basic Switch Set",
 					"maxNodes": 10
 				},
 				"3": {
-					"label": "Switch Multilevel Set",
+					"label": "Multilevel Switch Set",
 					"maxNodes": 10
 				},
 				"4": {
-					"label": "Switch Multilevel Start/Stop",
+					"label": "Multilevel Switch Start/Stop",
 					"maxNodes": 10
 				},
 				"5": {
-					"label": "Double-tap Basic Set",
+					"label": "Basic Double-tap Set",
 					"maxNodes": 10
 				},
 				"6": {
-					"label": "Triple-tap Basic Set",
+					"label": "Basic Triple-tap Set",
 					"maxNodes": 10
 				},
 				"7": {
-					"label": "Config Multilevel Set",
+					"label": "Multilevel Config Set",
 					"maxNodes": 10
 				}
 			}
