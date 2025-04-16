@@ -5576,6 +5576,16 @@ ${handlers.length} left`,
 				return;
 			}
 		} else {
+			if (
+				msg.functionType >= FunctionType.Proprietary_F0
+				&& msg.functionType <= FunctionType.Proprietary_FE
+				&& await this._controller
+					?.handleUnsolictedProprietaryCommand(msg)
+			) {
+				// Proprietary command was handled
+				return;
+			}
+
 			// TODO: This deserves a nicer formatting
 			this.driverLog.print(
 				`handling request ${

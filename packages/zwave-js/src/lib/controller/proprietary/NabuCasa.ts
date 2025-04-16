@@ -1,11 +1,14 @@
 import {
 	ColorComponent,
 	ColorSwitchCCValues,
+	ConfigurationCCValues,
 	MultilevelSensorCCValues,
 	type SetValueResult,
 	SetValueStatus,
 } from "@zwave-js/cc";
 import {
+	ConfigValueFormat,
+	type ConfigurationMetadata,
 	MessagePriority,
 	type TranslatedValueID,
 	type ValueDB,
@@ -30,6 +33,8 @@ export enum NabuCasaCommand {
 	SetLED = 0x02,
 	ReadGyro = 0x03,
 	SetSystemIndication = 0x04,
+	GetConfig = 0x05,
+	SetConfig = 0x06,
 }
 
 export interface RGB {
@@ -44,10 +49,14 @@ export interface Vector {
 	z: number;
 }
 
-export enum IndicationSeverity {
+export enum NabuCasaIndicationSeverity {
 	None,
 	Warning,
 	Error,
+}
+
+export enum NabuCasaConfigKey {
+	EnableTiltIndicator = 0,
 }
 
 const colorSwitchCurrentColorRed =
@@ -121,6 +130,40 @@ const multilevelSensorZTranslated = {
 	commandClassName: getCCName(multilevelSensorZ.commandClass),
 	propertyName: multilevelSensorZ.property,
 };
+
+const configEnableTiltIndicator = ConfigurationCCValues.paramInformation(
+	NabuCasaConfigKey.EnableTiltIndicator,
+).id;
+const configEnableTiltIndicatorTranslated = {
+	...configEnableTiltIndicator,
+	commandClassName: getCCName(configEnableTiltIndicator.commandClass),
+	propertyName: "enableTiltIndicator",
+};
+const configEnableTiltIndicatorMeta: ConfigurationMetadata = {
+	type: "number",
+	readable: true,
+	writeable: true,
+	min: 0,
+	max: 1,
+	allowManualEntry: false,
+	default: 1,
+	format: ConfigValueFormat.UnsignedInteger,
+	label: "Enable Tilt Indicator",
+	states: {
+		0: "Disable",
+		1: "Enable",
+	},
+	valueSize: 1,
+};
+
+function parseGyro(msg: Message): Vector {
+	// According to datasheet: 8g range => 977 µg/LSB
+	const x = roundTo(msg.payload.readInt16BE(1) / 1024 * 9.77, 2);
+	const y = roundTo(msg.payload.readInt16BE(3) / 1024 * 9.77, 2);
+	const z = roundTo(msg.payload.readInt16BE(5) / 1024 * 9.77, 2);
+
+	return { x, y, z };
+}
 
 export class ControllerProprietary_NabuCasa
 	implements ControllerProprietaryCommon
@@ -201,6 +244,21 @@ export class ControllerProprietary_NabuCasa
 					this.persistGyroValues(valueDB, gyro);
 				}
 			}).catch(noop);
+		}
+
+		if (supported.includes(NabuCasaCommand.GetConfig)) {
+			const enableTiltIndicator = await this.getConfig(
+				NabuCasaConfigKey.EnableTiltIndicator,
+			);
+
+			valueDB.setMetadata(
+				configEnableTiltIndicator,
+				configEnableTiltIndicatorMeta,
+			);
+			valueDB.setValue(
+				configEnableTiltIndicator,
+				enableTiltIndicator,
+			);
 		}
 	}
 
@@ -360,15 +418,11 @@ export class ControllerProprietary_NabuCasa
 		const callback = await callbackPromise;
 
 		// According to datasheet: 8g range => 977 µg/LSB
-		const x = roundTo(callback.payload.readInt16BE(1) / 1024 * 9.77, 2);
-		const y = roundTo(callback.payload.readInt16BE(3) / 1024 * 9.77, 2);
-		const z = roundTo(callback.payload.readInt16BE(5) / 1024 * 9.77, 2);
-
-		return { x, y, z };
+		return parseGyro(callback);
 	}
 
 	public async setSystemIndication(
-		severity: IndicationSeverity,
+		severity: NabuCasaIndicationSeverity,
 	): Promise<boolean> {
 		// HOST->ZW: NABU_CASA_SET_SYSTEM_INDICATION | severity
 		// ZW->HOST: NABU_CASA_SET_SYSTEM_INDICATION | success
@@ -399,6 +453,80 @@ export class ControllerProprietary_NabuCasa
 		return success;
 	}
 
+	public async getConfig(key: NabuCasaConfigKey): Promise<number> {
+		// HOST->ZW (REQ): NABU_CASA_CONFIG_GET | key
+		// ZW->HOST (RES): NABU_CASA_CONFIG_GET | key | size | value...
+
+		const payload = Bytes.from([
+			NabuCasaCommand.GetConfig,
+			key,
+		]);
+
+		const getConfigCmd = new Message({
+			type: MessageType.Request,
+			functionType: FUNC_ID_NABUCASA,
+			payload,
+			expectedResponse: (self, msg) => {
+				return (
+					msg.functionType === FUNC_ID_NABUCASA
+					&& msg.type === MessageType.Response
+					&& msg.payload[0] === NabuCasaCommand.GetConfig
+					&& msg.payload[1] === key
+				);
+			},
+		});
+
+		const resultPromise = this.driver.sendMessage(getConfigCmd, {
+			priority: MessagePriority.Controller,
+			supportCheck: false,
+		});
+		const { payload: result } = await resultPromise;
+
+		const size = result[2];
+		if (result.length > 3 + size) {
+			// TODO: Decide what to do when the response is invalid
+			return Number.NEGATIVE_INFINITY;
+		} else {
+			return result.readIntBE(3, size);
+		}
+	}
+
+	public async setConfig(
+		key: NabuCasaConfigKey,
+		value: number,
+	): Promise<boolean> {
+		// HOST->ZW (REQ): NABU_CASA_CONFIG_SET | key | size | value...
+		// ZW->HOST (RES): NABU_CASA_CONFIG_SET | success
+
+		const payload = Bytes.from([
+			NabuCasaCommand.SetConfig,
+			key,
+			// For now, only 1 byte is supported
+			1,
+			value,
+		]);
+
+		const setConfigCmd = new Message({
+			type: MessageType.Request,
+			functionType: FUNC_ID_NABUCASA,
+			payload,
+			expectedResponse: (self, msg) => {
+				return (
+					msg.functionType === FUNC_ID_NABUCASA
+					&& msg.type === MessageType.Response
+					&& msg.payload[0] === NabuCasaCommand.SetConfig
+				);
+			},
+		});
+		const result = await this.driver.sendMessage(setConfigCmd, {
+			priority: MessagePriority.Controller,
+			supportCheck: false,
+		});
+		const success = !!result.payload[1];
+
+		return success;
+	}
+
 	public getDefinedValueIDs(): TranslatedValueID[] {
 		// TODO: Make dynamic
 
@@ -414,6 +542,8 @@ export class ControllerProprietary_NabuCasa
 			multilevelSensorXTranslated,
 			multilevelSensorYTranslated,
 			multilevelSensorZTranslated,
+			// Configuration
+			configEnableTiltIndicatorTranslated,
 		];
 	}
 
@@ -467,6 +597,25 @@ export class ControllerProprietary_NabuCasa
 				}
 			}
 		}
+
+		if (
+			ConfigurationCCValues.paramInformation.is(valueId)
+			&& valueId.propertyKey == undefined
+		) {
+			switch (valueId.property) {
+				case NabuCasaConfigKey.EnableTiltIndicator:
+					// OK
+					break;
+				default:
+					return undefined;
+			}
+
+			const value = await this.getConfig(valueId.property as number);
+			if (value != undefined) {
+				this.controller.valueDB.setValue(valueId, value);
+				return value;
+			}
+		}
 	}
 
 	public async setValue(
@@ -489,6 +638,41 @@ export class ControllerProprietary_NabuCasa
 			return { status: SetValueStatus.Success };
 		}
 
+		if (
+			ConfigurationCCValues.paramInformation.is(valueId)
+			&& valueId.propertyKey == undefined
+			&& typeof value === "number"
+			&& [
+				NabuCasaConfigKey.EnableTiltIndicator,
+			].includes(valueId.property as any)
+		) {
+			await this.setConfig(
+				valueId.property as NabuCasaConfigKey,
+				value,
+			);
+			this.controller.valueDB.setValue(valueId, value);
+
+			return { status: SetValueStatus.Success };
+		}
+
 		return { status: SetValueStatus.NoDeviceSupport };
+	}
+
+	// eslint-disable-next-line @typescript-eslint/require-await
+	async handleUnsolicited(msg: Message): Promise<boolean> {
+		if (
+			msg.functionType === FUNC_ID_NABUCASA
+			&& msg.type === MessageType.Request
+		) {
+			const command = msg.payload[0];
+			if (
+				command === NabuCasaCommand.ReadGyro && msg.payload.length >= 7
+			) {
+				const gyro = parseGyro(msg);
+				this.persistGyroValues(this.controller.valueDB, gyro);
+				return true;
+			}
+		}
+		return false;
 	}
 }
