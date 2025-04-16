@@ -1802,6 +1802,20 @@ export class ZWaveController
 		}
 	}
 
+	/** @internal */
+	public async handleUnsolictedProprietaryCommand(
+		msg: Message,
+	): Promise<boolean> {
+		for (const impl of Object.values(this.proprietary)) {
+			if (typeof impl.handleUnsolicited === "function") {
+				if (await impl.handleUnsolicited(msg)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * @internal
 	 * Interviews the controller for the necessary information.

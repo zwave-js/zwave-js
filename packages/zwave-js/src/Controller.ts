@@ -33,4 +33,6 @@ export {
 	ControllerProprietary_NabuCasa,
 	FUNC_ID_NABUCASA,
 	NabuCasaCommand,
+	NabuCasaConfigKey,
+	NabuCasaIndicationSeverity,
 } from "./lib/controller/proprietary/NabuCasa.js";
