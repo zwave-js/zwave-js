@@ -469,10 +469,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		valueId = normalizeValueID(valueId);
 
 		// For the controller, look at proprietary implementations to set the value
-		const proprietary = this.driver.controller.proprietary;
-		for (const impl of Object.values(proprietary)) {
-			if (typeof impl.setValue === "function") {
-				return impl.setValue(valueId, value);
+		if (this.isControllerNode) {
+			const proprietary = this.driver.controller.proprietary;
+			for (const impl of Object.values(proprietary)) {
+				if (typeof impl.setValue === "function") {
+					return impl.setValue(valueId, value);
+				}
 			}
 		}
 
@@ -720,10 +722,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		valueId = normalizeValueID(valueId);
 
 		// For the controller, look at proprietary implementations to poll the value
-		const proprietary = this.driver.controller.proprietary;
-		for (const impl of Object.values(proprietary)) {
-			if (typeof impl.pollValue === "function") {
-				return impl.pollValue(valueId);
+		if (this.isControllerNode) {
+			const proprietary = this.driver.controller.proprietary;
+			for (const impl of Object.values(proprietary)) {
+				if (typeof impl.pollValue === "function") {
+					return impl.pollValue(valueId);
+				}
 			}
 		}
 
