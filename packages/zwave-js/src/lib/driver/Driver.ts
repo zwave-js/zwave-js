@@ -141,6 +141,7 @@ import {
 	ZWaveSerialStreamFactory,
 	getDefaultPriority,
 	hasNodeId,
+	isAnySendDataResponse,
 	isSuccessIndicator,
 	isZWaveSerialBindingFactory,
 	isZWaveSerialPortImplementation,
@@ -6293,6 +6294,7 @@ ${handlers.length} left`,
 		while ((msg = await transaction.generateNextMessage(prevResult))) {
 			// Keep track of how often the controller failed to send a command, to prevent ending up in an infinite loop
 			let jammedAttempts = 0;
+			let queueAttempts = 0;
 			attemptMessage: for (let attemptNumber = 1;; attemptNumber++) {
 				try {
 					prevResult = await this.queueSerialAPICommand(
@@ -6353,6 +6355,7 @@ ${handlers.length} left`,
 					break attemptMessage;
 				} catch (e: any) {
 					let zwError: ZWaveError;
+					let waitDurationMs = 0;
 
 					if (!isZWaveError(e)) {
 						zwError = createMessageDroppedUnexpectedError(e);
@@ -6369,6 +6372,17 @@ ${handlers.length} left`,
 							// The controller was reset unexpectedly. Reject the transaction, so we can attempt to recover
 							throw e;
 						} else if (
+							isAnySendDataResponse(e.context)
+							&& !e.context.wasSent
+						) {
+							// If a SendData command could not be queued, try again after a short delay
+							queueAttempts++;
+							if (queueAttempts < 3) {
+								waitDurationMs = 500;
+							} else {
+								throw e;
+							}
+						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
 						) {
 							// We gave up on this command, so don't retry it
@@ -6378,11 +6392,14 @@ ${handlers.length} left`,
 						if (
 							this.mayRetrySerialAPICommand(
 								msg,
-								// Ignore the number of attempts while jammed
-								attemptNumber - jammedAttempts,
+								// Ignore the number of attempts while jammed or where queuing failed
+								attemptNumber - jammedAttempts - queueAttempts,
 								e,
 							)
 						) {
+							if (waitDurationMs) {
+								await wait(waitDurationMs, true);
+							}
 							// Retry the command
 							continue attemptMessage;
 						}
