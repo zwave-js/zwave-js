@@ -216,6 +216,21 @@ type ParsedNVM =
 		type: "unknown";
 	};
 
+/**
+ * Options influencing how NVM contents should be migrated.
+ * By default, all data will be preserved.
+ */
+export interface MigrateNVMOptions {
+	/** Whether application data will be preserved */
+	preserveApplicationData?: boolean;
+	/** Whether SUC update entries will be preserved */
+	preserveSUCUpdateEntries?: boolean;
+	/** Whether LWR, NLWR and the priority route flag will be preserved */
+	preserveRoutes?: boolean;
+	/** Whether the neighbor table will be preserved */
+	preserveNeighbors?: boolean;
+}
+
 export function nodeHasInfo(node: NVMJSONNode): node is NVMJSONNodeWithInfo {
 	return !node.isVirtual || Object.keys(node).length > 1;
 }
@@ -1929,6 +1944,7 @@ export function json700To500(json: NVMJSON): NVM500JSON {
 export async function migrateNVM(
 	sourceNVM: Uint8Array,
 	targetNVM: Uint8Array,
+	options: MigrateNVMOptions = {},
 ): Promise<Uint8Array> {
 	let source: ParsedNVM;
 	let target: ParsedNVM;
@@ -1990,6 +2006,18 @@ export async function migrateNVM(
 		}
 	}
 
+	const {
+		preserveApplicationData = true,
+		preserveNeighbors = true,
+		preserveRoutes = true,
+		preserveSUCUpdateEntries = true,
+	} = options;
+
+	const preserveAll = preserveApplicationData
+		&& preserveNeighbors
+		&& preserveRoutes
+		&& preserveSUCUpdateEntries;
+
 	// Short circuit if...
 	if (
 		target.type === "unknown"
@@ -1998,6 +2026,8 @@ export async function migrateNVM(
 		&& sourceProtocolFileFormat
 		&& sourceProtocolFileFormat <= targetProtocolFileFormat
 		&& sourceNVM.length === targetNVM.length
+		// ...everything should be preserved and...
+		&& preserveAll
 	) {
 		// ...both the source and the target are 700 series, but at least the target uses an unsupported protocol version.
 		// We can be sure however that the target can upgrade any 700 series NVM to its protocol version, as long as the
@@ -2010,6 +2040,8 @@ export async function migrateNVM(
 		&& sourceNVM.length === targetNVM.length
 		&& source.json.meta.sharedFileSystem
 			=== target.json.meta.sharedFileSystem
+		// ...everything should be preserved,...
+		&& preserveAll
 	) {
 		// ... the source and target protocol versions are compatible without conversion
 		const sourceProtocolVersion = source.json.controller.protocolVersion;
@@ -2071,6 +2103,37 @@ export async function migrateNVM(
 	// In any case, preserve the application version of the target stick
 	source.json.controller.applicationVersion =
 		target.json.controller.applicationVersion;
+
+	// Remove information we do not want to preserve
+	if (!preserveApplicationData) {
+		source.json.controller.applicationData = undefined;
+	}
+	if (!preserveNeighbors) {
+		for (const node of Object.values(source.json.nodes)) {
+			if (!node.isVirtual) {
+				node.neighbors = [];
+			}
+		}
+	}
+	if (!preserveRoutes) {
+		for (const node of Object.values(source.json.nodes)) {
+			if (!node.isVirtual) {
+				node.appRouteLock = false;
+				node.lwr = undefined;
+				node.nlwr = undefined;
+			}
+		}
+	}
+	if (!preserveSUCUpdateEntries) {
+		source.json.controller.sucUpdateEntries = [];
+		source.json.controller.sucLastIndex = 0xff;
+		for (const node of Object.values(source.json.nodes)) {
+			if (!node.isVirtual) {
+				node.sucUpdateIndex = 0xfe;
+				node.sucPendingUpdate = false;
+			}
+		}
+	}
 
 	if (source.type === 500 && target.type === 500) {
 		// Both are 500, so we just need to update the metadata to match the target

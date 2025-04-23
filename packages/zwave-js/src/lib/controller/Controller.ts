@@ -105,6 +105,7 @@ import {
 } from "@zwave-js/core";
 import {
 	BufferedNVMReader,
+	type MigrateNVMOptions,
 	NVM3,
 	NVM3Adapter,
 	NVM500,
@@ -7894,11 +7895,13 @@ export class ZWaveController
 	 * @param nvmData The NVM backup to be restored
 	 * @param convertProgress Can be used to monitor the progress of the NVM conversion, which may take several seconds up to a few minutes depending on the NVM size
 	 * @param restoreProgress Can be used to monitor the progress of the restore operation, which may take several seconds up to a few minutes depending on the NVM size
+	 * @param migrateOptions Influence which data should be preserved during a migration
 	 */
 	public async restoreNVM(
 		nvmData: Uint8Array,
 		convertProgress?: (bytesRead: number, total: number) => void,
 		restoreProgress?: (bytesWritten: number, total: number) => void,
+		migrateOptions?: MigrateNVMOptions,
 	): Promise<void> {
 		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
 		if (!(await this.toggleRF(false))) {
@@ -7926,7 +7929,11 @@ export class ZWaveController
 			} else {
 				targetNVM = await this.backupNVMRaw500(convertProgress);
 			}
-			const convertedNVM = await migrateNVM(nvmData, targetNVM);
+			const convertedNVM = await migrateNVM(
+				nvmData,
+				targetNVM,
+				migrateOptions,
+			);
 
 			this.driver.controllerLog.print("Restoring NVM backup...");
 			if (this.sdkVersionGte("7.0")) {
