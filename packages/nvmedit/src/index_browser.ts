@@ -12,6 +12,7 @@ export {
 	nvmToJSON,
 } from "./convert.js";
 export type {
+	MigrateNVMOptions,
 	NVMJSON,
 	NVMJSONController,
 	NVMJSONControllerRFConfig,

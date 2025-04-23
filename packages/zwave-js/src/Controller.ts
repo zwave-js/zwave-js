@@ -12,6 +12,7 @@ export {
 } from "@zwave-js/core/safe";
 export type { RSSI, TXReport } from "@zwave-js/core/safe";
 export type { ZWaveApiVersion, ZWaveLibraryTypes } from "@zwave-js/core/safe";
+export type { MigrateNVMOptions } from "@zwave-js/nvmedit";
 export { SerialAPISetupCommand } from "@zwave-js/serial/serialapi";
 export { ZWaveController } from "./lib/controller/Controller.js";
 export type { ControllerEvents } from "./lib/controller/Controller.js";
