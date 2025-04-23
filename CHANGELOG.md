@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.1.0 (2025-04-23)
 ### Features
 * Add more proprietary controller features, fix `setValue` when using controller with proprietary features (#7744)
 * Add options to omit optional data during NVM migration (#7746)
