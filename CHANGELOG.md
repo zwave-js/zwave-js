@@ -4,6 +4,17 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Add more proprietary controller features, fix `setValue` when using controller with proprietary features (#7744)
+* Add options to omit optional data during NVM migration (#7746)
+
+### Bugfixes
+* Retry communication with nodes again when the controller indicates that queuing the command failed (#7743)
+
+### Config file changes
+* Add ZWA-2 (#7730)
+
 ## 15.0.6 (2025-04-14)
 ### Bugfixes
 * Avoid radio TX queue overflows by waiting for complete transmission, even when no ACK is requested (#7732)
