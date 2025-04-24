@@ -1,6 +1,7 @@
 import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
@@ -11,7 +12,6 @@ import { CCAPI, type CCAPIEndpoint, type CCAPIHost } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
-	type CommandClassOptions,
 	type InterviewContext,
 	type RefreshValuesContext,
 } from "../lib/CommandClass.js";
@@ -104,9 +104,11 @@ export class ManufacturerProprietaryCCAPI extends CCAPI {
 }
 
 // @publicAPI
-export interface ManufacturerProprietaryCCOptions extends CommandClassOptions {
+export interface ManufacturerProprietaryCCOptions {
 	manufacturerId?: number;
 	unspecifiedExpectsResponse?: boolean;
+	// Needed to support unknown proprietary commands
+	payload?: Uint8Array;
 }
 
 function getReponseForManufacturerProprietary(cc: ManufacturerProprietaryCC) {
@@ -133,7 +135,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 	declare ccCommand: undefined;
 
 	public constructor(
-		options: ManufacturerProprietaryCCOptions,
+		options: WithAddress<ManufacturerProprietaryCCOptions>,
 	) {
 		super(options);
 
