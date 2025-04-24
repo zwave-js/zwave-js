@@ -2140,7 +2140,7 @@ export class BatteryCCHealthReport extends BatteryCC {
     // (undocumented)
     readonly maximumCapacity: number | undefined;
     // (undocumented)
-    persistValues(ctx: PersistValuesContext): boolean;
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly temperature: number | undefined;
     // (undocumented)
@@ -2316,6 +2316,7 @@ export const BatteryCCValues: Readonly<{
         is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Temperature";
+            readonly unit: "°C";
             readonly writeable: false;
             readonly min: -128;
             readonly max: 127;
@@ -9212,7 +9213,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "supportedIndicatorIds";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: Readonly<{
             readonly type: "any";
             readonly readable: true;
@@ -9237,7 +9238,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "value";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Indicator value";
             readonly ccSpecific: {
@@ -9268,7 +9269,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "identify";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Identify";
             readonly states: {
@@ -9297,7 +9298,7 @@ export const IndicatorCCValues: Readonly<{
             readonly endpoint: number;
             readonly property: "timeout";
         };
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         readonly meta: {
             readonly label: "Timeout";
             readonly type: "string";
@@ -9331,7 +9332,7 @@ export const IndicatorCCValues: Readonly<{
             readonly writeable: true;
         }>;
     }) & {
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         options: {
             readonly internal: true;
             readonly minVersion: 1;
@@ -9363,7 +9364,7 @@ export const IndicatorCCValues: Readonly<{
             readonly writeable: true;
         };
     }) & {
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         options: {
             readonly internal: false;
             readonly minVersion: 2;
@@ -9389,7 +9390,7 @@ export const IndicatorCCValues: Readonly<{
             readonly writeable: true;
         }>;
     }) & {
-        is: (valueId: ValueID) => boolean;
+        is: (valueId: ValueID_2) => boolean;
         options: {
             readonly internal: true;
             readonly minVersion: 4;
@@ -23289,24 +23290,10 @@ export enum ZWaveProtocolCommand {
 
 // Warnings were encountered during analysis:
 //
-// src/cc/ColorSwitchCC.ts:471:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
-//   Type 'string | undefined' is not assignable to type 'string | number | symbol'.
-//     Type 'undefined' is not assignable to type 'string | number | symbol'.
-// src/cc/ConfigurationCC.ts:1276:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// src/cc/ConfigurationCC.ts:1283:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// src/cc/ConfigurationCC.ts:1407:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// src/cc/Security2CC.ts:549:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// src/cc/Security2CC.ts:557:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// src/cc/Security2CC.ts:1709:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// src/cc/Security2CC.ts:1712:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
-// src/cc/Security2CC.ts:1862:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
 // src/cc/TransportServiceCC.ts:39:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
 // src/cc/TransportServiceCC.ts:41:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
-// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:69:17 - (TS2345) Argument of type 'LogFormat | undefined' is not assignable to parameter of type 'LogFormat'.
-//   Type 'undefined' is not assignable to type 'LogFormat'.
+// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:8:47 - (TS2307) Cannot find module 'winston/lib/winston/transports' or its corresponding type declarations.
+// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 
