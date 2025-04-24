@@ -33,7 +33,8 @@ export function createNodeSocketFactory(
 					reject(err);
 				};
 				const onConnect = () => {
-					socket.setKeepAlive(true, 2500);
+					// During testing, values below 1000 caused the keep alive functionality to silently fail
+					socket.setKeepAlive(true, 1000);
 					removeListeners();
 					resolve();
 				};
