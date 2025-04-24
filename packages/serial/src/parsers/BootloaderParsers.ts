@@ -68,7 +68,11 @@ class BootloaderScreenParserTransformer
 		if (this.receiveBuffer) {
 			this.flushTimeout = setTimer(() => {
 				this.flushTimeout = undefined;
-				controller.enqueue(this.receiveBuffer);
+				try {
+					controller.enqueue(this.receiveBuffer);
+				} catch {
+					// This can fail after tearing down the plumbing
+				}
 				this.receiveBuffer = "";
 			}, 500);
 		}
