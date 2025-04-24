@@ -7,6 +7,9 @@ import {
 	MultiChannelCCEndPointFindReport,
 	MultiChannelCCEndPointGet,
 	MultiChannelCCEndPointReport,
+	MultiChannelCCV1CommandEncapsulation,
+	MultiChannelCCV1Get,
+	MultiChannelCCV1Report,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { type MockNodeBehavior } from "@zwave-js/testing";
@@ -17,9 +20,15 @@ const encapsulateMultiChannelCC: MockNodeBehavior = {
 			// The existing machinery interprets endpointIndex from the view
 			// of the controller, but we are the end node here, so re-interpret
 			// the destination as the endpoint index
-			receivedCC.encapsulated.endpointIndex = receivedCC
-				.destination as number;
-			receivedCC = receivedCC.encapsulated;
+			const inner = receivedCC.encapsulated;
+			inner.endpointIndex = receivedCC.destination as number;
+			inner.encapsulatingCC = receivedCC as any;
+			return inner;
+		} else if (receivedCC instanceof MultiChannelCCV1CommandEncapsulation) {
+			const inner = receivedCC.encapsulated;
+			inner.endpointIndex = receivedCC.endpointIndex;
+			inner.encapsulatingCC = receivedCC as any;
+			return inner;
 		}
 		return receivedCC;
 	},
@@ -38,18 +47,28 @@ const encapsulateMultiChannelCC: MockNodeBehavior = {
 			);
 			if (!multiChannelEncap) return response;
 
-			// FIXME: Consider V1 of the CC
-			const destination = multiChannelEncap.endpointIndex;
-			const source =
-				(multiChannelEncap as MultiChannelCCCommandEncapsulation)
-					.destination as number;
+			if (
+				multiChannelEncap
+					instanceof MultiChannelCCV1CommandEncapsulation
+			) {
+				response.cc = new MultiChannelCCV1CommandEncapsulation({
+					nodeId: response.cc.nodeId,
+					endpointIndex: multiChannelEncap.endpointIndex,
+					encapsulated: response.cc,
+				});
+			} else if (
+				multiChannelEncap instanceof MultiChannelCCCommandEncapsulation
+			) {
+				const destination = multiChannelEncap.endpointIndex;
+				const source = multiChannelEncap.destination as number;
 
-			response.cc = new MultiChannelCCCommandEncapsulation({
-				nodeId: response.cc.nodeId,
-				endpointIndex: source,
-				encapsulated: response.cc,
-				destination,
-			});
+				response.cc = new MultiChannelCCCommandEncapsulation({
+					nodeId: response.cc.nodeId,
+					endpointIndex: source,
+					encapsulated: response.cc,
+					destination,
+				});
+			}
 		}
 
 		return response;
@@ -110,6 +129,29 @@ const respondToMultiChannelCCCapabilityGet: MockNodeBehavior = {
 	},
 };
 
+const respondToMultiChannelCCV1Get: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof MultiChannelCCV1Get) {
+			// On V1, CCs must exist on sequential endpoints. Therefore
+			// we can look for the last endpoint to support a given CC
+			const requestedCC = receivedCC.requestedCC;
+			const supportedEndpointIndizes = [...self.endpoints.values()]
+				.filter((ep) => {
+					const info = ep.implementedCCs.get(requestedCC);
+					return info && info.version > 0 && info.isSupported;
+				}).map((ep) => ep.index);
+			const endpointCount = Math.max(0, ...supportedEndpointIndizes);
+
+			const cc = new MultiChannelCCV1Report({
+				nodeId: self.id,
+				requestedCC,
+				endpointCount,
+			});
+			return { action: "sendCC", cc };
+		}
+	},
+};
+
 export const MultiChannelCCHooks = [
 	encapsulateMultiChannelCC,
 ];
@@ -118,4 +160,5 @@ export const MultiChannelCCBehaviors = [
 	respondToMultiChannelCCEndPointGet,
 	respondToMultiChannelCCEndPointFind,
 	respondToMultiChannelCCCapabilityGet,
+	respondToMultiChannelCCV1Get,
 ];
