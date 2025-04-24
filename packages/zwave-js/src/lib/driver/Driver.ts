@@ -1655,10 +1655,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private _controllerInterviewed: boolean = false;
 	private _nodesReady = new Set<number>();
 	private _nodesReadyEventEmitted: boolean = false;
+	private _isOpeningSerialPort: boolean = false;
 
 	private async openSerialport(): Promise<void> {
 		let lastError: unknown;
 		// After a reset, the serial port may need a few seconds until we can open it - try a few times
+		this._isOpeningSerialPort = true;
 		for (
 			let attempt = 1;
 			attempt <= this._options.attempts.openSerialPort;
@@ -1668,7 +1670,17 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this.serial = await this.serialFactory!.createStream();
 				// Start reading from the serial port
 				void this.handleSerialData(this.serial);
-				return;
+
+				// There are some situations where the serial port closes unexpectedly
+				// after just a few milliseconds, e.g. when reconnecting to a TCP serial port.
+				// Wait a bit to see if this happens.
+				await wait(250);
+
+				if (this.serial.isOpen) {
+					// It is still open, we're done
+					this._isOpeningSerialPort = false;
+					return;
+				}
 			} catch (e) {
 				lastError = e;
 			}
@@ -1676,6 +1688,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				await wait(1000);
 			}
 		}
+
+		this._isOpeningSerialPort = false;
 
 		const message = `Failed to open the serial port: ${
 			getErrorMessage(
@@ -3259,7 +3273,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				"error",
 			);
 			// Don't continue if the controller is unresponsive
-			if (isMissingControllerACK(e)) throw e;
+			if (isMissingControllerACK(e)) {
+				this.isSoftResetting = false;
+				throw e;
+			}
 		}
 
 		if (this._controller) {
@@ -3723,7 +3740,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			) {
 				// A disconnection while soft resetting is to be expected.
 				// The soft reset method will handle reopening
-				if (this.isSoftResetting) return;
+				if (this.isSoftResetting || this._isOpeningSerialPort) return;
 
 				void this.destroyWithMessage(e.message);
 				return;
