@@ -22,12 +22,10 @@ const encapsulateMultiChannelCC: MockNodeBehavior = {
 			// the destination as the endpoint index
 			const inner = receivedCC.encapsulated;
 			inner.endpointIndex = receivedCC.destination as number;
-			inner.encapsulatingCC = receivedCC as any;
 			return inner;
 		} else if (receivedCC instanceof MultiChannelCCV1CommandEncapsulation) {
 			const inner = receivedCC.encapsulated;
 			inner.endpointIndex = receivedCC.endpointIndex;
-			inner.encapsulatingCC = receivedCC as any;
 			return inner;
 		}
 		return receivedCC;

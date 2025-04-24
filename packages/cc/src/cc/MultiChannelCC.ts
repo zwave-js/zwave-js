@@ -1622,6 +1622,22 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 	) {
 		super(options);
 		this.encapsulated = options.encapsulated;
+		this.encapsulated.encapsulatingCC = this as any;
+		// Propagate the endpoint index all the way down
+		let cur: CommandClass = this;
+		while (cur) {
+			if (isMultiEncapsulatingCommandClass(cur)) {
+				for (const cc of cur.encapsulated) {
+					cc.endpointIndex = this.endpointIndex;
+				}
+				break;
+			} else if (isEncapsulatingCommandClass(cur)) {
+				cur.encapsulated.endpointIndex = this.endpointIndex;
+				cur = cur.encapsulated;
+			} else {
+				break;
+			}
+		}
 	}
 
 	public static async from(
@@ -1641,7 +1657,6 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 			raw.payload.subarray(isV2withV1Header ? 2 : 1),
 			ctx,
 		);
-		encapsulated.endpointIndex = endpointIndex;
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
