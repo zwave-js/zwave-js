@@ -556,9 +556,7 @@ identical capabilities:      ${multiResponse.identicalCapabilities}`;
 				endpoint: this.endpointIndex,
 				message:
 					`The following endpoints are ignored through the config file: ${
-						removeEndpoints.join(
-							", ",
-						)
+						removeEndpoints.join(", ")
 					}`,
 				direction: "none",
 			});
@@ -709,6 +707,12 @@ supported CCs:`;
 		const removeEndpoints = ctx.getDeviceConfig?.(node.id)?.compat
 			?.removeEndpoints;
 		if (removeEndpoints === "*") {
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message:
+					`Skipping ${this.ccName} interview b/c all endpoints are ignored by the device config file...`,
+				direction: "none",
+			});
 			return;
 		}
 		const api = CCAPI.create(
@@ -788,9 +792,7 @@ supported CCs:`;
 				endpoint: this.endpointIndex,
 				message:
 					`The following endpoints are ignored through the config file: ${
-						removeEndpoints.join(
-							", ",
-						)
+						removeEndpoints.join(", ")
 					}`,
 				direction: "none",
 			});
