@@ -973,6 +973,9 @@ export const BatteryCCValues = Object.freeze({
 			return {
 				...ValueMetadata.ReadOnlyInt8,
 				label: "Temperature",
+				// For now, only °C is specified as a valid unit
+				// If this ever changes, update the unit in persistValues on the fly
+				unit: "°C",
 			} as const;
 		},
 		options: {

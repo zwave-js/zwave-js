@@ -1491,7 +1491,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// No identification desired, just send a NAK and assume it's a
 				// Serial API controller
 				await this.writeHeader(MessageHeaders.NAK);
-				await wait(1000);
+				if (getenv("NODE_ENV") !== "test") {
+					await wait(1000);
+				}
 			} else {
 				const mode = await this.detectMode();
 				if (mode === DriverMode.CLI) {
@@ -1674,7 +1676,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// There are some situations where the serial port closes unexpectedly
 				// after just a few milliseconds, e.g. when reconnecting to a TCP serial port.
 				// Wait a bit to see if this happens.
-				await wait(250);
+				if (getenv("NODE_ENV") !== "test") {
+					await wait(250);
+				}
 
 				if (this.serial.isOpen) {
 					// It is still open, we're done
