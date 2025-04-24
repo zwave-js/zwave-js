@@ -417,6 +417,7 @@ export class MultiChannelCC extends CommandClass {
 	): MultiChannelCCV1CommandEncapsulation {
 		const ret = new MultiChannelCCV1CommandEncapsulation({
 			nodeId: cc.nodeId,
+			endpointIndex: cc.endpointIndex,
 			encapsulated: cc,
 		});
 
@@ -1517,6 +1518,14 @@ export class MultiChannelCCV1Report extends MultiChannelCC {
 	public readonly requestedCC: CommandClasses;
 	public readonly endpointCount: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.requestedCC,
+			this.endpointCount,
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -1551,18 +1560,17 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): MultiChannelCCV1Get {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		// V1 won't be extended in the future, so do an exact check
+		validatePayload(raw.payload.length === 1);
+		const requestedCC: CommandClasses = raw.payload[0];
 
-		// return new MultiChannelCCV1Get({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			requestedCC,
+		});
 	}
 
 	public requestedCC: CommandClasses;
@@ -1614,8 +1622,22 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 	) {
 		super(options);
 		this.encapsulated = options.encapsulated;
-		// No need to distinguish between source and destination in V1
-		this.endpointIndex = this.encapsulated.endpointIndex;
+		this.encapsulated.encapsulatingCC = this as any;
+		// Propagate the endpoint index all the way down
+		let cur: CommandClass = this;
+		while (cur) {
+			if (isMultiEncapsulatingCommandClass(cur)) {
+				for (const cc of cur.encapsulated) {
+					cc.endpointIndex = this.endpointIndex;
+				}
+				break;
+			} else if (isEncapsulatingCommandClass(cur)) {
+				cur.encapsulated.endpointIndex = this.endpointIndex;
+				cur = cur.encapsulated;
+			} else {
+				break;
+			}
+		}
 	}
 
 	public static async from(

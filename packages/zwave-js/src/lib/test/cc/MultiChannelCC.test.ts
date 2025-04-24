@@ -1,4 +1,8 @@
-import { CommandClass } from "@zwave-js/cc";
+import {
+	BinarySwitchCCReport,
+	BinarySwitchCCValues,
+	CommandClass,
+} from "@zwave-js/cc";
 import {
 	BasicCCGet,
 	BasicCCReport,
@@ -17,7 +21,10 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared/safe";
+import { createMockZWaveRequestFrame } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
+import { integrationTest } from "../integrationTestSuite.js";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -280,3 +287,76 @@ test("MultiChannelCC/BasicCCGet => MultiCommandCC/BasicCCReport = unexpected", (
 
 	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
 });
+
+integrationTest(
+	"Interviewing and endpoint handling for Multi Channel CC v1 works correctly",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				{
+					ccId: CommandClasses["Multi Channel"],
+					version: 1,
+				},
+				CommandClasses["Binary Switch"],
+			],
+			endpoints: [
+				{
+					// EP 1
+					commandClasses: [
+						CommandClasses["Binary Switch"],
+					],
+				},
+				{
+					// EP 2
+					commandClasses: [
+						CommandClasses["Binary Switch"],
+					],
+				},
+			],
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			// By default, all endpoint values are false
+			const currentValueValue = BinarySwitchCCValues.currentValue;
+			t.expect(
+				node.getValue(currentValueValue.endpoint(0)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(1)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(2)),
+			).toBe(false);
+
+			// Send a report from endpoint 2
+			let cc: CommandClass = new BinarySwitchCCReport({
+				nodeId: node.id,
+				endpointIndex: 2,
+				currentValue: true,
+			});
+			cc = MultiChannelCC.encapsulateV1(cc);
+
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+
+			await wait(100);
+
+			// Now only endpoint 2 should be true
+			t.expect(
+				node.getValue(currentValueValue.endpoint(0)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(1)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(2)),
+			).toBe(true);
+		},
+	},
+);
