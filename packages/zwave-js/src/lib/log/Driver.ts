@@ -13,7 +13,7 @@ import {
 	messageRecordToLines,
 	tagify,
 } from "@zwave-js/core";
-import type { Message, ResponseRole } from "@zwave-js/serial";
+import type { Message, RCPResponseRole } from "@zwave-js/serial";
 import { FunctionType, MessageType } from "@zwave-js/serial";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName } from "@zwave-js/shared";
@@ -96,7 +96,7 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 	public transactionResponse(
 		message: Message,
 		originalTransaction: Transaction | undefined,
-		role: ResponseRole,
+		role: RCPResponseRole,
 	): void {
 		if (!this.isDriverLogVisible()) return;
 		this.logMessage(message, {
