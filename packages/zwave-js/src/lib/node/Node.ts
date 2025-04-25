@@ -28,6 +28,11 @@ import {
 	utils as ccUtils,
 } from "@zwave-js/cc";
 import {
+	type SetValueResult,
+	SetValueStatus,
+	supervisionResultToSetValueResult,
+} from "@zwave-js/cc";
+import {
 	AssociationCCGet,
 	AssociationCCRemove,
 	AssociationCCSet,
@@ -74,11 +79,6 @@ import {
 } from "@zwave-js/cc/VersionCC";
 import { WakeUpCCWakeUpNotification } from "@zwave-js/cc/WakeUpCC";
 import { ZWavePlusCCGet } from "@zwave-js/cc/ZWavePlusCC";
-import {
-	type SetValueResult,
-	SetValueStatus,
-	supervisionResultToSetValueResult,
-} from "@zwave-js/cc/safe";
 import { embeddedDevicesDir } from "@zwave-js/config";
 import {
 	BasicDeviceClass,

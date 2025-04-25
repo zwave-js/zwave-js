@@ -1,4 +1,4 @@
-import { Bytes, getErrorMessage, isUint8Array } from "@zwave-js/shared/safe";
+import { Bytes, getErrorMessage, isUint8Array } from "@zwave-js/shared";
 import { unzipSync } from "fflate";
 import { decryptAES256CBC } from "../crypto/index.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";

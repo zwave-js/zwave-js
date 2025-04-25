@@ -11,12 +11,12 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
 	Bytes,
 	stringToUint8ArrayUTF16BE,
 	uint8ArrayToStringUTF16BE,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,

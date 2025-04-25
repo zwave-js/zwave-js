@@ -17,7 +17,7 @@ import type {
 	NodeId,
 	SinglecastCC,
 	SupportsCC,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
 	CommandClasses,
 	type MaybeNotKnown,
@@ -26,9 +26,9 @@ import {
 	enumValuesToMetadataStates,
 	parseFloatWithScale,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type AllOrNone, getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import { type AllOrNone, getEnumMemberName, pick } from "@zwave-js/shared";
 import {
 	CCAPI,
 	POLL_VALUE,

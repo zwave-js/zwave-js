@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { type NVMAccess, type NVMIO } from "../common/definitions.js";
 
 interface BufferedChunk {

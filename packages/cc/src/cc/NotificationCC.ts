@@ -41,9 +41,9 @@ import {
 	isZWaveError,
 	parseBitMask,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes, isUint8Array } from "@zwave-js/shared/safe";
-import { buffer2hex, num2hex, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, isUint8Array } from "@zwave-js/shared";
+import { buffer2hex, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { isArray } from "alcalzone-shared/typeguards";
 import {

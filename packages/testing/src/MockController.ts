@@ -19,7 +19,7 @@ import {
 } from "@zwave-js/serial";
 import { type MockPort } from "@zwave-js/serial/mock";
 import { AsyncQueue } from "@zwave-js/shared";
-import { TimedExpectation, isAbortError, noop } from "@zwave-js/shared/safe";
+import { TimedExpectation, isAbortError, noop } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {
 	type MockControllerCapabilities,

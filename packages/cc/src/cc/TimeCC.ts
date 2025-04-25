@@ -13,9 +13,9 @@ import {
 	getDSTInfo,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+import { type MaybeNotKnown } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import { pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI } from "../lib/API.js";
 import {

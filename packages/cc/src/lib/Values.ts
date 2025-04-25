@@ -5,12 +5,12 @@ import {
 	type GetValueDB,
 	type ValueID,
 	type ValueMetadata,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
 	type FnOrStatic,
 	type ReturnTypeOrStatic,
 	evalOrStatic,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import type { ValueIDProperties } from "./API.js";
 
 import { CCValues } from "../cc/_CCValues.generated.js";

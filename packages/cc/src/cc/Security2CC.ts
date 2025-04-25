@@ -37,9 +37,9 @@ import {
 	NODE_ID_BROADCAST_LR,
 	type SecurityManagers,
 	encodeCCList,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import { buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { isArray } from "alcalzone-shared/typeguards";
 import { CCAPI } from "../lib/API.js";

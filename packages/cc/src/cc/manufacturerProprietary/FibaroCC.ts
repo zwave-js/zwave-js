@@ -13,7 +13,7 @@ import {
 	ZWaveErrorCodes,
 	parseMaybeNumber,
 	validatePayload,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { isArray } from "alcalzone-shared/typeguards";

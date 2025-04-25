@@ -16,7 +16,7 @@ import {
 	UserCodeCCUsersNumberGet,
 	UserCodeCCUsersNumberReport,
 } from "@zwave-js/cc/UserCodeCC";
-import { CRC16_CCITT, CommandClasses } from "@zwave-js/core/safe";
+import { CRC16_CCITT, CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import {
 	type MockNodeBehavior,

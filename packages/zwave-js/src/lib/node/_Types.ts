@@ -1,4 +1,3 @@
-import type { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import type {
 	EntryControlDataTypes,
 	EntryControlEventTypes,
@@ -8,7 +7,8 @@ import type {
 	Powerlevel,
 	PowerlevelTestStatus,
 	Weekday,
-} from "@zwave-js/cc/safe";
+} from "@zwave-js/cc";
+import type { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import type {
 	CommandClasses,
 	MetadataUpdatedArgs,
@@ -18,7 +18,7 @@ import type {
 	ValueNotificationArgs,
 	ValueRemovedArgs,
 	ValueUpdatedArgs,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { type AllOrNone } from "@zwave-js/shared";
 import { type Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
@@ -31,12 +31,8 @@ export {
 	MultilevelSwitchCommand,
 	Powerlevel,
 	PowerlevelTestStatus,
-} from "@zwave-js/cc/safe";
-export {
-	ControllerStatus,
-	InterviewStage,
-	NodeStatus,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/cc";
+export { ControllerStatus, InterviewStage, NodeStatus } from "@zwave-js/core";
 
 export type NodeInterviewFailedEventArgs =
 	& {

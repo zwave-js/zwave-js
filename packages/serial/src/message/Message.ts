@@ -20,8 +20,8 @@ import {
 	Bytes,
 	type JSONObject,
 	type TypedClassDecorator,
-} from "@zwave-js/shared/safe";
-import { num2hex, staticExtends } from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
+import { num2hex, staticExtends } from "@zwave-js/shared";
 import { FunctionType, MessageType } from "./Constants.js";
 import { MessageHeaders } from "./MessageHeaders.js";
 

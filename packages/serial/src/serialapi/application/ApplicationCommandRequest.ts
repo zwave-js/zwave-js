@@ -20,7 +20,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { type MessageWithCC } from "../utils.js";
 
 export enum ApplicationCommandStatusFlags {

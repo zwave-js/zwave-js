@@ -1,9 +1,4 @@
 import {
-	ZWaveError,
-	ZWaveErrorCodes,
-	isZWaveError,
-} from "@zwave-js/core/error";
-import {
 	type CommandClasses,
 	ControllerCapabilityFlags,
 	MAX_NODES,
@@ -12,14 +7,13 @@ import {
 	NodeType,
 	RFRegion,
 	stripUndefined,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
-	Bytes,
-	buffer2hex,
-	cloneDeep,
-	num2hex,
-	pick,
-} from "@zwave-js/shared/safe";
+	ZWaveError,
+	ZWaveErrorCodes,
+	isZWaveError,
+} from "@zwave-js/core/error";
+import { Bytes, buffer2hex, cloneDeep, num2hex, pick } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { SemVer } from "semver";
 import semverGte from "semver/functions/gte.js";

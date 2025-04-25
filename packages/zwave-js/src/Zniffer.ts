@@ -1,4 +1,4 @@
-export { BeamingInfo, MPDUHeaderType } from "@zwave-js/core/safe";
+export { BeamingInfo, MPDUHeaderType } from "@zwave-js/core";
 export type { MPDU } from "./lib/zniffer/MPDU.js";
 export type {
 	BeamFrame,

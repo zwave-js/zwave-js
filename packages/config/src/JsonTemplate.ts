@@ -1,10 +1,10 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { pathExists, readTextFile } from "@zwave-js/shared";
+import { getErrorMessage } from "@zwave-js/shared";
 import {
 	type ReadFile,
 	type ReadFileSystemInfo,
 } from "@zwave-js/shared/bindings";
-import { getErrorMessage } from "@zwave-js/shared/safe";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";
 import path from "pathe";

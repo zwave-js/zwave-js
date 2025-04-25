@@ -6,7 +6,7 @@ import {
 	EnergyProductionCCGet,
 	EnergyProductionCCReport,
 } from "@zwave-js/cc/EnergyProductionCC";
-import { CommandClasses } from "@zwave-js/core/safe";
+import { CommandClasses } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
 import {
 	type EnergyProductionCCCapabilities,

@@ -4,7 +4,7 @@ import type {
 	MessageOrCCLogEntry,
 	SupervisionResult,
 	WithAddress,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
 	CommandClasses,
 	type MaybeNotKnown,
@@ -12,9 +12,9 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import { getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI } from "../lib/API.js";
 import {

@@ -1,4 +1,4 @@
-import { BasicDeviceClass, CommandClasses } from "@zwave-js/core/safe";
+import { BasicDeviceClass, CommandClasses } from "@zwave-js/core";
 
 export function determineNIF(): {
 	basicDeviceClass: BasicDeviceClass;

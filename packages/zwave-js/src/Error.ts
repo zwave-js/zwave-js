@@ -1,1 +1,1 @@
-export { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
+export { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";

@@ -22,9 +22,9 @@ import {
 	ZWaveErrorCodes,
 	isTransmissionError,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import { getEnumMemberName } from "@zwave-js/shared";
 import { PhysicalCCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {

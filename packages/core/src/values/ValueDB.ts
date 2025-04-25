@@ -1,9 +1,9 @@
-import { type Database } from "@zwave-js/shared/bindings";
 import {
 	TypedEventTarget,
 	areUint8ArraysEqual,
 	isUint8Array,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
+import { type Database } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import type { CommandClasses } from "../definitions/CommandClasses.js";
 import {

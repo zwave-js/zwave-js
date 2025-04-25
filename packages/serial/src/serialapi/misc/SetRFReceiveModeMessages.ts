@@ -19,7 +19,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 export interface SetRFReceiveModeRequestOptions {
 	/** Whether the stick should receive (true) or not (false) */

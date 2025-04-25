@@ -4,7 +4,7 @@ import {
 	type MaybeNotKnown,
 	TransmitOptions,
 	validatePayload,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { CCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {

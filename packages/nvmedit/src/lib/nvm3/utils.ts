@@ -1,4 +1,4 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { buffer2hex, num2hex } from "@zwave-js/shared";
 import { type NVM3 } from "../NVM3.js";
 import { FragmentType, ObjectType, PageStatus } from "./consts.js";

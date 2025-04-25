@@ -15,7 +15,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { type EndpointId, type MaybeNotKnown } from "@zwave-js/core/safe";
+import { type EndpointId, type MaybeNotKnown } from "@zwave-js/core";
 import {
 	type AllOrNone,
 	Bytes,

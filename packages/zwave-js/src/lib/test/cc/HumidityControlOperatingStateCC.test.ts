@@ -6,7 +6,7 @@ import {
 	HumidityControlOperatingStateCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {

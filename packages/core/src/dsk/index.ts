@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 export function dskToString(dsk: Uint8Array): string {

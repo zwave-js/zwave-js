@@ -1,9 +1,9 @@
 import { CommandClass } from "@zwave-js/cc";
+import { AssociationCommand } from "@zwave-js/cc";
 import { type AssociationCCReport } from "@zwave-js/cc/AssociationCC";
 import { BasicCCSet } from "@zwave-js/cc/BasicCC";
 import { MultiCommandCCCommandEncapsulation } from "@zwave-js/cc/MultiCommandCC";
 import { SecurityCCCommandEncapsulation } from "@zwave-js/cc/SecurityCC";
-import { AssociationCommand } from "@zwave-js/cc/safe";
 import { CommandClasses, ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { ApplicationCommandRequest } from "@zwave-js/serial/serialapi";
 import { MockController, MockNode } from "@zwave-js/testing";

@@ -8,7 +8,7 @@ import {
 	ThermostatSetpointCCSupportedGet,
 	ThermostatSetpointCCSupportedReport,
 } from "@zwave-js/cc/ThermostatSetpointCC";
-import { CommandClasses } from "@zwave-js/core/safe";
+import { CommandClasses } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
 	type ThermostatSetpointCCCapabilities,

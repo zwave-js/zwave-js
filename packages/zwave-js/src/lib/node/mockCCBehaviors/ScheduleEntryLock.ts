@@ -23,8 +23,8 @@ import {
 	ScheduleEntryLockCCYearDayScheduleReport,
 	ScheduleEntryLockCCYearDayScheduleSet,
 } from "@zwave-js/cc/ScheduleEntryLockCC";
-import { CommandClasses } from "@zwave-js/core/safe";
-import { type AllOrNone } from "@zwave-js/shared/safe";
+import { CommandClasses } from "@zwave-js/core";
+import { type AllOrNone } from "@zwave-js/shared";
 import {
 	type MockNodeBehavior,
 	type ScheduleEntryLockCCCapabilities,

@@ -6,7 +6,7 @@ import {
 	type ValueID,
 	type ValueRemovedArgs,
 	type ValueUpdatedArgs,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { ObjectKeyMap, type Timer, setTimer } from "@zwave-js/shared";
 import { type Driver } from "../../driver/Driver.js";
 import { type DeviceClass } from "../DeviceClass.js";

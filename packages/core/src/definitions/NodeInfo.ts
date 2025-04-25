@@ -1,5 +1,5 @@
-import { Bytes } from "@zwave-js/shared/safe";
-import { sum } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
+import { sum } from "@zwave-js/shared";
 import { type BasicDeviceClass } from "../registries/DeviceClasses.js";
 import { validatePayload } from "../util/misc.js";
 import { CommandClasses } from "./CommandClasses.js";

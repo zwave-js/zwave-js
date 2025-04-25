@@ -8,7 +8,7 @@ import {
 	type SetValueResult,
 	SetValueStatus,
 	supervisionResultToSetValueResult,
-} from "@zwave-js/cc/safe";
+} from "@zwave-js/cc";
 import {
 	SecurityClass,
 	SupervisionStatus,

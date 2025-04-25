@@ -1,4 +1,4 @@
-import { NUM_NODEMASK_BYTES } from "@zwave-js/core/safe";
+import { NUM_NODEMASK_BYTES } from "@zwave-js/core";
 import { SUC_UPDATE_ENTRY_SIZE } from "../../consts.js";
 import { type Route } from "../common/routeCache.js";
 import { type SUCUpdateEntry } from "../common/sucUpdateEntry.js";

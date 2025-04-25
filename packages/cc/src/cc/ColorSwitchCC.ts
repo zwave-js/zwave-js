@@ -18,14 +18,14 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown, encodeBitMask } from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+import { type MaybeNotKnown, encodeBitMask } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import {
 	getEnumMemberName,
 	isEnumMember,
 	keysOf,
 	pick,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
 import { isObject } from "alcalzone-shared/typeguards";

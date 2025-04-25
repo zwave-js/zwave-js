@@ -6,7 +6,7 @@ import {
 	ThermostatModeCCSupportedGet,
 	ThermostatModeCCSupportedReport,
 } from "@zwave-js/cc/ThermostatModeCC";
-import { CommandClasses } from "@zwave-js/core/safe";
+import { CommandClasses } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
 	type ThermostatModeCCCapabilities,

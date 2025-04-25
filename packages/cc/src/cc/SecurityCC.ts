@@ -24,9 +24,9 @@ import {
 	randomBytes,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { buffer2hex, num2hex, pick } from "@zwave-js/shared/safe";
+import { type MaybeNotKnown } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import { buffer2hex, num2hex, pick } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {

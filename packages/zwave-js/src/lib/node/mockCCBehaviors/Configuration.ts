@@ -10,7 +10,7 @@ import {
 	ConfigurationCCReport,
 	ConfigurationCCSet,
 } from "@zwave-js/cc/ConfigurationCC";
-import { CommandClasses, ConfigValueFormat } from "@zwave-js/core/safe";
+import { CommandClasses, ConfigValueFormat } from "@zwave-js/core";
 import {
 	type ConfigurationCCCapabilities,
 	type MockNodeBehavior,

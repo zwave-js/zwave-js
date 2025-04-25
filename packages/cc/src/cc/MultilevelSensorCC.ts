@@ -25,7 +25,7 @@ import type {
 	SupervisionResult,
 	SupportsCC,
 	ValueID,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
 	CommandClasses,
 	type MaybeNotKnown,
@@ -35,9 +35,9 @@ import {
 	parseBitMask,
 	parseFloatWithScale,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type AllOrNone, num2hex } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import { type AllOrNone, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,

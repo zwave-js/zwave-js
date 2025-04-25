@@ -1,6 +1,6 @@
 import { type ZWaveSerialStream } from "@zwave-js/serial";
 import { type MockPort } from "@zwave-js/serial/mock";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import {
 	MockController,
 	type MockControllerOptions,
