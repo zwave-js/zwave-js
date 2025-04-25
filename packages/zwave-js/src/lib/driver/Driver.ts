@@ -221,7 +221,11 @@ import { isArray, isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
 import { PACKAGE_NAME, PACKAGE_VERSION } from "../_version.js";
 import { ZWaveController } from "../controller/Controller.js";
-import { InclusionState, RemoveNodeReason } from "../controller/Inclusion.js";
+import {
+	type FoundNode,
+	InclusionState,
+	RemoveNodeReason,
+} from "../controller/Inclusion.js";
 import { determineNIF } from "../controller/NodeInformationFrame.js";
 import { DriverLogger } from "../log/Driver.js";
 import type { Endpoint } from "../node/Endpoint.js";
@@ -1837,6 +1841,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (this._controller == undefined) {
 			this._controller = new ZWaveController(this);
 			this._controller
+				.on("node found", this.onNodeFound.bind(this))
 				.on("node added", this.onNodeAdded.bind(this))
 				.on("node removed", this.onNodeRemoved.bind(this))
 				.on(
@@ -2748,6 +2753,27 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	/** Is called when a node interview is completed */
 	private onNodeInterviewCompleted(node: ZWaveNode): void {
 		this.debounceSendNodeToSleep(node);
+	}
+
+	/** This is called when a new node was found and is being added to the network */
+	private onNodeFound(node: FoundNode): void {
+		// GH#7692: In some cases, an old node's info may be left in the value DB,
+		// causing incorrect behavior during interview.
+
+		// Delete from value and metadata DBs
+		const prefix = `{"nodeId":${node.id},`;
+		for (const key of this.valueDB!.keys()) {
+			if (key.startsWith(prefix)) {
+				this.valueDB!.delete(key);
+			}
+		}
+		for (const key of this.metadataDB!.keys()) {
+			if (key.startsWith(prefix)) {
+				this.metadataDB!.delete(key);
+			}
+		}
+
+		this.cachePurge(cacheKeys.node(node.id)._baseKey);
 	}
 
 	/** This is called when a new node has been added to the network */
