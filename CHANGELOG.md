@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.1.1 (2025-04-25)
 ### Bugfixes
 * More resilient recovery from disconnected TCP serial ports (#7748)
 * Do not delete battery temperature unit if value is unknown (#7749)

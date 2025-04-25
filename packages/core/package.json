@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/core",
-  "version": "15.0.6",
+  "version": "15.1.1",
   "description": "zwave-js: core components",
   "keywords": [],
   "publishConfig": {
