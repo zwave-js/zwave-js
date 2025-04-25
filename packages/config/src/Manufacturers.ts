@@ -6,10 +6,10 @@ import {
 	stringify,
 	writeTextFile,
 } from "@zwave-js/shared";
-import {
-	type ReadFile,
-	type ReadFileSystemInfo,
-	type WriteFile,
+import type {
+	ReadFile,
+	ReadFileSystemInfo,
+	WriteFile,
 } from "@zwave-js/shared/bindings";
 import { isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";

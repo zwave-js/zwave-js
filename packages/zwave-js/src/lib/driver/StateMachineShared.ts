@@ -10,19 +10,15 @@ import {
 	type SendDataBridgeRequestTransmitReport,
 	SendDataMulticastBridgeRequest,
 	type SendDataMulticastBridgeRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
 	SendDataMulticastRequest,
 	type SendDataMulticastRequestTransmitReport,
 	SendDataRequest,
 	type SendDataRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
 	isSendData,
 	isSendDataTransmitReport,
 } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName } from "@zwave-js/shared";
-import { type SerialAPICommandMachineFailure } from "./SerialAPICommandMachine.js";
+import type { SerialAPICommandMachineFailure } from "./SerialAPICommandMachine.js";
 import type { Transaction } from "./Transaction.js";
 
 export function serialAPICommandErrorToZWaveError(

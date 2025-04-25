@@ -1,8 +1,8 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import net from "node:net";
-import { type UnderlyingSink, type UnderlyingSource } from "node:stream/web";
-import { type ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
-import { type ZWaveSocketOptions } from "./ZWaveSocketOptions.js";
+import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
+import type { ZWaveSocketOptions } from "./ZWaveSocketOptions.js";
 
 export function createNodeSocketFactory(
 	socketOptions: ZWaveSocketOptions,

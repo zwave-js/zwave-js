@@ -7,7 +7,7 @@ import {
 	SceneActuatorConfigurationCommand,
 } from "@zwave-js/cc";
 import { CommandClasses, Duration } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {

@@ -9,7 +9,7 @@ import {
 import { IndicatorCCValues } from "@zwave-js/cc/IndicatorCC";
 import { CommandClasses } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 import { createTestNode } from "../mocks.js";
 

@@ -1,5 +1,5 @@
 import { getenv } from "@zwave-js/shared";
-import { type Format } from "logform";
+import type { Format } from "logform";
 import path from "pathe";
 import { configs } from "triple-beam";
 import winston from "winston";
@@ -22,7 +22,7 @@ import {
 	stringToNodeList,
 	timestampFormatShort,
 } from "../../log/shared.js";
-import { type LogContainer, type ZWaveLogger } from "../../log/traits.js";
+import type { LogContainer, ZWaveLogger } from "../../log/traits.js";
 
 const isTTY = process.stdout.isTTY;
 const isUnitTest = process.env.NODE_ENV === "test";

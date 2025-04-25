@@ -1,8 +1,8 @@
-import {
-	type PersistValuesContext,
-	type VersionCCCapabilitiesGet,
-	type VersionCCCommandClassGet,
-	type VersionCCGet,
+import type {
+	PersistValuesContext,
+	VersionCCCapabilitiesGet,
+	VersionCCCommandClassGet,
+	VersionCCGet,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
@@ -11,10 +11,10 @@ import {
 	ZWaveLibraryTypes,
 } from "@zwave-js/core";
 import semverParse from "semver/functions/parse.js";
-import { type ZWaveController } from "../../controller/Controller.js";
+import type { ZWaveController } from "../../controller/Controller.js";
 import { libVersion } from "../../driver/Driver.js";
-import { type ZWaveOptions } from "../../driver/ZWaveOptions.js";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
+import type { ZWaveNode } from "../Node.js";
 
 export async function handleVersionGet(
 	ctx: PersistValuesContext & LogNode,

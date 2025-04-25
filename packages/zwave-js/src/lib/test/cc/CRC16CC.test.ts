@@ -7,7 +7,7 @@ import {
 	InvalidCC,
 	isEncapsulatingCommandClass,
 } from "@zwave-js/cc";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 test("should be detected as an encapsulating CC", (t) => {

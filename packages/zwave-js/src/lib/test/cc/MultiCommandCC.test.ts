@@ -1,6 +1,6 @@
-import type { CommandClass } from "@zwave-js/cc";
 import {
 	BasicCCSet,
+	type CommandClass,
 	MultiCommandCC,
 	isMultiEncapsulatingCommandClass,
 } from "@zwave-js/cc";

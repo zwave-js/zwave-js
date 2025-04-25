@@ -12,7 +12,7 @@ import {
 } from "@zwave-js/core";
 import { getErrorMessage } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveNode } from "../Node.js";
 
 export interface WakeUpHandlerStore {
 	/** The timestamp of the last received wakeup notification */

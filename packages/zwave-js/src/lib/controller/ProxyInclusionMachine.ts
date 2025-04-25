@@ -1,11 +1,11 @@
-import { type InclusionControllerStep } from "@zwave-js/cc";
+import type { InclusionControllerStep } from "@zwave-js/cc";
 import {
 	type InferStateMachineTransitions,
 	type NodeUpdatePayload,
 	StateMachine,
 	type StateMachineTransition,
 } from "@zwave-js/core";
-import { type ZWaveNode } from "../node/Node.js";
+import type { ZWaveNode } from "../node/Node.js";
 
 export type ProxyInclusionState =
 	| {

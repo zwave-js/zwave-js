@@ -17,6 +17,8 @@ import {
 	PowerlevelTestStatus,
 	ScheduleEntryLockCommand,
 	type SetValueAPIOptions,
+	type SetValueResult,
+	SetValueStatus,
 	TimeCCDateGet,
 	TimeCCTimeGet,
 	TimeCCTimeOffsetGet,
@@ -25,6 +27,7 @@ import {
 	UserCodeCCValues,
 	type ValueIDProperties,
 	getImplementedVersion,
+	supervisionResultToSetValueResult,
 	utils as ccUtils,
 } from "@zwave-js/cc";
 import {
@@ -74,11 +77,6 @@ import {
 } from "@zwave-js/cc/VersionCC";
 import { WakeUpCCWakeUpNotification } from "@zwave-js/cc/WakeUpCC";
 import { ZWavePlusCCGet } from "@zwave-js/cc/ZWavePlusCC";
-import {
-	type SetValueResult,
-	SetValueStatus,
-	supervisionResultToSetValueResult,
-} from "@zwave-js/cc/safe";
 import { embeddedDevicesDir } from "@zwave-js/config";
 import {
 	BasicDeviceClass,
@@ -135,12 +133,8 @@ import {
 	type ApplicationUpdateRequest,
 	ApplicationUpdateRequestNodeInfoReceived,
 	ApplicationUpdateRequestNodeInfoRequestFailed,
-} from "@zwave-js/serial/serialapi";
-import {
 	GetNodeProtocolInfoRequest,
 	type GetNodeProtocolInfoResponse,
-} from "@zwave-js/serial/serialapi";
-import {
 	RequestNodeInfoRequest,
 	RequestNodeInfoResponse,
 } from "@zwave-js/serial/serialapi";
@@ -161,7 +155,7 @@ import {
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import path from "pathe";
-import { type Driver } from "../driver/Driver.js";
+import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
 import {
@@ -235,8 +229,8 @@ import {
 } from "./CCHandlers/WakeUpCC.js";
 import { handleZWavePlusGet } from "./CCHandlers/ZWavePlusCC.js";
 import { DeviceClass } from "./DeviceClass.js";
-import { type NodeDump, type ValueDump } from "./Dump.js";
-import { type Endpoint } from "./Endpoint.js";
+import type { NodeDump, ValueDump } from "./Dump.js";
+import type { Endpoint } from "./Endpoint.js";
 import {
 	formatLifelineHealthCheckSummary,
 	formatRouteHealthCheckSummary,
@@ -250,18 +244,19 @@ import {
 } from "./NodeStatistics.js";
 import {
 	type DateAndTime,
+	InterviewStage,
 	type LifelineHealthCheckResult,
 	type LifelineHealthCheckSummary,
 	LinkReliabilityCheckMode,
 	type LinkReliabilityCheckOptions,
 	type LinkReliabilityCheckResult,
+	NodeStatus,
 	type RefreshInfoOptions,
 	type RouteHealthCheckResult,
 	type RouteHealthCheckSummary,
 	type ZWaveNodeEventCallbacks,
 	type ZWaveNotificationCapability,
 } from "./_Types.js";
-import { InterviewStage, NodeStatus } from "./_Types.js";
 import { ZWaveNodeMixins } from "./mixins/index.js";
 import * as nodeUtils from "./utils.js";
 

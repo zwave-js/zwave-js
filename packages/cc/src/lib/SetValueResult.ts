@@ -1,4 +1,4 @@
-import { type Duration, type SupervisionResult } from "@zwave-js/core/safe";
+import type { Duration, SupervisionResult } from "@zwave-js/core";
 
 /**
  * Indicates the status of a `setValue` call. This enum is an extension of `SupervisionStatus`

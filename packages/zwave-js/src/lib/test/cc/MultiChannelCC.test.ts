@@ -1,13 +1,11 @@
 import {
-	BinarySwitchCCReport,
-	BinarySwitchCCValues,
-	CommandClass,
-} from "@zwave-js/cc";
-import {
 	BasicCCGet,
 	BasicCCReport,
 	BasicCCSet,
 	BasicCommand,
+	BinarySwitchCCReport,
+	BinarySwitchCCValues,
+	CommandClass,
 	MultiChannelCC,
 	MultiChannelCCAggregatedMembersGet,
 	MultiChannelCCCapabilityGet,
@@ -20,7 +18,7 @@ import {
 	isEncapsulatingCommandClass,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";

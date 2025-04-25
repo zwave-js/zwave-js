@@ -5,7 +5,7 @@ import {
 	VersionCCCommandClassGet,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { type MockNodeBehavior } from "@zwave-js/testing";
+import type { MockNodeBehavior } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

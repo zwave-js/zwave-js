@@ -1,6 +1,6 @@
-import { type NodeType } from "./NodeInfo.js";
-import { type ZWaveApiVersion } from "./ZWaveApiVersion.js";
-import { type UnknownZWaveChipType } from "./ZWaveChipTypes.js";
+import type { NodeType } from "./NodeInfo.js";
+import type { ZWaveApiVersion } from "./ZWaveApiVersion.js";
+import type { UnknownZWaveChipType } from "./ZWaveChipTypes.js";
 
 // These flags are a mess and sometimes have a different meaning than their name implies
 export enum ControllerCapabilityFlags {

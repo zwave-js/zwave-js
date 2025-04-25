@@ -6,7 +6,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses, type LogNode } from "@zwave-js/core";
 import { getEnumMemberName, pick } from "@zwave-js/shared";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveNode } from "../Node.js";
 
 export interface EntryControlHandlerStore {
 	recentSequenceNumbers: number[];

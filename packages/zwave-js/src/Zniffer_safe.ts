@@ -1,4 +1,4 @@
-export { BeamingInfo, MPDUHeaderType } from "@zwave-js/core/safe";
+export { BeamingInfo, MPDUHeaderType } from "@zwave-js/core";
 export type { ZnifferOptions } from "./lib/zniffer/Zniffer.js";
 export {
 	ExplorerFrameCommand,

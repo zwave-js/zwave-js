@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import {
 	MAX_NODES_LR,
 	NUM_LR_NODES_PER_SEGMENT,

@@ -1,15 +1,17 @@
-import { type CCAPI, type SchedulePollOptions } from "@zwave-js/cc";
-import { type ValueDB, normalizeValueID, valueEquals } from "@zwave-js/core";
+import type { CCAPI, SchedulePollOptions } from "@zwave-js/cc";
 import {
 	type CommandClasses,
 	MessagePriority,
+	type ValueDB,
 	type ValueID,
 	type ValueRemovedArgs,
 	type ValueUpdatedArgs,
-} from "@zwave-js/core/safe";
+	normalizeValueID,
+	valueEquals,
+} from "@zwave-js/core";
 import { ObjectKeyMap, type Timer, setTimer } from "@zwave-js/shared";
-import { type Driver } from "../../driver/Driver.js";
-import { type DeviceClass } from "../DeviceClass.js";
+import type { Driver } from "../../driver/Driver.js";
+import type { DeviceClass } from "../DeviceClass.js";
 import { EndpointsMixin } from "./50_Endpoints.js";
 
 export interface ScheduledPoll {

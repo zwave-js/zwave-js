@@ -18,8 +18,8 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	securityClassIsS2,
-} from "@zwave-js/core/safe";
-import { staticExtends } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { staticExtends } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
 import type { Driver } from "../driver/Driver.js";
 import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper.js";

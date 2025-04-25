@@ -1,4 +1,4 @@
-import { num2hex } from "@zwave-js/shared/safe";
+import { num2hex } from "@zwave-js/shared";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 export interface ScaleDefinition {

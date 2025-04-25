@@ -1,5 +1,5 @@
-import { type SecurityClass } from "../definitions/SecurityClass.js";
-import { type MaybeNotKnown } from "../values/Primitive.js";
+import type { SecurityClass } from "../definitions/SecurityClass.js";
+import type { MaybeNotKnown } from "../values/Primitive.js";
 
 /** Allows querying the security classes of a node */
 

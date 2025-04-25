@@ -1,9 +1,4 @@
 import {
-	ZWaveError,
-	ZWaveErrorCodes,
-	isZWaveError,
-} from "@zwave-js/core/error";
-import {
 	type CommandClasses,
 	ControllerCapabilityFlags,
 	MAX_NODES,
@@ -12,14 +7,13 @@ import {
 	NodeType,
 	RFRegion,
 	stripUndefined,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
-	Bytes,
-	buffer2hex,
-	cloneDeep,
-	num2hex,
-	pick,
-} from "@zwave-js/shared/safe";
+	ZWaveError,
+	ZWaveErrorCodes,
+	isZWaveError,
+} from "@zwave-js/core/error";
+import { Bytes, buffer2hex, cloneDeep, num2hex, pick } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { SemVer } from "semver";
 import semverGte from "semver/functions/gte.js";
@@ -34,7 +28,7 @@ import {
 	type RouteCache,
 	getEmptyRoute,
 } from "./lib/common/routeCache.js";
-import { type SUCUpdateEntry } from "./lib/common/sucUpdateEntry.js";
+import type { SUCUpdateEntry } from "./lib/common/sucUpdateEntry.js";
 import { NVMMemoryIO } from "./lib/io/NVMMemoryIO.js";
 import { NVM3Adapter } from "./lib/nvm3/adapter.js";
 import {
@@ -106,11 +100,11 @@ import { dumpNVM, mapToObject } from "./lib/nvm3/utils.js";
 import { NVM500Adapter } from "./lib/nvm500/adapter.js";
 import { nvm500Impls } from "./lib/nvm500/impls/index.js";
 import { resolveLayout } from "./lib/nvm500/shared.js";
-import {
-	type NVM500JSON,
-	type NVM500JSONController,
-	type NVM500JSONNode,
-	type NVM500Meta,
+import type {
+	NVM500JSON,
+	NVM500JSONController,
+	NVM500JSONNode,
+	NVM500Meta,
 } from "./nvm500/NVMParser.js";
 
 export interface NVMJSON {

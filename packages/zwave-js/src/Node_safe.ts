@@ -5,8 +5,8 @@ export {
 	NodeType,
 	ProtocolDataRate,
 	ProtocolVersion,
-} from "@zwave-js/core/safe";
-export type { DataRate, FLiRS } from "@zwave-js/core/safe";
+} from "@zwave-js/core";
+export type { DataRate, FLiRS } from "@zwave-js/core";
 export { DeviceClass } from "./lib/node/DeviceClass.js";
 export type {
 	NodeStatistics,

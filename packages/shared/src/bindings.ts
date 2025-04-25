@@ -1,7 +1,7 @@
 // Definitions for runtime-agnostic low level bindings like cryptography,
 // file system access, etc.
 
-import { type ReadableWritablePair } from "node:stream/web";
+import type { ReadableWritablePair } from "node:stream/web";
 
 export interface CryptoPrimitives {
 	randomBytes(length: number): Uint8Array;

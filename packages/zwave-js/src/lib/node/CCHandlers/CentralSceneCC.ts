@@ -4,9 +4,9 @@ import {
 	CentralSceneKeys,
 	type PersistValuesContext,
 } from "@zwave-js/cc";
-import { type LogNode } from "@zwave-js/core";
+import type { LogNode } from "@zwave-js/core";
 import { type Timer, setTimer, stringify } from "@zwave-js/shared";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveNode } from "../Node.js";
 
 export interface CentralSceneHandlerStore {
 	keyHeldDownContext:

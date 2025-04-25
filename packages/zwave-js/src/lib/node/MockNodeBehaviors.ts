@@ -15,7 +15,7 @@ import {
 	ZWaveProtocolCCRequestNodeInformationFrame,
 } from "@zwave-js/cc/ZWaveProtocolCC";
 import { CommandClasses } from "@zwave-js/core";
-import { type MockNodeBehavior } from "@zwave-js/testing";
+import type { MockNodeBehavior } from "@zwave-js/testing";
 
 import { BasicCCBehaviors } from "./mockCCBehaviors/Basic.js";
 import { BinarySensorCCBehaviors } from "./mockCCBehaviors/BinarySensor.js";

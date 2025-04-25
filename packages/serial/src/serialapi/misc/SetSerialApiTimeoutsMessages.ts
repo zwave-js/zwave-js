@@ -11,7 +11,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 export interface SetSerialApiTimeoutsRequestOptions {
 	ackTimeout: number;

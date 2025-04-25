@@ -12,7 +12,7 @@ import {
 	MultiChannelCCV1Report,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { type MockNodeBehavior } from "@zwave-js/testing";
+import type { MockNodeBehavior } from "@zwave-js/testing";
 
 const encapsulateMultiChannelCC: MockNodeBehavior = {
 	transformIncomingCC(controller, self, receivedCC) {

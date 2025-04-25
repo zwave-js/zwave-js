@@ -4,7 +4,7 @@ import {
 	ZWaveErrorCodes,
 	encodeCCList,
 	parseCCList,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import {
 	SUC_UPDATE_ENTRY_SIZE,

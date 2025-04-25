@@ -10,7 +10,7 @@ import {
 	SoundSwitchCCTonesNumberGet,
 	SoundSwitchCCTonesNumberReport,
 } from "@zwave-js/cc/SoundSwitchCC";
-import { CommandClasses } from "@zwave-js/core/safe";
+import { CommandClasses } from "@zwave-js/core";
 import { type Timer, setTimer } from "@zwave-js/shared";
 import {
 	type MockNodeBehavior,

@@ -1,5 +1,9 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
-import { MessagePriority, encodeNodeID, parseNodeID } from "@zwave-js/core";
+import {
+	type MessageOrCCLogEntry,
+	MessagePriority,
+	encodeNodeID,
+	parseNodeID,
+} from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,

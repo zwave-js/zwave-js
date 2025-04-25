@@ -1,6 +1,6 @@
 import { ZWaveError, ZWaveErrorCodes, highResTimestamp } from "@zwave-js/core";
 import { createWrappingCounter, evalOrStatic, noop } from "@zwave-js/shared";
-import { type CompareResult } from "alcalzone-shared/comparable";
+import type { CompareResult } from "alcalzone-shared/comparable";
 import {
 	type DeferredPromise,
 	createDeferredPromise,

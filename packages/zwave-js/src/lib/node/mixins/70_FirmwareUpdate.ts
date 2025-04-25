@@ -45,7 +45,7 @@ import {
 	type TaskBuilder,
 	TaskPriority,
 } from "../../driver/Task.js";
-import { type Transaction } from "../../driver/Transaction.js";
+import type { Transaction } from "../../driver/Transaction.js";
 import { SchedulePollMixin } from "./60_ScheduledPoll.js";
 
 interface AbortFirmwareUpdateContext {

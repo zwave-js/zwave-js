@@ -1,4 +1,4 @@
-import { type DeviceConfig } from "@zwave-js/config";
+import type { DeviceConfig } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, formatId } from "@zwave-js/shared";
 import { cacheKeys } from "../../driver/NetworkCache.js";
