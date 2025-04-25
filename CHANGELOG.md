@@ -4,6 +4,19 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* More resilient recovery from disconnected TCP serial ports (#7748)
+* Do not delete battery temperature unit if value is unknown (#7749)
+* Handle endpoint of inbound Multi Channel V1 commands correctly (#7726)
+* Return payload from `sendAndReceiveData` method of Manufacturer Proprietary CC (#7721)
+* Only apply CC-related compat options to the root endpoint before Multi Channel interview (#7728)
+* Respect remove endpoints compat flag in Multi Channel V1 interview (#7729)
+* Ensure that stale cached values are not attributed to newly included nodes (#7755)
+
+### Config file changes
+* Add fingerprint `0x0311:0x0109` to "FortrezZ LLC SSA1/SSA2" (#7754)
+
 ## 15.1.0 (2025-04-23)
 ### Features
 * Add more proprietary controller features, fix `setValue` when using controller with proprietary features (#7744)
