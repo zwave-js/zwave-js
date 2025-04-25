@@ -28,7 +28,7 @@ import {
 	type RouteCache,
 	getEmptyRoute,
 } from "./lib/common/routeCache.js";
-import { type SUCUpdateEntry } from "./lib/common/sucUpdateEntry.js";
+import type { SUCUpdateEntry } from "./lib/common/sucUpdateEntry.js";
 import { NVMMemoryIO } from "./lib/io/NVMMemoryIO.js";
 import { NVM3Adapter } from "./lib/nvm3/adapter.js";
 import {
@@ -100,11 +100,11 @@ import { dumpNVM, mapToObject } from "./lib/nvm3/utils.js";
 import { NVM500Adapter } from "./lib/nvm500/adapter.js";
 import { nvm500Impls } from "./lib/nvm500/impls/index.js";
 import { resolveLayout } from "./lib/nvm500/shared.js";
-import {
-	type NVM500JSON,
-	type NVM500JSONController,
-	type NVM500JSONNode,
-	type NVM500Meta,
+import type {
+	NVM500JSON,
+	NVM500JSONController,
+	NVM500JSONNode,
+	NVM500Meta,
 } from "./nvm500/NVMParser.js";
 
 export interface NVMJSON {

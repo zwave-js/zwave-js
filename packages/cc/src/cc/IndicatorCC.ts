@@ -1,9 +1,9 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { Indicator } from "@zwave-js/core";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
+	Indicator,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -18,8 +18,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
-import { num2hex } from "@zwave-js/shared";
+import { Bytes, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp, roundTo } from "alcalzone-shared/math";
 import { isArray } from "alcalzone-shared/typeguards";

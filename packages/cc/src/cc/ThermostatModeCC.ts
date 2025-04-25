@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -17,8 +17,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
-import { buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,

@@ -1,27 +1,16 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { type GetDeviceConfig } from "@zwave-js/config";
-import {
-	type FloatParameters,
-	type GetNode,
-	type GetSupportedCCVersion,
-	type GetValueDB,
-	type MaybeUnknown,
-	type WithAddress,
-	encodeBitMask,
-	encodeFloatWithScale,
-	getFloatParameters,
-	getMeter,
-	getMeterName,
-	getMeterScale,
-	getUnknownMeterScale,
-	timespan,
-} from "@zwave-js/core";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type ControlsCC,
 	type EndpointId,
+	type FloatParameters,
 	type GetEndpoint,
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -31,13 +20,22 @@ import {
 	type SupportsCC,
 	UNKNOWN_STATE,
 	ValueMetadata,
+	type WithAddress,
+	encodeBitMask,
+	encodeFloatWithScale,
+	getFloatParameters,
+	getMeter,
+	getMeterName,
+	getMeterScale,
+	getUnknownMeterScale,
 	parseBitMask,
 	parseFloatWithScale,
+	timespan,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
 import {
 	type AllOrNone,
+	Bytes,
 	getEnumMemberName,
 	num2hex,
 	pick,

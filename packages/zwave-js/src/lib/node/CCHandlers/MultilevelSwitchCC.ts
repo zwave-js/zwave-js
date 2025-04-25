@@ -8,7 +8,7 @@ import {
 	type PersistValuesContext,
 } from "@zwave-js/cc";
 import { CommandClasses, type LogNode } from "@zwave-js/core";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveNode } from "../Node.js";
 
 /** Handles the receipt of a MultilevelCC Set or Report */
 export function handleMultilevelSwitchCommand(

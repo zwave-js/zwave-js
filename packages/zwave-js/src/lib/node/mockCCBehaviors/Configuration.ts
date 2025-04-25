@@ -11,9 +11,9 @@ import {
 	ConfigurationCCSet,
 } from "@zwave-js/cc/ConfigurationCC";
 import { CommandClasses, ConfigValueFormat } from "@zwave-js/core";
-import {
-	type ConfigurationCCCapabilities,
-	type MockNodeBehavior,
+import type {
+	ConfigurationCCCapabilities,
+	MockNodeBehavior,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: ConfigurationCCCapabilities = {

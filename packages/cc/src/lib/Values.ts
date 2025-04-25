@@ -1,10 +1,10 @@
-import { type GetDeviceConfig } from "@zwave-js/config";
-import {
-	type CommandClasses,
-	type EndpointId,
-	type GetValueDB,
-	type ValueID,
-	type ValueMetadata,
+import type { GetDeviceConfig } from "@zwave-js/config";
+import type {
+	CommandClasses,
+	EndpointId,
+	GetValueDB,
+	ValueID,
+	ValueMetadata,
 } from "@zwave-js/core";
 import {
 	type FnOrStatic,

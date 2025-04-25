@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { type UnderlyingSink, type UnderlyingSource } from "node:stream/web";
-import { type ZWaveSerialPortImplementation } from "./ZWaveSerialPortImplementation.js";
-import { type ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
+import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+import type { ZWaveSerialPortImplementation } from "./ZWaveSerialPortImplementation.js";
+import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export function wrapLegacySerialBinding(
 	legacy: ZWaveSerialPortImplementation,

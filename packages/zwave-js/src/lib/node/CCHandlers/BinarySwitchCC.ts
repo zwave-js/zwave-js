@@ -4,8 +4,8 @@ import {
 	BinarySwitchCCValues,
 	type PersistValuesContext,
 } from "@zwave-js/cc";
-import { type LogNode } from "@zwave-js/core";
-import { type ZWaveNode } from "../Node.js";
+import type { LogNode } from "@zwave-js/core";
+import type { ZWaveNode } from "../Node.js";
 
 /** Handles the receipt of a BinarySwitchCC Set */
 export function handleBinarySwitchCommand(

@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig, ParamInfoMap } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -34,8 +34,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
-import { getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
 import {

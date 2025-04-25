@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,

@@ -5,8 +5,8 @@ import type {
 	LongRangeChannel,
 	RFRegion,
 } from "@zwave-js/core";
-import { type Serial, type ZWaveSerialStream } from "@zwave-js/serial";
-import { type DeepPartial, type Expand } from "@zwave-js/shared";
+import type { Serial, ZWaveSerialStream } from "@zwave-js/serial";
+import type { DeepPartial, Expand } from "@zwave-js/shared";
 import type { DatabaseFactory, FileSystem } from "@zwave-js/shared/bindings";
 import type {
 	InclusionUserCallbacks,

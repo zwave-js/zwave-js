@@ -19,8 +19,8 @@ import type {
 	ValueRemovedArgs,
 	ValueUpdatedArgs,
 } from "@zwave-js/core";
-import { type AllOrNone } from "@zwave-js/shared";
-import { type Endpoint } from "./Endpoint.js";
+import type { AllOrNone } from "@zwave-js/shared";
+import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
 

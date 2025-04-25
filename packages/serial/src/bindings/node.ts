@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { SerialPort } from "serialport";
-import { type EnumeratedPort, type Serial } from "../serialport/Bindings.js";
+import type { EnumeratedPort, Serial } from "../serialport/Bindings.js";
 import { createNodeSerialPortFactory } from "../serialport/NodeSerialPort.js";
 import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
 

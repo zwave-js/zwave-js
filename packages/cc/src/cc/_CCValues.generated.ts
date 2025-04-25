@@ -19,7 +19,7 @@ import {
 	windowCoveringParameterToLevelChangeLabel,
 	windowCoveringParameterToMetadataStates,
 } from "../lib/CCValueUtils.js";
-import { type CCValueOptions } from "../lib/Values.js";
+import type { CCValueOptions } from "../lib/Values.js";
 import {
 	AlarmSensorType,
 	BarrierState,

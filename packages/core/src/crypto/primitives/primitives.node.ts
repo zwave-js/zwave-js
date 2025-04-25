@@ -1,5 +1,5 @@
 import { Bytes } from "@zwave-js/shared";
-import { type CryptoPrimitives, type KeyPair } from "@zwave-js/shared/bindings";
+import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
 import crypto from "node:crypto";
 import {
 	BLOCK_SIZE,

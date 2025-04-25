@@ -24,10 +24,10 @@ import {
 	ScheduleEntryLockCCYearDayScheduleSet,
 } from "@zwave-js/cc/ScheduleEntryLockCC";
 import { CommandClasses } from "@zwave-js/core";
-import { type AllOrNone } from "@zwave-js/shared";
-import {
-	type MockNodeBehavior,
-	type ScheduleEntryLockCCCapabilities,
+import type { AllOrNone } from "@zwave-js/shared";
+import type {
+	MockNodeBehavior,
+	ScheduleEntryLockCCCapabilities,
 } from "@zwave-js/testing";
 import { defaultCapabilities as defaultUserCodeCapabilities } from "./UserCode.js";
 

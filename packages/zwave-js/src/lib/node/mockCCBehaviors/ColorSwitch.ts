@@ -10,9 +10,9 @@ import {
 } from "@zwave-js/cc/ColorSwitchCC";
 import { CommandClasses } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
-import {
-	type ColorSwitchCCCapabilities,
-	type MockNodeBehavior,
+import type {
+	ColorSwitchCCCapabilities,
+	MockNodeBehavior,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: ColorSwitchCCCapabilities = {

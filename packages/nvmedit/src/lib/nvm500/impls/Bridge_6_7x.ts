@@ -1,8 +1,8 @@
 import { MAX_NODES, NUM_NODEMASK_BYTES } from "@zwave-js/core";
 import { SUC_MAX_UPDATES } from "../../../consts.js";
-import type { NVM500Impl } from "../shared.js";
 import {
 	APPL_NODEPARM_MAX,
+	type NVM500Impl,
 	NVMEntryType,
 	type NVMLayout,
 	NVM_SERIALAPI_HOST_SIZE,

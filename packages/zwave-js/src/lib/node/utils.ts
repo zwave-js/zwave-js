@@ -6,7 +6,7 @@ import {
 	entryControlEventTypeLabels,
 } from "@zwave-js/cc";
 import { MultiChannelCCValues } from "@zwave-js/cc/MultiChannelCC";
-import { type GetDeviceConfig } from "@zwave-js/config";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type ControlsCC,
@@ -29,10 +29,10 @@ import {
 	getCCName,
 	getNotification,
 } from "@zwave-js/core";
-import {
-	type ZWaveNotificationCapability,
-	type ZWaveNotificationCapability_EntryControlCC,
-	type ZWaveNotificationCapability_NotificationCC,
+import type {
+	ZWaveNotificationCapability,
+	ZWaveNotificationCapability_EntryControlCC,
+	ZWaveNotificationCapability_NotificationCC,
 } from "./_Types.js";
 
 function getValue<T>(

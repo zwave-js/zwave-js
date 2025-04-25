@@ -4,7 +4,7 @@ import {
 	GetControllerIdRequest,
 	type GetControllerIdResponse,
 } from "@zwave-js/serial/serialapi";
-import { type MockControllerBehavior } from "@zwave-js/testing";
+import type { MockControllerBehavior } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldRespond = true;

@@ -1,8 +1,9 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
 	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -13,14 +14,14 @@ import {
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
+	encodeBitMask,
 	isUnsupervisedOrSucceeded,
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown, encodeBitMask } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
 import {
+	Bytes,
 	getEnumMemberName,
 	isEnumMember,
 	keysOf,

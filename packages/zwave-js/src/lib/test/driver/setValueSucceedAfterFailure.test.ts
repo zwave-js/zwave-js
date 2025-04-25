@@ -1,4 +1,4 @@
-import { type CommandClass } from "@zwave-js/cc";
+import type { CommandClass } from "@zwave-js/cc";
 import { BasicCCGet, BasicCCReport, BasicCCValues } from "@zwave-js/cc/BasicCC";
 import { MultiChannelCCCommandEncapsulation } from "@zwave-js/cc/MultiChannelCC";
 import { CommandClasses, NodeStatus } from "@zwave-js/core";

@@ -1,6 +1,5 @@
-import { CommandClass } from "@zwave-js/cc";
-import { AssociationCommand } from "@zwave-js/cc";
-import { type AssociationCCReport } from "@zwave-js/cc/AssociationCC";
+import { AssociationCommand, CommandClass } from "@zwave-js/cc";
+import type { AssociationCCReport } from "@zwave-js/cc/AssociationCC";
 import { BasicCCSet } from "@zwave-js/cc/BasicCC";
 import { MultiCommandCCCommandEncapsulation } from "@zwave-js/cc/MultiCommandCC";
 import { SecurityCCCommandEncapsulation } from "@zwave-js/cc/SecurityCC";

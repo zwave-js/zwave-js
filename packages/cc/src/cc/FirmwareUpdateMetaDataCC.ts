@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CRC16_CCITT,
 	CommandClasses,
@@ -12,9 +12,9 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
 import {
 	type AllOrNone,
+	Bytes,
 	getEnumMemberName,
 	num2hex,
 	pick,

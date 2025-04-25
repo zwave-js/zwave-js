@@ -39,7 +39,7 @@ import {
 	inclusionTimeouts,
 	utils as ccUtils,
 } from "@zwave-js/cc";
-import { type IndicatorObject } from "@zwave-js/cc/IndicatorCC";
+import type { IndicatorObject } from "@zwave-js/cc/IndicatorCC";
 import {
 	BasicDeviceClass,
 	type CCId,
@@ -119,6 +119,11 @@ import {
 	type SuccessIndicator,
 } from "@zwave-js/serial";
 import {
+	AddNodeDSKToNetworkRequest,
+	AddNodeStatus,
+	AddNodeToNetworkRequest,
+	type AddNodeToNetworkRequestStatusReport,
+	AddNodeType,
 	type ApplicationUpdateRequest,
 	ApplicationUpdateRequestNodeAdded,
 	ApplicationUpdateRequestNodeInfoReceived,
@@ -126,43 +131,100 @@ import {
 	ApplicationUpdateRequestSUCIdChanged,
 	ApplicationUpdateRequestSmartStartHomeIDReceived,
 	ApplicationUpdateRequestSmartStartLongRangeHomeIDReceived,
-} from "@zwave-js/serial/serialapi";
-import {
-	ShutdownRequest,
-	type ShutdownResponse,
-} from "@zwave-js/serial/serialapi";
-import {
+	AssignPriorityReturnRouteRequest,
+	AssignPrioritySUCReturnRouteRequest,
+	type AssignPrioritySUCReturnRouteRequestTransmitReport,
+	AssignReturnRouteRequest,
+	type AssignReturnRouteRequestTransmitReport,
+	AssignSUCReturnRouteRequest,
+	AssignSUCReturnRouteRequestTransmitReport,
+	DeleteReturnRouteRequest,
+	type DeleteReturnRouteRequestTransmitReport,
+	DeleteSUCReturnRouteRequest,
+	DeleteSUCReturnRouteRequestTransmitReport,
+	EnableSmartStartListenRequest,
+	ExtNVMReadLongBufferRequest,
+	type ExtNVMReadLongBufferResponse,
+	ExtNVMReadLongByteRequest,
+	type ExtNVMReadLongByteResponse,
+	ExtNVMWriteLongBufferRequest,
+	type ExtNVMWriteLongBufferResponse,
+	ExtNVMWriteLongByteRequest,
+	type ExtNVMWriteLongByteResponse,
+	ExtendedNVMOperationStatus,
+	ExtendedNVMOperationsCloseRequest,
+	ExtendedNVMOperationsCommand,
+	ExtendedNVMOperationsOpenRequest,
+	ExtendedNVMOperationsReadRequest,
+	type ExtendedNVMOperationsResponse,
+	ExtendedNVMOperationsWriteRequest,
+	FirmwareUpdateNVM_GetNewImageRequest,
+	type FirmwareUpdateNVM_GetNewImageResponse,
+	FirmwareUpdateNVM_InitRequest,
+	type FirmwareUpdateNVM_InitResponse,
+	FirmwareUpdateNVM_IsValidCRC16Request,
+	type FirmwareUpdateNVM_IsValidCRC16Response,
+	FirmwareUpdateNVM_SetNewImageRequest,
+	type FirmwareUpdateNVM_SetNewImageResponse,
+	FirmwareUpdateNVM_UpdateCRC16Request,
+	type FirmwareUpdateNVM_UpdateCRC16Response,
+	FirmwareUpdateNVM_WriteRequest,
+	type FirmwareUpdateNVM_WriteResponse,
+	GetBackgroundRSSIRequest,
+	type GetBackgroundRSSIResponse,
 	GetControllerCapabilitiesRequest,
 	type GetControllerCapabilitiesResponse,
-} from "@zwave-js/serial/serialapi";
-import {
+	GetControllerIdRequest,
+	type GetControllerIdResponse,
 	GetControllerVersionRequest,
 	type GetControllerVersionResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetLongRangeNodesRequest,
-	type GetLongRangeNodesResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetProtocolVersionRequest,
-	type GetProtocolVersionResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetSerialApiCapabilitiesRequest,
-	type GetSerialApiCapabilitiesResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetSerialApiInitDataRequest,
-	type GetSerialApiInitDataResponse,
-} from "@zwave-js/serial/serialapi";
-import { HardResetRequest } from "@zwave-js/serial/serialapi";
-import {
 	GetLongRangeChannelRequest,
 	type GetLongRangeChannelResponse,
-	SetLongRangeChannelRequest,
-	type SetLongRangeChannelResponse,
-} from "@zwave-js/serial/serialapi";
-import {
+	GetLongRangeNodesRequest,
+	type GetLongRangeNodesResponse,
+	GetNVMIdRequest,
+	type GetNVMIdResponse,
+	GetPriorityRouteRequest,
+	type GetPriorityRouteResponse,
+	GetProtocolVersionRequest,
+	type GetProtocolVersionResponse,
+	GetRoutingInfoRequest,
+	type GetRoutingInfoResponse,
+	GetSUCNodeIdRequest,
+	type GetSUCNodeIdResponse,
+	GetSerialApiCapabilitiesRequest,
+	type GetSerialApiCapabilitiesResponse,
+	GetSerialApiInitDataRequest,
+	type GetSerialApiInitDataResponse,
+	HardResetRequest,
+	IsFailedNodeRequest,
+	type IsFailedNodeResponse,
+	LearnModeIntent,
+	LearnModeStatus,
+	type NVMId,
+	NVMOperationStatus,
+	NVMOperationsCloseRequest,
+	NVMOperationsOpenRequest,
+	NVMOperationsReadRequest,
+	type NVMOperationsResponse,
+	NVMOperationsWriteRequest,
+	NodeNeighborUpdateStatus,
+	RemoveFailedNodeRequest,
+	type RemoveFailedNodeRequestStatusReport,
+	RemoveFailedNodeResponse,
+	RemoveFailedNodeStartFlags,
+	RemoveFailedNodeStatus,
+	RemoveNodeFromNetworkRequest,
+	type RemoveNodeFromNetworkRequestStatusReport,
+	RemoveNodeStatus,
+	RemoveNodeType,
+	ReplaceFailedNodeRequest,
+	type ReplaceFailedNodeRequestStatusReport,
+	type ReplaceFailedNodeResponse,
+	ReplaceFailedNodeStartFlags,
+	ReplaceFailedNodeStatus,
+	type RequestNodeNeighborUpdateReport,
+	RequestNodeNeighborUpdateRequest,
 	SerialAPISetupCommand,
 	SerialAPISetup_CommandUnsupportedResponse,
 	SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest,
@@ -195,161 +257,25 @@ import {
 	type SerialAPISetup_SetRFRegionResponse,
 	SerialAPISetup_SetTXStatusReportRequest,
 	type SerialAPISetup_SetTXStatusReportResponse,
-} from "@zwave-js/serial/serialapi";
-import { SetApplicationNodeInformationRequest } from "@zwave-js/serial/serialapi";
-import {
-	GetControllerIdRequest,
-	type GetControllerIdResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetBackgroundRSSIRequest,
-	type GetBackgroundRSSIResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	SetRFReceiveModeRequest,
-	type SetRFReceiveModeResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	SetSerialApiTimeoutsRequest,
-	type SetSerialApiTimeoutsResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	StartWatchdogRequest,
-	StopWatchdogRequest,
-} from "@zwave-js/serial/serialapi";
-import {
-	AddNodeDSKToNetworkRequest,
-	AddNodeStatus,
-	AddNodeToNetworkRequest,
-	type AddNodeToNetworkRequestStatusReport,
-	AddNodeType,
-	EnableSmartStartListenRequest,
-	computeNeighborDiscoveryTimeout,
-} from "@zwave-js/serial/serialapi";
-import { AssignPriorityReturnRouteRequest } from "@zwave-js/serial/serialapi";
-import {
-	AssignPrioritySUCReturnRouteRequest,
-	type AssignPrioritySUCReturnRouteRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
-	AssignReturnRouteRequest,
-	type AssignReturnRouteRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
-	AssignSUCReturnRouteRequest,
-	AssignSUCReturnRouteRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
-	DeleteReturnRouteRequest,
-	type DeleteReturnRouteRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
-	DeleteSUCReturnRouteRequest,
-	DeleteSUCReturnRouteRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetPriorityRouteRequest,
-	type GetPriorityRouteResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetRoutingInfoRequest,
-	type GetRoutingInfoResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetSUCNodeIdRequest,
-	type GetSUCNodeIdResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	IsFailedNodeRequest,
-	type IsFailedNodeResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	RemoveFailedNodeRequest,
-	type RemoveFailedNodeRequestStatusReport,
-	RemoveFailedNodeResponse,
-	RemoveFailedNodeStartFlags,
-	RemoveFailedNodeStatus,
-} from "@zwave-js/serial/serialapi";
-import {
-	RemoveNodeFromNetworkRequest,
-	type RemoveNodeFromNetworkRequestStatusReport,
-	RemoveNodeStatus,
-	RemoveNodeType,
-} from "@zwave-js/serial/serialapi";
-import {
-	ReplaceFailedNodeRequest,
-	type ReplaceFailedNodeRequestStatusReport,
-	type ReplaceFailedNodeResponse,
-	ReplaceFailedNodeStartFlags,
-	ReplaceFailedNodeStatus,
-} from "@zwave-js/serial/serialapi";
-import {
-	NodeNeighborUpdateStatus,
-	type RequestNodeNeighborUpdateReport,
-	RequestNodeNeighborUpdateRequest,
-} from "@zwave-js/serial/serialapi";
-import {
-	LearnModeIntent,
-	LearnModeStatus,
+	SetApplicationNodeInformationRequest,
 	type SetLearnModeCallback,
 	SetLearnModeRequest,
-} from "@zwave-js/serial/serialapi";
-import { SetPriorityRouteRequest } from "@zwave-js/serial/serialapi";
-import { SetSUCNodeIdRequest } from "@zwave-js/serial/serialapi";
-import {
-	ExtNVMReadLongBufferRequest,
-	type ExtNVMReadLongBufferResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	ExtNVMReadLongByteRequest,
-	type ExtNVMReadLongByteResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	ExtNVMWriteLongBufferRequest,
-	type ExtNVMWriteLongBufferResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	ExtNVMWriteLongByteRequest,
-	type ExtNVMWriteLongByteResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	ExtendedNVMOperationStatus,
-	ExtendedNVMOperationsCloseRequest,
-	ExtendedNVMOperationsCommand,
-	ExtendedNVMOperationsOpenRequest,
-	ExtendedNVMOperationsReadRequest,
-	type ExtendedNVMOperationsResponse,
-	ExtendedNVMOperationsWriteRequest,
-} from "@zwave-js/serial/serialapi";
-import {
-	FirmwareUpdateNVM_GetNewImageRequest,
-	type FirmwareUpdateNVM_GetNewImageResponse,
-	FirmwareUpdateNVM_InitRequest,
-	type FirmwareUpdateNVM_InitResponse,
-	FirmwareUpdateNVM_IsValidCRC16Request,
-	type FirmwareUpdateNVM_IsValidCRC16Response,
-	FirmwareUpdateNVM_SetNewImageRequest,
-	type FirmwareUpdateNVM_SetNewImageResponse,
-	FirmwareUpdateNVM_UpdateCRC16Request,
-	type FirmwareUpdateNVM_UpdateCRC16Response,
-	FirmwareUpdateNVM_WriteRequest,
-	type FirmwareUpdateNVM_WriteResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetNVMIdRequest,
-	type GetNVMIdResponse,
-	type NVMId,
+	SetLongRangeChannelRequest,
+	type SetLongRangeChannelResponse,
+	SetPriorityRouteRequest,
+	SetRFReceiveModeRequest,
+	type SetRFReceiveModeResponse,
+	SetSUCNodeIdRequest,
+	SetSerialApiTimeoutsRequest,
+	type SetSerialApiTimeoutsResponse,
+	ShutdownRequest,
+	type ShutdownResponse,
+	StartWatchdogRequest,
+	StopWatchdogRequest,
+	type TransmitReport,
+	computeNeighborDiscoveryTimeout,
 	nvmSizeToBufferSize,
 } from "@zwave-js/serial/serialapi";
-import {
-	NVMOperationStatus,
-	NVMOperationsCloseRequest,
-	NVMOperationsOpenRequest,
-	NVMOperationsReadRequest,
-	type NVMOperationsResponse,
-	NVMOperationsWriteRequest,
-} from "@zwave-js/serial/serialapi";
-import type { TransmitReport } from "@zwave-js/serial/serialapi";
 import {
 	Bytes,
 	Mixin,
@@ -429,13 +355,13 @@ import {
 	createProxyInclusionMachine,
 } from "./ProxyInclusionMachine.js";
 import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions.js";
-import {
-	type FirmwareUpdateDeviceID,
-	type FirmwareUpdateInfo,
-	type GetFirmwareUpdatesOptions,
-	type RebuildRoutesOptions,
-	type RebuildRoutesStatus,
-	type SDKVersion,
+import type {
+	FirmwareUpdateDeviceID,
+	FirmwareUpdateInfo,
+	GetFirmwareUpdatesOptions,
+	RebuildRoutesOptions,
+	RebuildRoutesStatus,
+	SDKVersion,
 } from "./_Types.js";
 import { assertProvisioningEntry, isRebuildRoutesTask } from "./utils.js";
 

@@ -1,6 +1,6 @@
 import colors from "ansi-colors";
 import { configs } from "triple-beam";
-import { type LogFormat } from "./format.js";
+import type { LogFormat } from "./format.js";
 
 const defaultColors = configs.npm.colors;
 

@@ -18,9 +18,9 @@ import {
 } from "@zwave-js/cc/UserCodeCC";
 import { CRC16_CCITT, CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import {
-	type MockNodeBehavior,
-	type UserCodeCCCapabilities,
+import type {
+	MockNodeBehavior,
+	UserCodeCCCapabilities,
 } from "@zwave-js/testing";
 
 export const defaultCapabilities: UserCodeCCCapabilities = {

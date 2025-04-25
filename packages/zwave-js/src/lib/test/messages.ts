@@ -1,5 +1,4 @@
-import type { Message } from "@zwave-js/serial";
-import { MessageType } from "@zwave-js/serial";
+import { type Message, MessageType } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 
 const defaultImplementations = {

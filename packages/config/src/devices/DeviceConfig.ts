@@ -1,5 +1,4 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { digest } from "@zwave-js/core";
+import { ZWaveError, ZWaveErrorCodes, digest } from "@zwave-js/core";
 import {
 	Bytes,
 	type JSONObject,
@@ -14,10 +13,10 @@ import {
 	stringify,
 	writeTextFile,
 } from "@zwave-js/shared";
-import {
-	type ReadFile,
-	type ReadFileSystemInfo,
-	type WriteFile,
+import type {
+	ReadFile,
+	ReadFileSystemInfo,
+	WriteFile,
 } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";

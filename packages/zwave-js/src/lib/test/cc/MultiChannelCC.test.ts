@@ -1,13 +1,11 @@
 import {
-	BinarySwitchCCReport,
-	BinarySwitchCCValues,
-	CommandClass,
-} from "@zwave-js/cc";
-import {
 	BasicCCGet,
 	BasicCCReport,
 	BasicCCSet,
 	BasicCommand,
+	BinarySwitchCCReport,
+	BinarySwitchCCValues,
+	CommandClass,
 	MultiChannelCC,
 	MultiChannelCCAggregatedMembersGet,
 	MultiChannelCCCapabilityGet,

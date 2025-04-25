@@ -228,6 +228,7 @@ export default tseslint.config(
 		files: ["packages/**/*.ts"],
 		rules: {
 			"@zwave-js/no-forbidden-imports": "error",
+			"@zwave-js/consistent-import-declarations": "error",
 		},
 	},
 );

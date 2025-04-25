@@ -2,11 +2,9 @@ import {
 	BasicCCValues,
 	type CCAPI,
 	type SetValueAPIOptions,
-	type ValueIDProperties,
-} from "@zwave-js/cc";
-import {
 	type SetValueResult,
 	SetValueStatus,
+	type ValueIDProperties,
 	supervisionResultToSetValueResult,
 } from "@zwave-js/cc";
 import {

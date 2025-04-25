@@ -16,8 +16,8 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { noop, pick } from "@zwave-js/shared";
-import { type Driver } from "../../driver/Driver.js";
-import { type ZWaveNode } from "../Node.js";
+import type { Driver } from "../../driver/Driver.js";
+import type { ZWaveNode } from "../Node.js";
 
 export function handlePowerlevelSet(
 	driver: Driver,

@@ -1,8 +1,5 @@
-import { type SendCommand } from "@zwave-js/cc";
-import {
-	type CompatOverrideQueries,
-	type GetDeviceConfig,
-} from "@zwave-js/config";
+import type { SendCommand } from "@zwave-js/cc";
+import type { CompatOverrideQueries, GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type ControlsCC,
@@ -51,11 +48,11 @@ import {
 	getCommandClass,
 	getImplementedVersion,
 } from "./CommandClassDecorators.js";
-import { type CCValue, type StaticCCValue } from "./Values.js";
-import {
-	type GetRefreshValueTimeouts,
-	type GetUserPreferences,
-	type SchedulePoll,
+import type { CCValue, StaticCCValue } from "./Values.js";
+import type {
+	GetRefreshValueTimeouts,
+	GetUserPreferences,
+	SchedulePoll,
 } from "./traits.js";
 
 export type ValueIDProperties = Pick<ValueID, "property" | "propertyKey">;

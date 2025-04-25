@@ -6,7 +6,7 @@ import {
 	type ZWavePlusNodeType,
 	type ZWavePlusRoleType,
 } from "@zwave-js/cc";
-import { type MaybeNotKnown } from "@zwave-js/core";
+import type { MaybeNotKnown } from "@zwave-js/core";
 import { NodeValuesMixin } from "./40_Values.js";
 
 export interface NodeCapabilityValues {

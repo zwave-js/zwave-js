@@ -6,12 +6,12 @@ import {
 	readTextFile,
 	writeTextFile,
 } from "@zwave-js/shared";
-import {
-	type CopyFile,
-	type ManageDirectory,
-	type ReadFile,
-	type ReadFileSystemInfo,
-	type WriteFile,
+import type {
+	CopyFile,
+	ManageDirectory,
+	ReadFile,
+	ReadFileSystemInfo,
+	WriteFile,
 } from "@zwave-js/shared/bindings";
 import { fileURLToPath } from "node:url";
 import path from "pathe";

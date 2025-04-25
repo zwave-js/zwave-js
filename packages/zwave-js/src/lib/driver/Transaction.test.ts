@@ -1,9 +1,11 @@
 import { NoOperationCC } from "@zwave-js/cc/NoOperationCC";
 import { MessagePriority } from "@zwave-js/core";
 import { type Message, getDefaultPriority } from "@zwave-js/serial";
-import { GetControllerVersionRequest } from "@zwave-js/serial/serialapi";
-import { RemoveFailedNodeRequest } from "@zwave-js/serial/serialapi";
-import { SendDataRequest } from "@zwave-js/serial/serialapi";
+import {
+	GetControllerVersionRequest,
+	RemoveFailedNodeRequest,
+	SendDataRequest,
+} from "@zwave-js/serial/serialapi";
 import { test } from "vitest";
 import type { ZWaveNode } from "../node/Node.js";
 import { NodeStatus } from "../node/_Types.js";

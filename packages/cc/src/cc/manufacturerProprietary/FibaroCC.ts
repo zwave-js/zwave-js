@@ -1,5 +1,5 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { type GetDeviceConfig } from "@zwave-js/config";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -27,12 +27,12 @@ import {
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
 } from "../../lib/API.js";
-import {
-	type CCRaw,
-	type CommandClassOptions,
-	type InterviewContext,
-	type PersistValuesContext,
-	type RefreshValuesContext,
+import type {
+	CCRaw,
+	CommandClassOptions,
+	InterviewContext,
+	PersistValuesContext,
+	RefreshValuesContext,
 } from "../../lib/CommandClass.js";
 import { expectedCCResponse } from "../../lib/CommandClassDecorators.js";
 import {

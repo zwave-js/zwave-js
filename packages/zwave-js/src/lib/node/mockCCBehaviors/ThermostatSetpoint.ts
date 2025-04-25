@@ -9,9 +9,9 @@ import {
 	ThermostatSetpointCCSupportedReport,
 } from "@zwave-js/cc/ThermostatSetpointCC";
 import { CommandClasses } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	type ThermostatSetpointCCCapabilities,
+import type {
+	MockNodeBehavior,
+	ThermostatSetpointCCCapabilities,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: ThermostatSetpointCCCapabilities = {

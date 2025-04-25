@@ -1,5 +1,5 @@
-import { type ZWaveSerialStream } from "@zwave-js/serial";
-import { type MockPort } from "@zwave-js/serial/mock";
+import type { ZWaveSerialStream } from "@zwave-js/serial";
+import type { MockPort } from "@zwave-js/serial/mock";
 import { Bytes } from "@zwave-js/shared";
 import {
 	MockController,
@@ -17,7 +17,7 @@ import {
 	type CreateAndStartDriverWithMockPortResult,
 	createAndStartDriverWithMockPort,
 } from "../driver/DriverMock.js";
-import { type PartialZWaveOptions } from "../driver/ZWaveOptions.js";
+import type { PartialZWaveOptions } from "../driver/ZWaveOptions.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

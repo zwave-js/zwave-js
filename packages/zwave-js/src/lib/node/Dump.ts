@@ -5,7 +5,7 @@ import type {
 	SerializedValue,
 	ValueMetadata,
 } from "@zwave-js/core";
-import { type JSONObject } from "@zwave-js/shared";
+import type { JSONObject } from "@zwave-js/shared";
 
 export interface DeviceClassDump {
 	key: number;

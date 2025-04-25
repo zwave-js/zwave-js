@@ -1,8 +1,9 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
 	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -24,9 +25,7 @@ import {
 	randomBytes,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
-import { buffer2hex, num2hex, pick } from "@zwave-js/shared";
+import { Bytes, buffer2hex, num2hex, pick } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {

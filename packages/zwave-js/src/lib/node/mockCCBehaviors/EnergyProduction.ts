@@ -8,9 +8,9 @@ import {
 } from "@zwave-js/cc/EnergyProductionCC";
 import { CommandClasses } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
-import {
-	type EnergyProductionCCCapabilities,
-	type MockNodeBehavior,
+import type {
+	EnergyProductionCCCapabilities,
+	MockNodeBehavior,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: EnergyProductionCCCapabilities = {

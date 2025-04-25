@@ -1,5 +1,5 @@
 import { Bytes, cpp2js } from "@zwave-js/shared";
-import { type NVM3Object } from "../object.js";
+import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,
 	type NVMFileCreationOptions,

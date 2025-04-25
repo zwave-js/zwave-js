@@ -7,22 +7,20 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	parseBitMask,
+	sdkVersionLt,
 	validatePayload,
 } from "@zwave-js/core";
-import { sdkVersionLt } from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
-import type {
-	MessageConstructor,
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-	SuccessIndicator,
-} from "@zwave-js/serial";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageConstructor,
+	type MessageEncodingContext,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
+	type SuccessIndicator,
 	expectedResponse,
 	messageTypes,
 	priority,

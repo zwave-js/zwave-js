@@ -1,34 +1,34 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { type GetDeviceConfig } from "@zwave-js/config";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
+	CommandClasses,
+	type ControlsCC,
+	type EndpointId,
+	type GetEndpoint,
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
+	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
+	MessagePriority,
+	type MessageRecord,
+	type NodeId,
+	type SinglecastCC,
+	type SupportsCC,
+	ValueMetadata,
 	type WithAddress,
 	encodeFloatWithScale,
-	timespan,
-} from "@zwave-js/core";
-import type {
-	ControlsCC,
-	EndpointId,
-	GetEndpoint,
-	MessageOrCCLogEntry,
-	MessageRecord,
-	NodeId,
-	SinglecastCC,
-	SupportsCC,
-} from "@zwave-js/core";
-import {
-	CommandClasses,
-	type MaybeNotKnown,
-	MessagePriority,
-	ValueMetadata,
 	enumValuesToMetadataStates,
 	parseFloatWithScale,
+	timespan,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
-import { type AllOrNone, getEnumMemberName, pick } from "@zwave-js/shared";
+import {
+	type AllOrNone,
+	Bytes,
+	getEnumMemberName,
+	pick,
+} from "@zwave-js/shared";
 import {
 	CCAPI,
 	POLL_VALUE,

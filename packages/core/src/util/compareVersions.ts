@@ -3,7 +3,7 @@ import semverGt from "semver/functions/gt.js";
 import semverGte from "semver/functions/gte.js";
 import semverLt from "semver/functions/lt.js";
 import semverLte from "semver/functions/lte.js";
-import { type MaybeNotKnown } from "../values/Primitive.js";
+import type { MaybeNotKnown } from "../values/Primitive.js";
 
 /** Checks if the SDK version is greater than the given one */
 export function sdkVersionGt(

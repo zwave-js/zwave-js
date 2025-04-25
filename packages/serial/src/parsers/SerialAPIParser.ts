@@ -1,5 +1,5 @@
 import { Bytes, num2hex } from "@zwave-js/shared";
-import { type Transformer } from "node:stream/web";
+import type { Transformer } from "node:stream/web";
 import type { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
 import {

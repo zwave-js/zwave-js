@@ -1,5 +1,5 @@
 import { NODE_ID_MAX, encodeBitMask, parseBitMask } from "@zwave-js/core";
-import { type Bytes } from "@zwave-js/shared";
+import type { Bytes } from "@zwave-js/shared";
 import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,

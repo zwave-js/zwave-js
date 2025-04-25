@@ -4,14 +4,12 @@ import {
 	NUM_NODEMASK_BYTES,
 	NodeType,
 	type SerialApiInitData,
+	type UnknownZWaveChipType,
 	type ZWaveApiVersion,
 	encodeBitMask,
-	parseNodeBitMask,
-} from "@zwave-js/core";
-import {
-	type UnknownZWaveChipType,
 	getChipTypeAndVersion,
 	getZWaveChipType,
+	parseNodeBitMask,
 } from "@zwave-js/core";
 import {
 	FunctionType,

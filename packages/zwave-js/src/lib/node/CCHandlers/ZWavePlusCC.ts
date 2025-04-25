@@ -9,8 +9,8 @@ import {
 	EncapsulationFlags,
 	type LogNode,
 } from "@zwave-js/core";
-import { type ZWaveOptions } from "../../driver/ZWaveOptions.js";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
+import type { ZWaveNode } from "../Node.js";
 
 export async function handleZWavePlusGet(
 	ctx: PersistValuesContext & LogNode,

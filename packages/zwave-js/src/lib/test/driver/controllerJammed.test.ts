@@ -7,12 +7,12 @@ import {
 	getZWaveChipType,
 } from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
-import { SoftResetRequest } from "@zwave-js/serial/serialapi";
 import {
 	SendDataAbort,
 	SendDataRequest,
 	SendDataRequestTransmitReport,
 	SendDataResponse,
+	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
 import {
 	type MockControllerBehavior,

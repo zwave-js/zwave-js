@@ -18,9 +18,9 @@ import {
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import { roundTo } from "alcalzone-shared/math";
-import { type Driver } from "../../driver/Driver.js";
-import { type ZWaveController } from "../Controller.js";
-import { type ControllerProprietaryCommon } from "../Proprietary.js";
+import type { Driver } from "../../driver/Driver.js";
+import type { ZWaveController } from "../Controller.js";
+import type { ControllerProprietaryCommon } from "../Proprietary.js";
 
 export const FUNC_ID_NABUCASA = FunctionType.Proprietary_F0;
 

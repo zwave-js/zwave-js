@@ -1,5 +1,4 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
-import { MessagePriority } from "@zwave-js/core";
+import { type MessageOrCCLogEntry, MessagePriority } from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,

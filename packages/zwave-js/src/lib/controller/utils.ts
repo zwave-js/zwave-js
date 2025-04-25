@@ -6,7 +6,7 @@ import {
 	isValidDSK,
 } from "@zwave-js/core";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { type Task } from "../driver/Task.js";
+import type { Task } from "../driver/Task.js";
 import {
 	type PlannedProvisioningEntry,
 	ProvisioningEntryStatus,

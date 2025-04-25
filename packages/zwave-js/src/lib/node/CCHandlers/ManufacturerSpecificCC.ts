@@ -1,14 +1,14 @@
-import {
-	type ManufacturerSpecificCCGet,
-	type PersistValuesContext,
+import type {
+	ManufacturerSpecificCCGet,
+	PersistValuesContext,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
 	type LogNode,
 } from "@zwave-js/core";
-import { type ZWaveOptions } from "../../driver/ZWaveOptions.js";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
+import type { ZWaveNode } from "../Node.js";
 
 export async function handleManufacturerSpecificGet(
 	ctx: PersistValuesContext & LogNode,

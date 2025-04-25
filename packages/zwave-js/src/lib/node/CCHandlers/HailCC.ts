@@ -1,6 +1,6 @@
-import { type HailCC, type PersistValuesContext } from "@zwave-js/cc";
-import { type LogNode } from "@zwave-js/core";
-import { type ZWaveNode } from "../Node.js";
+import type { HailCC, PersistValuesContext } from "@zwave-js/cc";
+import type { LogNode } from "@zwave-js/core";
+import type { ZWaveNode } from "../Node.js";
 
 export interface HailHandlerStore {
 	busyPolling: boolean;

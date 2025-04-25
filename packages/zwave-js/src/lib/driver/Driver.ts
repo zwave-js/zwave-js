@@ -1,4 +1,4 @@
-import { type JsonlDBOptions } from "@alcalzone/jsonl-db";
+import type { JsonlDBOptions } from "@alcalzone/jsonl-db";
 import {
 	type CCAPIHost,
 	type CCEncodingContext,
@@ -147,41 +147,31 @@ import {
 	isZWaveSerialPortImplementation,
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
-import { ApplicationUpdateRequest } from "@zwave-js/serial/serialapi";
 import {
-	SerialAPIStartedRequest,
-	SerialAPIWakeUpReason,
-} from "@zwave-js/serial/serialapi";
-import { GetControllerVersionRequest } from "@zwave-js/serial/serialapi";
-import { SoftResetRequest } from "@zwave-js/serial/serialapi";
-import {
-	SendDataBridgeRequest,
-	SendDataMulticastBridgeRequest,
-} from "@zwave-js/serial/serialapi";
-import {
+	ApplicationUpdateRequest,
+	type CommandRequest,
+	type ContainsCC,
+	GetControllerVersionRequest,
 	MAX_SEND_ATTEMPTS,
 	SendDataAbort,
+	SendDataBridgeRequest,
+	type SendDataMessage,
+	SendDataMulticastBridgeRequest,
 	SendDataMulticastRequest,
 	SendDataRequest,
-} from "@zwave-js/serial/serialapi";
-import {
-	type SendDataMessage,
+	SendTestFrameRequest,
+	SendTestFrameTransmitReport,
+	SerialAPIStartedRequest,
+	SerialAPIWakeUpReason,
+	SoftResetRequest,
+	containsCC,
+	containsSerializedCC,
 	hasTXReport,
+	isCommandRequest,
 	isSendData,
 	isSendDataSinglecast,
 	isSendDataTransmitReport,
 	isTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
-	SendTestFrameRequest,
-	SendTestFrameTransmitReport,
-} from "@zwave-js/serial/serialapi";
-import {
-	type CommandRequest,
-	type ContainsCC,
-	containsCC,
-	containsSerializedCC,
-	isCommandRequest,
 } from "@zwave-js/serial/serialapi";
 import {
 	AsyncQueue,
@@ -201,14 +191,14 @@ import {
 	noop,
 	num2hex,
 	pick,
+	setInterval,
 	setTimer,
 } from "@zwave-js/shared";
-import { setInterval } from "@zwave-js/shared";
-import {
-	type Database,
-	type KeyPair,
-	type ReadFile,
-	type ReadFileSystemInfo,
+import type {
+	Database,
+	KeyPair,
+	ReadFile,
+	ReadFileSystemInfo,
 } from "@zwave-js/shared/bindings";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
@@ -237,10 +227,10 @@ import {
 	type ZWaveNotificationCallback,
 	zWaveNodeEvents,
 } from "../node/_Types.js";
-import { type ZWaveNodeBase } from "../node/mixins/00_Base.js";
-import { type NodeWakeup } from "../node/mixins/30_Wakeup.js";
-import { type NodeValues } from "../node/mixins/40_Values.js";
-import { type NodeSchedulePoll } from "../node/mixins/60_ScheduledPoll.js";
+import type { ZWaveNodeBase } from "../node/mixins/00_Base.js";
+import type { NodeWakeup } from "../node/mixins/30_Wakeup.js";
+import type { NodeValues } from "../node/mixins/40_Values.js";
+import type { NodeSchedulePoll } from "../node/mixins/60_ScheduledPoll.js";
 import { reportMissingDeviceConfig } from "../telemetry/deviceConfig.js";
 import {
 	type AppInfo,
