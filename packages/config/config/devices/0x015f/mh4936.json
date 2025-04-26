@@ -28,7 +28,8 @@
 		},
 		{
 			"#": "2",
-			"$import": "templates/mcohome_template.json#temperature_reporting_threshold"
+			"$import": "templates/mcohome_template.json#temperature_reporting_threshold",
+			"defaultValue": 10
 		},
 		{
 			"#": "3",
@@ -45,11 +46,13 @@
 		},
 		{
 			"#": "16",
-			"$import": "templates/mcohome_template.json#temperature_upper_limit"
+			"$import": "templates/mcohome_template.json#temperature_upper_limit",
+			"defaultValue": 98
 		},
 		{
 			"#": "17",
-			"$import": "templates/mcohome_template.json#temperature_lower_limit"
+			"$import": "templates/mcohome_template.json#temperature_lower_limit",
+			"defaultValue": 41
 		},
 		{
 			"#": "18",
@@ -99,7 +102,7 @@
 					"value": 6
 				},
 				{
-					"label": "Heat pump two stages cooling/heating",
+					"label": "Heat pump two stage cooling/heating",
 					"value": 7
 				}
 			]

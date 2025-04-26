@@ -125,6 +125,14 @@
 			{
 				"label": "Disable",
 				"value": 0
+			},
+			{
+				"label": "Default (Celsius)",
+				"value": 5
+			},
+			{
+				"label": "Default (Fahrenheit)",
+				"value": 10
 			}
 		]
 	},
@@ -197,7 +205,7 @@
 	"temperature_upper_limit": {
 		"label": "Temperature: Upper Limit",
 		"$import": "~/templates/master_template.json#base_1-99_nounit",
-		"defaultValue": 98,
+		"defaultValue": 37,
 		"options": [
 			{
 				"label": "Default (Celsius)",
