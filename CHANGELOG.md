@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Work around a possible controller lockup when retransmitting a command to an unreachable device (#7766)
+
 ## 15.1.2 (2025-04-26)
 ### Bugfixes
 * Work around an issue in downstream projects that causes the error `import_serial.isAnySendDataResponse is not a function` (#7762)
