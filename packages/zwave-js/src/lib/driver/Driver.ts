@@ -6430,6 +6430,14 @@ ${handlers.length} left`,
 								throw e;
 							}
 						} else if (
+							isTransmitReport(e.context)
+							&& e.context.transmitStatus === TransmitStatus.NoAck
+						) {
+							// If retrying communication with an unresponsive node too quickly,
+							// the controller may lock up --> GH#7764
+							// Try waiting a bit so this doesn't happen
+							waitDurationMs = 100;
+						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
 						) {
 							// We gave up on this command, so don't retry it
