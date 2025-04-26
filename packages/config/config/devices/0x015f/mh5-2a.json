@@ -96,7 +96,7 @@
 		},
 		{
 			"#": "29",
-			"$import": "templates/mcohome_template.json#temperature_deadband"
+			"$import": "templates/mcohome_template.json#temperature_deadband_15_30"
 		},
 		{
 			"#": "255",

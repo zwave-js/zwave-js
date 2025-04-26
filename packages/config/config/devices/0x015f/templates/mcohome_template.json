@@ -132,7 +132,7 @@
 		"label": "Humidity Reporting Threshold",
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
 		"description": "Variation in humidity to induce automatic report",
-		"defaultValue": 10,
+		"defaultValue": 6,
 		"options": [
 			{
 				"label": "Disable",
@@ -322,11 +322,27 @@
 		"maxValue": 30,
 		"defaultValue": 5
 	},
-	"temperature_deadband": {
+	"temperature_deadband_10_20": {
 		"label": "Temperature Deadband",
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
 		"unit": "0.1 °F/C",
-		"defaultValue": 30,
+		"defaultValue": 10,
+		"options": [
+			{
+				"label": "Default (Celsius)",
+				"value": 10
+			},
+			{
+				"label": "Default (Fahrenheit)",
+				"value": 20
+			}
+		]
+	},
+	"temperature_deadband_15_30": {
+		"label": "Temperature Deadband",
+		"$import": "~/templates/master_template.json#base_0-99_nounit",
+		"unit": "0.1 °F/C",
+		"defaultValue": 15,
 		"options": [
 			{
 				"label": "Default (Celsius)",
