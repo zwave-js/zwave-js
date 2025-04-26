@@ -23,51 +23,15 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Temperature Unit",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Celsius",
-					"value": 0
-				},
-				{
-					"label": "Fahrenheit",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#temperature_scale_celsius_fahrenheit"
 		},
 		{
 			"#": "2",
-			"label": "Temperature Reporting Threshold",
-			"description": "Valid range: 3-255; Variation in temperature to induce automatic report",
-			"valueSize": 2,
-			"unit": "0.1 °F/C",
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 5,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"$import": "templates/mcohome_template.json#temperature_reporting_threshold"
 		},
 		{
 			"#": "3",
-			"label": "Humidity Reporting Threshold",
-			"description": "Variation in humidity to induce automatic report",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 99,
-			"defaultValue": 10,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"$import": "templates/mcohome_template.json#humidity_reporting_threshold"
 		},
 		{
 			"#": "12",
@@ -76,280 +40,67 @@
 		},
 		{
 			"#": "13",
-			"label": "Display Brightness",
-			"valueSize": 1,
-			"defaultValue": 2,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Dim",
-					"value": 1
-				},
-				{
-					"label": "Low",
-					"value": 2
-				},
-				{
-					"label": "Medium",
-					"value": 3
-				},
-				{
-					"label": "High",
-					"value": 4
-				},
-				{
-					"label": "Always on",
-					"value": 5
-				}
-			]
+			"$import": "templates/mcohome_template.json#display_brightness"
 		},
 		{
 			"#": "14",
-			"label": "Beep Volume",
-			"valueSize": 1,
-			"defaultValue": 5,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Off",
-					"value": 1
-				},
-				{
-					"label": "Low",
-					"value": 2
-				},
-				{
-					"label": "Medium",
-					"value": 3
-				},
-				{
-					"label": "High",
-					"value": 4
-				},
-				{
-					"label": "Standard",
-					"value": 5
-				}
-			]
+			"$import": "templates/mcohome_template.json#beep_volume"
 		},
 		{
 			"#": "16",
-			"label": "Set Temperature: Upper Limit",
-			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 99,
-			"defaultValue": 98,
-			"options": [
-				{
-					"label": "Default (Celsius)",
-					"value": 37
-				},
-				{
-					"label": "Default (Fahrenheit)",
-					"value": 98
-				}
-			]
+			"$import": "templates/mcohome_template.json#temperature_upper_limit"
 		},
 		{
 			"#": "17",
-			"label": "Set Temperature: Lower Limit",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 98,
-			"defaultValue": 5,
-			"options": [
-				{
-					"label": "Default (Celsius)",
-					"value": 5
-				},
-				{
-					"label": "Default (Fahrenheit)",
-					"value": 41
-				}
-			]
+			"$import": "templates/mcohome_template.json#temperature_lower_limit"
 		},
 		{
 			"#": "18",
-			"label": "Indoor Temperature Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °F/C",
-			"minValue": -99,
-			"maxValue": 99,
-			"defaultValue": 0
+			"$import": "templates/mcohome_template.json#indoor_temperature_calibration"
 		},
 		{
 			"#": "19",
-			"label": "Indoor Humidity Calibration",
-			"valueSize": 1,
-			"unit": "%",
-			"minValue": -20,
-			"maxValue": 20,
-			"defaultValue": 0
+			"$import": "templates/mcohome_template.json#indoor_humidity_calibration"
 		},
 		{
 			"#": "20",
-			"label": "Outdoor Temperature Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °F/C",
-			"minValue": -99,
-			"maxValue": 99,
-			"defaultValue": 0
+			"$import": "templates/mcohome_template.json#outdoor_temperature_calibration"
 		},
 		{
 			"#": "21",
-			"label": "Outdoor Temperature Sensor Type",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Protection sensor",
-					"value": 0
-				},
-				{
-					"label": "Controlled sensor",
-					"value": 1
-				}
-			]
+			"$import": "templates/mcohome_template.json#outdoor_temperature_sensor_type"
 		},
 		{
 			"#": "22",
-			"label": "Antifreeze Protection",
-			"description": "Automatic heating at 41 °F/5 °C",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				},
-				{
-					"label": "Enable",
-					"value": 1
-				}
-			]
+			"$import": "templates/mcohome_template.json#antifreeze_protection"
 		},
 		{
 			"#": "23",
-			"label": "Fan Mode Above Set Temperature",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Normal operation",
-					"value": 0
-				},
-				{
-					"label": "Always off",
-					"value": 1
-				}
-			]
+			"$import": "templates/mcohome_template.json#fan_mode_above_set_temperature"
 		},
 		{
 			"#": "24",
-			"label": "Fan Working Mode",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Cool and heat modes",
-					"value": 0
-				},
-				{
-					"label": "Cool mode only",
-					"value": 1
-				},
-				{
-					"label": "Heat mode only",
-					"value": 2
-				},
-				{
-					"label": "Disable",
-					"value": 3
-				}
-			]
+			"$import": "templates/mcohome_template.json#fan_working_mode"
 		},
 		{
 			"#": "25",
-			"label": "Key Lock Function",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				},
-				{
-					"label": "Enable",
-					"value": 1
-				}
-			]
+			"$import": "templates/mcohome_template.json#key_lock_function"
 		},
 		{
 			"#": "27",
-			"label": "Ventilation Function",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				},
-				{
-					"label": "Enable",
-					"value": 1
-				}
-			]
+			"$import": "templates/mcohome_template.json#ventilation_function"
 		},
 		{
 			"#": "28",
-			"label": "Ventilation Duration",
-			"valueSize": 1,
-			"unit": "minutes",
-			"minValue": 1,
-			"maxValue": 30,
-			"defaultValue": 5
+			"$import": "templates/mcohome_template.json#ventilation_duration"
 		},
 		{
 			"#": "29",
-			"label": "Temperature Deadband",
-			"valueSize": 1,
-			"unit": "0.1 °F/C",
-			"minValue": 0,
-			"maxValue": 99,
-			"defaultValue": 30,
-			"options": [
-				{
-					"label": "Default (Celsius)",
-					"value": 15
-				},
-				{
-					"label": "Default (Fahrenheit)",
-					"value": 30
-				}
-			]
+			"$import": "templates/mcohome_template.json#temperature_deadband"
 		},
 		{
 			"#": "255",
-			"label": "Factory Reset",
-			"valueSize": 1,
-			"defaultValue": 53,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Normal operation",
-					"value": 53
-				},
-				{
-					"label": "Reset to factory defaults",
-					"value": 55
-				}
-			]
+			"$import": "templates/mcohome_template.json#factory_reset_53_55"
 		}
 	]
 }
