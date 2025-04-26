@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Work around an issue in downstream projects that causes the error `import_serial.isAnySendDataResponse is not a function` (#7762)
+
+### Changes under the hood
+* Eliminate internal usage of `.../safe` entrypoints, merge/format imports consistently (#7758)
+
 ## 15.1.1 (2025-04-25)
 ### Bugfixes
 * More resilient recovery from disconnected TCP serial ports (#7748)
