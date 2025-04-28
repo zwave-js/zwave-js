@@ -80,6 +80,13 @@ export {
 	BasicCCSet,
 	BasicCCValues,
 } from "./BasicCC.js";
+export type { BasicWindowCoveringCCStartLevelChangeOptions } from "./BasicWindowCoveringCC.js";
+export {
+	BasicWindowCoveringCC,
+	BasicWindowCoveringCCStartLevelChange,
+	BasicWindowCoveringCCStopLevelChange,
+	BasicWindowCoveringCCValues,
+} from "./BasicWindowCoveringCC.js";
 export type {
 	BatteryCCHealthReportOptions,
 	BatteryCCReportOptions,

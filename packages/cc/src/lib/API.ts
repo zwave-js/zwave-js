@@ -803,6 +803,7 @@ type CCNameMap = {
 		typeof CommandClasses["Association Group Information"];
 	"Barrier Operator": typeof CommandClasses["Barrier Operator"];
 	Basic: typeof CommandClasses["Basic"];
+	"Basic Window Covering": typeof CommandClasses["Basic Window Covering"];
 	Battery: typeof CommandClasses["Battery"];
 	"Binary Sensor": typeof CommandClasses["Binary Sensor"];
 	"Binary Switch": typeof CommandClasses["Binary Switch"];
@@ -961,6 +962,8 @@ export interface CCAPIs {
 	"Barrier Operator":
 		import("../cc/BarrierOperatorCC.js").BarrierOperatorCCAPI;
 	Basic: import("../cc/BasicCC.js").BasicCCAPI;
+	"Basic Window Covering":
+		import("../cc/BasicWindowCoveringCC.js").BasicWindowCoveringCCAPI;
 	Battery: import("../cc/BatteryCC.js").BatteryCCAPI;
 	"Binary Sensor": import("../cc/BinarySensorCC.js").BinarySensorCCAPI;
 	"Binary Switch": import("../cc/BinarySwitchCC.js").BinarySwitchCCAPI;
