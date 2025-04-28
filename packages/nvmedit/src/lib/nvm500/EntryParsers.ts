@@ -2,10 +2,9 @@ import {
 	type NodeProtocolInfo,
 	encodeNodeProtocolInfo,
 	parseNodeProtocolInfo,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { padStart } from "alcalzone-shared/strings";
-import type { NVMModuleType } from "./shared";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
+import type { NVMModuleType } from "./shared.js";
 
 export interface NVMDescriptor {
 	manufacturerID: number;
@@ -29,8 +28,7 @@ export function parseNVMDescriptor(
 		firmwareVersion: `${buffer[offset + 8]}.${buffer[offset + 9]}`,
 		// Z-Wave protocol versions are formatted as "6.07" and similar
 		protocolVersion: `${buffer[offset + 10]}.${
-			padStart(
-				buffer[offset + 11].toString(),
+			buffer[offset + 11].toString().padStart(
 				2,
 				"0",
 			)

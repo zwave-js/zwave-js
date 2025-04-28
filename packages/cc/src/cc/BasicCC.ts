@@ -1,9 +1,14 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type ControlsCC,
 	Duration,
 	type EndpointId,
 	type GetEndpoint,
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
@@ -18,17 +23,8 @@ import {
 	maybeUnknownToString,
 	parseMaybeNumber,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetNode,
-	GetSupportedCCVersion,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -40,7 +36,7 @@ import {
 	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -48,58 +44,56 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { BasicCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { BasicCommand } from "../lib/_Types.js";
 
-export const BasicCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Basic, {
-		...V.staticProperty("currentValue", {
-			...ValueMetadata.ReadOnlyLevel,
-			label: "Current value" as const,
-		}),
-		...V.staticProperty("targetValue", {
-			...ValueMetadata.UInt8,
-			label: "Target value" as const,
-			forceCreation: true,
-		}),
-		...V.staticProperty("duration", {
-			...ValueMetadata.ReadOnlyDuration,
-			label: "Remaining duration" as const,
-			minVersion: 2,
-		}),
-
-		...V.staticProperty("restorePrevious", {
-			...ValueMetadata.WriteOnlyBoolean,
-			label: "Restore previous value" as const,
-			states: {
-				true: "Restore",
-			},
-		}),
-
-		...V.staticPropertyWithName(
-			"compatEvent",
-			"event",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Event value",
-			} as const,
-			{
-				stateful: false,
-				autoCreate: false,
-			},
-		),
+export const BasicCCValues = V.defineCCValues(CommandClasses.Basic, {
+	...V.staticProperty("currentValue", {
+		...ValueMetadata.ReadOnlyLevel,
+		label: "Current value",
 	}),
+	...V.staticProperty("targetValue", {
+		...ValueMetadata.UInt8,
+		label: "Target value",
+	}),
+	...V.staticProperty("duration", {
+		...ValueMetadata.ReadOnlyDuration,
+		label: "Remaining duration",
+	}, {
+		minVersion: 2,
+	}),
+
+	...V.staticProperty("restorePrevious", {
+		...ValueMetadata.WriteOnlyBoolean,
+		label: "Restore previous value",
+		states: {
+			true: "Restore",
+		},
+	}),
+
+	...V.staticPropertyWithName(
+		"compatEvent",
+		"event",
+		{
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Event value",
+		},
+		{
+			stateful: false,
+			autoCreate: false,
+		},
+	),
 });
 
 @API(CommandClasses.Basic)
@@ -389,7 +383,7 @@ export class BasicCCSet extends BasicCC {
 		validatePayload(raw.payload.length >= 1);
 		const targetValue = raw.payload[0];
 
-		return new BasicCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			targetValue,
 		});
@@ -397,7 +391,7 @@ export class BasicCCSet extends BasicCC {
 
 	public targetValue: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.targetValue]);
 		return super.serialize(ctx);
 	}
@@ -418,6 +412,9 @@ export interface BasicCCReportOptions {
 }
 
 @CCCommand(BasicCommand.Report)
+@ccValueProperty("currentValue", BasicCCValues.currentValue)
+@ccValueProperty("targetValue", BasicCCValues.targetValue)
+@ccValueProperty("duration", BasicCCValues.duration)
 export class BasicCCReport extends BasicCC {
 	// @noCCValues See comment in the constructor
 	public constructor(
@@ -447,7 +444,7 @@ export class BasicCCReport extends BasicCC {
 			duration = Duration.parseReport(raw.payload[2]);
 		}
 
-		return new BasicCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			currentValue,
 			targetValue,
@@ -455,13 +452,10 @@ export class BasicCCReport extends BasicCC {
 		});
 	}
 
-	@ccValue(BasicCCValues.currentValue)
 	public currentValue: MaybeUnknown<number> | undefined;
 
-	@ccValue(BasicCCValues.targetValue)
 	public readonly targetValue: MaybeUnknown<number> | undefined;
 
-	@ccValue(BasicCCValues.duration)
 	public readonly duration: Duration | undefined;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -507,7 +501,7 @@ export class BasicCCReport extends BasicCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.currentValue ?? 0xfe,
 			this.targetValue ?? 0xfe,

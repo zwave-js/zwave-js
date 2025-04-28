@@ -8,10 +8,10 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { DeviceClass } from "../DeviceClass";
-import { Endpoint } from "../Endpoint";
-import * as nodeUtils from "../utils";
-import { NodeValuesMixin } from "./40_Values";
+import { DeviceClass } from "../DeviceClass.js";
+import { Endpoint } from "../Endpoint.js";
+import * as nodeUtils from "../utils.js";
+import { NodeCapabilityValuesMixin } from "./41_CapabilityValues.js";
 
 /** Defines functionality of Z-Wave nodes related to accessing endpoints and their capabilities */
 export interface Endpoints {
@@ -40,7 +40,7 @@ export interface Endpoints {
 	getAllEndpoints(): Endpoint[];
 }
 
-export abstract class EndpointsMixin extends NodeValuesMixin
+export abstract class EndpointsMixin extends NodeCapabilityValuesMixin
 	implements Endpoints, GetEndpoint<Endpoint>, GetAllEndpoints<Endpoint>
 {
 	public get endpointCountIsDynamic(): MaybeNotKnown<boolean> {
@@ -134,8 +134,9 @@ export abstract class EndpointsMixin extends NodeValuesMixin
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		// Zero is the root endpoint - i.e. this node
-		if (index === 0) return this;
+		// Zero is the root endpoint - i.e. this node. Also accept undefined if an application misbehaves
+		if (!index) return this;
+
 		// Check if the Multi Channel CC interview for this node is completed,
 		// because we don't have all the information before that
 		if (!this.isMultiChannelInterviewComplete) {

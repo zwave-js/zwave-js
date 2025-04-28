@@ -1,17 +1,21 @@
 /** Management class and utils for Security S0 */
 
-import { randomBytes } from "node:crypto";
-import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError";
-import { encryptAES128ECB } from "./crypto";
+import { type Timer, setTimer } from "@zwave-js/shared";
+import { encryptAES128ECB, randomBytes } from "../crypto/index.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 const authKeyBase = new Uint8Array(16).fill(0x55);
 const encryptionKeyBase = new Uint8Array(16).fill(0xaa);
 
-export function generateAuthKey(networkKey: Uint8Array): Uint8Array {
+export function generateAuthKey(
+	networkKey: Uint8Array,
+): Promise<Uint8Array> {
 	return encryptAES128ECB(authKeyBase, networkKey);
 }
 
-export function generateEncryptionKey(networkKey: Uint8Array): Uint8Array {
+export function generateEncryptionKey(
+	networkKey: Uint8Array,
+): Promise<Uint8Array> {
 	return encryptAES128ECB(encryptionKeyBase, networkKey);
 }
 
@@ -59,23 +63,31 @@ export class SecurityManager {
 			);
 		}
 		this._networkKey = v;
-		this._authKey = generateAuthKey(this._networkKey);
-		this._encryptionKey = generateEncryptionKey(this._networkKey);
+		this._authKey = undefined;
+		this._encryptionKey = undefined;
 	}
 
-	private _authKey!: Uint8Array;
-	public get authKey(): Uint8Array {
+	private _authKey: Uint8Array | undefined;
+	public async getAuthKey(): Promise<Uint8Array> {
+		if (!this._authKey) {
+			this._authKey = await generateAuthKey(this.networkKey);
+		}
 		return this._authKey;
 	}
 
-	private _encryptionKey!: Uint8Array;
-	public get encryptionKey(): Uint8Array {
+	private _encryptionKey: Uint8Array | undefined;
+	public async getEncryptionKey(): Promise<Uint8Array> {
+		if (!this._encryptionKey) {
+			this._encryptionKey = await generateEncryptionKey(
+				this.networkKey,
+			);
+		}
 		return this._encryptionKey;
 	}
 
 	private _nonceStore = new Map<string, NonceEntry>();
 	private _freeNonceIDs = new Set<string>();
-	private _nonceTimers = new Map<string, NodeJS.Timeout>();
+	private _nonceTimers = new Map<string, Timer>();
 
 	private normalizeId(id: number | NonceKey): string {
 		let ret: NonceKey;
@@ -116,14 +128,12 @@ export class SecurityManager {
 		{ free = true }: SetNonceOptions = {},
 	): void {
 		const key = this.normalizeId(id);
-		if (this._nonceTimers.has(key)) {
-			clearTimeout(this._nonceTimers.get(key));
-		}
+		this._nonceTimers.get(key)?.clear();
 		this._nonceStore.set(key, entry);
 		if (free) this._freeNonceIDs.add(key);
 		this._nonceTimers.set(
 			key,
-			setTimeout(() => {
+			setTimer(() => {
 				this.expireNonce(key);
 			}, this.nonceTimeout).unref(),
 		);
@@ -150,9 +160,7 @@ export class SecurityManager {
 	}
 
 	private deleteNonceInternal(key: string) {
-		if (this._nonceTimers.has(key)) {
-			clearTimeout(this._nonceTimers.get(key));
-		}
+		this._nonceTimers.get(key)?.clear();
 		this._nonceStore.delete(key);
 		this._nonceTimers.delete(key);
 		this._freeNonceIDs.delete(key);

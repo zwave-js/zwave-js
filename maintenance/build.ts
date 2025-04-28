@@ -1,12 +1,13 @@
-import execa from "execa";
+import { type Options as ExecaOptions, execa } from "execa";
 
 const project = process.argv[2] ?? "all";
 const buildArgs = process.argv
 	.slice(3)
 	.filter((a) => a !== "-w" && a !== "--watch");
 
-// TODO: Parse package.json dependency graph to figure out if codegen and/or
+// FIXME: Parse package.json dependency graph to figure out if codegen and/or
 // partial builds are necessary, instead of hardcoding it here.
+// FIXME: dependency graph is needed to create CJS builds for affected packages
 
 // Only cc, config and projects that depend on them need codegen and partial builds
 const needsNoCodegen = [
@@ -18,17 +19,19 @@ const needsNoCodegen = [
 	"@zwave-js/transformers",
 ];
 
-const hasCodegen = ["@zwave-js/cc", "@zwave-js/config"];
+const hasCodegen = ["@zwave-js/cc", "@zwave-js/config", "zwave-js"];
 
 // zwave-js is the main entry point, but there are projects that depend on it
 const dependsOnZwaveJs = [
 	"@zwave-js/flash",
 	// The eslint plugin doesn't actually depend on zwave-js, but it needs to be built too
 	"@zwave-js/eslint-plugin",
+	// The bindings-browser package doesn't actually depend on zwave-js, but it needs to be built too
+	"@zwave-js/bindings-browser",
 	// And CLI in the future
 ];
 
-const execOptions: execa.Options<string> = {
+const execOptions: ExecaOptions = {
 	stdio: "inherit",
 };
 
@@ -130,6 +133,15 @@ async function main() {
 			execOptions,
 		);
 	}
+
+	// Perform ESM to CJS transformation
+	console.log();
+	console.log(`Transpiling to CommonJS...`);
+	await execa(
+		"yarn",
+		["workspaces", "foreach", "--all", "--parallel", "run", "postbuild"],
+		execOptions,
+	);
 }
 
 main()

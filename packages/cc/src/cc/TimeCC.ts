@@ -1,6 +1,9 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type DSTInfo,
+	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type SupervisionResult,
@@ -11,22 +14,14 @@ import {
 	getDSTInfo,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { padStart } from "alcalzone-shared/strings";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -34,9 +29,9 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { TimeCommand } from "../lib/_Types";
-import { encodeTimezone, parseTimezone } from "../lib/serializers";
+} from "../lib/CommandClassDecorators.js";
+import { TimeCommand } from "../lib/_Types.js";
+import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
 
 // @noSetValueAPI
 // Only the timezone information can be set and that accepts a non-primitive value
@@ -261,7 +256,7 @@ export class TimeCCTimeReport extends TimeCC {
 			second <= 59,
 		);
 
-		return new TimeCCTimeReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			hour,
 			minute,
@@ -273,7 +268,7 @@ export class TimeCCTimeReport extends TimeCC {
 	public minute: number;
 	public second: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.hour & 0b11111,
 			this.minute,
@@ -286,13 +281,9 @@ export class TimeCCTimeReport extends TimeCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				time: `${padStart(this.hour.toString(), 2, "0")}:${
-					padStart(
-						this.minute.toString(),
-						2,
-						"0",
-					)
-				}:${padStart(this.second.toString(), 2, "0")}`,
+				time: `${this.hour.toString().padStart(2, "0")}:${
+					this.minute.toString().padStart(2, "0")
+				}:${this.second.toString().padStart(2, "0")}`,
 			},
 		};
 	}
@@ -326,7 +317,7 @@ export class TimeCCDateReport extends TimeCC {
 		const month = raw.payload[2];
 		const day = raw.payload[3];
 
-		return new TimeCCDateReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			year,
 			month,
@@ -338,7 +329,7 @@ export class TimeCCDateReport extends TimeCC {
 	public month: number;
 	public day: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			// 2 bytes placeholder for year
 			0,
@@ -354,13 +345,9 @@ export class TimeCCDateReport extends TimeCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				date: `${padStart(this.year.toString(), 4, "0")}-${
-					padStart(
-						this.month.toString(),
-						2,
-						"0",
-					)
-				}-${padStart(this.day.toString(), 2, "0")}`,
+				date: `${this.year.toString().padStart(4, "0")}-${
+					this.month.toString().padStart(2, "0")
+				}-${this.day.toString().padStart(2, "0")}`,
 			},
 		};
 	}
@@ -411,7 +398,7 @@ export class TimeCCTimeOffsetSet extends TimeCC {
 	public dstStartDate: Date;
 	public dstEndDate: Date;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			encodeTimezone({
 				standardOffset: this.standardOffset,
@@ -486,7 +473,7 @@ export class TimeCCTimeOffsetReport extends TimeCC {
 			),
 		);
 
-		return new TimeCCTimeOffsetReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			standardOffset,
 			dstOffset,
@@ -500,7 +487,7 @@ export class TimeCCTimeOffsetReport extends TimeCC {
 	public dstStartDate: Date;
 	public dstEndDate: Date;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			encodeTimezone({
 				standardOffset: this.standardOffset,

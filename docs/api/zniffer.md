@@ -29,6 +29,8 @@ interface ZnifferOptions {
 	/** Security keys for decrypting Z-Wave Long Range traffic */
 	securityKeysLongRange?: ZWaveOptions["securityKeysLongRange"];
 
+	host?: ZWaveOptions["host"];
+
 	/**
 	 * The RSSI values reported by the Zniffer are not actual RSSI values.
 	 * They can be converted to dBm, but the conversion is chip dependent and not documented for 700/800 series Zniffers.
@@ -46,6 +48,13 @@ interface ZnifferOptions {
 	 * Supported regions and their names have to be queried using the `getFrequencies` and `getFrequencyInfo(frequency)` commands.
 	 */
 	defaultFrequency?: number;
+
+	/**
+	 * The LR channel configuration to initialize the Zniffer with. If not specified, the current setting will be kept.
+	 *
+	 * This is only supported for 800 series Zniffers with LR support
+	 */
+	defaultLRChannelConfig?: ZnifferLRChannelConfig;
 
 	/** Limit the number of frames that are kept in memory. */
 	maxCapturedFrames?: number;
@@ -189,7 +198,7 @@ type CorruptedFrame = {
 
 	protocolDataRate: ZnifferProtocolDataRate;
 
-	payload: Buffer;
+	payload: Uint8Array;
 };
 ```
 
@@ -235,7 +244,7 @@ type ZWaveFrame =
 				type: ZWaveFrameType.Singlecast;
 				destinationNodeId: number;
 				ackRequested: boolean;
-				payload: Buffer | CommandClass;
+				payload: Uint8Array | CommandClass;
 			}
 			// Only present in routed frames:
 			& AllOrNone<
@@ -274,13 +283,13 @@ type ZWaveFrame =
 			type: ZWaveFrameType.Broadcast;
 			destinationNodeId: typeof NODE_ID_BROADCAST;
 			ackRequested: boolean;
-			payload: Buffer | CommandClass;
+			payload: Uint8Array | CommandClass;
 		}
 		| {
 			// Multicast frame, not routed
 			type: ZWaveFrameType.Multicast;
 			destinationNodeIds: number[];
-			payload: Buffer | CommandClass;
+			payload: Uint8Array | CommandClass;
 		}
 		| {
 			// Ack frame, not routed
@@ -291,7 +300,7 @@ type ZWaveFrame =
 			// Different kind of explorer frames
 			& ({
 				type: ZWaveFrameType.ExplorerNormal;
-				payload: Buffer | CommandClass;
+				payload: Uint8Array | CommandClass;
 			} | {
 				type: ZWaveFrameType.ExplorerSearchResult;
 				searchingNodeId: number;
@@ -301,7 +310,7 @@ type ZWaveFrame =
 			} | {
 				type: ZWaveFrameType.ExplorerInclusionRequest;
 				networkHomeId: number;
-				payload: Buffer | CommandClass;
+				payload: Uint8Array | CommandClass;
 			})
 			// Common fields for all explorer frames
 			& {
@@ -344,7 +353,7 @@ type LongRangeFrame =
 			// Singlecast frame
 			type: LongRangeFrameType.Singlecast;
 			ackRequested: boolean;
-			payload: Buffer | CommandClass;
+			payload: Uint8Array | CommandClass;
 		}
 		| {
 			// Broadcast frame. This is technically a singlecast frame,
@@ -352,13 +361,13 @@ type LongRangeFrame =
 			type: LongRangeFrameType.Broadcast;
 			destinationNodeId: typeof NODE_ID_BROADCAST_LR;
 			ackRequested: boolean;
-			payload: Buffer | CommandClass;
+			payload: Uint8Array | CommandClass;
 		}
 		| {
 			// Acknowledgement frame
 			type: LongRangeFrameType.Ack;
 			incomingRSSI: RSSI;
-			payload: Buffer;
+			payload: Uint8Array;
 		}
 	);
 ```

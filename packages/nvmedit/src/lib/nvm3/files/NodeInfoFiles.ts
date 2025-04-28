@@ -10,9 +10,9 @@ import {
 	encodeNodeProtocolInfo,
 	parseBitMask,
 	parseNodeProtocolInfo,
-} from "@zwave-js/core/safe";
-import { Bytes, pick } from "@zwave-js/shared/safe";
-import type { NVM3Object } from "../object";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
+import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -20,7 +20,7 @@ import {
 	gotDeserializationOptions,
 	nvmFileID,
 	nvmSection,
-} from "./NVMFile";
+} from "./NVMFile.js";
 
 export const NODEINFOS_PER_FILE_V1 = 4;
 export const LR_NODEINFOS_PER_FILE_V5 = 50;

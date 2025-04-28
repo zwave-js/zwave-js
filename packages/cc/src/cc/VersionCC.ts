@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -15,196 +17,175 @@ import {
 	securityClassIsS2,
 	securityClassOrder,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, num2hex, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	getImplementedVersion,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { VersionCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { VersionCommand } from "../lib/_Types.js";
 
-export const VersionCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Version, {
-		...V.staticProperty(
-			"firmwareVersions",
-			{
-				...ValueMetadata.ReadOnly,
-				type: "string[]",
-				label: "Z-Wave chip firmware versions",
-			} as const,
-			{ supportsEndpoints: false },
-		),
-
-		...V.staticProperty(
-			"libraryType",
-			{
-				...ValueMetadata.ReadOnlyNumber,
-				label: "Library type",
-				states: enumValuesToMetadataStates(ZWaveLibraryTypes),
-			} as const,
-			{ supportsEndpoints: false },
-		),
-
-		...V.staticProperty(
-			"protocolVersion",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Z-Wave protocol version",
-			} as const,
-			{ supportsEndpoints: false },
-		),
-
-		...V.staticProperty(
-			"hardwareVersion",
-			{
-				...ValueMetadata.ReadOnlyNumber,
-				label: "Z-Wave chip hardware version",
-			} as const,
-			{
-				minVersion: 2,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"supportsZWaveSoftwareGet",
-			undefined,
-			{
-				minVersion: 3,
-				internal: true,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"sdkVersion",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "SDK version",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"applicationFrameworkAPIVersion",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Z-Wave application framework API version",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"applicationFrameworkBuildNumber",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Z-Wave application framework API build number",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticPropertyWithName(
-			"serialAPIVersion",
-			"hostInterfaceVersion",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Serial API version",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticPropertyWithName(
-			"serialAPIBuildNumber",
-			"hostInterfaceBuildNumber",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Serial API build number",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"zWaveProtocolVersion",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Z-Wave protocol version",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"zWaveProtocolBuildNumber",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Z-Wave protocol build number",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"applicationVersion",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Application version",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-
-		...V.staticProperty(
-			"applicationBuildNumber",
-			{
-				...ValueMetadata.ReadOnlyString,
-				label: "Application build number",
-			} as const,
-			{
-				minVersion: 3,
-				supportsEndpoints: false,
-			} as const,
-		),
-	}),
+export const VersionCCValues = V.defineCCValues(CommandClasses.Version, {
+	...V.staticProperty(
+		"firmwareVersions",
+		{
+			...ValueMetadata.ReadOnly,
+			type: "string[]",
+			label: "Z-Wave chip firmware versions",
+		} as const,
+		{ supportsEndpoints: false },
+	),
+	...V.staticProperty(
+		"libraryType",
+		{
+			...ValueMetadata.ReadOnlyNumber,
+			label: "Library type",
+			states: enumValuesToMetadataStates(ZWaveLibraryTypes),
+		} as const,
+		{ supportsEndpoints: false },
+	),
+	...V.staticProperty(
+		"protocolVersion",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Z-Wave protocol version",
+		} as const,
+		{ supportsEndpoints: false },
+	),
+	...V.staticProperty(
+		"hardwareVersion",
+		{
+			...ValueMetadata.ReadOnlyNumber,
+			label: "Z-Wave chip hardware version",
+		} as const,
+		{
+			minVersion: 2,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticProperty(
+		"supportsZWaveSoftwareGet",
+		undefined,
+		{
+			minVersion: 3,
+			internal: true,
+		} as const,
+	),
+	...V.staticProperty(
+		"sdkVersion",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "SDK version",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticProperty(
+		"applicationFrameworkAPIVersion",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Z-Wave application framework API version",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticProperty(
+		"applicationFrameworkBuildNumber",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Z-Wave application framework API build number",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticPropertyWithName(
+		"serialAPIVersion",
+		"hostInterfaceVersion",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Serial API version",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticPropertyWithName(
+		"serialAPIBuildNumber",
+		"hostInterfaceBuildNumber",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Serial API build number",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticProperty(
+		"zWaveProtocolVersion",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Z-Wave protocol version",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticProperty(
+		"zWaveProtocolBuildNumber",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Z-Wave protocol build number",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticProperty(
+		"applicationVersion",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Application version",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
+	...V.staticProperty(
+		"applicationBuildNumber",
+		{
+			...ValueMetadata.ReadOnlyString,
+			label: "Application build number",
+		} as const,
+		{
+			minVersion: 3,
+			supportsEndpoints: false,
+		} as const,
+	),
 });
 
 function parseVersion(buffer: Uint8Array): string {
@@ -650,6 +631,10 @@ export interface VersionCCReportOptions {
 }
 
 @CCCommand(VersionCommand.Report)
+@ccValueProperty("libraryType", VersionCCValues.libraryType)
+@ccValueProperty("protocolVersion", VersionCCValues.protocolVersion)
+@ccValueProperty("firmwareVersions", VersionCCValues.firmwareVersions)
+@ccValueProperty("hardwareVersion", VersionCCValues.hardwareVersion)
 export class VersionCCReport extends VersionCC {
 	public constructor(
 		options: WithAddress<VersionCCReportOptions>,
@@ -702,7 +687,7 @@ export class VersionCCReport extends VersionCC {
 			}
 		}
 
-		return new VersionCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			libraryType,
 			protocolVersion,
@@ -711,19 +696,15 @@ export class VersionCCReport extends VersionCC {
 		});
 	}
 
-	@ccValue(VersionCCValues.libraryType)
 	public readonly libraryType: ZWaveLibraryTypes;
 
-	@ccValue(VersionCCValues.protocolVersion)
 	public readonly protocolVersion: string;
 
-	@ccValue(VersionCCValues.firmwareVersions)
 	public readonly firmwareVersions: string[];
 
-	@ccValue(VersionCCValues.hardwareVersion)
 	public readonly hardwareVersion: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.libraryType,
 			...this.protocolVersion
@@ -802,7 +783,7 @@ export class VersionCCCommandClassReport extends VersionCC {
 		const requestedCC: CommandClasses = raw.payload[0];
 		const ccVersion = raw.payload[1];
 
-		return new VersionCCCommandClassReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			requestedCC,
 			ccVersion,
@@ -812,7 +793,7 @@ export class VersionCCCommandClassReport extends VersionCC {
 	public ccVersion: number;
 	public requestedCC: CommandClasses;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.requestedCC, this.ccVersion]);
 		return super.serialize(ctx);
 	}
@@ -861,7 +842,7 @@ export class VersionCCCommandClassGet extends VersionCC {
 		validatePayload(raw.payload.length >= 1);
 		const requestedCC: CommandClasses = raw.payload[0];
 
-		return new VersionCCCommandClassGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			requestedCC,
 		});
@@ -869,7 +850,7 @@ export class VersionCCCommandClassGet extends VersionCC {
 
 	public requestedCC: CommandClasses;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.requestedCC]);
 		return super.serialize(ctx);
 	}
@@ -888,6 +869,10 @@ export interface VersionCCCapabilitiesReportOptions {
 }
 
 @CCCommand(VersionCommand.CapabilitiesReport)
+@ccValueProperty(
+	"supportsZWaveSoftwareGet",
+	VersionCCValues.supportsZWaveSoftwareGet,
+)
 export class VersionCCCapabilitiesReport extends VersionCC {
 	public constructor(
 		options: WithAddress<VersionCCCapabilitiesReportOptions>,
@@ -905,16 +890,15 @@ export class VersionCCCapabilitiesReport extends VersionCC {
 		const capabilities = raw.payload[0];
 		const supportsZWaveSoftwareGet = !!(capabilities & 0b100);
 
-		return new VersionCCCapabilitiesReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportsZWaveSoftwareGet,
 		});
 	}
 
-	@ccValue(VersionCCValues.supportsZWaveSoftwareGet)
 	public supportsZWaveSoftwareGet: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			(this.supportsZWaveSoftwareGet ? 0b100 : 0) | 0b11,
 		]);
@@ -950,6 +934,30 @@ export interface VersionCCZWaveSoftwareReportOptions {
 }
 
 @CCCommand(VersionCommand.ZWaveSoftwareReport)
+@ccValueProperty("sdkVersion", VersionCCValues.sdkVersion)
+@ccValueProperty(
+	"applicationFrameworkAPIVersion",
+	VersionCCValues.applicationFrameworkAPIVersion,
+)
+@ccValueProperty(
+	"applicationFrameworkBuildNumber",
+	VersionCCValues.applicationFrameworkBuildNumber,
+)
+@ccValueProperty("hostInterfaceVersion", VersionCCValues.serialAPIVersion)
+@ccValueProperty(
+	"hostInterfaceBuildNumber",
+	VersionCCValues.serialAPIBuildNumber,
+)
+@ccValueProperty("zWaveProtocolVersion", VersionCCValues.zWaveProtocolVersion)
+@ccValueProperty(
+	"zWaveProtocolBuildNumber",
+	VersionCCValues.zWaveProtocolBuildNumber,
+)
+@ccValueProperty("applicationVersion", VersionCCValues.applicationVersion)
+@ccValueProperty(
+	"applicationBuildNumber",
+	VersionCCValues.applicationBuildNumber,
+)
 export class VersionCCZWaveSoftwareReport extends VersionCC {
 	public constructor(
 		options: WithAddress<VersionCCZWaveSoftwareReportOptions>,
@@ -1010,7 +1018,7 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
 			applicationBuildNumber = 0;
 		}
 
-		return new VersionCCZWaveSoftwareReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sdkVersion,
 			applicationFrameworkAPIVersion,
@@ -1024,31 +1032,22 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
 		});
 	}
 
-	@ccValue(VersionCCValues.sdkVersion)
 	public readonly sdkVersion: string;
 
-	@ccValue(VersionCCValues.applicationFrameworkAPIVersion)
 	public readonly applicationFrameworkAPIVersion: string;
 
-	@ccValue(VersionCCValues.applicationFrameworkBuildNumber)
 	public readonly applicationFrameworkBuildNumber: number;
 
-	@ccValue(VersionCCValues.serialAPIVersion)
 	public readonly hostInterfaceVersion: string;
 
-	@ccValue(VersionCCValues.serialAPIBuildNumber)
 	public readonly hostInterfaceBuildNumber: number;
 
-	@ccValue(VersionCCValues.zWaveProtocolVersion)
 	public readonly zWaveProtocolVersion: string;
 
-	@ccValue(VersionCCValues.zWaveProtocolBuildNumber)
 	public readonly zWaveProtocolBuildNumber: number;
 
-	@ccValue(VersionCCValues.applicationVersion)
 	public readonly applicationVersion: string;
 
-	@ccValue(VersionCCValues.applicationBuildNumber)
 	public readonly applicationBuildNumber: number;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

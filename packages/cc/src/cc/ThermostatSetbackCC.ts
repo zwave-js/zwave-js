@@ -1,32 +1,28 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type SupervisionResult,
 	type WithAddress,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
 	POLL_VALUE,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -34,13 +30,13 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
+} from "../lib/CommandClassDecorators.js";
 import {
 	type SetbackState,
 	SetbackType,
 	ThermostatSetbackCommand,
-} from "../lib/_Types";
-import { decodeSetbackState, encodeSetbackState } from "../lib/serializers";
+} from "../lib/_Types.js";
+import { decodeSetbackState, encodeSetbackState } from "../lib/serializers.js";
 
 // @noSetValueAPI
 // The setback state consist of two values that must be set together
@@ -193,12 +189,11 @@ export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
 		validatePayload(raw.payload.length >= 2);
 		const setbackType: SetbackType = raw.payload[0] & 0b11;
 
-		// If we receive an unknown setback state, return the raw value
-		const rawSetbackState = raw.payload.readInt8(1);
-		const setbackState: SetbackState = decodeSetbackState(rawSetbackState)
-			|| rawSetbackState;
+		const setbackState: SetbackState = decodeSetbackState(raw.payload, 1)
+			// If we receive an unknown setback state, return the raw value
+			|| raw.payload.readInt8(1);
 
-		return new ThermostatSetbackCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			setbackType,
 			setbackState,
@@ -209,9 +204,9 @@ export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
 	/** The offset from the setpoint in 0.1 Kelvin or a special mode */
 	public setbackState: SetbackState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
-		this.payload = Bytes.from([
-			this.setbackType & 0b11,
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.setbackType & 0b11],
 			encodeSetbackState(this.setbackState),
 		]);
 		return super.serialize(ctx);
@@ -257,12 +252,11 @@ export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
 		validatePayload(raw.payload.length >= 2);
 		const setbackType: SetbackType = raw.payload[0] & 0b11;
 
-		// If we receive an unknown setback state, return the raw value
-		const rawSetbackState = raw.payload.readInt8(1);
-		const setbackState: SetbackState = decodeSetbackState(rawSetbackState)
-			|| rawSetbackState;
+		const setbackState: SetbackState = decodeSetbackState(raw.payload, 1)
+			// If we receive an unknown setback state, return the raw value
+			|| raw.payload.readInt8(1);
 
-		return new ThermostatSetbackCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			setbackType,
 			setbackState,
@@ -273,9 +267,9 @@ export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
 	/** The offset from the setpoint in 0.1 Kelvin or a special mode */
 	public readonly setbackState: SetbackState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
-		this.payload = Bytes.from([
-			this.setbackType & 0b11,
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.setbackType & 0b11],
 			encodeSetbackState(this.setbackState),
 		]);
 		return super.serialize(ctx);

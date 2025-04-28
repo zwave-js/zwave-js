@@ -1,3 +1,5 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig, LookupManufacturer } from "@zwave-js/config";
 import {
 	type BroadcastCC,
 	type CCAddress,
@@ -10,7 +12,12 @@ import {
 	type GetAllEndpoints,
 	type GetCCs,
 	type GetEndpoint,
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
+	type HostIDs,
 	type ListenBehavior,
+	type LogNode,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type ModifyCCs,
@@ -34,18 +41,6 @@ import {
 	parseCCId,
 	valueIdToString,
 } from "@zwave-js/core";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetInterviewOptions,
-	GetNode,
-	GetSupportedCCVersion,
-	GetValueDB,
-	HostIDs,
-	LogNode,
-	LookupManufacturer,
-} from "@zwave-js/host";
 import {
 	Bytes,
 	type JSONObject,
@@ -55,7 +50,7 @@ import {
 	staticExtends,
 } from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
-import type { CCAPIHost, CCAPINode, ValueIDProperties } from "./API";
+import type { CCAPIHost, CCAPINode, ValueIDProperties } from "./API.js";
 import {
 	getCCCommand,
 	getCCCommandConstructor,
@@ -66,18 +61,19 @@ import {
 	getCommandClass,
 	getExpectedCCResponse,
 	getImplementedVersion,
-} from "./CommandClassDecorators";
+} from "./CommandClassDecorators.js";
 import {
 	type EncapsulatingCommandClass,
 	isEncapsulatingCommandClass,
 	isMultiEncapsulatingCommandClass,
-} from "./EncapsulatingCommandClass";
+} from "./EncapsulatingCommandClass.js";
 import {
 	type CCValue,
 	type DynamicCCValue,
 	type StaticCCValue,
 	defaultCCValueOptions,
-} from "./Values";
+} from "./Values.js";
+import type { GetInterviewOptions } from "./traits.js";
 
 export interface CommandClassOptions extends CCAddress {
 	ccId?: number; // Used to overwrite the declared CC ID
@@ -213,17 +209,17 @@ export class CommandClass implements CCId {
 		this.payload = Bytes.view(payload);
 	}
 
-	public static parse(
+	public static async parse(
 		data: Uint8Array,
 		ctx: CCParsingContext,
-	): CommandClass {
+	): Promise<CommandClass> {
 		const raw = CCRaw.parse(data);
 
 		// Find the correct subclass constructor to invoke
 		const CCConstructor = getCCConstructor(raw.ccId);
 		if (!CCConstructor) {
 			// None -> fall back to the default constructor
-			return CommandClass.from(raw, ctx);
+			return await CommandClass.from(raw, ctx);
 		}
 
 		let CommandConstructor: CCConstructor<CommandClass> | undefined;
@@ -236,7 +232,7 @@ export class CommandClass implements CCId {
 		// Not every CC has a constructor for its commands. In that case,
 		// call the CC constructor directly
 		try {
-			return (CommandConstructor ?? CCConstructor).from(raw, ctx);
+			return await (CommandConstructor ?? CCConstructor).from(raw, ctx);
 		} catch (e) {
 			// Indicate invalid payloads with a special CC type
 			if (
@@ -270,7 +266,10 @@ export class CommandClass implements CCId {
 		}
 	}
 
-	public static from(raw: CCRaw, ctx: CCParsingContext): CommandClass {
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): CommandClass | Promise<CommandClass> {
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			ccId: raw.ccId,
@@ -351,8 +350,8 @@ export class CommandClass implements CCId {
 	/**
 	 * Serializes this CommandClass to be embedded in a message payload or another CC
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public serialize(ctx: CCEncodingContext): Bytes {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// NoOp CCs have no command and no payload
 		if (this.ccId === CommandClasses["No Operation"]) {
 			return Bytes.from([this.ccId]);
@@ -952,10 +951,10 @@ export class CommandClass implements CCId {
 	}
 
 	/** Include previously received partial responses into a final CC */
-	public mergePartialCCs(
+	public async mergePartialCCs(
 		_partials: CommandClass[],
 		_ctx: CCParsingContext,
-	): void {
+	): Promise<void> {
 		// This is highly CC dependent
 		// Overwrite this in derived classes, by default do nothing
 	}

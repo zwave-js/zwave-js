@@ -22,7 +22,7 @@ import { Bytes } from "@zwave-js/shared";
 import {
 	ApplicationUpdateRequestNodeInfoReceived,
 	ApplicationUpdateRequestNodeInfoRequestFailed,
-} from "../application/ApplicationUpdateRequest";
+} from "../application/ApplicationUpdateRequest.js";
 
 export interface RequestNodeInfoResponseOptions {
 	wasSent: boolean;
@@ -56,7 +56,7 @@ export class RequestNodeInfoResponse extends Message
 		return this.wasSent;
 	}
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.wasSent ? 0x01 : 0]);
 		return super.serialize(ctx);
 	}
@@ -118,7 +118,7 @@ export class RequestNodeInfoRequest extends Message {
 		return false;
 	}
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = encodeNodeID(this.nodeId, ctx.nodeIdType);
 		return super.serialize(ctx);
 	}

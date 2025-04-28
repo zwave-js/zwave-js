@@ -1,5 +1,5 @@
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { num2hex } from "./strings";
+import { num2hex } from "./strings.js";
 
 /** Object.keys, but with `(keyof T)[]` as the return type */
 export function keysOf<T extends object>(obj: T): (keyof T)[] {
@@ -44,15 +44,6 @@ export function pickDeep<T = unknown>(
 		return _pickDeep(obj[propName], pathArr);
 	}
 	return _pickDeep(object, path.split(".")) as T;
-}
-
-/** Calls the map function of the given array and flattens the result by one level */
-export function flatMap<U, T extends any[]>(
-	array: T[],
-	callbackfn: (value: T, index: number, array: T[]) => U[],
-): U[] {
-	const mapped = array.map(callbackfn);
-	return mapped.reduce((acc, cur) => [...acc, ...cur], [] as U[]);
 }
 
 /**

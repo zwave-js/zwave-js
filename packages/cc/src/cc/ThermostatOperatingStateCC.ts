@@ -1,44 +1,47 @@
-import type { MessageOrCCLogEntry, WithAddress } from "@zwave-js/core/safe";
+import type { CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
 	MessagePriority,
 	ValueMetadata,
+	type WithAddress,
 	enumValuesToMetadataStates,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type { CCParsingContext, GetValueDB } from "@zwave-js/host/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { getEnumMemberName } from "@zwave-js/shared";
 import {
 	CCAPI,
 	POLL_VALUE,
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ThermostatOperatingState,
 	ThermostatOperatingStateCommand,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-export const ThermostatOperatingStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Operating State"], {
+export const ThermostatOperatingStateCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Operating State"],
+	{
 		...V.staticPropertyWithName(
 			"operatingState",
 			"state",
@@ -48,8 +51,8 @@ export const ThermostatOperatingStateCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(ThermostatOperatingState),
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -164,6 +167,7 @@ export interface ThermostatOperatingStateCCReportOptions {
 }
 
 @CCCommand(ThermostatOperatingStateCommand.Report)
+@ccValueProperty("state", ThermostatOperatingStateCCValues.operatingState)
 export class ThermostatOperatingStateCCReport
 	extends ThermostatOperatingStateCC
 {
@@ -183,13 +187,12 @@ export class ThermostatOperatingStateCCReport
 		validatePayload(raw.payload.length >= 1);
 		const state: ThermostatOperatingState = raw.payload[0];
 
-		return new ThermostatOperatingStateCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			state,
 		});
 	}
 
-	@ccValue(ThermostatOperatingStateCCValues.operatingState)
 	public readonly state: ThermostatOperatingState;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

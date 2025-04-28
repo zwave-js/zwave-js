@@ -1,22 +1,17 @@
-import type {
-	MessageOrCCLogEntry,
-	MessageRecord,
-	SupervisionResult,
-	WithAddress,
-} from "@zwave-js/core/safe";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
+	type MessageRecord,
+	type SupervisionResult,
 	ValueMetadata,
+	type WithAddress,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -24,22 +19,23 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+} from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { SceneActivationCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { SceneActivationCommand } from "../lib/_Types.js";
 
-export const SceneActivationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Scene Activation"], {
+export const SceneActivationCCValues = V.defineCCValues(
+	CommandClasses["Scene Activation"],
+	{
 		...V.staticProperty(
 			"sceneId",
 			{
@@ -50,7 +46,6 @@ export const SceneActivationCCValues = Object.freeze({
 			} as const,
 			{ stateful: false },
 		),
-
 		...V.staticProperty(
 			"dimmingDuration",
 			{
@@ -58,8 +53,8 @@ export const SceneActivationCCValues = Object.freeze({
 				label: "Dimming duration",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 // @noInterview This CC is write-only
 
@@ -134,6 +129,8 @@ export interface SceneActivationCCSetOptions {
 
 @CCCommand(SceneActivationCommand.Set)
 @useSupervision()
+@ccValueProperty("sceneId", SceneActivationCCValues.sceneId)
+@ccValueProperty("dimmingDuration", SceneActivationCCValues.dimmingDuration)
 export class SceneActivationCCSet extends SceneActivationCC {
 	public constructor(
 		options: WithAddress<SceneActivationCCSetOptions>,
@@ -157,20 +154,18 @@ export class SceneActivationCCSet extends SceneActivationCC {
 			dimmingDuration = Duration.parseSet(raw.payload[1]);
 		}
 
-		return new SceneActivationCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sceneId,
 			dimmingDuration,
 		});
 	}
 
-	@ccValue(SceneActivationCCValues.sceneId)
 	public sceneId: number;
 
-	@ccValue(SceneActivationCCValues.dimmingDuration)
 	public dimmingDuration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.sceneId,
 			this.dimmingDuration?.serializeSet() ?? 0xff,

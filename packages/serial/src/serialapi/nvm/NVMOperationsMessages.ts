@@ -43,7 +43,7 @@ export class NVMOperationsRequest extends Message {
 	// This must be set in subclasses
 	public command!: NVMOperationsCommand;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.command]),
 			this.payload,
@@ -127,7 +127,7 @@ export class NVMOperationsReadRequest extends NVMOperationsRequest {
 	public length: number;
 	public offset: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(3);
 		this.payload[0] = this.length;
 		this.payload.writeUInt16BE(this.offset, 1);
@@ -194,7 +194,7 @@ export class NVMOperationsWriteRequest extends NVMOperationsRequest {
 	public offset: number;
 	public buffer: Uint8Array;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(3 + this.buffer.length);
 		this.payload[0] = this.buffer.length;
 		this.payload.writeUInt16BE(this.offset, 1);

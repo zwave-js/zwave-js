@@ -2,19 +2,17 @@ import {
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
-	createSimpleReflectionDecorator,
 	validatePayload,
 } from "@zwave-js/core";
-import type {
-	MessageBaseOptions,
-	MessageConstructor,
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-} from "@zwave-js/serial";
+import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
 	Message,
+	type MessageBaseOptions,
+	type MessageConstructor,
+	type MessageEncodingContext,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
 	expectedResponse,
 	messageTypes,
@@ -37,7 +35,7 @@ const {
 	lookupConstructor: getSubCommandRequestConstructor,
 	lookupValue: getSubCommandForRequest,
 } = createSimpleReflectionDecorator<
-	FirmwareUpdateNVMRequest,
+	typeof FirmwareUpdateNVMRequest,
 	[command: FirmwareUpdateNVMCommand],
 	MessageConstructor<FirmwareUpdateNVMRequest>
 >({
@@ -49,7 +47,7 @@ const {
 	lookupConstructor: getSubCommandResponseConstructor,
 	lookupValue: getSubCommandForResponse,
 } = createSimpleReflectionDecorator<
-	FirmwareUpdateNVMResponse,
+	typeof FirmwareUpdateNVMResponse,
 	[command: FirmwareUpdateNVMCommand],
 	MessageConstructor<FirmwareUpdateNVMResponse>
 >({
@@ -105,7 +103,7 @@ export class FirmwareUpdateNVMRequest extends Message {
 
 	public command: FirmwareUpdateNVMCommand;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.command]),
 			this.payload,
@@ -255,7 +253,7 @@ export class FirmwareUpdateNVM_SetNewImageRequest
 
 	public newImage: boolean;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.newImage ? 1 : 0]);
 
 		return super.serialize(ctx);
@@ -406,7 +404,7 @@ export class FirmwareUpdateNVM_UpdateCRC16Request
 		return 30000;
 	}
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(7);
 		this.payload.writeUIntBE(this.offset, 0, 3);
 		this.payload.writeUInt16BE(this.blockLength, 3);
@@ -555,7 +553,7 @@ export class FirmwareUpdateNVM_WriteRequest extends FirmwareUpdateNVMRequest {
 	public offset: number;
 	public buffer: Uint8Array;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(5 + this.buffer.length);
 		this.payload.writeUIntBE(this.offset, 0, 3);
 		this.payload.writeUInt16BE(this.buffer.length, 3);

@@ -1,4 +1,4 @@
-import { type CommandClass } from "@zwave-js/cc";
+import type { CommandClass } from "@zwave-js/cc";
 import { BasicCCGet, BasicCCReport, BasicCCValues } from "@zwave-js/cc/BasicCC";
 import { MultiChannelCCCommandEncapsulation } from "@zwave-js/cc/MultiChannelCC";
 import { CommandClasses, NodeStatus } from "@zwave-js/core";
@@ -7,7 +7,7 @@ import {
 	type MockNodeBehavior,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro for https://github.com/home-assistant/core/issues/98491
 
@@ -76,7 +76,7 @@ integrationTest(
 				},
 			};
 
-			t.is(node2.status, NodeStatus.Alive);
+			t.expect(node2.status).toBe(NodeStatus.Alive);
 
 			const basicSetPromise0 = node2.setValue(
 				BasicCCValues.targetValue.endpoint(0),
@@ -118,7 +118,7 @@ integrationTest(
 			mockNode.autoAckControllerFrames = true;
 
 			await basicSetPromise2;
-			t.is(node2.status, NodeStatus.Alive);
+			t.expect(node2.status).toBe(NodeStatus.Alive);
 
 			await wait(10000);
 		},

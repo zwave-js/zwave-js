@@ -18,7 +18,7 @@ import {
 import { wait } from "alcalzone-shared/async";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"S2 encapsulated commands using a lower security class can be decoded",
@@ -33,17 +33,17 @@ integrationTest(
 
 		customSetup: async (driver, controller, mockNode) => {
 			// Create a security manager for the node
-			const sm2Node = new SecurityManager2();
+			const sm2Node = await SecurityManager2.create();
 			// Copy keys from the driver
-			sm2Node.setKey(
+			await sm2Node.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			sm2Node.setKey(
+			await sm2Node.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			sm2Node.setKey(
+			await sm2Node.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
@@ -53,30 +53,29 @@ integrationTest(
 				SecurityClass.S2_Unauthenticated;
 
 			// Create a security manager for the controller
-			const smCtrlr = new SecurityManager2();
+			const smCtrlr = await SecurityManager2.create();
 			// Copy keys from the driver
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_AccessControl,
 				driver.options.securityKeys!.S2_AccessControl!,
 			);
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Authenticated,
 				driver.options.securityKeys!.S2_Authenticated!,
 			);
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
 			controller.securityManagers.securityManager2 = smCtrlr;
-			controller.parsingContext.getHighestSecurityClass =
-				controller.encodingContext.getHighestSecurityClass =
-					() => SecurityClass.S2_Unauthenticated;
+			controller.encodingContext.getHighestSecurityClass = () =>
+				SecurityClass.S2_Unauthenticated;
 
 			// Respond to S2 Nonce Get
 			const respondToS2NonceGet: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
+				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof Security2CCNonceGet) {
-						const nonce = sm2Node.generateNonce(
+						const nonce = await sm2Node.generateNonce(
 							controller.ownNodeId,
 						);
 						const cc = new Security2CCNonceReport({
@@ -206,8 +205,6 @@ integrationTest(
 					&& f.payload instanceof Security2CCMessageEncapsulation
 					&& f.payload.encapsulated instanceof BasicCCSet,
 			);
-
-			t.pass();
 		},
 	},
 );

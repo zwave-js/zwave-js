@@ -24,6 +24,10 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
+	// Ignore the browser bindings for now
+	{
+		ignores: ["packages/bindings-browser/**/*.ts"],
+	},
 	...tseslint.configs.recommended,
 	...tseslint.configs.recommendedTypeChecked,
 	{
@@ -197,6 +201,15 @@ export default tseslint.config(
 			"@typescript-eslint/*": "off",
 		},
 	},
+	// Make sure that the browser barrel files are parsed with the correct conditions
+	{
+		files: ["packages/**/*.browser.ts", "packages/**/index_browser.ts"],
+		languageOptions: {
+			parserOptions: {
+				project: "tsconfig.browser.json",
+			},
+		},
+	},
 	// Enable rules from the local plugin for relevant files
 	{
 		files: ["packages/cc/src/**/*CC.ts"],
@@ -215,6 +228,7 @@ export default tseslint.config(
 		files: ["packages/**/*.ts"],
 		rules: {
 			"@zwave-js/no-forbidden-imports": "error",
+			"@zwave-js/consistent-import-declarations": "error",
 		},
 	},
 );

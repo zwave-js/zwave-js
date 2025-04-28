@@ -1,6 +1,9 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -11,24 +14,19 @@ import {
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
+	encodeBitMask,
 	isUnsupervisedOrSucceeded,
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown, encodeBitMask } from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
 import {
+	Bytes,
 	getEnumMemberName,
 	isEnumMember,
 	keysOf,
 	pick,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
 import { isObject } from "alcalzone-shared/typeguards";
@@ -42,7 +40,7 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -50,18 +48,18 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ColorComponent,
 	ColorComponentMap,
@@ -69,7 +67,7 @@ import {
 	ColorSwitchCommand,
 	type ColorTable,
 	LevelChangeDirection,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
 const hexColorRegex =
 	/^#?(?<red>[0-9a-f]{2})(?<green>[0-9a-f]{2})(?<blue>[0-9a-f]{2})$/i;
@@ -101,16 +99,15 @@ function colorComponentToTableKey(
 	}
 }
 
-export const ColorSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Color Switch"], {
+export const ColorSwitchCCValues = V.defineCCValues(
+	CommandClasses["Color Switch"],
+	{
 		...V.staticProperty("supportedColorComponents", undefined, {
 			internal: true,
 		}),
 		...V.staticProperty("supportsHexColor", undefined, {
 			internal: true,
 		}),
-
-		// The compound color (static)
 		...V.staticPropertyWithName(
 			"currentColor",
 			"currentColor",
@@ -135,8 +132,6 @@ export const ColorSwitchCCValues = Object.freeze({
 				label: "Remaining duration",
 			} as const,
 		),
-
-		// The compound color as HEX
 		...V.staticProperty(
 			"hexColor",
 			{
@@ -147,10 +142,6 @@ export const ColorSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Color Switch"], {
-		// The individual color channels (dynamic)
 		...V.dynamicPropertyAndKeyWithName(
 			"currentColorChannel",
 			"currentColor",
@@ -184,8 +175,8 @@ export const ColorSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Color Switch"])
 export class ColorSwitchCCAPI extends CCAPI {
@@ -685,6 +676,10 @@ export interface ColorSwitchCCSupportedReportOptions {
 }
 
 @CCCommand(ColorSwitchCommand.SupportedReport)
+@ccValueProperty(
+	"supportedColorComponents",
+	ColorSwitchCCValues.supportedColorComponents,
+)
 export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
 	public constructor(
 		options: WithAddress<ColorSwitchCCSupportedReportOptions>,
@@ -705,16 +700,15 @@ export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
 			ColorComponent["Warm White"],
 		);
 
-		return new ColorSwitchCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedColorComponents,
 		});
 	}
 
-	@ccValue(ColorSwitchCCValues.supportedColorComponents)
 	public readonly supportedColorComponents: readonly ColorComponent[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeBitMask(
 			this.supportedColorComponents,
 			15, // fixed 2 bytes
@@ -748,6 +742,17 @@ export interface ColorSwitchCCReportOptions {
 }
 
 @CCCommand(ColorSwitchCommand.Report)
+@ccValueProperty(
+	"currentValue",
+	ColorSwitchCCValues.currentColorChannel,
+	(self) => [self.colorComponent],
+)
+@ccValueProperty(
+	"targetValue",
+	ColorSwitchCCValues.targetColorChannel,
+	(self) => [self.colorComponent],
+)
+@ccValueProperty("duration", ColorSwitchCCValues.duration)
 export class ColorSwitchCCReport extends ColorSwitchCC {
 	public constructor(
 		options: WithAddress<ColorSwitchCCReportOptions>,
@@ -772,7 +777,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 			duration = Duration.parseReport(raw.payload[3]);
 		}
 
-		return new ColorSwitchCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			colorComponent,
 			currentValue,
@@ -844,22 +849,14 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 	}
 
 	public readonly colorComponent: ColorComponent;
-	@ccValue(
-		ColorSwitchCCValues.currentColorChannel,
-		(self: ColorSwitchCCReport) => [self.colorComponent] as const,
-	)
+
 	public readonly currentValue: number;
 
-	@ccValue(
-		ColorSwitchCCValues.targetColorChannel,
-		(self: ColorSwitchCCReport) => [self.colorComponent] as const,
-	)
 	public readonly targetValue: number | undefined;
 
-	@ccValue(ColorSwitchCCValues.duration)
 	public readonly duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.colorComponent,
 			this.currentValue,
@@ -923,7 +920,7 @@ export class ColorSwitchCCGet extends ColorSwitchCC {
 		validatePayload(raw.payload.length >= 1);
 		const colorComponent: ColorComponent = raw.payload[0];
 
-		return new ColorSwitchCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			colorComponent,
 		});
@@ -943,7 +940,7 @@ export class ColorSwitchCCGet extends ColorSwitchCC {
 		this._colorComponent = value;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this._colorComponent]);
 		return super.serialize(ctx);
 	}
@@ -1014,7 +1011,7 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 			duration = Duration.parseSet(raw.payload[offset]);
 		}
 
-		return new ColorSwitchCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			...colorTable,
 			duration,
@@ -1024,7 +1021,7 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 	public colorTable: ColorTable;
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const populatedColorCount = Object.keys(this.colorTable).length;
 		this.payload = new Bytes(
 			1 + populatedColorCount * 2 + 1,
@@ -1123,7 +1120,7 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 			duration = Duration.parseSet(raw.payload[3]);
 		}
 
-		return new ColorSwitchCCStartLevelChange({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			ignoreStartLevel,
 			direction,
@@ -1139,7 +1136,7 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 	public direction: keyof typeof LevelChangeDirection;
 	public colorComponent: ColorComponent;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const controlByte = (LevelChangeDirection[this.direction] << 6)
 			| (this.ignoreStartLevel ? 0b0010_0000 : 0);
 		this.payload = Bytes.from([
@@ -1205,7 +1202,7 @@ export class ColorSwitchCCStopLevelChange extends ColorSwitchCC {
 		validatePayload(raw.payload.length >= 1);
 		const colorComponent: ColorComponent = raw.payload[0];
 
-		return new ColorSwitchCCStopLevelChange({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			colorComponent,
 		});
@@ -1213,7 +1210,7 @@ export class ColorSwitchCCStopLevelChange extends ColorSwitchCC {
 
 	public readonly colorComponent: ColorComponent;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.colorComponent]);
 		return super.serialize(ctx);
 	}

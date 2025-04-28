@@ -1,9 +1,9 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
-import { getErrorMessage } from "@zwave-js/shared/safe";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { getErrorMessage, pathExists, readTextFile } from "@zwave-js/shared";
+import type { ReadFile, ReadFileSystemInfo } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import * as fs from "fs-extra";
 import JSON5 from "json5";
-import * as path from "node:path";
+import path from "pathe";
 
 const IMPORT_KEY = "$import";
 const importSpecifierRegex =
@@ -21,10 +21,11 @@ export function clearTemplateCache(): void {
 
 /** Parses a JSON file with $import keys and replaces them with the selected objects */
 export async function readJsonWithTemplate(
+	fs: ReadFileSystemInfo & ReadFile,
 	filename: string,
 	rootDirs?: string | string[],
 ): Promise<Record<string, unknown>> {
-	if (!(await fs.pathExists(filename))) {
+	if (!(await pathExists(fs, filename))) {
 		throw new ZWaveError(
 			`Could not open config file ${filename}: not found!`,
 			ZWaveErrorCodes.Config_NotFound,
@@ -36,6 +37,7 @@ export async function readJsonWithTemplate(
 	// Try to use the cached versions of the template files to speed up the loading
 	const fileCache = new Map(templateCache);
 	const ret = await readJsonWithTemplateInternal(
+		fs,
 		filename,
 		undefined,
 		[],
@@ -90,12 +92,12 @@ function select(
 	for (const part of selectorParts) {
 		// Special case for paramInformation selectors to select params by #
 		if (isArray(ret)) {
-			const item = ret.find(
-				(r) => isObject(r) && "#" in r && r["#"] === part,
+			const item = (ret as any).find(
+				(r: any) => isObject(r) && "#" in r && r["#"] === part,
 			);
 			if (item != undefined) {
 				// Don't copy the param number
-				const { ["#"]: _, ...rest } = item as any;
+				const { ["#"]: _, ...rest } = item;
 				ret = rest;
 				continue;
 			}
@@ -126,6 +128,7 @@ function getImportStack(
 }
 
 async function readJsonWithTemplateInternal(
+	fs: ReadFileSystemInfo & ReadFile,
 	filename: string,
 	selector: string | undefined,
 	visited: string[],
@@ -171,7 +174,7 @@ ${getImportStack(visited, selector)}`,
 		json = fileCache.get(filename)!;
 	} else {
 		try {
-			const fileContent = await fs.readFile(filename, "utf8");
+			const fileContent = await readTextFile(fs, filename, "utf8");
 			json = JSON5.parse(fileContent);
 			fileCache.set(filename, json);
 		} catch (e) {
@@ -187,6 +190,7 @@ ${getImportStack(visited, selector)}`,
 	}
 	// Resolve the JSON imports for (a subset) of the file and return the compound file
 	return resolveJsonImports(
+		fs,
 		selector ? select(json, selector) : json,
 		filename,
 		[...visited, specifier],
@@ -197,6 +201,7 @@ ${getImportStack(visited, selector)}`,
 
 /** Replaces all `$import` properties in a JSON object with object spreads of the referenced file/property */
 async function resolveJsonImports(
+	fs: ReadFileSystemInfo & ReadFile,
 	json: Record<string, unknown>,
 	filename: string,
 	visited: string[],
@@ -224,7 +229,7 @@ async function resolveJsonImports(
 								rootDir,
 								importFilename.slice(2),
 							);
-							if (await fs.pathExists(newFilename)) {
+							if (await pathExists(fs, newFilename)) {
 								break;
 							} else {
 								// Try the next
@@ -274,6 +279,7 @@ async function resolveJsonImports(
 
 			// const importFilename = path.join(path.dirname(filename), val);
 			const imported = await readJsonWithTemplateInternal(
+				fs,
 				newFilename,
 				selector,
 				visited,
@@ -284,6 +290,7 @@ async function resolveJsonImports(
 		} else if (isObject(val)) {
 			// We're looking at an object, recurse into it
 			ret[prop] = await resolveJsonImports(
+				fs,
 				val,
 				filename,
 				visited,
@@ -297,6 +304,7 @@ async function resolveJsonImports(
 				if (isObject(v)) {
 					vals.push(
 						await resolveJsonImports(
+							fs,
 							v,
 							filename,
 							visited,

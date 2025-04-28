@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -17,14 +19,8 @@ import {
 	parseFloatWithScale,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -34,40 +30,38 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	type HumidityControlSetpointCapabilities,
 	HumidityControlSetpointCommand,
 	HumidityControlSetpointType,
 	type HumidityControlSetpointValue,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-export const HumidityControlSetpointCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Humidity Control Setpoint"], {
+export const HumidityControlSetpointCCValues = V.defineCCValues(
+	CommandClasses["Humidity Control Setpoint"],
+	{
 		...V.staticProperty("supportedSetpointTypes", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Humidity Control Setpoint"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"setpoint",
 			"setpoint",
@@ -86,7 +80,6 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 				ccSpecific: { setpointType },
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
 			"setpointScale",
@@ -103,8 +96,8 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 				})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 function getScale(scale: number): Scale {
 	return getNamedScale("humidity", scale as any) ?? getUnknownScale(scale);
@@ -552,7 +545,7 @@ export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
 	public value: number;
 	public scale: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.setpointType & 0b1111]),
 			encodeFloatWithScale(this.value, this.scale),
@@ -605,7 +598,7 @@ export class HumidityControlSetpointCCReport extends HumidityControlSetpointCC {
 		// Setpoint type 0 is not defined in the spec, prevent devices from using it.
 		if (type === 0) {
 			// Not supported
-			return new HumidityControlSetpointCCReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				type,
 				value: 0,
@@ -616,7 +609,7 @@ export class HumidityControlSetpointCCReport extends HumidityControlSetpointCC {
 		// parseFloatWithScale does its own validation
 		const { value, scale } = parseFloatWithScale(raw.payload.subarray(1));
 
-		return new HumidityControlSetpointCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			value,
@@ -717,7 +710,7 @@ export class HumidityControlSetpointCCGet extends HumidityControlSetpointCC {
 
 	public setpointType: HumidityControlSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
 		return super.serialize(ctx);
 	}
@@ -741,6 +734,10 @@ export interface HumidityControlSetpointCCSupportedReportOptions {
 }
 
 @CCCommand(HumidityControlSetpointCommand.SupportedReport)
+@ccValueProperty(
+	"supportedSetpointTypes",
+	HumidityControlSetpointCCValues.supportedSetpointTypes,
+)
 export class HumidityControlSetpointCCSupportedReport
 	extends HumidityControlSetpointCC
 {
@@ -764,13 +761,12 @@ export class HumidityControlSetpointCCSupportedReport
 				HumidityControlSetpointType["N/A"],
 			);
 
-		return new HumidityControlSetpointCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedSetpointTypes,
 		});
 	}
 
-	@ccValue(HumidityControlSetpointCCValues.supportedSetpointTypes)
 	public readonly supportedSetpointTypes:
 		readonly HumidityControlSetpointType[];
 
@@ -830,7 +826,7 @@ export class HumidityControlSetpointCCScaleSupportedReport
 			0,
 		);
 
-		return new HumidityControlSetpointCCScaleSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedScales,
 		});
@@ -887,7 +883,7 @@ export class HumidityControlSetpointCCScaleSupportedGet
 
 	public setpointType: HumidityControlSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
 		return super.serialize(ctx);
 	}
@@ -949,7 +945,7 @@ export class HumidityControlSetpointCCCapabilitiesReport
 			raw.payload.subarray(1 + bytesRead),
 		);
 
-		return new HumidityControlSetpointCCCapabilitiesReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			minValue,
@@ -1034,7 +1030,7 @@ export class HumidityControlSetpointCCCapabilitiesGet
 
 	public setpointType: HumidityControlSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
 		return super.serialize(ctx);
 	}

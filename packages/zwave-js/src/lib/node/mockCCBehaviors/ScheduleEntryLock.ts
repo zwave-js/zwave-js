@@ -23,13 +23,13 @@ import {
 	ScheduleEntryLockCCYearDayScheduleReport,
 	ScheduleEntryLockCCYearDayScheduleSet,
 } from "@zwave-js/cc/ScheduleEntryLockCC";
-import { CommandClasses } from "@zwave-js/core/safe";
-import { type AllOrNone } from "@zwave-js/shared/safe";
-import {
-	type MockNodeBehavior,
-	type ScheduleEntryLockCCCapabilities,
+import { CommandClasses } from "@zwave-js/core";
+import type { AllOrNone } from "@zwave-js/shared";
+import type {
+	MockNodeBehavior,
+	ScheduleEntryLockCCCapabilities,
 } from "@zwave-js/testing";
-import { defaultCapabilities as defaultUserCodeCapabilities } from "./UserCode";
+import { defaultCapabilities as defaultUserCodeCapabilities } from "./UserCode.js";
 
 const defaultCapabilities: ScheduleEntryLockCCCapabilities = {
 	numWeekDaySlots: 1,

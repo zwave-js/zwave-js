@@ -1,21 +1,23 @@
-import type { MockPortBinding } from "@zwave-js/serial/mock";
-import { noop } from "@zwave-js/shared";
-import {
-	type MockController,
-	type MockControllerOptions,
-	type MockNode,
-	type MockNodeOptions,
+import { fs } from "@zwave-js/core/bindings/fs/node";
+import type { ZWaveSerialStream } from "@zwave-js/serial";
+import type { MockPort } from "@zwave-js/serial/mock";
+import { copyFilesRecursive, noop } from "@zwave-js/shared";
+import type {
+	MockController,
+	MockControllerOptions,
+	MockNode,
+	MockNodeOptions,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import test, { type ExecutionContext } from "ava";
-import fs from "fs-extra";
 import crypto from "node:crypto";
+import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { Driver } from "../driver/Driver";
-import type { PartialZWaveOptions } from "../driver/ZWaveOptions";
-import type { ZWaveNode } from "../node/Node";
-import { prepareDriver, prepareMocks } from "./integrationTestSuiteShared";
+import { type TestContext, test } from "vitest";
+import type { Driver } from "../driver/Driver.js";
+import type { PartialZWaveOptions } from "../driver/ZWaveOptions.js";
+import type { ZWaveNode } from "../node/Node.js";
+import { prepareDriver, prepareMocks } from "./integrationTestSuiteShared.js";
 
 interface IntegrationTestOptions {
 	/** Enable debugging for this integration tests. When enabled, a driver logfile will be written and the test directory will not be deleted after each test. Default: false */
@@ -32,7 +34,7 @@ interface IntegrationTestOptions {
 		mockNode: MockNode,
 	) => Promise<void>;
 	testBody: (
-		t: ExecutionContext,
+		t: TestContext,
 		driver: Driver,
 		node: ZWaveNode,
 		mockController: MockController,
@@ -69,7 +71,8 @@ function suite(
 
 	let driver: Driver;
 	let node: ZWaveNode;
-	let mockPort: MockPortBinding;
+	let mockPort: MockPort;
+	let serial: ZWaveSerialStream;
 	let continueStartup: () => void;
 	let mockController: MockController;
 	let mockNode: MockNode;
@@ -85,14 +88,15 @@ function suite(
 		}
 
 		// Make sure every test is starting fresh
-		await fs.emptyDir(cacheDir).catch(noop);
+		await fsp.rm(cacheDir, { recursive: true, force: true }).catch(noop);
+		await fsp.mkdir(cacheDir, { recursive: true });
 
 		// And potentially provision the cache
 		if (provisioningDirectory) {
-			await fs.copy(provisioningDirectory, cacheDir);
+			await copyFilesRecursive(fs, provisioningDirectory, cacheDir);
 		}
 
-		({ driver, continueStartup, mockPort } = await prepareDriver(
+		({ driver, continueStartup, mockPort, serial } = await prepareDriver(
 			cacheDir,
 			debug,
 			additionalDriverOptions,
@@ -103,6 +107,7 @@ function suite(
 			mockNodes: [mockNode],
 		} = prepareMocks(
 			mockPort,
+			serial,
 			{
 				capabilities: controllerCapabilities,
 			},
@@ -144,7 +149,10 @@ function suite(
 				}
 			});
 
-			if (options.additionalDriverOptions?.allowBootloaderOnly) {
+			if (
+				options.additionalDriverOptions?.bootloaderMode === "stay"
+				|| options.additionalDriverOptions?.bootloaderMode === "allow"
+			) {
 				driver.once("bootloader ready", () => {
 					process.nextTick(resolve);
 				});
@@ -156,23 +164,25 @@ function suite(
 
 	// Integration tests need to run in serial, or they might block the serial port on CI
 	const fn = modifier === "only"
-		? test.serial.only
+		? test.sequential.only
 		: modifier === "skip"
-		? test.serial.skip
-		: test.serial;
+		? test.sequential.skip
+		: test.sequential;
 	fn(name, async (t) => {
-		t.timeout(30000);
-		t.teardown(async () => {
+		t.onTestFinished(async () => {
 			// Give everything a chance to settle before destroying the driver.
 			await wait(100);
 
 			await driver.destroy();
-			if (!debug) await fs.emptyDir(cacheDir).catch(noop);
+			if (!debug) {
+				await fsp.rm(cacheDir, { recursive: true, force: true })
+					.catch(noop);
+			}
 		});
 
 		await prepareTest();
 		await testBody(t, driver, node, mockController, mockNode);
-	});
+	}, 30000);
 }
 
 /** Performs an integration test with a real driver using a mock controller and one mock node */

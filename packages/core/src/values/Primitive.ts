@@ -1,15 +1,15 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import {
 	MAX_NODES_LR,
 	NUM_LR_NODES_PER_SEGMENT,
 	NUM_NODEMASK_BYTES,
-} from "../consts";
-import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError";
+} from "../definitions/consts.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import {
 	getBitMaskWidth,
 	getMinimumShiftForBitMask,
 	validatePayload,
-} from "../util/misc";
+} from "../util/misc.js";
 
 /** Indicates that value is not known (yet). */
 export const NOT_KNOWN = undefined;

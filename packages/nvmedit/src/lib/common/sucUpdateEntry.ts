@@ -4,9 +4,12 @@ import {
 	ZWaveErrorCodes,
 	encodeCCList,
 	parseCCList,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import { SUC_UPDATE_ENTRY_SIZE, SUC_UPDATE_NODEPARM_MAX } from "../../consts";
+import {
+	SUC_UPDATE_ENTRY_SIZE,
+	SUC_UPDATE_NODEPARM_MAX,
+} from "../../consts.js";
 
 export interface SUCUpdateEntry {
 	nodeId: number;

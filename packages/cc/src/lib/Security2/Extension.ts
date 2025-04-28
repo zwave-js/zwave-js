@@ -1,10 +1,6 @@
-import { createSimpleReflectionDecorator } from "@zwave-js/core";
-import {
-	ZWaveError,
-	ZWaveErrorCodes,
-	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes, buffer2hex, getEnumMemberName } from "@zwave-js/shared/safe";
+import { ZWaveError, ZWaveErrorCodes, validatePayload } from "@zwave-js/core";
+import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
+import { Bytes, buffer2hex, getEnumMemberName } from "@zwave-js/shared";
 
 enum S2ExtensionType {
 	SPAN = 0x01,
@@ -14,7 +10,7 @@ enum S2ExtensionType {
 }
 
 const extensionTypeDecorator = createSimpleReflectionDecorator<
-	Security2Extension,
+	typeof Security2Extension,
 	[type: S2ExtensionType],
 	Security2ExtensionConstructor<Security2Extension>
 >({

@@ -1,27 +1,24 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type WithAddress,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI } from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { CCAPI } from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
 	commandClass,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { MultiCommandCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { MultiCommandCommand } from "../lib/_Types.js";
 
 // TODO: Handle this command when received
 
@@ -114,10 +111,10 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
 		}
 	}
 
-	public static from(
+	public static async from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
-	): MultiCommandCCCommandEncapsulation {
+	): Promise<MultiCommandCCCommandEncapsulation> {
 		validatePayload(raw.payload.length >= 1);
 		const numCommands = raw.payload[0];
 		const encapsulated: CommandClass[] = [];
@@ -127,7 +124,7 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
 			const cmdLength = raw.payload[offset];
 			validatePayload(raw.payload.length >= offset + 1 + cmdLength);
 			encapsulated.push(
-				CommandClass.parse(
+				await CommandClass.parse(
 					raw.payload.subarray(
 						offset + 1,
 						offset + 1 + cmdLength,
@@ -138,7 +135,7 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
 			offset += 1 + cmdLength;
 		}
 
-		return new MultiCommandCCCommandEncapsulation({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			encapsulated,
 		});
@@ -146,11 +143,11 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
 
 	public encapsulated: CommandClass[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const buffers: Bytes[] = [];
 		buffers.push(Bytes.from([this.encapsulated.length]));
 		for (const cmd of this.encapsulated) {
-			const cmdBuffer = cmd.serialize(ctx);
+			const cmdBuffer = await cmd.serialize(ctx);
 			buffers.push(Bytes.from([cmdBuffer.length]));
 			buffers.push(cmdBuffer);
 		}

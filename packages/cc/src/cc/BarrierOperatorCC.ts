@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
@@ -14,19 +16,14 @@ import {
 	maybeUnknownToString,
 	parseBitMask,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
 import {
+	Bytes,
 	getEnumMemberName,
 	isEnumMember,
 	noop,
 	pick,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -40,34 +37,35 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	BarrierOperatorCommand,
 	BarrierState,
 	SubsystemState,
 	SubsystemType,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-export const BarrierOperatorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Barrier Operator"], {
+export const BarrierOperatorCCValues = V.defineCCValues(
+	CommandClasses["Barrier Operator"],
+	{
 		...V.staticProperty("supportedSubsystemTypes", undefined, {
 			internal: true,
 		}),
@@ -102,9 +100,7 @@ export const BarrierOperatorCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(BarrierState),
 			} as const,
 		),
-	}),
 
-	...V.defineDynamicCCValues(CommandClasses["Barrier Operator"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"signalingState",
 			"signalingState",
@@ -123,8 +119,8 @@ export const BarrierOperatorCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(SubsystemState),
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Barrier Operator"])
 export class BarrierOperatorCCAPI extends CCAPI {
@@ -572,7 +568,7 @@ export class BarrierOperatorCCSet extends BarrierOperatorCC {
 
 	public targetState: BarrierState.Open | BarrierState.Closed;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.targetState]);
 		return super.serialize(ctx);
 	}
@@ -592,6 +588,8 @@ export interface BarrierOperatorCCReportOptions {
 }
 
 @CCCommand(BarrierOperatorCommand.Report)
+@ccValueProperty("currentState", BarrierOperatorCCValues.currentState)
+@ccValueProperty("position", BarrierOperatorCCValues.position)
 export class BarrierOperatorCCReport extends BarrierOperatorCC {
 	public constructor(
 		options: WithAddress<BarrierOperatorCCReportOptions>,
@@ -637,17 +635,15 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
 			currentState = UNKNOWN_STATE;
 		}
 
-		return new BarrierOperatorCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			position,
 			currentState,
 		});
 	}
 
-	@ccValue(BarrierOperatorCCValues.currentState)
 	public readonly currentState: MaybeUnknown<BarrierState>;
 
-	@ccValue(BarrierOperatorCCValues.position)
 	public readonly position: MaybeUnknown<number>;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -673,6 +669,10 @@ export interface BarrierOperatorCCSignalingCapabilitiesReportOptions {
 }
 
 @CCCommand(BarrierOperatorCommand.SignalingCapabilitiesReport)
+@ccValueProperty(
+	"supportedSubsystemTypes",
+	BarrierOperatorCCValues.supportedSubsystemTypes,
+)
 export class BarrierOperatorCCSignalingCapabilitiesReport
 	extends BarrierOperatorCC
 {
@@ -696,13 +696,12 @@ export class BarrierOperatorCCSignalingCapabilitiesReport
 			SubsystemType.Audible,
 		);
 
-		return new BarrierOperatorCCSignalingCapabilitiesReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedSubsystemTypes,
 		});
 	}
 
-	@ccValue(BarrierOperatorCCValues.supportedSubsystemTypes)
 	public readonly supportedSubsystemTypes: readonly SubsystemType[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -758,7 +757,7 @@ export class BarrierOperatorCCEventSignalingSet extends BarrierOperatorCC {
 	public subsystemType: SubsystemType;
 	public subsystemState: SubsystemState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.subsystemType, this.subsystemState]);
 		return super.serialize(ctx);
 	}
@@ -806,7 +805,7 @@ export class BarrierOperatorCCEventSignalingReport extends BarrierOperatorCC {
 		const subsystemType: SubsystemType = raw.payload[0];
 		const subsystemState: SubsystemState = raw.payload[1];
 
-		return new BarrierOperatorCCEventSignalingReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			subsystemType,
 			subsystemState,
@@ -878,7 +877,7 @@ export class BarrierOperatorCCEventSignalingGet extends BarrierOperatorCC {
 
 	public subsystemType: SubsystemType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.subsystemType]);
 		return super.serialize(ctx);
 	}

@@ -81,7 +81,7 @@ export class SetPriorityRouteRequest extends Message {
 	public repeaters: number[] | undefined;
 	public routeSpeed: ZWaveDataRate | undefined;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const nodeId = encodeNodeID(
 			this.destinationNodeId,
 			ctx.nodeIdType,

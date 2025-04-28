@@ -3,12 +3,11 @@ import {
 	hexToUint8Array,
 	isUint8Array,
 	uint8ArrayToHex,
-} from "@zwave-js/shared/safe";
-import { composeObject } from "alcalzone-shared/objects";
+} from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { Duration } from "./Duration";
-import type { ValueMetadata } from "./Metadata";
-import type { ValueID } from "./_Types";
+import { Duration } from "./Duration.js";
+import type { ValueMetadata } from "./Metadata.js";
+import type { ValueID } from "./_Types.js";
 
 // export type SerializableValue = number | string | boolean | Map<string | number, any> | JSONObject;
 export type SerializedValue =
@@ -37,7 +36,7 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 	if (value instanceof Map) {
 		// We mark maps with a special key, so they can be detected by the deserialization routine
 		return {
-			...composeObject(
+			...Object.fromEntries(
 				[...value.entries()].map(([k, v]) => [
 					k,
 					serializeCacheValue(v),
@@ -45,7 +44,7 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 			),
 			[SPECIAL_TYPE_KEY]: "map",
 		};
-	} else if (value instanceof Duration) {
+	} else if (Duration.isDuration(value)) {
 		const valueAsJSON = value.toJSON();
 		return {
 			...(typeof valueAsJSON === "string"

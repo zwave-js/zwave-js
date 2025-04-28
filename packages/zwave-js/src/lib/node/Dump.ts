@@ -4,8 +4,8 @@ import type {
 	FLiRS,
 	SerializedValue,
 	ValueMetadata,
-} from "@zwave-js/core/safe";
-import { type JSONObject } from "@zwave-js/shared";
+} from "@zwave-js/core";
+import type { JSONObject } from "@zwave-js/shared";
 
 export interface DeviceClassDump {
 	key: number;

@@ -18,12 +18,12 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	securityClassIsS2,
-} from "@zwave-js/core/safe";
-import { staticExtends } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { staticExtends } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
-import type { Driver } from "../driver/Driver";
-import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper";
-import { VirtualNode } from "./VirtualNode";
+import type { Driver } from "../driver/Driver.js";
+import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper.js";
+import { VirtualNode } from "./VirtualNode.js";
 
 /**
  * Represents an endpoint of a virtual (broadcast, multicast) Z-Wave node.

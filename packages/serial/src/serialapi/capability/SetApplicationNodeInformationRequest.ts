@@ -46,7 +46,7 @@ export class SetApplicationNodeInformationRequest extends Message {
 	public supportedCCs: CommandClasses[];
 	public controlledCCs: CommandClasses[];
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const ccList = encodeCCList(this.supportedCCs, this.controlledCCs);
 		const ccListLength = Math.min(ccList.length, 35);
 		this.payload = Bytes.from([

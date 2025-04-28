@@ -4,16 +4,16 @@ import {
 	WakeUpCCNoMoreInformation,
 } from "@zwave-js/cc";
 import { generateAuthKey, generateEncryptionKey } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
 import { randomBytes } from "node:crypto";
+import { test } from "vitest";
 
 test("WakeUpCCNoMoreInformation should expect no response", (t) => {
 	const cc = new WakeUpCCNoMoreInformation({
 		nodeId: 2,
 		endpointIndex: 2,
 	});
-	t.false(cc.expectsCCResponse());
+	t.expect(cc.expectsCCResponse()).toBe(false);
 });
 
 test("MultiChannelCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
@@ -23,7 +23,7 @@ test("MultiChannelCC/WakeUpCCNoMoreInformation should expect NO response", (t) =
 			endpointIndex: 2,
 		}),
 	);
-	t.false(ccRequest.expectsCCResponse());
+	t.expect(ccRequest.expectsCCResponse()).toBe(false);
 });
 
 test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
@@ -34,8 +34,8 @@ test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
 
 	const securityManager = {
 		getNonce: () => nonce,
-		authKey: generateAuthKey(networkKey),
-		encryptionKey: generateEncryptionKey(networkKey),
+		getAuthKey: generateAuthKey(networkKey),
+		getEncryptionKey: generateEncryptionKey(networkKey),
 	};
 
 	const ccRequest = SecurityCC.encapsulate(
@@ -46,5 +46,5 @@ test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
 			endpointIndex: 2,
 		}),
 	);
-	t.false(ccRequest.expectsCCResponse());
+	t.expect(ccRequest.expectsCCResponse()).toBe(false);
 });

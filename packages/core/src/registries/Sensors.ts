@@ -1,10 +1,10 @@
-import { num2hex } from "@zwave-js/shared/safe";
+import { num2hex } from "@zwave-js/shared";
 import {
 	type Scale,
 	type ScaleDefinition,
 	type ScaleGroup,
 	getNamedScaleGroup,
-} from "./Scales";
+} from "./Scales.js";
 
 export interface SensorDefinition {
 	readonly label: string;

@@ -1,32 +1,23 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CRC16_CCITT,
 	CommandClasses,
+	type GetValueDB,
 	type MessageOrCCLogEntry,
 	type SinglecastCC,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { buffer2hex } from "@zwave-js/shared/safe";
-import {
-	type CCRaw,
-	type CCResponseRole,
-	CommandClass,
-} from "../lib/CommandClass";
+} from "@zwave-js/core";
+import { Bytes, buffer2hex } from "@zwave-js/shared";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	CCCommand,
 	commandClass,
-	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { TransportServiceCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { TransportServiceCommand } from "../lib/_Types.js";
 
 export const MAX_SEGMENT_SIZE = 39;
 
@@ -81,7 +72,7 @@ export function isTransportServiceEncapsulation(
 }
 
 @CCCommand(TransportServiceCommand.FirstSegment)
-// @expectedCCResponse(TransportServiceCCReport)
+// Handling expected responses is done by the RX state machine
 export class TransportServiceCCFirstSegment extends TransportServiceCC {
 	public constructor(
 		options: WithAddress<TransportServiceCCFirstSegmentOptions>,
@@ -136,7 +127,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 		// MUST NOT send Transport Service segments with the Payload field longer than 39 bytes.
 		validatePayload(partialDatagram.length <= MAX_SEGMENT_SIZE);
 
-		return new TransportServiceCCFirstSegment({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			datagramSize,
 			sessionId,
@@ -151,7 +142,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 	public partialDatagram: Uint8Array;
 	public encapsulated!: CommandClass;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Transport Service re-uses the lower 3 bits of the ccCommand as payload
 		this.ccCommand = (this.ccCommand & 0b11111_000)
 			| ((this.datagramSize >>> 8) & 0b111);
@@ -226,7 +217,7 @@ export interface TransportServiceCCSubsequentSegmentOptions
 }
 
 @CCCommand(TransportServiceCommand.SubsequentSegment)
-// @expectedCCResponse(TransportServiceCCReport)
+// Handling expected responses is done by the RX state machine
 export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 	public constructor(
 		options: WithAddress<TransportServiceCCSubsequentSegmentOptions>,
@@ -281,7 +272,7 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 		// MUST NOT send Transport Service segments with the Payload field longer than 39 bytes.
 		validatePayload(partialDatagram.length <= MAX_SEGMENT_SIZE);
 
-		return new TransportServiceCCSubsequentSegment({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			datagramSize,
 			sessionId,
@@ -336,13 +327,13 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 		return { ccCommand: undefined, sessionId: this.sessionId };
 	}
 
-	public mergePartialCCs(
+	public async mergePartialCCs(
 		partials: [
 			TransportServiceCCFirstSegment,
 			...TransportServiceCCSubsequentSegment[],
 		],
 		ctx: CCParsingContext,
-	): void {
+	): Promise<void> {
 		// Concat the CC buffers
 		const datagram = new Bytes(this.datagramSize);
 		for (const partial of [...partials, this]) {
@@ -360,11 +351,11 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 		}
 
 		// and deserialize the CC
-		this._encapsulated = CommandClass.parse(datagram, ctx);
+		this._encapsulated = await CommandClass.parse(datagram, ctx);
 		this._encapsulated.encapsulatingCC = this as any;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Transport Service re-uses the lower 3 bits of the ccCommand as payload
 		this.ccCommand = (this.ccCommand & 0b11111_000)
 			| ((this.datagramSize >>> 8) & 0b111);
@@ -433,23 +424,8 @@ export interface TransportServiceCCSegmentRequestOptions {
 	datagramOffset: number;
 }
 
-function testResponseForSegmentRequest(
-	sent: TransportServiceCCSegmentRequest,
-	received: TransportServiceCC,
-): CCResponseRole {
-	return (
-		(sent.datagramOffset === 0
-			&& received instanceof TransportServiceCCFirstSegment
-			&& received.sessionId === sent.sessionId)
-		|| (sent.datagramOffset > 0
-			&& received instanceof TransportServiceCCSubsequentSegment
-			&& sent.datagramOffset === received.datagramOffset
-			&& received.sessionId === sent.sessionId)
-	);
-}
-
 @CCCommand(TransportServiceCommand.SegmentRequest)
-@expectedCCResponse(TransportServiceCC, testResponseForSegmentRequest)
+// Handling expected responses is done by the RX state machine
 export class TransportServiceCCSegmentRequest extends TransportServiceCC {
 	public constructor(
 		options: WithAddress<TransportServiceCCSegmentRequestOptions>,
@@ -468,7 +444,7 @@ export class TransportServiceCCSegmentRequest extends TransportServiceCC {
 		const datagramOffset = ((raw.payload[1] & 0b111) << 8)
 			+ raw.payload[2];
 
-		return new TransportServiceCCSegmentRequest({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sessionId,
 			datagramOffset,
@@ -478,7 +454,7 @@ export class TransportServiceCCSegmentRequest extends TransportServiceCC {
 	public sessionId: number;
 	public datagramOffset: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			((this.sessionId & 0b1111) << 4)
 			| ((this.datagramOffset >>> 8) & 0b111),
@@ -519,7 +495,7 @@ export class TransportServiceCCSegmentComplete extends TransportServiceCC {
 		validatePayload(raw.payload.length >= 2);
 		const sessionId = raw.payload[1] >>> 4;
 
-		return new TransportServiceCCSegmentComplete({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sessionId,
 		});
@@ -527,7 +503,7 @@ export class TransportServiceCCSegmentComplete extends TransportServiceCC {
 
 	public sessionId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([(this.sessionId & 0b1111) << 4]);
 		return super.serialize(ctx);
 	}
@@ -561,7 +537,7 @@ export class TransportServiceCCSegmentWait extends TransportServiceCC {
 		validatePayload(raw.payload.length >= 2);
 		const pendingSegments = raw.payload[1];
 
-		return new TransportServiceCCSegmentWait({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			pendingSegments,
 		});
@@ -569,7 +545,7 @@ export class TransportServiceCCSegmentWait extends TransportServiceCC {
 
 	public pendingSegments: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.pendingSegments]);
 		return super.serialize(ctx);
 	}

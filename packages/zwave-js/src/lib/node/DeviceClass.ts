@@ -4,8 +4,8 @@ import {
 	type SpecificDeviceClass,
 	getGenericDeviceClass,
 	getSpecificDeviceClass,
-} from "@zwave-js/core/safe";
-import { type JSONObject, getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { type JSONObject, getEnumMemberName } from "@zwave-js/shared";
 
 export class DeviceClass {
 	public constructor(

@@ -1,4 +1,8 @@
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
+	type GetNode,
+	type GetSupportedCCVersion,
+	type HostIDs,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessagePriority,
@@ -8,24 +12,19 @@ import {
 	type SecurityManagers,
 	ZWaveError,
 	ZWaveErrorCodes,
-	createReflectionDecorator,
 	getNodeTag,
 	highResTimestamp,
 } from "@zwave-js/core";
-import type {
-	GetDeviceConfig,
-	GetNode,
-	GetSupportedCCVersion,
-	HostIDs,
-} from "@zwave-js/host";
+import { createReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	Bytes,
 	type JSONObject,
 	type TypedClassDecorator,
-} from "@zwave-js/shared/safe";
-import { num2hex, staticExtends } from "@zwave-js/shared/safe";
-import { FunctionType, MessageType } from "./Constants";
-import { MessageHeaders } from "./MessageHeaders";
+	num2hex,
+	staticExtends,
+} from "@zwave-js/shared";
+import { FunctionType, MessageType } from "./Constants.js";
+import { MessageHeaders } from "./MessageHeaders.js";
 
 export type MessageConstructor<T extends Message> = typeof Message & {
 	new (options: MessageBaseOptions): T;
@@ -267,9 +266,11 @@ export class Message {
 		return;
 	}
 
-	/** Serializes this message into a Buffer */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	/**
+	 * Serializes this message into a Buffer
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const ret = new Bytes(this.payload.length + 5);
 		ret[0] = MessageHeaders.SOF;
 		// length of the following data, including the checksum
@@ -485,7 +486,7 @@ function getMessageTypeMapKey(
 }
 
 const messageTypesDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[messageType: MessageType, functionType: FunctionType],
 	{ messageType: MessageType; functionType: FunctionType },
 	MessageConstructor<Message>
@@ -556,7 +557,7 @@ function getMessageConstructor(
 }
 
 const expectedResponseDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[typeOrPredicate: FunctionType | typeof Message | ResponsePredicate],
 	FunctionType | typeof Message | ResponsePredicate,
 	MessageConstructor<Message>
@@ -592,7 +593,7 @@ export function getExpectedResponseStatic<
 }
 
 const expectedCallbackDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[typeOrPredicate: FunctionType | typeof Message | ResponsePredicate],
 	FunctionType | typeof Message | ResponsePredicate,
 	MessageConstructor<Message>
@@ -605,9 +606,12 @@ const expectedCallbackDecorator = createReflectionDecorator<
 /**
  * Defines the expected callback function type or message class for a Z-Wave message
  */
-export function expectedCallback<TSent extends Message>(
-	typeOrPredicate: FunctionType | typeof Message | ResponsePredicate<TSent>,
-): TypedClassDecorator<Message> {
+export function expectedCallback<TSent extends typeof Message>(
+	typeOrPredicate:
+		| FunctionType
+		| typeof Message
+		| ResponsePredicate<InstanceType<TSent>>,
+): TypedClassDecorator<TSent> {
 	return expectedCallbackDecorator.decorator(typeOrPredicate as any);
 }
 
@@ -632,7 +636,7 @@ export function getExpectedCallbackStatic<
 }
 
 const priorityDecorator = createReflectionDecorator<
-	Message,
+	typeof Message,
 	[prio: MessagePriority],
 	MessagePriority
 >({

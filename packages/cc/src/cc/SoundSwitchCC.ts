@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -11,14 +13,8 @@ import {
 	ZWaveErrorCodes,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
 import {
@@ -29,28 +25,29 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	type CCResponsePredicate,
 	CommandClass,
 	type InterviewContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { SoundSwitchCommand, type ToneId } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { SoundSwitchCommand, type ToneId } from "../lib/_Types.js";
 
-export const SoundSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Sound Switch"], {
+export const SoundSwitchCCValues = V.defineCCValues(
+	CommandClasses["Sound Switch"],
+	{
 		...V.staticProperty(
 			"volume",
 			{
@@ -65,7 +62,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				},
 			} as const,
 		),
-
 		...V.staticProperty(
 			"toneId",
 			{
@@ -74,7 +70,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["volume"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"defaultVolume",
 			{
@@ -85,7 +80,6 @@ export const SoundSwitchCCValues = Object.freeze({
 				label: "Default volume",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"defaultToneId",
 			{
@@ -95,8 +89,8 @@ export const SoundSwitchCCValues = Object.freeze({
 				label: "Default tone ID",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Sound Switch"])
 export class SoundSwitchCCAPI extends CCAPI {
@@ -491,7 +485,7 @@ export class SoundSwitchCCTonesNumberReport extends SoundSwitchCC {
 		validatePayload(raw.payload.length >= 1);
 		const toneCount = raw.payload[0];
 
-		return new SoundSwitchCCTonesNumberReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			toneCount,
 		});
@@ -499,7 +493,7 @@ export class SoundSwitchCCTonesNumberReport extends SoundSwitchCC {
 
 	public toneCount: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneCount]);
 		return super.serialize(ctx);
 	}
@@ -548,7 +542,7 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
 			"utf8",
 		);
 
-		return new SoundSwitchCCToneInfoReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			toneId,
 			duration,
@@ -560,7 +554,7 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
 	public readonly duration: number;
 	public readonly name: string;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.toneId, 0, 0, this.name.length]),
 			Bytes.from(this.name, "utf8"),
@@ -613,7 +607,7 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 		validatePayload(raw.payload.length >= 1);
 		const toneId = raw.payload[0];
 
-		return new SoundSwitchCCToneInfoGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			toneId,
 		});
@@ -621,7 +615,7 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 
 	public toneId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneId]);
 		return super.serialize(ctx);
 	}
@@ -659,7 +653,7 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 		const defaultVolume = raw.payload[0];
 		const defaultToneId = raw.payload[1];
 
-		return new SoundSwitchCCConfigurationSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			defaultVolume,
 			defaultToneId,
@@ -669,7 +663,7 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 	public defaultVolume: number;
 	public defaultToneId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.defaultVolume, this.defaultToneId]);
 		return super.serialize(ctx);
 	}
@@ -692,6 +686,8 @@ export interface SoundSwitchCCConfigurationReportOptions {
 }
 
 @CCCommand(SoundSwitchCommand.ConfigurationReport)
+@ccValueProperty("defaultVolume", SoundSwitchCCValues.defaultVolume)
+@ccValueProperty("defaultToneId", SoundSwitchCCValues.defaultToneId)
 export class SoundSwitchCCConfigurationReport extends SoundSwitchCC {
 	public constructor(
 		options: WithAddress<SoundSwitchCCConfigurationReportOptions>,
@@ -709,20 +705,18 @@ export class SoundSwitchCCConfigurationReport extends SoundSwitchCC {
 		const defaultVolume = clamp(raw.payload[0], 0, 100);
 		const defaultToneId = raw.payload[1];
 
-		return new SoundSwitchCCConfigurationReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			defaultVolume,
 			defaultToneId,
 		});
 	}
 
-	@ccValue(SoundSwitchCCValues.defaultVolume)
 	public defaultVolume: number;
 
-	@ccValue(SoundSwitchCCValues.defaultToneId)
 	public defaultToneId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.defaultVolume, this.defaultToneId]);
 		return super.serialize(ctx);
 	}
@@ -771,7 +765,7 @@ export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
 			volume = raw.payload[1];
 		}
 
-		return new SoundSwitchCCTonePlaySet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			toneId,
 			volume,
@@ -781,7 +775,7 @@ export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
 	public toneId: ToneId | number;
 	public volume?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneId, this.volume ?? 0]);
 		return super.serialize(ctx);
 	}
@@ -808,6 +802,8 @@ export interface SoundSwitchCCTonePlayReportOptions {
 }
 
 @CCCommand(SoundSwitchCommand.TonePlayReport)
+@ccValueProperty("toneId", SoundSwitchCCValues.toneId)
+@ccValueProperty("volume", SoundSwitchCCValues.volume)
 export class SoundSwitchCCTonePlayReport extends SoundSwitchCC {
 	public constructor(
 		options: WithAddress<SoundSwitchCCTonePlayReportOptions>,
@@ -829,20 +825,18 @@ export class SoundSwitchCCTonePlayReport extends SoundSwitchCC {
 			volume = raw.payload[1];
 		}
 
-		return new SoundSwitchCCTonePlayReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			toneId,
 			volume,
 		});
 	}
 
-	@ccValue(SoundSwitchCCValues.toneId)
 	public readonly toneId: ToneId | number;
 
-	@ccValue(SoundSwitchCCValues.volume)
 	public volume?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.toneId, this.volume ?? 0]);
 		return super.serialize(ctx);
 	}

@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -13,14 +15,8 @@ import {
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -30,29 +26,30 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { ThermostatFanMode, ThermostatFanModeCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { ThermostatFanMode, ThermostatFanModeCommand } from "../lib/_Types.js";
 
-export const ThermostatFanModeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Fan Mode"], {
+export const ThermostatFanModeCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Fan Mode"],
+	{
 		...V.staticPropertyWithName(
 			"turnedOff",
 			"off",
@@ -62,7 +59,6 @@ export const ThermostatFanModeCCValues = Object.freeze({
 			} as const,
 			{ minVersion: 3 } as const,
 		),
-
 		...V.staticPropertyWithName(
 			"fanMode",
 			"mode",
@@ -72,15 +68,14 @@ export const ThermostatFanModeCCValues = Object.freeze({
 				label: "Thermostat fan mode",
 			} as const,
 		),
-
 		...V.staticPropertyWithName(
 			"supportedFanModes",
 			"supportedModes",
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Fan Mode"])
 export class ThermostatFanModeCCAPI extends CCAPI {
@@ -370,7 +365,7 @@ export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
 	public mode: ThermostatFanMode;
 	public off: boolean | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			(this.off ? 0b1000_0000 : 0)
 			| (this.mode & 0b1111),
@@ -396,6 +391,8 @@ export interface ThermostatFanModeCCReportOptions {
 }
 
 @CCCommand(ThermostatFanModeCommand.Report)
+@ccValueProperty("mode", ThermostatFanModeCCValues.fanMode)
+@ccValueProperty("off", ThermostatFanModeCCValues.turnedOff)
 export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 	public constructor(
 		options: WithAddress<ThermostatFanModeCCReportOptions>,
@@ -416,17 +413,15 @@ export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 		// V3+
 		const off = !!(raw.payload[0] & 0b1000_0000);
 
-		return new ThermostatFanModeCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			mode,
 			off,
 		});
 	}
 
-	@ccValue(ThermostatFanModeCCValues.fanMode)
 	public readonly mode: ThermostatFanMode;
 
-	@ccValue(ThermostatFanModeCCValues.turnedOff)
 	public readonly off: boolean | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -453,6 +448,7 @@ export interface ThermostatFanModeCCSupportedReportOptions {
 }
 
 @CCCommand(ThermostatFanModeCommand.SupportedReport)
+@ccValueProperty("supportedModes", ThermostatFanModeCCValues.supportedFanModes)
 export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
 	public constructor(
 		options: WithAddress<ThermostatFanModeCCSupportedReportOptions>,
@@ -472,7 +468,7 @@ export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
 			ThermostatFanMode["Auto low"],
 		);
 
-		return new ThermostatFanModeCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedModes,
 		});
@@ -494,7 +490,6 @@ export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
 		return true;
 	}
 
-	@ccValue(ThermostatFanModeCCValues.supportedFanModes)
 	public readonly supportedModes: ThermostatFanMode[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

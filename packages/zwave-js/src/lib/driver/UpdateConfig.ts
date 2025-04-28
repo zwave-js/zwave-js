@@ -1,13 +1,19 @@
-import { type PackageManager, detectPackageManager } from "@alcalzone/pak";
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { getErrorMessage } from "@zwave-js/shared";
+import { untar } from "@andrewbranch/untar.js";
+import { ZWaveError, ZWaveErrorCodes, gunzipSync } from "@zwave-js/core";
+import { getErrorMessage, writeTextFile } from "@zwave-js/shared";
+import type {
+	CopyFile,
+	MakeTempDirectory,
+	ManageDirectory,
+	OpenFile,
+	ReadFileSystemInfo,
+	WriteFile,
+} from "@zwave-js/shared/bindings";
 import { isObject } from "alcalzone-shared/typeguards";
-import execa from "execa";
-import fs from "fs-extra";
-import os from "node:os";
-import * as path from "node:path";
-import * as lockfile from "proper-lockfile";
-import * as semver from "semver";
+import path from "pathe";
+import semverInc from "semver/functions/inc.js";
+import semverValid from "semver/functions/valid.js";
+import semverMaxSatisfying from "semver/ranges/max-satisfying.js";
 
 /**
  * Checks whether there is a compatible update for the currently installed config package.
@@ -17,11 +23,11 @@ import * as semver from "semver";
 export async function checkForConfigUpdates(
 	currentVersion: string,
 ): Promise<string | undefined> {
-	const { got } = await import("got");
+	const { default: ky } = await import("ky");
 	let registry: Record<string, unknown>;
 
 	try {
-		registry = await got
+		registry = await ky
 			.get("https://registry.npmjs.org/@zwave-js/config")
 			.json();
 	} catch {
@@ -40,92 +46,42 @@ export async function checkForConfigUpdates(
 
 	// Find the highest possible prepatch update (e.g. 7.2.4 -> 7.2.5-20200424)
 	const allVersions = Object.keys(registry.versions)
-		.filter((v) => !!semver.valid(v))
+		.filter((v) => !!semverValid(v))
 		.filter((v) => /\-\d{8}$/.test(v));
 	const updateRange = `>${currentVersion} <${
-		semver.inc(
+		semverInc(
 			currentVersion,
 			"patch",
 		)
 	}`;
-	const updateVersion = semver.maxSatisfying(allVersions, updateRange, {
+	const updateVersion = semverMaxSatisfying(allVersions, updateRange, {
 		includePrerelease: true,
 	});
 	if (updateVersion) return updateVersion;
 }
 
 /**
- * Installs the update for @zwave-js/config with the given version.
+ * Downloads and installs the given configuration update.
+ * This only works if an external configuation directory is used.
  */
-export async function installConfigUpdate(newVersion: string): Promise<void> {
-	// Check which package manager to use for the update
-	let pak: PackageManager;
-	try {
-		pak = await detectPackageManager({
-			cwd: __dirname,
-			requireLockfile: false,
-			setCwdToPackageRoot: true,
-		});
-	} catch {
-		throw new ZWaveError(
-			`Config update failed: No package manager detected or package.json not found!`,
-			ZWaveErrorCodes.Config_Update_PackageManagerNotFound,
-		);
-	}
-
-	const packageJsonPath = path.join(pak.cwd, "package.json");
-	try {
-		await lockfile.lock(packageJsonPath, {
-			onCompromised: () => {
-				// do nothing
-			},
-		});
-	} catch {
-		throw new ZWaveError(
-			`Config update failed: Another installation is already in progress!`,
-			ZWaveErrorCodes.Config_Update_InstallFailed,
-		);
-	}
-
-	// And install it
-	const result = await pak.overrideDependencies({
-		"@zwave-js/config": newVersion,
-	});
-
-	// Free the lock
-	try {
-		if (await lockfile.check(packageJsonPath)) {
-			await lockfile.unlock(packageJsonPath);
-		}
-	} catch {
-		// whatever - just don't crash
-	}
-
-	if (result.success) return;
-
-	throw new ZWaveError(
-		`Config update failed: Package manager exited with code ${result.exitCode}
-${result.stderr}`,
-		ZWaveErrorCodes.Config_Update_InstallFailed,
-	);
-}
-
-/**
- * Installs the update for @zwave-js/config with the given version.
- * Version for Docker images that does not mess up the container if there's no yarn cache
- */
-export async function installConfigUpdateInDocker(
+export async function installConfigUpdate(
+	fs:
+		& ManageDirectory
+		& ReadFileSystemInfo
+		& WriteFile
+		& CopyFile
+		& OpenFile
+		& MakeTempDirectory,
 	newVersion: string,
-	external?: {
+	external: {
 		configDir: string;
-		cacheDir: string;
 	},
 ): Promise<void> {
-	const { got } = await import("got");
+	const { default: ky } = await import("ky");
 
 	let registryInfo: any;
 	try {
-		registryInfo = await got
+		registryInfo = await ky
 			.get(`https://registry.npmjs.org/@zwave-js/config/${newVersion}`)
 			.json();
 	} catch {
@@ -143,78 +99,12 @@ export async function installConfigUpdateInDocker(
 		);
 	}
 
-	let lockfilePath: string;
-	let lockfileOptions: lockfile.LockOptions;
-	if (external) {
-		lockfilePath = external.cacheDir;
-		lockfileOptions = {
-			lockfilePath: path.join(external.cacheDir, "config-update.lock"),
-		};
-	} else {
-		// Acquire a lock so the installation doesn't run twice
-		let pak: PackageManager;
-		try {
-			pak = await detectPackageManager({
-				cwd: __dirname,
-				requireLockfile: false,
-				setCwdToPackageRoot: true,
-			});
-		} catch {
-			throw new ZWaveError(
-				`Config update failed: No package manager detected or package.json not found!`,
-				ZWaveErrorCodes.Config_Update_PackageManagerNotFound,
-			);
-		}
-
-		lockfilePath = path.join(pak.cwd, "package.json");
-		lockfileOptions = {};
-	}
-
+	let tarballData: Uint8Array;
 	try {
-		await lockfile.lock(lockfilePath, {
-			...lockfileOptions,
-			onCompromised: () => {
-				// do nothing
-			},
-		});
-	} catch {
-		throw new ZWaveError(
-			`Config update failed: Another installation is already in progress!`,
-			ZWaveErrorCodes.Config_Update_InstallFailed,
+		tarballData = new Uint8Array(
+			await ky.get(url).arrayBuffer(),
 		);
-	}
-
-	const freeLock = async () => {
-		try {
-			if (await lockfile.check(lockfilePath, lockfileOptions)) {
-				await lockfile.unlock(lockfilePath, lockfileOptions);
-			}
-		} catch {
-			// whatever - just don't crash
-		}
-	};
-
-	// Download tarball to a temporary directory
-	const tmpDir = path.join(os.tmpdir(), "zjs-config-update");
-	const tarFilename = path.join(tmpDir, "zjs-config-update.tgz");
-
-	const configModuleDir = path.dirname(
-		require.resolve("@zwave-js/config/package.json"),
-	);
-	const extractedDir = path.join(tmpDir, "extracted");
-
-	try {
-		await fs.ensureDir(tmpDir);
-		const fstream = fs.createWriteStream(tarFilename, { autoClose: true });
-		const response = got.stream.get(url);
-		response.pipe(fstream);
-
-		await new Promise((resolve, reject) => {
-			response.on("error", reject);
-			response.on("end", resolve);
-		});
 	} catch (e) {
-		await freeLock();
 		throw new ZWaveError(
 			`Config update failed: Could not download tarball. Reason: ${
 				getErrorMessage(
@@ -225,78 +115,38 @@ export async function installConfigUpdateInDocker(
 		);
 	}
 
-	// This should not be necessary in Docker. Leaving it here anyways in case
-	// we want to use this method on Windows at some point
-	function normalizeToUnixStyle(path: string): string {
-		path = path.replaceAll(":", "");
-		path = path.replaceAll("\\", "/");
-		if (!path.startsWith("/")) path = `/${path}`;
-		return path;
-	}
-
-	// Extract it into a temporary folder, then overwrite the config node_modules with it
 	try {
-		await fs.emptyDir(extractedDir);
-		await execa("tar", [
-			"--strip-components=1",
-			"-xzf",
-			normalizeToUnixStyle(tarFilename),
-			"-C",
-			normalizeToUnixStyle(extractedDir),
-		]);
-		// How we install now depends on whether we're installing into the external config dir.
-		// If we are, we just need to copy the `devices` subdirectory. If not, copy the entire extracted dir
-		if (external) {
-			await fs.emptyDir(external.configDir);
-			await fs.copy(
-				path.join(extractedDir, "config"),
-				external.configDir,
-				{
-					filter: async (src: string) => {
-						if (!(await fs.stat(src)).isFile()) return true;
-						return src.endsWith(".json");
-					},
-				},
-			);
-			const externalVersionFilename = path.join(
-				external.configDir,
-				"version",
-			);
-			await fs.writeFile(externalVersionFilename, newVersion, "utf8");
-		} else {
-			await fs.remove(configModuleDir);
-			await fs.rename(extractedDir, configModuleDir);
+		// Extract json files from the tarball's config directory
+		// and overwrite the external config directory with them
+		const tarFiles = untar(gunzipSync(tarballData));
+		await fs.deleteDir(external.configDir);
+		await fs.ensureDir(external.configDir);
+
+		const prefix = "package/config/";
+		for (const file of tarFiles) {
+			if (
+				!file.filename.startsWith(prefix)
+				|| !file.filename.endsWith(".json")
+			) {
+				continue;
+			}
+			const filename = file.filename.slice(prefix.length);
+			const targetFileName = path.join(external.configDir, filename);
+			const targetDirName = path.dirname(targetFileName);
+
+			await fs.ensureDir(targetDirName);
+			await fs.writeFile(targetFileName, file.fileData);
 		}
+
+		const externalVersionFilename = path.join(
+			external.configDir,
+			"version",
+		);
+		await writeTextFile(fs, externalVersionFilename, newVersion);
 	} catch {
-		await freeLock();
 		throw new ZWaveError(
 			`Config update failed: Could not extract tarball`,
 			ZWaveErrorCodes.Config_Update_InstallFailed,
 		);
 	}
-
-	// Try to update our own package.json if we're working with the internal structure
-	if (!external) {
-		try {
-			const packageJsonPath = require.resolve("zwave-js/package.json");
-			const json = await fs.readJSON(packageJsonPath, {
-				encoding: "utf8",
-			});
-			json.dependencies["@zwave-js/config"] = newVersion;
-			await fs.writeJSON(packageJsonPath, json, {
-				encoding: "utf8",
-				spaces: 2,
-			});
-		} catch {
-			// ignore
-		}
-	}
-
-	// Clean up the temp dir and ignore errors
-	void fs.remove(tmpDir).catch(() => {
-		// ignore
-	});
-
-	// Free the lock
-	await freeLock();
 }

@@ -1,5 +1,7 @@
+import type { CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -7,53 +9,50 @@ import {
 	type WithAddress,
 	enumValuesToMetadataStates,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type { CCParsingContext, GetValueDB } from "@zwave-js/host/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { getEnumMemberName } from "@zwave-js/shared";
 import {
 	CCAPI,
 	POLL_VALUE,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	HumidityControlOperatingState,
 	HumidityControlOperatingStateCommand,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-export const HumidityControlOperatingStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(
-		CommandClasses["Humidity Control Operating State"],
-		{
-			...V.staticProperty(
-				"state",
-				{
-					...ValueMetadata.ReadOnlyUInt8,
-					states: enumValuesToMetadataStates(
-						HumidityControlOperatingState,
-					),
-					label: "Humidity control operating state",
-				} as const,
-			),
-		},
-	),
-});
+export const HumidityControlOperatingStateCCValues = V.defineCCValues(
+	CommandClasses["Humidity Control Operating State"],
+	{
+		...V.staticProperty(
+			"state",
+			{
+				...ValueMetadata.ReadOnlyUInt8,
+				states: enumValuesToMetadataStates(
+					HumidityControlOperatingState,
+				),
+				label: "Humidity control operating state",
+			} as const,
+		),
+	},
+);
 
 @API(CommandClasses["Humidity Control Operating State"])
 export class HumidityControlOperatingStateCCAPI extends CCAPI {
@@ -167,6 +166,7 @@ export interface HumidityControlOperatingStateCCReportOptions {
 }
 
 @CCCommand(HumidityControlOperatingStateCommand.Report)
+@ccValueProperty("state", HumidityControlOperatingStateCCValues.state)
 export class HumidityControlOperatingStateCCReport
 	extends HumidityControlOperatingStateCC
 {
@@ -186,13 +186,12 @@ export class HumidityControlOperatingStateCCReport
 		validatePayload(raw.payload.length >= 1);
 		const state: HumidityControlOperatingState = raw.payload[0] & 0b1111;
 
-		return new HumidityControlOperatingStateCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			state,
 		});
 	}
 
-	@ccValue(HumidityControlOperatingStateCCValues.state)
 	public readonly state: HumidityControlOperatingState;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

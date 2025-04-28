@@ -1,4 +1,4 @@
-import { type CommandClass } from "@zwave-js/cc";
+import type { CommandClass } from "@zwave-js/cc";
 import {
 	type BeamingInfo,
 	MPDUHeaderType,
@@ -30,12 +30,11 @@ import {
 	pick,
 	staticExtends,
 } from "@zwave-js/shared";
-import { padStart } from "alcalzone-shared/strings";
 import {
 	ExplorerFrameCommand,
 	LongRangeFrameType,
 	ZWaveFrameType,
-} from "./_Types";
+} from "./_Types.js";
 
 function getChannelConfiguration(region: ZnifferRegion): "1/2" | "3" | "4" {
 	switch (region) {
@@ -73,7 +72,7 @@ function longRangeBeamPowerToDBm(power: number): number {
 }
 
 function formatNodeId(nodeId: number): string {
-	return padStart(nodeId.toString(), 3, "0");
+	return nodeId.toString().padStart(3, "0");
 }
 
 function formatRoute(
@@ -127,6 +126,7 @@ export function parseMPDU(
 		case 2:
 			return ZWaveMPDU.from(frame);
 		case 3:
+		case 4:
 			return LongRangeMPDU.from(frame);
 		default:
 			validatePayload.fail(
@@ -330,9 +330,10 @@ export class ZWaveMPDU implements MPDU {
 				destinationOffset++;
 				break;
 			}
-			case 3: {
+			case 3:
+			case 4: {
 				validatePayload.fail(
-					`Channel 3 (ZWLR) must be parsed as a LongRangeMPDU!`,
+					`Channel ${options.frameInfo.channel} (ZWLR) must be parsed as a LongRangeMPDU!`,
 				);
 			}
 			default: {
@@ -726,8 +727,7 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 
 		const message: MessageRecord = {
 			...original,
-			"network home ID": padStart(
-				this.networkHomeId.toString(16),
+			"network home ID": this.networkHomeId.toString(16).padStart(
 				8,
 				"0",
 			),

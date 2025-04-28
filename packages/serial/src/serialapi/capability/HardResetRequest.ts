@@ -1,5 +1,4 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
-import { MessagePriority } from "@zwave-js/core";
+import { type MessageOrCCLogEntry, MessagePriority } from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,
@@ -12,7 +11,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 @messageTypes(MessageType.Request, FunctionType.HardReset)
 @priority(MessagePriority.Controller)
@@ -31,7 +30,7 @@ export class HardResetRequestBase extends Message {
 
 @expectedCallback(FunctionType.HardReset)
 export class HardResetRequest extends HardResetRequestBase {
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		this.payload = Bytes.from([this.callbackId]);
 		return super.serialize(ctx);

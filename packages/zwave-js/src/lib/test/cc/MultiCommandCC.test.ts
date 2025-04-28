@@ -1,10 +1,10 @@
-import type { CommandClass } from "@zwave-js/cc";
 import {
 	BasicCCSet,
+	type CommandClass,
 	MultiCommandCC,
 	isMultiEncapsulatingCommandClass,
 } from "@zwave-js/cc";
-import test from "ava";
+import { test } from "vitest";
 
 test("is a multi-encapsulating CommandClass", (t) => {
 	let cc: CommandClass = new BasicCCSet({
@@ -12,5 +12,5 @@ test("is a multi-encapsulating CommandClass", (t) => {
 		targetValue: 50,
 	});
 	cc = MultiCommandCC.encapsulate([cc]);
-	t.true(isMultiEncapsulatingCommandClass(cc));
+	t.expect(isMultiEncapsulatingCommandClass(cc)).toBe(true);
 });

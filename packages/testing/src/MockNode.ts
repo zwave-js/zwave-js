@@ -1,4 +1,4 @@
-import type { CommandClass } from "@zwave-js/cc";
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type CommandClassInfo,
 	type CommandClasses,
@@ -6,20 +6,19 @@ import {
 	NOT_KNOWN,
 	SecurityClass,
 	type SecurityManagers,
+	isCCInfoEqual,
 	securityClassOrder,
 } from "@zwave-js/core";
-import type { CCEncodingContext } from "@zwave-js/host";
 import { TimedExpectation } from "@zwave-js/shared";
-import { isDeepStrictEqual } from "node:util";
-import type { CCIdToCapabilities } from "./CCSpecificCapabilities";
-import type { MockController } from "./MockController";
+import type { CCIdToCapabilities } from "./CCSpecificCapabilities.js";
+import type { MockController } from "./MockController.js";
 import {
 	type MockEndpointCapabilities,
 	type MockNodeCapabilities,
 	type PartialCCCapabilities,
 	getDefaultMockEndpointCapabilities,
 	getDefaultMockNodeCapabilities,
-} from "./MockNodeCapabilities";
+} from "./MockNodeCapabilities.js";
 import {
 	type LazyMockZWaveFrame,
 	MOCK_FRAME_ACK_TIMEOUT,
@@ -29,7 +28,7 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveAckFrame,
 	createMockZWaveRequestFrame,
-} from "./MockZWaveFrame";
+} from "./MockZWaveFrame.js";
 
 const defaultCCInfo: CommandClassInfo = {
 	isSupported: true,
@@ -95,7 +94,7 @@ export class MockEndpoint {
 	public addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void {
 		const original = this.implementedCCs.get(cc);
 		const updated = Object.assign({}, original ?? defaultCCInfo, info);
-		if (!isDeepStrictEqual(original, updated)) {
+		if (original == undefined || !isCCInfoEqual(original, updated)) {
 			this.implementedCCs.set(cc, updated);
 		}
 	}
@@ -226,7 +225,7 @@ export class MockNode {
 	/** Can be used by behaviors to store controller related state */
 	public readonly state = new Map<string, unknown>();
 
-	/** Controls whether the controller automatically ACKs node frames before handling them */
+	/** Controls whether the node automatically ACKs CCs from the controller before handling them */
 	public autoAckControllerFrames: boolean = true;
 
 	private expectedControllerFrames: TimedExpectation<
@@ -388,7 +387,7 @@ export class MockNode {
 	public addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void {
 		const original = this.implementedCCs.get(cc);
 		const updated = Object.assign({}, original ?? defaultCCInfo, info);
-		if (!isDeepStrictEqual(original, updated)) {
+		if (original == undefined || !isCCInfoEqual(original, updated)) {
 			this.implementedCCs.set(cc, updated);
 		}
 	}

@@ -1,4 +1,4 @@
-import type { DataDirection, LogContext } from "@zwave-js/core/safe";
+import type { DataDirection, LogContext } from "@zwave-js/core";
 
 export const SERIAL_LABEL = "SERIAL";
 export const SERIAL_LOGLEVEL = "debug";

@@ -7,8 +7,8 @@ import {
 	SceneActuatorConfigurationCommand,
 } from "@zwave-js/cc";
 import { CommandClasses, Duration } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -19,7 +19,7 @@ function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
+test("the Get command should serialize correctly", async (t) => {
 	const cc = new SceneActuatorConfigurationCCGet({
 		nodeId: 2,
 		sceneId: 1,
@@ -30,10 +30,12 @@ test("the Get command should serialize correctly", (t) => {
 			1,
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly with level", (t) => {
+test("the Set command should serialize correctly with level", async (t) => {
 	const cc = new SceneActuatorConfigurationCCSet({
 		nodeId: 2,
 		sceneId: 2,
@@ -49,10 +51,12 @@ test("the Set command should serialize correctly with level", (t) => {
 			0x00, // level
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly with undefined level", (t) => {
+test("the Set command should serialize correctly with undefined level", async (t) => {
 	const cc = new SceneActuatorConfigurationCCSet({
 		nodeId: 2,
 		sceneId: 2,
@@ -68,10 +72,12 @@ test("the Set command should serialize correctly with undefined level", (t) => {
 			0xff, // level
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command (v1) should be deserialized correctly", (t) => {
+test("the Report command (v1) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			SceneActuatorConfigurationCommand.Report, // CC Command
@@ -80,24 +86,24 @@ test("the Report command (v1) should be deserialized correctly", (t) => {
 			0x05, // dimmingDuration
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as SceneActuatorConfigurationCCReport;
-	t.is(cc.constructor, SceneActuatorConfigurationCCReport);
+	t.expect(cc.constructor).toBe(SceneActuatorConfigurationCCReport);
 
-	t.is(cc.sceneId, 55);
-	t.is(cc.level, 0x50);
-	t.deepEqual(cc.dimmingDuration, Duration.parseReport(0x05)!);
+	t.expect(cc.sceneId).toBe(55);
+	t.expect(cc.level).toBe(0x50);
+	t.expect(cc.dimmingDuration).toStrictEqual(Duration.parseReport(0x05)!);
 });
 
-test("deserializing an unsupported command should return an unspecified version of SceneActuatorConfigurationCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of SceneActuatorConfigurationCC", async (t) => {
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		serializedCC,
 		{ sourceNodeId: 2 } as any,
 	) as SceneActuatorConfigurationCC;
-	t.is(cc.constructor, SceneActuatorConfigurationCC);
+	t.expect(cc.constructor).toBe(SceneActuatorConfigurationCC);
 });

@@ -1,6 +1,9 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
+	type GetSupportedCCVersion,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -15,21 +18,17 @@ import {
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetSupportedCCVersion,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes, isUint8Array, uint8ArrayToString } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
 import {
+	Bytes,
 	getEnumMemberName,
 	isPrintableASCII,
 	isPrintableASCIIWithWhitespace,
+	isUint8Array,
 	num2hex,
 	pick,
-} from "@zwave-js/shared/safe";
+	uint8ArrayToString,
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -42,7 +41,7 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -50,116 +49,106 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import type { NotificationEventPayload } from "../lib/NotificationEventPayload";
-import { V } from "../lib/Values";
-import { KeypadMode, UserCodeCommand, UserIDStatus } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import type { NotificationEventPayload } from "../lib/NotificationEventPayload.js";
+import { V } from "../lib/Values.js";
+import { KeypadMode, UserCodeCommand, UserIDStatus } from "../lib/_Types.js";
 
-export const UserCodeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["User Code"], {
-		...V.staticProperty("supportedUsers", undefined, { internal: true }),
-		...V.staticProperty("supportsAdminCode", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsAdminCodeDeactivation", undefined, {
-			internal: true,
-		}),
-		// The following two properties are only kept for compatibility with devices
-		// that were interviewed before the rename to admin code
-		...V.staticPropertyWithName(
-			"_deprecated_supportsMasterCode",
-			"supportsMasterCode",
-			undefined,
-			{
-				internal: true,
-			},
-		),
-		...V.staticPropertyWithName(
-			"_deprecated_supportsMasterCodeDeactivation",
-			"supportsMasterCodeDeactivation",
-			undefined,
-			{
-				internal: true,
-			},
-		),
-		...V.staticProperty("supportsUserCodeChecksum", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsMultipleUserCodeReport", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsMultipleUserCodeSet", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedUserIDStatuses", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedKeypadModes", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedASCIIChars", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("userCodeChecksum", undefined, { internal: true }),
-
-		...V.staticProperty(
-			"keypadMode",
-			{
-				...ValueMetadata.ReadOnlyNumber,
-				label: "Keypad Mode",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty(
-			"adminCode",
-			{
-				...ValueMetadata.String,
-				label: "Admin Code",
-				minLength: 4,
-				maxLength: 10,
-			} as const,
-			{
-				minVersion: 2,
-				secret: true,
-			} as const,
-		),
+export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
+	...V.staticProperty("supportedUsers", undefined, { internal: true }),
+	...V.staticProperty("supportsAdminCode", undefined, {
+		internal: true,
 	}),
-
-	...V.defineDynamicCCValues(CommandClasses["User Code"], {
-		...V.dynamicPropertyAndKeyWithName(
-			"userIdStatus",
-			"userIdStatus",
-			(userId: number) => userId,
-			({ property, propertyKey }) =>
-				property === "userIdStatus" && typeof propertyKey === "number",
-			(userId: number) => ({
-				...ValueMetadata.Number,
-				label: `User ID status (${userId})`,
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"userCode",
-			"userCode",
-			(userId: number) => userId,
-			({ property, propertyKey }) =>
-				property === "userCode" && typeof propertyKey === "number",
-			// The user code metadata is dynamically created
-			undefined,
-			{ secret: true },
-		),
+	...V.staticProperty("supportsAdminCodeDeactivation", undefined, {
+		internal: true,
 	}),
+	...V.staticPropertyWithName(
+		"_deprecated_supportsMasterCode",
+		"supportsMasterCode",
+		undefined,
+		{
+			internal: true,
+		},
+	),
+	...V.staticPropertyWithName(
+		"_deprecated_supportsMasterCodeDeactivation",
+		"supportsMasterCodeDeactivation",
+		undefined,
+		{
+			internal: true,
+		},
+	),
+	...V.staticProperty("supportsUserCodeChecksum", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportsMultipleUserCodeReport", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportsMultipleUserCodeSet", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedUserIDStatuses", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedKeypadModes", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedASCIIChars", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("userCodeChecksum", undefined, { internal: true }),
+	...V.staticProperty(
+		"keypadMode",
+		{
+			...ValueMetadata.ReadOnlyNumber,
+			label: "Keypad Mode",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty(
+		"adminCode",
+		{
+			...ValueMetadata.String,
+			label: "Admin Code",
+			minLength: 4,
+			maxLength: 10,
+		} as const,
+		{
+			minVersion: 2,
+			secret: true,
+		} as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"userIdStatus",
+		"userIdStatus",
+		(userId: number) => userId,
+		({ property, propertyKey }) =>
+			property === "userIdStatus" && typeof propertyKey === "number",
+		(userId: number) => ({
+			...ValueMetadata.Number,
+			label: `User ID status (${userId})`,
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"userCode",
+		"userCode",
+		(userId: number) => userId,
+		({ property, propertyKey }) =>
+			property === "userCode" && typeof propertyKey === "number",
+		// The user code metadata is dynamically created
+		undefined,
+		{ secret: true },
+	),
 });
 
 function parseExtendedUserCode(payload: Bytes): {
@@ -1285,7 +1274,7 @@ export class UserCodeCCSet extends UserCodeCC {
 		}
 
 		if (userIdStatus === UserIDStatus.Available) {
-			return new UserCodeCCSet({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				userId,
 				userIdStatus,
@@ -1294,7 +1283,7 @@ export class UserCodeCCSet extends UserCodeCC {
 
 		const userCode = raw.payload.subarray(2);
 
-		return new UserCodeCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userId,
 			userIdStatus,
@@ -1306,7 +1295,7 @@ export class UserCodeCCSet extends UserCodeCC {
 	public userIdStatus: UserIDStatus;
 	public userCode: string | Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.userId, this.userIdStatus]),
 			typeof this.userCode === "string"
@@ -1384,7 +1373,7 @@ export class UserCodeCCReport extends UserCodeCC
 			}
 		}
 
-		return new UserCodeCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userId,
 			userIdStatus,
@@ -1409,7 +1398,7 @@ export class UserCodeCCReport extends UserCodeCC
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let userCodeBuffer: Bytes;
 		if (typeof this.userCode === "string") {
 			userCodeBuffer = Bytes.from(this.userCode, "ascii");
@@ -1460,7 +1449,7 @@ export class UserCodeCCGet extends UserCodeCC {
 		validatePayload(raw.payload.length >= 1);
 		const userId = raw.payload[0];
 
-		return new UserCodeCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userId,
 		});
@@ -1468,7 +1457,7 @@ export class UserCodeCCGet extends UserCodeCC {
 
 	public userId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.userId]);
 		return super.serialize(ctx);
 	}
@@ -1487,6 +1476,7 @@ export interface UserCodeCCUsersNumberReportOptions {
 }
 
 @CCCommand(UserCodeCommand.UsersNumberReport)
+@ccValueProperty("supportedUsers", UserCodeCCValues.supportedUsers)
 export class UserCodeCCUsersNumberReport extends UserCodeCC {
 	public constructor(
 		options: WithAddress<UserCodeCCUsersNumberReportOptions>,
@@ -1512,16 +1502,15 @@ export class UserCodeCCUsersNumberReport extends UserCodeCC {
 			supportedUsers = raw.payload[0];
 		}
 
-		return new UserCodeCCUsersNumberReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedUsers,
 		});
 	}
 
-	@ccValue(UserCodeCCValues.supportedUsers)
 	public readonly supportedUsers: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(3);
 		// If the node implements more than 255 users, this field MUST be set to 255
 		this.payload[0] = Math.min(255, this.supportedUsers);
@@ -1554,6 +1543,29 @@ export interface UserCodeCCCapabilitiesReportOptions {
 }
 
 @CCCommand(UserCodeCommand.CapabilitiesReport)
+@ccValueProperty("supportsAdminCode", UserCodeCCValues.supportsAdminCode)
+@ccValueProperty(
+	"supportsAdminCodeDeactivation",
+	UserCodeCCValues.supportsAdminCodeDeactivation,
+)
+@ccValueProperty(
+	"supportsUserCodeChecksum",
+	UserCodeCCValues.supportsUserCodeChecksum,
+)
+@ccValueProperty(
+	"supportsMultipleUserCodeReport",
+	UserCodeCCValues.supportsMultipleUserCodeReport,
+)
+@ccValueProperty(
+	"supportsMultipleUserCodeSet",
+	UserCodeCCValues.supportsMultipleUserCodeSet,
+)
+@ccValueProperty(
+	"supportedUserIDStatuses",
+	UserCodeCCValues.supportedUserIDStatuses,
+)
+@ccValueProperty("supportedKeypadModes", UserCodeCCValues.supportedKeypadModes)
+@ccValueProperty("supportedASCIIChars", UserCodeCCValues.supportedASCIIChars)
 export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 	public constructor(
 		options: WithAddress<UserCodeCCCapabilitiesReportOptions>,
@@ -1631,7 +1643,7 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 			),
 		).toString("ascii");
 
-		return new UserCodeCCCapabilitiesReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportsAdminCode,
 			supportsAdminCodeDeactivation,
@@ -1644,31 +1656,23 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 		});
 	}
 
-	@ccValue(UserCodeCCValues.supportsAdminCode)
 	public readonly supportsAdminCode: boolean;
 
-	@ccValue(UserCodeCCValues.supportsAdminCodeDeactivation)
 	public readonly supportsAdminCodeDeactivation: boolean;
 
-	@ccValue(UserCodeCCValues.supportsUserCodeChecksum)
 	public readonly supportsUserCodeChecksum: boolean;
 
-	@ccValue(UserCodeCCValues.supportsMultipleUserCodeReport)
 	public readonly supportsMultipleUserCodeReport: boolean;
 
-	@ccValue(UserCodeCCValues.supportsMultipleUserCodeSet)
 	public readonly supportsMultipleUserCodeSet: boolean;
 
-	@ccValue(UserCodeCCValues.supportedUserIDStatuses)
 	public readonly supportedUserIDStatuses: readonly UserIDStatus[];
 
-	@ccValue(UserCodeCCValues.supportedKeypadModes)
 	public readonly supportedKeypadModes: readonly KeypadMode[];
 
-	@ccValue(UserCodeCCValues.supportedASCIIChars)
 	public readonly supportedASCIIChars: string;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const supportedStatusesBitmask = encodeBitMask(
 			this.supportedUserIDStatuses,
 			undefined,
@@ -1758,7 +1762,7 @@ export class UserCodeCCKeypadModeSet extends UserCodeCC {
 		validatePayload(raw.payload.length >= 1);
 		const keypadMode: KeypadMode = raw.payload[0];
 
-		return new UserCodeCCKeypadModeSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			keypadMode,
 		});
@@ -1766,7 +1770,7 @@ export class UserCodeCCKeypadModeSet extends UserCodeCC {
 
 	public keypadMode: KeypadMode;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.keypadMode]);
 		return super.serialize(ctx);
 	}
@@ -1785,6 +1789,7 @@ export interface UserCodeCCKeypadModeReportOptions {
 }
 
 @CCCommand(UserCodeCommand.KeypadModeReport)
+@ccValueProperty("keypadMode", UserCodeCCValues.keypadMode)
 export class UserCodeCCKeypadModeReport extends UserCodeCC {
 	public constructor(
 		options: WithAddress<UserCodeCCKeypadModeReportOptions>,
@@ -1800,7 +1805,7 @@ export class UserCodeCCKeypadModeReport extends UserCodeCC {
 		validatePayload(raw.payload.length >= 1);
 		const keypadMode: KeypadMode = raw.payload[0];
 
-		return new UserCodeCCKeypadModeReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			keypadMode,
 		});
@@ -1827,10 +1832,9 @@ export class UserCodeCCKeypadModeReport extends UserCodeCC {
 		return true;
 	}
 
-	@ccValue(UserCodeCCValues.keypadMode)
 	public readonly keypadMode: KeypadMode;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.keypadMode]);
 		return super.serialize(ctx);
 	}
@@ -1875,7 +1879,7 @@ export class UserCodeCCAdminCodeSet extends UserCodeCC {
 			.subarray(1, 1 + codeLength)
 			.toString("ascii");
 
-		return new UserCodeCCAdminCodeSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			adminCode,
 		});
@@ -1883,7 +1887,7 @@ export class UserCodeCCAdminCodeSet extends UserCodeCC {
 
 	public adminCode: string;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.adminCode.length & 0b1111]),
 			Bytes.from(this.adminCode, "ascii"),
@@ -1905,6 +1909,7 @@ export interface UserCodeCCAdminCodeReportOptions {
 }
 
 @CCCommand(UserCodeCommand.AdminCodeReport)
+@ccValueProperty("adminCode", UserCodeCCValues.adminCode)
 export class UserCodeCCAdminCodeReport extends UserCodeCC {
 	public constructor(
 		options: WithAddress<UserCodeCCAdminCodeReportOptions>,
@@ -1924,16 +1929,15 @@ export class UserCodeCCAdminCodeReport extends UserCodeCC {
 			.subarray(1, 1 + codeLength)
 			.toString("ascii");
 
-		return new UserCodeCCAdminCodeReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			adminCode,
 		});
 	}
 
-	@ccValue(UserCodeCCValues.adminCode)
 	public readonly adminCode: string;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.adminCode.length & 0b1111]),
 			Bytes.from(this.adminCode, "ascii"),
@@ -1959,6 +1963,7 @@ export interface UserCodeCCUserCodeChecksumReportOptions {
 }
 
 @CCCommand(UserCodeCommand.UserCodeChecksumReport)
+@ccValueProperty("userCodeChecksum", UserCodeCCValues.userCodeChecksum)
 export class UserCodeCCUserCodeChecksumReport extends UserCodeCC {
 	public constructor(
 		options: WithAddress<UserCodeCCUserCodeChecksumReportOptions>,
@@ -1974,16 +1979,15 @@ export class UserCodeCCUserCodeChecksumReport extends UserCodeCC {
 		validatePayload(raw.payload.length >= 2);
 		const userCodeChecksum = raw.payload.readUInt16BE(0);
 
-		return new UserCodeCCUserCodeChecksumReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userCodeChecksum,
 		});
 	}
 
-	@ccValue(UserCodeCCValues.userCodeChecksum)
 	public readonly userCodeChecksum: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(2);
 		this.payload.writeUInt16BE(this.userCodeChecksum, 0);
 		return super.serialize(ctx);
@@ -2039,7 +2043,7 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 
 	public userCodes: UserCodeCCSetOptions[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const userCodeBuffers = this.userCodes.map((code) => {
 			const ret = Bytes.concat([
 				Bytes.from([
@@ -2115,7 +2119,7 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 		validatePayload(raw.payload.length >= offset + 2);
 		const nextUserId = raw.payload.readUInt16BE(offset);
 
-		return new UserCodeCCExtendedUserCodeReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			userCodes,
 			nextUserId,
@@ -2192,7 +2196,7 @@ export class UserCodeCCExtendedUserCodeGet extends UserCodeCC {
 	public userId: number;
 	public reportMore: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([0, 0, this.reportMore ? 1 : 0]);
 		this.payload.writeUInt16BE(this.userId, 0);
 		return super.serialize(ctx);

@@ -10,7 +10,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	mergeSupervisionResults,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 
 /** Creates a wrapper that looks like an instance of a specific CC API, but can handle multiple instances of that API */
 export function createMultiCCAPIWrapper<T extends CCAPI>(apiInstances: T[]): T {

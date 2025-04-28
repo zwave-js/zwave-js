@@ -1,15 +1,15 @@
-import { MAX_NODES, NUM_NODEMASK_BYTES } from "@zwave-js/core/safe";
-import { SUC_MAX_UPDATES } from "../../../consts";
-import type { NVM500Impl } from "../shared";
+import { MAX_NODES, NUM_NODEMASK_BYTES } from "@zwave-js/core";
+import { SUC_MAX_UPDATES } from "../../../consts.js";
 import {
 	APPL_NODEPARM_MAX,
+	type NVM500Impl,
 	NVMEntryType,
 	type NVMLayout,
 	NVM_SERIALAPI_HOST_SIZE,
 	RTC_TIMER_SIZE,
 	SUC_CONTROLLER_LIST_SIZE,
 	TOTAL_RTC_TIMER_MAX,
-} from "../shared";
+} from "../shared.js";
 
 const NVM_Layout_Bridge_6_6x: NVMLayout = [
 	{ name: "nvmTotalEnd", type: NVMEntryType.Word, count: 1 },

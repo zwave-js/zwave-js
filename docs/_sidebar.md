@@ -2,6 +2,8 @@
 
   - [Introduction](README.md)
   - [Quick Start](getting-started/quickstart.md)
+  - [Examples](examples/index.md)
+    <!-- AUTO-GENERATE: Examples -->
   - [For Integrators / Why Z-Wave JS?](getting-started/integrators.md)
   - [Our Philosophy](getting-started/philosophy.md)
   - [Frequently Asked Questions](getting-started/faq.md)

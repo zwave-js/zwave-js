@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
@@ -9,17 +11,11 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { PhysicalCCAPI } from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { PhysicalCCAPI } from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -27,12 +23,12 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
+} from "../lib/CommandClassDecorators.js";
 import {
 	Powerlevel,
 	PowerlevelCommand,
 	PowerlevelTestStatus,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
 @API(CommandClasses.Powerlevel)
 export class PowerlevelCCAPI extends PhysicalCCAPI {
@@ -242,14 +238,14 @@ export class PowerlevelCCSet extends PowerlevelCC {
 		const powerlevel: Powerlevel = raw.payload[0];
 
 		if (powerlevel === Powerlevel["Normal Power"]) {
-			return new PowerlevelCCSet({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				powerlevel,
 			});
 		} else {
 			validatePayload(raw.payload.length >= 2);
 			const timeout = raw.payload[1];
-			return new PowerlevelCCSet({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				powerlevel,
 				timeout,
@@ -260,7 +256,7 @@ export class PowerlevelCCSet extends PowerlevelCC {
 	public powerlevel: Powerlevel;
 	public timeout?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.powerlevel, this.timeout ?? 0x00]);
 		return super.serialize(ctx);
 	}
@@ -304,14 +300,14 @@ export class PowerlevelCCReport extends PowerlevelCC {
 		const powerlevel: Powerlevel = raw.payload[0];
 
 		if (powerlevel === Powerlevel["Normal Power"]) {
-			return new PowerlevelCCReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				powerlevel,
 			});
 		} else {
 			validatePayload(raw.payload.length >= 2);
 			const timeout = raw.payload[1];
-			return new PowerlevelCCReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				powerlevel,
 				timeout,
@@ -322,7 +318,7 @@ export class PowerlevelCCReport extends PowerlevelCC {
 	public readonly powerlevel: Powerlevel;
 	public readonly timeout?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.powerlevel, this.timeout ?? 0x00]);
 		return super.serialize(ctx);
 	}
@@ -373,7 +369,7 @@ export class PowerlevelCCTestNodeSet extends PowerlevelCC {
 		const powerlevel: Powerlevel = raw.payload[1];
 		const testFrameCount = raw.payload.readUInt16BE(2);
 
-		return new PowerlevelCCTestNodeSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			testNodeId,
 			powerlevel,
@@ -385,7 +381,7 @@ export class PowerlevelCCTestNodeSet extends PowerlevelCC {
 	public powerlevel: Powerlevel;
 	public testFrameCount: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.testNodeId, this.powerlevel, 0, 0]);
 		this.payload.writeUInt16BE(this.testFrameCount, 2);
 		return super.serialize(ctx);
@@ -431,7 +427,7 @@ export class PowerlevelCCTestNodeReport extends PowerlevelCC {
 		const status: PowerlevelTestStatus = raw.payload[1];
 		const acknowledgedFrames = raw.payload.readUInt16BE(2);
 
-		return new PowerlevelCCTestNodeReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			testNodeId,
 			status,
@@ -443,7 +439,7 @@ export class PowerlevelCCTestNodeReport extends PowerlevelCC {
 	public status: PowerlevelTestStatus;
 	public acknowledgedFrames: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.testNodeId,
 			this.status,

@@ -118,7 +118,7 @@ export class SerialAPIStartedRequest extends Message {
 	public controlledCCs: CommandClasses[];
 	public supportsLongRange: boolean = false;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const ccList = encodeCCList(this.supportedCCs, this.controlledCCs);
 		const numCCBytes = ccList.length;
 

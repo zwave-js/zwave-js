@@ -4,13 +4,13 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	isValidDSK,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { type Task } from "../driver/Task";
+import type { Task } from "../driver/Task.js";
 import {
 	type PlannedProvisioningEntry,
 	ProvisioningEntryStatus,
-} from "./Inclusion";
+} from "./Inclusion.js";
 
 export function assertProvisioningEntry(
 	arg: any,
