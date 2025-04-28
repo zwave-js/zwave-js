@@ -26,7 +26,7 @@
 			"#": "20",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Overload Protection",
-			"description": "If current exceeds 11.5A over 5 seconds, relay will turn off.",
+			"description": "If current exceeds 11.5 A over 5 seconds, relay will turn off.",
 			"defaultValue": 1
 		},
 		{
@@ -57,7 +57,7 @@
 		},
 		{
 			"#": "27",
-			"label": "Indicator Mode",
+			"label": "LED Indicator",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
@@ -67,7 +67,7 @@
 					"value": 0
 				},
 				{
-					"label": "LED on for 5 seconds, then off",
+					"label": "On for 5 seconds, then off",
 					"value": 1
 				}
 			]
