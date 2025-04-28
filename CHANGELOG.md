@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Support Basic Window Covering CC (#7768)
+
+### Config file changes
+* Add Ness Smart Plug ZA-216001 (#7339)
+
 ## 15.1.3 (2025-04-26)
 ### Bugfixes
 * Work around a possible controller lockup when retransmitting a command to an unreachable device (#7766)
