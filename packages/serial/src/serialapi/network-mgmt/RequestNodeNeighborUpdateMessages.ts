@@ -1,18 +1,19 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
-import { MessagePriority, encodeNodeID } from "@zwave-js/core";
-import type {
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-	MultiStageCallback,
-	SuccessIndicator,
-} from "@zwave-js/serial";
+import {
+	type MessageOrCCLogEntry,
+	MessagePriority,
+	encodeNodeID,
+} from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageEncodingContext,
 	MessageOrigin,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
+	type MultiStageCallback,
+	type SuccessIndicator,
 	expectedCallback,
 	messageTypes,
 	priority,

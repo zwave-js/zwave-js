@@ -16,7 +16,7 @@ import {
 	type ZWaveLogInfo,
 	timestampFormatShort,
 } from "../../log/shared.js";
-import { type LogContainer, type ZWaveLogger } from "../../log/traits.js";
+import type { LogContainer, ZWaveLogger } from "../../log/traits.js";
 
 colors.enabled = true;
 

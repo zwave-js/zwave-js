@@ -1,4 +1,4 @@
-import { num2hex } from "@zwave-js/shared/safe";
+import { num2hex } from "@zwave-js/shared";
 
 export interface MeterScaleDefinition {
 	readonly label: string;

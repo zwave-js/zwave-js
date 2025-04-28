@@ -1,5 +1,4 @@
-import type { ProtocolType } from "@zwave-js/core";
-import { MessagePriority } from "@zwave-js/core";
+import { MessagePriority, type ProtocolType } from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,

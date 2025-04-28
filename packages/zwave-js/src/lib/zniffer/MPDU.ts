@@ -1,4 +1,4 @@
-import { type CommandClass } from "@zwave-js/cc";
+import type { CommandClass } from "@zwave-js/cc";
 import {
 	type BeamingInfo,
 	MPDUHeaderType,

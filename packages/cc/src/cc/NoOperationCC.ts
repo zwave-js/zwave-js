@@ -1,4 +1,4 @@
-import { CommandClasses, MessagePriority } from "@zwave-js/core/safe";
+import { CommandClasses, MessagePriority } from "@zwave-js/core";
 import { PhysicalCCAPI } from "../lib/API.js";
 import { CommandClass } from "../lib/CommandClass.js";
 import {

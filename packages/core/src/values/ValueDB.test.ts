@@ -1,4 +1,4 @@
-import { pick } from "@zwave-js/shared/safe";
+import { pick } from "@zwave-js/shared";
 import sinon from "sinon";
 import { test } from "vitest";
 import { CommandClasses } from "../definitions/CommandClasses.js";

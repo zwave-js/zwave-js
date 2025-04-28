@@ -1,9 +1,5 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import {
-	type GetDeviceConfig,
-	type LookupManufacturer,
-} from "@zwave-js/config";
-import { type LogNode } from "@zwave-js/core";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig, LookupManufacturer } from "@zwave-js/config";
 import {
 	type BroadcastCC,
 	type CCAddress,
@@ -21,6 +17,7 @@ import {
 	type GetValueDB,
 	type HostIDs,
 	type ListenBehavior,
+	type LogNode,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type ModifyCCs,
@@ -43,7 +40,7 @@ import {
 	isZWaveError,
 	parseCCId,
 	valueIdToString,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
 	Bytes,
 	type JSONObject,
@@ -51,7 +48,7 @@ import {
 	getEnumMemberName,
 	num2hex,
 	staticExtends,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
 import type { CCAPIHost, CCAPINode, ValueIDProperties } from "./API.js";
 import {
@@ -76,7 +73,7 @@ import {
 	type StaticCCValue,
 	defaultCCValueOptions,
 } from "./Values.js";
-import { type GetInterviewOptions } from "./traits.js";
+import type { GetInterviewOptions } from "./traits.js";
 
 export interface CommandClassOptions extends CCAddress {
 	ccId?: number; // Used to overwrite the declared CC ID

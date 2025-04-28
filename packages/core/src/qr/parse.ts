@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { digest } from "../crypto/index.js";
 import { SecurityClass } from "../definitions/SecurityClass.js";
 import { dskToString } from "../dsk/index.js";

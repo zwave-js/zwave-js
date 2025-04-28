@@ -3736,7 +3736,7 @@ export enum TransmitOptions {
     // (undocumented)
     DEFAULT = 37,
     // (undocumented)
-    DEFAULT_NOACK = 36,
+    DEFAULT_NOACK = 0,
     // (undocumented)
     Explore = 32,
     // (undocumented)
@@ -4372,6 +4372,18 @@ export function wasControllerReset(e: unknown): e is ZWaveError & {
 // @public (undocumented)
 export type WithAddress<T extends object> = T & CCAddress;
 
+// Warning: (ae-missing-release-tag) "ZnifferLRChannelConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ZnifferLRChannelConfig {
+    // (undocumented)
+    "Classic & LR A" = 1,
+    // (undocumented)
+    "Classic & LR B" = 2,
+    // (undocumented)
+    "LR A & B" = 3
+}
+
 // Warning: (ae-missing-release-tag) "ZnifferProtocolDataRate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -4729,6 +4741,7 @@ export interface ZWaveLogInfo<TContext extends LogContext = LogContext> extends 
 // src/qr/definitions.ts:63:3 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
 // src/security/Manager2.ts:64:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/security/Manager2.ts:64:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 

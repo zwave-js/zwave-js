@@ -1,8 +1,4 @@
-import {
-	CommandClasses,
-	ZWaveError,
-	ZWaveErrorCodes,
-} from "@zwave-js/core/safe";
+import { CommandClasses, ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 
 export const hexKeyRegexNDigits = /^0x[a-f0-9]+$/;
 export const hexKeyRegex4Digits = /^0x[a-f0-9]{4}$/;

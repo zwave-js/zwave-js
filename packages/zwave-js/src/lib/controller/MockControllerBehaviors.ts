@@ -14,7 +14,37 @@ import {
 	isZWaveError,
 } from "@zwave-js/core";
 import {
+	AddNodeStatus,
+	AddNodeToNetworkRequest,
+	AddNodeToNetworkRequestStatusReport,
+	AddNodeType,
 	ApplicationCommandRequest,
+	type ApplicationUpdateRequest,
+	ApplicationUpdateRequestNodeInfoReceived,
+	ApplicationUpdateRequestNodeInfoRequestFailed,
+	AssignSUCReturnRouteRequest,
+	AssignSUCReturnRouteRequestTransmitReport,
+	AssignSUCReturnRouteResponse,
+	GetControllerCapabilitiesRequest,
+	GetControllerCapabilitiesResponse,
+	GetControllerIdRequest,
+	GetControllerIdResponse,
+	GetControllerVersionRequest,
+	GetControllerVersionResponse,
+	GetNodeProtocolInfoRequest,
+	GetNodeProtocolInfoResponse,
+	GetSUCNodeIdRequest,
+	GetSUCNodeIdResponse,
+	GetSerialApiCapabilitiesRequest,
+	GetSerialApiCapabilitiesResponse,
+	GetSerialApiInitDataRequest,
+	GetSerialApiInitDataResponse,
+	RemoveNodeFromNetworkRequest,
+	RemoveNodeFromNetworkRequestStatusReport,
+	RemoveNodeStatus,
+	RemoveNodeType,
+	RequestNodeInfoRequest,
+	RequestNodeInfoResponse,
 	SendDataBridgeRequest,
 	SendDataBridgeRequestTransmitReport,
 	SendDataBridgeResponse,
@@ -22,73 +52,15 @@ import {
 	SendDataMulticastBridgeRequest,
 	SendDataMulticastBridgeRequestTransmitReport,
 	SendDataMulticastBridgeResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	type ApplicationUpdateRequest,
-	ApplicationUpdateRequestNodeInfoReceived,
-	ApplicationUpdateRequestNodeInfoRequestFailed,
-} from "@zwave-js/serial/serialapi";
-import {
-	SerialAPIStartedRequest,
-	SerialAPIWakeUpReason,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetControllerCapabilitiesRequest,
-	GetControllerCapabilitiesResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetControllerVersionRequest,
-	GetControllerVersionResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetSerialApiCapabilitiesRequest,
-	GetSerialApiCapabilitiesResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetSerialApiInitDataRequest,
-	GetSerialApiInitDataResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetControllerIdRequest,
-	GetControllerIdResponse,
-} from "@zwave-js/serial/serialapi";
-import { SoftResetRequest } from "@zwave-js/serial/serialapi";
-import {
-	AddNodeStatus,
-	AddNodeToNetworkRequest,
-	AddNodeToNetworkRequestStatusReport,
-	AddNodeType,
-} from "@zwave-js/serial/serialapi";
-import {
-	AssignSUCReturnRouteRequest,
-	AssignSUCReturnRouteRequestTransmitReport,
-	AssignSUCReturnRouteResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetNodeProtocolInfoRequest,
-	GetNodeProtocolInfoResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	GetSUCNodeIdRequest,
-	GetSUCNodeIdResponse,
-} from "@zwave-js/serial/serialapi";
-import {
-	RemoveNodeFromNetworkRequest,
-	RemoveNodeFromNetworkRequestStatusReport,
-	RemoveNodeStatus,
-	RemoveNodeType,
-} from "@zwave-js/serial/serialapi";
-import {
-	RequestNodeInfoRequest,
-	RequestNodeInfoResponse,
-} from "@zwave-js/serial/serialapi";
-import {
 	SendDataMulticastRequest,
 	SendDataMulticastRequestTransmitReport,
 	SendDataMulticastResponse,
 	SendDataRequest,
 	SendDataRequestTransmitReport,
 	SendDataResponse,
+	SerialAPIStartedRequest,
+	SerialAPIWakeUpReason,
+	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
 import {
 	MOCK_FRAME_ACK_TIMEOUT,

@@ -1,20 +1,20 @@
 import {
+	type CommandClasses,
+	ZWaveError,
+	ZWaveErrorCodes,
+} from "@zwave-js/core";
+import {
 	createReflectionDecorator,
 	createReflectionDecoratorPair,
 	createValuelessReflectionDecorator,
 } from "@zwave-js/core/reflection";
-import {
-	type CommandClasses,
-	ZWaveError,
-	ZWaveErrorCodes,
-} from "@zwave-js/core/safe";
 import type { TypedClassDecorator } from "@zwave-js/shared";
 import type { APIConstructor, CCAPI } from "./API.js";
-import {
-	type CCConstructor,
-	type CCResponsePredicate,
-	type CommandClass,
-	type DynamicCCResponse,
+import type {
+	CCConstructor,
+	CCResponsePredicate,
+	CommandClass,
+	DynamicCCResponse,
 } from "./CommandClass.js";
 import type {
 	DynamicCCValue,

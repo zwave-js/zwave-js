@@ -1,12 +1,12 @@
 import { fs } from "@zwave-js/core/bindings/fs/node";
-import { type ZWaveSerialStream } from "@zwave-js/serial";
+import type { ZWaveSerialStream } from "@zwave-js/serial";
 import type { MockPort } from "@zwave-js/serial/mock";
 import { copyFilesRecursive, noop } from "@zwave-js/shared";
-import {
-	type MockController,
-	type MockControllerOptions,
-	type MockNode,
-	type MockNodeOptions,
+import type {
+	MockController,
+	MockControllerOptions,
+	MockNode,
+	MockNodeOptions,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import crypto from "node:crypto";

@@ -1,8 +1,8 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { type UnderlyingSink, type UnderlyingSource } from "node:stream/web";
+import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import { SerialPort } from "serialport";
-import { type DisconnectError } from "./DisconnectError.js";
-import { type ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
+import type { DisconnectError } from "./DisconnectError.js";
+import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 /** The default version of the Z-Wave serial binding factory that works using node-serialport */
 export function createNodeSerialPortFactory(

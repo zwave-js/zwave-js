@@ -22,7 +22,7 @@ export {
 	formatId,
 	getEnumMemberName,
 	num2hex,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 export { driverPresets } from "./lib/driver/ZWaveOptions.js";
 export {
 	formatLifelineHealthCheckRound,

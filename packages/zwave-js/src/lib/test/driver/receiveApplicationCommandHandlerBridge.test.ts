@@ -4,7 +4,7 @@ import {
 	BridgeApplicationCommandRequest,
 	FunctionType,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import {
 	getDefaultMockControllerCapabilities,
 	getDefaultSupportedFunctionTypes,

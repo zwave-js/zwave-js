@@ -10,8 +10,8 @@ import {
 	routingSchemeToString,
 	rssiToString,
 	stripUndefined,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { AssignPriorityReturnRouteRequestTransmitReport } from "../network-mgmt/AssignPriorityReturnRouteMessages.js";
 import { AssignPrioritySUCReturnRouteRequestTransmitReport } from "../network-mgmt/AssignPrioritySUCReturnRouteMessages.js";
 import { AssignReturnRouteRequestTransmitReport } from "../network-mgmt/AssignReturnRouteMessages.js";
@@ -21,14 +21,18 @@ import { DeleteSUCReturnRouteRequestTransmitReport } from "../network-mgmt/Delet
 import {
 	SendDataBridgeRequest,
 	SendDataBridgeRequestTransmitReport,
+	SendDataBridgeResponse,
 	SendDataMulticastBridgeRequest,
 	SendDataMulticastBridgeRequestTransmitReport,
+	SendDataMulticastBridgeResponse,
 } from "./SendDataBridgeMessages.js";
 import {
 	SendDataMulticastRequest,
 	SendDataMulticastRequestTransmitReport,
+	SendDataMulticastResponse,
 	SendDataRequest,
 	SendDataRequestTransmitReport,
+	SendDataResponse,
 } from "./SendDataMessages.js";
 
 export type SendDataMessage =
@@ -36,6 +40,12 @@ export type SendDataMessage =
 	| SendDataMulticastRequest
 	| SendDataBridgeRequest
 	| SendDataMulticastBridgeRequest;
+
+export type AnySendDataResponse =
+	| SendDataResponse
+	| SendDataMulticastResponse
+	| SendDataBridgeResponse
+	| SendDataMulticastBridgeResponse;
 
 export type SendDataTransmitReport =
 	| SendDataRequestTransmitReport
@@ -290,6 +300,18 @@ export function isSendData(msg: unknown): msg is SendDataMessage {
 		|| msg instanceof SendDataMulticastRequest
 		|| msg instanceof SendDataBridgeRequest
 		|| msg instanceof SendDataMulticastBridgeRequest
+	);
+}
+
+export function isAnySendDataResponse(
+	msg: unknown,
+): msg is AnySendDataResponse {
+	if (!msg) return false;
+	return (
+		msg instanceof SendDataResponse
+		|| msg instanceof SendDataMulticastResponse
+		|| msg instanceof SendDataBridgeResponse
+		|| msg instanceof SendDataMulticastBridgeResponse
 	);
 }
 

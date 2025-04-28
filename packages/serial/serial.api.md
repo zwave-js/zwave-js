@@ -238,6 +238,11 @@ export enum AddNodeType {
     StopControllerReplication = 6
 }
 
+// Warning: (ae-missing-release-tag) "AnySendDataResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type AnySendDataResponse = SendDataResponse | SendDataMulticastResponse | SendDataBridgeResponse | SendDataMulticastBridgeResponse;
+
 // Warning: (ae-missing-release-tag) "ApplicationCommandRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2787,6 +2792,11 @@ export function hasNodeId<T extends Message>(msg: T): msg is T & HasNodeId;
 export function hasTXReport(msg: unknown): msg is (SendDataRequestTransmitReport | SendDataBridgeRequestTransmitReport) & {
     txReport: TXReport_2;
 };
+
+// Warning: (ae-missing-release-tag) "isAnySendDataResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function isAnySendDataResponse(msg: unknown): msg is AnySendDataResponse;
 
 // Warning: (ae-missing-release-tag) "isCommandRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5619,11 +5629,19 @@ export enum ZnifferFunctionType {
     // (undocumented)
     GetFrequencyInfo = 19,
     // (undocumented)
+    GetLRChannelConfigInfo = 20,
+    // (undocumented)
+    GetLRChannelConfigs = 7,
+    // (undocumented)
+    GetLRRegions = 8,
+    // (undocumented)
     GetVersion = 1,
     // (undocumented)
     SetBaudRate = 14,
     // (undocumented)
     SetFrequency = 2,
+    // (undocumented)
+    SetLRChannelConfig = 6,
     // (undocumented)
     Start = 4,
     // (undocumented)
@@ -5704,6 +5722,108 @@ export interface ZnifferGetFrequencyInfoResponseOptions {
     frequencyName: string;
     // (undocumented)
     numChannels: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigInfoRequest extends ZnifferMessage {
+    constructor(options: ZnifferGetLRChannelConfigInfoRequestOptions);
+    // (undocumented)
+    channelConfig: number;
+    // (undocumented)
+    serialize(): Bytes_2;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRChannelConfigInfoRequestOptions {
+    // (undocumented)
+    channelConfig: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigInfoResponse extends ZnifferMessage {
+    constructor(options: ZnifferGetLRChannelConfigInfoResponseOptions & ZnifferMessageBaseOptions);
+    // (undocumented)
+    readonly channelConfig: number;
+    // (undocumented)
+    readonly configName: string;
+    // (undocumented)
+    static from(raw: ZnifferMessageRaw): ZnifferGetLRChannelConfigInfoResponse;
+    // (undocumented)
+    readonly numChannels: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigInfoResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRChannelConfigInfoResponseOptions {
+    // (undocumented)
+    channelConfig: number;
+    // (undocumented)
+    configName: string;
+    // (undocumented)
+    numChannels: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigsRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigsRequest extends ZnifferMessage {
+    constructor();
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigsResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRChannelConfigsResponse extends ZnifferMessage {
+    constructor(options: ZnifferGetLRChannelConfigsResponseOptions & ZnifferMessageBaseOptions);
+    // (undocumented)
+    readonly currentConfig: number;
+    // (undocumented)
+    static from(raw: ZnifferMessageRaw): ZnifferGetLRChannelConfigsResponse;
+    // (undocumented)
+    readonly supportedConfigs: readonly number[];
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRChannelConfigsResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRChannelConfigsResponseOptions {
+    // (undocumented)
+    currentConfig: number;
+    // (undocumented)
+    supportedConfigs: number[];
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRRegionsRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRRegionsRequest extends ZnifferMessage {
+    constructor();
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRRegionsResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferGetLRRegionsResponse extends ZnifferMessage {
+    constructor(options: ZnifferGetLRRegionsResponseOptions & ZnifferMessageBaseOptions);
+    // (undocumented)
+    static from(raw: ZnifferMessageRaw): ZnifferGetLRRegionsResponse;
+    // (undocumented)
+    readonly regions: number[];
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferGetLRRegionsResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferGetLRRegionsResponseOptions {
+    // (undocumented)
+    regions: number[];
 }
 
 // Warning: (ae-missing-release-tag) "ZnifferGetVersionRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5920,6 +6040,31 @@ export interface ZnifferSetFrequencyRequestOptions {
 export class ZnifferSetFrequencyResponse extends ZnifferMessage {
 }
 
+// Warning: (ae-missing-release-tag) "ZnifferSetLRChannelConfigRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferSetLRChannelConfigRequest extends ZnifferMessage {
+    constructor(options: ZnifferSetLRChannelConfigRequestOptions);
+    // (undocumented)
+    channelConfig: number;
+    // (undocumented)
+    serialize(): Bytes_2;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferSetLRChannelConfigRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZnifferSetLRChannelConfigRequestOptions {
+    // (undocumented)
+    channelConfig: number;
+}
+
+// Warning: (ae-missing-release-tag) "ZnifferSetLRChannelConfigResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZnifferSetLRChannelConfigResponse extends ZnifferMessage {
+}
+
 // Warning: (ae-missing-release-tag) "ZnifferStartRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -6063,22 +6208,8 @@ export type ZWaveSocketOptions = Omit<net.TcpSocketConnectOpts, "onread"> | Omit
 
 // Warnings were encountered during analysis:
 //
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ColorSwitchCC.ts:471:9 - (TS2345) Argument of type '("index" | "warmWhite" | "coldWhite" | "red" | "green" | "blue" | "amber" | "cyan" | "purple" | undefined)[]' is not assignable to parameter of type 'readonly (string | number | symbol)[]'.
-//   Type 'string | undefined' is not assignable to type 'string | number | symbol'.
-//     Type 'undefined' is not assignable to type 'string | number | symbol'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1276:36 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1283:20 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/ConfigurationCC.ts:1407:35 - (TS2345) Argument of type 'string | number' is not assignable to parameter of type 'number'.
-//   Type 'string' is not assignable to type 'number'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:549:24 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:557:24 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1709:20 - (TS2339) Property 'groupId' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1712:34 - (TS2339) Property 'innerMPANState' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/cc/Security2CC.ts:1862:19 - (TS2339) Property 'senderEI' does not exist on type 'Security2Extension'.
-// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:69:17 - (TS2345) Argument of type 'LogFormat | undefined' is not assignable to parameter of type 'LogFormat'.
-//   Type 'undefined' is not assignable to type 'LogFormat'.
+// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:8:47 - (TS2307) Cannot find module 'winston/lib/winston/transports' or its corresponding type declarations.
+// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 

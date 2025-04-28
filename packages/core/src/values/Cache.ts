@@ -3,7 +3,7 @@ import {
 	hexToUint8Array,
 	isUint8Array,
 	uint8ArrayToHex,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import { Duration } from "./Duration.js";
 import type { ValueMetadata } from "./Metadata.js";

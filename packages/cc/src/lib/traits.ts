@@ -1,15 +1,15 @@
-import { type GetDeviceConfig } from "@zwave-js/config";
-import {
-	type CCId,
-	type FrameType,
-	type GetSupportedCCVersion,
-	type HostIDs,
-	type MaybeNotKnown,
-	type SecurityClass,
-	type SecurityManagers,
-	type SendCommandOptions,
-	type SendCommandReturnType,
-	type ValueID,
+import type { GetDeviceConfig } from "@zwave-js/config";
+import type {
+	CCId,
+	FrameType,
+	GetSupportedCCVersion,
+	HostIDs,
+	MaybeNotKnown,
+	SecurityClass,
+	SecurityManagers,
+	SendCommandOptions,
+	SendCommandReturnType,
+	ValueID,
 } from "@zwave-js/core";
 
 /** Allows scheduling a value refresh (poll) for a later time */

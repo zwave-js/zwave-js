@@ -1,14 +1,13 @@
 import { untar } from "@andrewbranch/untar.js";
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { gunzipSync } from "@zwave-js/core";
+import { ZWaveError, ZWaveErrorCodes, gunzipSync } from "@zwave-js/core";
 import { getErrorMessage, writeTextFile } from "@zwave-js/shared";
-import {
-	type CopyFile,
-	type MakeTempDirectory,
-	type ManageDirectory,
-	type OpenFile,
-	type ReadFileSystemInfo,
-	type WriteFile,
+import type {
+	CopyFile,
+	MakeTempDirectory,
+	ManageDirectory,
+	OpenFile,
+	ReadFileSystemInfo,
+	WriteFile,
 } from "@zwave-js/shared/bindings";
 import { isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";

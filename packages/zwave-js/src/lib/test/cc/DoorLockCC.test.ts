@@ -15,7 +15,7 @@ import {
 import { DoorLockCCValues } from "@zwave-js/cc/DoorLockCC";
 import { CommandClasses, Duration } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {

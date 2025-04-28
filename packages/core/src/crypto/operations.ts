@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { BLOCK_SIZE, leftShift1, xor, zeroPad } from "./shared.js";
 
 // Import the correct primitives based on the environment

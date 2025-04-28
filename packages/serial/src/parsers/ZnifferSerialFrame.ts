@@ -1,4 +1,4 @@
-import { type Bytes } from "@zwave-js/shared";
+import type { Bytes } from "@zwave-js/shared";
 
 export enum ZnifferSerialFrameType {
 	SerialAPI = 0,

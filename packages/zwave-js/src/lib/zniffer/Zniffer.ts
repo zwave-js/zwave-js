@@ -32,9 +32,9 @@ import {
 	getChipTypeAndVersion,
 	isLongRangeNodeId,
 	isZWaveError,
+	sdkVersionGte,
 	securityClassIsS2,
 } from "@zwave-js/core";
-import { sdkVersionGte } from "@zwave-js/core";
 import {
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
@@ -84,7 +84,7 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
-import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
+import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ZnifferLogger } from "../log/Zniffer.js";
 import {
 	type CorruptedFrame,

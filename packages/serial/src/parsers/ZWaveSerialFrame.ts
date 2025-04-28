@@ -1,7 +1,7 @@
-import { type Bytes } from "@zwave-js/shared";
-import {
-	type MessageHeaders,
-	type XModemMessageHeaders,
+import type { Bytes } from "@zwave-js/shared";
+import type {
+	MessageHeaders,
+	XModemMessageHeaders,
 } from "../message/MessageHeaders.js";
 
 export enum ZWaveSerialFrameType {

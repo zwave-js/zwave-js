@@ -4,16 +4,13 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
+	MAX_NODES,
 	type ValueID,
 	ValueMetadata,
-} from "@zwave-js/core";
-import {
-	MAX_NODES,
 	ZWaveLibraryTypes,
 	enumValuesToMetadataStates,
-} from "@zwave-js/core/safe";
-import { getEnumMemberName } from "@zwave-js/shared";
-import { num2hex } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { getEnumMemberName, num2hex } from "@zwave-js/shared";
 import {
 	irrigationValveIdToMetadataPrefix,
 	meterTypesToPropertyKey,
@@ -22,7 +19,7 @@ import {
 	windowCoveringParameterToLevelChangeLabel,
 	windowCoveringParameterToMetadataStates,
 } from "../lib/CCValueUtils.js";
-import { type CCValueOptions } from "../lib/Values.js";
+import type { CCValueOptions } from "../lib/Values.js";
 import {
 	AlarmSensorType,
 	BarrierState,
@@ -973,6 +970,9 @@ export const BatteryCCValues = Object.freeze({
 			return {
 				...ValueMetadata.ReadOnlyInt8,
 				label: "Temperature",
+				// For now, only °C is specified as a valid unit
+				// If this ever changes, update the unit in persistValues on the fly
+				unit: "°C",
 			} as const;
 		},
 		options: {

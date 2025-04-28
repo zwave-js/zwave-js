@@ -1,13 +1,13 @@
 import type { CCId } from "../traits/CommandClasses.js";
-import { type EncapsulationFlags } from "./EncapsulationFlags.js";
-import { type MessagePriority } from "./MessagePriority.js";
-import { type SecurityClass } from "./SecurityClass.js";
-import {
-	type SupervisionResult,
-	type SupervisionUpdateHandler,
+import type { EncapsulationFlags } from "./EncapsulationFlags.js";
+import type { MessagePriority } from "./MessagePriority.js";
+import type { SecurityClass } from "./SecurityClass.js";
+import type {
+	SupervisionResult,
+	SupervisionUpdateHandler,
 } from "./Supervision.js";
-import { type TXReport } from "./TXReport.js";
-import { type TransactionProgressListener } from "./Transactions.js";
+import type { TXReport } from "./TXReport.js";
+import type { TransactionProgressListener } from "./Transactions.js";
 
 export enum TransmitOptions {
 	NotSet = 0,
@@ -20,7 +20,7 @@ export enum TransmitOptions {
 	Explore = 1 << 5,
 
 	DEFAULT = ACK | AutoRoute | Explore,
-	DEFAULT_NOACK = DEFAULT & ~ACK,
+	DEFAULT_NOACK = NotSet,
 }
 
 export enum TransmitStatus {

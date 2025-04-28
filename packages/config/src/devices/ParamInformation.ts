@@ -4,7 +4,7 @@ import {
 	ObjectKeyMap,
 	type ReadonlyObjectKeyMap,
 	pick,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import { throwInvalidConfig } from "../utils_safe.js";
 import {

@@ -1,6 +1,6 @@
 import type { TransformableInfo } from "logform";
 import type Transport from "winston-transport";
-import { type LogContainer } from "./traits.js";
+import type { LogContainer } from "./traits.js";
 
 export const timestampFormatShort = "HH:mm:ss.SSS";
 export const timestampPaddingShort = " ".repeat(

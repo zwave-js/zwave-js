@@ -1,4 +1,4 @@
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+import { getEnumMemberName } from "@zwave-js/shared";
 
 /**
  * @publicAPI

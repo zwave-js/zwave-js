@@ -1,5 +1,5 @@
 import { Bytes } from "@zwave-js/shared";
-import { type Transformer } from "node:stream/web";
+import type { Transformer } from "node:stream/web";
 import type { SerialLogger } from "../log/Logger.js";
 import { ZnifferFrameType } from "../message/Constants.js";
 import { ZnifferMessageHeaders } from "../message/MessageHeaders.js";

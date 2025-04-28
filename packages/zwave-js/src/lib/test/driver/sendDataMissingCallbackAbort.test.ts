@@ -19,18 +19,14 @@ import {
 	assertZWaveError,
 } from "@zwave-js/core";
 import {
-	SerialAPIStartedRequest,
-	SerialAPIWakeUpReason,
-} from "@zwave-js/serial/serialapi";
-import { SoftResetRequest } from "@zwave-js/serial/serialapi";
-import {
 	RequestNodeInfoRequest,
 	RequestNodeInfoResponse,
-} from "@zwave-js/serial/serialapi";
-import {
 	SendDataAbort,
 	SendDataRequest,
 	SendDataResponse,
+	SerialAPIStartedRequest,
+	SerialAPIWakeUpReason,
+	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
 import path from "node:path";
 import Sinon from "sinon";

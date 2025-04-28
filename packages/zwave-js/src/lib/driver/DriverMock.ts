@@ -1,6 +1,6 @@
-import { type ZWaveSerialStream } from "@zwave-js/serial";
+import type { ZWaveSerialStream } from "@zwave-js/serial";
 import { MockPort } from "@zwave-js/serial/mock";
-import { type FileSystem } from "@zwave-js/shared/bindings";
+import type { FileSystem } from "@zwave-js/shared/bindings";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import { tmpdir } from "node:os";
 import path from "pathe";

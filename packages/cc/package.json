@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/cc",
-  "version": "15.0.0-beta.2",
+  "version": "15.1.2",
   "description": "zwave-js: Command Classes",
   "keywords": [],
   "publishConfig": {
@@ -78,7 +78,7 @@
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
-    "@microsoft/api-extractor": "^7.48.0",
+    "@microsoft/api-extractor": "^7.52.2",
     "@types/node": "^20.17.16",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",

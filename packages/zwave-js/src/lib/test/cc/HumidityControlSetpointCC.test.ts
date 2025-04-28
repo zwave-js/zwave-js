@@ -14,7 +14,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses, encodeFloatWithScale } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {

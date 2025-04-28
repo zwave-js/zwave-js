@@ -5,7 +5,7 @@ import {
 	isZWaveError,
 } from "@zwave-js/core";
 import { getErrorMessage, pathExists } from "@zwave-js/shared";
-import { type FileSystem } from "@zwave-js/shared/bindings";
+import type { FileSystem } from "@zwave-js/shared/bindings";
 import path from "pathe";
 import { ConfigLogger } from "./Logger.js";
 import {
