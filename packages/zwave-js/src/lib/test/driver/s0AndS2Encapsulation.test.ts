@@ -22,7 +22,7 @@ import {
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 	// debug: true,
@@ -35,17 +35,17 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 
 	customSetup: async (driver, controller, mockNode) => {
 		// Create a security manager for the node
-		const sm2Node = new SecurityManager2();
+		const sm2Node = await SecurityManager2.create();
 		// Copy keys from the driver
-		sm2Node.setKey(
+		await sm2Node.setKey(
 			SecurityClass.S2_AccessControl,
 			driver.options.securityKeys!.S2_AccessControl!,
 		);
-		sm2Node.setKey(
+		await sm2Node.setKey(
 			SecurityClass.S2_Authenticated,
 			driver.options.securityKeys!.S2_Authenticated!,
 		);
-		sm2Node.setKey(
+		await sm2Node.setKey(
 			SecurityClass.S2_Unauthenticated,
 			driver.options.securityKeys!.S2_Unauthenticated!,
 		);
@@ -61,24 +61,23 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 		mockNode.securityManagers.securityManager = sm0Node;
 
 		// Create a security manager for the controller
-		const smCtrlr = new SecurityManager2();
+		const smCtrlr = await SecurityManager2.create();
 		// Copy keys from the driver
-		smCtrlr.setKey(
+		await smCtrlr.setKey(
 			SecurityClass.S2_AccessControl,
 			driver.options.securityKeys!.S2_AccessControl!,
 		);
-		smCtrlr.setKey(
+		await smCtrlr.setKey(
 			SecurityClass.S2_Authenticated,
 			driver.options.securityKeys!.S2_Authenticated!,
 		);
-		smCtrlr.setKey(
+		await smCtrlr.setKey(
 			SecurityClass.S2_Unauthenticated,
 			driver.options.securityKeys!.S2_Unauthenticated!,
 		);
 		controller.securityManagers.securityManager2 = smCtrlr;
-		controller.parsingContext.getHighestSecurityClass =
-			controller.encodingContext.getHighestSecurityClass =
-				() => SecurityClass.S2_Unauthenticated;
+		controller.encodingContext.getHighestSecurityClass = () =>
+			SecurityClass.S2_Unauthenticated;
 
 		const sm0Ctrlr = new SecurityManager({
 			ownNodeId: controller.ownNodeId,
@@ -107,16 +106,18 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 
 		// Parse Security CC commands
 		const parseS0CC: MockNodeBehavior = {
-			handleCC(controller, self, receivedCC) {
+			async handleCC(controller, self, receivedCC) {
 				// We don't support sequenced commands here
 				if (receivedCC instanceof SecurityCCCommandEncapsulation) {
-					receivedCC.mergePartialCCs([], {
+					await receivedCC.mergePartialCCs([], {
 						sourceNodeId: controller.ownNodeId,
 						__internalIsMockNode: true,
+						frameType: "singlecast",
 						...self.encodingContext,
 						...self.securityManagers,
 					});
 				}
+				// This just decodes - we need to call further handlers
 				return undefined;
 			},
 		};
@@ -124,9 +125,9 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 
 		// Respond to S2 Nonce Get
 		const respondToS2NonceGet: MockNodeBehavior = {
-			handleCC(controller, self, receivedCC) {
+			async handleCC(controller, self, receivedCC) {
 				if (receivedCC instanceof Security2CCNonceGet) {
-					const nonce = sm2Node.generateNonce(
+					const nonce = await sm2Node.generateNonce(
 						controller.ownNodeId,
 					);
 					const cc = new Security2CCNonceReport({
@@ -143,7 +144,7 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 
 		// Handle decode errors
 		const handleInvalidCC: MockNodeBehavior = {
-			handleCC(controller, self, receivedCC) {
+			async handleCC(controller, self, receivedCC) {
 				if (receivedCC instanceof InvalidCC) {
 					if (
 						receivedCC.reason
@@ -151,7 +152,7 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 						|| receivedCC.reason
 							=== ZWaveErrorCodes.Security2CC_NoSPAN
 					) {
-						const nonce = sm2Node.generateNonce(
+						const nonce = await sm2Node.generateNonce(
 							controller.ownNodeId,
 						);
 						const cc = new Security2CCNonceReport({
@@ -203,7 +204,5 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 				&& f.payload.encapsulated
 					instanceof SecurityCCCommandsSupportedGet,
 		);
-
-		t.pass();
 	},
 });

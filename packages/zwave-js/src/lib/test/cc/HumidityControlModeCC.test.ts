@@ -11,8 +11,8 @@ import {
 import { HumidityControlModeCCValues } from "@zwave-js/cc/HumidityControlModeCC";
 import { CommandClasses, enumValuesToMetadataStates } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 const host = createTestingHost();
 const nodeId = 2;
@@ -26,7 +26,7 @@ function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
+test("the Get command should serialize correctly", async (t) => {
 	const cc = new HumidityControlModeCCGet({
 		nodeId,
 	});
@@ -35,10 +35,12 @@ test("the Get command should serialize correctly", (t) => {
 			HumidityControlModeCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly", (t) => {
+test("the Set command should serialize correctly", async (t) => {
 	const cc = new HumidityControlModeCCSet({
 		nodeId,
 		mode: HumidityControlMode.Auto,
@@ -49,33 +51,35 @@ test("the Set command should serialize correctly", (t) => {
 			0x03, // target value
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command should be deserialized correctly", (t) => {
+test("the Report command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			HumidityControlModeCommand.Report, // CC Command
 			HumidityControlMode.Auto, // current value
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: nodeId } as any,
 	) as HumidityControlModeCCReport;
-	t.is(cc.constructor, HumidityControlModeCCReport);
+	t.expect(cc.constructor).toBe(HumidityControlModeCCReport);
 
-	t.is(cc.mode, HumidityControlMode.Auto);
+	t.expect(cc.mode).toBe(HumidityControlMode.Auto);
 });
 
-test("the Report command should set the correct value", (t) => {
+test("the Report command should set the correct value", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			HumidityControlModeCommand.Report, // CC Command
 			HumidityControlMode.Auto, // current value
 		]),
 	);
-	const report = CommandClass.parse(
+	const report = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: nodeId } as any,
 	) as HumidityControlModeCCReport;
@@ -85,17 +89,17 @@ test("the Report command should set the correct value", (t) => {
 		commandClass: CommandClasses["Humidity Control Mode"],
 		property: "mode",
 	});
-	t.deepEqual(currentValue, HumidityControlMode.Auto);
+	t.expect(currentValue).toStrictEqual(HumidityControlMode.Auto);
 });
 
-test("the Report command should set the correct metadata", (t) => {
+test("the Report command should set the correct metadata", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			HumidityControlModeCommand.Report, // CC Command
 			HumidityControlMode.Auto, // current value
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: nodeId } as any,
 	) as HumidityControlModeCCReport;
@@ -105,13 +109,13 @@ test("the Report command should set the correct metadata", (t) => {
 		.getValueDB(nodeId)
 		.getMetadata(HumidityControlModeCCValues.mode.id);
 
-	t.like(currentValueMeta, {
+	t.expect(currentValueMeta).toMatchObject({
 		states: enumValuesToMetadataStates(HumidityControlMode),
 		label: "Humidity control mode",
 	});
 });
 
-test("the SupportedGet command should serialize correctly", (t) => {
+test("the SupportedGet command should serialize correctly", async (t) => {
 	const cc = new HumidityControlModeCCSupportedGet({
 		nodeId,
 	});
@@ -120,36 +124,38 @@ test("the SupportedGet command should serialize correctly", (t) => {
 			HumidityControlModeCommand.SupportedGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the SupportedReport command should be deserialized correctly", (t) => {
+test("the SupportedReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			HumidityControlModeCommand.SupportedReport, // CC Command
 			(1 << HumidityControlMode.Off) | (1 << HumidityControlMode.Auto),
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: nodeId } as any,
 	) as HumidityControlModeCCSupportedReport;
-	t.is(cc.constructor, HumidityControlModeCCSupportedReport);
+	t.expect(cc.constructor).toBe(HumidityControlModeCCSupportedReport);
 
-	t.deepEqual(cc.supportedModes, [
+	t.expect(cc.supportedModes).toStrictEqual([
 		HumidityControlMode.Off,
 		HumidityControlMode.Auto,
 	]);
 });
 
-test("the SupportedReport command should set the correct metadata", (t) => {
+test("the SupportedReport command should set the correct metadata", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			HumidityControlModeCommand.SupportedReport, // CC Command
 			(1 << HumidityControlMode.Off) | (1 << HumidityControlMode.Auto),
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: nodeId } as any,
 	) as HumidityControlModeCCSupportedReport;
@@ -159,7 +165,7 @@ test("the SupportedReport command should set the correct metadata", (t) => {
 		.getValueDB(nodeId)
 		.getMetadata(HumidityControlModeCCValues.mode.id);
 
-	t.like(currentValueMeta, {
+	t.expect(currentValueMeta).toMatchObject({
 		states: {
 			0: "Off",
 			3: "Auto",

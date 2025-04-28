@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -18,14 +20,8 @@ import {
 	parseFloatWithScale,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -35,29 +31,29 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ThermostatSetpointCommand,
 	ThermostatSetpointType,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
 // This array is used to map the advertised supported types (interpretation A)
 // to the actual enum values
@@ -84,14 +80,12 @@ function getSetpointUnit(scale: number): string {
 	return getScale(scale).unit ?? "";
 }
 
-export const ThermostatSetpointCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Setpoint"], {
+export const ThermostatSetpointCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Setpoint"],
+	{
 		...V.staticProperty("supportedSetpointTypes", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Thermostat Setpoint"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"setpoint",
 			"setpoint",
@@ -109,8 +103,6 @@ export const ThermostatSetpointCCValues = Object.freeze({
 				ccSpecific: { setpointType },
 			} as const),
 		),
-
-		// The setpoint scale is only used internally
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
 			"setpointScale",
@@ -120,8 +112,8 @@ export const ThermostatSetpointCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Setpoint"])
 export class ThermostatSetpointCCAPI extends CCAPI {
@@ -373,6 +365,9 @@ export class ThermostatSetpointCC extends CommandClass {
 			// If the Setpoint Type 0x00 (type N/A) is advertised in the returned Thermostat Setpoint Report
 			// Command, the controlling node MUST conclude that the actual Setpoint Type is not supported.
 
+			// The specs require us to query the list of supported setpoint types anyways, even if the response is ignored
+			await api.getSupportedSetpointTypes();
+
 			// Now scan all endpoints. Each type we received a value for gets marked as supported
 			const supportedSetpointTypes: ThermostatSetpointType[] = [];
 			for (
@@ -574,7 +569,7 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 			raw.payload.subarray(1),
 		);
 
-		return new ThermostatSetpointCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			setpointType,
 			value,
@@ -586,7 +581,7 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 	public value: number;
 	public scale: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// If a config file overwrites how the float should be encoded, use that information
 		const override = ctx.getDeviceConfig?.(this.nodeId as number)
 			?.compat?.overrideFloatEncoding;
@@ -640,7 +635,7 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 
 		if (type === 0) {
 			// Not supported
-			return new ThermostatSetpointCCReport({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 				type,
 				value: 0,
@@ -653,7 +648,7 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 			raw.payload.subarray(1),
 		);
 
-		return new ThermostatSetpointCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			value,
@@ -694,7 +689,7 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 	public scale: number;
 	public value: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.type & 0b1111]),
 			encodeFloatWithScale(this.value, this.scale),
@@ -750,7 +745,7 @@ export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
 		validatePayload(raw.payload.length >= 1);
 		const setpointType: ThermostatSetpointType = raw.payload[0] & 0b1111;
 
-		return new ThermostatSetpointCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			setpointType,
 		});
@@ -758,7 +753,7 @@ export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
 
 	public setpointType: ThermostatSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
 		return super.serialize(ctx);
 	}
@@ -817,7 +812,7 @@ export class ThermostatSetpointCCCapabilitiesReport
 			raw.payload.subarray(1 + bytesRead),
 		);
 
-		return new ThermostatSetpointCCCapabilitiesReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			minValue,
@@ -849,7 +844,7 @@ export class ThermostatSetpointCCCapabilitiesReport
 	public minValueScale: number;
 	public maxValueScale: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const min = encodeFloatWithScale(this.minValue, this.minValueScale);
 		const max = encodeFloatWithScale(this.maxValue, this.maxValueScale);
 		this.payload = Bytes.concat([Bytes.from([this.type]), min, max]);
@@ -895,7 +890,7 @@ export class ThermostatSetpointCCCapabilitiesGet extends ThermostatSetpointCC {
 		validatePayload(raw.payload.length >= 1);
 		const setpointType: ThermostatSetpointType = raw.payload[0] & 0b1111;
 
-		return new ThermostatSetpointCCCapabilitiesGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			setpointType,
 		});
@@ -903,7 +898,7 @@ export class ThermostatSetpointCCCapabilitiesGet extends ThermostatSetpointCC {
 
 	public setpointType: ThermostatSetpointType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
 		return super.serialize(ctx);
 	}
@@ -927,6 +922,10 @@ export interface ThermostatSetpointCCSupportedReportOptions {
 }
 
 @CCCommand(ThermostatSetpointCommand.SupportedReport)
+@ccValueProperty(
+	"supportedSetpointTypes",
+	ThermostatSetpointCCValues.supportedSetpointTypes,
+)
 export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
 	public constructor(
 		options: WithAddress<ThermostatSetpointCCSupportedReportOptions>,
@@ -958,16 +957,15 @@ export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
 			(i) => thermostatSetpointTypeMap[i],
 		);
 
-		return new ThermostatSetpointCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedSetpointTypes,
 		});
 	}
 
-	@ccValue(ThermostatSetpointCCValues.supportedSetpointTypes)
 	public readonly supportedSetpointTypes: readonly ThermostatSetpointType[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeBitMask(
 			// Encode as interpretation A
 			this.supportedSetpointTypes

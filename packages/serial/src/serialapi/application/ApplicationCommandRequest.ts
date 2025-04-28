@@ -1,4 +1,4 @@
-import { type CommandClass } from "@zwave-js/cc";
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type FrameType,
 	type MessageOrCCLogEntry,
@@ -9,7 +9,6 @@ import {
 	encodeNodeID,
 	parseNodeID,
 } from "@zwave-js/core";
-import { type CCEncodingContext } from "@zwave-js/host";
 import {
 	FunctionType,
 	Message,
@@ -21,8 +20,8 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type MessageWithCC } from "../utils";
+import { Bytes } from "@zwave-js/shared";
+import type { MessageWithCC } from "../utils.js";
 
 export enum ApplicationCommandStatusFlags {
 	RoutedBusy = 0b1, // A response route is locked by the application
@@ -155,7 +154,7 @@ export class ApplicationCommandRequest extends Message
 	}
 
 	public serializedCC: Uint8Array | undefined;
-	public serializeCC(ctx: CCEncodingContext): Uint8Array {
+	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(
@@ -163,12 +162,12 @@ export class ApplicationCommandRequest extends Message
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
-			this.serializedCC = this.command.serialize(ctx);
+			this.serializedCC = await this.command.serialize(ctx);
 		}
 		return this.serializedCC;
 	}
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const statusByte = (this.frameType === "broadcast"
 			? ApplicationCommandStatusFlags.TypeBroad
 			: this.frameType === "multicast"
@@ -176,7 +175,7 @@ export class ApplicationCommandRequest extends Message
 			: 0)
 			| (this.routedBusy ? ApplicationCommandStatusFlags.RoutedBusy : 0);
 
-		const serializedCC = this.serializeCC(ctx);
+		const serializedCC = await this.serializeCC(ctx);
 		const nodeId = encodeNodeID(
 			this.getNodeId() ?? ctx.ownNodeId,
 			ctx.nodeIdType,

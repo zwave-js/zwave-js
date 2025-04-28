@@ -1,9 +1,5 @@
-import type {
-	CommandClasses,
-	Protocols,
-	SecurityClass,
-} from "@zwave-js/core/safe";
-import type { DeviceClass } from "../node/DeviceClass";
+import type { CommandClasses, Protocols, SecurityClass } from "@zwave-js/core";
+import type { DeviceClass } from "../node/DeviceClass.js";
 
 /** Additional information about the outcome of a node inclusion */
 export type InclusionResult =

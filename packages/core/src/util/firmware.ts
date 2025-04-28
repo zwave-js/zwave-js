@@ -1,10 +1,14 @@
-import { getErrorMessage, isUint8Array } from "@zwave-js/shared";
-import { Bytes } from "@zwave-js/shared/safe";
-import * as crypto from "node:crypto";
-import MemoryMap from "nrf-intel-hex";
-import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError";
-import type { Firmware, FirmwareFileFormat } from "./_Types";
-import { CRC16_CCITT } from "./crc";
+import { Bytes, getErrorMessage, isUint8Array } from "@zwave-js/shared";
+import { unzipSync } from "fflate";
+import { decryptAES256CBC } from "../crypto/index.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
+import type { Firmware, FirmwareFileFormat } from "./_Types.js";
+import { CRC16_CCITT } from "./crc.js";
+
+// This package has an incorrect type declaration
+import MemoryMap_ from "nrf-intel-hex";
+const MemoryMap =
+	MemoryMap_ as unknown as typeof import("nrf-intel-hex").default;
 
 const firmwareIndicators = {
 	// All aeotec updater exes contain this text
@@ -49,11 +53,44 @@ export function guessFirmwareFileFormat(
 			.equals(firmwareIndicators.hec)
 	) {
 		return "hec";
-	} else {
-		throw new ZWaveError(
-			"Could not detect firmware format",
-			ZWaveErrorCodes.Invalid_Firmware_File,
-		);
+	}
+
+	throw new ZWaveError(
+		"Could not detect firmware format",
+		ZWaveErrorCodes.Invalid_Firmware_File,
+	);
+}
+
+/**
+ * Given the contents of a ZIP archive with a compatible firmware file,
+ * this function extracts the firmware data and guesses the firmware format
+ * using {@link guessFirmwareFileFormat}.
+ *
+ * @returns An object containing the filename, guessed format and unzipped data
+ * of the firmware file from the ZIP archive, or `undefined` if no compatible
+ * firmware file could be extracted.
+ */
+export function tryUnzipFirmwareFile(zipData: Uint8Array): {
+	filename: string;
+	format: FirmwareFileFormat;
+	rawData: Uint8Array;
+} | undefined {
+	// Extract files we can work with
+	const unzipped = unzipSync(zipData, {
+		filter: (file) => {
+			return /\.(hex|exe|ex_|ota|otz|hec|gbl|bin)$/.test(file.name);
+		},
+	});
+	if (Object.keys(unzipped).length === 1) {
+		// Exactly one file was extracted, inspect that
+		const filename = Object.keys(unzipped)[0];
+		const rawData = unzipped[filename];
+		try {
+			const format = guessFirmwareFileFormat(filename, rawData);
+			return { filename, format, rawData };
+		} catch {
+			return;
+		}
 	}
 }
 
@@ -67,10 +104,10 @@ export function guessFirmwareFileFormat(
  *
  * The returned firmware data and target can be used to start a firmware update process with `node.beginFirmwareUpdate`
  */
-export function extractFirmware(
+export async function extractFirmware(
 	rawData: Uint8Array,
 	format: FirmwareFileFormat,
-): Firmware {
+): Promise<Firmware> {
 	switch (format) {
 		case "aeotec":
 			return extractFirmwareAeotec(rawData);
@@ -236,24 +273,22 @@ function extractFirmwareHEX(dataHEX: Uint8Array | string): Firmware {
 	}
 }
 
-function extractFirmwareHEC(data: Uint8Array): Firmware {
+async function extractFirmwareHEC(data: Uint8Array): Promise<Firmware> {
 	const key =
 		"d7a68def0f4a1241940f6cb8017121d15f0e2682e258c9f7553e706e834923b7";
 	const iv = "0e6519297530583708612a2823663844";
-	const decipher = crypto.createDecipheriv(
-		"aes-256-cbc",
-		Bytes.from(key, "hex"),
-		Bytes.from(iv, "hex"),
-	);
 
 	const ciphertext = Bytes.from(
 		Bytes.view(data.subarray(6)).toString("ascii"),
 		"base64",
 	);
-	const plaintext = Bytes.concat([
-		decipher.update(ciphertext),
-		decipher.final(),
-	])
+	const plaintext = Bytes.view(
+		await decryptAES256CBC(
+			ciphertext,
+			Bytes.from(key, "hex"),
+			Bytes.from(iv, "hex"),
+		),
+	)
 		.toString("ascii")
 		.replaceAll(" ", "\n");
 

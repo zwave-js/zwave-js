@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -9,17 +11,12 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
+} from "@zwave-js/core";
 import {
 	Bytes,
 	stringToUint8ArrayUTF16BE,
 	uint8ArrayToStringUTF16BE,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -30,28 +27,29 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { NodeNamingAndLocationCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { NodeNamingAndLocationCommand } from "../lib/_Types.js";
 
-export const NodeNamingAndLocationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Node Naming and Location"], {
+export const NodeNamingAndLocationCCValues = V.defineCCValues(
+	CommandClasses["Node Naming and Location"],
+	{
 		...V.staticProperty(
 			"name",
 			{
@@ -60,7 +58,6 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"location",
 			{
@@ -69,8 +66,8 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-	}),
-});
+	},
+);
 
 function isASCII(str: string): boolean {
 	return /^[\x00-\x7F]*$/.test(str);
@@ -303,7 +300,7 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 
 	public name: string;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encoding = isASCII(this.name) ? "ascii" : "utf16le";
 		this.payload = new Bytes(
 			1 + this.name.length * (encoding === "ascii" ? 1 : 2),
@@ -337,6 +334,7 @@ export interface NodeNamingAndLocationCCNameReportOptions {
 }
 
 @CCCommand(NodeNamingAndLocationCommand.NameReport)
+@ccValueProperty("name", NodeNamingAndLocationCCValues.name)
 export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
 	public constructor(
 		options: WithAddress<NodeNamingAndLocationCCNameReportOptions>,
@@ -360,13 +358,12 @@ export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
 			name = nameBuffer.toString("ascii");
 		}
 
-		return new NodeNamingAndLocationCCNameReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			name,
 		});
 	}
 
-	@ccValue(NodeNamingAndLocationCCValues.name)
 	public readonly name: string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -415,7 +412,7 @@ export class NodeNamingAndLocationCCLocationSet
 
 	public location: string;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encoding = isASCII(this.location) ? "ascii" : "utf16le";
 		this.payload = new Bytes(
 			1 + this.location.length * (encoding === "ascii" ? 1 : 2),
@@ -449,6 +446,7 @@ export interface NodeNamingAndLocationCCLocationReportOptions {
 }
 
 @CCCommand(NodeNamingAndLocationCommand.LocationReport)
+@ccValueProperty("location", NodeNamingAndLocationCCValues.location)
 export class NodeNamingAndLocationCCLocationReport
 	extends NodeNamingAndLocationCC
 {
@@ -474,13 +472,12 @@ export class NodeNamingAndLocationCCLocationReport
 			location = locationBuffer.toString("ascii");
 		}
 
-		return new NodeNamingAndLocationCCLocationReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			location,
 		});
 	}
 
-	@ccValue(NodeNamingAndLocationCCValues.location)
 	public readonly location: string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

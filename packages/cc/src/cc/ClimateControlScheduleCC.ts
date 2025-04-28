@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type SupervisionResult,
@@ -9,45 +11,39 @@ import {
 	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { padStart } from "alcalzone-shared/strings";
-import { CCAPI } from "../lib/API";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { CCAPI } from "../lib/API.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	ClimateControlScheduleCommand,
 	ScheduleOverrideType,
 	type SetbackState,
 	type Switchpoint,
 	Weekday,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 import {
 	decodeSetbackState,
 	decodeSwitchpoint,
 	encodeSetbackState,
 	encodeSwitchpoint,
-} from "../lib/serializers";
+} from "../lib/serializers.js";
 
-export const ClimateControlScheduleCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Climate Control Schedule"], {
+export const ClimateControlScheduleCCValues = V.defineCCValues(
+	CommandClasses["Climate Control Schedule"],
+	{
 		...V.staticProperty(
 			"overrideType",
 			{
@@ -64,9 +60,6 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 				min: -12.8,
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Climate Control Schedule"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
 			"schedule",
@@ -81,8 +74,8 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 				label: `Schedule (${getEnumMemberName(Weekday, weekday)})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Climate Control Schedule"])
 export class ClimateControlScheduleCCAPI extends CCAPI {
@@ -248,7 +241,7 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 	public switchPoints: Switchpoint[];
 	public weekday: Weekday;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Make sure we have exactly 9 entries
 		const allSwitchPoints = this.switchPoints.slice(0, 9); // maximum 9
 		while (allSwitchPoints.length < 9) {
@@ -274,9 +267,8 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 					this.switchPoints
 						.map(
 							(sp) => `
-· ${padStart(sp.hour.toString(), 2, "0")}:${
-								padStart(
-									sp.minute.toString(),
+· ${sp.hour.toString().padStart(2, "0")}:${
+								sp.minute.toString().padStart(
 									2,
 									"0",
 								)
@@ -296,6 +288,11 @@ export interface ClimateControlScheduleCCReportOptions {
 }
 
 @CCCommand(ClimateControlScheduleCommand.Report)
+@ccValueProperty(
+	"schedule",
+	ClimateControlScheduleCCValues.schedule,
+	(self) => [self.weekday],
+)
 export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 	public constructor(
 		options: WithAddress<ClimateControlScheduleCCReportOptions>,
@@ -324,7 +321,7 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 			sp.state !== "Unused"
 		);
 
-		return new ClimateControlScheduleCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			weekday,
 			schedule,
@@ -333,10 +330,6 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 
 	public readonly weekday: Weekday;
 
-	@ccValue(
-		ClimateControlScheduleCCValues.schedule,
-		(self: ClimateControlScheduleCCReport) => [self.weekday] as const,
-	)
 	public readonly schedule: readonly Switchpoint[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -348,9 +341,8 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 					this.schedule
 						.map(
 							(sp) => `
-· ${padStart(sp.hour.toString(), 2, "0")}:${
-								padStart(
-									sp.minute.toString(),
+· ${sp.hour.toString().padStart(2, "0")}:${
+								sp.minute.toString().padStart(
 									2,
 									"0",
 								)
@@ -394,7 +386,7 @@ export class ClimateControlScheduleCCGet extends ClimateControlScheduleCC {
 
 	public weekday: Weekday;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.weekday & 0b111]);
 		return super.serialize(ctx);
 	}
@@ -432,7 +424,7 @@ export class ClimateControlScheduleCCChangedReport
 		validatePayload(raw.payload.length >= 1);
 		const changeCounter = raw.payload[0];
 
-		return new ClimateControlScheduleCCChangedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			changeCounter,
 		});
@@ -461,6 +453,8 @@ export interface ClimateControlScheduleCCOverrideReportOptions {
 }
 
 @CCCommand(ClimateControlScheduleCommand.OverrideReport)
+@ccValueProperty("overrideType", ClimateControlScheduleCCValues.overrideType)
+@ccValueProperty("overrideState", ClimateControlScheduleCCValues.overrideState)
 export class ClimateControlScheduleCCOverrideReport
 	extends ClimateControlScheduleCC
 {
@@ -480,20 +474,19 @@ export class ClimateControlScheduleCCOverrideReport
 	): ClimateControlScheduleCCOverrideReport {
 		validatePayload(raw.payload.length >= 2);
 		const overrideType: ScheduleOverrideType = raw.payload[0] & 0b11;
-		const overrideState: SetbackState = decodeSetbackState(raw.payload[1])
-			|| raw.payload[1];
+		const overrideState: SetbackState = decodeSetbackState(raw.payload, 1)
+			// If we receive an unknown setback state, return the raw value
+			|| raw.payload.readInt8(1);
 
-		return new ClimateControlScheduleCCOverrideReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			overrideType,
 			overrideState,
 		});
 	}
 
-	@ccValue(ClimateControlScheduleCCValues.overrideType)
 	public readonly overrideType: ScheduleOverrideType;
 
-	@ccValue(ClimateControlScheduleCCValues.overrideState)
 	public readonly overrideState: SetbackState;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -552,9 +545,9 @@ export class ClimateControlScheduleCCOverrideSet
 	public overrideType: ScheduleOverrideType;
 	public overrideState: SetbackState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
-		this.payload = Bytes.from([
-			this.overrideType & 0b11,
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.overrideType & 0b11],
 			encodeSetbackState(this.overrideState),
 		]);
 		return super.serialize(ctx);

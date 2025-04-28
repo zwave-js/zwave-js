@@ -17,7 +17,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 function getFirstNodeId(segmentNumber: number): number {
 	return 256 + NUM_LR_NODES_PER_SEGMENT * segmentNumber;
@@ -52,7 +52,7 @@ export class GetLongRangeNodesRequest extends Message {
 
 	public segmentNumber: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.segmentNumber]);
 		return super.serialize(ctx);
 	}
@@ -111,7 +111,7 @@ export class GetLongRangeNodesResponse extends Message {
 	public segmentNumber: number;
 	public nodeIds: readonly number[];
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(
 			3 + NUM_LR_NODEMASK_SEGMENT_BYTES,
 		);

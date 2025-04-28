@@ -53,7 +53,7 @@ export class GetPriorityRouteRequest extends Message {
 
 	public destinationNodeId: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = encodeNodeID(
 			this.destinationNodeId,
 			ctx.nodeIdType,

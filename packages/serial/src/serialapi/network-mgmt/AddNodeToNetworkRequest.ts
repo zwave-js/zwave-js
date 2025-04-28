@@ -1,6 +1,7 @@
 import {
 	type BasicDeviceClass,
 	type CommandClasses,
+	type GetAllNodes,
 	type ListenBehavior,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -10,22 +11,20 @@ import {
 	type NodeUpdatePayload,
 	Protocols,
 	encodeNodeUpdatePayload,
+	isLongRangeNodeId,
 	parseNodeID,
 	parseNodeUpdatePayload,
 } from "@zwave-js/core";
-import type { GetAllNodes } from "@zwave-js/host";
-import type {
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-	SuccessIndicator,
-} from "@zwave-js/serial";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageEncodingContext,
 	MessageOrigin,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
+	type SuccessIndicator,
 	expectedCallback,
 	messageTypes,
 	priority,
@@ -78,7 +77,7 @@ export function computeNeighborDiscoveryTimeout(
 	host: GetAllNodes<NodeId & ListenBehavior>,
 	nodeType: NodeType,
 ): number {
-	const allNodes = [...host.getAllNodes()];
+	const allNodes = host.getAllNodes().filter((n) => !isLongRangeNodeId(n.id));
 	const numListeningNodes = allNodes.filter((n) => n.isListening).length;
 	const numFlirsNodes = allNodes.filter((n) => n.isFrequentListening).length;
 	const numNodes = allNodes.length;
@@ -171,7 +170,7 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
 	/** Whether to include network wide */
 	public networkWide: boolean = false;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		let data: number = this.addNodeType || AddNodeType.Any;
 		if (this.highPower) data |= AddNodeFlags.HighPower;
@@ -208,7 +207,7 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
 }
 
 export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const control: number = AddNodeType.SmartStartListen
 			| AddNodeFlags.NetworkWide;
 		// The Serial API does not send a callback, so disable waiting for one
@@ -251,7 +250,7 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 	/** Whether to include as long-range or not */
 	public protocol: Protocols;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		let control: number = AddNodeType.SmartStartDSK;
 		if (this.highPower) control |= AddNodeFlags.HighPower;
@@ -378,7 +377,7 @@ export class AddNodeToNetworkRequestStatusReport
 	public readonly status: AddNodeStatus;
 	public readonly statusContext: AddNodeStatusContext | undefined;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		this.payload = Bytes.from([this.callbackId, this.status]);
 		if (this.statusContext?.basicDeviceClass != undefined) {

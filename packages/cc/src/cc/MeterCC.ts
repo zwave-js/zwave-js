@@ -1,22 +1,16 @@
-import {
-	type FloatParameters,
-	type MaybeUnknown,
-	type WithAddress,
-	encodeBitMask,
-	encodeFloatWithScale,
-	getFloatParameters,
-	getMeter,
-	getMeterName,
-	getMeterScale,
-	getUnknownMeterScale,
-	timespan,
-} from "@zwave-js/core";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type ControlsCC,
 	type EndpointId,
+	type FloatParameters,
 	type GetEndpoint,
+	type GetNode,
+	type GetSupportedCCVersion,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -26,25 +20,26 @@ import {
 	type SupportsCC,
 	UNKNOWN_STATE,
 	ValueMetadata,
+	type WithAddress,
+	encodeBitMask,
+	encodeFloatWithScale,
+	getFloatParameters,
+	getMeter,
+	getMeterName,
+	getMeterScale,
+	getUnknownMeterScale,
 	parseBitMask,
 	parseFloatWithScale,
+	timespan,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetDeviceConfig,
-	GetNode,
-	GetSupportedCCVersion,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
 import {
 	type AllOrNone,
+	Bytes,
 	getEnumMemberName,
 	num2hex,
 	pick,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -59,7 +54,8 @@ import {
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
+import { meterTypesToPropertyKey } from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -67,98 +63,83 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	getCommandClass,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { MeterCommand, type MeterReading, RateType } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { MeterCommand, type MeterReading, RateType } from "../lib/_Types.js";
 
-export const MeterCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Meter, {
-		...V.staticProperty("type", undefined, { internal: true }),
-		...V.staticProperty("supportsReset", undefined, { internal: true }),
-		...V.staticProperty("supportedScales", undefined, { internal: true }),
-		...V.staticProperty("supportedRateTypes", undefined, {
-			internal: true,
-		}),
-
-		...V.staticPropertyWithName(
-			"resetAll",
-			"reset",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: `Reset accumulated values`,
-				states: {
-					true: "Reset",
-				},
-			} as const,
-		),
+export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
+	...V.staticProperty("type", undefined, { internal: true }),
+	...V.staticProperty("supportsReset", undefined, { internal: true }),
+	...V.staticProperty("supportedScales", undefined, { internal: true }),
+	...V.staticProperty("supportedRateTypes", undefined, {
+		internal: true,
 	}),
-
-	...V.defineDynamicCCValues(CommandClasses.Meter, {
-		...V.dynamicPropertyAndKeyWithName(
-			"resetSingle",
-			"reset",
-			toPropertyKey,
-			({ property, propertyKey }) =>
-				property === "reset" && typeof propertyKey === "number",
-			(meterType: number, rateType: RateType, scale: number) => ({
-				...ValueMetadata.WriteOnlyBoolean,
-				// This is only a placeholder label. A config manager is needed to
-				// determine the actual label.
-				label: `Reset (${
-					rateType === RateType.Consumed
-						? "Consumption, "
-						: rateType === RateType.Produced
-						? "Production, "
-						: ""
-				}${num2hex(scale)})`,
-				states: {
-					true: "Reset",
-				},
-				ccSpecific: {
-					meterType,
-					rateType,
-					scale,
-				},
-			} as const),
-		),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"value",
-			"value",
-			toPropertyKey,
-			({ property, propertyKey }) =>
-				property === "value" && typeof propertyKey === "number",
-			(meterType: number, rateType: RateType, scale: number) => ({
-				...ValueMetadata.ReadOnlyNumber,
-				// Label and unit can only be determined with a config manager
-				ccSpecific: {
-					meterType,
-					rateType,
-					scale,
-				},
-			} as const),
-		),
-	}),
+	...V.staticPropertyWithName(
+		"resetAll",
+		"reset",
+		{
+			...ValueMetadata.WriteOnlyBoolean,
+			label: `Reset accumulated values`,
+			states: {
+				true: "Reset",
+			},
+		} as const,
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"resetSingle",
+		"reset",
+		meterTypesToPropertyKey,
+		({ property, propertyKey }) =>
+			property === "reset" && typeof propertyKey === "number",
+		(meterType: number, rateType: RateType, scale: number) => ({
+			...ValueMetadata.WriteOnlyBoolean,
+			// This is only a placeholder label. A config manager is needed to
+			// determine the actual label.
+			label: `Reset (${
+				rateType === RateType.Consumed
+					? "Consumption, "
+					: rateType === RateType.Produced
+					? "Production, "
+					: ""
+			}${num2hex(scale)})`,
+			states: {
+				true: "Reset",
+			},
+			ccSpecific: {
+				meterType,
+				rateType,
+				scale,
+			},
+		} as const),
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"value",
+		"value",
+		meterTypesToPropertyKey,
+		({ property, propertyKey }) =>
+			property === "value" && typeof propertyKey === "number",
+		(meterType: number, rateType: RateType, scale: number) => ({
+			...ValueMetadata.ReadOnlyNumber,
+			// Label and unit can only be determined with a config manager
+			ccSpecific: {
+				meterType,
+				rateType,
+				scale,
+			},
+		} as const),
+	),
 });
-
-function toPropertyKey(
-	meterType: number,
-	rateType: RateType,
-	scale: number,
-): number {
-	return (meterType << 16) | (scale << 8) | rateType;
-}
 
 function splitPropertyKey(key: number): {
 	meterType: number;
@@ -947,7 +928,7 @@ export class MeterCCReport extends MeterCC {
 		}
 		const scale = parseScale(scale1, raw.payload, offset);
 
-		return new MeterCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			rateType,
@@ -1046,7 +1027,7 @@ export class MeterCCReport extends MeterCC {
 	public rateType: RateType;
 	public deltaTime: MaybeUnknown<number>;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const { data: typeAndValue, floatParams, scale2 } =
 			encodeMeterValueAndInfo(
 				this.type,
@@ -1150,7 +1131,7 @@ export class MeterCCGet extends MeterCC {
 			}
 		}
 
-		return new MeterCCGet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			rateType,
 			scale,
@@ -1160,7 +1141,7 @@ export class MeterCCGet extends MeterCC {
 	public rateType: RateType | undefined;
 	public scale: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let scale1: number;
 		let scale2: number | undefined;
 		let bufferLength = 0;
@@ -1228,6 +1209,10 @@ export interface MeterCCSupportedReportOptions {
 }
 
 @CCCommand(MeterCommand.SupportedReport)
+@ccValueProperty("type", MeterCCValues.type)
+@ccValueProperty("supportsReset", MeterCCValues.supportsReset)
+@ccValueProperty("supportedScales", MeterCCValues.supportedScales)
+@ccValueProperty("supportedRateTypes", MeterCCValues.supportedRateTypes)
 export class MeterCCSupportedReport extends MeterCC {
 	public constructor(
 		options: WithAddress<MeterCCSupportedReportOptions>,
@@ -1277,7 +1262,7 @@ export class MeterCCSupportedReport extends MeterCC {
 			1,
 		);
 
-		return new MeterCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			supportsReset,
@@ -1286,16 +1271,12 @@ export class MeterCCSupportedReport extends MeterCC {
 		});
 	}
 
-	@ccValue(MeterCCValues.type)
 	public readonly type: number;
 
-	@ccValue(MeterCCValues.supportsReset)
 	public readonly supportsReset: boolean;
 
-	@ccValue(MeterCCValues.supportedScales)
 	public readonly supportedScales: readonly number[];
 
-	@ccValue(MeterCCValues.supportedRateTypes)
 	public readonly supportedRateTypes: readonly RateType[];
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -1334,7 +1315,7 @@ export class MeterCCSupportedReport extends MeterCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const typeByte = (this.type & 0b0_00_11111)
 			| (this.supportedRateTypes.includes(RateType.Consumed)
 				? 0b0_01_00000
@@ -1419,7 +1400,7 @@ export class MeterCCReset extends MeterCC {
 
 	public static from(raw: CCRaw, ctx: CCParsingContext): MeterCCReset {
 		if (raw.payload.length === 0) {
-			return new MeterCCReset({
+			return new this({
 				nodeId: ctx.sourceNodeId,
 			});
 		}
@@ -1433,7 +1414,7 @@ export class MeterCCReset extends MeterCC {
 		} = parseMeterValueAndInfo(raw.payload, 0);
 		const scale = parseScale(scale1, raw.payload, scale2Offset);
 
-		return new MeterCCReset({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			rateType,
@@ -1447,7 +1428,7 @@ export class MeterCCReset extends MeterCC {
 	public rateType: RateType | undefined;
 	public targetValue: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
 			this.type != undefined
 			&& this.scale != undefined

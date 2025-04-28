@@ -1,6 +1,6 @@
 export { MessagePriority } from "@zwave-js/core";
 export type { SendMessageOptions } from "@zwave-js/core";
-export type { FileSystem } from "@zwave-js/host/safe";
+export type { FileSystem } from "@zwave-js/core";
 export { FunctionType, Message, MessageType } from "@zwave-js/serial";
 export type {
 	MessageOptions,
@@ -17,10 +17,16 @@ export {
 	isCommandRequest,
 	isMessageWithCC,
 } from "@zwave-js/serial/serialapi";
-export { Driver, libName, libVersion } from "./lib/driver/Driver";
+export { Driver, libName, libVersion } from "./lib/driver/Driver.js";
+export * from "./lib/driver/DriverMode.js";
 export type {
 	EditableZWaveOptions,
 	PartialZWaveOptions,
 	ZWaveOptions,
-} from "./lib/driver/ZWaveOptions";
-export type { DriverLogContext } from "./lib/log/Driver";
+} from "./lib/driver/ZWaveOptions.js";
+export { OTWFirmwareUpdateStatus } from "./lib/driver/_Types.js";
+export type {
+	OTWFirmwareUpdateProgress,
+	OTWFirmwareUpdateResult,
+} from "./lib/driver/_Types.js";
+export type { DriverLogContext } from "./lib/log/Driver.js";

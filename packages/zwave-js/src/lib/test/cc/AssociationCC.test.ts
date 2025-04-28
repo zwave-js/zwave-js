@@ -9,8 +9,8 @@ import {
 	CommandClass,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -21,7 +21,7 @@ function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	]);
 }
 
-test("the SupportedGroupingsGet command should serialize correctly", (t) => {
+test("the SupportedGroupingsGet command should serialize correctly", async (t) => {
 	const cc = new AssociationCCSupportedGroupingsGet({
 		nodeId: 1,
 	});
@@ -30,26 +30,28 @@ test("the SupportedGroupingsGet command should serialize correctly", (t) => {
 			AssociationCommand.SupportedGroupingsGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the SupportedGroupingsReport command should be deserialized correctly", (t) => {
+test("the SupportedGroupingsReport command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			AssociationCommand.SupportedGroupingsReport, // CC Command
 			7, // # of groups
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as AssociationCCSupportedGroupingsReport;
-	t.is(cc.constructor, AssociationCCSupportedGroupingsReport);
+	t.expect(cc.constructor).toBe(AssociationCCSupportedGroupingsReport);
 
-	t.is(cc.groupCount, 7);
+	t.expect(cc.groupCount).toBe(7);
 });
 
-test("the Set command should serialize correctly", (t) => {
+test("the Set command should serialize correctly", async (t) => {
 	const cc = new AssociationCCSet({
 		nodeId: 2,
 		groupId: 5,
@@ -65,9 +67,11 @@ test("the Set command should serialize correctly", (t) => {
 			5,
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
-test("the Get command should serialize correctly", (t) => {
+test("the Get command should serialize correctly", async (t) => {
 	const cc = new AssociationCCGet({
 		nodeId: 1,
 		groupId: 9,
@@ -78,10 +82,12 @@ test("the Get command should serialize correctly", (t) => {
 			9, // group ID
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command should be deserialized correctly", (t) => {
+test("the Report command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			AssociationCommand.Report, // CC Command
@@ -94,19 +100,19 @@ test("the Report command should be deserialized correctly", (t) => {
 			5,
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as AssociationCCReport;
-	t.is(cc.constructor, AssociationCCReport);
+	t.expect(cc.constructor).toBe(AssociationCCReport);
 
-	t.is(cc.groupId, 5);
-	t.is(cc.maxNodes, 9);
-	t.is(cc.reportsToFollow, 0);
-	t.deepEqual(cc.nodeIds, [1, 2, 5]);
+	t.expect(cc.groupId).toBe(5);
+	t.expect(cc.maxNodes).toBe(9);
+	t.expect(cc.reportsToFollow).toBe(0);
+	t.expect(cc.nodeIds).toStrictEqual([1, 2, 5]);
 });
 
-test("the Remove command should serialize correctly", (t) => {
+test("the Remove command should serialize correctly", async (t) => {
 	const cc = new AssociationCCRemove({
 		nodeId: 2,
 		groupId: 5,
@@ -122,10 +128,12 @@ test("the Remove command should serialize correctly", (t) => {
 			5,
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Remove command should serialize correctly (empty node list)", (t) => {
+test("the Remove command should serialize correctly (empty node list)", async (t) => {
 	const cc = new AssociationCCRemove({
 		nodeId: 2,
 		groupId: 5,
@@ -136,7 +144,9 @@ test("the Remove command should serialize correctly (empty node list)", (t) => {
 			5, // group id
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
 // test("deserializing an unsupported command should return an unspecified version of AssociationCC", (t) => {

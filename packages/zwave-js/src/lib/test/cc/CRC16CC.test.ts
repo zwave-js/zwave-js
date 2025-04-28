@@ -7,8 +7,8 @@ import {
 	InvalidCC,
 	isEncapsulatingCommandClass,
 } from "@zwave-js/cc";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 test("should be detected as an encapsulating CC", (t) => {
 	const basicCCSet = new BasicCCSet({
@@ -16,54 +16,54 @@ test("should be detected as an encapsulating CC", (t) => {
 		targetValue: 89,
 	});
 	const crc16 = CRC16CC.encapsulate(basicCCSet);
-	t.true(isEncapsulatingCommandClass(crc16));
+	t.expect(isEncapsulatingCommandClass(crc16)).toBe(true);
 });
 
-test("should match the specs", (t) => {
+test("should match the specs", async (t) => {
 	// SDS13783 contains the following sample encapsulated command:
 	const basicCCGet = new BasicCCGet({ nodeId: 1 });
 	const crc16 = CRC16CC.encapsulate(basicCCGet);
-	const serialized = crc16.serialize({} as any);
+	const serialized = await crc16.serialize({} as any);
 	const expected = Bytes.from("560120024d26", "hex");
-	t.deepEqual(serialized, expected);
+	t.expect(serialized).toStrictEqual(expected);
 });
 
-test("serialization and deserialization should be compatible", (t) => {
+test("serialization and deserialization should be compatible", async (t) => {
 	const basicCCSet = new BasicCCSet({
 		nodeId: 3,
 		targetValue: 89,
 	});
 	const crc16 = CRC16CC.encapsulate(basicCCSet);
-	t.is(crc16.nodeId, basicCCSet.nodeId);
-	t.is(crc16.encapsulated, basicCCSet);
-	const serialized = crc16.serialize({} as any);
+	t.expect(crc16.nodeId).toBe(basicCCSet.nodeId);
+	t.expect(crc16.encapsulated).toBe(basicCCSet);
+	const serialized = await crc16.serialize({} as any);
 
-	const deserialized = CommandClass.parse(
+	const deserialized = await CommandClass.parse(
 		serialized,
 		{ sourceNodeId: basicCCSet.nodeId as number } as any,
 	);
-	t.is(deserialized.nodeId, basicCCSet.nodeId);
+	t.expect(deserialized.nodeId).toBe(basicCCSet.nodeId);
 	const deserializedPayload = (deserialized as CRC16CCCommandEncapsulation)
 		.encapsulated as BasicCCSet;
-	t.true(deserializedPayload instanceof BasicCCSet);
-	t.is(deserializedPayload.nodeId, basicCCSet.nodeId);
-	t.is(deserializedPayload.targetValue, basicCCSet.targetValue);
+	t.expect(deserializedPayload instanceof BasicCCSet).toBe(true);
+	t.expect(deserializedPayload.nodeId).toBe(basicCCSet.nodeId);
+	t.expect(deserializedPayload.targetValue).toBe(basicCCSet.targetValue);
 });
 
-test("deserializing a CC with a wrong checksum should result in an invalid CC", (t) => {
+test("deserializing a CC with a wrong checksum should result in an invalid CC", async (t) => {
 	const basicCCSet = new BasicCCSet({
 		nodeId: 3,
 		targetValue: 89,
 	});
 	const crc16 = CRC16CC.encapsulate(basicCCSet);
-	t.is(crc16.nodeId, basicCCSet.nodeId);
-	t.is(crc16.encapsulated, basicCCSet);
-	const serialized = crc16.serialize({} as any);
+	t.expect(crc16.nodeId).toBe(basicCCSet.nodeId);
+	t.expect(crc16.encapsulated).toBe(basicCCSet);
+	const serialized = await crc16.serialize({} as any);
 	serialized[serialized.length - 1] ^= 0xff;
 
-	const deserialized = CommandClass.parse(
+	const deserialized = await CommandClass.parse(
 		serialized,
 		{ sourceNodeId: basicCCSet.nodeId as number } as any,
 	);
-	t.true(deserialized instanceof InvalidCC);
+	t.expect(deserialized instanceof InvalidCC).toBe(true);
 });

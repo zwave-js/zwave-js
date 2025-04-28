@@ -1,7 +1,7 @@
 import { ZWavePlusCCGet, ZWavePlusCommand } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -12,7 +12,7 @@ function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	]);
 }
 
-test("The Get command should serialize correctly", (t) => {
+test("The Get command should serialize correctly", async (t) => {
 	const cc = new ZWavePlusCCGet({
 		nodeId: 1,
 	});
@@ -21,7 +21,9 @@ test("The Get command should serialize correctly", (t) => {
 			ZWavePlusCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
 // describe.skip(`interview()`, () => {

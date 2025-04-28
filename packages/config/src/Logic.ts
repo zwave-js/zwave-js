@@ -1,7 +1,14 @@
 import { padVersion } from "@zwave-js/shared";
-import { type RulesLogic, add_operation, apply } from "json-logic-js";
-import * as semver from "semver";
-import { parse } from "./LogicParser";
+import semverEq from "semver/functions/eq.js";
+import semverGt from "semver/functions/gt.js";
+import semverGte from "semver/functions/gte.js";
+import semverLt from "semver/functions/lt.js";
+import semverLte from "semver/functions/lte.js";
+import { parse } from "./LogicParser.js";
+
+// The types are not correct:
+import { type RulesLogic, default as JsonLogic } from "json-logic-js";
+const { add_operation, apply } = JsonLogic;
 
 function tryOr<T extends (...args: any[]) => any>(
 	operation: T,
@@ -18,23 +25,23 @@ function tryOr<T extends (...args: any[]) => any>(
 
 add_operation(
 	"ver >=",
-	tryOr((a, b) => semver.gte(padVersion(a), padVersion(b)), false),
+	tryOr((a, b) => semverGte(padVersion(a), padVersion(b)), false),
 );
 add_operation(
 	"ver >",
-	tryOr((a, b) => semver.gt(padVersion(a), padVersion(b)), false),
+	tryOr((a, b) => semverGt(padVersion(a), padVersion(b)), false),
 );
 add_operation(
 	"ver <=",
-	tryOr((a, b) => semver.lte(padVersion(a), padVersion(b)), false),
+	tryOr((a, b) => semverLte(padVersion(a), padVersion(b)), false),
 );
 add_operation(
 	"ver <",
-	tryOr((a, b) => semver.lt(padVersion(a), padVersion(b)), false),
+	tryOr((a, b) => semverLt(padVersion(a), padVersion(b)), false),
 );
 add_operation(
 	"ver ===",
-	tryOr((a, b) => semver.eq(padVersion(a), padVersion(b)), false),
+	tryOr((a, b) => semverEq(padVersion(a), padVersion(b)), false),
 );
 
 export function parseLogic(logic: string): RulesLogic {

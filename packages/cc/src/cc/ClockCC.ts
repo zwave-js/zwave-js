@@ -1,32 +1,25 @@
-import type {
-	MessageOrCCLogEntry,
-	SupervisionResult,
-	WithAddress,
-} from "@zwave-js/core/safe";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
 	MessagePriority,
+	type SupervisionResult,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { padStart } from "alcalzone-shared/strings";
-import { CCAPI } from "../lib/API";
+import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -34,8 +27,8 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { ClockCommand, Weekday } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { ClockCommand, Weekday } from "../lib/_Types.js";
 
 // @noSetValueAPI - This CC has no simple value to set
 
@@ -178,7 +171,7 @@ export class ClockCCSet extends ClockCC {
 	public hour: number;
 	public minute: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			((this.weekday & 0b111) << 5) | (this.hour & 0b11111),
 			this.minute,
@@ -195,9 +188,8 @@ export class ClockCCSet extends ClockCC {
 						Weekday,
 						this.weekday,
 					)
-				}, ${padStart(this.hour.toString(), 2, "0")}:${
-					padStart(
-						this.minute.toString(),
+				}, ${this.hour.toString().padStart(2, "0")}:${
+					this.minute.toString().padStart(
 						2,
 						"0",
 					)
@@ -238,7 +230,7 @@ export class ClockCCReport extends ClockCC {
 			minute <= 59,
 		);
 
-		return new ClockCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			weekday,
 			hour,
@@ -259,9 +251,8 @@ export class ClockCCReport extends ClockCC {
 						Weekday,
 						this.weekday,
 					)
-				}, ${padStart(this.hour.toString(), 2, "0")}:${
-					padStart(
-						this.minute.toString(),
+				}, ${this.hour.toString().padStart(2, "0")}:${
+					this.minute.toString().padStart(
 						2,
 						"0",
 					)

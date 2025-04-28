@@ -87,7 +87,7 @@ export class SetLearnModeRequest extends SetLearnModeRequestBase {
 
 	public intent: LearnModeIntent;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		this.payload = Bytes.from([
 			this.intent,

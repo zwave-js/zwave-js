@@ -1,3 +1,4 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	type BasicDeviceClass,
 	CommandClasses,
@@ -21,21 +22,20 @@ import {
 	parseNodeProtocolInfoAndDeviceClass,
 	validatePayload,
 } from "@zwave-js/core";
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type CCRaw, CommandClass } from "../lib/CommandClass";
+import { Bytes } from "@zwave-js/shared";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	CCCommand,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
+} from "../lib/CommandClassDecorators.js";
 import {
 	type NetworkTransferStatus,
 	WakeUpTime,
 	ZWaveProtocolCommand,
 	parseWakeUpTime,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
 enum DataRateBitmask {
 	"9k6" = 0b001,
@@ -101,7 +101,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC
 	): ZWaveProtocolCCNodeInformationFrame {
 		const nif = parseNodeInformationFrame(raw.payload);
 
-		return new ZWaveProtocolCCNodeInformationFrame({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			...nif,
 		});
@@ -121,7 +121,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC
 	public supportsBeaming: boolean;
 	public supportedCCs: CommandClasses[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeNodeInformationFrame(this);
 		return super.serialize(ctx);
 	}
@@ -157,7 +157,7 @@ export class ZWaveProtocolCCAssignIDs extends ZWaveProtocolCC {
 		const assignedNodeId = raw.payload[0];
 		const homeId = raw.payload.readUInt32BE(1);
 
-		return new ZWaveProtocolCCAssignIDs({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			assignedNodeId,
 			homeId,
@@ -167,7 +167,7 @@ export class ZWaveProtocolCCAssignIDs extends ZWaveProtocolCC {
 	public assignedNodeId: number;
 	public homeId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(5);
 		this.payload[0] = this.assignedNodeId;
 		this.payload.writeUInt32BE(this.homeId, 1);
@@ -228,7 +228,7 @@ export class ZWaveProtocolCCFindNodesInRange extends ZWaveProtocolCC {
 			dataRate = ZWaveDataRate["9k6"];
 		}
 
-		return new ZWaveProtocolCCFindNodesInRange({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			candidateNodeIds,
 			dataRate,
@@ -240,7 +240,7 @@ export class ZWaveProtocolCCFindNodesInRange extends ZWaveProtocolCC {
 	public wakeUpTime: WakeUpTime;
 	public dataRate: ZWaveDataRate;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.candidateNodeIds, MAX_NODES);
 		const speedAndLength = 0b1000_0000 | nodesBitmask.length;
 		this.payload = Bytes.concat([
@@ -287,7 +287,7 @@ export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
 			);
 		}
 
-		return new ZWaveProtocolCCRangeInfo({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			neighborNodeIds,
 			wakeUpTime,
@@ -297,7 +297,7 @@ export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
 	public neighborNodeIds: number[];
 	public wakeUpTime?: WakeUpTime;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.neighborNodeIds, MAX_NODES);
 		this.payload = Bytes.concat([
 			Bytes.from([nodesBitmask.length]),
@@ -335,7 +335,7 @@ export class ZWaveProtocolCCCommandComplete extends ZWaveProtocolCC {
 		validatePayload(raw.payload.length >= 1);
 		const sequenceNumber = raw.payload[0];
 
-		return new ZWaveProtocolCCCommandComplete({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sequenceNumber,
 		});
@@ -343,7 +343,7 @@ export class ZWaveProtocolCCCommandComplete extends ZWaveProtocolCC {
 
 	public sequenceNumber: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.sequenceNumber]);
 		return super.serialize(ctx);
 	}
@@ -383,7 +383,7 @@ export class ZWaveProtocolCCTransferPresentation extends ZWaveProtocolCC {
 		const excludeNode = !!(option & 0b0010);
 		const includeNode = !!(option & 0b0100);
 
-		return new ZWaveProtocolCCTransferPresentation({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportsNWI,
 			excludeNode,
@@ -395,7 +395,7 @@ export class ZWaveProtocolCCTransferPresentation extends ZWaveProtocolCC {
 	public includeNode: boolean;
 	public excludeNode: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			(this.supportsNWI ? 0b0001 : 0)
 			| (this.excludeNode ? 0b0010 : 0)
@@ -451,7 +451,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC
 			raw.payload.subarray(2),
 		);
 
-		return new ZWaveProtocolCCTransferNodeInformation({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sequenceNumber,
 			sourceNodeId,
@@ -474,7 +474,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC
 	public supportsSecurity: boolean;
 	public supportsBeaming: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.sequenceNumber, this.sourceNodeId]),
 			encodeNodeProtocolInfoAndDeviceClass(this),
@@ -515,7 +515,7 @@ export class ZWaveProtocolCCTransferRangeInformation extends ZWaveProtocolCC {
 			raw.payload.subarray(3, 3 + bitmaskLength),
 		);
 
-		return new ZWaveProtocolCCTransferRangeInformation({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sequenceNumber,
 			testedNodeId,
@@ -527,7 +527,7 @@ export class ZWaveProtocolCCTransferRangeInformation extends ZWaveProtocolCC {
 	public testedNodeId: number;
 	public neighborNodeIds: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.neighborNodeIds, MAX_NODES);
 		this.payload = Bytes.concat([
 			Bytes.from([
@@ -562,7 +562,7 @@ export class ZWaveProtocolCCTransferEnd extends ZWaveProtocolCC {
 		validatePayload(raw.payload.length >= 1);
 		const status: NetworkTransferStatus = raw.payload[0];
 
-		return new ZWaveProtocolCCTransferEnd({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			status,
 		});
@@ -570,7 +570,7 @@ export class ZWaveProtocolCCTransferEnd extends ZWaveProtocolCC {
 
 	public status: NetworkTransferStatus;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.status]);
 		return super.serialize(ctx);
 	}
@@ -620,7 +620,7 @@ export class ZWaveProtocolCCAssignReturnRoute extends ZWaveProtocolCC {
 		);
 		const destinationWakeUp: WakeUpTime = (speedAndWakeup >>> 1) & 0b11;
 
-		return new ZWaveProtocolCCAssignReturnRoute({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			destinationNodeId,
 			routeIndex,
@@ -636,7 +636,7 @@ export class ZWaveProtocolCCAssignReturnRoute extends ZWaveProtocolCC {
 	public destinationWakeUp: WakeUpTime;
 	public destinationSpeed: ZWaveDataRate;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const routeByte = (this.routeIndex << 4) | this.repeaters.length;
 		const speedMask = dataRate2Bitmask(this.destinationSpeed);
 		const speedByte = (speedMask << 3) | (this.destinationWakeUp << 1);
@@ -691,7 +691,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC
 
 		const nif = parseNodeInformationFrame(raw.payload.subarray(1));
 
-		return new ZWaveProtocolCCNewNodeRegistered({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			newNodeId,
 			...nif,
@@ -713,7 +713,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC
 	public supportsBeaming: boolean;
 	public supportedCCs: CommandClasses[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.newNodeId]),
 			encodeNodeInformationFrame(this),
@@ -749,7 +749,7 @@ export class ZWaveProtocolCCNewRangeRegistered extends ZWaveProtocolCC {
 			...raw.payload.subarray(2, 2 + numNeighbors),
 		];
 
-		return new ZWaveProtocolCCNewRangeRegistered({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			testedNodeId,
 			neighborNodeIds,
@@ -759,7 +759,7 @@ export class ZWaveProtocolCCNewRangeRegistered extends ZWaveProtocolCC {
 	public testedNodeId: number;
 	public neighborNodeIds: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.neighborNodeIds, MAX_NODES);
 		this.payload = Bytes.concat([
 			Bytes.from([this.testedNodeId, nodesBitmask.length]),
@@ -794,7 +794,7 @@ export class ZWaveProtocolCCTransferNewPrimaryControllerComplete
 		validatePayload(raw.payload.length >= 1);
 		const genericDeviceClass = raw.payload[0];
 
-		return new ZWaveProtocolCCTransferNewPrimaryControllerComplete({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			genericDeviceClass,
 		});
@@ -802,7 +802,7 @@ export class ZWaveProtocolCCTransferNewPrimaryControllerComplete
 
 	public genericDeviceClass: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.genericDeviceClass]);
 		return super.serialize(ctx);
 	}
@@ -838,7 +838,7 @@ export class ZWaveProtocolCCSUCNodeID extends ZWaveProtocolCC {
 		const capabilities = raw.payload[1] ?? 0;
 		const isSIS = !!(capabilities & 0b1);
 
-		return new ZWaveProtocolCCSUCNodeID({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			sucNodeId,
 			isSIS,
@@ -848,7 +848,7 @@ export class ZWaveProtocolCCSUCNodeID extends ZWaveProtocolCC {
 	public sucNodeId: number;
 	public isSIS: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.sucNodeId, this.isSIS ? 0b1 : 0]);
 		return super.serialize(ctx);
 	}
@@ -877,7 +877,7 @@ export class ZWaveProtocolCCSetSUC extends ZWaveProtocolCC {
 		const capabilities = raw.payload[1] ?? 0;
 		const enableSIS = !!(capabilities & 0b1);
 
-		return new ZWaveProtocolCCSetSUC({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			enableSIS,
 		});
@@ -885,7 +885,7 @@ export class ZWaveProtocolCCSetSUC extends ZWaveProtocolCC {
 
 	public enableSIS: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([0x01, this.enableSIS ? 0b1 : 0]);
 		return super.serialize(ctx);
 	}
@@ -916,7 +916,7 @@ export class ZWaveProtocolCCSetSUCAck extends ZWaveProtocolCC {
 		const capabilities = raw.payload[1] ?? 0;
 		const isSIS = !!(capabilities & 0b1);
 
-		return new ZWaveProtocolCCSetSUCAck({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			accepted,
 			isSIS,
@@ -926,7 +926,7 @@ export class ZWaveProtocolCCSetSUCAck extends ZWaveProtocolCC {
 	public accepted: boolean;
 	public isSIS: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.accepted ? 0x01 : 0x00,
 			this.isSIS ? 0b1 : 0,
@@ -969,7 +969,7 @@ export class ZWaveProtocolCCStaticRouteRequest extends ZWaveProtocolCC {
 			(id) => id > 0 && id <= MAX_NODES,
 		);
 
-		return new ZWaveProtocolCCStaticRouteRequest({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			nodeIds,
 		});
@@ -977,7 +977,7 @@ export class ZWaveProtocolCCStaticRouteRequest extends ZWaveProtocolCC {
 
 	public nodeIds: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(5, 0);
 		for (let i = 0; i < this.nodeIds.length && i < 5; i++) {
 			this.payload[i] = this.nodeIds[i];
@@ -1004,7 +1004,7 @@ export class ZWaveProtocolCCLost extends ZWaveProtocolCC {
 		validatePayload(raw.payload.length >= 1);
 		const lostNodeId = raw.payload[0];
 
-		return new ZWaveProtocolCCLost({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			lostNodeId,
 		});
@@ -1012,7 +1012,7 @@ export class ZWaveProtocolCCLost extends ZWaveProtocolCC {
 
 	public lostNodeId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.lostNodeId]);
 		return super.serialize(ctx);
 	}
@@ -1042,7 +1042,7 @@ export class ZWaveProtocolCCAcceptLost extends ZWaveProtocolCC {
 		);
 		const accepted = raw.payload[0] === 0x05;
 
-		return new ZWaveProtocolCCAcceptLost({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			accepted,
 		});
@@ -1050,7 +1050,7 @@ export class ZWaveProtocolCCAcceptLost extends ZWaveProtocolCC {
 
 	public accepted: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.accepted ? 0x05 : 0x04]);
 		return super.serialize(ctx);
 	}
@@ -1108,7 +1108,7 @@ export class ZWaveProtocolCCNOPPower extends ZWaveProtocolCC {
 			validatePayload.fail("Invalid payload length!");
 		}
 
-		return new ZWaveProtocolCCNOPPower({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			powerDampening,
 		});
@@ -1117,7 +1117,7 @@ export class ZWaveProtocolCCNOPPower extends ZWaveProtocolCC {
 	// Power dampening in (negative) dBm. A value of 2 means -2 dBm.
 	public powerDampening: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([0, this.powerDampening]);
 		return super.serialize(ctx);
 	}
@@ -1148,7 +1148,7 @@ export class ZWaveProtocolCCReservedIDs extends ZWaveProtocolCC {
 			...raw.payload.subarray(1, 1 + numNodeIDs),
 		];
 
-		return new ZWaveProtocolCCReservedIDs({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			reservedNodeIDs,
 		});
@@ -1156,7 +1156,7 @@ export class ZWaveProtocolCCReservedIDs extends ZWaveProtocolCC {
 
 	public reservedNodeIDs: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.reservedNodeIDs.length,
 			...this.reservedNodeIDs,
@@ -1187,7 +1187,7 @@ export class ZWaveProtocolCCReserveNodeIDs extends ZWaveProtocolCC {
 		validatePayload(raw.payload.length >= 1);
 		const numNodeIDs = raw.payload[0];
 
-		return new ZWaveProtocolCCReserveNodeIDs({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			numNodeIDs,
 		});
@@ -1195,7 +1195,7 @@ export class ZWaveProtocolCCReserveNodeIDs extends ZWaveProtocolCC {
 
 	public numNodeIDs: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.numNodeIDs]);
 		return super.serialize(ctx);
 	}
@@ -1225,7 +1225,7 @@ export class ZWaveProtocolCCNodesExistReply extends ZWaveProtocolCC {
 		const nodeMaskType = raw.payload[0];
 		const nodeListUpdated = raw.payload[1] === 0x01;
 
-		return new ZWaveProtocolCCNodesExistReply({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			nodeMaskType,
 			nodeListUpdated,
@@ -1235,7 +1235,7 @@ export class ZWaveProtocolCCNodesExistReply extends ZWaveProtocolCC {
 	public nodeMaskType: number;
 	public nodeListUpdated: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.nodeMaskType,
 			this.nodeListUpdated ? 0x01 : 0x00,
@@ -1281,7 +1281,7 @@ export class ZWaveProtocolCCNodesExist extends ZWaveProtocolCC {
 		validatePayload(raw.payload.length >= 2 + numNodeIDs);
 		const nodeIDs = [...raw.payload.subarray(2, 2 + numNodeIDs)];
 
-		return new ZWaveProtocolCCNodesExist({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			nodeMaskType,
 			nodeIDs,
@@ -1291,7 +1291,7 @@ export class ZWaveProtocolCCNodesExist extends ZWaveProtocolCC {
 	public nodeMaskType: number;
 	public nodeIDs: number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.nodeMaskType,
 			this.nodeIDs.length,
@@ -1325,7 +1325,7 @@ export class ZWaveProtocolCCSetNWIMode extends ZWaveProtocolCC {
 		const enabled = raw.payload[0] === 0x01;
 		const timeoutMinutes: number | undefined = raw.payload[1] || undefined;
 
-		return new ZWaveProtocolCCSetNWIMode({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			enabled,
 			timeoutMinutes,
@@ -1335,7 +1335,7 @@ export class ZWaveProtocolCCSetNWIMode extends ZWaveProtocolCC {
 	public enabled: boolean;
 	public timeoutMinutes?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.enabled ? 0x01 : 0x00,
 			this.timeoutMinutes ?? 0x00,
@@ -1373,7 +1373,7 @@ export class ZWaveProtocolCCAssignReturnRoutePriority extends ZWaveProtocolCC {
 		const targetNodeId = raw.payload[0];
 		const routeNumber = raw.payload[1];
 
-		return new ZWaveProtocolCCAssignReturnRoutePriority({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			targetNodeId,
 			routeNumber,
@@ -1383,7 +1383,7 @@ export class ZWaveProtocolCCAssignReturnRoutePriority extends ZWaveProtocolCC {
 	public targetNodeId: number;
 	public routeNumber: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.targetNodeId, this.routeNumber]);
 		return super.serialize(ctx);
 	}
@@ -1425,7 +1425,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation
 		validatePayload(raw.payload.length >= 4);
 		const nwiHomeId = raw.payload.subarray(0, 4);
 
-		return new ZWaveProtocolCCSmartStartIncludedNodeInformation({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			nwiHomeId,
 		});
@@ -1433,7 +1433,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation
 
 	public nwiHomeId: Uint8Array;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from(this.nwiHomeId);
 		return super.serialize(ctx);
 	}

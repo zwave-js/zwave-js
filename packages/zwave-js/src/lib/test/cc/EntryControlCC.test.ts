@@ -13,8 +13,8 @@ import {
 	EntryControlEventTypes,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -25,7 +25,7 @@ function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	]);
 }
 
-test("the Notification command should deserialize correctly", (t) => {
+test("the Notification command should deserialize correctly", async (t) => {
 	const data = buildCCBuffer(
 		Bytes.concat([
 			Uint8Array.from([
@@ -44,19 +44,19 @@ test("the Notification command should deserialize correctly", (t) => {
 		]),
 	);
 
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		data,
 		{ sourceNodeId: 1 } as any,
 	) as EntryControlCCNotification;
-	t.is(cc.constructor, EntryControlCCNotification);
+	t.expect(cc.constructor).toBe(EntryControlCCNotification);
 
-	t.deepEqual(cc.sequenceNumber, 1);
-	t.deepEqual(cc.dataType, EntryControlDataTypes.ASCII);
-	t.deepEqual(cc.eventType, EntryControlEventTypes.DisarmAll);
-	t.deepEqual(cc.eventData, "1234");
+	t.expect(cc.sequenceNumber).toStrictEqual(1);
+	t.expect(cc.dataType).toStrictEqual(EntryControlDataTypes.ASCII);
+	t.expect(cc.eventType).toStrictEqual(EntryControlEventTypes.DisarmAll);
+	t.expect(cc.eventData).toStrictEqual("1234");
 });
 
-test("the ConfigurationGet command should serialize correctly", (t) => {
+test("the ConfigurationGet command should serialize correctly", async (t) => {
 	const cc = new EntryControlCCConfigurationGet({
 		nodeId: 1,
 	});
@@ -65,10 +65,12 @@ test("the ConfigurationGet command should serialize correctly", (t) => {
 			EntryControlCommand.ConfigurationGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the ConfigurationSet command should serialize correctly", (t) => {
+test("the ConfigurationSet command should serialize correctly", async (t) => {
 	const cc = new EntryControlCCConfigurationSet({
 		nodeId: 1,
 		keyCacheSize: 1,
@@ -81,10 +83,12 @@ test("the ConfigurationSet command should serialize correctly", (t) => {
 			0x2,
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the ConfigurationReport command should be deserialize correctly", (t) => {
+test("the ConfigurationReport command should be deserialize correctly", async (t) => {
 	const data = buildCCBuffer(
 		Uint8Array.from([
 			EntryControlCommand.ConfigurationReport, // CC Command
@@ -93,17 +97,17 @@ test("the ConfigurationReport command should be deserialize correctly", (t) => {
 		]),
 	);
 
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		data,
 		{ sourceNodeId: 1 } as any,
 	) as EntryControlCCConfigurationReport;
-	t.is(cc.constructor, EntryControlCCConfigurationReport);
+	t.expect(cc.constructor).toBe(EntryControlCCConfigurationReport);
 
-	t.deepEqual(cc.keyCacheSize, 1);
-	t.deepEqual(cc.keyCacheTimeout, 2);
+	t.expect(cc.keyCacheSize).toStrictEqual(1);
+	t.expect(cc.keyCacheTimeout).toStrictEqual(2);
 });
 
-test("the EventSupportedGet command should serialize correctly", (t) => {
+test("the EventSupportedGet command should serialize correctly", async (t) => {
 	const cc = new EntryControlCCEventSupportedGet({
 		nodeId: 1,
 	});
@@ -112,10 +116,12 @@ test("the EventSupportedGet command should serialize correctly", (t) => {
 			EntryControlCommand.EventSupportedGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the EventSupportedReport command should be deserialize correctly", (t) => {
+test("the EventSupportedReport command should be deserialize correctly", async (t) => {
 	const data = buildCCBuffer(
 		Uint8Array.from([
 			EntryControlCommand.EventSupportedReport, // CC Command
@@ -133,36 +139,40 @@ test("the EventSupportedReport command should be deserialize correctly", (t) => 
 		]),
 	);
 
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		data,
 		{ sourceNodeId: 1 } as any,
 	) as EntryControlCCEventSupportedReport;
-	t.is(cc.constructor, EntryControlCCEventSupportedReport);
+	t.expect(cc.constructor).toBe(EntryControlCCEventSupportedReport);
 
-	t.deepEqual(cc.supportedDataTypes, [EntryControlDataTypes.ASCII]);
-	t.deepEqual(cc.supportedEventTypes, [
+	t.expect(cc.supportedDataTypes).toStrictEqual([
+		EntryControlDataTypes.ASCII,
+	]);
+	t.expect(cc.supportedEventTypes).toStrictEqual([
 		EntryControlEventTypes.DisarmAll,
 		EntryControlEventTypes.ArmAway,
 		EntryControlEventTypes.ArmHome,
 		EntryControlEventTypes.Cancel,
 	]);
-	t.deepEqual(cc.minKeyCacheSize, 1);
-	t.deepEqual(cc.maxKeyCacheSize, 20);
-	t.deepEqual(cc.minKeyCacheTimeout, 2);
-	t.deepEqual(cc.maxKeyCacheTimeout, 9);
+	t.expect(cc.minKeyCacheSize).toStrictEqual(1);
+	t.expect(cc.maxKeyCacheSize).toStrictEqual(20);
+	t.expect(cc.minKeyCacheTimeout).toStrictEqual(2);
+	t.expect(cc.maxKeyCacheTimeout).toStrictEqual(9);
 });
 
-test("the KeySupportedGet command should serialize correctly", (t) => {
+test("the KeySupportedGet command should serialize correctly", async (t) => {
 	const cc = new EntryControlCCKeySupportedGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
 		Uint8Array.from([
 			EntryControlCommand.KeySupportedGet, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the KeySupportedReport command should be deserialize correctly", (t) => {
+test("the KeySupportedReport command should be deserialize correctly", async (t) => {
 	const data = buildCCBuffer(
 		Uint8Array.from([
 			EntryControlCommand.KeySupportedReport, // CC Command
@@ -171,11 +181,11 @@ test("the KeySupportedReport command should be deserialize correctly", (t) => {
 		]),
 	);
 
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		data,
 		{ sourceNodeId: 1 } as any,
 	) as EntryControlCCKeySupportedReport;
-	t.is(cc.constructor, EntryControlCCKeySupportedReport);
+	t.expect(cc.constructor).toBe(EntryControlCCKeySupportedReport);
 
-	t.deepEqual(cc.supportedKeys, [1, 3, 4, 6]);
+	t.expect(cc.supportedKeys).toStrictEqual([1, 3, 4, 6]);
 });

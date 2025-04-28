@@ -1,6 +1,6 @@
 // Shared tsconfig to be inherited by all other tsconfigs in this repo
 {
-	"extends": "@tsconfig/node18/tsconfig.json",
+	"extends": "@tsconfig/node20/tsconfig.json",
 	"compilerOptions": {
 		"composite": true,
 		"incremental": true,
@@ -9,8 +9,6 @@
 
 		"noEmitOnError": true,
 		"removeComments": false,
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": false,
 		"sourceMap": true,
 		"inlineSourceMap": false,
 		"stripInternal": true,

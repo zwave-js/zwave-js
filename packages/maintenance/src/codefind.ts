@@ -2,20 +2,24 @@
  * This scripts helps find certain code patterns via the CLI
  */
 
-import {
+import c from "ansi-colors";
+import { fromJson as themeFromJson, highlight } from "cli-highlight";
+import esMain from "es-main";
+import globrex from "globrex";
+import path from "node:path";
+import ts from "typescript";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { loadTSConfig, projectRoot } from "./tsAPITools.js";
+
+const {
 	blueBright,
 	bold,
 	gray,
 	greenBright,
 	redBright,
 	yellow,
-} from "ansi-colors";
-import highlight, { fromJson as themeFromJson } from "cli-highlight";
-import globrex from "globrex";
-import path from "node:path";
-import ts from "typescript";
-import yargs from "yargs";
-import { loadTSConfig, projectRoot } from "./tsAPITools";
+} = c;
 
 function relativeToProject(filename: string): string {
 	return path.relative(projectRoot, filename).replaceAll("\\", "/");
@@ -357,8 +361,9 @@ export function codefind(query: CodeFindQuery): Result[] {
 	return results;
 }
 
-if (require.main === module) {
-	const argv = yargs
+if (esMain(import.meta)) {
+	const yargsInstance = yargs(hideBin(process.argv));
+	const argv = yargsInstance
 		.usage("Code search utility\n\nUsage: $0 [options]")
 		.options({
 			include: {
@@ -407,7 +412,7 @@ if (require.main === module) {
 				default: 3,
 			},
 		})
-		.wrap(Math.min(100, yargs.terminalWidth()))
+		.wrap(Math.min(100, yargsInstance.terminalWidth()))
 		.demandOption("search", "Please specify a search query")
 		.parseSync();
 

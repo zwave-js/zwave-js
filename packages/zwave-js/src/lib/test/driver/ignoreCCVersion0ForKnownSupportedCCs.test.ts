@@ -30,9 +30,9 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
-// Repro for https://github.com/zwave-js/node-zwave-js/issues/6305
+// Repro for https://github.com/zwave-js/zwave-js/issues/6305
 
 integrationTest(
 	"CC Version 0 is ignored for known supported CCs: Security S2",
@@ -48,9 +48,9 @@ integrationTest(
 
 		customSetup: async (driver, controller, mockNode) => {
 			// Create a security manager for the node
-			const smNode = new SecurityManager2();
+			const smNode = await SecurityManager2.create();
 			// Copy keys from the driver
-			smNode.setKey(
+			await smNode.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
@@ -59,22 +59,21 @@ integrationTest(
 				SecurityClass.S2_Unauthenticated;
 
 			// Create a security manager for the controller
-			const smCtrlr = new SecurityManager2();
+			const smCtrlr = await SecurityManager2.create();
 			// Copy keys from the driver
-			smCtrlr.setKey(
+			await smCtrlr.setKey(
 				SecurityClass.S2_Unauthenticated,
 				driver.options.securityKeys!.S2_Unauthenticated!,
 			);
 			controller.securityManagers.securityManager2 = smCtrlr;
-			controller.parsingContext.getHighestSecurityClass =
-				controller.encodingContext.getHighestSecurityClass =
-					() => SecurityClass.S2_Unauthenticated;
+			controller.encodingContext.getHighestSecurityClass = () =>
+				SecurityClass.S2_Unauthenticated;
 
 			// Respond to Nonce Get
 			const respondToNonceGet: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
+				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof Security2CCNonceGet) {
-						const nonce = smNode.generateNonce(
+						const nonce = await smNode.generateNonce(
 							controller.ownNodeId,
 						);
 						const cc = new Security2CCNonceReport({
@@ -91,7 +90,7 @@ integrationTest(
 
 			// Handle decode errors
 			const handleInvalidCC: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
+				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof InvalidCC) {
 						if (
 							receivedCC.reason
@@ -99,7 +98,7 @@ integrationTest(
 							|| receivedCC.reason
 								=== ZWaveErrorCodes.Security2CC_NoSPAN
 						) {
-							const nonce = smNode.generateNonce(
+							const nonce = await smNode.generateNonce(
 								controller.ownNodeId,
 							);
 							const cc = new Security2CCNonceReport({
@@ -172,7 +171,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			t.true(node.supportsCC(CommandClasses["Security 2"]));
+			t.expect(node.supportsCC(CommandClasses["Security 2"])).toBe(true);
 		},
 	},
 );
@@ -342,12 +341,13 @@ integrationTest(
 
 			// Parse Security CC commands
 			const parseS0CC: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
+				async handleCC(controller, self, receivedCC) {
 					// We don't support sequenced commands here
 					if (receivedCC instanceof SecurityCCCommandEncapsulation) {
-						receivedCC.mergePartialCCs([], {
+						await receivedCC.mergePartialCCs([], {
 							sourceNodeId: controller.ownNodeId,
 							__internalIsMockNode: true,
+							frameType: "singlecast",
 							...self.encodingContext,
 							...self.securityManagers,
 						});
@@ -360,7 +360,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			t.true(node.supportsCC(CommandClasses["Security"]));
+			t.expect(node.supportsCC(CommandClasses["Security"])).toBe(true);
 		},
 	},
 );

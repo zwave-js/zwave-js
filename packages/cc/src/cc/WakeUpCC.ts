@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -9,14 +11,8 @@ import {
 	type WithAddress,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
 import {
@@ -27,55 +23,51 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { WakeUpCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { WakeUpCommand } from "../lib/_Types.js";
 
-export const WakeUpCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Wake Up"], {
-		...V.staticProperty(
-			"controllerNodeId",
-			{
-				...ValueMetadata.ReadOnly,
-				label: "Node ID of the controller",
-			} as const,
-			{
-				supportsEndpoints: false,
-			},
-		),
-
-		...V.staticProperty(
-			"wakeUpInterval",
-			{
-				...ValueMetadata.UInt24,
-				label: "Wake Up interval",
-			} as const,
-			{
-				supportsEndpoints: false,
-			},
-		),
-
-		...V.staticProperty("wakeUpOnDemandSupported", undefined, {
-			internal: true,
+export const WakeUpCCValues = V.defineCCValues(CommandClasses["Wake Up"], {
+	...V.staticProperty(
+		"controllerNodeId",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Node ID of the controller",
+		} as const,
+		{
 			supportsEndpoints: false,
-			minVersion: 3,
-		}),
+		},
+	),
+	...V.staticProperty(
+		"wakeUpInterval",
+		{
+			...ValueMetadata.UInt24,
+			label: "Wake Up interval",
+		} as const,
+		{
+			supportsEndpoints: false,
+		},
+	),
+	...V.staticProperty("wakeUpOnDemandSupported", undefined, {
+		internal: true,
+		supportsEndpoints: false,
+		minVersion: 3,
 	}),
 });
 
@@ -376,7 +368,7 @@ export class WakeUpCCIntervalSet extends WakeUpCC {
 		const wakeUpInterval = raw.payload.readUIntBE(0, 3);
 		const controllerNodeId = raw.payload[3];
 
-		return new WakeUpCCIntervalSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			wakeUpInterval,
 			controllerNodeId,
@@ -386,7 +378,7 @@ export class WakeUpCCIntervalSet extends WakeUpCC {
 	public wakeUpInterval: number;
 	public controllerNodeId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			0,
 			0,
@@ -415,6 +407,8 @@ export interface WakeUpCCIntervalReportOptions {
 }
 
 @CCCommand(WakeUpCommand.IntervalReport)
+@ccValueProperty("wakeUpInterval", WakeUpCCValues.wakeUpInterval)
+@ccValueProperty("controllerNodeId", WakeUpCCValues.controllerNodeId)
 export class WakeUpCCIntervalReport extends WakeUpCC {
 	public constructor(
 		options: WithAddress<WakeUpCCIntervalReportOptions>,
@@ -434,17 +428,15 @@ export class WakeUpCCIntervalReport extends WakeUpCC {
 		const wakeUpInterval = raw.payload.readUIntBE(0, 3);
 		const controllerNodeId = raw.payload[3];
 
-		return new WakeUpCCIntervalReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			wakeUpInterval,
 			controllerNodeId,
 		});
 	}
 
-	@ccValue(WakeUpCCValues.wakeUpInterval)
 	public readonly wakeUpInterval: number;
 
-	@ccValue(WakeUpCCValues.controllerNodeId)
 	public readonly controllerNodeId: number;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -478,6 +470,10 @@ export interface WakeUpCCIntervalCapabilitiesReportOptions {
 }
 
 @CCCommand(WakeUpCommand.IntervalCapabilitiesReport)
+@ccValueProperty(
+	"wakeUpOnDemandSupported",
+	WakeUpCCValues.wakeUpOnDemandSupported,
+)
 export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 	public constructor(
 		options: WithAddress<WakeUpCCIntervalCapabilitiesReportOptions>,
@@ -507,7 +503,7 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 			wakeUpOnDemandSupported = !!(raw.payload[12] & 0b1);
 		}
 
-		return new WakeUpCCIntervalCapabilitiesReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			minWakeUpInterval,
 			maxWakeUpInterval,
@@ -547,7 +543,6 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 	public readonly defaultWakeUpInterval: number;
 	public readonly wakeUpIntervalSteps: number;
 
-	@ccValue(WakeUpCCValues.wakeUpOnDemandSupported)
 	public readonly wakeUpOnDemandSupported: boolean;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

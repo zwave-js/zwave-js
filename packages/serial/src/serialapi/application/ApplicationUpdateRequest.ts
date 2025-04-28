@@ -4,13 +4,13 @@ import {
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type NodeUpdatePayload,
-	createSimpleReflectionDecorator,
 	encodeNodeUpdatePayload,
 	getCCName,
 	parseCCList,
 	parseNodeID,
 	parseNodeUpdatePayload,
 } from "@zwave-js/core";
+import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
 	Message,
@@ -43,7 +43,7 @@ const {
 	lookupConstructor: getApplicationUpdateRequestConstructor,
 	lookupValue: getApplicationUpdateType,
 } = createSimpleReflectionDecorator<
-	ApplicationUpdateRequest,
+	typeof ApplicationUpdateRequest,
 	[updateType: ApplicationUpdateTypes],
 	MessageConstructor<ApplicationUpdateRequest>
 >({
@@ -91,7 +91,7 @@ export class ApplicationUpdateRequest extends Message {
 
 	public readonly updateType: ApplicationUpdateTypes;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.updateType]),
 			this.payload,
@@ -135,7 +135,7 @@ export class ApplicationUpdateRequestWithNodeInfo
 	public nodeId: number;
 	public nodeInformation: NodeUpdatePayload;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = encodeNodeUpdatePayload(
 			this.nodeInformation,
 			ctx.nodeIdType,

@@ -1,4 +1,4 @@
-import type { LogContext } from "@zwave-js/core/safe";
+import type { LogContext } from "@zwave-js/core";
 
 export const CONFIG_LABEL = "CONFIG";
 export const CONFIG_LOGLEVEL = "debug";

@@ -1,41 +1,39 @@
-import type { MessageOrCCLogEntry, WithAddress } from "@zwave-js/core/safe";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
 	MessagePriority,
 	ValueMetadata,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, num2hex, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI, PhysicalCCAPI } from "../lib/API";
+import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
 
-export const ManufacturerSpecificCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Manufacturer Specific"], {
+export const ManufacturerSpecificCCValues = V.defineCCValues(
+	CommandClasses["Manufacturer Specific"],
+	{
 		...V.staticProperty(
 			"manufacturerId",
 			{
@@ -44,7 +42,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productType",
 			{
@@ -53,7 +50,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productId",
 			{
@@ -62,9 +58,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Manufacturer Specific"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"deviceId",
 			"deviceId",
@@ -79,8 +72,8 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			}),
 			{ minVersion: 2 } as const,
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -234,6 +227,9 @@ export interface ManufacturerSpecificCCReportOptions {
 }
 
 @CCCommand(ManufacturerSpecificCommand.Report)
+@ccValueProperty("manufacturerId", ManufacturerSpecificCCValues.manufacturerId)
+@ccValueProperty("productType", ManufacturerSpecificCCValues.productType)
+@ccValueProperty("productId", ManufacturerSpecificCCValues.productId)
 export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
 	public constructor(
 		options: WithAddress<ManufacturerSpecificCCReportOptions>,
@@ -254,7 +250,7 @@ export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
 		const productType = raw.payload.readUInt16BE(2);
 		const productId = raw.payload.readUInt16BE(4);
 
-		return new ManufacturerSpecificCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			manufacturerId,
 			productType,
@@ -262,16 +258,13 @@ export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
 		});
 	}
 
-	@ccValue(ManufacturerSpecificCCValues.manufacturerId)
 	public readonly manufacturerId: number;
 
-	@ccValue(ManufacturerSpecificCCValues.productType)
 	public readonly productType: number;
 
-	@ccValue(ManufacturerSpecificCCValues.productId)
 	public readonly productId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(6);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.productType, 2);
@@ -302,6 +295,11 @@ export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
 }
 
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificReport)
+@ccValueProperty(
+	"deviceId",
+	ManufacturerSpecificCCValues.deviceId,
+	(self) => [self.type],
+)
 export class ManufacturerSpecificCCDeviceSpecificReport
 	extends ManufacturerSpecificCC
 {
@@ -329,7 +327,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			? deviceIdData.toString("utf8")
 			: "0x" + deviceIdData.toString("hex");
 
-		return new ManufacturerSpecificCCDeviceSpecificReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			type,
 			deviceId,
@@ -338,11 +336,6 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 
 	public readonly type: DeviceIdType;
 
-	@ccValue(
-		ManufacturerSpecificCCValues.deviceId,
-		(self: ManufacturerSpecificCCDeviceSpecificReport) =>
-			[self.type] as const,
-	)
 	public readonly deviceId: string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -389,7 +382,7 @@ export class ManufacturerSpecificCCDeviceSpecificGet
 
 	public deviceIdType: DeviceIdType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([(this.deviceIdType || 0) & 0b111]);
 		return super.serialize(ctx);
 	}

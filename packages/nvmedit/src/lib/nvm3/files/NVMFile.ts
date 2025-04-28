@@ -1,13 +1,17 @@
-import { createSimpleReflectionDecorator } from "@zwave-js/core";
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	Bytes,
 	type TypedClassDecorator,
 	isUint8Array,
 	num2hex,
 } from "@zwave-js/shared";
-import { FragmentType, NVM3_MAX_OBJ_SIZE_SMALL, ObjectType } from "../consts";
-import type { NVM3Object } from "../object";
+import {
+	FragmentType,
+	NVM3_MAX_OBJ_SIZE_SMALL,
+	ObjectType,
+} from "../consts.js";
+import type { NVM3Object } from "../object.js";
 
 export interface NVMFileBaseOptions {
 	fileId?: number;
@@ -110,9 +114,9 @@ export type NVMFileConstructor<T extends NVMFile> = typeof NVMFile & {
 /**
  * Defines the ID associated with a NVM file class
  */
-export function nvmFileID(
+export function nvmFileID<Class extends typeof NVMFile>(
 	id: number | ((id: number) => boolean),
-): TypedClassDecorator<NVMFile> {
+): TypedClassDecorator<Class> {
 	return (messageClass) => {
 		Reflect.defineMetadata(METADATA_nvmFileID, id, messageClass);
 
@@ -184,7 +188,7 @@ export function getNVMFileIDStatic<T extends NVMFileConstructor<NVMFile>>(
 export type NVMSection = "application" | "protocol";
 
 const nvmSectionDecorator = createSimpleReflectionDecorator<
-	NVMFile,
+	typeof NVMFile,
 	[section: NVMSection]
 >({
 	name: "nvmSection",

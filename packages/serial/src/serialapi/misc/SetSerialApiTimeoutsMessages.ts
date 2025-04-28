@@ -11,7 +11,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 export interface SetSerialApiTimeoutsRequestOptions {
 	ackTimeout: number;
@@ -33,7 +33,7 @@ export class SetSerialApiTimeoutsRequest extends Message {
 	public ackTimeout: number;
 	public byteTimeout: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			Math.round(this.ackTimeout / 10),
 			Math.round(this.byteTimeout / 10),

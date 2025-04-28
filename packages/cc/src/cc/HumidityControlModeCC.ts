@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -12,14 +14,8 @@ import {
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -29,29 +25,33 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
-import { HumidityControlMode, HumidityControlModeCommand } from "../lib/_Types";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
+import {
+	HumidityControlMode,
+	HumidityControlModeCommand,
+} from "../lib/_Types.js";
 
-export const HumidityControlModeCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Humidity Control Mode"], {
+export const HumidityControlModeCCValues = V.defineCCValues(
+	CommandClasses["Humidity Control Mode"],
+	{
 		...V.staticProperty(
 			"mode",
 			{
@@ -60,10 +60,9 @@ export const HumidityControlModeCCValues = Object.freeze({
 				label: "Humidity control mode",
 			} as const,
 		),
-
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Humidity Control Mode"])
 export class HumidityControlModeCCAPI extends CCAPI {
@@ -310,7 +309,7 @@ export class HumidityControlModeCCSet extends HumidityControlModeCC {
 
 	public mode: HumidityControlMode;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.mode & 0b1111]);
 		return super.serialize(ctx);
 	}
@@ -331,6 +330,7 @@ export interface HumidityControlModeCCReportOptions {
 }
 
 @CCCommand(HumidityControlModeCommand.Report)
+@ccValueProperty("mode", HumidityControlModeCCValues.mode)
 export class HumidityControlModeCCReport extends HumidityControlModeCC {
 	public constructor(
 		options: WithAddress<HumidityControlModeCCReportOptions>,
@@ -348,13 +348,12 @@ export class HumidityControlModeCCReport extends HumidityControlModeCC {
 		validatePayload(raw.payload.length >= 1);
 		const mode: HumidityControlMode = raw.payload[0] & 0b1111;
 
-		return new HumidityControlModeCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			mode,
 		});
 	}
 
-	@ccValue(HumidityControlModeCCValues.mode)
 	public readonly mode: HumidityControlMode;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -377,6 +376,7 @@ export interface HumidityControlModeCCSupportedReportOptions {
 }
 
 @CCCommand(HumidityControlModeCommand.SupportedReport)
+@ccValueProperty("supportedModes", HumidityControlModeCCValues.supportedModes)
 export class HumidityControlModeCCSupportedReport
 	extends HumidityControlModeCC
 {
@@ -402,7 +402,7 @@ export class HumidityControlModeCCSupportedReport
 			supportedModes.unshift(HumidityControlMode.Off);
 		}
 
-		return new HumidityControlModeCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedModes,
 		});
@@ -424,7 +424,6 @@ export class HumidityControlModeCCSupportedReport
 		return true;
 	}
 
-	@ccValue(HumidityControlModeCCValues.supportedModes)
 	public supportedModes: HumidityControlMode[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

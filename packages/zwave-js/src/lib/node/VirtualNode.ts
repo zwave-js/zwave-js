@@ -2,13 +2,11 @@ import {
 	BasicCCValues,
 	type CCAPI,
 	type SetValueAPIOptions,
-	type ValueIDProperties,
-} from "@zwave-js/cc";
-import {
 	type SetValueResult,
 	SetValueStatus,
+	type ValueIDProperties,
 	supervisionResultToSetValueResult,
-} from "@zwave-js/cc/safe";
+} from "@zwave-js/cc";
 import {
 	SecurityClass,
 	SupervisionStatus,
@@ -27,9 +25,9 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import { distinct } from "alcalzone-shared/arrays";
-import type { Driver } from "../driver/Driver";
-import type { ZWaveNode } from "./Node";
-import { VirtualEndpoint } from "./VirtualEndpoint";
+import type { Driver } from "../driver/Driver.js";
+import type { ZWaveNode } from "./Node.js";
+import { VirtualEndpoint } from "./VirtualEndpoint.js";
 
 export interface VirtualValueID extends TranslatedValueID {
 	/** The metadata that belongs to this virtual value ID */
@@ -338,8 +336,9 @@ export class VirtualNode extends VirtualEndpoint {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		// Zero is the root endpoint - i.e. this node
-		if (index === 0) return this;
+		// Zero is the root endpoint - i.e. this node. Also accept undefined if an application misbehaves
+		if (!index) return this;
+
 		// Check if the Multi Channel CC interviews for all nodes are completed,
 		// because we don't have all the information before that
 		if (!this.isMultiChannelInterviewComplete) {

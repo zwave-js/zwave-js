@@ -1,6 +1,8 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
@@ -13,14 +15,8 @@ import {
 	maybeUnknownToString,
 	parseMaybeNumber,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -32,7 +28,11 @@ import {
 	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
+import {
+	multilevelSwitchTypeProperties,
+	multilevelSwitchTypeToActions,
+} from "../lib/CCValueUtils.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -40,42 +40,27 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	LevelChangeDirection,
 	MultilevelSwitchCommand,
 	SwitchType,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-/**
- * Translates a switch type into two actions that may be performed. Unknown types default to Down/Up
- */
-function switchTypeToActions(switchType: string): [down: string, up: string] {
-	if (!switchType.includes("/")) switchType = SwitchType[0x02]; // Down/Up
-	return switchType.split("/", 2) as any;
-}
-
-/**
- * The property names are organized so that positive motions are at odd indices and negative motions at even indices
- */
-const switchTypeProperties = Object.keys(SwitchType)
-	.filter((key) => key.includes("/"))
-	.map((key) => switchTypeToActions(key))
-	.reduce<string[]>((acc, cur) => acc.concat(...cur), []);
-
-export const MultilevelSwitchCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multilevel Switch"], {
+export const MultilevelSwitchCCValues = V.defineCCValues(
+	CommandClasses["Multilevel Switch"],
+	{
 		...V.staticProperty(
 			"currentValue",
 			{
@@ -83,7 +68,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				label: "Current value",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"targetValue",
 			{
@@ -92,7 +76,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const,
 		),
-
 		...V.staticProperty(
 			"duration",
 			{
@@ -100,7 +83,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				label: "Remaining duration",
 			} as const,
 		),
-
 		...V.staticProperty(
 			"restorePrevious",
 			{
@@ -111,7 +93,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				},
 			} as const,
 		),
-
 		...V.staticPropertyWithName(
 			"compatEvent",
 			"event",
@@ -126,17 +107,11 @@ export const MultilevelSwitchCCValues = Object.freeze({
 						?.treatMultilevelSwitchSetAsEvent,
 			},
 		),
-
 		...V.staticProperty("switchType", undefined, { internal: true }),
-
-		// TODO: Solve this differently
 		...V.staticProperty("superviseStartStopLevelChange", undefined, {
 			internal: true,
 			supportsEndpoints: false,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multilevel Switch"], {
 		...V.dynamicPropertyWithName(
 			"levelChangeUp",
 			// This is called "up" here, but the actual property name will depend on
@@ -146,18 +121,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 					SwitchType,
 					switchType,
 				);
-				const [, up] = switchTypeToActions(switchTypeName);
+				const [, up] = multilevelSwitchTypeToActions(switchTypeName);
 				return up;
 			},
 			({ property }) =>
 				typeof property === "string"
-				&& switchTypeProperties.indexOf(property) % 2 === 1,
+				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 1,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
 					switchType,
 				);
-				const [, up] = switchTypeToActions(switchTypeName);
+				const [, up] = multilevelSwitchTypeToActions(switchTypeName);
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `Perform a level change (${up})`,
@@ -170,7 +145,6 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-
 		...V.dynamicPropertyWithName(
 			"levelChangeDown",
 			// This is called "down" here, but the actual property name will depend on
@@ -180,18 +154,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 					SwitchType,
 					switchType,
 				);
-				const [down] = switchTypeToActions(switchTypeName);
+				const [down] = multilevelSwitchTypeToActions(switchTypeName);
 				return down;
 			},
 			({ property }) =>
 				typeof property === "string"
-				&& switchTypeProperties.indexOf(property) % 2 === 0,
+				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 0,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
 					switchType,
 				);
-				const [down] = switchTypeToActions(switchTypeName);
+				const [down] = multilevelSwitchTypeToActions(switchTypeName);
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
 					label: `Perform a level change (${down})`,
@@ -204,8 +178,8 @@ export const MultilevelSwitchCCValues = Object.freeze({
 				} as const;
 			},
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Multilevel Switch"])
 export class MultilevelSwitchCCAPI extends CCAPI {
@@ -347,7 +321,9 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				}
 				const duration = Duration.from(options?.transitionDuration);
 				return this.set(value, duration);
-			} else if (switchTypeProperties.includes(property as string)) {
+			} else if (
+				multilevelSwitchTypeProperties.includes(property as string)
+			) {
 				// Since the switch only supports one of the switch types, we would
 				// need to check if the correct one is used. But since the names are
 				// purely cosmetic, we just accept all of them
@@ -362,11 +338,12 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				if (value) {
 					// The property names are organized so that positive motions are
 					// at odd indices and negative motions at even indices
-					const direction =
-						switchTypeProperties.indexOf(property as string) % 2
-								=== 0
-							? "down"
-							: "up";
+					const direction = multilevelSwitchTypeProperties.indexOf(
+									property as string,
+								) % 2
+							=== 0
+						? "down"
+						: "up";
 					// Singlecast only: Try to retrieve the current value to use as the start level,
 					// even if the target node is going to ignore it. There might
 					// be some bugged devices that ignore the ignore start level flag.
@@ -648,7 +625,7 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 			duration = Duration.parseReport(raw.payload[1]);
 		}
 
-		return new MultilevelSwitchCCSet({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			targetValue,
 			duration,
@@ -658,7 +635,7 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 	public targetValue: number;
 	public duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.targetValue,
 			(this.duration ?? Duration.default()).serializeSet(),
@@ -699,6 +676,9 @@ export interface MultilevelSwitchCCReportOptions {
 }
 
 @CCCommand(MultilevelSwitchCommand.Report)
+@ccValueProperty("targetValue", MultilevelSwitchCCValues.targetValue)
+@ccValueProperty("duration", MultilevelSwitchCCValues.duration)
+@ccValueProperty("currentValue", MultilevelSwitchCCValues.currentValue)
 export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public constructor(
 		options: WithAddress<MultilevelSwitchCCReportOptions>,
@@ -728,7 +708,7 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 			duration = Duration.parseReport(raw.payload[2]);
 		}
 
-		return new MultilevelSwitchCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			currentValue,
 			targetValue,
@@ -736,16 +716,13 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 		});
 	}
 
-	@ccValue(MultilevelSwitchCCValues.targetValue)
 	public targetValue: MaybeUnknown<number> | undefined;
 
-	@ccValue(MultilevelSwitchCCValues.duration)
 	public duration: Duration | undefined;
 
-	@ccValue(MultilevelSwitchCCValues.currentValue)
 	public currentValue: MaybeUnknown<number> | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.currentValue ?? 0xfe,
 			this.targetValue ?? 0xfe,
@@ -821,7 +798,7 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 			duration = Duration.parseSet(raw.payload[2]);
 		}
 
-		return new MultilevelSwitchCCStartLevelChange({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			ignoreStartLevel,
 			direction,
@@ -835,7 +812,7 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	public ignoreStartLevel: boolean;
 	public direction: keyof typeof LevelChangeDirection;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const controlByte = (LevelChangeDirection[this.direction] << 6)
 			| (this.ignoreStartLevel ? 0b0010_0000 : 0);
 		this.payload = Bytes.from([
@@ -884,6 +861,7 @@ export interface MultilevelSwitchCCSupportedReportOptions {
 }
 
 @CCCommand(MultilevelSwitchCommand.SupportedReport)
+@ccValueProperty("switchType", MultilevelSwitchCCValues.switchType)
 export class MultilevelSwitchCCSupportedReport extends MultilevelSwitchCC {
 	public constructor(
 		options: WithAddress<MultilevelSwitchCCSupportedReportOptions>,
@@ -900,14 +878,14 @@ export class MultilevelSwitchCCSupportedReport extends MultilevelSwitchCC {
 		validatePayload(raw.payload.length >= 1);
 		const switchType: SwitchType = raw.payload[0] & 0b11111;
 
-		return new MultilevelSwitchCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			switchType,
 		});
 	}
 
 	// This is the primary switch type. We're not supporting secondary switch types
-	@ccValue(MultilevelSwitchCCValues.switchType)
+
 	public readonly switchType: SwitchType;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -916,7 +894,7 @@ export class MultilevelSwitchCCSupportedReport extends MultilevelSwitchCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.switchType & 0b11111]);
 		return super.serialize(ctx);
 	}

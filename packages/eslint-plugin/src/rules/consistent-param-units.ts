@@ -1,6 +1,6 @@
 import type { AST } from "jsonc-eslint-parser";
 import { CONFIG_PARAM } from "../jsonSelectors.js";
-import { type JSONCRule } from "../utils.js";
+import type { JSONCRule } from "../utils.js";
 
 interface FixableUnit {
 	wrong: string[];

@@ -6,17 +6,15 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
-import type {
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-	SuccessIndicator,
-} from "@zwave-js/serial";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageEncodingContext,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
+	type SuccessIndicator,
 	expectedResponse,
 	messageTypes,
 	priority,
@@ -46,7 +44,7 @@ export class ExtendedNVMOperationsRequest extends Message {
 	// This must be set in subclasses
 	public command!: ExtendedNVMOperationsCommand;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.command]),
 			this.payload,
@@ -139,7 +137,7 @@ export class ExtendedNVMOperationsReadRequest
 	public length: number;
 	public offset: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(5);
 		this.payload[0] = this.length;
 		this.payload.writeUInt32BE(this.offset, 1);
@@ -208,7 +206,7 @@ export class ExtendedNVMOperationsWriteRequest
 	public offset: number;
 	public buffer: Uint8Array;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(1 + 4 + this.buffer.length);
 		this.payload[0] = this.buffer.length;
 		this.payload.writeUInt32BE(this.offset, 1);

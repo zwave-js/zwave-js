@@ -15,7 +15,7 @@ import {
 	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Communication via Security S0 works", {
 	// debug: true,
@@ -167,12 +167,13 @@ integrationTest("Communication via Security S0 works", {
 
 		// Parse Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
 		const parseS0CC: MockNodeBehavior = {
-			handleCC(controller, self, receivedCC) {
+			async handleCC(controller, self, receivedCC) {
 				// We don't support sequenced commands here
 				if (receivedCC instanceof SecurityCCCommandEncapsulation) {
-					receivedCC.mergePartialCCs([], {
+					await receivedCC.mergePartialCCs([], {
 						sourceNodeId: controller.ownNodeId,
 						__internalIsMockNode: true,
+						frameType: "singlecast",
 						...self.encodingContext,
 						...self.securityManagers,
 					});
@@ -187,8 +188,6 @@ integrationTest("Communication via Security S0 works", {
 	testBody: async (t, driver, node, mockController, mockNode) => {
 		const result = await node.commandClasses.Basic.get();
 
-		t.is(result?.currentValue, 2);
-
-		t.pass();
+		t.expect(result?.currentValue).toBe(2);
 	},
 });

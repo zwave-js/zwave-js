@@ -1,5 +1,9 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
-import { MessagePriority, encodeNodeID, parseNodeID } from "@zwave-js/core";
+import {
+	type MessageOrCCLogEntry,
+	MessagePriority,
+	encodeNodeID,
+	parseNodeID,
+} from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,
@@ -55,7 +59,7 @@ export class GetControllerIdResponse extends Message {
 	public homeId: number;
 	public ownNodeId: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const nodeId = encodeNodeID(this.ownNodeId, ctx.nodeIdType);
 		const homeId = new Bytes(4);
 		homeId.writeUInt32BE(this.homeId, 0);

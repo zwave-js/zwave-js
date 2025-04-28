@@ -1,15 +1,43 @@
-import { formatId, padVersion } from "@zwave-js/shared";
-import * as fs from "fs-extra";
-import path from "node:path";
-import * as semver from "semver";
-import type { ConfigLogger } from "./Logger";
-import type { DeviceConfigIndexEntry } from "./devices/DeviceConfig";
+import {
+	copyFilesRecursive,
+	formatId,
+	getenv,
+	padVersion,
+	readTextFile,
+	writeTextFile,
+} from "@zwave-js/shared";
+import type {
+	CopyFile,
+	ManageDirectory,
+	ReadFile,
+	ReadFileSystemInfo,
+	WriteFile,
+} from "@zwave-js/shared/bindings";
+import { fileURLToPath } from "node:url";
+import path from "pathe";
+import semverGte from "semver/functions/gte.js";
+import semverInc from "semver/functions/inc.js";
+import semverLte from "semver/functions/lte.js";
+import semverSatisfies from "semver/functions/satisfies.js";
+import semverValid from "semver/functions/valid.js";
+import type { ConfigLogger } from "./Logger.js";
+import { PACKAGE_VERSION } from "./_version.js";
+import type { DeviceConfigIndexEntry } from "./devices/DeviceConfig.js";
 
 /** The absolute path of the embedded configuration directory */
-export const configDir = path.resolve(__dirname, "../config");
+export const configDir = import.meta.url.startsWith("file:")
+	? path.join(
+		path.dirname(fileURLToPath(import.meta.url)),
+		import.meta.url.endsWith("src/utils.ts")
+			? ".."
+			: "../..",
+		"config",
+	)
+	: import.meta.resolve("/config");
+
 /** The (optional) absolute path of an external configuration directory */
-export function externalConfigDir(): string | undefined {
-	return process.env.ZWAVEJS_EXTERNAL_CONFIG;
+export function getExternalConfigDirEnvVariable(): string | undefined {
+	return getenv("ZWAVEJS_EXTERNAL_CONFIG");
 }
 
 export function getDeviceEntryPredicate(
@@ -25,11 +53,11 @@ export function getDeviceEntryPredicate(
 		if (firmwareVersion != undefined) {
 			// A firmware version was given, only look at files with a matching firmware version
 			return (
-				semver.lte(
+				semverLte(
 					padVersion(entry.firmwareVersion.min),
 					padVersion(firmwareVersion),
 				)
-				&& semver.gte(
+				&& semverGte(
 					padVersion(entry.firmwareVersion.max),
 					padVersion(firmwareVersion),
 				)
@@ -37,10 +65,6 @@ export function getDeviceEntryPredicate(
 		}
 		return true;
 	};
-}
-
-export async function getEmbeddedConfigVersion(): Promise<string> {
-	return (await fs.readJSON(path.join(__dirname, "../package.json"))).version;
 }
 
 export type SyncExternalConfigDirResult =
@@ -56,9 +80,10 @@ export type SyncExternalConfigDirResult =
  * Synchronizes or updates the external config directory and returns whether the directory is in a state that can be used
  */
 export async function syncExternalConfigDir(
+	fs: ManageDirectory & ReadFileSystemInfo & ReadFile & CopyFile & WriteFile,
+	extConfigDir: string,
 	logger: ConfigLogger,
 ): Promise<SyncExternalConfigDirResult> {
-	const extConfigDir = externalConfigDir();
 	if (!extConfigDir) return { success: false };
 
 	// Make sure the config dir exists
@@ -73,9 +98,9 @@ export async function syncExternalConfigDir(
 	}
 
 	const externalVersionFilename = path.join(extConfigDir, "version");
-	const currentVersion = await getEmbeddedConfigVersion();
+	const currentVersion = PACKAGE_VERSION;
 	const supportedRange = `>=${currentVersion} <${
-		semver.inc(
+		semverInc(
 			currentVersion,
 			"patch",
 		)
@@ -90,11 +115,15 @@ export async function syncExternalConfigDir(
 	let wipe = false;
 	let externalVersion: string | undefined;
 	try {
-		externalVersion = await fs.readFile(externalVersionFilename, "utf8");
-		if (!semver.valid(externalVersion)) {
+		externalVersion = await readTextFile(
+			fs,
+			externalVersionFilename,
+			"utf8",
+		);
+		if (!semverValid(externalVersion)) {
 			wipe = true;
 		} else if (
-			!semver.satisfies(externalVersion, supportedRange, {
+			!semverSatisfies(externalVersion, supportedRange, {
 				includePrerelease: true,
 			})
 		) {
@@ -110,14 +139,20 @@ export async function syncExternalConfigDir(
 	// Wipe and override the external dir
 	try {
 		logger.print(`Synchronizing external config dir ${extConfigDir}...`);
-		await fs.emptyDir(extConfigDir);
-		await fs.copy(configDir, extConfigDir, {
-			filter: async (src: string) => {
-				if (!(await fs.stat(src)).isFile()) return true;
-				return src.endsWith(".json");
-			},
-		});
-		await fs.writeFile(externalVersionFilename, currentVersion, "utf8");
+		await fs.deleteDir(extConfigDir);
+		await fs.ensureDir(extConfigDir);
+		await copyFilesRecursive(
+			fs,
+			configDir,
+			extConfigDir,
+			(src) => src.endsWith(".json"),
+		);
+		await writeTextFile(
+			fs,
+			externalVersionFilename,
+			currentVersion,
+			"utf8",
+		);
 		externalVersion = currentVersion;
 	} catch {
 		// Something went wrong
@@ -137,7 +172,7 @@ export function versionInRange(
 	max: string,
 ): boolean {
 	return (
-		semver.gte(padVersion(version), padVersion(min))
-		&& semver.lte(padVersion(version), padVersion(max))
+		semverGte(padVersion(version), padVersion(min))
+		&& semverLte(padVersion(version), padVersion(max))
 	);
 }

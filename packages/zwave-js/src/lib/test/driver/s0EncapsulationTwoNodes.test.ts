@@ -16,7 +16,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuiteMulti";
+import { integrationTest } from "../integrationTestSuiteMulti.js";
 
 integrationTest(
 	"Security S0 Nonce Get is answered while waiting for a reply from another node",
@@ -202,14 +202,15 @@ integrationTest(
 
 				// Parse Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
 				const parseS0CC: MockNodeBehavior = {
-					handleCC(controller, self, receivedCC) {
+					async handleCC(controller, self, receivedCC) {
 						// We don't support sequenced commands here
 						if (
 							receivedCC instanceof SecurityCCCommandEncapsulation
 						) {
-							receivedCC.mergePartialCCs([], {
+							await receivedCC.mergePartialCCs([], {
 								sourceNodeId: controller.ownNodeId,
 								__internalIsMockNode: true,
+								frameType: "singlecast",
 								...self.encodingContext,
 								...self.securityManagers,
 							});
@@ -260,9 +261,7 @@ integrationTest(
 					);
 				});
 
-			t.is((await basicGet)?.currentValue, 2);
-
-			t.pass();
+			t.expect((await basicGet)?.currentValue).toBe(2);
 		},
 	},
 );

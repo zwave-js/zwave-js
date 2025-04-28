@@ -6,19 +6,19 @@ export {
 	RouteProtocolDataRate,
 	protocolDataRateToString,
 	rssiToString,
-} from "@zwave-js/core/safe";
-export type { Firmware, FirmwareFileFormat } from "@zwave-js/core/safe";
+} from "@zwave-js/core";
+export type { Firmware, FirmwareFileFormat } from "@zwave-js/core";
 export {
 	buffer2hex,
 	formatId,
 	getEnumMemberName,
 	num2hex,
-} from "@zwave-js/shared/safe";
-export { driverPresets } from "./lib/driver/ZWaveOptions";
+} from "@zwave-js/shared";
+export { driverPresets } from "./lib/driver/ZWaveOptions.js";
 export {
 	formatLifelineHealthCheckRound,
 	formatLifelineHealthCheckSummary,
 	formatRouteHealthCheckRound,
 	formatRouteHealthCheckSummary,
 	healthCheckRatingToWord,
-} from "./lib/node/HealthCheck";
+} from "./lib/node/HealthCheck.js";

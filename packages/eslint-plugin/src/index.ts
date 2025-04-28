@@ -3,6 +3,7 @@ import { ccAPIValidateArgs } from "./rules/ccapi-validate-args.js";
 import { consistentCCClasses } from "./rules/consistent-cc-classes.js";
 import { consistentConfigStringCase } from "./rules/consistent-config-string-case.js";
 import { consistentDeviceConfigPropertyOrder } from "./rules/consistent-device-config-property-order.js";
+import { consistentImportDeclarations } from "./rules/consistent-import-declarations.js";
 import { consistentParamUnits } from "./rules/consistent-param-units.js";
 import { noDebugInTests } from "./rules/no-debug-in-tests.js";
 import { noForbiddenImports } from "./rules/no-forbidden-imports.js";
@@ -22,6 +23,7 @@ export default {
 		"consistent-config-string-case": consistentConfigStringCase,
 		"consistent-device-config-property-order":
 			consistentDeviceConfigPropertyOrder,
+		"consistent-import-declarations": consistentImportDeclarations,
 		"consistent-param-units": consistentParamUnits,
 		"no-debug-in-tests": noDebugInTests,
 		"no-forbidden-imports": noForbiddenImports,

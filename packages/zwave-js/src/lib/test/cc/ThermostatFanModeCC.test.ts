@@ -7,8 +7,8 @@ import {
 	ThermostatFanModeCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -19,17 +19,19 @@ function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
+test("the Get command should serialize correctly", async (t) => {
 	const cc = new ThermostatFanModeCCGet({ nodeId: 5 });
 	const expected = buildCCBuffer(
 		Uint8Array.from([
 			ThermostatFanModeCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly (off = false)", (t) => {
+test("the Set command should serialize correctly (off = false)", async (t) => {
 	const cc = new ThermostatFanModeCCSet({
 		nodeId: 5,
 		mode: ThermostatFanMode["Auto medium"],
@@ -41,10 +43,12 @@ test("the Set command should serialize correctly (off = false)", (t) => {
 			0x04, // target value
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Set command should serialize correctly (off = true)", (t) => {
+test("the Set command should serialize correctly (off = true)", async (t) => {
 	const cc = new ThermostatFanModeCCSet({
 		nodeId: 5,
 		mode: ThermostatFanMode["Auto medium"],
@@ -56,24 +60,26 @@ test("the Set command should serialize correctly (off = true)", (t) => {
 			0b1000_0100, // target value
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command should be deserialized correctly", (t) => {
+test("the Report command should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			ThermostatFanModeCommand.Report, // CC Command
 			0b1000_0010, // Off bit set to 1 and Auto high mode
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 5 } as any,
 	) as ThermostatFanModeCCReport;
-	t.is(cc.constructor, ThermostatFanModeCCReport);
+	t.expect(cc.constructor).toBe(ThermostatFanModeCCReport);
 
-	t.is(cc.mode, ThermostatFanMode["Auto high"]);
-	t.is(cc.off, true);
+	t.expect(cc.mode).toBe(ThermostatFanMode["Auto high"]);
+	t.expect(cc.off).toBe(true);
 });
 
 // TODO: add tests for getting supported features, interview, etc

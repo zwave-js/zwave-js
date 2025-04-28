@@ -7,8 +7,8 @@ import {
 	ThermostatFanStateCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
-import test from "ava";
+import { Bytes } from "@zwave-js/shared";
+import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -19,41 +19,43 @@ function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	]);
 }
 
-test("the Get command should serialize correctly", (t) => {
+test("the Get command should serialize correctly", async (t) => {
 	const cc = new ThermostatFanStateCCGet({ nodeId: 1 });
 	const expected = buildCCBuffer(
 		Uint8Array.from([
 			ThermostatFanStateCommand.Get, // CC Command
 		]),
 	);
-	t.deepEqual(cc.serialize({} as any), expected);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
 });
 
-test("the Report command (v1 - v2) should be deserialized correctly", (t) => {
+test("the Report command (v1 - v2) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([
 			ThermostatFanStateCommand.Report, // CC Command
 			ThermostatFanState["Idle / off"], // state
 		]),
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 1 } as any,
 	) as ThermostatFanStateCCReport;
-	t.is(cc.constructor, ThermostatFanStateCCReport);
+	t.expect(cc.constructor).toBe(ThermostatFanStateCCReport);
 
-	t.is(cc.state, ThermostatFanState["Idle / off"]);
+	t.expect(cc.state).toBe(ThermostatFanState["Idle / off"]);
 });
 
-test("deserializing an unsupported command should return an unspecified version of ThermostatFanStateCC", (t) => {
+test("deserializing an unsupported command should return an unspecified version of ThermostatFanStateCC", async (t) => {
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = CommandClass.parse(
+	const cc = await CommandClass.parse(
 		serializedCC,
 		{ sourceNodeId: 1 } as any,
 	) as ThermostatFanStateCC;
-	t.is(cc.constructor, ThermostatFanStateCC);
+	t.expect(cc.constructor).toBe(ThermostatFanStateCC);
 });
 
 // test("the CC values should have the correct metadata", (t) => {

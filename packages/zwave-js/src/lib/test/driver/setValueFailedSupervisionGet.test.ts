@@ -9,7 +9,7 @@ import {
 import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { integrationTest } from "../integrationTestSuite";
+import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"setValue with failed supervised command: expect validation GET",
@@ -96,8 +96,6 @@ integrationTest(
 						"Node should have sent a BinarySwitchCCReport with currentValue false",
 				},
 			);
-
-			t.pass();
 		},
 	},
 );

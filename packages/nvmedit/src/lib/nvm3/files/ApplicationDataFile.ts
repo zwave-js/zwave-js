@@ -1,4 +1,4 @@
-import { type Bytes } from "@zwave-js/shared/safe";
+import type { Bytes } from "@zwave-js/shared";
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -6,7 +6,7 @@ import {
 	gotDeserializationOptions,
 	nvmFileID,
 	nvmSection,
-} from "./NVMFile";
+} from "./NVMFile.js";
 
 export interface ApplicationDataFileOptions extends NVMFileCreationOptions {
 	applicationData: Bytes;

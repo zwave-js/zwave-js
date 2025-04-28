@@ -1,5 +1,6 @@
-import { type MockPortBinding } from "@zwave-js/serial/mock";
-import { Bytes } from "@zwave-js/shared/safe";
+import type { ZWaveSerialStream } from "@zwave-js/serial";
+import type { MockPort } from "@zwave-js/serial/mock";
+import { Bytes } from "@zwave-js/shared";
 import {
 	MockController,
 	type MockControllerOptions,
@@ -7,38 +8,45 @@ import {
 	type MockNodeOptions,
 } from "@zwave-js/testing";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
 	createDefaultMockControllerBehaviors,
 	createDefaultMockNodeBehaviors,
-} from "../../Utils";
+} from "../../Testing.js";
 import {
 	type CreateAndStartDriverWithMockPortResult,
 	createAndStartDriverWithMockPort,
-} from "../driver/DriverMock";
-import { type PartialZWaveOptions } from "../driver/ZWaveOptions";
+} from "../driver/DriverMock.js";
+import type { PartialZWaveOptions } from "../driver/ZWaveOptions.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function prepareDriver(
 	cacheDir: string = path.join(__dirname, "cache"),
 	logToFile: boolean = false,
 	additionalOptions: PartialZWaveOptions = {},
 ): Promise<CreateAndStartDriverWithMockPortResult> {
+	// Skipping the bootloader check speeds up tests a lot
+	additionalOptions.testingHooks ??= {};
+	additionalOptions.testingHooks.skipFirmwareIdentification =
+		additionalOptions.bootloaderMode === "recover"
+		|| additionalOptions.bootloaderMode == undefined;
+
+	const logConfig = additionalOptions.logConfig ?? {};
+	if (logToFile) {
+		logConfig.enabled = true;
+		logConfig.logToFile = true;
+		logConfig.filename = path.join(
+			cacheDir,
+			"logs",
+			"zwavejs_%DATE%.log",
+		);
+		logConfig.level ??= "debug";
+	}
+
 	return createAndStartDriverWithMockPort({
 		...additionalOptions,
-		portAddress: "/tty/FAKE",
-		...(logToFile
-			? {
-				logConfig: {
-					filename: path.join(
-						cacheDir,
-						"logs",
-						"zwavejs_%DATE%.log",
-					),
-					logToFile: true,
-					enabled: true,
-					level: additionalOptions.logConfig?.level ?? "debug",
-				},
-			}
-			: {}),
+		logConfig,
 		securityKeys: {
 			S0_Legacy: Bytes.from("0102030405060708090a0b0c0d0e0f10", "hex"),
 			S2_Unauthenticated: Bytes.from(
@@ -63,7 +71,8 @@ export function prepareDriver(
 }
 
 export function prepareMocks(
-	mockPort: MockPortBinding,
+	mockPort: MockPort,
+	serial: ZWaveSerialStream,
 	controller: Pick<
 		MockControllerOptions,
 		"ownNodeId" | "homeId" | "capabilities"
@@ -77,7 +86,8 @@ export function prepareMocks(
 		homeId: 0x7e570001,
 		ownNodeId: 1,
 		...controller,
-		serial: mockPort,
+		mockPort,
+		serial,
 	});
 	// Apply default behaviors that are required for interacting with the driver correctly
 	mockController.defineBehavior(...createDefaultMockControllerBehaviors());

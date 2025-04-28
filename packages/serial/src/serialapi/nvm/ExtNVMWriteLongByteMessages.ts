@@ -62,7 +62,7 @@ export class ExtNVMWriteLongByteRequest extends Message {
 	public offset: number;
 	public byte: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(4);
 		this.payload.writeUIntBE(this.offset, 0, 3);
 		this.payload[3] = this.byte;

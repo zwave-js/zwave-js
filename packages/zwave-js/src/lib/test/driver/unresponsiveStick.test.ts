@@ -3,12 +3,12 @@ import { FunctionType } from "@zwave-js/serial";
 import {
 	GetControllerIdRequest,
 	type GetControllerIdResponse,
+	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
-import { SoftResetRequest } from "@zwave-js/serial/serialapi";
-import { type MockControllerBehavior } from "@zwave-js/testing";
+import type { MockControllerBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import Sinon from "sinon";
-import { integrationTest } from "../integrationTestSuite";
+import { vi } from "vitest";
+import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldRespond = true;
 
@@ -50,7 +50,7 @@ integrationTest(
 				{ supportCheck: false },
 			);
 
-			t.is(ids.ownNodeId, mockController.ownNodeId);
+			t.expect(ids.ownNodeId).toBe(mockController.ownNodeId);
 		},
 	},
 );
@@ -85,16 +85,18 @@ integrationTest(
 			shouldRespond = false;
 			mockController.autoAckHostMessages = false;
 
-			const serialPortCloseSpy = Sinon.stub().callsFake(() => {
-				shouldRespond = true;
-				mockController.autoAckHostMessages = true;
-			});
-			mockController.serial.on("close", serialPortCloseSpy);
+			const serialPortCloseSpy = vi.spyOn(mockController.serial, "close")
+				.mockImplementation(
+					async () => {
+						shouldRespond = true;
+						mockController.autoAckHostMessages = true;
+					},
+				);
 
 			await wait(1000);
 
 			await assertZWaveError(
-				t,
+				t.expect,
 				() =>
 					driver.sendMessage<GetControllerIdResponse>(
 						new GetControllerIdRequest(),
@@ -108,7 +110,7 @@ integrationTest(
 
 			// The serial port should have been closed and reopened
 			await wait(100);
-			t.true(serialPortCloseSpy.called);
+			t.expect(serialPortCloseSpy).toHaveBeenCalled();
 
 			// FIXME: When closing the serial port, we lose the connection between the mock port instance and the controller
 			// Fix it at some point, then enable the below test.
@@ -161,7 +163,7 @@ integrationTest(
 
 			// The command fails
 			await assertZWaveError(
-				t,
+				t.expect,
 				() =>
 					driver.sendMessage<GetControllerIdResponse>(
 						new GetControllerIdRequest(),
@@ -176,11 +178,11 @@ integrationTest(
 			await wait(500);
 
 			// And the controller does not get soft-reset
-			t.throws(() =>
+			t.expect(() =>
 				mockController.assertReceivedHostMessage((msg) =>
 					msg.functionType === FunctionType.SoftReset
 				)
-			);
+			).toThrow();
 		},
 	},
 );

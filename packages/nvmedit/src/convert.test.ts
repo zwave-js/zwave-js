@@ -1,37 +1,43 @@
-import { cloneDeep } from "@zwave-js/shared/safe";
-import test, { type ExecutionContext } from "ava";
-import fs from "fs-extra";
+import { fs } from "@zwave-js/core/bindings/fs/node";
+import { cloneDeep, readJSON } from "@zwave-js/shared";
+import fsp from "node:fs/promises";
 import path from "node:path";
-import { jsonToNVM, migrateNVM } from ".";
+import { fileURLToPath } from "node:url";
+import { type ExpectStatic, test } from "vitest";
 import {
+	type MigrateNVMOptions,
 	type NVMJSON,
 	json500To700,
 	json700To500,
+	jsonToNVM,
 	jsonToNVM500,
+	migrateNVM,
 	nvm500ToJSON,
 	nvmToJSON,
-} from "./convert";
-import type { NVM500JSON } from "./nvm500/NVMParser";
+} from "./convert.js";
+import type { NVM500JSON } from "./nvm500/NVMParser.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function bufferEquals(
-	t: ExecutionContext,
+	expect: ExpectStatic,
 	actual: Uint8Array,
 	expected: Uint8Array,
 ) {
-	t.deepEqual(actual.buffer, expected.buffer);
+	expect(actual.buffer).toStrictEqual(expected.buffer);
 }
 
 {
 	const suite = "700-series, binary to JSON";
 
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
-	const files = fs.readdirSync(fixturesDir);
+	const files = await fsp.readdir(fixturesDir);
 
 	for (const file of files) {
 		test(`${suite} -> ${file}`, async (t) => {
-			const data = await fs.readFile(path.join(fixturesDir, file));
+			const data = await fsp.readFile(path.join(fixturesDir, file));
 			const json = await nvmToJSON(data);
-			t.snapshot(json);
+			t.expect(json).toMatchSnapshot();
 		});
 	}
 }
@@ -40,11 +46,12 @@ function bufferEquals(
 	const suite = "700 series, JSON to NVM to JSON round-trip";
 
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_json");
-	const files = fs.readdirSync(fixturesDir);
+	const files = await fsp.readdir(fixturesDir);
 
 	for (const file of files) {
 		test(`${suite} -> ${file}`, async (t) => {
-			const jsonInput: NVMJSON = await fs.readJson(
+			const jsonInput: NVMJSON = await readJSON(
+				fs,
 				path.join(fixturesDir, file),
 			);
 			const nvm = await jsonToNVM(
@@ -55,7 +62,7 @@ function bufferEquals(
 			// @ts-expect-error
 			if (!("meta" in jsonInput)) delete jsonOutput.meta;
 
-			t.deepEqual(jsonOutput, jsonInput);
+			t.expect(jsonOutput).toStrictEqual(jsonInput);
 		});
 	}
 }
@@ -67,17 +74,17 @@ function bufferEquals(
 		__dirname,
 		"../test/fixtures/nvm_700_invariants",
 	);
-	const files = fs.readdirSync(fixturesDir);
+	const files = await fsp.readdir(fixturesDir);
 
 	for (const file of files) {
 		test(`${suite} -> ${file}`, async (t) => {
-			const nvmIn = await fs.readFile(path.join(fixturesDir, file));
+			const nvmIn = await fsp.readFile(path.join(fixturesDir, file));
 
 			const version = /_(\d+\.\d+\.\d+)[_.]/.exec(file)![1];
 			const json = await nvmToJSON(nvmIn);
 			const nvmOut = await jsonToNVM(json, version);
 
-			bufferEquals(t, nvmOut, nvmIn);
+			bufferEquals(t.expect, nvmOut, nvmIn);
 		});
 	}
 }
@@ -86,13 +93,13 @@ function bufferEquals(
 	const suite = "500-series, binary to JSON";
 
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_500_binary");
-	const files = fs.readdirSync(fixturesDir);
+	const files = await fsp.readdir(fixturesDir);
 
 	for (const file of files) {
 		test(`${suite} -> ${file}`, async (t) => {
-			const data = await fs.readFile(path.join(fixturesDir, file));
+			const data = await fsp.readFile(path.join(fixturesDir, file));
 			const json = await nvm500ToJSON(data);
-			t.snapshot(json);
+			t.expect(json).toMatchSnapshot();
 		});
 	}
 }
@@ -104,7 +111,7 @@ function bufferEquals(
 		__dirname,
 		"../test/fixtures/nvm_500_invariants",
 	);
-	const files = fs.readdirSync(fixturesDir);
+	const files = await fsp.readdir(fixturesDir);
 
 	// For debugging purposes
 	// function toHex(buffer: Buffer): string {
@@ -124,7 +131,7 @@ function bufferEquals(
 
 	for (const file of files) {
 		test(`${suite} -> ${file}`, async (t) => {
-			const nvmIn = await fs.readFile(path.join(fixturesDir, file));
+			const nvmIn = await fsp.readFile(path.join(fixturesDir, file));
 
 			// const lib = /_(static|bridge)_/.exec(file)![1];
 			const json = await nvm500ToJSON(nvmIn);
@@ -133,7 +140,7 @@ function bufferEquals(
 				json.controller.protocolVersion,
 			);
 
-			bufferEquals(t, nvmOut, nvmIn);
+			bufferEquals(t.expect, nvmOut, nvmIn);
 		});
 	}
 }
@@ -142,15 +149,16 @@ function bufferEquals(
 	const suite = "500 to 700 series JSON conversion";
 
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_500_json");
-	const files = fs.readdirSync(fixturesDir);
+	const files = await fsp.readdir(fixturesDir);
 
 	for (const file of files) {
 		test(`${suite} -> ${file}`, async (t) => {
-			const json500: NVM500JSON = await fs.readJson(
+			const json500: NVM500JSON = await readJSON(
+				fs,
 				path.join(fixturesDir, file),
 			);
 			const json700 = json500To700(json500, true);
-			t.snapshot(json700);
+			t.expect(json700).toMatchSnapshot();
 		});
 	}
 }
@@ -159,11 +167,12 @@ function bufferEquals(
 	const suite = "500 to 700 to 500 series JSON round-trip";
 
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_500_json");
-	const files = fs.readdirSync(fixturesDir);
+	const files = await fsp.readdir(fixturesDir);
 
 	for (const file of files) {
 		test(`${suite} -> ${file}`, async (t) => {
-			const json500: NVM500JSON = await fs.readJson(
+			const json500: NVM500JSON = await readJSON(
+				fs,
 				path.join(fixturesDir, file),
 			);
 			const json700 = json500To700(json500, true);
@@ -185,7 +194,7 @@ function bufferEquals(
 						.applicationData.slice(0, 1024);
 				}
 			}
-			t.deepEqual(output, expected);
+			t.expect(output).toStrictEqual(expected);
 		});
 	}
 }
@@ -193,15 +202,154 @@ function bufferEquals(
 test("700 to 700 migration shortcut", async (t) => {
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
 
-	const nvmSource = await fs.readFile(
+	const nvmSource = await fsp.readFile(
 		// cannot use 7.11.bin because it has an invalid combination of protocol
 		// and application version
 		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
 	);
-	const nvmTarget = await fs.readFile(
+	const nvmTarget = await fsp.readFile(
 		path.join(fixturesDir, "ctrlr_backup_700_7.16_1.bin"),
 	);
 	const converted = await migrateNVM(nvmSource, nvmTarget);
 
-	bufferEquals(t, converted, nvmSource);
+	bufferEquals(t.expect, converted, nvmSource);
+});
+
+test("strip application data during migration", async (t) => {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+
+	const nvmSource = await fsp.readFile(
+		// cannot use 7.11.bin because it has an invalid combination of protocol
+		// and application version
+		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.16_1.bin"),
+	);
+
+	const options: MigrateNVMOptions = {
+		preserveApplicationData: false,
+	};
+
+	const converted = await migrateNVM(nvmSource, nvmTarget, options);
+	const convertedJSON = await nvmToJSON(converted);
+
+	t.expect(convertedJSON.controller.applicationData).toBeNull();
+});
+
+test("strip neighbors during migration", async (t) => {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+
+	const nvmSource = await fsp.readFile(
+		// cannot use 7.11.bin because it has an invalid combination of protocol
+		// and application version
+		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.16_1.bin"),
+	);
+
+	const options: MigrateNVMOptions = {
+		preserveNeighbors: false,
+	};
+
+	const converted = await migrateNVM(nvmSource, nvmTarget, options);
+	const convertedJSON = await nvmToJSON(converted);
+
+	for (const node of Object.values(convertedJSON.nodes)) {
+		if (node.isVirtual) continue;
+		t.expect(node.neighbors).toEqual([]);
+	}
+});
+
+test("strip SUC entries during migration", async (t) => {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+
+	const nvmSource = await fsp.readFile(
+		// cannot use 7.11.bin because it has an invalid combination of protocol
+		// and application version
+		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.16_1.bin"),
+	);
+
+	const options: MigrateNVMOptions = {
+		preserveSUCUpdateEntries: false,
+	};
+
+	const converted = await migrateNVM(nvmSource, nvmTarget, options);
+	const convertedJSON = await nvmToJSON(converted);
+
+	t.expect(convertedJSON.controller.sucUpdateEntries).toEqual([]);
+	t.expect(convertedJSON.controller.sucLastIndex).toBe(0xff);
+
+	for (const node of Object.values(convertedJSON.nodes)) {
+		if (node.isVirtual) continue;
+		t.expect(node.sucUpdateIndex).toBe(0xfe);
+	}
+});
+
+test("strip routes during migration", async (t) => {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+
+	const nvmSource = await fsp.readFile(
+		// cannot use 7.11.bin because it has an invalid combination of protocol
+		// and application version
+		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.16_1.bin"),
+	);
+
+	const options: MigrateNVMOptions = {
+		preserveSUCUpdateEntries: false,
+	};
+
+	const converted = await migrateNVM(nvmSource, nvmTarget, options);
+	const convertedJSON = await nvmToJSON(converted);
+
+	for (const node of Object.values(convertedJSON.nodes)) {
+		if (node.isVirtual) continue;
+		t.expect(node.lwr).toBeNull();
+		t.expect(node.nlwr).toBeNull();
+		t.expect(node.appRouteLock).toBe(false);
+	}
+});
+
+test("strip everything optional during migration", async (t) => {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+
+	const nvmSource = await fsp.readFile(
+		// cannot use 7.11.bin because it has an invalid combination of protocol
+		// and application version
+		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.16_1.bin"),
+	);
+
+	const options: MigrateNVMOptions = {
+		preserveSUCUpdateEntries: false,
+		preserveApplicationData: false,
+		preserveNeighbors: false,
+		preserveRoutes: false,
+	};
+
+	const converted = await migrateNVM(nvmSource, nvmTarget, options);
+	const convertedJSON = await nvmToJSON(converted);
+
+	t.expect(convertedJSON.controller.sucUpdateEntries).toEqual([]);
+	t.expect(convertedJSON.controller.sucLastIndex).toBe(0xff);
+
+	for (const node of Object.values(convertedJSON.nodes)) {
+		if (node.isVirtual) continue;
+
+		t.expect(convertedJSON.controller.applicationData).toBeNull();
+		t.expect(node.neighbors).toEqual([]);
+		t.expect(node.sucUpdateIndex).toBe(0xfe);
+		t.expect(node.lwr).toBeNull();
+		t.expect(node.nlwr).toBeNull();
+		t.expect(node.appRouteLock).toBe(false);
+	}
 });

@@ -1,10 +1,6 @@
-import {
-	ZWaveError,
-	ZWaveErrorCodes,
-	stripUndefined,
-} from "@zwave-js/core/safe";
+import { ZWaveError, ZWaveErrorCodes, stripUndefined } from "@zwave-js/core";
 import { Bytes, buffer2hex } from "@zwave-js/shared";
-import type { NVM3Object } from "../object";
+import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -12,7 +8,7 @@ import {
 	gotDeserializationOptions,
 	nvmFileID,
 	nvmSection,
-} from "./NVMFile";
+} from "./NVMFile.js";
 
 export type ControllerInfoFileOptions =
 	& NVMFileCreationOptions

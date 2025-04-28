@@ -1,4 +1,4 @@
-import { type CommandClass } from "@zwave-js/cc";
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	MAX_NODES,
 	type MessageOrCCLogEntry,
@@ -15,7 +15,6 @@ import {
 	encodeNodeID,
 	parseNodeID,
 } from "@zwave-js/core";
-import type { CCEncodingContext } from "@zwave-js/host";
 import {
 	FunctionType,
 	Message,
@@ -33,15 +32,15 @@ import {
 } from "@zwave-js/serial";
 import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
-import { ApplicationCommandRequest } from "../application/ApplicationCommandRequest";
-import { BridgeApplicationCommandRequest } from "../application/BridgeApplicationCommandRequest";
-import { type MessageWithCC, containsCC } from "../utils";
+import { ApplicationCommandRequest } from "../application/ApplicationCommandRequest.js";
+import { BridgeApplicationCommandRequest } from "../application/BridgeApplicationCommandRequest.js";
+import { type MessageWithCC, containsCC } from "../utils.js";
 import {
 	encodeTXReport,
 	parseTXReport,
 	serializableTXReportToTXReport,
 	txReportToMessageRecord,
-} from "./SendDataShared";
+} from "./SendDataShared.js";
 
 export const MAX_SEND_ATTEMPTS = 5;
 
@@ -160,7 +159,7 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 	}
 
 	public serializedCC: Uint8Array | undefined;
-	public serializeCC(ctx: CCEncodingContext): Uint8Array {
+	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(
@@ -168,7 +167,7 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
-			this.serializedCC = this.command.serialize(ctx);
+			this.serializedCC = await this.command.serialize(ctx);
 		}
 		return this.serializedCC;
 	}
@@ -179,13 +178,13 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 		this.callbackId = undefined;
 	}
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		const nodeId = encodeNodeID(
 			this.command?.nodeId ?? this._nodeId,
 			ctx.nodeIdType,
 		);
-		const serializedCC = this.serializeCC(ctx);
+		const serializedCC = await this.serializeCC(ctx);
 		this.payload = Bytes.concat([
 			nodeId,
 			Bytes.from([serializedCC.length]),
@@ -271,7 +270,7 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 	public transmitStatus: TransmitStatus;
 	public txReport: TXReport | undefined;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		this.payload = Bytes.from([
 			this.callbackId,
@@ -335,7 +334,7 @@ export class SendDataResponse extends Message implements SuccessIndicator {
 
 	public wasSent: boolean;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.wasSent ? 1 : 0]);
 		return super.serialize(ctx);
 	}
@@ -480,7 +479,7 @@ export class SendDataMulticastRequest<
 	}
 
 	public serializedCC: Uint8Array | undefined;
-	public serializeCC(ctx: CCEncodingContext): Uint8Array {
+	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(
@@ -488,7 +487,7 @@ export class SendDataMulticastRequest<
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
-			this.serializedCC = this.command.serialize(ctx);
+			this.serializedCC = await this.command.serialize(ctx);
 		}
 		return this.serializedCC;
 	}
@@ -499,9 +498,9 @@ export class SendDataMulticastRequest<
 		this.callbackId = undefined;
 	}
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
-		const serializedCC = this.serializeCC(ctx);
+		const serializedCC = await this.serializeCC(ctx);
 		const destinationNodeIDs = (this.command?.nodeId ?? this.nodeIds)
 			.map((id) => encodeNodeID(id, ctx.nodeIdType));
 		this.payload = Bytes.concat([
@@ -565,7 +564,7 @@ export class SendDataMulticastRequestTransmitReport
 
 	public transmitStatus: TransmitStatus;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		this.payload = Bytes.from([this.callbackId, this.transmitStatus]);
 		return super.serialize(ctx);
@@ -617,7 +616,7 @@ export class SendDataMulticastResponse extends Message
 
 	public wasSent: boolean;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.wasSent ? 1 : 0]);
 		return super.serialize(ctx);
 	}

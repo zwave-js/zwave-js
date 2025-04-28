@@ -1,5 +1,7 @@
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
@@ -14,16 +16,9 @@ import {
 	enumValuesToMetadataStates,
 	parseBitMask,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import type {
-	CCEncodingContext,
-	CCParsingContext,
-	GetValueDB,
-} from "@zwave-js/host/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { padStart } from "alcalzone-shared/strings";
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -32,7 +27,7 @@ import {
 	type SetValueImplementation,
 	throwUnsupportedProperty,
 	throwWrongValueType,
-} from "../lib/API";
+} from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
@@ -40,79 +35,73 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	getEffectiveCCVersion,
-} from "../lib/CommandClass";
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
-	ccValue,
+	ccValueProperty,
 	ccValues,
 	commandClass,
 	expectedCCResponse,
 	implementedVersion,
 	useSupervision,
-} from "../lib/CommandClassDecorators";
-import { V } from "../lib/Values";
+} from "../lib/CommandClassDecorators.js";
+import { V } from "../lib/Values.js";
 import {
 	LocalProtectionState,
 	ProtectionCommand,
 	RFProtectionState,
-} from "../lib/_Types";
+} from "../lib/_Types.js";
 
-export const ProtectionCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses.Protection, {
-		...V.staticProperty(
-			"exclusiveControlNodeId",
-			{
-				...ValueMetadata.UInt8,
-				min: 1,
-				max: MAX_NODES,
-				label: "Node ID with exclusive control",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticPropertyWithName(
-			"localProtectionState",
-			"local",
-			{
-				...ValueMetadata.Number,
-				label: "Local protection state",
-				states: enumValuesToMetadataStates(LocalProtectionState),
-			} as const,
-		),
-
-		...V.staticPropertyWithName(
-			"rfProtectionState",
-			"rf",
-			{
-				...ValueMetadata.Number,
-				label: "RF protection state",
-				states: enumValuesToMetadataStates(RFProtectionState),
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty(
-			"timeout",
-			{
-				...ValueMetadata.UInt8,
-				label: "RF protection timeout",
-			} as const,
-			{ minVersion: 2 } as const,
-		),
-
-		...V.staticProperty("supportsExclusiveControl", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportsTimeout", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedLocalStates", undefined, {
-			internal: true,
-		}),
-		...V.staticProperty("supportedRFStates", undefined, {
-			internal: true,
-		}),
+export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
+	...V.staticProperty(
+		"exclusiveControlNodeId",
+		{
+			...ValueMetadata.UInt8,
+			min: 1,
+			max: MAX_NODES,
+			label: "Node ID with exclusive control",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticPropertyWithName(
+		"localProtectionState",
+		"local",
+		{
+			...ValueMetadata.Number,
+			label: "Local protection state",
+			states: enumValuesToMetadataStates(LocalProtectionState),
+		} as const,
+	),
+	...V.staticPropertyWithName(
+		"rfProtectionState",
+		"rf",
+		{
+			...ValueMetadata.Number,
+			label: "RF protection state",
+			states: enumValuesToMetadataStates(RFProtectionState),
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty(
+		"timeout",
+		{
+			...ValueMetadata.UInt8,
+			label: "RF protection timeout",
+		} as const,
+		{ minVersion: 2 } as const,
+	),
+	...V.staticProperty("supportsExclusiveControl", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportsTimeout", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedLocalStates", undefined, {
+		internal: true,
+	}),
+	...V.staticProperty("supportedRFStates", undefined, {
+		internal: true,
 	}),
 });
 
@@ -490,7 +479,7 @@ rf     ${getEnumMemberName(RFProtectionState, protectionResp.rf)}`;
 			if (nodeId != undefined) {
 				ctx.logNode(node.id, {
 					message: (nodeId !== 0
-						? `Node ${padStart(nodeId.toString(), 3, "0")}`
+						? `Node ${nodeId.toString().padStart(3, "0")}`
 						: `no node`) + ` has exclusive control`,
 					direction: "inbound",
 				});
@@ -531,7 +520,7 @@ export class ProtectionCCSet extends ProtectionCC {
 	public local: LocalProtectionState;
 	public rf?: RFProtectionState;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.local & 0b1111,
 			(this.rf ?? RFProtectionState.Unprotected) & 0b1111,
@@ -571,6 +560,8 @@ export interface ProtectionCCReportOptions {
 }
 
 @CCCommand(ProtectionCommand.Report)
+@ccValueProperty("local", ProtectionCCValues.localProtectionState)
+@ccValueProperty("rf", ProtectionCCValues.rfProtectionState)
 export class ProtectionCCReport extends ProtectionCC {
 	public constructor(
 		options: WithAddress<ProtectionCCReportOptions>,
@@ -590,17 +581,15 @@ export class ProtectionCCReport extends ProtectionCC {
 			rf = raw.payload[1] & 0b1111;
 		}
 
-		return new ProtectionCCReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			local,
 			rf,
 		});
 	}
 
-	@ccValue(ProtectionCCValues.localProtectionState)
 	public readonly local: LocalProtectionState;
 
-	@ccValue(ProtectionCCValues.rfProtectionState)
 	public readonly rf?: RFProtectionState;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -630,6 +619,16 @@ export interface ProtectionCCSupportedReportOptions {
 }
 
 @CCCommand(ProtectionCommand.SupportedReport)
+@ccValueProperty(
+	"supportsExclusiveControl",
+	ProtectionCCValues.supportsExclusiveControl,
+)
+@ccValueProperty("supportsTimeout", ProtectionCCValues.supportsTimeout)
+@ccValueProperty(
+	"supportedLocalStates",
+	ProtectionCCValues.supportedLocalStates,
+)
+@ccValueProperty("supportedRFStates", ProtectionCCValues.supportedRFStates)
 export class ProtectionCCSupportedReport extends ProtectionCC {
 	public constructor(
 		options: WithAddress<ProtectionCCSupportedReportOptions>,
@@ -659,7 +658,7 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 			RFProtectionState.Unprotected,
 		);
 
-		return new ProtectionCCSupportedReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportsTimeout,
 			supportsExclusiveControl,
@@ -693,16 +692,12 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 		return true;
 	}
 
-	@ccValue(ProtectionCCValues.supportsExclusiveControl)
 	public readonly supportsExclusiveControl: boolean;
 
-	@ccValue(ProtectionCCValues.supportsTimeout)
 	public readonly supportsTimeout: boolean;
 
-	@ccValue(ProtectionCCValues.supportedLocalStates)
 	public readonly supportedLocalStates: LocalProtectionState[];
 
-	@ccValue(ProtectionCCValues.supportedRFStates)
 	public readonly supportedRFStates: RFProtectionState[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -736,6 +731,10 @@ export interface ProtectionCCExclusiveControlReportOptions {
 }
 
 @CCCommand(ProtectionCommand.ExclusiveControlReport)
+@ccValueProperty(
+	"exclusiveControlNodeId",
+	ProtectionCCValues.exclusiveControlNodeId,
+)
 export class ProtectionCCExclusiveControlReport extends ProtectionCC {
 	public constructor(
 		options: WithAddress<ProtectionCCExclusiveControlReportOptions>,
@@ -753,13 +752,12 @@ export class ProtectionCCExclusiveControlReport extends ProtectionCC {
 		validatePayload(raw.payload.length >= 1);
 		const exclusiveControlNodeId = raw.payload[0];
 
-		return new ProtectionCCExclusiveControlReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			exclusiveControlNodeId,
 		});
 	}
 
-	@ccValue(ProtectionCCValues.exclusiveControlNodeId)
 	public readonly exclusiveControlNodeId: number;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -809,7 +807,7 @@ export class ProtectionCCExclusiveControlSet extends ProtectionCC {
 
 	public exclusiveControlNodeId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.exclusiveControlNodeId]);
 		return super.serialize(ctx);
 	}
@@ -830,6 +828,7 @@ export interface ProtectionCCTimeoutReportOptions {
 }
 
 @CCCommand(ProtectionCommand.TimeoutReport)
+@ccValueProperty("timeout", ProtectionCCValues.timeout)
 export class ProtectionCCTimeoutReport extends ProtectionCC {
 	public constructor(
 		options: WithAddress<ProtectionCCTimeoutReportOptions>,
@@ -847,13 +846,12 @@ export class ProtectionCCTimeoutReport extends ProtectionCC {
 		validatePayload(raw.payload.length >= 1);
 		const timeout: Timeout = Timeout.parse(raw.payload[0]);
 
-		return new ProtectionCCTimeoutReport({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			timeout,
 		});
 	}
 
-	@ccValue(ProtectionCCValues.timeout)
 	public readonly timeout: Timeout;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -901,7 +899,7 @@ export class ProtectionCCTimeoutSet extends ProtectionCC {
 
 	public timeout: Timeout;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.timeout.serialize()]);
 		return super.serialize(ctx);
 	}
