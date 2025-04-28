@@ -302,6 +302,11 @@ export enum BasicCommand {
 	Report = 0x03,
 }
 
+export enum BasicWindowCoveringCommand {
+	StartLevelChange = 0x01,
+	StopLevelChange = 0x02,
+}
+
 export enum BatteryChargingStatus {
 	Discharging = 0x00,
 	Charging = 0x01,
