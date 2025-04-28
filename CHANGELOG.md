@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.2.0 (2025-04-28)
 ### Features
 * Support Basic Window Covering CC (#7768)
 
