@@ -58,6 +58,34 @@
     },
     "./package.json": "./package.json"
   },
+  "imports": {
+    "#default_bindings/fs": {
+      "@@dev": "@zwave-js/core/bindings/fs/node",
+      "node": "@zwave-js/core/bindings/fs/node",
+      "default": "@zwave-js/core/bindings/fs/stub"
+    },
+    "#default_bindings/serial": {
+      "@@dev": "@zwave-js/serial/bindings/node",
+      "node": "@zwave-js/serial/bindings/node",
+      "default": "@zwave-js/serial/bindings/stub"
+    },
+    "#default_bindings/db": {
+      "@@dev": "@zwave-js/core/bindings/db/jsonl",
+      "node": "@zwave-js/core/bindings/db/jsonl",
+      "default": "@zwave-js/core/bindings/db/stub"
+    },
+    "#default_bindings/log": {
+      "@@dev": "@zwave-js/core/bindings/log/node",
+      "node": "@zwave-js/core/bindings/log/node",
+      "default": "@zwave-js/core/bindings/log/stub"
+    },
+    "#mdns_discovery": {
+      "@@dev": "./src/lib/driver/mDNSDiscovery/node.ts",
+      "require": "./build/cjs/lib/driver/mDNSDiscovery/node.js",
+      "node": "./build/esm/lib/driver/mDNSDiscovery/node.js",
+      "default": "./build/esm/lib/driver/mDNSDiscovery/stub.js"
+    }
+  },
   "files": [
     "bin/",
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",

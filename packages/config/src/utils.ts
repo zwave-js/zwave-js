@@ -1,3 +1,4 @@
+import { configDir } from "#config_dir";
 import {
 	copyFilesRecursive,
 	formatId,
@@ -13,7 +14,6 @@ import type {
 	ReadFileSystemInfo,
 	WriteFile,
 } from "@zwave-js/shared/bindings";
-import { fileURLToPath } from "node:url";
 import path from "pathe";
 import semverGte from "semver/functions/gte.js";
 import semverInc from "semver/functions/inc.js";
@@ -23,17 +23,6 @@ import semverValid from "semver/functions/valid.js";
 import type { ConfigLogger } from "./Logger.js";
 import { PACKAGE_VERSION } from "./_version.js";
 import type { DeviceConfigIndexEntry } from "./devices/DeviceConfig.js";
-
-/** The absolute path of the embedded configuration directory */
-export const configDir = import.meta.url.startsWith("file:")
-	? path.join(
-		path.dirname(fileURLToPath(import.meta.url)),
-		import.meta.url.endsWith("src/utils.ts")
-			? ".."
-			: "../..",
-		"config",
-	)
-	: import.meta.resolve("/config");
 
 /** The (optional) absolute path of an external configuration directory */
 export function getExternalConfigDirEnvVariable(): string | undefined {

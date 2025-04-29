@@ -1,3 +1,4 @@
+import { configDir } from "#config_dir";
 import {
 	type LogContainer,
 	ZWaveError,
@@ -26,7 +27,6 @@ import {
 } from "./devices/DeviceConfig.js";
 import {
 	type SyncExternalConfigDirResult,
-	configDir,
 	getDeviceEntryPredicate,
 	getExternalConfigDirEnvVariable,
 	syncExternalConfigDir,
@@ -52,7 +52,7 @@ export class ConfigManager {
 
 	private _fs: FileSystem | undefined;
 	private async getFS(): Promise<FileSystem> {
-		this._fs ??= (await import("@zwave-js/core/bindings/fs/node")).fs;
+		this._fs ??= (await import("#default_bindings/fs")).fs;
 		return this._fs;
 	}
 
@@ -66,7 +66,9 @@ export class ConfigManager {
 	private async getLogger(): Promise<ConfigLogger> {
 		if (!this._logContainer) {
 			this._logContainer =
-				(await import("@zwave-js/core/bindings/log/node")).log({
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
+				(await import("#default_bindings/log")).log({
 					enabled: false,
 				});
 		}

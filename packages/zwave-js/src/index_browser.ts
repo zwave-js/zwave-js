@@ -1,6 +1,7 @@
 // organize-imports-ignore
 
 /* @forbiddenImports sinon */
+/* @forbiddenImports external */
 
 // This module is the main entry point. Requiring reflect-metadata here avoids forgetting it
 import "reflect-metadata";

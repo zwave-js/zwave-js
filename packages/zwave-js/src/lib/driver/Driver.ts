@@ -1265,7 +1265,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Ideally we'd use the host bindings used by the driver, but we can't access them in a static method
 
 		const bindings =
-			(await import("@zwave-js/serial/bindings/node")).serial;
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
+			(await import("#default_bindings/serial")).serial;
 		if (local && typeof bindings.list === "function") {
 			for (const port of await bindings.list()) {
 				if (port.type === "custom") continue;
@@ -1372,13 +1374,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// on Node.js internals
 		this.bindings = {
 			fs: this._options.host?.fs
-				?? (await import("@zwave-js/core/bindings/fs/node")).fs,
+				?? (await import("#default_bindings/fs")).fs,
 			serial: this._options.host?.serial
-				?? (await import("@zwave-js/serial/bindings/node")).serial,
+				?? (await import("#default_bindings/serial")).serial,
 			db: this._options.host?.db
-				?? (await import("@zwave-js/core/bindings/db/jsonl")).db,
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
+				?? (await import("#default_bindings/db")).db,
 			log: this._options.host?.log
-				?? (await import("@zwave-js/core/bindings/log/node")).log,
+				?? (await import("#default_bindings/log")).log,
 		};
 
 		// Initialize logging
