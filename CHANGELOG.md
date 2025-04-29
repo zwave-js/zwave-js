@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.2.1 (2025-04-29)
 ### Bugfixes
 * Revert: Work around a possible controller lockup when retransmitting a command to an unreachable device (#7769)
 
