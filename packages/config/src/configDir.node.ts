@@ -5,7 +5,7 @@ import path from "pathe";
 export const configDir = import.meta.url.startsWith("file:")
 	? path.join(
 		path.dirname(fileURLToPath(import.meta.url)),
-		import.meta.url.endsWith("src/utils.ts")
+		/src\/[^/\\]+\.ts$/.test(import.meta.url)
 			? ".."
 			: "../..",
 		"config",
