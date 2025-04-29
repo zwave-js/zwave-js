@@ -8,6 +8,7 @@
   },
   "type": "module",
   "main": "build/cli.js",
+  "sideEffects": false,
   "files": [
     "bin/",
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",

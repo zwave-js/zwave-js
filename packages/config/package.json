@@ -43,6 +43,7 @@
     "build/**/package.json",
     "config/"
   ],
+  "sideEffects": false,
   "author": {
     "name": "AlCalzone",
     "email": "d.griesel@gmx.net"

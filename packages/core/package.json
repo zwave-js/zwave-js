@@ -73,7 +73,7 @@
     "./package.json": "./package.json"
   },
   "sideEffects": [
-    "./reflection/decorators.js"
+    "./build/(esm|cjs)/reflection/decorators.js"
   ],
   "imports": {
     "#crypto_primitives": {
