@@ -4,6 +4,14 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Revert: Work around a possible controller lockup when retransmitting a command to an unreachable device (#7769)
+
+### Changes under the hood
+* Don't traverse `node_modules` in import lint, add some known good modules (#7770)
+* Bundling improvements (#7771, #7772)
+
 ## 15.2.0 (2025-04-28)
 ### Features
 * Support Basic Window Covering CC (#7768)
