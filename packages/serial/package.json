@@ -2,6 +2,7 @@
   "name": "@zwave-js/serial",
   "version": "15.2.0",
   "description": "zwave-js: Serialport driver",
+  "keywords": [],
   "publishConfig": {
     "access": "public"
   },
@@ -34,7 +35,13 @@
     },
     "./package.json": "./package.json"
   },
-  "keywords": [],
+  "imports": {
+    "#default_bindings/log": {
+      "@@dev": "@zwave-js/core/bindings/log/node",
+      "node": "@zwave-js/core/bindings/log/node",
+      "default": "@zwave-js/core/bindings/log/stub"
+    }
+  },
   "files": [
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
     "build/**/package.json"
