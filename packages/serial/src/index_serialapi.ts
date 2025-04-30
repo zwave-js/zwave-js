@@ -15,6 +15,7 @@ export * from "./serialapi/capability/SerialAPISetupMessages.js";
 export * from "./serialapi/capability/SetApplicationNodeInformationRequest.js";
 export * from "./serialapi/capability/SetLongRangeShadowNodeIDsRequest.js";
 export * from "./serialapi/memory/GetControllerIdMessages.js";
+export * from "./serialapi/misc/EnterBootloaderRequest.js";
 export * from "./serialapi/misc/GetBackgroundRSSIMessages.js";
 export * from "./serialapi/misc/SetRFReceiveModeMessages.js";
 export * from "./serialapi/misc/SetSerialApiTimeoutsMessages.js";

@@ -123,6 +123,7 @@ import {
 	BootloaderChunkType,
 	type CLIChunk,
 	CLIChunkType,
+	EnterBootloaderRequest,
 	type EnumeratedPort,
 	FunctionType,
 	type HasNodeId,
@@ -2305,7 +2306,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 
 		// Drop all pending messages that come from a previous interview attempt
-		this.rejectTransactions(
+		await this.rejectTransactions(
 			(t) =>
 				t.message.getNodeId() === node.id
 				&& (t.priority === MessagePriority.NodeQuery
@@ -2445,7 +2446,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Make sure to handle the pending messages as quickly as possible
 		if (oldStatus === NodeStatus.Asleep) {
-			this.reduceQueues(({ message }) => {
+			void this.reduceQueues(({ message }) => {
 				// Ignore messages that are not for this node
 				if (message.getNodeId() !== node.id) return { type: "keep" };
 				// Resolve pings, so we don't need to send them (we know the node is awake)
@@ -2810,7 +2811,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		this.securityManager2?.deleteNonce(node.id);
 		this.securityManagerLR?.deleteNonce(node.id);
 
-		this.rejectAllTransactionsForNode(
+		void this.rejectAllTransactionsForNode(
 			node.id,
 			"The node was removed from the network",
 			ZWaveErrorCodes.Controller_NodeRemoved,
@@ -3546,7 +3547,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		await this.controller.hardReset();
 
 		// Clean up
-		this.rejectTransactions(() => true, `The controller was hard-reset`);
+		await this.rejectTransactions(
+			() => true,
+			`The controller was hard-reset`,
+		);
 		this.sendNodeToSleepTimers.forEach((timeout) => timeout.clear());
 		this.sendNodeToSleepTimers.clear();
 
@@ -3677,7 +3681,50 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this.serial = undefined;
 		}
 
+		await this.destroyController();
+
+		this.driverLog.print(`driver instance destroyed`);
+
+		// destroy loggers as the very last thing
+		this._logContainer.destroy();
+
+		this._destroyPromise.resolve();
+	}
+
+	/** Cleanly destroy the controller instance, but not the entire driver */
+	private async destroyController(): Promise<void> {
+		// Avoid re-transmissions etc. communicating with other applications
+		// or the bootloader
+		await this.scheduler.removeTasks(
+			() => true,
+			new ZWaveError(
+				"The controller instance is being destroyed",
+				ZWaveErrorCodes.Driver_TaskRemoved,
+			),
+		);
+
+		await this.rejectTransactions(
+			(_t) => true,
+			"The controller instance is being destroyed",
+			ZWaveErrorCodes.Driver_TaskRemoved,
+		);
+
+		// FIXME: Clear/stop Serial API queue
+
 		// Attempt to close the value DBs and network cache
+		await this.closeDatabases();
+
+		// Remove all timeouts
+		this.clearAllTimeouts();
+
+		// Destroy all nodes and the controller
+		if (this._controller) {
+			this._controller.destroy();
+			this._controller = undefined;
+		}
+	}
+
+	private async closeDatabases(): Promise<void> {
 		try {
 			await this._valueDB?.close();
 		} catch (e) {
@@ -3702,8 +3749,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				"error",
 			);
 		}
+	}
 
-		// Remove all timeouts
+	private clearAllTimeouts() {
 		for (
 			const timeout of [
 				this._powerlevelTestNodeContext?.timeout,
@@ -3727,19 +3775,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		) {
 			timeout?.clear();
 		}
-
-		// Destroy all nodes and the controller
-		if (this._controller) {
-			this._controller.destroy();
-			this._controller = undefined;
-		}
-
-		this.driverLog.print(`driver instance destroyed`);
-
-		// destroy loggers as the very last thing
-		this._logContainer.destroy();
-
-		this._destroyPromise.resolve();
 	}
 
 	private async handleSerialData(serial: ZWaveSerialStream): Promise<void> {
@@ -4377,7 +4412,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			});
 
 			transaction.abort(error);
-			this.rejectAllTransactionsForNode(node.id, errorMsg);
+			void this.rejectAllTransactionsForNode(node.id, errorMsg);
 
 			return true;
 		}
@@ -4542,7 +4577,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				});
 
 				transaction.abort(error);
-				this.rejectAllTransactionsForNode(node.id, errorMsg);
+				void this.rejectAllTransactionsForNode(node.id, errorMsg);
 
 				handled = true;
 			}
@@ -6884,7 +6919,7 @@ ${handlers.length} left`,
 		let expirationTimeout: Timer | undefined;
 		if (options.expire) {
 			expirationTimeout = setTimer(() => {
-				this.reduceQueues((t, _source) => {
+				void this.reduceQueues((t, _source) => {
 					if (t === transaction) {
 						return {
 							type: "reject",
@@ -7497,7 +7532,7 @@ ${handlers.length} left`,
 			tag: "interview",
 		};
 
-		this.reduceQueues((transaction, _source) => {
+		void this.reduceQueues((transaction, _source) => {
 			const msg = transaction.message;
 			if (msg.getNodeId() !== nodeId) return { type: "keep" };
 			// Drop all messages that are not allowed in the wakeup queue
@@ -7518,8 +7553,8 @@ ${handlers.length} left`,
 		predicate: (t: Transaction) => boolean,
 		errorMsg: string = `The message has been removed from the queue`,
 		errorCode: ZWaveErrorCodes = ZWaveErrorCodes.Controller_MessageDropped,
-	): void {
-		this.reduceQueues((transaction, _source) => {
+	): Promise<void> {
+		return this.reduceQueues((transaction, _source) => {
 			if (predicate(transaction)) {
 				return {
 					type: "reject",
@@ -7540,8 +7575,8 @@ ${handlers.length} left`,
 		nodeId: number,
 		errorMsg: string = `The node is dead`,
 		errorCode: ZWaveErrorCodes = ZWaveErrorCodes.Controller_MessageDropped,
-	): void {
-		this.rejectTransactions(
+	): Promise<void> {
+		return this.rejectTransactions(
 			(t) => t.message.getNodeId() === nodeId,
 			errorMsg,
 			errorCode,
@@ -7563,16 +7598,16 @@ ${handlers.length} left`,
 		this.triggerQueues();
 	}
 
-	private reduceQueues(reducer: TransactionReducer): void {
+	private async reduceQueues(reducer: TransactionReducer): Promise<void> {
 		for (const queue of this.queues) {
-			this.reduceQueue(queue, reducer);
+			await this.reduceQueue(queue, reducer);
 		}
 	}
 
-	private reduceQueue(
+	private async reduceQueue(
 		queue: TransactionQueue,
 		reducer: TransactionReducer,
-	): void {
+	): Promise<void> {
 		const dropQueued: Transaction[] = [];
 		let stopActive: Transaction | undefined;
 		const requeue: Transaction[] = [];
@@ -7656,7 +7691,7 @@ ${handlers.length} left`,
 
 		// Abort ongoing SendData messages that should be dropped
 		if (isSendData(stopActive?.message)) {
-			void this.abortSendData();
+			await this.abortSendData();
 		}
 	}
 
@@ -8473,32 +8508,15 @@ ${handlers.length} left`,
 	}
 
 	private async enterBootloaderFromSerialAPI(): Promise<void> {
-		// Avoid re-transmissions etc. communicating with the bootloader
-		await this.scheduler.removeTasks(
-			() => true,
-			new ZWaveError(
-				"The controller is entering bootloader mode.",
-				ZWaveErrorCodes.Driver_TaskRemoved,
-			),
-		);
+		// Get the encoding context before destroying the controller
+		const ctx = this.getEncodingContext();
 
-		this.rejectTransactions(
-			(_t) => true,
-			"The controller is entering bootloader mode.",
-		);
-
-		await this.trySoftReset();
-		this.pauseSendQueue();
-
-		// Again, just to be very sure
-		this.rejectTransactions(
-			(_t) => true,
-			"The controller is entering bootloader mode.",
-		);
+		await this.destroyController();
 
 		// It would be nicer to not hardcode the command here, but since we're switching stream parsers
 		// mid-command - thus ignoring the ACK, we can't really use the existing communication machinery
-		const promise = this.writeSerial(Bytes.from("01030027db", "hex"));
+		const msg = new EnterBootloaderRequest();
+		const promise = this.writeSerial(await msg.serialize(ctx));
 		this.serial!.mode = ZWaveSerialMode.Bootloader;
 		await promise;
 	}
