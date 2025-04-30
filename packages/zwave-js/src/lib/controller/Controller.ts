@@ -1842,6 +1842,9 @@ export class ZWaveController
 			VersionCCValues.sdkVersion.id,
 			this._sdkVersion,
 		);
+
+		// Look up the device config afterwards
+		await this.nodes.get(this._ownNodeId!)?.["loadDeviceConfig"]();
 	}
 
 	private createValueDBForNode(nodeId: number, ownKeys?: Set<string>) {
