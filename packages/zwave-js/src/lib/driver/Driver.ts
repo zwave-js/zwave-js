@@ -1904,6 +1904,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				async () => {
 					// Try to restore the network information from the cache
 					if (getenv("NO_CACHE") !== "true") {
+						// FIXME: This entire thing is a pretty convoluted way of looking up the device config
 						await this.restoreNetworkStructureFromCache();
 					}
 				},
