@@ -1,17 +1,4 @@
 {
-	"schedule_hour": {
-		"valueSize": 2,
-		"minValue": 0,
-		"maxValue": 23,
-		"unit": "hour"
-	},
-	"schedule_minute": {
-		"valueSize": 2,
-		"minValue": 0,
-		"maxValue": 60,
-		"unit": "minute",
-		"defaultValue": 0
-	},
 	"schedule_time": {
 		"valueSize": 2,
 		"minValue": 0,
@@ -46,25 +33,5 @@
 		"minValue" :0,
 		"maxValue": 990,
 		"unit": "0.1 °C"
-	},
-	"schedule_hour_1st_fine": {
-		"$import": "#schedule_hour_1st",
-		"description": "Ignored if not explicitly set to a value."
-	},
-	"schedule_hour_2nd_fine": {
-		"$import": "#schedule_hour_2nd",
-		"description": "Ignored if not explicitly set to a value."
-	},
-	"schedule_hour_3rd_fine": {
-		"$import": "#schedule_hour_3rd",
-		"description": "Ignored if not explicitly set to a value."
-	},
-	"schedule_hour_4th_fine": {
-		"$import": "#schedule_hour_4th",
-		"description": "Ignored if not explicitly set to a value."
-	},
-	"schedule_minute_fine": {
-		"$import": "#schedule_minute",
-		"description": "Ignored if not explicitly set to a value."
 	}
 }
