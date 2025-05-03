@@ -500,43 +500,107 @@
 		},
 		{
 			"#": "50",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 1st Period Heat Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 1st Period Heat Setpoint",
+			"defaultValue": 210
+		},
+		{
+			"#": "50",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "51",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 2nd Period Heat Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 2nd Period Heat Setpoint",
+			"defaultValue": 165
+		},
+		{
+			"#": "51",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "52",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 3rd Period Heat Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 3rd Period Heat Setpoint",
+			"defaultValue": 210
+		},
+		{
+			"#": "52",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "53",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 4th Period Heat Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 4th Period Heat Setpoint",
+			"defaultValue": 165
+		},
+		{
+			"#": "53",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "54",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 1st Period Cool Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 1st Period Cool Setpoint",
+			"defaultValue": 255
+		},
+		{
+			"#": "54",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 4th Period Heat Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "55",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 2nd Period Cool Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 2nd Period Cool Setpoint",
+			"defaultValue": 295
+		},
+		{
+			"#": "55",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "56",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 3rd Period Cool Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 3rd Period Cool Setpoint",
+			"defaultValue": 255
+		},
+		{
+			"#": "56",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "57",
-			"$import": "templates/thermostat_template.json#setpoint",
-			"label": "Monday-Sunday 4th Period Cool Setpoint"
+			"$if": "param1 == 0",
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday-Sunday 4th Period Cool Setpoint",
+			"defaultValue": 280
+		},
+		{
+			"#": "57",
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday-Sunday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "58[0x0f]",
@@ -821,618 +885,730 @@
 		{
 			"#": "86",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_c",
-			"label": "Monday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 1st Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "86",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_f",
-			"label": "Monday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "87",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_c",
-			"label": "Tuesday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 1st Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "87",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_f",
-			"label": "Tuesday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "88",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_c",
-			"label": "Wednesday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 1st Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "88",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_f",
-			"label": "Wednesday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "89",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_c",
-			"label": "Thursday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 1st Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "89",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_f",
-			"label": "Thursday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "90",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_c",
-			"label": "Friday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 1st Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "90",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_f",
-			"label": "Friday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "91",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_c",
-			"label": "Saturday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 1st Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "91",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_f",
-			"label": "Saturday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "92",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_c",
-			"label": "Sunday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 1st Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "92",
-			"$import": "templates/thermostat_template.json#setpoint_1st_heat_f",
-			"label": "Sunday 1st Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 1st Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "93",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_c",
-			"label": "Monday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 2nd Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "93",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_f",
-			"label": "Monday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "94",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_c",
-			"label": "Tuesday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 2nd Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "94",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_f",
-			"label": "Tuesday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "95",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_c",
-			"label": "Wednesday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 2nd Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "95",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_f",
-			"label": "Wednesday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "96",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_c",
-			"label": "Thursday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 2nd Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "96",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_f",
-			"label": "Thursday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "97",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_c",
-			"label": "Friday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 2nd Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "97",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_f",
-			"label": "Friday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "98",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_c",
-			"label": "Saturday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 2nd Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "98",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_f",
-			"label": "Saturday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "99",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_c",
-			"label": "Sunday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 2nd Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "99",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_heat_f",
-			"label": "Sunday 2nd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 2nd Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "100",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_c",
-			"label": "Monday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 3rd Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "100",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_f",
-			"label": "Monday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "101",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_c",
-			"label": "Tuesday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 3rd Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "101",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_f",
-			"label": "Tuesday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "102",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_c",
-			"label": "Wednesday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 3rd Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "102",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_f",
-			"label": "Wednesday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "103",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_c",
-			"label": "Thursday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 3rd Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "103",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_f",
-			"label": "Thursday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "104",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_c",
-			"label": "Friday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 3rd Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "104",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_f",
-			"label": "Friday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "105",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_c",
-			"label": "Saturday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 3rd Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "105",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_f",
-			"label": "Saturday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "106",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_c",
-			"label": "Sunday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 3rd Period Heat Setpoint",
+			"defaultValue": 210
 		},
 		{
 			"#": "106",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_heat_f",
-			"label": "Sunday 3rd Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 3rd Period Heat Setpoint",
+			"defaultValue": 700
 		},
 		{
 			"#": "107",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_c",
-			"label": "Monday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 4th Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "107",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_f",
-			"label": "Monday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "108",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_c",
-			"label": "Tuesday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 4th Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "108",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_f",
-			"label": "Tuesday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "109",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_c",
-			"label": "Wednesday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 4th Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "109",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_f",
-			"label": "Wednesday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "110",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_c",
-			"label": "Thursday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 4th Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "110",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_f",
-			"label": "Thursday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "111",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_c",
-			"label": "Friday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 4th Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "111",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_f",
-			"label": "Friday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "112",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_c",
-			"label": "Saturday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 4th Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "112",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_f",
-			"label": "Saturday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "113",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_c",
-			"label": "Sunday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 4th Period Heat Setpoint",
+			"defaultValue": 165
 		},
 		{
 			"#": "113",
-			"$import": "templates/thermostat_template.json#setpoint_4th_heat_f",
-			"label": "Sunday 4th Period Heat Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 4th Period Heat Setpoint",
+			"defaultValue": 620
 		},
 		{
 			"#": "114",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_c",
-			"label": "Monday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 1st Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "114",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_f",
-			"label": "Monday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 1st Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "115",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_c",
-			"label": "Tuesday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 1st Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "115",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_f",
-			"label": "Tuesday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 1st Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "116",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_c",
-			"label": "Wednesday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 1st Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "116",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_f",
-			"label": "Wednesday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 1st Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "117",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_c",
-			"label": "Thursday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 1st Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "117",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_f",
-			"label": "Thursday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 1st Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "118",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_c",
-			"label": "Friday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 1st Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "118",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_f",
-			"label": "Friday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 1st Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "119",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_c",
-			"label": "Saturday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 1st Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "119",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_f",
-			"label": "Saturday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 1st Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "120",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_c",
-			"label": "Sunday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 1st Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "120",
-			"$import": "templates/thermostat_template.json#setpoint_1st_cool_f",
-			"label": "Sunday 1st Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 1st Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "121",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_c",
-			"label": "Monday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 2nd Period Cool Setpoint",
+			"defaultValue": 295
 		},
 		{
 			"#": "121",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_f",
-			"label": "Monday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "122",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_c",
-			"label": "Tuesday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 2nd Period Cool Setpoint",
+			"defaultValue": 295
 		},
 		{
 			"#": "122",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_f",
-			"label": "Tuesday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "123",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_c",
-			"label": "Wednesday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 2nd Period Cool Setpoint",
+			"defaultValue": 295
 		},
 		{
 			"#": "123",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_f",
-			"label": "Wednesday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "124",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_c",
-			"label": "Thursday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 2nd Period Cool Setpoint",
+			"defaultValue": 295
 		},
 		{
 			"#": "124",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_f",
-			"label": "Thursday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "125",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_c",
-			"label": "Friday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 2nd Period Cool Setpoint",
+			"defaultValue": 295
 		},
 		{
 			"#": "125",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_f",
-			"label": "Friday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "126",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_c",
-			"label": "Saturday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 2nd Period Cool Setpoint",
+			"defaultValue": 295
 		},
 		{
 			"#": "126",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_f",
-			"label": "Saturday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "127",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_c",
-			"label": "Sunday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 2nd Period Cool Setpoint",
+			"defaultValue": 295
 		},
 		{
 			"#": "127",
-			"$import": "templates/thermostat_template.json#setpoint_2nd_cool_f",
-			"label": "Sunday 2nd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 2nd Period Cool Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "128",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_c",
-			"label": "Monday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 3rd Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "128",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_f",
-			"label": "Monday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "129",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_c",
-			"label": "Tuesday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 3rd Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "129",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_f",
-			"label": "Tuesday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "130",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_c",
-			"label": "Wednesday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 3rd Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "130",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_f",
-			"label": "Wednesday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "131",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_c",
-			"label": "Thursday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 3rd Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "131",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_f",
-			"label": "Thursday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "132",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_c",
-			"label": "Friday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 3rd Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "132",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_f",
-			"label": "Friday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "133",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_c",
-			"label": "Saturday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 3rd Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "133",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_f",
-			"label": "Saturday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "134",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_c",
-			"label": "Sunday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 3rd Period Cool Setpoint",
+			"defaultValue": 255
 		},
 		{
 			"#": "134",
-			"$import": "templates/thermostat_template.json#setpoint_3rd_cool_f",
-			"label": "Sunday 3rd Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 3rd Period Cool Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "135",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_c",
-			"label": "Monday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Monday 4th Period Cool Setpoint",
+			"defaultValue": 280
 		},
 		{
 			"#": "135",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_f",
-			"label": "Monday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Monday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "136",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_c",
-			"label": "Tuesday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Tuesday 4th Period Cool Setpoint",
+			"defaultValue": 280
 		},
 		{
 			"#": "136",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_f",
-			"label": "Tuesday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Tuesday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "137",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_c",
-			"label": "Wednesday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Wednesday 4th Period Cool Setpoint",
+			"defaultValue": 280
 		},
 		{
 			"#": "137",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_f",
-			"label": "Wednesday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Wednesday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "138",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_c",
-			"label": "Thursday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Thursday 4th Period Cool Setpoint",
+			"defaultValue": 280
 		},
 		{
 			"#": "138",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_f",
-			"label": "Thursday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Thursday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "139",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_c",
-			"label": "Friday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Friday 4th Period Cool Setpoint",
+			"defaultValue": 280
 		},
 		{
 			"#": "139",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_f",
-			"label": "Friday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Friday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "140",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_c",
-			"label": "Saturday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Saturday 4th Period Cool Setpoint",
+			"defaultValue": 280
 		},
 		{
 			"#": "140",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_f",
-			"label": "Saturday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Saturday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "141",
 			"$if": "param1 == 0",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_c",
-			"label": "Sunday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_c",
+			"label": "Sunday 4th Period Cool Setpoint",
+			"defaultValue": 280
 		},
 		{
 			"#": "141",
-			"$import": "templates/thermostat_template.json#setpoint_4th_cool_f",
-			"label": "Sunday 4th Period Cool Setpoint"
+			"$import": "templates/thermostat_template.json#setpoint_f",
+			"label": "Sunday 4th Period Cool Setpoint",
+			"defaultValue": 820
 		},
 		{
 			"#": "255",

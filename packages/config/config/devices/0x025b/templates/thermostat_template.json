@@ -28,101 +28,13 @@
 		"$import": "#schedule_hour",
 		"defaultValue": 22
 	},
-	"setpoint_1st_heat_c": {
+	"setpoint_c": {
 		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 210,
-		"description": "The 1st heat setpoint for Mon...Sun"
+		"unit": "0.1 °C"
 	},
-	"setpoint_2nd_heat_c": {
+	"setpoint_f": {
 		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 165,
-		"description": "The 2nd heat setpoint for Mon...Sun."
-	},
-	"setpoint_3rd_heat_c": {
-		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 210,
-		"description": "The 3rd heat setpoint for Mon...Sun"
-	},
-	"setpoint_4th_heat_c": {
-		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 165,
-		"description": "The 4th heat setpoint for Mon...Sun"
-	},
-	"setpoint_1st_cool_c": {
-		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 255,
-		"description": "The 1st cool setpoint for Mon...Sun"
-	},
-	"setpoint_2nd_cool_c": {
-		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 295,
-		"description": "The 2nd cool setpoint for Mon...Sun"
-	},
-	"setpoint_3rd_cool_c": {
-		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 255,
-		"description": "The 3rd cool setpoint for Mon...Sun"
-	},
-	"setpoint_4th_cool_c": {
-		"valueSize": 2,
-		"unit": "0.1 °C",
-		"defaultValue": 280,
-		"description": "The 4th cool setpoint for Mon...Sun"
-	},
-	"setpoint_1st_heat_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 700,
-		"description": "The 1st heat setpoint for Mon...Sun"
-	},
-	"setpoint_2nd_heat_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 620,
-		"description": "The 2nd heat setpoint for Mon...Sun"
-	},
-	"setpoint_3rd_heat_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 700,
-		"description": "The 3rd heat setpoint for Mon...Sun"
-	},
-	"setpoint_4th_heat_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 620,
-		"description": "The 4th heat setpoint for Mon...Sun"
-	},
-	"setpoint_1st_cool_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 780,
-		"description": "The 1st cool setpoint for Mon...Sun"
-	},
-	"setpoint_2nd_cool_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 850,
-		"description": "The 2nd cool setpoint for Mon...Sun"
-	},
-	"setpoint_3rd_cool_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 780,
-		"description": "The 3rd cool setpoint for Mon...Sun"
-	},
-	"setpoint_4th_cool_f": {
-		"valueSize": 2,
-		"unit": "0.1 °F",
-		"defaultValue": 820,
-		"description": "The 4th cool setpoint for Mon...Sun"
+		"unit": "0.1 °C"
 	},
 	"schedule_hour_1st_fine": {
 		"$import": "#schedule_hour_1st",
