@@ -460,43 +460,23 @@
 		},
 		{
 			"#": "46[0x0f]",
-			"$import": "templates/thermostat_template.json#schedule_hour_1st",
-			"label": "Monday-Sunday 1st Period Hour"
-		},
-		{
-			"#": "46[0xf0]",
-			"$import": "templates/thermostat_template.json#schedule_minute",
-			"label": "Monday-Sunday 1st Period Minute"
+			"$import": "templates/thermostat_template.json#schedule_time_1st",
+			"label": "Monday-Sunday 1st Period"
 		},
 		{
 			"#": "47[0x0f]",
-			"$import": "templates/thermostat_template.json#schedule_hour_2nd",
-			"label": "Monday-Sunday 2nd Period Hour"
-		},
-		{
-			"#": "47[0xf0]",
-			"$import": "templates/thermostat_template.json#schedule_minute",
-			"label": "Monday-Sunday 2nd Period Minute"
+			"$import": "templates/thermostat_template.json#schedule_time_2nd",
+			"label": "Monday-Sunday 2nd Period"
 		},
 		{
 			"#": "48[0x0f]",
-			"$import": "templates/thermostat_template.json#schedule_hour_3rd",
-			"label": "Monday-Sunday 3rd Period Hour"
-		},
-		{
-			"#": "48[0xf0]",
-			"$import": "templates/thermostat_template.json#schedule_minute",
-			"label": "Monday-Sunday 3rd Period Minute"
-		},
-		{
-			"#": "49[0x0f]",
-			"$import": "templates/thermostat_template.json#schedule_hour_4th",
-			"label": "Monday-Sunday 4th Period Hour"
+			"$import": "templates/thermostat_template.json#schedule_time_3rd",
+			"label": "Monday-Sunday 3rd Period"
 		},
 		{
 			"#": "49[0xf0]",
-			"$import": "templates/thermostat_template.json#schedule_minute",
-			"label": "Monday-Sunday 4th Period Minute"
+			"$import": "templates/thermostat_template.json#schedule_time_4th",
+			"label": "Monday-Sunday 4th Period"
 		},
 		{
 			"#": "50",
