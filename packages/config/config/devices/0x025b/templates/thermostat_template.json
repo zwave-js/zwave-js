@@ -12,20 +12,27 @@
 		"unit": "minute",
 		"defaultValue": 0
 	},
-	"schedule_hour_1st": {
-		"$import": "#schedule_hour",
+	"schedule_time": {
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 15127,
+		"unsigned": true,
+		"description": "Start time for the schedule period (HH:MM). Value = Minute * 256 + Hour."
+	},
+	"schedule_time_1st": {
+		"$import": "#schedule_time",
 		"defaultValue": 6
 	},
-	"schedule_hour_2nd": {
-		"$import": "#schedule_hour",
+	"schedule_time_2nd": {
+		"$import": "#schedule_time",
 		"defaultValue": 8
 	},
-	"schedule_hour_3rd": {
-		"$import": "#schedule_hour",
+	"schedule_time_3rd": {
+		"$import": "#schedule_time",
 		"defaultValue": 18
 	},
-	"schedule_hour_4th": {
-		"$import": "#schedule_hour",
+	"schedule_time_4th": {
+		"$import": "#schedule_time",
 		"defaultValue": 22
 	},
 	"setpoint_c": {
