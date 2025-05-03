@@ -1614,6 +1614,8 @@
 			"#": "255",
 			"label": "Factory Reset",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
 			"defaultValue": 0,
 			"options": [
 				{
