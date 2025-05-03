@@ -55,9 +55,5 @@
 	"schedule_minute_fine": {
 		"$import": "#schedule_minute",
 		"description": "Ignored if not explicitly set to a value."
-	},
-	"setpoint_fine": {
-		"$import": "#setpoint",
-		"description": "Unit and default depends on parameter #1. Ignored if not explicitly set to a value."
 	}
 }
