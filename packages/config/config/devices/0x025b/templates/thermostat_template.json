@@ -30,10 +30,14 @@
 	},
 	"setpoint_c": {
 		"valueSize": 2,
+		"minValue" :0,
+		"maxValue": 990,
 		"unit": "0.1 °C"
 	},
 	"setpoint_f": {
 		"valueSize": 2,
+		"minValue" :0,
+		"maxValue": 990,
 		"unit": "0.1 °C"
 	},
 	"schedule_hour_1st_fine": {
