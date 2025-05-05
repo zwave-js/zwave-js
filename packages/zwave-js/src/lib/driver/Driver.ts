@@ -1877,24 +1877,29 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 * adds event handlers and starts the interview process.
 	 */
 	private async initializeControllerAndNodes(): Promise<void> {
-		if (this._controller == undefined) {
-			this._controller = new ZWaveController(this);
-			this._controller
-				.on("node found", this.onNodeFound.bind(this))
-				.on("node added", this.onNodeAdded.bind(this))
-				.on("node removed", this.onNodeRemoved.bind(this))
-				.on(
-					"status changed",
-					this.onControllerStatusChanged.bind(this),
-				)
-				.on("network found", this.onNetworkFound.bind(this))
-				.on("network joined", this.onNetworkJoined.bind(this))
-				.on("network left", this.onNetworkLeft.bind(this));
-
-			// Create and start all queues after creating the controller instance
-			this.initTransactionQueues();
-			this.initSerialAPIQueue();
+		if (this._controller) {
+			throw new ZWaveError(
+				"The controller was already initialized!",
+				ZWaveErrorCodes.Driver_Failed,
+			);
 		}
+
+		this._controller = new ZWaveController(this);
+		this._controller
+			.on("node found", this.onNodeFound.bind(this))
+			.on("node added", this.onNodeAdded.bind(this))
+			.on("node removed", this.onNodeRemoved.bind(this))
+			.on(
+				"status changed",
+				this.onControllerStatusChanged.bind(this),
+			)
+			.on("network found", this.onNetworkFound.bind(this))
+			.on("network joined", this.onNetworkJoined.bind(this))
+			.on("network left", this.onNetworkLeft.bind(this));
+
+		// Create and start all queues after creating the controller instance
+		this.initTransactionQueues();
+		this.initSerialAPIQueue();
 
 		if (!this._options.testingHooks?.skipControllerIdentification) {
 			// Determine what the controller can do
@@ -3595,27 +3600,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		await this.controller.hardReset();
 
 		// Clean up
-		await this.rejectTransactions(
-			() => true,
-			`The controller was hard-reset`,
-		);
-		this.sendNodeToSleepTimers.forEach((timeout) => timeout.clear());
-		this.sendNodeToSleepTimers.clear();
-
-		for (const timer of this.retryNodeInterviewTimeouts.values()) {
-			timer.clear();
-		}
-		this.retryNodeInterviewTimeouts.clear();
-
-		for (const timer of this.autoRefreshNodeValueTimers.values()) {
-			timer.clear();
-		}
-		this.autoRefreshNodeValueTimers.clear();
-
-		this.pollBackgroundRSSITimer?.clear();
-		this.pollBackgroundRSSITimer = undefined;
-
-		this._controllerInterviewed = false;
+		await this.destroyController();
 		void this.initializeControllerAndNodes();
 
 		// Save the key pair in the new cache again
@@ -3780,6 +3765,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this._controller.destroy();
 			this._controller = undefined;
 		}
+
+		this._controllerInterviewed = false;
+		this._nodesReady.clear();
+		this._nodesReadyEventEmitted = false;
 	}
 
 	private async closeDatabases(): Promise<void> {
@@ -8333,7 +8322,6 @@ ${handlers.length} left`,
 		data: Uint8Array,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
-		let destroy = false;
 
 		try {
 			await this.enterBootloader();
@@ -8432,10 +8420,6 @@ ${handlers.length} left`,
 								),
 							};
 							this.emit("firmware update progress", progress);
-
-							// we've transmitted at least one fragment, so we need to destroy the driver afterwards
-							destroy = true;
-
 							continue transfer;
 						}
 						case XModemMessageHeaders.NAK:
@@ -8536,7 +8520,7 @@ ${handlers.length} left`,
 			this.emit("firmware update finished", result);
 			return result;
 		} finally {
-			await this.leaveBootloader(destroy);
+			await this.leaveBootloader();
 			this._otwFirmwareUpdateInProgress = false;
 		}
 	}
@@ -8608,9 +8592,9 @@ ${handlers.length} left`,
 	}
 
 	/**
-	 * Leaves the bootloader and destroys the driver instance if desired
+	 * Leaves the bootloader by running the application.
 	 */
-	public async leaveBootloader(destroy: boolean = false): Promise<void> {
+	public async leaveBootloader(): Promise<void> {
 		this.controllerLog.print("Leaving bootloader...");
 		await this.leaveBootloaderInternal();
 
@@ -8633,28 +8617,10 @@ ${handlers.length} left`,
 			return;
 		}
 
-		// FIXME: Do not destroy the driver.
-		// We're most likely talking to a Serial API application
-		if (destroy) {
-			const restartReason = "Restarting driver after OTW update...";
-			this.controllerLog.print(restartReason);
+		// FIXME: Do we need the pause thing still?
+		this.unpauseSendQueue();
 
-			await this.destroy();
-
-			// Let the async calling context finish before emitting the error
-			setImmediate(() => {
-				this.emit(
-					"error",
-					new ZWaveError(
-						restartReason,
-						ZWaveErrorCodes.Driver_Failed,
-					),
-				);
-			});
-		} else {
-			this.unpauseSendQueue();
-			await this.ensureSerialAPI();
-		}
+		await this.ensureSerialAPI();
 	}
 
 	private serialport_onBootloaderData(data: BootloaderChunk): void {
