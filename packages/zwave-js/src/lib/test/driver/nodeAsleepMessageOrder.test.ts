@@ -86,7 +86,8 @@ integrationTest(
 			mockNode10.ackControllerRequestFrame();
 
 			// Ping for 10 should be failed now
-			t.expect(await pingPromise10).toBe(false);
+			const pingResult10 = await pingPromise10;
+			t.expect(pingResult10).toBe(false);
 
 			// Now the ping for 17 should go out
 			await wait(500);
@@ -104,7 +105,10 @@ integrationTest(
 				.toBeUndefined();
 
 			// And it should fail since we don't ack:
-			t.expect(await pingPromise17).toBe(false);
+			const pingResult17 = await pingPromise17;
+			t.expect(pingResult17).toBe(false);
+
+			await wait(1000);
 		},
 	},
 );
