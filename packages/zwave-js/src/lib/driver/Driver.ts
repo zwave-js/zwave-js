@@ -765,34 +765,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this.getSupportedCCVersion(cc, nodeId, endpointIndex),
 		};
 
-		this.immediateQueue = new TransactionQueue({
-			name: "immediate",
-			mayStartNextTransaction: (t) => {
-				// While the controller is unresponsive, only soft resetting is allowed.
-				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
-				// allow that too.
-				if (this.controller.status === ControllerStatus.Unresponsive) {
-					return t.message instanceof SoftResetRequest
-						|| t.message instanceof GetControllerVersionRequest;
-				}
-
-				// While the controller is jammed, only soft resetting is allowed
-				if (this.controller.status === ControllerStatus.Jammed) {
-					return t.message instanceof SoftResetRequest;
-				}
-
-				// All other messages on the immediate queue may always be sent as long as the controller is ready to send
-				return !this.queuePaused
-					&& this.controller.status === ControllerStatus.Ready;
-			},
-		});
-		this.queue = new TransactionQueue({
-			name: "normal",
-			mayStartNextTransaction: (t) => this.mayStartTransaction(t),
-		});
-		this.serialAPIQueue = new AsyncQueue();
-		this._queueIdle = false;
-
 		this._scheduler = new TaskScheduler();
 	}
 
@@ -819,8 +791,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			getDeviceConfig: (nodeId) => this.getDeviceConfig(nodeId),
 			sdkVersion: this._controller?.sdkVersion,
 			requestStorage: this._requestStorage,
-			ownNodeId: this.controller.ownNodeId!,
-			homeId: this.controller.homeId!,
+			ownNodeId: this._controller?.ownNodeId ?? 0, // Unspecified node ID
+			homeId: this._controller?.homeId ?? 0x55555555, // Invalid home ID
 			nodeIdType: this._controller?.nodeIdType ?? NodeIDType.Short,
 		};
 	}
@@ -838,15 +810,65 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 	// We have multiple queues to achieve multiple "layers" of communication priority:
 	// The default queue for most messages
-	private queue: TransactionQueue;
+	private queue!: TransactionQueue; // Is initialized in initTransactionQueues()
 	// An immediate queue for handling queries that need to be handled ASAP, e.g. Nonce Get
-	private immediateQueue: TransactionQueue;
+	private immediateQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
-	private serialAPIQueue: AsyncQueue<SerialAPIQueueItem>;
+	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
 
 	/** Gives access to the transaction queues, ordered by priority */
 	private get queues(): TransactionQueue[] {
 		return [this.immediateQueue, this.queue];
+	}
+
+	private initTransactionQueues(): void {
+		this.immediateQueue = new TransactionQueue({
+			name: "immediate",
+			mayStartNextTransaction: (t) => {
+				// While the controller is unresponsive, only soft resetting is allowed.
+				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
+				// allow that too.
+				if (this.controller.status === ControllerStatus.Unresponsive) {
+					return t.message instanceof SoftResetRequest
+						|| t.message instanceof GetControllerVersionRequest;
+				}
+
+				// While the controller is jammed, only soft resetting is allowed
+				if (this.controller.status === ControllerStatus.Jammed) {
+					return t.message instanceof SoftResetRequest;
+				}
+
+				// All other messages on the immediate queue may always be sent as long as the controller is ready to send
+				return !this.queuePaused
+					&& this.controller.status === ControllerStatus.Ready;
+			},
+		});
+		this.queue = new TransactionQueue({
+			name: "normal",
+			mayStartNextTransaction: (t) => this.mayStartTransaction(t),
+		});
+
+		this._queueIdle = false;
+
+		// Start draining the queues
+		for (const queue of this.queues) {
+			void this.drainTransactionQueue(queue);
+		}
+	}
+
+	private async destroyTransactionQueues(
+		reason: string,
+		errorCode?: ZWaveErrorCodes,
+	): Promise<void> {
+		await this.rejectTransactions(
+			(_t) => true,
+			reason,
+			errorCode ?? ZWaveErrorCodes.Driver_TaskRemoved,
+		);
+
+		for (const queue of this.queues) {
+			queue.abort();
+		}
 	}
 
 	private _scheduler: TaskScheduler;
@@ -858,9 +880,31 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	/** Used to immediately abort ongoing Serial API commands */
 	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
 
+	private initSerialAPIQueue(): void {
+		this.serialAPIQueue = new AsyncQueue();
+
+		// Start draining the queue
+		void this.drainSerialAPIQueue();
+	}
+
+	private destroySerialAPIQueue(
+		reason: string,
+		errorCode?: ZWaveErrorCodes,
+	): void {
+		this.serialAPIQueue.abort();
+
+		// Abort the currently executed serial API command, so the queue does not lock up
+		this.abortSerialAPICommand?.reject(
+			new ZWaveError(
+				reason,
+				errorCode ?? ZWaveErrorCodes.Driver_Destroyed,
+			),
+		);
+	}
+
 	// Keep track of which queues are currently busy
 	private _queuesBusyFlags = 0;
-	private _queueIdle: boolean;
+	private _queueIdle: boolean = false;
 	/** Whether the queue is currently idle */
 	public get queueIdle(): boolean {
 		return this._queueIdle;
@@ -1467,14 +1511,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this._isOpen = true;
 			spOpenPromise.resolve();
 
-			// Start draining the queues
-			for (const queue of this.queues) {
-				void this.drainTransactionQueue(queue);
-			}
-
-			// Start the serial API queue
-			void this.drainSerialAPIQueue();
-
 			// Start the task scheduler
 			this._scheduler.start();
 
@@ -1846,6 +1882,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				.on("network found", this.onNetworkFound.bind(this))
 				.on("network joined", this.onNetworkJoined.bind(this))
 				.on("network left", this.onNetworkLeft.bind(this));
+
+			// Create and start all queues after creating the controller instance
+			this.initTransactionQueues();
+			this.initSerialAPIQueue();
 		}
 
 		if (!this._options.testingHooks?.skipControllerIdentification) {
@@ -3670,10 +3710,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// First stop the scheduler, all queues and close the serial port, so nothing happens anymore
 		await this._scheduler.stop();
 
-		this.serialAPIQueue.abort();
-		for (const queue of this.queues) {
-			queue.abort();
-		}
+		await this.destroyTransactionQueues(
+			"driver instance destroyed",
+			ZWaveErrorCodes.Driver_Destroyed,
+		);
+
+		this.destroySerialAPIQueue(
+			"driver instance destroyed",
+			ZWaveErrorCodes.Driver_Destroyed,
+		);
 
 		if (this.serial != undefined) {
 			// Avoid spewing errors if the port was in the middle of receiving something
@@ -3692,6 +3737,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	/** Cleanly destroy the controller instance, but not the entire driver */
+	// FIXME: Too much overlap with destroy()
 	private async destroyController(): Promise<void> {
 		// Avoid re-transmissions etc. communicating with other applications
 		// or the bootloader
@@ -3703,13 +3749,17 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			),
 		);
 
-		await this.rejectTransactions(
-			(_t) => true,
+		await this.destroyTransactionQueues(
 			"The controller instance is being destroyed",
 			ZWaveErrorCodes.Driver_TaskRemoved,
 		);
 
-		// FIXME: Clear/stop Serial API queue
+		this.destroySerialAPIQueue(
+			"The controller instance is being destroyed",
+			ZWaveErrorCodes.Driver_TaskRemoved,
+		);
+
+		this.requestHandlers.clear();
 
 		// Attempt to close the value DBs and network cache
 		await this.closeDatabases();
@@ -6515,6 +6565,7 @@ ${handlers.length} left`,
 	private async drainSerialAPIQueue(): Promise<void> {
 		for await (const item of this.serialAPIQueue) {
 			const { msg, transactionSource, result } = item;
+			this._currentSerialAPICommandPromise = result;
 
 			// Attempt the command multiple times if necessary
 			attempts: for (let attempt = 1;; attempt++) {
@@ -6562,6 +6613,17 @@ ${handlers.length} left`,
 			msg,
 			transactionSource,
 			result,
+			[Symbol.dispose]: () => {
+				// Is called when the queue is aborted
+				result.reject(
+					new ZWaveError(
+						"The message has been removed from the queue",
+						ZWaveErrorCodes.Controller_MessageDropped,
+						undefined,
+						transactionSource,
+					),
+				);
+			},
 		});
 
 		return result;
@@ -8544,13 +8606,26 @@ ${handlers.length} left`,
 		this.controllerLog.print("Leaving bootloader...");
 		await this.leaveBootloaderInternal();
 
-		// Wait a second so we can detect if we end up in a CLI application
-		await wait(1000);
-		if (this.mode === DriverMode.CLI) {
+		// We may end up in a Serial API or CLI application. CLI is detected
+		// automatically, Serial API should send a SerialAPIStartedRequest.
+		// Give both a second to respond.
+		const isSerialAPI = await this.waitForMessage<SerialAPIStartedRequest>(
+			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+			1000,
+		)
+			.then(() => true as const)
+			.catch(() => false as const);
+
+		if (isSerialAPI) {
+			// Re-initialize the controller
+			await this.initializeControllerAndNodes();
+			return;
+		} else if (this.mode === DriverMode.CLI) {
 			await this.ensureCLIReady();
 			return;
 		}
 
+		// FIXME: Do not destroy the driver.
 		// We're most likely talking to a Serial API application
 		if (destroy) {
 			const restartReason = "Restarting driver after OTW update...";
