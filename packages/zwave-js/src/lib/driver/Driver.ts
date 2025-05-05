@@ -860,6 +860,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): Promise<void> {
+		// The queues might not have been initialized yet
+		for (const queue of this.queues) {
+			if (!queue) return;
+		}
+
 		await this.rejectTransactions(
 			(_t) => true,
 			reason,
@@ -891,6 +896,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): void {
+		// The queue might not have been initialized yet
+		if (!this.serialAPIQueue) return;
+
 		this.serialAPIQueue.abort();
 
 		// Abort the currently executed serial API command, so the queue does not lock up
