@@ -3396,11 +3396,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 	}
 
-	/** @internal */
-	public async softResetAndRestart(
-		restartLogMessage: string,
-		restartReason: string,
-	): Promise<void> {
+	/** Soft-reset the Z-Wave module and restart the driver instance */
+	public async softResetAndRestart(): Promise<void> {
 		this.controllerLog.print("Performing soft reset...");
 
 		try {
@@ -3415,19 +3412,19 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				"error",
 			);
 		}
+
+		// Make sure we're able to communicate with the controller again
+		if (!(await this.ensureSerialAPI())) {
+			await this.destroyWithMessage(
+				"The Serial API did not respond after soft-reset",
+			);
+		}
+
 		this.isSoftResetting = false;
 
-		this.controllerLog.print(restartLogMessage);
-
-		await this.destroy();
-
-		// Let the async calling context finish before emitting the error
-		process.nextTick(() => {
-			this.emit(
-				"error",
-				new ZWaveError(restartReason, ZWaveErrorCodes.Driver_Failed),
-			);
-		});
+		// Clean up and interview the controller again
+		await this.destroyController();
+		void this.initializeControllerAndNodes();
 	}
 
 	/**
@@ -3455,8 +3452,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (waitResult) {
 			// Serial API did start
 			this.controllerLog.print("reconnected and restarted");
-			this.controller["_supportsLongRange"] =
-				waitResult.supportsLongRange;
+			if (this._controller) {
+				this._controller["_supportsLongRange"] =
+					waitResult.supportsLongRange;
+			}
 			return true;
 		}
 
@@ -3482,8 +3481,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (waitResult) {
 			// Serial API did start, maybe do something with the information?
 			this.controllerLog.print("Serial API started");
-			this.controller["_supportsLongRange"] =
-				waitResult.supportsLongRange;
+			if (this._controller) {
+				this._controller["_supportsLongRange"] =
+					waitResult.supportsLongRange;
+			}
 			return true;
 		}
 
@@ -8210,10 +8211,10 @@ ${handlers.length} left`,
 				const wasUpdated = await this.firmwareUpdateOTW500(data);
 				if (wasUpdated.success) {
 					// After updating the firmware on 500 series sticks, we MUST soft-reset them
-					await this.softResetAndRestart(
+					this.driverLog.print(
 						"Activating new firmware and restarting driver...",
-						"Controller firmware updates require a driver restart!",
 					);
+					await this.softResetAndRestart();
 				}
 				return wasUpdated;
 			}

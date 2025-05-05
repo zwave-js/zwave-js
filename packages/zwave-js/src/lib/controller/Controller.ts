@@ -4824,7 +4824,7 @@ export class ZWaveController
 		});
 
 		// Cancel all transactions that were created by the route rebuilding process
-		this.driver.rejectTransactions(
+		void this.driver.rejectTransactions(
 			(t) =>
 				t.message instanceof RequestNodeNeighborUpdateRequest
 				|| t.message instanceof DeleteReturnRouteRequest
@@ -7870,9 +7870,11 @@ export class ZWaveController
 			} else {
 				await this.restoreNVMRaw500(convertedNVM, restoreProgress);
 			}
-			this.driver.controllerLog.print("NVM backup restored");
-		} finally {
-			// Whatever happens, turn Z-Wave radio back on
+			this.driver.controllerLog.print(
+				"NVM backup restored. Restarting to activate the restored backup...",
+			);
+		} catch {
+			// If the process fails, at least turn the Z-Wave radio back on
 			await this.toggleRF(true);
 		}
 
@@ -7881,13 +7883,7 @@ export class ZWaveController
 		// Reset all info about all nodes, so they get re-interviewed.
 		this._nodes.clear();
 
-		// Normally we'd only need to soft reset the stick, but we also need to re-interview the controller and potentially all nodes.
-		// Just forcing a restart of the driver seems easier.
-
-		await this.driver.softResetAndRestart(
-			"Restarting driver to activate restored NVM backup...",
-			"Applying the NVM backup requires a driver restart!",
-		);
+		await this.driver.softResetAndRestart();
 	}
 
 	/**
