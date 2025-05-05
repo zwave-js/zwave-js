@@ -4,6 +4,20 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+As of this release, Z-Wave JS no longer destroys the driver instance after NVM restore, OTW upgrades and leaving the bootloader. Previously applications had to catch the corresponding error and re-create the driver instance.
+
+This is no longer necessary, but applications MUST ensure that they always attach the event handlers for the controller and nodes after receiving the `driver ready` event.
+
+### Features
+* Re-create controller instance instead of destroying driver after certain actions (#7787)
+
+### Bugfixes
+* Fixed an issue where incorrect device info for the controller was exposed until restarting after migration from different hardware (#7776)
+
+### Config file changes
+* Add fingerprint `0x0313:0x0109` to "FortrezZ LLC SSA1/SSA2" (#7773)
+
 ## 15.2.1 (2025-04-29)
 ### Bugfixes
 * Revert: Work around a possible controller lockup when retransmitting a command to an unreachable device (#7769)
