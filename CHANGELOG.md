@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.3.1 (2025-05-07)
 ### Bugfixes
 * Fixed an issue where some CCs could be missing when Z-Wave JS was bundled (#7791)
 
