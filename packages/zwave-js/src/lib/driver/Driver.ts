@@ -54,6 +54,7 @@ import {
 	isEncapsulatingCommandClass,
 	isMultiEncapsulatingCommandClass,
 	isTransportServiceEncapsulation,
+	registerCCs,
 } from "@zwave-js/cc";
 import { ConfigManager, type DeviceConfig } from "@zwave-js/config";
 import {
@@ -280,6 +281,9 @@ import {
 	OTWFirmwareUpdateStatus,
 } from "./_Types.js";
 import { discoverRemoteSerialPorts } from "./mDNSDiscovery.js";
+
+// Force-load all Command Classes:
+registerCCs();
 
 export const libVersion: string = PACKAGE_VERSION;
 export const libName: string = PACKAGE_NAME;
