@@ -5,6 +5,7 @@ import {
 	Security2CCNonceGet,
 	Security2CCNonceReport,
 	SecurityCCNonceReport,
+	registerCCs,
 } from "@zwave-js/cc";
 import { DeviceConfig } from "@zwave-js/config";
 import {
@@ -95,6 +96,9 @@ import {
 	parseMPDU,
 	znifferDataMessageToCorruptedFrame,
 } from "./MPDU.js";
+
+// Force-load all Command Classes:
+registerCCs();
 
 const logo: string = `
 ███████╗ ███╗   ██╗ ██╗ ██████╗ ██████╗ ███████╗ ██████╗          ██╗ ███████╗
