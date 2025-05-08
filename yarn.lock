@@ -2646,17 +2646,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@zwave-js/fmt@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "@zwave-js/fmt@npm:1.0.3"
+"@zwave-js/fmt@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@zwave-js/fmt@npm:1.0.4"
   dependencies:
     json5: "npm:^2.2.3"
   peerDependencies:
     "@dprint/formatter": ^0.4.1
-    "@dprint/json": ^0.19.3
-    "@dprint/markdown": ^0.17.8
-    "@dprint/typescript": ^0.93.0
-  checksum: 10/b478139f1becb669df84069e50feb46d985725ac144aa9bc2e412749fb865bb63fdebcfdcc4600c4c0d03d6ef7c1879364e925aa67e98525e2a28a2b208df015
+    "@dprint/json": ^0.20.0
+    "@dprint/markdown": ^0.18.0
+    "@dprint/typescript": ^0.95.0
+  checksum: 10/9dc73f0ee2e6b9026171de7091ff2d201c836fd95d51ee6bae4fe034b7e8489e24f5349612705ed351fcba857564c8117c902a4d63d2680fd5b679586443c609
   languageName: node
   linkType: hard
 
@@ -2689,7 +2689,7 @@ __metadata:
     "@types/node": "npm:^20.17.32"
     "@types/yargs": "npm:^17.0.33"
     "@zwave-js/core": "workspace:*"
-    "@zwave-js/fmt": "npm:^1.0.3"
+    "@zwave-js/fmt": "npm:^1.0.4"
     "@zwave-js/shared": "workspace:*"
     ansi-colors: "npm:^4.1.3"
     cli-highlight: "npm:^2.1.11"
@@ -2762,7 +2762,7 @@ __metadata:
     "@zwave-js/core": "workspace:*"
     "@zwave-js/eslint-plugin": "workspace:*"
     "@zwave-js/flash": "workspace:*"
-    "@zwave-js/fmt": "npm:^1.0.3"
+    "@zwave-js/fmt": "npm:^1.0.4"
     "@zwave-js/host": "workspace:*"
     "@zwave-js/maintenance": "workspace:*"
     "@zwave-js/nvmedit": "workspace:*"

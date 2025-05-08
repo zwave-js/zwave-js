@@ -55,7 +55,7 @@
     "@zwave-js/core": "workspace:*",
     "@zwave-js/eslint-plugin": "workspace:*",
     "@zwave-js/flash": "workspace:*",
-    "@zwave-js/fmt": "^1.0.3",
+    "@zwave-js/fmt": "^1.0.4",
     "@zwave-js/host": "workspace:*",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/nvmedit": "workspace:*",
