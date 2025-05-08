@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.3.2 (2025-05-08)
 ### Bugfixes
 * Fixed a regression from v15 where command delivery verification wouldn't work on S2-capable devices without Supervision (#7795)
 
