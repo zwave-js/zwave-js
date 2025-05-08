@@ -5527,9 +5527,7 @@ ${handlers.length} left`,
 			if (msg.command instanceof Security2CCNonceGet) {
 				return this.handleSecurity2NonceGet(node);
 			}
-			if (msg.command instanceof Security2CCNonceReport) {
-				return this.handleSecurity2NonceReport(node, msg.command);
-			}
+			// Nonce Report is handled further down, as we might have dynamic handlers for it
 			if (msg.command instanceof Security2CCCommandsSupportedGet) {
 				return this.handleSecurity2CommandsSupportedGet(
 					node,
@@ -5657,6 +5655,11 @@ ${handlers.length} left`,
 					await reply(SupervisionStatus.Success);
 					return;
 				}
+			}
+
+			// Handle Nonce Reports if there was no dynamic handler waiting for them
+			if (msg.command instanceof Security2CCNonceReport) {
+				return this.handleSecurity2NonceReport(node, msg.command);
 			}
 
 			// Some S2 commands contain only extensions. Those are handled by the CC implementation.

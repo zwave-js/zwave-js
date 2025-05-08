@@ -540,10 +540,10 @@ integrationTest(
 	},
 );
 
-integrationTest.only(
+integrationTest(
 	"S2 Collisions: Both nodes send at the same time. Supervision supported, but disabled. Verify delivery",
 	{
-		debug: true,
+		// debug: true,
 
 		// We need the cache to skip the CC interviews and mark S2 as supported
 		provisioningDirectory: path.join(
@@ -699,14 +699,12 @@ integrationTest.only(
 
 			// If the collision was handled gracefully, we should now have the value reported by the node
 			const currentValue = node.getValue(
-				BasicCCValues.currentValue.id,
+				BinarySwitchCCValues.currentValue.id,
 			);
-			t.expect(currentValue).toBe(0);
+			t.expect(currentValue).toBe(true);
 
 			// Ensure the Basic Set causing a collision eventually gets resolved
-			t.expect(p2result).toMatchObject({
-				status: SupervisionStatus.Success,
-			});
+			t.expect(p2result).toBeUndefined();
 		},
 	},
 );
