@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixed a regression from v15 where command delivery verification wouldn't work on S2-capable devices without Supervision (#7795)
+
+### Config file changes
+* Disallow manual entry for param 3 on Zooz ZSE70 (#7794)
+
 ## 15.3.1 (2025-05-07)
 ### Bugfixes
 * Fixed an issue where some CCs could be missing when Z-Wave JS was bundled (#7791)
