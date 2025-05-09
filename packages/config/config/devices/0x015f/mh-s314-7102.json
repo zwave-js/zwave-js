@@ -1,0 +1,1135 @@
+{
+	"manufacturer": "McoHome Technology Co., Ltd.",
+	"manufacturerId": "0x015f",
+	"label": "MH-S314 Gen 7",
+	"description": "Touch Panel Switch 4 Button",
+	"devices": [
+		{
+			"productType": "0x7041",
+			"productId": "0x7102"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Button 1",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Button 2",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Button 3",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Button 4",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev"
+		},
+		{
+			"#": "2",
+			"label": "LED Backlight Brightness Level ON",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 10
+		},
+		{
+			"#": "3",
+			"label": "LED Backlight Brightness Level OFF",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 10
+		},
+		{
+			"#": "4[0x01]",
+			"label": "Button 1 Local Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "4[0x02]",
+			"label": "Button 2 Local Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "4[0x04]",
+			"label": "Button 3 Local Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "4[0x08]",
+			"label": "Button 4 Local Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "5[0x01]",
+			"label": "Button 1 Z-Wave Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "5[0x02]",
+			"label": "Button 2 Z-Wave Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "5[0x04]",
+			"label": "Button 3 Z-Wave Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "5[0x08]",
+			"label": "Button 4 Z-Wave Relay Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "6",
+			"label": "Button Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click to switch on/off",
+					"value": 0
+				},
+				{
+					"label": "Click to turn on, auto off after param 11 duration",
+					"value": 1
+				},
+				{
+					"label": "Click to turn off, auto on after param 11 duration",
+					"value": 2
+				},
+				{
+					"label": "Hold the key is on, off once released",
+					"value": 3
+				},
+				{
+					"label": "Hold >3s to switch on/off remains states after release",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "7",
+			"label": "Button 1 Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click to switch on/off",
+					"value": 0
+				},
+				{
+					"label": "Click to turn on, auto off after param 6 duration",
+					"value": 1
+				},
+				{
+					"label": "Click to turn off, auto on after param 6 duration",
+					"value": 2
+				},
+				{
+					"label": "Hold >3s for on until released",
+					"value": 3
+				},
+				{
+					"label": "Single click to toggle, hold >3s for on until released",
+					"value": 4
+				},
+				{
+					"label": "Momentary, hold for on until released",
+					"value": 5
+				},
+				{
+					"label": "Hold >3s to switch on/off",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "8",
+			"label": "Button 2 Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click to switch on/off",
+					"value": 0
+				},
+				{
+					"label": "Click to turn on, auto off after param 6 duration",
+					"value": 1
+				},
+				{
+					"label": "Click to turn off, auto on after param 6 duration",
+					"value": 2
+				},
+				{
+					"label": "Hold >3s for on until released",
+					"value": 3
+				},
+				{
+					"label": "Single click to toggle, hold >3s for on until released",
+					"value": 4
+				},
+				{
+					"label": "Momentary, hold for on until released",
+					"value": 5
+				},
+				{
+					"label": "Hold >3s to switch on/off",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "9",
+			"label": "Button 3 Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click to switch on/off",
+					"value": 0
+				},
+				{
+					"label": "Click to turn on, auto off after param 6 duration",
+					"value": 1
+				},
+				{
+					"label": "Click to turn off, auto on after param 6 duration",
+					"value": 2
+				},
+				{
+					"label": "Hold >3s for on until released",
+					"value": 3
+				},
+				{
+					"label": "Single click to toggle, hold >3s for on until released",
+					"value": 4
+				},
+				{
+					"label": "Momentary, hold for on until released",
+					"value": 5
+				},
+				{
+					"label": "Hold >3s to switch on/off",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Button 4 Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click to switch on/off",
+					"value": 0
+				},
+				{
+					"label": "Click to turn on, auto off after param 6 duration",
+					"value": 1
+				},
+				{
+					"label": "Click to turn off, auto on after param 6 duration",
+					"value": 2
+				},
+				{
+					"label": "Hold >3s for on until released",
+					"value": 3
+				},
+				{
+					"label": "Single click to toggle, hold >3s for on until released",
+					"value": 4
+				},
+				{
+					"label": "Momentary, hold for on until released",
+					"value": 5
+				},
+				{
+					"label": "Hold >3s to switch on/off",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "11",
+			"label": "Relay On Duration",
+			"description": "0 for infinite",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0
+		},
+		{
+			"#": "12",
+			"label": "Button 1 On Duration",
+			"description": "0 for infinite",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0
+		},
+		{
+			"#": "13",
+			"label": "Button 2 On Duration",
+			"description": "0 for infinite",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0
+		},
+		{
+			"#": "14",
+			"label": "Button 3 On Duration",
+			"description": "0 for infinite",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0
+		},
+		{
+			"#": "15",
+			"label": "Button 4 On Duration",
+			"description": "0 for infinite",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0
+		},
+		{
+			"#": "23[0x01]",
+			"label": "Button 1 Respond to Scenes",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "23[0x02]",
+			"label": "Button 2 Respond to Scenes",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "23[0x04]",
+			"label": "Button 3 Respond to Scenes",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "23[0x08]",
+			"label": "Button 4 Respond to Scenes",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "24",
+			"label": "Button 1 Scene Activate Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Scene activate function disabled",
+					"value": 0
+				},
+				{
+					"label": "Button 1 tap activates scene in param 12 regardless of state",
+					"value": 1
+				},
+				{
+					"label": "Button 1 tap activates scene in param 12 when state is off",
+					"value": 2
+				},
+				{
+					"label": "Button 1 tap activates scene in param 12 when state is on",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "25",
+			"label": "Button 1 Activate Scene ID",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "26",
+			"label": "Button 1 Activate Scene Dim Duration",
+			"description": "0-127 seconds, +128 for minutes",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "27",
+			"label": "Button 2 Scene Activate Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Scene activate function disabled",
+					"value": 0
+				},
+				{
+					"label": "Button 2 tap activates scene in param 15 regardless of state",
+					"value": 1
+				},
+				{
+					"label": "Button 2 tap activates scene in param 15 when state is off",
+					"value": 2
+				},
+				{
+					"label": "Button 2 tap activates scene in param 15 when state is on",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "28",
+			"label": "Button 2 Activate Scene ID",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "29",
+			"label": "Button 2 Activate Scene Dim Duration",
+			"description": "0-127 seconds, +128 for minutes",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "30",
+			"label": "Button 3 Scene Activate Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Scene activate function disabled",
+					"value": 0
+				},
+				{
+					"label": "Button 3 tap activates scene in param 15 regardless of state",
+					"value": 1
+				},
+				{
+					"label": "Button 3 tap activates scene in param 15 when state is off",
+					"value": 2
+				},
+				{
+					"label": "Button 3 tap activates scene in param 15 when state is on",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "31",
+			"label": "Button 3 Activate Scene ID",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "32",
+			"label": "Button 3 Activate Scene Dim Duration",
+			"description": "0-127 seconds, +128 for minutes",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "33",
+			"label": "Button 4 Scene Activate Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Scene activate function disabled",
+					"value": 0
+				},
+				{
+					"label": "Button 4 tap activates scene in param 15 regardless of state",
+					"value": 1
+				},
+				{
+					"label": "Button 4 tap activates scene in param 15 when state is off",
+					"value": 2
+				},
+				{
+					"label": "Button 4 tap activates scene in param 15 when state is on",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "34",
+			"label": "Button 4 Activate Scene ID",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "35",
+			"label": "Button 4 Activate Scene Dim Duration",
+			"description": "0-127 seconds, +128 for minutes",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "50[0x01]",
+			"label": "Button 1 Scene Respond (ID 1-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "50[0x02]",
+			"label": "Button 2 Scene Respond (ID 1-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "50[0x04]",
+			"label": "Button 3 Scene Respond (ID 1-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "50[0x08]",
+			"label": "Button 4 Scene Respond (ID 1-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "51[0x01]",
+			"label": "Button 1 Scene Respond (ID 1-20)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "51[0x02]",
+			"label": "Button 2 Scene Respond (ID 1-20)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "51[0x04]",
+			"label": "Button 3 Scene Respond (ID 1-20)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "51[0x08]",
+			"label": "Button 4 Scene Respond (ID 1-20)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "52[0x01]",
+			"label": "Button 1 Scene Respond (ID 21-40)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "52[0x02]",
+			"label": "Button 2 Scene Respond (ID 21-40)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "52[0x04]",
+			"label": "Button 3 Scene Respond (ID 21-40)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "52[0x08]",
+			"label": "Button 4 Scene Respond (ID 21-40)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "53[0x01]",
+			"label": "Button 1 Scene Respond (ID 41-60)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "53[0x02]",
+			"label": "Button 2 Scene Respond (ID 41-60)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "53[0x04]",
+			"label": "Button 3 Scene Respond (ID 41-60)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "53[0x08]",
+			"label": "Button 4 Scene Respond (ID 41-60)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "54[0x01]",
+			"label": "Button 1 Scene Respond (ID 61-80)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "54[0x02]",
+			"label": "Button 2 Scene Respond (ID 61-80)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "54[0x04]",
+			"label": "Button 3 Scene Respond (ID 61-80)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "54[0x08]",
+			"label": "Button 4 Scene Respond (ID 61-80)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "55[0x01]",
+			"label": "Button 1 Scene Respond (ID 81-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "55[0x02]",
+			"label": "Button 2 Scene Respond (ID 81-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "55[0x04]",
+			"label": "Button 3 Scene Respond (ID 81-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "55[0x08]",
+			"label": "Button 4 Scene Respond (ID 81-100)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "255",
+			"label": "Factory Reset",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normal operation",
+					"value": 0
+				},
+				{
+					"label": "Reset",
+					"value": 85
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Press any button 3 times quickly to include.",
+		"exclusion": "Press any button 3 times quickly to exclude.",
+		"reset": "Press any button 20 times to perform a factory reset.",
+		"manual": "https://manuals-backend.z-wave.info/make.php?lang=en&sku=MCOETPS314_700&cert="
+	}
+}
