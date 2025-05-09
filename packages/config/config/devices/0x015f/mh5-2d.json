@@ -1,11 +1,11 @@
 {
 	"manufacturer": "McoHome Technology Co., Ltd.",
 	"manufacturerId": "0x015f",
-	"label": "MH5-2A",
+	"label": "MH5-2D",
 	"description": "Fan Coil Thermostat",
 	"devices": [
 		{
-			"productType": "0xf501",
+			"productType": "0xf52d",
 			"productId": "0x7102"
 		}
 	],
