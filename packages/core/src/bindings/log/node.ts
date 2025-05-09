@@ -19,6 +19,7 @@ import {
 	type LogFactory,
 	nonUndefinedLogConfigKeys,
 	stringToNodeList,
+	timestampFormat,
 	timestampFormatShort,
 } from "../../log/shared.js";
 import type { LogContainer, ZWaveLogger } from "../../log/traits.js";
@@ -49,7 +50,7 @@ export function createLoggerFormat(channel: string): Format {
 		// add the channel as a label
 		label(channel),
 		// default to short timestamps
-		timestamp(),
+		timestamp(timestampFormat),
 	) as unknown as Format;
 }
 
