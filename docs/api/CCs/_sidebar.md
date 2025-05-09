@@ -31,6 +31,7 @@
     - [Association Group Information CC](api/CCs/AssociationGroupInfo.md)
     - [Barrier Operator CC](api/CCs/BarrierOperator.md)
     - [Basic CC](api/CCs/Basic.md)
+    - [Basic Window Covering CC](api/CCs/BasicWindowCovering.md)
     - [Battery CC](api/CCs/Battery.md)
     - [Binary Sensor CC](api/CCs/BinarySensor.md)
     - [Binary Switch CC](api/CCs/BinarySwitch.md)

@@ -4,7 +4,7 @@
 
 ```ts
 
-import { ReadableWritablePair } from 'node:stream/web';
+import type { ReadableWritablePair } from 'node:stream/web';
 
 // Warning: (ae-forgotten-export) The symbol "Constructors" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "AllOf" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -348,11 +348,6 @@ export function enumFilesRecursive(fs: ReadFileSystemInfo, rootDir: string, pred
 // @public (undocumented)
 export function evalOrStatic<T>(fnOrConst: T, ...args: any[]): ReturnTypeOrStatic<T>;
 
-// Warning: (ae-missing-release-tag) "EventHandler" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export type EventHandler = ((arg1: any, arg2: any, arg3: any, arg4: any) => void) | ((arg1: any, arg2: any, arg3: any) => void) | ((arg1: any, arg2: any) => void) | ((arg1: any) => void) | ((...args: any[]) => void);
-
 // Warning: (ae-missing-release-tag) "EventListener" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -658,45 +653,6 @@ export class Timer {
 //
 // @public (undocumented)
 export type TypedClassDecorator<Class extends abstract new (...args: any) => any> = (target: Class, context: ClassDecoratorContext<Class>) => Class | void;
-
-// Warning: (ae-missing-release-tag) "TypedEventEmitter" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-// Warning: (ae-missing-release-tag) "TypedEventEmitter" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public
-export interface TypedEventEmitter<TEvents extends Record<keyof TEvents, EventHandler>> {
-    // (undocumented)
-    emit<TEvent extends keyof TEvents>(event: TEvent, ...args: Parameters<TEvents[TEvent]>): boolean;
-    // (undocumented)
-    eventNames(): Array<keyof TEvents>;
-    // (undocumented)
-    getMaxListeners(): number;
-    // (undocumented)
-    listenerCount<TEvent extends keyof TEvents>(event: TEvent, listener?: TEvents[TEvent]): number;
-    // (undocumented)
-    listeners<TEvent extends keyof TEvents>(eventName: TEvent): TEvents[TEvent][];
-    // (undocumented)
-    off<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
-    // (undocumented)
-    on<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
-    // (undocumented)
-    once<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
-    // (undocumented)
-    prependListener<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
-    // (undocumented)
-    prependOnceListener<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
-    // (undocumented)
-    rawListeners<TEvent extends keyof TEvents>(eventName: TEvent): TEvents[TEvent][];
-    // (undocumented)
-    removeAllListeners(event?: keyof TEvents): this;
-    // (undocumented)
-    removeListener<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
-    // (undocumented)
-    setMaxListeners(n: number): this;
-}
-
-// @public (undocumented)
-export class TypedEventEmitter<TEvents extends Record<keyof TEvents, EventHandler>> {
-}
 
 // Warning: (ae-missing-release-tag) "TypedEventTarget" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

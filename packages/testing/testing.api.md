@@ -7,18 +7,18 @@
 import type { CCEncodingContext } from '@zwave-js/cc';
 import { CCId } from '@zwave-js/core';
 import type { ColorComponent } from '@zwave-js/cc';
-import { CommandClass } from '@zwave-js/cc';
+import type { CommandClass } from '@zwave-js/cc';
 import { CommandClasses } from '@zwave-js/core';
 import { CommandClassInfo } from '@zwave-js/core';
 import type { ConfigValue } from '@zwave-js/core';
 import type { ConfigValueFormat } from '@zwave-js/core';
-import { FunctionType } from '@zwave-js/serial/safe';
+import { FunctionType } from '@zwave-js/serial';
 import type { KeypadMode } from '@zwave-js/cc';
 import type { MaybeUnknown } from '@zwave-js/core';
 import { Message } from '@zwave-js/serial';
 import { MessageEncodingContext } from '@zwave-js/serial';
 import { MessageParsingContext } from '@zwave-js/serial';
-import { MockPort } from '@zwave-js/serial/mock';
+import type { MockPort } from '@zwave-js/serial/mock';
 import { NodeProtocolInfoAndDeviceClass } from '@zwave-js/core';
 import { SecurityManagers } from '@zwave-js/core';
 import type { SwitchType } from '@zwave-js/cc';
@@ -26,8 +26,8 @@ import type { ThermostatMode } from '@zwave-js/cc';
 import type { ThermostatSetpointType } from '@zwave-js/cc';
 import type { UserIDStatus } from '@zwave-js/cc';
 import type { WindowCoveringParameter } from '@zwave-js/cc';
-import { ZWaveApiVersion } from '@zwave-js/core/safe';
-import { ZWaveLibraryTypes } from '@zwave-js/core/safe';
+import { ZWaveApiVersion } from '@zwave-js/core';
+import { ZWaveLibraryTypes } from '@zwave-js/core';
 import { ZWaveSerialStream } from '@zwave-js/serial';
 
 // Warning: (ae-missing-release-tag) "BinarySensorCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -648,11 +648,6 @@ export interface WindowCoveringCCCapabilities {
     // (undocumented)
     supportedParameters: WindowCoveringParameter[];
 }
-
-// Warnings were encountered during analysis:
-//
-// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:8:47 - (TS2307) Cannot find module 'winston/lib/winston/transports' or its corresponding type declarations.
-// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 
