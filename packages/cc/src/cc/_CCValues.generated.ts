@@ -856,6 +856,79 @@ export const BasicCCValues = Object.freeze({
 	},
 });
 
+export const BasicWindowCoveringCCValues = Object.freeze({
+	levelChangeUp: {
+		id: {
+			commandClass: CommandClasses["Basic Window Covering"],
+			property: "levelChangeUp",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["Basic Window Covering"],
+			endpoint,
+			property: "levelChangeUp",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass
+					=== CommandClasses["Basic Window Covering"]
+				&& valueId.property === "levelChangeUp"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return {
+				...ValueMetadata.WriteOnlyBoolean,
+				label: "Open",
+				states: {
+					true: "Start",
+					false: "Stop",
+				},
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	levelChangeDown: {
+		id: {
+			commandClass: CommandClasses["Basic Window Covering"],
+			property: "levelChangeDown",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["Basic Window Covering"],
+			endpoint,
+			property: "levelChangeDown",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass
+					=== CommandClasses["Basic Window Covering"]
+				&& valueId.property === "levelChangeDown"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return {
+				...ValueMetadata.WriteOnlyBoolean,
+				label: "Close",
+				states: {
+					true: "Start",
+					false: "Stop",
+				},
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+});
+
 export const BatteryCCValues = Object.freeze({
 	level: {
 		id: {
@@ -9854,6 +9927,7 @@ export const CCValues = {
 		AssociationGroupInfoCCValues,
 	[CommandClasses["Barrier Operator"]]: BarrierOperatorCCValues,
 	[CommandClasses.Basic]: BasicCCValues,
+	[CommandClasses["Basic Window Covering"]]: BasicWindowCoveringCCValues,
 	[CommandClasses.Battery]: BatteryCCValues,
 	[CommandClasses["Binary Sensor"]]: BinarySensorCCValues,
 	[CommandClasses["Binary Switch"]]: BinarySwitchCCValues,

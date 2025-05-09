@@ -126,7 +126,7 @@ export async function createAndStartTestingDriver(
 		skipFirmwareIdentification = true,
 		skipNodeInterview = false,
 		loadConfiguration = true,
-		fs = (await import("@zwave-js/core/bindings/fs/node")).fs,
+		fs = (await import("#default_bindings/fs")).fs,
 		...internalOptions
 	} = options;
 

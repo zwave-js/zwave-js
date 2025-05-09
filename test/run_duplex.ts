@@ -1,7 +1,6 @@
+import { Bytes } from "@zwave-js/shared";
 import { wait as _wait } from "alcalzone-shared/async";
 import path from "node:path";
-import "reflect-metadata";
-import { Bytes } from "@zwave-js/shared";
 import { fileURLToPath } from "node:url";
 import { Driver, RFRegion } from "zwave-js";
 

@@ -1,3 +1,4 @@
+import { configDir } from "#config_dir";
 import { ZWaveError, ZWaveErrorCodes, isZWaveError } from "@zwave-js/core";
 import {
 	formatId,
@@ -14,7 +15,6 @@ import type {
 import { isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";
 import path from "pathe";
-import { configDir } from "./utils.js";
 import { hexKeyRegex4Digits, throwInvalidConfig } from "./utils_safe.js";
 
 export type ManufacturersMap = Map<number, string>;

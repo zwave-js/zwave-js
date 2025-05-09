@@ -5,7 +5,6 @@ import { configs } from "triple-beam";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import type Transport from "winston-transport";
-import type { ConsoleTransportInstance } from "winston/lib/winston/transports";
 import { colorizer } from "../../log/Colorizer.js";
 import {
 	combine,
@@ -28,6 +27,8 @@ const isTTY = process.stdout.isTTY;
 const isUnitTest = process.env.NODE_ENV === "test";
 
 const loglevels = configs.npm.levels;
+
+type ConsoleTransportInstance = winston.transports.ConsoleTransportInstance;
 
 function getTransportLoglevel(): string {
 	const loglevel = getenv("LOGLEVEL")!;

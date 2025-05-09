@@ -80,6 +80,7 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 	public abort(): void {
 		this.ended = true;
 		this.transactions.clear();
+		this.currentTransaction = undefined;
 		for (const p of this.listeners) {
 			p.resolve(undefined);
 		}
@@ -122,7 +123,7 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 	}
 }
 
-export interface SerialAPIQueueItem {
+export interface SerialAPIQueueItem extends Disposable {
 	msg: Message;
 	transactionSource?: string;
 	result: DeferredPromise<Message | undefined>;

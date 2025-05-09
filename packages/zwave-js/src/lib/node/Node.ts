@@ -2573,8 +2573,12 @@ protocol version:      ${this.protocolVersion}`;
 	public async deserialize(): Promise<void> {
 		if (!this.driver.networkCache) return;
 
-		// Restore the device config
-		await this.loadDeviceConfig();
+		// Restore the device config. For the controller, this needs to happen
+		// after the interview, as we could have migrated to a different controller
+		// but the cache still contains the old fingerprint
+		if (!this.isControllerNode) {
+			await this.loadDeviceConfig();
+		}
 
 		// Mark already-interviewed nodes as potentially ready
 		if (this.interviewStage === InterviewStage.Complete) {

@@ -1,7 +1,6 @@
+import { fs } from "@zwave-js/core/bindings/fs/node";
 import { readJSON, writeTextFile } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
-import "reflect-metadata";
-import { fs } from "@zwave-js/core/bindings/fs/node";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {

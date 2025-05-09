@@ -1,8 +1,7 @@
-import { wait as _wait } from "alcalzone-shared/async";
-import path from "node:path";
-import "reflect-metadata";
 import { Bytes } from "@zwave-js/shared";
+import { wait as _wait } from "alcalzone-shared/async";
 import _os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Driver } from "zwave-js";
 
@@ -24,7 +23,7 @@ process.on("unhandledRejection", (_r) => {
 // 800 series
 const port = os.platform() === "win32"
 	? "COM5"
-	: "/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00";
+	: "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_D83BDA7524E4-if00";
 // const port = "tcp://127.0.0.1:5555";
 
 const driver = new Driver(port, {
@@ -73,6 +72,21 @@ const driver = new Driver(port, {
 	.on("error", console.error)
 	.once("driver ready", async () => {
 		// Test code goes here
+		const node = driver.controller.nodes.getOrThrow(2);
+		node.once("ready", async () => {
+			await wait(500);
+			debugger;
+			void node.commandClasses["Binary Switch"].withOptions({
+				maxSendAttempts: 3,
+			}).set(false);
+
+			await wait(30000);
+			debugger;
+
+			await node.commandClasses["Binary Switch"].withOptions({
+				maxSendAttempts: 3,
+			}).set(false);
+		});
 	})
 	.once("bootloader ready", async () => {
 		// What to do when stuck in the bootloader
