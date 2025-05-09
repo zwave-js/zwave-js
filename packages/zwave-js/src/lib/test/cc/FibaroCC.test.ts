@@ -6,7 +6,7 @@ import {
 	FibaroVenetianBlindCCSet,
 } from "@zwave-js/cc/manufacturerProprietary/FibaroCC";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
@@ -36,7 +36,7 @@ test("the Set Tilt command should serialize correctly", async (t) => {
 			0x63, // Tilt
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -50,7 +50,7 @@ test("the Report command should be deserialized correctly", async (t) => {
 			0x00, // Tilt
 		]),
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 2 } as any,
 	) as FibaroVenetianBlindCCReport;
@@ -79,7 +79,7 @@ test("FibaroVenetianBlindCCSet => FibaroVenetianBlindCCReport = unexpected", asy
 		nodeId: 2,
 		tilt: 7,
 	});
-	const ccResponse = await CommandClass.parseAsync(
+	const ccResponse = await CommandClass.parse(
 		buildCCBuffer(
 			Uint8Array.from([
 				FibaroVenetianBlindCCCommand.Report,
@@ -98,7 +98,7 @@ test("FibaroVenetianBlindCCGet => FibaroVenetianBlindCCReport = expected", async
 	const ccRequest = new FibaroVenetianBlindCCGet({
 		nodeId: 2,
 	});
-	const ccResponse = await CommandClass.parseAsync(
+	const ccResponse = await CommandClass.parse(
 		buildCCBuffer(
 			Uint8Array.from([
 				FibaroVenetianBlindCCCommand.Report,

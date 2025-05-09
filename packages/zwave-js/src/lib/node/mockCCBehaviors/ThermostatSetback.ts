@@ -4,7 +4,7 @@ import {
 	ThermostatSetbackCCReport,
 	ThermostatSetbackCCSet,
 } from "@zwave-js/cc/ThermostatSetbackCC";
-import { type MockNodeBehavior } from "@zwave-js/testing";
+import type { MockNodeBehavior } from "@zwave-js/testing";
 
 const STATE_KEY_PREFIX = "ThermostatSetback_";
 const StateKeys = {

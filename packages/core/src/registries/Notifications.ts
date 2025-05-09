@@ -1,4 +1,4 @@
-import { num2hex } from "@zwave-js/shared/safe";
+import { num2hex } from "@zwave-js/shared";
 
 interface NotificationDefinition {
 	readonly name: string;
@@ -725,8 +725,7 @@ const notifications = Object.freeze(
 				},
 				[0x23]: {
 					label: "Credential lock/open operation",
-					// parameters contain a partial User Credential Report:
-					// User Unique Identifier, Credential Type, Credential Slot Number (V8)
+					// parameters contain Credential Usage Data
 					parameter: {
 						type: "commandclass",
 					},
@@ -741,8 +740,7 @@ const notifications = Object.freeze(
 				},
 				[0x24]: {
 					label: "Credential unlock/close operation",
-					// parameters contain a partial User Credential Report:
-					// User Unique Identifier, Credential Type, Credential Slot Number (V8)
+					// parameters contain Credential Usage Data
 					parameter: {
 						type: "commandclass",
 					},
@@ -771,75 +769,8 @@ const notifications = Object.freeze(
 				[0x0a]: {
 					label: "Auto lock not fully locked operation",
 				},
-				[0x25]: {
-					label: "All users deleted", // User Credential CC
-				},
-				[0x26]: {
-					label: "Multiple credentials deleted",
-					// parameters contain a partial User Credential Report:
-					// User Unique Identifier, Credential Type, Credential Slot Number (V8)
-					parameter: {
-						type: "commandclass",
-					},
-				},
 				[0x0c]: {
 					label: "All user codes deleted", // User Code CC
-				},
-				[0x27]: {
-					label: "User added",
-					parameter: {
-						// User Notification Report with newly added data
-						type: "commandclass",
-					},
-				},
-				[0x28]: {
-					label: "User modified",
-					parameter: {
-						// User Notification Report with newly modified data
-						type: "commandclass",
-					},
-				},
-				[0x29]: {
-					label: "User deleted",
-					parameter: {
-						// User Notification Report with deleted data
-						type: "commandclass",
-					},
-				},
-				[0x2a]: {
-					label: "User unchanged",
-					parameter: {
-						// User Notification Report with existing data
-						type: "commandclass",
-					},
-				},
-				[0x2b]: {
-					label: "Credential added",
-					parameter: {
-						// Credential Notification Report with newly added data
-						type: "commandclass",
-					},
-				},
-				[0x2c]: {
-					label: "Credential modified",
-					parameter: {
-						// Credential Notification Report with newly modified data
-						type: "commandclass",
-					},
-				},
-				[0x2d]: {
-					label: "Credential deleted",
-					parameter: {
-						// Credential Notification Report with deleted data
-						type: "commandclass",
-					},
-				},
-				[0x2e]: {
-					label: "Credential unchanged",
-					parameter: {
-						// Credential Notification Report with existing data
-						type: "commandclass",
-					},
 				},
 				[0x0d]: {
 					label: "Single user code deleted",
@@ -865,16 +796,14 @@ const notifications = Object.freeze(
 				[0x2F]: {
 					label:
 						"Valid credential access denied: User Active State set to Occupied Disabled",
-					// parameters contain a partial User Credential Report:
-					// User Unique Identifier, Credential Type, Credential Slot Number (V8)1
+					// parameters contain Credential Usage Data
 					parameter: {
 						type: "commandclass",
 					},
 				},
 				[0x30]: {
 					label: "Valid credential access denied: Schedule inactive",
-					// parameters contain a partial User Credential Report:
-					// User Unique Identifier, Credential Type, Credential Slot Number (V8)
+					// parameters contain Credential Usage Data
 					parameter: {
 						type: "commandclass",
 					},
@@ -882,8 +811,7 @@ const notifications = Object.freeze(
 				[0x31]: {
 					label:
 						"Valid credential access denied: Not enough credentials entered",
-					// TODO: parameters contain number of blocks, followed by N blocks:
-					// User Unique Identifier, Credential Type, Credential Slot Number (V8)
+					// parameters contain Credential Usage Data for the entered credentials
 				},
 				[0x32]: {
 					label: "Invalid credential used",

@@ -1,8 +1,8 @@
 import { JsonlDB } from "@alcalzone/jsonl-db";
-import {
-	type Database,
-	type DatabaseFactory,
-	type DatabaseOptions,
+import type {
+	Database,
+	DatabaseFactory,
+	DatabaseOptions,
 } from "@zwave-js/shared/bindings";
 
 /** An implementation of the Database bindings for Node.js based on JsonlDB */

@@ -1,5 +1,5 @@
-import { type Protocols } from "../definitions/Protocol.js";
-import { type SecurityClass } from "../definitions/SecurityClass.js";
+import type { Protocols } from "../definitions/Protocol.js";
+import type { SecurityClass } from "../definitions/SecurityClass.js";
 
 export const onlyDigitsRegex = /^\d+$/;
 export const minQRCodeLength = 52; // 2 digits Z, 2 digits version, 5 digits checksum, 3 digits keys, 40 digits DSK

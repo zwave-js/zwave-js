@@ -1,8 +1,5 @@
-import { type SendCommand } from "@zwave-js/cc";
-import {
-	type CompatOverrideQueries,
-	type GetDeviceConfig,
-} from "@zwave-js/config";
+import type { SendCommand } from "@zwave-js/cc";
+import type { CompatOverrideQueries, GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type ControlsCC,
@@ -51,11 +48,11 @@ import {
 	getCommandClass,
 	getImplementedVersion,
 } from "./CommandClassDecorators.js";
-import { type CCValue, type StaticCCValue } from "./Values.js";
-import {
-	type GetRefreshValueTimeouts,
-	type GetUserPreferences,
-	type SchedulePoll,
+import type { CCValue, StaticCCValue } from "./Values.js";
+import type {
+	GetRefreshValueTimeouts,
+	GetUserPreferences,
+	SchedulePoll,
 } from "./traits.js";
 
 export type ValueIDProperties = Pick<ValueID, "property" | "propertyKey">;
@@ -806,6 +803,7 @@ type CCNameMap = {
 		typeof CommandClasses["Association Group Information"];
 	"Barrier Operator": typeof CommandClasses["Barrier Operator"];
 	Basic: typeof CommandClasses["Basic"];
+	"Basic Window Covering": typeof CommandClasses["Basic Window Covering"];
 	Battery: typeof CommandClasses["Battery"];
 	"Binary Sensor": typeof CommandClasses["Binary Sensor"];
 	"Binary Switch": typeof CommandClasses["Binary Switch"];
@@ -964,6 +962,8 @@ export interface CCAPIs {
 	"Barrier Operator":
 		import("../cc/BarrierOperatorCC.js").BarrierOperatorCCAPI;
 	Basic: import("../cc/BasicCC.js").BasicCCAPI;
+	"Basic Window Covering":
+		import("../cc/BasicWindowCoveringCC.js").BasicWindowCoveringCCAPI;
 	Battery: import("../cc/BatteryCC.js").BatteryCCAPI;
 	"Binary Sensor": import("../cc/BinarySensorCC.js").BinarySensorCCAPI;
 	"Binary Switch": import("../cc/BinarySwitchCC.js").BinarySwitchCCAPI;

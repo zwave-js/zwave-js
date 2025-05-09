@@ -1,9 +1,4 @@
 import {
-	ZWaveError,
-	ZWaveErrorCodes,
-	isZWaveError,
-} from "@zwave-js/core/error";
-import {
 	type CommandClasses,
 	ControllerCapabilityFlags,
 	MAX_NODES,
@@ -12,14 +7,13 @@ import {
 	NodeType,
 	RFRegion,
 	stripUndefined,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import {
-	Bytes,
-	buffer2hex,
-	cloneDeep,
-	num2hex,
-	pick,
-} from "@zwave-js/shared/safe";
+	ZWaveError,
+	ZWaveErrorCodes,
+	isZWaveError,
+} from "@zwave-js/core/error";
+import { Bytes, buffer2hex, cloneDeep, num2hex, pick } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { SemVer } from "semver";
 import semverGte from "semver/functions/gte.js";
@@ -34,7 +28,7 @@ import {
 	type RouteCache,
 	getEmptyRoute,
 } from "./lib/common/routeCache.js";
-import { type SUCUpdateEntry } from "./lib/common/sucUpdateEntry.js";
+import type { SUCUpdateEntry } from "./lib/common/sucUpdateEntry.js";
 import { NVMMemoryIO } from "./lib/io/NVMMemoryIO.js";
 import { NVM3Adapter } from "./lib/nvm3/adapter.js";
 import {
@@ -106,11 +100,11 @@ import { dumpNVM, mapToObject } from "./lib/nvm3/utils.js";
 import { NVM500Adapter } from "./lib/nvm500/adapter.js";
 import { nvm500Impls } from "./lib/nvm500/impls/index.js";
 import { resolveLayout } from "./lib/nvm500/shared.js";
-import {
-	type NVM500JSON,
-	type NVM500JSONController,
-	type NVM500JSONNode,
-	type NVM500Meta,
+import type {
+	NVM500JSON,
+	NVM500JSONController,
+	NVM500JSONNode,
+	NVM500Meta,
 } from "./nvm500/NVMParser.js";
 
 export interface NVMJSON {
@@ -215,6 +209,21 @@ type ParsedNVM =
 	| {
 		type: "unknown";
 	};
+
+/**
+ * Options influencing how NVM contents should be migrated.
+ * By default, all data will be preserved.
+ */
+export interface MigrateNVMOptions {
+	/** Whether application data will be preserved */
+	preserveApplicationData?: boolean;
+	/** Whether SUC update entries will be preserved */
+	preserveSUCUpdateEntries?: boolean;
+	/** Whether LWR, NLWR and the priority route flag will be preserved */
+	preserveRoutes?: boolean;
+	/** Whether the neighbor table will be preserved */
+	preserveNeighbors?: boolean;
+}
 
 export function nodeHasInfo(node: NVMJSONNode): node is NVMJSONNodeWithInfo {
 	return !node.isVirtual || Object.keys(node).length > 1;
@@ -1781,7 +1790,7 @@ export function json500To700(
 		applicationData = raw.toString("hex");
 	}
 
-	// https://github.com/zwave-js/node-zwave-js/issues/6055
+	// https://github.com/zwave-js/zwave-js/issues/6055
 	// On some controllers this byte can be 0xff (effectively not set)
 	let controllerConfiguration = source.controller.controllerConfiguration;
 	if (source.controller.controllerConfiguration === 0xff) {
@@ -1814,7 +1823,7 @@ export function json500To700(
 		}
 	}
 
-	// https://github.com/zwave-js/node-zwave-js/issues/6055
+	// https://github.com/zwave-js/zwave-js/issues/6055
 	// Some controllers have invalid information for the IDs
 	let maxNodeId = source.controller.maxNodeId;
 	if (maxNodeId === 0xff) maxNodeId = source.controller.lastNodeId;
@@ -1929,6 +1938,7 @@ export function json700To500(json: NVMJSON): NVM500JSON {
 export async function migrateNVM(
 	sourceNVM: Uint8Array,
 	targetNVM: Uint8Array,
+	options: MigrateNVMOptions = {},
 ): Promise<Uint8Array> {
 	let source: ParsedNVM;
 	let target: ParsedNVM;
@@ -1990,6 +2000,18 @@ export async function migrateNVM(
 		}
 	}
 
+	const {
+		preserveApplicationData = true,
+		preserveNeighbors = true,
+		preserveRoutes = true,
+		preserveSUCUpdateEntries = true,
+	} = options;
+
+	const preserveAll = preserveApplicationData
+		&& preserveNeighbors
+		&& preserveRoutes
+		&& preserveSUCUpdateEntries;
+
 	// Short circuit if...
 	if (
 		target.type === "unknown"
@@ -1998,6 +2020,8 @@ export async function migrateNVM(
 		&& sourceProtocolFileFormat
 		&& sourceProtocolFileFormat <= targetProtocolFileFormat
 		&& sourceNVM.length === targetNVM.length
+		// ...everything should be preserved and...
+		&& preserveAll
 	) {
 		// ...both the source and the target are 700 series, but at least the target uses an unsupported protocol version.
 		// We can be sure however that the target can upgrade any 700 series NVM to its protocol version, as long as the
@@ -2010,6 +2034,8 @@ export async function migrateNVM(
 		&& sourceNVM.length === targetNVM.length
 		&& source.json.meta.sharedFileSystem
 			=== target.json.meta.sharedFileSystem
+		// ...everything should be preserved,...
+		&& preserveAll
 	) {
 		// ... the source and target protocol versions are compatible without conversion
 		const sourceProtocolVersion = source.json.controller.protocolVersion;
@@ -2071,6 +2097,37 @@ export async function migrateNVM(
 	// In any case, preserve the application version of the target stick
 	source.json.controller.applicationVersion =
 		target.json.controller.applicationVersion;
+
+	// Remove information we do not want to preserve
+	if (!preserveApplicationData) {
+		source.json.controller.applicationData = undefined;
+	}
+	if (!preserveNeighbors) {
+		for (const node of Object.values(source.json.nodes)) {
+			if (!node.isVirtual) {
+				node.neighbors = [];
+			}
+		}
+	}
+	if (!preserveRoutes) {
+		for (const node of Object.values(source.json.nodes)) {
+			if (!node.isVirtual) {
+				node.appRouteLock = false;
+				node.lwr = undefined;
+				node.nlwr = undefined;
+			}
+		}
+	}
+	if (!preserveSUCUpdateEntries) {
+		source.json.controller.sucUpdateEntries = [];
+		source.json.controller.sucLastIndex = 0xff;
+		for (const node of Object.values(source.json.nodes)) {
+			if (!node.isVirtual) {
+				node.sucUpdateIndex = 0xfe;
+				node.sucPendingUpdate = false;
+			}
+		}
+	}
 
 	if (source.type === 500 && target.type === 500) {
 		// Both are 500, so we just need to update the metadata to match the target

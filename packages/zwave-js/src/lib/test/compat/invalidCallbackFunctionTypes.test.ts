@@ -4,8 +4,6 @@ import { FunctionType } from "@zwave-js/serial";
 import {
 	AssignSUCReturnRouteRequest,
 	AssignSUCReturnRouteResponse,
-} from "@zwave-js/serial/serialapi";
-import {
 	DeleteSUCReturnRouteRequest,
 	DeleteSUCReturnRouteRequestTransmitReport,
 	DeleteSUCReturnRouteResponse,
@@ -21,7 +19,7 @@ import {
 } from "../../controller/MockControllerState.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
-// Repro for https://github.com/zwave-js/node-zwave-js/issues/6363
+// Repro for https://github.com/zwave-js/zwave-js/issues/6363
 
 integrationTest(
 	"Invalid callback function types don't trigger the unresponsive controller detection",

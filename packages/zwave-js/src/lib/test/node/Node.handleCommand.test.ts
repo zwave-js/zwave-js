@@ -1,6 +1,6 @@
 import { CommandClass, EntryControlCommand } from "@zwave-js/cc";
 import { BinarySwitchCCReport } from "@zwave-js/cc/BinarySwitchCC";
-import { type EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
+import type { EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
 import { type CommandClassInfo, CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import sinon from "sinon";
@@ -113,7 +113,7 @@ test.sequential(
 			new Uint8Array(12).fill(0xff),
 		]);
 
-		const command = await CommandClass.parseAsync(
+		const command = await CommandClass.parse(
 			buf,
 			{ sourceNodeId: node.id } as any,
 		) as EntryControlCCNotification;

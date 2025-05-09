@@ -1,7 +1,6 @@
+import { Bytes } from "@zwave-js/shared";
 import { wait as _wait } from "alcalzone-shared/async";
 import path from "node:path";
-import "reflect-metadata";
-import { Bytes } from "@zwave-js/shared/safe";
 import { fileURLToPath } from "node:url";
 import { Driver, RFRegion } from "zwave-js";
 
@@ -69,7 +68,7 @@ const driver_primary = new Driver(port_primary, {
 		cacheDir: path.join(__dirname, "cache"),
 		lockDir: path.join(__dirname, "cache/locks"),
 	},
-	allowBootloaderOnly: true,
+	bootloaderMode: "allow",
 })
 	.on("error", console.error)
 	.once("driver ready", async () => {
@@ -153,7 +152,7 @@ const driver_secondary = new Driver(port_secondary, {
 		cacheDir: path.join(__dirname, "cache2"),
 		lockDir: path.join(__dirname, "cache2/locks"),
 	},
-	allowBootloaderOnly: true,
+	bootloaderMode: "allow",
 	// joinNetworkUserCallbacks: {
 	// 	showDSK(dsk) {
 	// 		pin = dsk.split("-")[0];

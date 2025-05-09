@@ -2,8 +2,8 @@ import {
 	type NodeProtocolInfo,
 	encodeNodeProtocolInfo,
 	parseNodeProtocolInfo,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import type { NVMModuleType } from "./shared.js";
 
 export interface NVMDescriptor {

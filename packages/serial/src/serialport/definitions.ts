@@ -1,4 +1,4 @@
-import { type MessageHeaders } from "../message/MessageHeaders.js";
+import type { MessageHeaders } from "../message/MessageHeaders.js";
 
 export type ZWaveSerialChunk =
 	| MessageHeaders.ACK
@@ -7,6 +7,10 @@ export type ZWaveSerialChunk =
 	| Uint8Array;
 
 export enum ZWaveSerialMode {
+	// Controller or end device Serial API
 	SerialAPI,
+	// OTW Bootloader
 	Bootloader,
+	// Text-based SoC end device CLI
+	CLI,
 }

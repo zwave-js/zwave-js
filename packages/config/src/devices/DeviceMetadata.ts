@@ -1,4 +1,4 @@
-import { type JSONObject, pick } from "@zwave-js/shared/safe";
+import { type JSONObject, pick } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import { throwInvalidConfig } from "../utils_safe.js";
 import {

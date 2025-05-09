@@ -1,3 +1,4 @@
+import { configDir } from "#config_dir";
 import {
 	getBitMaskWidth,
 	getIntegerLimits,
@@ -26,16 +27,12 @@ import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,
 } from "../src/devices/DeviceConfig.js";
-import {
-	type ConditionalParamInfoMap,
-	type ParamInfoMap,
+import type {
+	ConditionalParamInfoMap,
+	ParamInfoMap,
 } from "../src/devices/ParamInformation.js";
 import type { DeviceID } from "../src/devices/shared.js";
-import {
-	configDir,
-	getDeviceEntryPredicate,
-	versionInRange,
-} from "../src/utils.js";
+import { getDeviceEntryPredicate, versionInRange } from "../src/utils.js";
 
 const configManager = new ConfigManager();
 

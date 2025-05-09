@@ -1,18 +1,19 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
-import { MessagePriority, encodeNodeID } from "@zwave-js/core";
-import type {
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-	MultiStageCallback,
-	SuccessIndicator,
-} from "@zwave-js/serial";
+import {
+	type MessageOrCCLogEntry,
+	MessagePriority,
+	encodeNodeID,
+} from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageEncodingContext,
 	MessageOrigin,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
+	type MultiStageCallback,
+	type SuccessIndicator,
 	expectedCallback,
 	messageTypes,
 	priority,
@@ -61,11 +62,10 @@ export class RequestNodeNeighborUpdateRequest
 	public nodeId: number;
 	public discoveryTimeout: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		const nodeId = encodeNodeID(this.nodeId, ctx.nodeIdType);
 		this.payload = Bytes.concat([nodeId, Bytes.from([this.callbackId])]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

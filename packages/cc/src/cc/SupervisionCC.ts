@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -22,9 +22,8 @@ import {
 	ZWaveErrorCodes,
 	isTransmissionError,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { PhysicalCCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -38,9 +37,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SupervisionCommand } from "../lib/_Types.js";
 
-export const SupervisionCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses.Supervision, {
-		// Used to remember whether a node supports supervision-encapsulation of the given CC
+export const SupervisionCCValues = V.defineCCValues(
+	CommandClasses.Supervision,
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"ccSupported",
 			"ccSupported",
@@ -51,8 +50,8 @@ export const SupervisionCCValues = Object.freeze({
 			undefined,
 			{ internal: true, supportsEndpoints: false },
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI - This CC has no values to set
 // @noInterview - This CC is only used for encapsulation
@@ -336,7 +335,7 @@ export class SupervisionCCReport extends SupervisionCC {
 	public readonly status: SupervisionStatus;
 	public readonly duration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([
 				(this.moreUpdatesFollow ? 0b1_0_000000 : 0)
@@ -352,7 +351,6 @@ export class SupervisionCCReport extends SupervisionCC {
 				Bytes.from([this.duration.serializeReport()]),
 			]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -414,23 +412,7 @@ export class SupervisionCCGet extends SupervisionCC {
 		this.encapsulated.encapsulatingCC = this as any;
 	}
 
-	/** @deprecated Use {@link fromAsync} instead */
-	public static from(raw: CCRaw, ctx: CCParsingContext): SupervisionCCGet {
-		validatePayload(raw.payload.length >= 3);
-		const requestStatusUpdates = !!(raw.payload[0] & 0b1_0_000000);
-		const sessionId = raw.payload[0] & 0b111111;
-
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
-		const encapsulated = CommandClass.parse(raw.payload.subarray(2), ctx);
-		return new this({
-			nodeId: ctx.sourceNodeId,
-			requestStatusUpdates,
-			sessionId,
-			encapsulated,
-		});
-	}
-
-	public static async fromAsync(
+	public static async from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): Promise<SupervisionCCGet> {
@@ -438,7 +420,7 @@ export class SupervisionCCGet extends SupervisionCC {
 		const requestStatusUpdates = !!(raw.payload[0] & 0b1_0_000000);
 		const sessionId = raw.payload[0] & 0b111111;
 
-		const encapsulated = await CommandClass.parseAsync(
+		const encapsulated = await CommandClass.parse(
 			raw.payload.subarray(2),
 			ctx,
 		);
@@ -454,10 +436,8 @@ export class SupervisionCCGet extends SupervisionCC {
 	public sessionId: number;
 	public encapsulated: CommandClass;
 
-	/** @deprecated Use {@link serializeAsync} instead */
-	public serialize(ctx: CCEncodingContext): Bytes {
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
-		const encapCC = this.encapsulated.serialize(ctx);
+	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const encapCC = await this.encapsulated.serialize(ctx);
 		this.payload = Bytes.concat([
 			Bytes.from([
 				(this.requestStatusUpdates ? 0b10_000000 : 0)
@@ -466,21 +446,7 @@ export class SupervisionCCGet extends SupervisionCC {
 			]),
 			encapCC,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
-	}
-
-	public async serializeAsync(ctx: CCEncodingContext): Promise<Bytes> {
-		const encapCC = await this.encapsulated.serializeAsync(ctx);
-		this.payload = Bytes.concat([
-			Bytes.from([
-				(this.requestStatusUpdates ? 0b10_000000 : 0)
-				| (this.sessionId & 0b111111),
-				encapCC.length,
-			]),
-			encapCC,
-		]);
-		return super.serializeAsync(ctx);
 	}
 
 	protected computeEncapsulationOverhead(): number {

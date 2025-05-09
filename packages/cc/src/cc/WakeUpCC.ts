@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -11,9 +11,8 @@ import {
 	type WithAddress,
 	supervisedCommandSucceeded,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
 import {
@@ -44,35 +43,31 @@ import {
 import { V } from "../lib/Values.js";
 import { WakeUpCommand } from "../lib/_Types.js";
 
-export const WakeUpCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Wake Up"], {
-		...V.staticProperty(
-			"controllerNodeId",
-			{
-				...ValueMetadata.ReadOnly,
-				label: "Node ID of the controller",
-			} as const,
-			{
-				supportsEndpoints: false,
-			},
-		),
-
-		...V.staticProperty(
-			"wakeUpInterval",
-			{
-				...ValueMetadata.UInt24,
-				label: "Wake Up interval",
-			} as const,
-			{
-				supportsEndpoints: false,
-			},
-		),
-
-		...V.staticProperty("wakeUpOnDemandSupported", undefined, {
-			internal: true,
+export const WakeUpCCValues = V.defineCCValues(CommandClasses["Wake Up"], {
+	...V.staticProperty(
+		"controllerNodeId",
+		{
+			...ValueMetadata.ReadOnly,
+			label: "Node ID of the controller",
+		} as const,
+		{
 			supportsEndpoints: false,
-			minVersion: 3,
-		}),
+		},
+	),
+	...V.staticProperty(
+		"wakeUpInterval",
+		{
+			...ValueMetadata.UInt24,
+			label: "Wake Up interval",
+		} as const,
+		{
+			supportsEndpoints: false,
+		},
+	),
+	...V.staticProperty("wakeUpOnDemandSupported", undefined, {
+		internal: true,
+		supportsEndpoints: false,
+		minVersion: 3,
 	}),
 });
 
@@ -383,7 +378,7 @@ export class WakeUpCCIntervalSet extends WakeUpCC {
 	public wakeUpInterval: number;
 	public controllerNodeId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			0,
 			0,
@@ -391,7 +386,6 @@ export class WakeUpCCIntervalSet extends WakeUpCC {
 			this.controllerNodeId,
 		]);
 		this.payload.writeUIntBE(this.wakeUpInterval, 0, 3);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

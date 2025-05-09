@@ -1,18 +1,16 @@
-import { type CCParsingContext } from "@zwave-js/cc";
-import type {
-	GetValueDB,
-	MessageOrCCLogEntry,
-	WithAddress,
-} from "@zwave-js/core/safe";
+import type { CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
 	MessagePriority,
 	ValueMetadata,
+	type WithAddress,
 	enumValuesToMetadataStates,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { getEnumMemberName } from "@zwave-js/shared";
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -41,8 +39,9 @@ import {
 	ThermostatOperatingStateCommand,
 } from "../lib/_Types.js";
 
-export const ThermostatOperatingStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Operating State"], {
+export const ThermostatOperatingStateCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Operating State"],
+	{
 		...V.staticPropertyWithName(
 			"operatingState",
 			"state",
@@ -52,8 +51,8 @@ export const ThermostatOperatingStateCCValues = Object.freeze({
 				states: enumValuesToMetadataStates(ThermostatOperatingState),
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 

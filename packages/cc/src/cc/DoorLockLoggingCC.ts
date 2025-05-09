@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -10,9 +10,8 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { isPrintableASCII, num2hex } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, isPrintableASCII, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -98,11 +97,12 @@ const eventTypeLabel = {
 
 const LATEST_RECORD_NUMBER_KEY = 0;
 
-export const DoorLockLoggingCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Door Lock Logging"], {
+export const DoorLockLoggingCCValues = V.defineCCValues(
+	CommandClasses["Door Lock Logging"],
+	{
 		...V.staticProperty("recordsCount", undefined, { internal: true }),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Door Lock Logging"])
 export class DoorLockLoggingCCAPI extends PhysicalCCAPI {
@@ -427,9 +427,8 @@ export class DoorLockLoggingCCRecordGet extends DoorLockLoggingCC {
 
 	public recordNumber: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.recordNumber]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

@@ -46,15 +46,6 @@ export function pickDeep<T = unknown>(
 	return _pickDeep(object, path.split(".")) as T;
 }
 
-/** Calls the map function of the given array and flattens the result by one level */
-export function flatMap<U, T extends any[]>(
-	array: T[],
-	callbackfn: (value: T, index: number, array: T[]) => U[],
-): U[] {
-	const mapped = array.map(callbackfn);
-	return mapped.reduce((acc, cur) => [...acc, ...cur], [] as U[]);
-}
-
 /**
  * Returns a human-readable representation of the given enum value.
  * If the given value is not found in the enum object, `"unknown (<value-as-hex>)"` is returned.
@@ -242,5 +233,6 @@ export function evalOrStatic<T>(
 	fnOrConst: T,
 	...args: any[]
 ): ReturnTypeOrStatic<T> {
+	// @ts-expect-error https://github.com/microsoft/TypeScript/issues/61337
 	return typeof fnOrConst === "function" ? fnOrConst(...args) : fnOrConst;
 }

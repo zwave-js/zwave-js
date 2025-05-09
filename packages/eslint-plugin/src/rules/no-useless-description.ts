@@ -1,4 +1,4 @@
-import { type AST } from "jsonc-eslint-parser";
+import type { AST } from "jsonc-eslint-parser";
 import { CONFIG_PARAM } from "../jsonSelectors.js";
 import { type JSONCRule, removeJSONProperty } from "../utils.js";
 

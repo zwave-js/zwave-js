@@ -10,8 +10,8 @@ import {
 	encodeNodeProtocolInfo,
 	parseBitMask,
 	parseNodeProtocolInfo,
-} from "@zwave-js/core/safe";
-import { Bytes, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
 import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,

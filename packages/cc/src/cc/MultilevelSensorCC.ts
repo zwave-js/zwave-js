@@ -1,43 +1,38 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { type GetDeviceConfig } from "@zwave-js/config";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
+	CommandClasses,
+	type ControlsCC,
+	type EndpointId,
+	type GetEndpoint,
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
 	type LogNode,
+	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
+	MessagePriority,
+	type MessageRecord,
+	type NodeId,
+	type Scale,
+	type SinglecastCC,
+	type SupervisionResult,
+	type SupportsCC,
+	type ValueID,
+	ValueMetadata,
 	type WithAddress,
 	encodeBitMask,
+	encodeFloatWithScale,
 	getSensor,
 	getSensorName,
 	getSensorScale,
 	getUnknownScale,
-	timespan,
-} from "@zwave-js/core";
-import type {
-	ControlsCC,
-	EndpointId,
-	GetEndpoint,
-	MessageOrCCLogEntry,
-	MessageRecord,
-	NodeId,
-	Scale,
-	SinglecastCC,
-	SupervisionResult,
-	SupportsCC,
-	ValueID,
-} from "@zwave-js/core/safe";
-import {
-	CommandClasses,
-	type MaybeNotKnown,
-	MessagePriority,
-	ValueMetadata,
-	encodeFloatWithScale,
 	parseBitMask,
 	parseFloatWithScale,
+	timespan,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type AllOrNone, num2hex } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { type AllOrNone, Bytes, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -70,16 +65,14 @@ import {
 	MultilevelSensorCommand,
 	type MultilevelSensorValue,
 } from "../lib/_Types.js";
-import { type GetUserPreferences } from "../lib/traits.js";
+import type { GetUserPreferences } from "../lib/traits.js";
 
-export const MultilevelSensorCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Multilevel Sensor"], {
+export const MultilevelSensorCCValues = V.defineCCValues(
+	CommandClasses["Multilevel Sensor"],
+	{
 		...V.staticProperty("supportedSensorTypes", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Multilevel Sensor"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"supportedScales",
 			"supportedScales",
@@ -90,7 +83,6 @@ export const MultilevelSensorCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyWithName(
 			"value",
 			// This should have been the sensor type, but it is too late to change now
@@ -107,8 +99,8 @@ export const MultilevelSensorCCValues = Object.freeze({
 				label: sensorTypeName,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 /**
  * Determine the scale to use to query a sensor reading. Uses the user-preferred scale if given,
@@ -750,12 +742,11 @@ export class MultilevelSensorCCReport extends MultilevelSensorCC {
 	public scale: number;
 	public value: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.type]),
 			encodeFloatWithScale(this.value, this.scale),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -825,7 +816,7 @@ export class MultilevelSensorCCGet extends MultilevelSensorCC {
 	public sensorType: number | undefined;
 	public scale: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
 			this.sensorType != undefined
 			&& this.scale != undefined
@@ -835,7 +826,6 @@ export class MultilevelSensorCCGet extends MultilevelSensorCC {
 				(this.scale & 0b11) << 3,
 			]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -900,9 +890,8 @@ export class MultilevelSensorCCSupportedSensorReport
 
 	public supportedSensorTypes: readonly number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeBitMask(this.supportedSensorTypes);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -966,12 +955,11 @@ export class MultilevelSensorCCSupportedScaleReport extends MultilevelSensorCC {
 
 	public readonly supportedScales: readonly number[];
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.sensorType]),
 			encodeBitMask(this.supportedScales, 4, 0),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1024,9 +1012,8 @@ export class MultilevelSensorCCGetSupportedScale extends MultilevelSensorCC {
 
 	public sensorType: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.sensorType]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

@@ -11,14 +11,14 @@ import {
 } from "../../controller/MockControllerState.js";
 
 import { TransmitStatus } from "@zwave-js/core";
-import { SoftResetRequest } from "@zwave-js/serial/serialapi";
-
 import {
 	SendDataAbort,
 	SendDataRequest,
 	SendDataRequestTransmitReport,
 	SendDataResponse,
+	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldTimeOut: boolean;

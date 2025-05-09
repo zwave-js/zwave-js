@@ -11,7 +11,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 @messageTypes(MessageType.Request, FunctionType.GetControllerCapabilities)
 @expectedResponse(FunctionType.GetControllerCapabilities)
@@ -84,7 +84,7 @@ export class GetControllerCapabilitiesResponse extends Message {
 	public isStaticUpdateController: boolean;
 	public noNodesIncluded: boolean;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			(this.isSecondary ? ControllerCapabilityFlags.Secondary : 0)
 			| (this.isUsingHomeIdFromOtherNetwork
@@ -101,7 +101,6 @@ export class GetControllerCapabilitiesResponse extends Message {
 				? ControllerCapabilityFlags.NoNodesIncluded
 				: 0),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 }

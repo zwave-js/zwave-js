@@ -1,7 +1,9 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type EndpointId,
 	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -15,7 +17,6 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { type EndpointId, type MaybeNotKnown } from "@zwave-js/core/safe";
 import {
 	type AllOrNone,
 	Bytes,
@@ -57,16 +58,14 @@ import {
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
 import { UserCodeCC } from "./UserCodeCC.js";
 
-export const ScheduleEntryLockCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Schedule Entry Lock"], {
+export const ScheduleEntryLockCCValues = V.defineCCValues(
+	CommandClasses["Schedule Entry Lock"],
+	{
 		...V.staticProperty("numWeekDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numYearDaySlots", undefined, { internal: true }),
 		...V.staticProperty("numDailyRepeatingSlots", undefined, {
 			internal: true,
 		}),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Schedule Entry Lock"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"userEnabled",
 			"userEnabled",
@@ -76,7 +75,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"scheduleKind",
 			"scheduleKind",
@@ -86,7 +84,6 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			undefined,
 			{ internal: true },
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
 			"schedule",
@@ -94,22 +91,14 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 				scheduleKind: ScheduleEntryLockScheduleKind,
 				userId: number,
 				slotId: number,
-			) => toPropertyKey(scheduleKind, userId, slotId),
+			) => (scheduleKind << 16) | (userId << 8) | slotId,
 			({ property, propertyKey }) =>
 				property === "schedule" && typeof propertyKey === "number",
 			undefined,
 			{ internal: true },
 		),
-	}),
-});
-
-function toPropertyKey(
-	scheduleKind: ScheduleEntryLockScheduleKind,
-	userId: number,
-	slotId: number,
-): number {
-	return (scheduleKind << 16) | (userId << 8) | slotId;
-}
+	},
+);
 
 /** Caches information about a schedule */
 function persistSchedule(
@@ -954,9 +943,8 @@ export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
 	public userId: number;
 	public enabled: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.userId, this.enabled ? 0x01 : 0x00]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1001,9 +989,8 @@ export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
 
 	public enabled: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.enabled ? 0x01 : 0x00]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1067,13 +1054,12 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 
 	public numDailyRepeatingSlots: number | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.numWeekDaySlots,
 			this.numYearDaySlots,
 			this.numDailyRepeatingSlots ?? 0,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1182,7 +1168,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.action,
 			this.userId,
@@ -1196,7 +1182,6 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1347,7 +1332,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.userId,
 			this.slotId,
@@ -1357,7 +1342,6 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1427,9 +1411,8 @@ export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
 	public userId: number;
 	public slotId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.userId, this.slotId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1549,7 +1532,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 	public stopHour?: number;
 	public stopMinute?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.action,
 			this.userId,
@@ -1568,7 +1551,6 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1766,7 +1748,7 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.userId,
 			this.slotId,
@@ -1781,7 +1763,6 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 			this.stopHour ?? 0xff,
 			this.stopMinute ?? 0xff,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1854,9 +1835,8 @@ export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
 	public userId: number;
 	public slotId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.userId, this.slotId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1904,12 +1884,11 @@ export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
 	public standardOffset: number;
 	public dstOffset: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeTimezone({
 			standardOffset: this.standardOffset,
 			dstOffset: this.dstOffset,
 		});
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -1956,12 +1935,11 @@ export class ScheduleEntryLockCCTimeOffsetReport extends ScheduleEntryLockCC {
 	public standardOffset: number;
 	public dstOffset: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeTimezone({
 			standardOffset: this.standardOffset,
 			dstOffset: this.dstOffset,
 		});
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2072,7 +2050,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 	public durationHour?: number;
 	public durationMinute?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.action, this.userId, this.slotId]);
 		if (this.action === ScheduleEntryLockSetAction.Set) {
 			this.payload = Bytes.concat([
@@ -2094,7 +2072,6 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 			this.payload = Bytes.concat([this.payload, Bytes.alloc(5, 0xff)]);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2225,7 +2202,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.userId, this.slotId]);
 		if (this.weekdays) {
 			this.payload = Bytes.concat([
@@ -2247,7 +2224,6 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 			this.payload = Bytes.concat([this.payload, Bytes.alloc(5, 0)]);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -2321,9 +2297,8 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleGet
 	public userId: number;
 	public slotId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.userId, this.slotId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

@@ -1,5 +1,5 @@
 import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 import {
 	decodeSetbackState,

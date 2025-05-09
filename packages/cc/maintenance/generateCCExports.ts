@@ -73,6 +73,7 @@ function findExports() {
 		if (
 			relativePath.endsWith(".test.ts")
 			|| relativePath.endsWith("index.ts")
+			|| relativePath.includes(".generated.")
 		) {
 			continue;
 		}
@@ -170,6 +171,8 @@ export async function generateCCExports(): Promise<void> {
 
 `;
 
+	let registerFunctionContent = ``;
+
 	// Generate type and value exports for all found symbols
 	for (
 		const [filename, fileExports] of [...findExports().entries()].sort(
@@ -184,6 +187,7 @@ export async function generateCCExports(): Promise<void> {
 			.replace(/\.ts$/, ".js")
 			// By passing the index file as "from", we get an erraneous "../" at the path start
 			.replace(/^\.\.\//, "./");
+
 		const typeExports = fileExports.filter((e) => e.typeOnly);
 		if (typeExports.length) {
 			fileContent += `export type { ${
@@ -194,13 +198,31 @@ export async function generateCCExports(): Promise<void> {
 		}
 		const valueExports = fileExports.filter((e) => !e.typeOnly);
 		if (valueExports.length) {
+			fileContent += `import { ${
+				valueExports
+					.map((e) => e.name)
+					.join(", ")
+			} } from "${relativePath}";\n`;
 			fileContent += `export { ${
 				valueExports
 					.map((e) => e.name)
 					.join(", ")
-			} } from "${relativePath}"\n`;
+			} };\n`;
+
+			registerFunctionContent += `void ${
+				valueExports
+					.map((e) => e.name)
+					.join(", ")
+			};\n`;
 		}
 	}
+
+	fileContent += `
+/* eslint-disable */
+export function registerCCs(): void {
+${registerFunctionContent}
+}
+`;
 
 	// And write the file if it changed
 	const originalFileContent = await fs.readFile(ccIndexFile, "utf8").catch(

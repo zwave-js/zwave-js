@@ -1,9 +1,11 @@
-import { CommandClass } from "@zwave-js/cc";
 import {
 	BasicCCGet,
 	BasicCCReport,
 	BasicCCSet,
 	BasicCommand,
+	BinarySwitchCCReport,
+	BinarySwitchCCValues,
+	CommandClass,
 	MultiChannelCC,
 	MultiChannelCCAggregatedMembersGet,
 	MultiChannelCCCapabilityGet,
@@ -16,8 +18,11 @@ import {
 	isEncapsulatingCommandClass,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
+import { createMockZWaveRequestFrame } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
+import { integrationTest } from "../integrationTestSuite.js";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -44,7 +49,7 @@ test("the EndPointGet command should serialize correctly", async (t) => {
 			MultiChannelCommand.EndPointGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -60,7 +65,7 @@ test("the CapabilityGet command should serialize correctly", async (t) => {
 			7, // EndPoint
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -78,7 +83,7 @@ test("the EndPointFind command should serialize correctly", async (t) => {
 			0x02, // specificClass
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -100,7 +105,7 @@ test("the CommandEncapsulation command should serialize correctly", async (t) =>
 			5, // target value
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -116,7 +121,7 @@ test("the AggregatedMembersGet command should serialize correctly", async (t) =>
 			6, // EndPoint
 		]),
 	);
-	await t.expect(cc.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -161,7 +166,7 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		serializedCC,
 		{ sourceNodeId: 1 } as any,
 	) as MultiChannelCC;
@@ -280,3 +285,76 @@ test("MultiChannelCC/BasicCCGet => MultiCommandCC/BasicCCReport = unexpected", (
 
 	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
 });
+
+integrationTest(
+	"Interviewing and endpoint handling for Multi Channel CC v1 works correctly",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				{
+					ccId: CommandClasses["Multi Channel"],
+					version: 1,
+				},
+				CommandClasses["Binary Switch"],
+			],
+			endpoints: [
+				{
+					// EP 1
+					commandClasses: [
+						CommandClasses["Binary Switch"],
+					],
+				},
+				{
+					// EP 2
+					commandClasses: [
+						CommandClasses["Binary Switch"],
+					],
+				},
+			],
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			// By default, all endpoint values are false
+			const currentValueValue = BinarySwitchCCValues.currentValue;
+			t.expect(
+				node.getValue(currentValueValue.endpoint(0)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(1)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(2)),
+			).toBe(false);
+
+			// Send a report from endpoint 2
+			let cc: CommandClass = new BinarySwitchCCReport({
+				nodeId: node.id,
+				endpointIndex: 2,
+				currentValue: true,
+			});
+			cc = MultiChannelCC.encapsulateV1(cc);
+
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+
+			await wait(100);
+
+			// Now only endpoint 2 should be true
+			t.expect(
+				node.getValue(currentValueValue.endpoint(0)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(1)),
+			).toBe(false);
+			t.expect(
+				node.getValue(currentValueValue.endpoint(2)),
+			).toBe(true);
+		},
+	},
+);

@@ -1,4 +1,4 @@
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+import { getEnumMemberName } from "@zwave-js/shared";
 import type { Duration } from "./Duration.js";
 import { IntegerLimits } from "./Primitive.js";
 

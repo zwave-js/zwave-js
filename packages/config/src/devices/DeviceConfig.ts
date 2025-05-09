@@ -1,10 +1,11 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { digest } from "@zwave-js/core";
+import { configDir } from "#config_dir";
+import { ZWaveError, ZWaveErrorCodes, digest } from "@zwave-js/core";
 import {
 	Bytes,
 	type JSONObject,
 	enumFilesRecursive,
 	formatId,
+	getenv,
 	num2hex,
 	padVersion,
 	pathExists,
@@ -13,10 +14,10 @@ import {
 	stringify,
 	writeTextFile,
 } from "@zwave-js/shared";
-import {
-	type ReadFile,
-	type ReadFileSystemInfo,
-	type WriteFile,
+import type {
+	ReadFile,
+	ReadFileSystemInfo,
+	WriteFile,
 } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";
@@ -24,7 +25,6 @@ import path from "pathe";
 import semverGt from "semver/functions/gt.js";
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
-import { configDir } from "../utils.js";
 import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
 import {
 	type AssociationConfig,
@@ -191,7 +191,7 @@ async function generateIndex<T extends Record<string, unknown>>(
 			}`;
 			// Crash hard during tests, just print an error when in production systems.
 			// A user could have changed a config file
-			if (process.env.NODE_ENV === "test" || !!process.env.CI) {
+			if (process.env.NODE_ENV === "test" || !!getenv("CI")) {
 				throw new ZWaveError(message, ZWaveErrorCodes.Config_Invalid);
 			} else {
 				logger?.print(message, "error");

@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -13,9 +13,8 @@ import {
 	getCCName,
 	parseCCId,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -42,47 +41,40 @@ import {
 import { AssociationCC } from "./AssociationCC.js";
 import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC.js";
 
-export const AssociationGroupInfoCCValues = Object.freeze({
-	// Defines values that do not depend on anything else
-	...V.defineStaticCCValues(CommandClasses["Association Group Information"], {
+export const AssociationGroupInfoCCValues = V.defineCCValues(
+	CommandClasses["Association Group Information"],
+	{
 		...V.staticProperty("hasDynamicInfo", undefined, { internal: true }),
-	}),
-
-	// Defines values that depend on one or more arguments and need to be called as a function
-	...V.defineDynamicCCValues(
-		CommandClasses["Association Group Information"],
-		{
-			...V.dynamicPropertyAndKeyWithName(
-				"groupName",
-				"name",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "name" && typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-			...V.dynamicPropertyAndKeyWithName(
-				"groupInfo",
-				"info",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "info" && typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-			...V.dynamicPropertyAndKeyWithName(
-				"commands",
-				"issuedCommands",
-				(groupId: number) => groupId,
-				({ property, propertyKey }) =>
-					property === "issuedCommands"
-					&& typeof propertyKey === "number",
-				undefined,
-				{ internal: true },
-			),
-		},
-	),
-});
+		...V.dynamicPropertyAndKeyWithName(
+			"groupName",
+			"name",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "name" && typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+		...V.dynamicPropertyAndKeyWithName(
+			"groupInfo",
+			"info",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "info" && typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+		...V.dynamicPropertyAndKeyWithName(
+			"commands",
+			"issuedCommands",
+			(groupId: number) => groupId,
+			({ property, propertyKey }) =>
+				property === "issuedCommands"
+				&& typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+	},
+);
 
 // @noSetValueAPI This CC only has get-type commands
 
@@ -518,12 +510,11 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.groupId, this.name.length]),
 			Bytes.from(this.name, "utf8"),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -568,9 +559,8 @@ export class AssociationGroupInfoCCNameGet extends AssociationGroupInfoCC {
 
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.groupId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -663,7 +653,7 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(1 + this.groups.length * 7, 0);
 
 		this.payload[0] = (this.isListMode ? 0b1000_0000 : 0)
@@ -677,7 +667,6 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 			// The remaining bytes are zero
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -755,7 +744,7 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
 	public listMode?: boolean;
 	public groupId?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const isListMode = this.listMode === true;
 		const optionByte = (this.refreshCache ? 0b1000_0000 : 0)
 			| (isListMode ? 0b0100_0000 : 0);
@@ -763,7 +752,6 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
 			optionByte,
 			isListMode ? 0 : this.groupId!,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -838,7 +826,7 @@ export class AssociationGroupInfoCCCommandListReport
 
 	public readonly commands: ReadonlyMap<CommandClasses, readonly number[]>;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// To make it easier to encode possible extended CCs, we first
 		// allocate as much space as we may need, then trim it again
 		this.payload = new Bytes(2 + this.commands.size * 3);
@@ -853,7 +841,6 @@ export class AssociationGroupInfoCCCommandListReport
 		}
 		this.payload[1] = offset - 2; // list length
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -915,12 +902,11 @@ export class AssociationGroupInfoCCCommandListGet
 	public allowCache: boolean;
 	public groupId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.allowCache ? 0b1000_0000 : 0,
 			this.groupId,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

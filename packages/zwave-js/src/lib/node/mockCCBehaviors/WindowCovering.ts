@@ -2,10 +2,10 @@ import {
 	WindowCoveringCCSupportedGet,
 	WindowCoveringCCSupportedReport,
 } from "@zwave-js/cc/WindowCoveringCC";
-import { CommandClasses } from "@zwave-js/core/safe";
-import {
-	type MockNodeBehavior,
-	type WindowCoveringCCCapabilities,
+import { CommandClasses } from "@zwave-js/core";
+import type {
+	MockNodeBehavior,
+	WindowCoveringCCCapabilities,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: WindowCoveringCCCapabilities = {

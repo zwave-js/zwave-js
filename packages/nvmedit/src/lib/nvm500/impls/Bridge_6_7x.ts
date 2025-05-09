@@ -1,8 +1,8 @@
-import { MAX_NODES, NUM_NODEMASK_BYTES } from "@zwave-js/core/safe";
+import { MAX_NODES, NUM_NODEMASK_BYTES } from "@zwave-js/core";
 import { SUC_MAX_UPDATES } from "../../../consts.js";
-import type { NVM500Impl } from "../shared.js";
 import {
 	APPL_NODEPARM_MAX,
+	type NVM500Impl,
 	NVMEntryType,
 	type NVMLayout,
 	NVM_SERIALAPI_HOST_SIZE,
@@ -208,7 +208,7 @@ export const Bridge_6_7x: NVM500Impl = {
 		"5.02",
 		"5.03",
 		// Technically the following is a 6.8x SDK, but according to
-		// https://github.com/zwave-js/node-zwave-js/issues/7385, it still uses
+		// https://github.com/zwave-js/zwave-js/issues/7385, it still uses
 		// a 6.7x NVM layout
 		"6.01",
 	],

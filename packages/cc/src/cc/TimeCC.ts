@@ -1,8 +1,9 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type DSTInfo,
 	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type SupervisionResult,
@@ -13,9 +14,7 @@ import {
 	getDSTInfo,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI } from "../lib/API.js";
 import {
@@ -269,13 +268,12 @@ export class TimeCCTimeReport extends TimeCC {
 	public minute: number;
 	public second: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.hour & 0b11111,
 			this.minute,
 			this.second,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -331,7 +329,7 @@ export class TimeCCDateReport extends TimeCC {
 	public month: number;
 	public day: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			// 2 bytes placeholder for year
 			0,
@@ -340,7 +338,6 @@ export class TimeCCDateReport extends TimeCC {
 			this.day,
 		]);
 		this.payload.writeUInt16BE(this.year, 0);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -401,7 +398,7 @@ export class TimeCCTimeOffsetSet extends TimeCC {
 	public dstStartDate: Date;
 	public dstEndDate: Date;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			encodeTimezone({
 				standardOffset: this.standardOffset,
@@ -416,7 +413,6 @@ export class TimeCCTimeOffsetSet extends TimeCC {
 				this.dstEndDate.getUTCHours(),
 			]),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -491,7 +487,7 @@ export class TimeCCTimeOffsetReport extends TimeCC {
 	public dstStartDate: Date;
 	public dstEndDate: Date;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			encodeTimezone({
 				standardOffset: this.standardOffset,
@@ -506,7 +502,6 @@ export class TimeCCTimeOffsetReport extends TimeCC {
 				this.dstEndDate.getUTCHours(),
 			]),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

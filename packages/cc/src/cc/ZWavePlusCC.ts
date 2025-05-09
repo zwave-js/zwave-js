@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -7,9 +7,8 @@ import {
 	MessagePriority,
 	type WithAddress,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, num2hex, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -37,32 +36,29 @@ import {
 // MUST be identical for the Root Device and all Multi Channel End Points
 // --> We only access endpoint 0
 
-export const ZWavePlusCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Z-Wave Plus Info"], {
+export const ZWavePlusCCValues = V.defineCCValues(
+	CommandClasses["Z-Wave Plus Info"],
+	{
 		...V.staticProperty("zwavePlusVersion", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("nodeType", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("roleType", undefined, {
 			supportsEndpoints: false,
 			internal: true,
 		}),
-
 		...V.staticProperty("userIcon", undefined, {
 			internal: true,
 		}),
-
 		...V.staticProperty("installerIcon", undefined, {
 			internal: true,
 		}),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -219,7 +215,7 @@ export class ZWavePlusCCReport extends ZWavePlusCC {
 
 	public userIcon: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.zwavePlusVersion,
 			this.roleType,
@@ -232,7 +228,6 @@ export class ZWavePlusCCReport extends ZWavePlusCC {
 		]);
 		this.payload.writeUInt16BE(this.installerIcon, 3);
 		this.payload.writeUInt16BE(this.userIcon, 5);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

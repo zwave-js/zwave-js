@@ -1,5 +1,5 @@
 import { Message } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 import { SerialAPISetup_GetSupportedCommandsResponse } from "./SerialAPISetupMessages.js";
 

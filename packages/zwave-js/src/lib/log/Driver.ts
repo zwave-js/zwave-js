@@ -5,20 +5,24 @@ import {
 } from "@zwave-js/cc";
 import {
 	type DataDirection,
+	type LogContainer,
 	type LogContext,
 	MessagePriority,
-	type ZWaveLogContainer,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 	messageRecordToLines,
 	tagify,
 } from "@zwave-js/core";
-import type { Message, ResponseRole } from "@zwave-js/serial";
-import { FunctionType, MessageType } from "@zwave-js/serial";
+import {
+	FunctionType,
+	type Message,
+	MessageType,
+	type ResponseRole,
+} from "@zwave-js/serial";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName } from "@zwave-js/shared";
 import type { Driver } from "../driver/Driver.js";
-import { type TransactionQueue } from "../driver/Queue.js";
+import type { TransactionQueue } from "../driver/Queue.js";
 import type { Transaction } from "../driver/Transaction.js";
 import { NodeStatus } from "../node/_Types.js";
 
@@ -31,7 +35,10 @@ export interface DriverLogContext extends LogContext<"driver"> {
 }
 
 export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
-	constructor(private readonly driver: Driver, loggers: ZWaveLogContainer) {
+	constructor(
+		private readonly driver: Driver,
+		loggers: LogContainer,
+	) {
 		super(loggers, DRIVER_LABEL);
 	}
 
@@ -118,7 +125,9 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 	): void {
 		if (!this.isDriverLogVisible()) return;
 		if (nodeId == undefined) nodeId = message.getNodeId();
-		if (nodeId != undefined && !this.container.shouldLogNode(nodeId)) {
+		if (
+			nodeId != undefined && !this.container.isNodeLoggingVisible(nodeId)
+		) {
 			return;
 		}
 

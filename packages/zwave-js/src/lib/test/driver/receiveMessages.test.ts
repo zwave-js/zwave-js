@@ -1,5 +1,5 @@
 import { WakeUpCCIntervalSet } from "@zwave-js/cc/WakeUpCC";
-import { type MockPort } from "@zwave-js/serial/mock";
+import type { MockPort } from "@zwave-js/serial/mock";
 import { ApplicationCommandRequest } from "@zwave-js/serial/serialapi";
 import { Bytes } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
@@ -59,7 +59,7 @@ test.sequential(
 			}),
 		});
 		mockPort.emitData(
-			await req.serializeAsync(driver["getEncodingContext"]()),
+			await req.serialize(driver["getEncodingContext"]()),
 		);
 		await controller.expectHostACK(1000);
 	},

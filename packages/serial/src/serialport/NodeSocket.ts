@@ -1,8 +1,8 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import net from "node:net";
-import { type UnderlyingSink, type UnderlyingSource } from "node:stream/web";
-import { type ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
-import { type ZWaveSocketOptions } from "./ZWaveSocketOptions.js";
+import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
+import type { ZWaveSocketOptions } from "./ZWaveSocketOptions.js";
 
 export function createNodeSocketFactory(
 	socketOptions: ZWaveSocketOptions,
@@ -33,7 +33,8 @@ export function createNodeSocketFactory(
 					reject(err);
 				};
 				const onConnect = () => {
-					socket.setKeepAlive(true, 2500);
+					// During testing, values below 1000 caused the keep alive functionality to silently fail
+					socket.setKeepAlive(true, 1000);
 					removeListeners();
 					resolve();
 				};
@@ -64,9 +65,6 @@ export function createNodeSocketFactory(
 		// This could be done in the start method of the sink, but handling async errors is a pain there.
 
 		const sink: UnderlyingSink<Uint8Array> = {
-			start(controller) {
-				socket.on("error", (err) => controller.error(err));
-			},
 			write(data, controller) {
 				if (!isOpen) {
 					controller.error(new Error("The serial port is not open!"));
@@ -92,6 +90,15 @@ export function createNodeSocketFactory(
 				socket.on("data", (data) => controller.enqueue(data));
 				// Abort source controller too if the serial port closes
 				socket.on("close", () => {
+					isOpen = false;
+					controller.error(
+						new ZWaveError(
+							`The serial port closed unexpectedly!`,
+							ZWaveErrorCodes.Driver_Failed,
+						),
+					);
+				});
+				socket.on("error", (_e) => {
 					isOpen = false;
 					controller.error(
 						new ZWaveError(

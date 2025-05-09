@@ -17,9 +17,13 @@ import {
 	type MessageParsingContext,
 	type ZWaveSerialStream,
 } from "@zwave-js/serial";
-import { type MockPort } from "@zwave-js/serial/mock";
-import { AsyncQueue } from "@zwave-js/shared";
-import { TimedExpectation, isAbortError, noop } from "@zwave-js/shared/safe";
+import type { MockPort } from "@zwave-js/serial/mock";
+import {
+	AsyncQueue,
+	TimedExpectation,
+	isAbortError,
+	noop,
+} from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {
 	type MockControllerCapabilities,
@@ -409,14 +413,14 @@ export class MockController {
 	): Promise<void> {
 		let data: Uint8Array;
 		if (fromNode) {
-			data = await msg.serializeAsync({
+			data = await msg.serialize({
 				nodeIdType: this.encodingContext.nodeIdType,
 				...fromNode.encodingContext,
 			});
 			// Simulate the frame being transmitted via radio
 			await wait(fromNode.capabilities.txDelay);
 		} else {
-			data = await msg.serializeAsync(this.encodingContext);
+			data = await msg.serialize(this.encodingContext);
 		}
 		this.mockPort.emitData(data);
 		// TODO: make the timeout match the configured ACK timeout

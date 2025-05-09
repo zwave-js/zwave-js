@@ -5,8 +5,10 @@ import {
 	NotificationCCSupportedReport,
 } from "@zwave-js/cc/NotificationCC";
 import { CommandClasses } from "@zwave-js/core";
-import type { NotificationCCCapabilities } from "@zwave-js/testing";
-import { type MockNodeBehavior } from "@zwave-js/testing";
+import type {
+	MockNodeBehavior,
+	NotificationCCCapabilities,
+} from "@zwave-js/testing";
 
 const defaultCapabilities: NotificationCCCapabilities = {
 	supportsV1Alarm: false,

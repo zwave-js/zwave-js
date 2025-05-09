@@ -1,4 +1,3 @@
-import type { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import type {
 	EntryControlDataTypes,
 	EntryControlEventTypes,
@@ -8,7 +7,8 @@ import type {
 	Powerlevel,
 	PowerlevelTestStatus,
 	Weekday,
-} from "@zwave-js/cc/safe";
+} from "@zwave-js/cc";
+import type { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import type {
 	CommandClasses,
 	MetadataUpdatedArgs,
@@ -18,9 +18,9 @@ import type {
 	ValueNotificationArgs,
 	ValueRemovedArgs,
 	ValueUpdatedArgs,
-} from "@zwave-js/core/safe";
-import { type AllOrNone } from "@zwave-js/shared";
-import { type Endpoint } from "./Endpoint.js";
+} from "@zwave-js/core";
+import type { AllOrNone } from "@zwave-js/shared";
+import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
 
@@ -31,12 +31,8 @@ export {
 	MultilevelSwitchCommand,
 	Powerlevel,
 	PowerlevelTestStatus,
-} from "@zwave-js/cc/safe";
-export {
-	ControllerStatus,
-	InterviewStage,
-	NodeStatus,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/cc";
+export { ControllerStatus, InterviewStage, NodeStatus } from "@zwave-js/core";
 
 export type NodeInterviewFailedEventArgs =
 	& {
@@ -143,6 +139,18 @@ export type ZWaveNotificationCallbackParams_NotificationCC = [
 	args: ZWaveNotificationCallbackArgs_NotificationCC,
 ];
 
+export interface ZWaveNotificationCapability_NotificationCC {
+	commandClass: CommandClasses.Notification;
+	endpoint: number;
+	/** A dictionary of supported event types and information */
+	supportedNotificationTypes: Record<number, {
+		/** The human-readable label for the notification type */
+		label: string;
+		/** A dictionary of supported events for this notification type and their human-readable labels */
+		supportedEvents: Record<number, string>;
+	}>;
+}
+
 /**
  * This is emitted when an unsolicited powerlevel test report is received
  */
@@ -180,6 +188,13 @@ export type ZWaveNotificationCallbackParams_EntryControlCC = [
 	args: ZWaveNotificationCallbackArgs_EntryControlCC,
 ];
 
+export interface ZWaveNotificationCapability_EntryControlCC {
+	commandClass: (typeof CommandClasses)["Entry Control"];
+	endpoint: number;
+	/** A dictionary of supported event types and their human-readable labels */
+	supportedEventTypes: Record<EntryControlEventTypes, string>;
+}
+
 export type ZWaveNotificationCallback = (
 	...args:
 		| ZWaveNotificationCallbackParams_NotificationCC
@@ -187,6 +202,10 @@ export type ZWaveNotificationCallback = (
 		| ZWaveNotificationCallbackParams_PowerlevelCC
 		| ZWaveNotificationCallbackParams_MultilevelSwitchCC
 ) => void;
+
+export type ZWaveNotificationCapability =
+	| ZWaveNotificationCapability_NotificationCC
+	| ZWaveNotificationCapability_EntryControlCC;
 
 export interface ZWaveNodeValueEventCallbacks {
 	"value added": ZWaveNodeValueAddedCallback;

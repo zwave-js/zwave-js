@@ -1,7 +1,9 @@
 import {
 	BatteryCC,
 	BatteryCCGet,
+	BatteryCCHealthReport,
 	BatteryCCReport,
+	BatteryCCValues,
 	BatteryChargingStatus,
 	BatteryCommand,
 	BatteryReplacementStatus,
@@ -9,7 +11,10 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
+import { createMockZWaveRequestFrame } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
+import { integrationTest } from "../integrationTestSuite.js";
 
 test("the Get command should serialize correctly", async (t) => {
 	const batteryCC = new BatteryCCGet({ nodeId: 1 });
@@ -17,7 +22,7 @@ test("the Get command should serialize correctly", async (t) => {
 		CommandClasses.Battery, // CC
 		BatteryCommand.Get, // CC Command
 	]);
-	await t.expect(batteryCC.serializeAsync({} as any)).resolves.toStrictEqual(
+	await t.expect(batteryCC.serialize({} as any)).resolves.toStrictEqual(
 		expected,
 	);
 });
@@ -28,7 +33,7 @@ test("the Report command (v1) should be deserialized correctly: when the battery
 		BatteryCommand.Report, // CC Command
 		55, // current value
 	]);
-	const batteryCC = await CommandClass.parseAsync(
+	const batteryCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 7 } as any,
 	) as BatteryCCReport;
@@ -44,7 +49,7 @@ test("the Report command (v1) should be deserialized correctly: when the battery
 		BatteryCommand.Report, // CC Command
 		0xff, // current value
 	]);
-	const batteryCC = await CommandClass.parseAsync(
+	const batteryCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 7 } as any,
 	) as BatteryCCReport;
@@ -62,7 +67,7 @@ test("the Report command (v2) should be deserialized correctly: all flags set", 
 		0b00_1111_00,
 		1, // disconnected
 	]);
-	const batteryCC = await CommandClass.parseAsync(
+	const batteryCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 7 } as any,
 	) as BatteryCCReport;
@@ -83,7 +88,7 @@ test("the Report command (v2) should be deserialized correctly: charging status"
 		0b10_000000, // Maintaining
 		0,
 	]);
-	const batteryCC = await CommandClass.parseAsync(
+	const batteryCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 7 } as any,
 	) as BatteryCCReport;
@@ -100,7 +105,7 @@ test("the Report command (v2) should be deserialized correctly: recharge or repl
 		0b11, // Maintaining
 		0,
 	]);
-	const batteryCC = await CommandClass.parseAsync(
+	const batteryCC = await CommandClass.parse(
 		ccData,
 		{ sourceNodeId: 7 } as any,
 	) as BatteryCCReport;
@@ -114,49 +119,44 @@ test("deserializing an unsupported command should return an unspecified version 
 		CommandClasses.Battery, // CC
 		255, // not a valid command
 	]);
-	const batteryCC = await CommandClass.parseAsync(
+	const batteryCC = await CommandClass.parse(
 		serializedCC,
 		{ sourceNodeId: 7 } as any,
 	) as BatteryCCReport;
 	t.expect(batteryCC.constructor).toBe(BatteryCC);
 });
 
-// describe.skip(`interview()`, () => {
-// 	const fakeDriver = createEmptyMockDriver();
-// 	const node = new ZWaveNode(2, fakeDriver as unknown as Driver);
+integrationTest(
+	"If the temperature field is omitted from a HealthReport, the unit does not get deleted",
+	{
+		// debug: true,
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Battery,
+			],
+		},
 
-// 	beforeAll(() => {
-// 		fakeDriver.sendMessage.mockImplementation(() =>
-// 			Promise.resolve({ command: {} }),
-// 		);
-// 		fakeDriver.controller.nodes.set(node.id, node);
-// 		node.addCC(CommandClasses.Battery, {
-// 			version: 2,
-// 			isSupported: true,
-// 		});
-// 	});
-// 	beforeEach(() => fakeDriver.sendMessage.mockClear());
-// 	afterAll(() => {
-// 		fakeDriver.sendMessage.mockImplementation(() => Promise.resolve());
-// 		node.destroy();
-// 	});
+		async testBody(t, driver, node, mockController, mockNode) {
+			const healthReport = new BatteryCCHealthReport({
+				nodeId: node.id,
+				maximumCapacity: 100,
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(healthReport, {
+					ackRequested: false,
+				}),
+			);
 
-// 	test("should send a BatteryCC.Get", async (t) => {
-// 		node.addCC(CommandClasses.Battery, {
-// 			isSupported: true,
-// 		});
-// 		const cc = node.createCCInstance(CommandClasses.Battery)!;
-// 		await cc.interview(fakeDriver);
-
-// 		sinon.assert.called(fakeDriver.sendMessage);
-
-// 		assertCC(t, fakeDriver.sendMessage.mock.calls[0][0], {
-// 			cc: BatteryCCGet,
-// 			nodeId: node.id,
-// 		});
-// 	});
-
-// 	it.todo("Test the behavior when the request failed");
-
-// 	it.todo("Test the behavior when the request succeeds");
-// });
+			await wait(100);
+			t.expect(node.getValue(BatteryCCValues.maximumCapacity.id)).toBe(
+				100,
+			);
+			t.expect(node.getValue(BatteryCCValues.temperature.id))
+				.toBeUndefined();
+			t.expect(node.getValueMetadata(BatteryCCValues.temperature.id))
+				.toMatchObject({
+					unit: "°C",
+				});
+		},
+	},
+);

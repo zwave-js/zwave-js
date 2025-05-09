@@ -3,12 +3,8 @@ import {
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
-} from "@zwave-js/core/safe";
-import {
-	type AllOrNone,
-	Bytes,
-	getEnumMemberName,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { type AllOrNone, Bytes, getEnumMemberName } from "@zwave-js/shared";
 import semverGte from "semver/functions/gte.js";
 import semverLt from "semver/functions/lt.js";
 import type { NVM3Object } from "../object.js";

@@ -1,5 +1,5 @@
-import { Powerlevel } from "@zwave-js/cc/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+import { Powerlevel } from "@zwave-js/cc";
+import { getEnumMemberName } from "@zwave-js/shared";
 import type {
 	LifelineHealthCheckResult,
 	LifelineHealthCheckSummary,

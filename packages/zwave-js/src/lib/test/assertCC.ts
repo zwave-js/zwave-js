@@ -1,7 +1,9 @@
 import type { CCConstructor, CommandClass } from "@zwave-js/cc";
-import { SendDataBridgeRequest } from "@zwave-js/serial/serialapi";
-import { SendDataRequest } from "@zwave-js/serial/serialapi";
-import { type ExpectStatic } from "vitest";
+import {
+	SendDataBridgeRequest,
+	SendDataRequest,
+} from "@zwave-js/serial/serialapi";
+import type { ExpectStatic } from "vitest";
 
 export function assertCC<
 	TConst extends CCConstructor<CommandClass> = CCConstructor<CommandClass>,

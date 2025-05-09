@@ -1,5 +1,3 @@
-import "reflect-metadata";
-
 export * from "./ApplicationCCsFile.js";
 export * from "./ApplicationDataFile.js";
 export * from "./ApplicationNameFile.js";

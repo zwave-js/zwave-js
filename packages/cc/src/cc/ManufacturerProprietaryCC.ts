@@ -1,12 +1,12 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, type CCAPIEndpoint, type CCAPIHost } from "../lib/API.js";
 import {
@@ -107,6 +107,8 @@ export class ManufacturerProprietaryCCAPI extends CCAPI {
 export interface ManufacturerProprietaryCCOptions {
 	manufacturerId?: number;
 	unspecifiedExpectsResponse?: boolean;
+	// Needed to support unknown proprietary commands
+	payload?: Uint8Array;
 }
 
 function getReponseForManufacturerProprietary(cc: ManufacturerProprietaryCC) {
@@ -155,10 +157,10 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		const PCConstructor = getManufacturerProprietaryCCConstructor(
 			manufacturerId,
 		);
+		const payload = raw.payload.subarray(2);
 		if (PCConstructor) {
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			return PCConstructor.from(
-				raw.withPayload(raw.payload.subarray(2)),
+				raw.withPayload(payload),
 				ctx,
 			);
 		}
@@ -166,6 +168,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		return new ManufacturerProprietaryCC({
 			nodeId: ctx.sourceNodeId,
 			manufacturerId,
+			payload,
 		});
 	}
 
@@ -188,7 +191,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		return this.manufacturerId;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const manufacturerId = this.getManufacturerIdOrThrow();
 		// ManufacturerProprietaryCC has no CC command, so the first byte
 		// is stored in ccCommand
@@ -201,7 +204,6 @@ export class ManufacturerProprietaryCC extends CommandClass {
 			]),
 			this.payload,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

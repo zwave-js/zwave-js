@@ -29,6 +29,8 @@ interface ZnifferOptions {
 	/** Security keys for decrypting Z-Wave Long Range traffic */
 	securityKeysLongRange?: ZWaveOptions["securityKeysLongRange"];
 
+	host?: ZWaveOptions["host"];
+
 	/**
 	 * The RSSI values reported by the Zniffer are not actual RSSI values.
 	 * They can be converted to dBm, but the conversion is chip dependent and not documented for 700/800 series Zniffers.
@@ -46,6 +48,13 @@ interface ZnifferOptions {
 	 * Supported regions and their names have to be queried using the `getFrequencies` and `getFrequencyInfo(frequency)` commands.
 	 */
 	defaultFrequency?: number;
+
+	/**
+	 * The LR channel configuration to initialize the Zniffer with. If not specified, the current setting will be kept.
+	 *
+	 * This is only supported for 800 series Zniffers with LR support
+	 */
+	defaultLRChannelConfig?: ZnifferLRChannelConfig;
 
 	/** Limit the number of frames that are kept in memory. */
 	maxCapturedFrames?: number;

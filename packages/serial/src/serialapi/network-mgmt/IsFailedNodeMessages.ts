@@ -11,7 +11,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { type Bytes } from "@zwave-js/shared";
+import type { Bytes } from "@zwave-js/shared";
 
 export interface IsFailedNodeRequestOptions {
 	// This must not be called nodeId or rejectAllTransactions may reject the request
@@ -32,9 +32,8 @@ export class IsFailedNodeRequest extends Message {
 	// This must not be called nodeId or rejectAllTransactions may reject the request
 	public failedNodeId: number;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = encodeNodeID(this.failedNodeId, ctx.nodeIdType);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 }

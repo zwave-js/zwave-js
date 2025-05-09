@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -16,9 +16,8 @@ import {
 	maybeUnknownToString,
 	parseBitMask,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -49,8 +48,9 @@ import { V } from "../lib/Values.js";
 import { CentralSceneCommand, CentralSceneKeys } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
 
-export const CentralSceneCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Central Scene"], {
+export const CentralSceneCCValues = V.defineCCValues(
+	CommandClasses["Central Scene"],
+	{
 		...V.staticProperty("sceneCount", undefined, {
 			internal: true,
 		}),
@@ -60,7 +60,6 @@ export const CentralSceneCCValues = Object.freeze({
 		...V.staticProperty("supportedKeyAttributes", undefined, {
 			internal: true,
 		}),
-
 		...V.staticProperty(
 			"slowRefresh",
 			{
@@ -70,9 +69,6 @@ export const CentralSceneCCValues = Object.freeze({
 					"When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
 			} as const,
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Central Scene"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"scene",
 			"scene",
@@ -87,8 +83,8 @@ export const CentralSceneCCValues = Object.freeze({
 			} as const),
 			{ stateful: false } as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Central Scene"])
 export class CentralSceneCCAPI extends CCAPI {
@@ -594,9 +590,8 @@ export class CentralSceneCCConfigurationSet extends CentralSceneCC {
 
 	public slowRefresh: boolean;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.slowRefresh ? 0b1000_0000 : 0]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

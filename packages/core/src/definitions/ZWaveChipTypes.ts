@@ -1,4 +1,4 @@
-import { type MaybeNotKnown } from "../values/Primitive.js";
+import type { MaybeNotKnown } from "../values/Primitive.js";
 
 const chipTypes = Object.freeze({
 	[0x0102]: "ZW0102",

@@ -1,4 +1,4 @@
-import { type CCParsingContext } from "@zwave-js/cc";
+import type { CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -10,8 +10,8 @@ import {
 	type WithAddress,
 	enumValuesToMetadataStates,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { getEnumMemberName } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { getEnumMemberName } from "@zwave-js/shared";
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -39,8 +39,9 @@ import {
 	ThermostatFanStateCommand,
 } from "../lib/_Types.js";
 
-export const ThermostatFanStateCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Thermostat Fan State"], {
+export const ThermostatFanStateCCValues = V.defineCCValues(
+	CommandClasses["Thermostat Fan State"],
+	{
 		...V.staticPropertyWithName(
 			"fanState",
 			"state",
@@ -50,8 +51,8 @@ export const ThermostatFanStateCCValues = Object.freeze({
 				label: "Thermostat fan state",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Thermostat Fan State"])
 export class ThermostatFanStateCCAPI extends CCAPI {

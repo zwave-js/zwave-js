@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -13,9 +13,8 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -46,8 +45,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SceneActuatorConfigurationCommand } from "../lib/_Types.js";
 
-export const SceneActuatorConfigurationCCValues = Object.freeze({
-	...V.defineDynamicCCValues(CommandClasses["Scene Actuator Configuration"], {
+export const SceneActuatorConfigurationCCValues = V.defineCCValues(
+	CommandClasses["Scene Actuator Configuration"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"level",
 			"level",
@@ -60,7 +60,6 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 				valueChangeOptions: ["transitionDuration"],
 			} as const),
 		),
-
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
 			"dimmingDuration",
@@ -73,8 +72,8 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 				label: `Dimming duration (${sceneId})`,
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Scene Actuator Configuration"])
 export class SceneActuatorConfigurationCCAPI extends CCAPI {
@@ -388,14 +387,13 @@ export class SceneActuatorConfigurationCCSet
 	public dimmingDuration: Duration;
 	public level?: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.sceneId,
 			this.dimmingDuration.serializeSet(),
 			this.level != undefined ? 0b1000_0000 : 0,
 			this.level ?? 0xff,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -555,9 +553,8 @@ export class SceneActuatorConfigurationCCGet
 
 	public sceneId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.sceneId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

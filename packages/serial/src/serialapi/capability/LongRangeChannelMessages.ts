@@ -1,10 +1,10 @@
 import {
+	LongRangeChannel,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
-import { LongRangeChannel } from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,
@@ -109,9 +109,8 @@ export class SetLongRangeChannelRequest extends Message {
 
 	public channel: LongRangeChannel;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.channel]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

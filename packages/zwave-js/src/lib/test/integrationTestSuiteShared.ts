@@ -1,6 +1,6 @@
-import { type ZWaveSerialStream } from "@zwave-js/serial";
-import { type MockPort } from "@zwave-js/serial/mock";
-import { Bytes } from "@zwave-js/shared/safe";
+import type { ZWaveSerialStream } from "@zwave-js/serial";
+import type { MockPort } from "@zwave-js/serial/mock";
+import { Bytes } from "@zwave-js/shared";
 import {
 	MockController,
 	type MockControllerOptions,
@@ -17,7 +17,7 @@ import {
 	type CreateAndStartDriverWithMockPortResult,
 	createAndStartDriverWithMockPort,
 } from "../driver/DriverMock.js";
-import { type PartialZWaveOptions } from "../driver/ZWaveOptions.js";
+import type { PartialZWaveOptions } from "../driver/ZWaveOptions.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,8 +28,9 @@ export function prepareDriver(
 ): Promise<CreateAndStartDriverWithMockPortResult> {
 	// Skipping the bootloader check speeds up tests a lot
 	additionalOptions.testingHooks ??= {};
-	additionalOptions.testingHooks.skipBootloaderCheck = !additionalOptions
-		.allowBootloaderOnly;
+	additionalOptions.testingHooks.skipFirmwareIdentification =
+		additionalOptions.bootloaderMode === "recover"
+		|| additionalOptions.bootloaderMode == undefined;
 
 	const logConfig = additionalOptions.logConfig ?? {};
 	if (logToFile) {

@@ -44,11 +44,12 @@ import {
 } from "@zwave-js/core";
 import type { Message } from "@zwave-js/serial";
 import {
+	type ContainsCC,
 	type SendDataMessage,
+	containsCC,
 	isSendData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
-import { type ContainsCC, containsCC } from "@zwave-js/serial/serialapi";
 import { getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {
@@ -251,7 +252,7 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 	}
 
 	// Send the command split into multiple segments
-	const payload = await msg.serializeCCAsync(ctx);
+	const payload = await msg.serializeCC(ctx);
 	const numSegments = Math.ceil(payload.length / MAX_SEGMENT_SIZE);
 	const segmentDelay = numSegments > RELAXED_TIMING_THRESHOLD
 		? TransportServiceTimeouts.relaxedTimingDelayR2

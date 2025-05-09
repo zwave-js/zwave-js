@@ -8,9 +8,9 @@ import {
 	type MaybeUnknown,
 	UNKNOWN_STATE,
 } from "@zwave-js/core";
-import {
-	type BinarySwitchCCCapabilities,
-	type MockNodeBehavior,
+import type {
+	BinarySwitchCCCapabilities,
+	MockNodeBehavior,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: BinarySwitchCCCapabilities = {

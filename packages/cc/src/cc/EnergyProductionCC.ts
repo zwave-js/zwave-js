@@ -1,7 +1,8 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	ValueMetadata,
@@ -10,7 +11,6 @@ import {
 	parseFloatWithScale,
 	validatePayload,
 } from "@zwave-js/core";
-import { type MaybeNotKnown } from "@zwave-js/core/safe";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
@@ -42,13 +42,9 @@ import {
 	getEnergyProductionScale,
 } from "../lib/_Types.js";
 
-export const EnergyProductionCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Energy Production"], {
-		// Static CC values go here
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Energy Production"], {
-		// Dynamic CC values go here
+export const EnergyProductionCCValues = V.defineCCValues(
+	CommandClasses["Energy Production"],
+	{
 		...V.dynamicPropertyAndKeyWithName(
 			"value",
 			"value",
@@ -64,8 +60,8 @@ export const EnergyProductionCCValues = Object.freeze({
 				// unit and ccSpecific are set dynamically
 			} as const),
 		),
-	}),
-});
+	},
+);
 
 @API(CommandClasses["Energy Production"])
 export class EnergyProductionCCAPI extends CCAPI {
@@ -247,12 +243,11 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
 		return true;
 	}
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from([this.parameter]),
 			encodeFloatWithScale(this.value, this.scale.key),
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -311,9 +306,8 @@ export class EnergyProductionCCGet extends EnergyProductionCC {
 
 	public parameter: EnergyProductionParameter;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.parameter]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

@@ -1,0 +1,41 @@
+{
+  "name": "@zwave-js/web",
+  "private": true,
+  "version": "15.3.2",
+  "description": "zwave-js: web stuff",
+  "keywords": [],
+  "type": "module",
+  "author": {
+    "name": "AlCalzone",
+    "email": "d.griesel@gmx.net"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zwave-js/zwave-js/issues"
+  },
+  "funding": {
+    "url": "https://github.com/sponsors/AlCalzone/"
+  },
+  "engines": {
+    "node": ">= 20"
+  },
+  "scripts": {
+    "test": "node .build.mjs",
+    "serve": "node .dev.mjs"
+  },
+  "devDependencies": {
+    "@types/w3c-web-serial": "^1.0.8",
+    "@types/w3c-web-usb": "^1.0.10",
+    "@zwave-js/bindings-browser": "workspace:^",
+    "@zwave-js/core": "workspace:*",
+    "@zwave-js/shared": "workspace:*",
+    "esbuild": "^0.25.0",
+    "esbuild-plugins-node-modules-polyfill": "^1.7.0",
+    "zwave-js": "workspace:*"
+  }
+}

@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { SUC_MAX_UPDATES, SUC_UPDATE_ENTRY_SIZE } from "../../../consts.js";
 import {
 	type SUCUpdateEntry,

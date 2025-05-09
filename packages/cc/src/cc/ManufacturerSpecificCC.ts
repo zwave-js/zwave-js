@@ -1,20 +1,17 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import type {
-	GetValueDB,
-	MessageOrCCLogEntry,
-	WithAddress,
-} from "@zwave-js/core/safe";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
 	MessagePriority,
 	ValueMetadata,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { getEnumMemberName, num2hex, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -34,8 +31,9 @@ import {
 import { V } from "../lib/Values.js";
 import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
 
-export const ManufacturerSpecificCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Manufacturer Specific"], {
+export const ManufacturerSpecificCCValues = V.defineCCValues(
+	CommandClasses["Manufacturer Specific"],
+	{
 		...V.staticProperty(
 			"manufacturerId",
 			{
@@ -44,7 +42,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productType",
 			{
@@ -53,7 +50,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-
 		...V.staticProperty(
 			"productId",
 			{
@@ -62,9 +58,6 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			} as const,
 			{ supportsEndpoints: false },
 		),
-	}),
-
-	...V.defineDynamicCCValues(CommandClasses["Manufacturer Specific"], {
 		...V.dynamicPropertyAndKeyWithName(
 			"deviceId",
 			"deviceId",
@@ -79,8 +72,8 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			}),
 			{ minVersion: 2 } as const,
 		),
-	}),
-});
+	},
+);
 
 // @noSetValueAPI This CC is read-only
 
@@ -271,12 +264,11 @@ export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
 
 	public readonly productId: number;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(6);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.productType, 2);
 		this.payload.writeUInt16BE(this.productId, 4);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -390,9 +382,8 @@ export class ManufacturerSpecificCCDeviceSpecificGet
 
 	public deviceIdType: DeviceIdType;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([(this.deviceIdType || 0) & 0b111]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

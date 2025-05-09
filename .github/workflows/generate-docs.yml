@@ -19,12 +19,12 @@ jobs:
   # If they do, a PR will be created with the changes
   check-and-update:
     # Don't run in forks
-    if: github.repository == 'zwave-js/node-zwave-js'
+    if: github.repository == 'zwave-js/zwave-js'
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18] # This should be LTS
+        node-version: [22] # This should be LTS
 
     steps:
     - name: Checkout code

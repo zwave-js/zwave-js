@@ -1,9 +1,8 @@
-import { CommandClass } from "@zwave-js/cc";
-import { type AssociationCCReport } from "@zwave-js/cc/AssociationCC";
+import { AssociationCommand, CommandClass } from "@zwave-js/cc";
+import type { AssociationCCReport } from "@zwave-js/cc/AssociationCC";
 import { BasicCCSet } from "@zwave-js/cc/BasicCC";
 import { MultiCommandCCCommandEncapsulation } from "@zwave-js/cc/MultiCommandCC";
 import { SecurityCCCommandEncapsulation } from "@zwave-js/cc/SecurityCC";
-import { AssociationCommand } from "@zwave-js/cc/safe";
 import { CommandClasses, ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { ApplicationCommandRequest } from "@zwave-js/serial/serialapi";
 import { MockController, MockNode } from "@zwave-js/testing";
@@ -73,7 +72,7 @@ test(
 	"returns true when a partial CC is received that expects no more reports",
 	async ({ context, expect }) => {
 		const { driver } = context;
-		const cc = await CommandClass.parseAsync(
+		const cc = await CommandClass.parse(
 			Uint8Array.from([
 				CommandClasses.Association,
 				AssociationCommand.Report,
@@ -97,7 +96,7 @@ test(
 	"returns false when a partial CC is received that expects more reports",
 	async ({ context, expect }) => {
 		const { driver } = context;
-		const cc = await CommandClass.parseAsync(
+		const cc = await CommandClass.parse(
 			Uint8Array.from([
 				CommandClasses.Association,
 				AssociationCommand.Report,
@@ -121,7 +120,7 @@ test(
 	"returns true when the final partial CC is received and merges its data",
 	async ({ context, expect }) => {
 		const { driver } = context;
-		const cc1 = await CommandClass.parseAsync(
+		const cc1 = await CommandClass.parse(
 			Uint8Array.from([
 				CommandClasses.Association,
 				AssociationCommand.Report,
@@ -134,7 +133,7 @@ test(
 			]),
 			{ sourceNodeId: 2 } as any,
 		) as AssociationCCReport;
-		const cc2 = await CommandClass.parseAsync(
+		const cc2 = await CommandClass.parse(
 			Uint8Array.from([
 				CommandClasses.Association,
 				AssociationCommand.Report,
@@ -185,7 +184,7 @@ test("supports nested partial/non-partial CCs", async ({ context, expect }) => {
 		encapsulated: {} as any,
 	});
 	cc.encapsulated = undefined as any;
-	cc["decryptedCCBytes"] = await cc1.serializeAsync({} as any);
+	cc["decryptedCCBytes"] = await cc1.serialize({} as any);
 	const msg = new ApplicationCommandRequest({
 		command: cc,
 	});
@@ -242,7 +241,7 @@ test(
 	"returns false when a partial CC throws Deserialization_NotImplemented during merging",
 	async ({ context, expect }) => {
 		const { driver } = context;
-		const cc = await CommandClass.parseAsync(
+		const cc = await CommandClass.parse(
 			Uint8Array.from([
 				CommandClasses.Association,
 				AssociationCommand.Report,
@@ -255,7 +254,7 @@ test(
 			]),
 			{ sourceNodeId: 2 } as any,
 		) as AssociationCCReport;
-		cc.mergePartialCCsAsync = async () => {
+		cc.mergePartialCCs = async () => {
 			throw new ZWaveError(
 				"not implemented",
 				ZWaveErrorCodes.Deserialization_NotImplemented,
@@ -272,7 +271,7 @@ test(
 	"returns false when a partial CC throws CC_NotImplemented during merging",
 	async ({ context, expect }) => {
 		const { driver } = context;
-		const cc = await CommandClass.parseAsync(
+		const cc = await CommandClass.parse(
 			Uint8Array.from([
 				CommandClasses.Association,
 				AssociationCommand.Report,
@@ -285,7 +284,7 @@ test(
 			]),
 			{ sourceNodeId: 2 } as any,
 		) as AssociationCCReport;
-		cc.mergePartialCCsAsync = async () => {
+		cc.mergePartialCCs = async () => {
 			throw new ZWaveError(
 				"not implemented",
 				ZWaveErrorCodes.CC_NotImplemented,
@@ -302,7 +301,7 @@ test(
 	"returns false when a partial CC throws PacketFormat_InvalidPayload during merging",
 	async ({ context, expect }) => {
 		const { driver } = context;
-		const cc = await CommandClass.parseAsync(
+		const cc = await CommandClass.parse(
 			Uint8Array.from([
 				CommandClasses.Association,
 				AssociationCommand.Report,
@@ -315,7 +314,7 @@ test(
 			]),
 			{ sourceNodeId: 2 } as any,
 		) as AssociationCCReport;
-		cc.mergePartialCCsAsync = async () => {
+		cc.mergePartialCCs = async () => {
 			throw new ZWaveError(
 				"not implemented",
 				ZWaveErrorCodes.PacketFormat_InvalidPayload,
@@ -330,7 +329,7 @@ test(
 
 test("passes other errors during merging through", async ({ context, expect }) => {
 	const { driver } = context;
-	const cc = await CommandClass.parseAsync(
+	const cc = await CommandClass.parse(
 		Uint8Array.from([
 			CommandClasses.Association,
 			AssociationCommand.Report,
@@ -343,7 +342,7 @@ test("passes other errors during merging through", async ({ context, expect }) =
 		]),
 		{ sourceNodeId: 2 } as any,
 	) as AssociationCCReport;
-	cc.mergePartialCCsAsync = async () => {
+	cc.mergePartialCCs = async () => {
 		throw new ZWaveError("invalid", ZWaveErrorCodes.Argument_Invalid);
 	};
 	const msg = new ApplicationCommandRequest({

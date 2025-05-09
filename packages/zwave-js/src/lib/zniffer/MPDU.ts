@@ -1,4 +1,4 @@
-import { type CommandClass } from "@zwave-js/cc";
+import type { CommandClass } from "@zwave-js/cc";
 import {
 	type BeamingInfo,
 	MPDUHeaderType,
@@ -126,6 +126,7 @@ export function parseMPDU(
 		case 2:
 			return ZWaveMPDU.from(frame);
 		case 3:
+		case 4:
 			return LongRangeMPDU.from(frame);
 		default:
 			validatePayload.fail(
@@ -329,9 +330,10 @@ export class ZWaveMPDU implements MPDU {
 				destinationOffset++;
 				break;
 			}
-			case 3: {
+			case 3:
+			case 4: {
 				validatePayload.fail(
-					`Channel 3 (ZWLR) must be parsed as a LongRangeMPDU!`,
+					`Channel ${options.frameInfo.channel} (ZWLR) must be parsed as a LongRangeMPDU!`,
 				);
 			}
 			default: {

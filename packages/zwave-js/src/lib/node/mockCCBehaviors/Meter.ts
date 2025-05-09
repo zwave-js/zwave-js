@@ -7,10 +7,7 @@ import {
 	RateType,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import {
-	type MeterCCCapabilities,
-	type MockNodeBehavior,
-} from "@zwave-js/testing";
+import type { MeterCCCapabilities, MockNodeBehavior } from "@zwave-js/testing";
 
 export const defaultCapabilities: MeterCCCapabilities = {
 	meterType: 0x01, // Electric

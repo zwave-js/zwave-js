@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/nvmedit",
-  "version": "14.3.7",
+  "version": "15.3.0",
   "description": "zwave-js: library to edit NVM backups",
   "keywords": [],
   "publishConfig": {
@@ -26,25 +26,26 @@
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
     "build/**/package.json"
   ],
+  "sideEffects": false,
   "bin": "bin/nvmedit.mjs",
   "author": {
     "name": "AlCalzone",
     "email": "d.griesel@gmx.net"
   },
   "license": "MIT",
-  "homepage": "https://github.com/zwave-js/node-zwave-js#readme",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zwave-js/node-zwave-js.git"
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
   },
   "bugs": {
-    "url": "https://github.com/zwave-js/node-zwave-js/issues"
+    "url": "https://github.com/zwave-js/zwave-js/issues"
   },
   "funding": {
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 18"
+    "node": ">= 20"
   },
   "dependencies": {
     "@zwave-js/core": "workspace:*",
@@ -66,13 +67,13 @@
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
-    "@microsoft/api-extractor": "^7.48.0",
-    "@types/node": "^18.19.63",
-    "@types/semver": "^7.5.8",
+    "@microsoft/api-extractor": "^7.52.2",
+    "@types/node": "^20.17.32",
+    "@types/semver": "^7.7.0",
     "@types/yargs": "^17.0.33",
     "del-cli": "^6.0.0",
-    "tsx": "^4.19.2",
-    "typescript": "5.6.2",
-    "vitest": "^2.1.4"
+    "tsx": "^4.19.3",
+    "typescript": "5.8.3",
+    "vitest": "^2.1.9"
   }
 }

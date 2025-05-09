@@ -6,8 +6,12 @@ import ts from "typescript";
 // Whitelist some imports that are known not to import forbidden modules
 const whitelistedImports = [
 	"reflect-metadata",
-	// fflate is browser-compatible
+	// These are browser-compatible
 	"fflate",
+	"dayjs",
+	"nrf-intel-hex",
+	"triple-beam",
+	"@andrewbranch/untar.js",
 	"alcalzone-shared/arrays",
 	"alcalzone-shared/async",
 	"alcalzone-shared/comparable",
@@ -17,9 +21,18 @@ const whitelistedImports = [
 	"alcalzone-shared/sorted-list",
 	"alcalzone-shared/typeguards",
 ];
+const whitelistedImportsRegex: RegExp[] = [];
+
+// FIXME: When looking at node modules, consider the imports of the implementation
+// files, not the declaration files. Those might import types from forbidden modules
+// even though they are not used in the implementation.
 
 // Whitelist some more imports that should be ignored in the checking
-const ignoredImports = ["@zwave-js/transformers"];
+const ignoredImports = ["@zwave-js/transformers", "pathe"];
+const ignoredImportsRegex: RegExp[] = [
+	/^semver\/functions\/.+/,
+	/^semver\/ranges\/.+/,
+];
 
 function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 	if (
@@ -277,7 +290,12 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 			imp: ResolvedImport,
 		): "ignored" | "forbidden" | "ok" {
 			const trimmedImport = imp.name.replaceAll("\"", "");
-			if (ignoredImports.includes(trimmedImport)) return "ignored";
+			if (
+				ignoredImports.includes(trimmedImport)
+				|| ignoredImportsRegex.some((regex) =>
+					regex.test(trimmedImport)
+				)
+			) return "ignored";
 
 			if (forbidden.includes("external")) {
 				// The special import name "external" forbids all external imports
@@ -286,6 +304,9 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 				if (
 					imp.sourceFile.fileName.includes("node_modules")
 					&& !whitelistedImports.includes(trimmedImport)
+					&& !whitelistedImportsRegex.some((regex) =>
+						regex.test(trimmedImport)
+					)
 				) {
 					return "forbidden";
 				}
@@ -339,7 +360,15 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 								break todo;
 							}
 							case "ok": {
-								addTodo(imp, importStack);
+								if (
+									!imp.sourceFile.fileName.includes(
+										"node_modules",
+									)
+								) {
+									// Do not continue traversing node_modules
+									addTodo(imp, importStack);
+								}
+								break;
 							}
 						}
 					}

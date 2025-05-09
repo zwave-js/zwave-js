@@ -10,28 +10,26 @@ import {
 	normalizeCCNameOrId,
 } from "@zwave-js/cc";
 import { ZWavePlusCCValues } from "@zwave-js/cc/ZWavePlusCC";
-import type {
-	ControlsCC,
-	EndpointId,
-	GetCCs,
-	IsCCSecure,
-	MaybeNotKnown,
-	ModifyCCs,
-	SupportsCC,
-} from "@zwave-js/core";
 import {
 	BasicDeviceClass,
 	CacheBackedMap,
 	type CommandClassInfo,
 	CommandClasses,
+	type ControlsCC,
+	type EndpointId,
+	type GetCCs,
 	GraphNode,
+	type IsCCSecure,
+	type MaybeNotKnown,
+	type ModifyCCs,
+	type SupportsCC,
 	ZWaveError,
 	ZWaveErrorCodes,
 	actuatorCCs,
 	getCCName,
+	isCCInfoEqual,
 } from "@zwave-js/core";
 import { getEnumMemberName, num2hex } from "@zwave-js/shared";
-import { isDeepStrictEqual } from "node:util";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { DeviceClass } from "./DeviceClass.js";
@@ -162,7 +160,7 @@ export class Endpoint
 			},
 			info,
 		);
-		if (!isDeepStrictEqual(original, updated)) {
+		if (original == undefined || !isCCInfoEqual(original, updated)) {
 			this._implementedCommandClasses.set(cc, updated);
 		}
 	}

@@ -1,5 +1,5 @@
-import { MAX_NODES, MAX_REPEATERS } from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+import { MAX_NODES, MAX_REPEATERS } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import {
 	EMPTY_ROUTECACHE_FILL,
 	ROUTECACHE_SIZE,

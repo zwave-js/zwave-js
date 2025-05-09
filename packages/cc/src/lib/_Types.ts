@@ -8,7 +8,7 @@ import {
 	type Scale,
 	type ValueMetadata,
 	ZWaveDataRate,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 
 export enum AlarmSensorCommand {
 	Get = 0x01,
@@ -302,6 +302,11 @@ export enum BasicCommand {
 	Report = 0x03,
 }
 
+export enum BasicWindowCoveringCommand {
+	StartLevelChange = 0x01,
+	StopLevelChange = 0x02,
+}
+
 export enum BatteryChargingStatus {
 	Discharging = 0x00,
 	Charging = 0x01,
@@ -468,7 +473,7 @@ export enum ConfigurationCommand {
 	DefaultReset = 0x01,
 }
 
-export type { ConfigValue } from "@zwave-js/core/safe";
+export type { ConfigValue } from "@zwave-js/core";
 
 export enum CRC16Command {
 	CommandEncapsulation = 0x01,

@@ -1,4 +1,4 @@
-import { ZWaveLogContainer } from "@zwave-js/core";
+import { wait } from "alcalzone-shared/async";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import {
 	type ZWaveSerialBindingFactory,
@@ -13,6 +13,9 @@ export class MockPort {
 		this.readable = readable;
 	}
 
+	/** How long each write operation should take */
+	public writeDelay: number = 0;
+
 	// Remembers the last written data
 	public lastWrite: Uint8Array | undefined;
 
@@ -26,6 +29,7 @@ export class MockPort {
 
 	public factory(): ZWaveSerialBindingFactory {
 		return () => {
+			let writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
 			const sink: UnderlyingSink<Uint8Array> = {
 				write: async (chunk, _controller) => {
 					// Remember the last written data
@@ -33,13 +37,17 @@ export class MockPort {
 					// Only write to the sink if its readable side has a reader attached.
 					// Otherwise, we get backpressure on the writable side of the mock port
 					if (this.readable.locked) {
-						const writer = this.#sink.getWriter();
-						try {
-							await writer.write(chunk);
-						} finally {
-							writer.releaseLock();
+						writer ??= this.#sink.getWriter();
+						// Simulate a slow write if necessary
+						if (this.writeDelay > 0) {
+							await wait(this.writeDelay);
 						}
+						// This will finish immediately on the mock port
+						await writer.write(chunk);
 					}
+				},
+				close: () => {
+					writer?.releaseLock();
 				},
 			};
 
@@ -74,7 +82,9 @@ export async function createAndOpenMockedZWaveSerialPort(): Promise<{
 	const port = new MockPort();
 	const factory = new ZWaveSerialStreamFactory(
 		port.factory(),
-		new ZWaveLogContainer({ enabled: false }),
+		(await import("#default_bindings/log")).log({
+			enabled: false,
+		}),
 	);
 	const serial = await factory.createStream();
 	return { port, serial };

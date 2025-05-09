@@ -1,19 +1,17 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import type {
-	GetValueDB,
-	MessageOrCCLogEntry,
-	MessageRecord,
-	SupervisionResult,
-	WithAddress,
-} from "@zwave-js/core/safe";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
+	type GetValueDB,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
+	type MessageRecord,
+	type SupervisionResult,
 	ValueMetadata,
+	type WithAddress,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -35,8 +33,9 @@ import {
 import { V } from "../lib/Values.js";
 import { SceneActivationCommand } from "../lib/_Types.js";
 
-export const SceneActivationCCValues = Object.freeze({
-	...V.defineStaticCCValues(CommandClasses["Scene Activation"], {
+export const SceneActivationCCValues = V.defineCCValues(
+	CommandClasses["Scene Activation"],
+	{
 		...V.staticProperty(
 			"sceneId",
 			{
@@ -47,7 +46,6 @@ export const SceneActivationCCValues = Object.freeze({
 			} as const,
 			{ stateful: false },
 		),
-
 		...V.staticProperty(
 			"dimmingDuration",
 			{
@@ -55,8 +53,8 @@ export const SceneActivationCCValues = Object.freeze({
 				label: "Dimming duration",
 			} as const,
 		),
-	}),
-});
+	},
+);
 
 // @noInterview This CC is write-only
 
@@ -167,12 +165,11 @@ export class SceneActivationCCSet extends SceneActivationCC {
 
 	public dimmingDuration: Duration | undefined;
 
-	public serialize(ctx: CCEncodingContext): Bytes {
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.sceneId,
 			this.dimmingDuration?.serializeSet() ?? 0xff,
 		]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

@@ -1,4 +1,4 @@
-import { type AssociationAddress } from "@zwave-js/cc";
+import type { AssociationAddress } from "@zwave-js/cc";
 import {
 	type CommandClasses,
 	NodeType,

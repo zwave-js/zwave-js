@@ -15,18 +15,16 @@ import {
 	parseNodeID,
 	parseNodeUpdatePayload,
 } from "@zwave-js/core";
-import type {
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-	SuccessIndicator,
-} from "@zwave-js/serial";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageEncodingContext,
 	MessageOrigin,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
+	type SuccessIndicator,
 	expectedCallback,
 	messageTypes,
 	priority,
@@ -172,7 +170,7 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
 	/** Whether to include network wide */
 	public networkWide: boolean = false;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		let data: number = this.addNodeType || AddNodeType.Any;
 		if (this.highPower) data |= AddNodeFlags.HighPower;
@@ -180,7 +178,6 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
 
 		this.payload = Bytes.from([data, this.callbackId]);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -210,14 +207,13 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
 }
 
 export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const control: number = AddNodeType.SmartStartListen
 			| AddNodeFlags.NetworkWide;
 		// The Serial API does not send a callback, so disable waiting for one
 		this.callbackId = 0;
 
 		this.payload = Bytes.from([control, this.callbackId]);
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -254,7 +250,7 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 	/** Whether to include as long-range or not */
 	public protocol: Protocols;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		let control: number = AddNodeType.SmartStartDSK;
 		if (this.highPower) control |= AddNodeFlags.HighPower;
@@ -269,7 +265,6 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 			this.authHomeId,
 		]);
 
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 
@@ -382,7 +377,7 @@ export class AddNodeToNetworkRequestStatusReport
 	public readonly status: AddNodeStatus;
 	public readonly statusContext: AddNodeStatusContext | undefined;
 
-	public serialize(ctx: MessageEncodingContext): Bytes {
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		this.payload = Bytes.from([this.callbackId, this.status]);
 		if (this.statusContext?.basicDeviceClass != undefined) {
@@ -394,7 +389,6 @@ export class AddNodeToNetworkRequestStatusReport
 				),
 			]);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		return super.serialize(ctx);
 	}
 

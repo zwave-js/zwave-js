@@ -65,6 +65,43 @@ getDefinedValueIDs(): TranslatedValueID[]
 
 When building a user interface for a Z-Wave application, you might need to know all possible values in advance. This method returns an array of all ValueIDs that are available for this node.
 
+### `getSupportedNotificationEvents`
+
+```ts
+getSupportedNotificationEvents(): ZWaveNotificationCapability[]
+```
+
+Likewise, this method allows querying information about all events that might be emitted using the `"notification"` event. It returns a list of notification capabilities that are either
+
+<!-- #import ZWaveNotificationCapability_NotificationCC from "zwave-js" -->
+
+```ts
+interface ZWaveNotificationCapability_NotificationCC {
+	commandClass: CommandClasses.Notification;
+	endpoint: number;
+	/** A dictionary of supported event types and information */
+	supportedNotificationTypes: Record<number, {
+		/** The human-readable label for the notification type */
+		label: string;
+		/** A dictionary of supported events for this notification type and their human-readable labels */
+		supportedEvents: Record<number, string>;
+	}>;
+}
+```
+
+or
+
+<!-- #import ZWaveNotificationCapability_EntryControlCC from "zwave-js" -->
+
+```ts
+interface ZWaveNotificationCapability_EntryControlCC {
+	commandClass: (typeof CommandClasses)["Entry Control"];
+	endpoint: number;
+	/** A dictionary of supported event types and their human-readable labels */
+	supportedEventTypes: Record<EntryControlEventTypes, string>;
+}
+```
+
 ### `interview`
 
 ```ts
@@ -352,7 +389,8 @@ Performs an OTA firmware update process for this node, applying the provided fir
 This method an array of firmware updates, each of which contains the following properties:
 
 - `data` - A buffer containing the firmware image in a format supported by the device
-- `target` - _(optional)_ The firmware target (i.e. chip) to upgrade. `0` updates the Z-Wave chip, `>=1` updates others if they exist
+- `firmwareTarget` - _(optional)_ The firmware target (i.e. chip) to upgrade. `0` updates the Z-Wave chip, `>=1` updates others if they exist
+- `firmwareId` - _(optional)_ The ID of the new firmware that will be uploaded. This is only necessary if the device checks the firmware ID before starting the update. If not given, the current firmware ID will be reused.
 
 <!-- #import Firmware from "zwave-js" -->
 
@@ -360,6 +398,7 @@ This method an array of firmware updates, each of which contains the following p
 interface Firmware {
 	data: Uint8Array;
 	firmwareTarget?: number;
+	firmwareId?: number;
 }
 ```
 
@@ -1160,6 +1199,15 @@ readonly productType: number
 ```
 
 These three properties together identify the actual device this node is.
+
+### `manufacturer`, `label`
+
+```ts
+readonly manufacturer: string | undefined
+readonly label: string | undefined
+```
+
+The human-readable manufacturer/brand name and device label of this node.
 
 ### `deviceConfig`
 
