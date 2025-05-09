@@ -8,6 +8,10 @@
 			"productType": "0x0003",
 			"productId": "0x002e",
 			"zwaveAllianceId": 5069
+		},
+		{ // ZWA046 3-Phase EU, Prototype?
+			"productType": "0x0003",
+			"productId": "0x0034"
 		}
 	],
 	"firmwareVersion": {
