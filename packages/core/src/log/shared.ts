@@ -6,7 +6,8 @@ export const timestampFormatShort = "HH:mm:ss.SSS";
 export const timestampPaddingShort = " ".repeat(
 	timestampFormatShort.length + 1,
 );
-export const timestampPadding = " ".repeat(new Date().toISOString().length + 1);
+export const timestampFormat = "YYYY-MM-DD HH:mm:ss.SSS";
+export const timestampPadding = " ".repeat(timestampFormat.length + 1);
 /** @internal */
 export const channelPadding = " ".repeat(7); // 6 chars channel name, 1 space
 
