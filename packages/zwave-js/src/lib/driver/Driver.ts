@@ -330,8 +330,8 @@ const defaultOptions: ZWaveOptions = {
 		unresponsiveControllerRecovery: !getenv(
 			"ZWAVEJS_DISABLE_UNRESPONSIVE_CONTROLLER_RECOVERY",
 		),
-		// By default enable the watchdog, unless the env variable is set
-		watchdog: !getenv("ZWAVEJS_DISABLE_WATCHDOG"),
+		// By default disable the watchdog
+		watchdog: false,
 	},
 	// By default, try to recover from bootloader mode
 	bootloaderMode: "recover",
@@ -3391,6 +3391,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// This is a bit hacky, but what the heck...
 		if (!this._enteringBootloader) {
 			// Start the watchdog again, unless disabled
+			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			if (this.options.features.watchdog) {
 				void this._controller?.startWatchdog();
 			}
@@ -5150,6 +5151,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				}
 
 				// Restart the watchdog unless disabled
+				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				if (this.options.features.watchdog) {
 					await this._controller?.startWatchdog();
 				}
