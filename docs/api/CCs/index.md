@@ -15,6 +15,7 @@ The **Command Classes API** provides a high-to-mid level entrypoint which allows
 - [Association Group Information CC](api/CCs/AssociationGroupInfo.md) · `0x59`
 - [Barrier Operator CC](api/CCs/BarrierOperator.md) · `0x66`
 - [Basic CC](api/CCs/Basic.md) · `0x20`
+- [Basic Window Covering CC](api/CCs/BasicWindowCovering.md) · `0x50`
 - [Battery CC](api/CCs/Battery.md) · `0x80`
 - [Binary Sensor CC](api/CCs/BinarySensor.md) · `0x30`
 - [Binary Switch CC](api/CCs/BinarySwitch.md) · `0x25`
