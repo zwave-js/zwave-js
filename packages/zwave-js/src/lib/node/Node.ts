@@ -825,18 +825,23 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		const { resetSecurityClasses = false, waitForWakeup = true } = options;
 		// Unless desired, don't forget the information about sleeping nodes immediately, so they continue to function
 		let didWakeUp = false;
+		let wasAwake = false;
 		if (
 			waitForWakeup
 			&& this.canSleep
 			&& this.supportsCC(CommandClasses["Wake Up"])
 		) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				"Re-interview scheduled, waiting for node to wake up...",
-			);
-			didWakeUp = await this.waitForWakeup()
-				.then(() => true)
-				.catch(() => false);
+			if (this.status === NodeStatus.Awake) {
+				wasAwake = true;
+			} else {
+				this.driver.controllerLog.logNode(
+					this.id,
+					"Re-interview scheduled, waiting for node to wake up...",
+				);
+				didWakeUp = await this.waitForWakeup()
+					.then(() => true)
+					.catch(() => false);
+			}
 		}
 
 		// preserve the node name and location, since they might not be stored on the node
@@ -917,7 +922,14 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// If we did wait for the wakeup, mark the node as awake again so it does not
 		// get considered asleep after querying protocol info.
-		if (didWakeUp) this.markAsAwake();
+		if (didWakeUp || wasAwake) {
+			// Re-interviewing forgets the node's capabilities. To be able to mark it
+			// as awake, we need to set those again.
+			this.isListening = false;
+			this.isFrequentListening = false;
+
+			this.markAsAwake();
+		}
 
 		void this.driver.interviewNodeInternal(this);
 		this._refreshInfoPending = false;
