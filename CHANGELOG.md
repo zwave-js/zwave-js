@@ -4,6 +4,27 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Update Notification definitions to 2024B-3 specs (#7796)
+* Add static methods to query Door Lock CC capabilities (#7799)
+* The hardware watchdog no longer gets enabled by default, since this is now handled by recent firmwares. The corresponding driver option and preset have been deprecated. (#7802)
+
+### Bugfixes
+* Omit empty fields from TX reports, ignore missing RSSI in routing statistics (#7808)
+* Use local time for logging to file (#7800)
+
+### Config file changes
+* Add Enbrighten (Jasco) 58446 / ZWA4013 Fan Control (#7673)
+* Add Aeotec ZWA046 Home Energy Meter 8 (#7510)
+* Add PE653 endpoints for VSP speeds and P5043ME pool/spa mode (#7805)
+* Add ZVIDAR WM25C (#7686)
+* Add MCO Home MH-S314-7102 (#7733)
+* Add McoHome thermostats MH4936, MH5-2D and MH5-4A (#7765)
+* Update Inovelli VZW31-SN to FW 1.04 (#7731)
+* Add param 29 (load sense) to HomePro ZDP100 (#7713)
+* Add Yale YDM3109A Smart Lock (#7670)
+
 ## 15.3.2 (2025-05-08)
 ### Bugfixes
 * Fixed a regression from v15 where command delivery verification wouldn't work on S2-capable devices without Supervision (#7795)
