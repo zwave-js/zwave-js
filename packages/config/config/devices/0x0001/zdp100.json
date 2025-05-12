@@ -13,5 +13,13 @@
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
-	}
+	},
+	"paramInformation": [
+		{
+			"#": "29",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Load Sensing",
+			"defaultValue": 1
+		}
+	]
 }
