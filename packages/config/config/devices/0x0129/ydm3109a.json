@@ -5,17 +5,13 @@
 	"description": "Smart Lock",
 	"devices": [
 		{
-			// Device code for Malaysian version as listed in the
-			// Z-Wave Alliance database
+			// Malaysian version
 			"productType": "0xc006",
 			"productId": "0x5904",
 			"zwaveAllianceId": 4723
 		},
 		{
-			// Device code for New Zealand (and probably
-			// Australian) version, confirmed over more than a
-			// dozen locks; no matching devices found in the Z-Wave
-			// Alliance database as of 2025-03-12.
+			// New Zealand / Australian version
 			"productType": "0xc006",
 			"productId": "0x1904"
 		}
@@ -63,29 +59,21 @@
 				"$import": "templates/yale_template.json#alarm_map_rfid_unlock"
 			},
 			{
-				// Interior "Forced Lock/Privacy Switch" set to
-				// ON position.
+				// Interior "Forced Lock/Privacy Switch" set to ON position.
 				//
-				// Translating this to a "Home Monitoring" /
-				// "Home occupied" notification, as there is
-				// nothing suitable under the Access Control
-				// section of the Z-Wave notification registry.
-				"from": { "alarmType": 155,
-					"alarmLevel": 0
-				},
+				// Translating this to a "Home Monitoring" / "Home occupied"
+				// notification, due to lack of a suitable standardized representation.
+				"from": { "alarmType": 155, "alarmLevel": 0 },
 				"to": {
 					"notificationType": 22,
 					"notificationEvent": 2
 				}
 			},
 			{
-				// Interior "Forced Lock/Privacy Switch" set to
-				// OFF position.
+				// Interior "Forced Lock/Privacy Switch" set to OFF position.
 				//
-				// Translating this to a "Home Monitoring" /
-				// "Home occupied" notification, as there is
-				// nothing suitable under the Access Control
-				// section of the Z-Wave notification registry.
+				// Translating this to a "Home Monitoring" / "Home occupied"
+				// notification, due to lack of a suitable standardized representation.
 				"from": {
 					"alarmType": 155,
 					"alarmLevel": 1
@@ -96,7 +84,6 @@
 				}
 			}
 		]
-
 	},
 	"metadata": {
 		"inclusion": "How to add (pairing) the product into Z-Wave network\n 1. Operate on lock following guide below:\n 1) Enter Master Code-> 'R' -> '9' -> '#' -> '1' -> '#' (only can be activated in advanced mode)",
