@@ -275,7 +275,7 @@
 	"antifreeze_protection": {
 		"label": "Antifreeze Protection",
 		"$import": "~/templates/master_template.json#base_enable_disable",
-		"description": "Automatic heating at 41 °F/5 °C"
+		"description": "Automatic heating at 41 °F / 5 °C"
 	},
 	"fan_mode_above_set_temperature": {
 		"label": "Fan Mode Above Set Temperature",
