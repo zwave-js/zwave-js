@@ -1,0 +1,122 @@
+// The firmware versions on this device are a mess
+// 1.2 -> (10.0 = 2.0) -> (10.10 = 2.10) -> (10.20 = 2.20 = 3.10) -> 3.20
+// Conditionals:
+// 2.0 / 10.0 and later: firmwareVersion >= 2.0
+// 800 series: firmwareVersion >= 3.10 && firmwareVersion < 10.0
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZEN75",
+	"description": "Heavy Duty Switch",
+	"devices": [
+		{
+			"productType": "0x7000",
+			"productId": "0xa005",
+			"zwaveAllianceId": 5179
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#orientation_momentary"
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "14",
+			"$import": "templates/zooz_template.json#led_indicator_color"
+		},
+		{
+			"#": "15",
+			"$import": "templates/zooz_template.json#led_indicator_brightness"
+		},
+		{
+			"#": "3",
+			"$import": "templates/zooz_template.json#auto_off_timer_0x_1x_3x_7x"
+		},
+		{
+			"#": "5",
+			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x"
+		},
+		{
+			"#": "7[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Group 2 with Physical Switch",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Group 2 with Connected 3-Way Switch",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Group 2 with Z-Wave Commands",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Group 2 with On/Off Timers",
+			"defaultValue": 1
+		},
+		{
+			"#": "8",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "9",
+			"$import": "templates/zooz_template.json#enable_scene_control"
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#smart_switch_mode_0-2"
+		},
+		{
+			"#": "12",
+			"$import": "templates/zooz_template.json#3way_switch_type"
+		},
+		{
+			"#": "13",
+			"$import": "templates/zooz_template.json#smart_switch_mode_reporting"
+		},
+		{
+			"#": "16",
+			"$import": "templates/zooz_template.json#association_reports_binary"
+		},
+		{
+			"#": "17",
+			"$import": "templates/zooz_template.json#local_programming"
+		}
+	],
+	"compat": {
+		// The device sends Configuration CC info reports in 4-byte chunks, causing each query to block the network for roughly 1.5 seconds.
+		"skipConfigurationNameQuery": true,
+		"skipConfigurationInfoQuery": true
+	},
+	"metadata": {
+		"inclusion": "1. Initiate inclusion (pairing) in the app (or web interface).\n2. TAP UP 3 TIMES QUICKLY if using traditional Z-Wave inclusion",
+		"exclusion": "1. Bring your Z-Wave gateway (hub) close to the switch if possible\n2. Put the Z-Wave hub into exclusion mode (not sure how to do that? ask@getzooz.com) \n3. Tap the lower paddle on the switch 3 times quickly (the LED indicator will start blinking blue)\n4. Your hub will confirm exclusion, the LED indicator on the switch will turn green for 3 seconds, and the device will disappear from your controller's device list",
+		"reset": "If your primary controller is missing or inoperable, you may need to reset the device to factory settings. To reset the switch, press and hold the lower paddle for 10 seconds until the LED indicator starts blinking. Release paddle, and immediately after, tap the lower paddle 5 times to complete the reset. The LED indicator will flash blue 3 times and turn red for 3 seconds to confirm successful reset.\nNOTE: All previously recorded activity and custom settings will be erased from the device’s memory",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4104/zooz-zen76-manual.pdf"
+	}
+}
