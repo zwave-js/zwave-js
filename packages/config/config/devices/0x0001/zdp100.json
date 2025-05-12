@@ -17,7 +17,9 @@
 	"paramInformation": [
 		{
 			"#": "29",
-			"$import": "templates/act_template.json#load_sensing"
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Load Sensing",
+			"defaultValue": 1
 		}
 	]
 }
