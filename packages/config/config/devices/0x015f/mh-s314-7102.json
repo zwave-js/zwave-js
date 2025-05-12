@@ -59,147 +59,43 @@
 		},
 		{
 			"#": "4[0x01]",
-			"label": "Button 1 Local Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Local Relay Control"
 		},
 		{
 			"#": "4[0x02]",
-			"label": "Button 2 Local Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Local Relay Control"
 		},
 		{
 			"#": "4[0x04]",
-			"label": "Button 3 Local Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Local Relay Control"
 		},
 		{
 			"#": "4[0x08]",
-			"label": "Button 4 Local Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Local Relay Control"
 		},
 		{
 			"#": "5[0x01]",
-			"label": "Button 1 Z-Wave Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Z-Wave Relay Control"
 		},
 		{
 			"#": "5[0x02]",
-			"label": "Button 2 Z-Wave Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Z-Wave Relay Control"
 		},
 		{
 			"#": "5[0x04]",
-			"label": "Button 3 Z-Wave Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Z-Wave Relay Control"
 		},
 		{
 			"#": "5[0x08]",
-			"label": "Button 4 Z-Wave Relay Control",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Z-Wave Relay Control"
 		},
 		{
 			"#": "6",
@@ -430,75 +326,23 @@
 		},
 		{
 			"#": "23[0x01]",
-			"label": "Button 1 Respond to Scenes",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Respond to Scenes"
 		},
 		{
 			"#": "23[0x02]",
-			"label": "Button 2 Respond to Scenes",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Respond to Scenes"
 		},
 		{
 			"#": "23[0x04]",
-			"label": "Button 3 Respond to Scenes",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Respond to Scenes"
 		},
 		{
 			"#": "23[0x08]",
-			"label": "Button 4 Respond to Scenes",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Respond to Scenes"
 		},
 		{
 			"#": "24",
@@ -678,435 +522,123 @@
 		},
 		{
 			"#": "50[0x01]",
-			"label": "Button 1 Scene Respond (ID 1-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Scene Respond (ID 1-100)"
 		},
 		{
 			"#": "50[0x02]",
-			"label": "Button 2 Scene Respond (ID 1-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Scene Respond (ID 1-100)"
 		},
 		{
 			"#": "50[0x04]",
-			"label": "Button 3 Scene Respond (ID 1-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Scene Respond (ID 1-100)"
 		},
 		{
 			"#": "50[0x08]",
-			"label": "Button 4 Scene Respond (ID 1-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Scene Respond (ID 1-100)"
 		},
 		{
 			"#": "51[0x01]",
-			"label": "Button 1 Scene Respond (ID 1-20)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Scene Respond (ID 1-20)"
 		},
 		{
 			"#": "51[0x02]",
-			"label": "Button 2 Scene Respond (ID 1-20)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Scene Respond (ID 1-20)"
 		},
 		{
 			"#": "51[0x04]",
-			"label": "Button 3 Scene Respond (ID 1-20)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Scene Respond (ID 1-20)"
 		},
 		{
 			"#": "51[0x08]",
-			"label": "Button 4 Scene Respond (ID 1-20)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Scene Respond (ID 1-20)"
 		},
 		{
 			"#": "52[0x01]",
-			"label": "Button 1 Scene Respond (ID 21-40)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Scene Respond (ID 21-40)"
 		},
 		{
 			"#": "52[0x02]",
-			"label": "Button 2 Scene Respond (ID 21-40)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Scene Respond (ID 21-40)"
 		},
 		{
 			"#": "52[0x04]",
-			"label": "Button 3 Scene Respond (ID 21-40)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Scene Respond (ID 21-40)"
 		},
 		{
 			"#": "52[0x08]",
-			"label": "Button 4 Scene Respond (ID 21-40)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Scene Respond (ID 21-40)"
 		},
 		{
 			"#": "53[0x01]",
-			"label": "Button 1 Scene Respond (ID 41-60)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Scene Respond (ID 41-60)"
 		},
 		{
 			"#": "53[0x02]",
-			"label": "Button 2 Scene Respond (ID 41-60)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Scene Respond (ID 41-60)"
 		},
 		{
 			"#": "53[0x04]",
-			"label": "Button 3 Scene Respond (ID 41-60)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Scene Respond (ID 41-60)"
 		},
 		{
 			"#": "53[0x08]",
-			"label": "Button 4 Scene Respond (ID 41-60)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Scene Respond (ID 41-60)"
 		},
 		{
 			"#": "54[0x01]",
-			"label": "Button 1 Scene Respond (ID 61-80)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Scene Respond (ID 61-80)"
 		},
 		{
 			"#": "54[0x02]",
-			"label": "Button 2 Scene Respond (ID 61-80)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Scene Respond (ID 61-80)"
 		},
 		{
 			"#": "54[0x04]",
-			"label": "Button 3 Scene Respond (ID 61-80)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Scene Respond (ID 61-80)"
 		},
 		{
 			"#": "54[0x08]",
-			"label": "Button 4 Scene Respond (ID 61-80)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Scene Respond (ID 61-80)"
 		},
 		{
 			"#": "55[0x01]",
-			"label": "Button 1 Scene Respond (ID 81-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 1 Scene Respond (ID 81-100)"
 		},
 		{
 			"#": "55[0x02]",
-			"label": "Button 2 Scene Respond (ID 81-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 2 Scene Respond (ID 81-100)"
 		},
 		{
 			"#": "55[0x04]",
-			"label": "Button 3 Scene Respond (ID 81-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 3 Scene Respond (ID 81-100)"
 		},
 		{
 			"#": "55[0x08]",
-			"label": "Button 4 Scene Respond (ID 81-100)",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button 4 Scene Respond (ID 81-100)"
 		},
 		{
 			"#": "255",
