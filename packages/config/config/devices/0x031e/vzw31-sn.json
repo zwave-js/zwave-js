@@ -23,7 +23,7 @@
 					"isLifeline": true
 				},
 				"2": {
-					"label": "Basic Switch Set",
+					"label": "Basic Set",
 					"maxNodes": 10
 				},
 				"3": {
@@ -35,15 +35,15 @@
 					"maxNodes": 10
 				},
 				"5": {
-					"label": "Basic Double-tap Set",
+					"label": "Basic Set Double-tap",
 					"maxNodes": 10
 				},
 				"6": {
-					"label": "Basic Triple-tap Set",
+					"label": "Basic Set Triple-tap",
 					"maxNodes": 10
 				},
 				"7": {
-					"label": "Multilevel Config Set",
+					"label": "Multilevel Switch Set (Config Button)",
 					"maxNodes": 10
 				}
 			}
@@ -322,11 +322,18 @@
 			"#": "23",
 			"$if": "firmwareVersion >= 1.4",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on.  0 = disabled, 1-59 = X 60ths of a second, 60 = 1 second",
+			"description": "Duration of initial increased power output when light turns on",
 			"valueSize": 1,
+			"unit": "1/60 seconds",
 			"minValue": 0,
 			"maxValue": 60,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "24",
@@ -368,7 +375,7 @@
 		{
 			"#": "32",
 			"$if": "firmwareVersion >= 1.2",
-			"label": "Internel Temperature",
+			"label": "Internal Temperature",
 			"description": "Temperature inside of the switch",
 			"valueSize": 1,
 			"unit": "°C",
@@ -732,12 +739,12 @@
 			"#": "130",
 			"$if": "firmwareVersion >= 1.4",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Group 7 Enable"
+			"label": "Group 7: Enable"
 		},
 		{
 			"#": "131",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7 Low Level",
+			"label": "Group 7: Low Level",
 			"description": "Low level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 1,
@@ -747,7 +754,7 @@
 		{
 			"#": "132",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7 Medium Level",
+			"label": "Group 7: Medium Level",
 			"description": "Medium level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 2,
@@ -757,7 +764,7 @@
 		{
 			"#": "133",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7 High Level",
+			"label": "Group 7: High Level",
 			"description": "High level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 3,
@@ -768,7 +775,7 @@
 			"#": "134",
 			"$if": "firmwareVersion >= 1.4",
 			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
-			"label": "Group 7 LED Color",
+			"label": "Group 7: LED Color",
 			"description": "Color to use for the LED bar while briefly indicating group 7 command transmission",
 			"valueSize": 1,
 			"defaultValue": 255
