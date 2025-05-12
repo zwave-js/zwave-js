@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.4.0 (2025-05-12)
 ### Features
 * Update Notification definitions to 2024B-3 specs (#7796)
 * Add static methods to query Door Lock CC capabilities (#7799)
