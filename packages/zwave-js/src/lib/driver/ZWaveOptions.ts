@@ -5,8 +5,8 @@ import type {
 	LongRangeChannel,
 	RFRegion,
 } from "@zwave-js/core";
-import { type Serial, type ZWaveSerialStream } from "@zwave-js/serial";
-import { type DeepPartial, type Expand } from "@zwave-js/shared";
+import type { Serial, ZWaveSerialStream } from "@zwave-js/serial";
+import type { DeepPartial, Expand } from "@zwave-js/shared";
 import type { DatabaseFactory, FileSystem } from "@zwave-js/shared/bindings";
 import type {
 	InclusionUserCallbacks,
@@ -271,9 +271,13 @@ export interface ZWaveOptions {
 
 		/**
 		 * Controllers of the 700 series and newer have a hardware watchdog that can be enabled to automatically
-		 * reset the chip in case it becomes unresponsive. This option controls whether the watchdog should be enabled.
+		 * reset the chip in case it becomes unresponsive. This option controls whether Z-Wave JS enables the watchdog automatically.
 		 *
-		 * Default: `true`, except when the ZWAVEJS_DISABLE_WATCHDOG env variable is set.
+		 * @deprecated
+		 * It makes more sense to handle the watchdog in the firmware itself. Recent firmware versions do just that, so
+		 * this option is no longer necessary.
+		 *
+		 * Default: `false`
 		 */
 		watchdog?: boolean;
 	};
@@ -501,8 +505,9 @@ export const driverPresets = Object.freeze(
 		},
 
 		/**
-		 * Prevents enabling the watchdog to be able to deal with controllers
-		 * which frequently get restarted for seemingly no reason.
+		 * @deprecated
+		 * This used to prevent the driver from enabling the watchdog on 700 series controllers.
+		 * This is now the default behavior, so this option is no longer necessary.
 		 */
 		NO_WATCHDOG: {
 			features: {

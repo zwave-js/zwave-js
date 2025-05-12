@@ -1,7 +1,7 @@
 {
   "name": "@zwave-js/web",
   "private": true,
-  "version": "15.0.5",
+  "version": "15.3.2",
   "description": "zwave-js: web stuff",
   "keywords": [],
   "type": "module",
@@ -29,7 +29,7 @@
     "serve": "node .dev.mjs"
   },
   "devDependencies": {
-    "@types/w3c-web-serial": "^1.0.7",
+    "@types/w3c-web-serial": "^1.0.8",
     "@types/w3c-web-usb": "^1.0.10",
     "@zwave-js/bindings-browser": "workspace:^",
     "@zwave-js/core": "workspace:*",

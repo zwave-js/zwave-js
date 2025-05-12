@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -13,9 +13,8 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,

@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CommandClass } from "@zwave-js/cc";
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type FrameType,
 	type MessageOrCCLogEntry,
@@ -20,8 +20,8 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type MessageWithCC } from "../utils.js";
+import { Bytes } from "@zwave-js/shared";
+import type { MessageWithCC } from "../utils.js";
 
 export enum ApplicationCommandStatusFlags {
 	RoutedBusy = 0b1, // A response route is locked by the application

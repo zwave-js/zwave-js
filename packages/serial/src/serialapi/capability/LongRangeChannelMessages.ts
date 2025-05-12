@@ -1,10 +1,10 @@
 import {
+	LongRangeChannel,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
-import { LongRangeChannel } from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,

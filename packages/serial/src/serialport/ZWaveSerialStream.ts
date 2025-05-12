@@ -9,7 +9,7 @@
 // 0 -->               -->     Parsers     --> read
 // 1 └─────────────────┘ └─────────────────┘ └──
 
-import { type LogContainer } from "@zwave-js/core";
+import type { LogContainer } from "@zwave-js/core";
 import { noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
@@ -18,7 +18,7 @@ import type {
 } from "node:stream/web";
 import { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
-import { type ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
+import type { ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
 import { ZWaveSerialParser } from "../plumbing/ZWaveSerialParser.js";
 import { ZWaveSerialMode } from "./definitions.js";
 

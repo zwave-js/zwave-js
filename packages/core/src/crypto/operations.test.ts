@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
 import { computeCMAC, computeMAC } from "./operations.js";
 

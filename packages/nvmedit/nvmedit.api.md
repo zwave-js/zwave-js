@@ -462,7 +462,17 @@ export type LRNodeNVMPropertyToDataType<P extends LRNodeNVMProperty> = P["type"]
 // Warning: (ae-missing-release-tag) "migrateNVM" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function migrateNVM(sourceNVM: Uint8Array, targetNVM: Uint8Array): Promise<Uint8Array>;
+export function migrateNVM(sourceNVM: Uint8Array, targetNVM: Uint8Array, options?: MigrateNVMOptions): Promise<Uint8Array>;
+
+// Warning: (ae-missing-release-tag) "MigrateNVMOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface MigrateNVMOptions {
+    preserveApplicationData?: boolean;
+    preserveNeighbors?: boolean;
+    preserveRoutes?: boolean;
+    preserveSUCUpdateEntries?: boolean;
+}
 
 // Warning: (ae-missing-release-tag) "nodeIdToLRNodeInfoFileIDV5" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1594,6 +1604,7 @@ export interface VersionFileOptions extends NVMFileCreationOptions {
 // src/lib/common/definitions.ts:208:2 - (ae-forgotten-export) The symbol "ControllerNVMPropertyTypes" needs to be exported by the entry point index.d.ts
 // src/lib/common/definitions.ts:217:2 - (ae-forgotten-export) The symbol "NodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
 // src/lib/common/definitions.ts:228:2 - (ae-forgotten-export) The symbol "LRNodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
+// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 

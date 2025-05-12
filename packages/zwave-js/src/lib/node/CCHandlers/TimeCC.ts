@@ -1,8 +1,8 @@
-import {
-	type PersistValuesContext,
-	type TimeCCDateGet,
-	type TimeCCTimeGet,
-	type TimeCCTimeOffsetGet,
+import type {
+	PersistValuesContext,
+	TimeCCDateGet,
+	TimeCCTimeGet,
+	TimeCCTimeOffsetGet,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
@@ -10,7 +10,7 @@ import {
 	type LogNode,
 	getDSTInfo,
 } from "@zwave-js/core";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveNode } from "../Node.js";
 
 export async function handleTimeGet(
 	ctx: PersistValuesContext & LogNode,

@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -13,9 +13,8 @@ import {
 	getCCName,
 	parseCCId,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes, cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {

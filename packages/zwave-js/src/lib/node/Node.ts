@@ -17,6 +17,8 @@ import {
 	PowerlevelTestStatus,
 	ScheduleEntryLockCommand,
 	type SetValueAPIOptions,
+	type SetValueResult,
+	SetValueStatus,
 	TimeCCDateGet,
 	TimeCCTimeGet,
 	TimeCCTimeOffsetGet,
@@ -25,6 +27,7 @@ import {
 	UserCodeCCValues,
 	type ValueIDProperties,
 	getImplementedVersion,
+	supervisionResultToSetValueResult,
 	utils as ccUtils,
 } from "@zwave-js/cc";
 import {
@@ -74,11 +77,6 @@ import {
 } from "@zwave-js/cc/VersionCC";
 import { WakeUpCCWakeUpNotification } from "@zwave-js/cc/WakeUpCC";
 import { ZWavePlusCCGet } from "@zwave-js/cc/ZWavePlusCC";
-import {
-	type SetValueResult,
-	SetValueStatus,
-	supervisionResultToSetValueResult,
-} from "@zwave-js/cc/safe";
 import { embeddedDevicesDir } from "@zwave-js/config";
 import {
 	BasicDeviceClass,
@@ -135,12 +133,8 @@ import {
 	type ApplicationUpdateRequest,
 	ApplicationUpdateRequestNodeInfoReceived,
 	ApplicationUpdateRequestNodeInfoRequestFailed,
-} from "@zwave-js/serial/serialapi";
-import {
 	GetNodeProtocolInfoRequest,
 	type GetNodeProtocolInfoResponse,
-} from "@zwave-js/serial/serialapi";
-import {
 	RequestNodeInfoRequest,
 	RequestNodeInfoResponse,
 } from "@zwave-js/serial/serialapi";
@@ -161,7 +155,7 @@ import {
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import path from "pathe";
-import { type Driver } from "../driver/Driver.js";
+import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
 import {
@@ -235,8 +229,8 @@ import {
 } from "./CCHandlers/WakeUpCC.js";
 import { handleZWavePlusGet } from "./CCHandlers/ZWavePlusCC.js";
 import { DeviceClass } from "./DeviceClass.js";
-import { type NodeDump, type ValueDump } from "./Dump.js";
-import { type Endpoint } from "./Endpoint.js";
+import type { NodeDump, ValueDump } from "./Dump.js";
+import type { Endpoint } from "./Endpoint.js";
 import {
 	formatLifelineHealthCheckSummary,
 	formatRouteHealthCheckSummary,
@@ -250,18 +244,19 @@ import {
 } from "./NodeStatistics.js";
 import {
 	type DateAndTime,
+	InterviewStage,
 	type LifelineHealthCheckResult,
 	type LifelineHealthCheckSummary,
 	LinkReliabilityCheckMode,
 	type LinkReliabilityCheckOptions,
 	type LinkReliabilityCheckResult,
+	NodeStatus,
 	type RefreshInfoOptions,
 	type RouteHealthCheckResult,
 	type RouteHealthCheckSummary,
 	type ZWaveNodeEventCallbacks,
 	type ZWaveNotificationCapability,
 } from "./_Types.js";
-import { InterviewStage, NodeStatus } from "./_Types.js";
 import { ZWaveNodeMixins } from "./mixins/index.js";
 import * as nodeUtils from "./utils.js";
 
@@ -469,10 +464,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		valueId = normalizeValueID(valueId);
 
 		// For the controller, look at proprietary implementations to set the value
-		const proprietary = this.driver.controller.proprietary;
-		for (const impl of Object.values(proprietary)) {
-			if (typeof impl.setValue === "function") {
-				return impl.setValue(valueId, value);
+		if (this.isControllerNode) {
+			const proprietary = this.driver.controller.proprietary;
+			for (const impl of Object.values(proprietary)) {
+				if (typeof impl.setValue === "function") {
+					return impl.setValue(valueId, value);
+				}
 			}
 		}
 
@@ -720,10 +717,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		valueId = normalizeValueID(valueId);
 
 		// For the controller, look at proprietary implementations to poll the value
-		const proprietary = this.driver.controller.proprietary;
-		for (const impl of Object.values(proprietary)) {
-			if (typeof impl.pollValue === "function") {
-				return impl.pollValue(valueId);
+		if (this.isControllerNode) {
+			const proprietary = this.driver.controller.proprietary;
+			for (const impl of Object.values(proprietary)) {
+				if (typeof impl.pollValue === "function") {
+					return impl.pollValue(valueId);
+				}
 			}
 		}
 
@@ -1472,8 +1471,8 @@ protocol version:      ${this.protocolVersion}`;
 			// After the version CC interview of the root endpoint, we have enough info to load the correct device config file
 			await this.loadDeviceConfig();
 
-			// At this point we may need to make some changes to the CCs the device reports
-			this.applyCommandClassesCompatFlag();
+			// At this point we may need to make some changes to the CCs the device reports for the root endpoint
+			this.applyCommandClassesCompatFlag(0);
 		} else {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -2574,8 +2573,12 @@ protocol version:      ${this.protocolVersion}`;
 	public async deserialize(): Promise<void> {
 		if (!this.driver.networkCache) return;
 
-		// Restore the device config
-		await this.loadDeviceConfig();
+		// Restore the device config. For the controller, this needs to happen
+		// after the interview, as we could have migrated to a different controller
+		// but the cache still contains the old fingerprint
+		if (!this.isControllerNode) {
+			await this.loadDeviceConfig();
+		}
 
 		// Mark already-interviewed nodes as potentially ready
 		if (this.interviewStage === InterviewStage.Complete) {
@@ -3618,7 +3621,10 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		this.updateStatistics((current) => {
 			const ret = { ...current };
 			// Update ACK RSSI
-			if (txReport.ackRSSI != undefined) {
+			if (
+				txReport.ackRSSI != undefined
+				&& txReport.ackRSSI !== RssiError.NotAvailable
+			) {
 				ret.rssi =
 					ret.rssi == undefined || isRssiError(txReport.ackRSSI)
 						? txReport.ackRSSI
@@ -3629,9 +3635,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			const newStats: RouteStatistics = {
 				protocolDataRate: txReport.routeSpeed,
 				repeaters: (txReport.repeaterNodeIds ?? []) as number[],
-				rssi: txReport.ackRSSI
-					?? ret.lwr?.rssi
-					?? RssiError.NotAvailable,
+				rssi: txReport.ackRSSI ?? ret.lwr?.rssi,
 			};
 			if (txReport.ackRepeaterRSSI != undefined) {
 				newStats.repeaterRSSI = txReport.ackRepeaterRSSI as number[];

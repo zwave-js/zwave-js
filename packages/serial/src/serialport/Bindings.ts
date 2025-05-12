@@ -1,4 +1,4 @@
-import { type ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
+import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export type EnumeratedPort = {
 	type: "link";

@@ -10,7 +10,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { type Bytes } from "@zwave-js/shared/safe";
+import type { Bytes } from "@zwave-js/shared";
 
 export interface LongRangeShadowNodeIDsRequestOptions {
 	shadowNodeIds: number[];

@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
 import type {
 	SetbackSpecialState,

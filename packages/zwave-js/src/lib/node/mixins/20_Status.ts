@@ -1,7 +1,7 @@
 import { type CommandClasses, InterviewStage } from "@zwave-js/core";
-import { type Driver } from "../../driver/Driver.js";
+import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
-import { type DeviceClass } from "../DeviceClass.js";
+import type { DeviceClass } from "../DeviceClass.js";
 import {
 	type NodeReadyMachine,
 	type NodeReadyMachineInput,

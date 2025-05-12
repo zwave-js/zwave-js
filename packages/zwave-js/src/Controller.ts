@@ -9,9 +9,10 @@ export {
 	RFRegion,
 	RssiError,
 	isRssiError,
-} from "@zwave-js/core/safe";
-export type { RSSI, TXReport } from "@zwave-js/core/safe";
-export type { ZWaveApiVersion, ZWaveLibraryTypes } from "@zwave-js/core/safe";
+} from "@zwave-js/core";
+export type { RSSI, TXReport } from "@zwave-js/core";
+export type { ZWaveApiVersion, ZWaveLibraryTypes } from "@zwave-js/core";
+export type { MigrateNVMOptions } from "@zwave-js/nvmedit";
 export { SerialAPISetupCommand } from "@zwave-js/serial/serialapi";
 export { ZWaveController } from "./lib/controller/Controller.js";
 export type { ControllerEvents } from "./lib/controller/Controller.js";
@@ -33,4 +34,6 @@ export {
 	ControllerProprietary_NabuCasa,
 	FUNC_ID_NABUCASA,
 	NabuCasaCommand,
+	NabuCasaConfigKey,
+	NabuCasaIndicationSeverity,
 } from "./lib/controller/proprietary/NabuCasa.js";

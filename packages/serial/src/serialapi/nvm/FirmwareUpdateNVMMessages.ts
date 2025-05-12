@@ -5,16 +5,14 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
-import type {
-	MessageBaseOptions,
-	MessageConstructor,
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-} from "@zwave-js/serial";
 import {
 	FunctionType,
 	Message,
+	type MessageBaseOptions,
+	type MessageConstructor,
+	type MessageEncodingContext,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
 	expectedResponse,
 	messageTypes,

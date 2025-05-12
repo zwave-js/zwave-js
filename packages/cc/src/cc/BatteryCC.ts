@@ -1,33 +1,34 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { type GetDeviceConfig } from "@zwave-js/config";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
+	CommandClasses,
+	type ControlsCC,
+	type EndpointId,
+	type GetEndpoint,
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
-	type WithAddress,
-	timespan,
-} from "@zwave-js/core";
-import type {
-	ControlsCC,
-	EndpointId,
-	GetEndpoint,
-	MessageOrCCLogEntry,
-	MessageRecord,
-	NodeId,
-	SinglecastCC,
-	SupportsCC,
-} from "@zwave-js/core/safe";
-import {
-	CommandClasses,
 	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
+	type NodeId,
+	type SinglecastCC,
+	type SupportsCC,
 	ValueMetadata,
+	type WithAddress,
+	encodeFloatWithScale,
 	enumValuesToMetadataStates,
 	parseFloatWithScale,
+	timespan,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type AllOrNone, getEnumMemberName, pick } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import {
+	type AllOrNone,
+	Bytes,
+	getEnumMemberName,
+	pick,
+} from "@zwave-js/shared";
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -96,6 +97,9 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		{
 			...ValueMetadata.ReadOnlyInt8,
 			label: "Temperature",
+			// For now, only °C is specified as a valid unit
+			// If this ever changes, update the unit in persistValues on the fly
+			unit: "°C",
 		} as const,
 		{
 			minVersion: 2,
@@ -680,24 +684,25 @@ export class BatteryCCHealthReport extends BatteryCC {
 		});
 	}
 
-	public persistValues(ctx: PersistValuesContext): boolean {
-		if (!super.persistValues(ctx)) return false;
-
-		// Update the temperature unit in the value DB
-		const temperatureValue = BatteryCCValues.temperature;
-		this.setMetadata(ctx, temperatureValue, {
-			...temperatureValue.meta,
-			unit: this.temperatureScale === 0x00 ? "°C" : undefined,
-		});
-
-		return true;
-	}
-
 	public readonly maximumCapacity: number | undefined;
-
 	public readonly temperature: number | undefined;
-
 	private readonly temperatureScale: number | undefined;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const temperature = this.temperature != undefined
+			? encodeFloatWithScale(
+				this.temperature,
+				this.temperatureScale ?? 0x00,
+			)
+			// size, precision and scale must be 0 if the temperature is omitted
+			: Bytes.from([0x00]);
+
+		this.payload = Bytes.concat([
+			[this.maximumCapacity ?? 0xff],
+			temperature,
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {

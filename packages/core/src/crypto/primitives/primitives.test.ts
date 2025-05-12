@@ -1,5 +1,5 @@
-import { type CryptoPrimitives } from "@zwave-js/shared/bindings";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
+import type { CryptoPrimitives } from "@zwave-js/shared/bindings";
 import { type ExpectStatic, test } from "vitest";
 
 function assertBufferEquals(

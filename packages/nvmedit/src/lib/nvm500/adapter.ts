@@ -6,18 +6,18 @@ import {
 import { Bytes } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
 import { SUC_MAX_UPDATES } from "../../consts.js";
-import { type NVM500, type NVM500Info } from "../NVM500.js";
-import {
-	type ControllerNVMProperty,
-	type NVMAdapter,
-	type NVMProperty,
-	type NVMPropertyToDataType,
-	type NodeNVMProperty,
+import type { NVM500, NVM500Info } from "../NVM500.js";
+import type {
+	ControllerNVMProperty,
+	NVMAdapter,
+	NVMProperty,
+	NVMPropertyToDataType,
+	NodeNVMProperty,
 } from "../common/definitions.js";
-import { type Route } from "../common/routeCache.js";
-import { type SUCUpdateEntry } from "../common/sucUpdateEntry.js";
-import { type NodeInfo } from "../nvm3/files/index.js";
-import { type NVM500NodeInfo } from "./EntryParsers.js";
+import type { Route } from "../common/routeCache.js";
+import type { SUCUpdateEntry } from "../common/sucUpdateEntry.js";
+import type { NodeInfo } from "../nvm3/files/index.js";
+import type { NVM500NodeInfo } from "./EntryParsers.js";
 import {
 	APPL_NODEPARM_MAX,
 	type NVMData,

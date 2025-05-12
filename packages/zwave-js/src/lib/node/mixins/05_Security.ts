@@ -9,9 +9,9 @@ import {
 	securityClassOrder,
 } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
-import { type Driver } from "../../driver/Driver.js";
+import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
-import { type DeviceClass } from "../DeviceClass.js";
+import type { DeviceClass } from "../DeviceClass.js";
 import { NetworkRoleMixin } from "./01_NetworkRole.js";
 
 export abstract class NodeSecurityMixin extends NetworkRoleMixin

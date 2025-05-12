@@ -4,8 +4,6 @@ import { FunctionType } from "@zwave-js/serial";
 import {
 	AssignSUCReturnRouteRequest,
 	AssignSUCReturnRouteResponse,
-} from "@zwave-js/serial/serialapi";
-import {
 	DeleteSUCReturnRouteRequest,
 	DeleteSUCReturnRouteRequestTransmitReport,
 	DeleteSUCReturnRouteResponse,

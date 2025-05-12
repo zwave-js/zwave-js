@@ -17,7 +17,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 function getFirstNodeId(segmentNumber: number): number {
 	return 256 + NUM_LR_NODES_PER_SEGMENT * segmentNumber;

@@ -472,11 +472,47 @@
 			"label": "Variable Speed Pump Speed 4 Schedule 3"
 		}
 	],
-	"associations": {
+	"endpoints": {
+		"0": {
+			"label": "Root",
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 5,
+					"isLifeline": true
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
+			"label": "Circuit 1"
+		},
+		"2": {
+			"label": "Circuit 2"
+		},
+		"3": {
+			"label": "Circuit 3"
+		},
+		"4": {
+			"label": "Circuit 4"
+		},
+		"5": {
+			"label": "Circuit 5"
+		},
+		"16": {
+			"label": "VSP Speed 1"
+		},
+		"17": {
+			"label": "VSP Speed 2"
+		},
+		"18": {
+			"label": "VSP Speed 3"
+		},
+		"19": {
+			"label": "VSP Speed 4"
+		},
+		// If P5043ME is not installed, Circuit 4 controls pool/spa mode
+		"39": {
+			"label": "P5043ME Pool/Spa Mode"
 		}
 	},
 	"compat": [
@@ -498,7 +534,7 @@
 					// BasicCC: All endpoints control the state of Switch 1 so only keep the root endpoint
 					// to reduce clutter and to handle received BASIC_SET events.
 					"Basic": {
-						"endpoints": [1, 2, 3, 4, 5]
+						"endpoints": [1, 2, 3, 4, 5, 16, 17, 18, 19, 39]
 					},
 					// ManufacturerSpecificCC: Endpoint 1 erroneously reports an incorrect manufacturer
 					// and product ID, unlike on the root endpoint.
@@ -523,7 +559,49 @@
 			},
 			// The device sometimes sends BASIC_SET to the lifeline association when the state of Switch 1
 			// changes but the value is always 0 so treat it as an event.
-			"mapBasicSet": "event"
+			"mapBasicSet": "event",
+			"overrideQueries": {
+				// Only 5 endpoints are reported, but 16-19 are used for VSP speeds and 39 is used by the P5043ME for Pool/Spa mode
+				"Multi Channel": [
+					{
+						"method": "getEndpointCountV1",
+						"matchArgs": [37],
+						"result": 39
+					}
+				]
+			},
+			// Keep endpoints 1-5 (Circuits), 16-19 (VSP speeds) and 39 (P5043ME Pool/Spa Mode) - all others are unused
+			"removeEndpoints": [
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38
+			]
 		},
 		{
 			"commandClasses": {
@@ -536,6 +614,15 @@
 				}
 			},
 			"overrideQueries": {
+				// Only 5 endpoints are reported, but 16-19 are used for VSP speeds. Omit 39 here as the P5043ME requires fw 3.4+
+				"Multi Channel": [
+					{
+						// "endpoint": 0,
+						"method": "getEndpointCountV1",
+						"matchArgs": [37],
+						"result": 19
+					}
+				],
 				// The response to the setpoint query is off by one bit: https://github.com/zwave-js/zwave-js/issues/5335
 				"Thermostat Setpoint": [
 					{
@@ -546,7 +633,9 @@
 						]
 					}
 				]
-			}
+			},
+			// Keep endpoints 1-5 (Circuits) and 16-19 (VSP speeds) - all others are unused
+			"removeEndpoints": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 		}
 	]
 }

@@ -1,6 +1,6 @@
-import { type ClockCCReport, type PersistValuesContext } from "@zwave-js/cc";
-import { type LogNode } from "@zwave-js/core";
-import { type ZWaveNode } from "../Node.js";
+import type { ClockCCReport, PersistValuesContext } from "@zwave-js/cc";
+import type { LogNode } from "@zwave-js/core";
+import type { ZWaveNode } from "../Node.js";
 
 export interface ClockHandlerStore {
 	busySettingClock: boolean;

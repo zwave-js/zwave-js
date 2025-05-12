@@ -1,4 +1,4 @@
-import { hexToUint8Array } from "@zwave-js/shared/safe";
+import { hexToUint8Array } from "@zwave-js/shared";
 import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

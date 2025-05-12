@@ -11,6 +11,7 @@ const whitelistedImports = [
 	"dayjs",
 	"nrf-intel-hex",
 	"triple-beam",
+	"@andrewbranch/untar.js",
 	"alcalzone-shared/arrays",
 	"alcalzone-shared/async",
 	"alcalzone-shared/comparable",
@@ -28,7 +29,10 @@ const whitelistedImportsRegex: RegExp[] = [];
 
 // Whitelist some more imports that should be ignored in the checking
 const ignoredImports = ["@zwave-js/transformers", "pathe"];
-const ignoredImportsRegex: RegExp[] = [/^semver\/functions\/.+/];
+const ignoredImportsRegex: RegExp[] = [
+	/^semver\/functions\/.+/,
+	/^semver\/ranges\/.+/,
+];
 
 function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 	if (
@@ -356,7 +360,15 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 								break todo;
 							}
 							case "ok": {
-								addTodo(imp, importStack);
+								if (
+									!imp.sourceFile.fileName.includes(
+										"node_modules",
+									)
+								) {
+									// Do not continue traversing node_modules
+									addTodo(imp, importStack);
+								}
+								break;
 							}
 						}
 					}

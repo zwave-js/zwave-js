@@ -55,9 +55,8 @@
 			"#": "3",
 			"label": "Motion Reports: Basic Set Values",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 7,
 			"defaultValue": 7,
+			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Disable",

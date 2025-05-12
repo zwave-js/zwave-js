@@ -1,9 +1,9 @@
-import {
-	type AssociationCCGet,
-	type AssociationCCRemove,
-	type AssociationCCSet,
-	type AssociationCCSpecificGroupGet,
-	type PersistValuesContext,
+import type {
+	AssociationCCGet,
+	AssociationCCRemove,
+	AssociationCCSet,
+	AssociationCCSpecificGroupGet,
+	PersistValuesContext,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
@@ -12,8 +12,8 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
-import { type ZWaveController } from "../../controller/Controller.js";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveController } from "../../controller/Controller.js";
+import type { ZWaveNode } from "../Node.js";
 import { MAX_ASSOCIATIONS } from "./_shared.js";
 
 export async function handleAssociationGet(

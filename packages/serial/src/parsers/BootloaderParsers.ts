@@ -1,5 +1,5 @@
 import { Bytes, type Timer, setTimer } from "@zwave-js/shared";
-import { type Transformer } from "node:stream/web";
+import type { Transformer } from "node:stream/web";
 import type { SerialLogger } from "../log/Logger.js";
 import { XModemMessageHeaders } from "../message/MessageHeaders.js";
 import {
@@ -68,7 +68,11 @@ class BootloaderScreenParserTransformer
 		if (this.receiveBuffer) {
 			this.flushTimeout = setTimer(() => {
 				this.flushTimeout = undefined;
-				controller.enqueue(this.receiveBuffer);
+				try {
+					controller.enqueue(this.receiveBuffer);
+				} catch {
+					// This can fail after tearing down the plumbing
+				}
 				this.receiveBuffer = "";
 			}, 500);
 		}

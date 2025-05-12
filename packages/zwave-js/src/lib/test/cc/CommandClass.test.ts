@@ -11,7 +11,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { SendDataRequest } from "@zwave-js/serial/serialapi";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 @implementedVersion(7)

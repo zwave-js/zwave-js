@@ -4,6 +4,88 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.3.2 (2025-05-08)
+### Bugfixes
+* Fixed a regression from v15 where command delivery verification wouldn't work on S2-capable devices without Supervision (#7795)
+
+### Config file changes
+* Disallow manual entry for param 3 on Zooz ZSE70 (#7794)
+
+## 15.3.1 (2025-05-07)
+### Bugfixes
+* Fixed an issue where some CCs could be missing when Z-Wave JS was bundled (#7791)
+
+## 15.3.0 (2025-05-05)
+As of this release, Z-Wave JS no longer destroys the driver instance after NVM restore, OTW upgrades and leaving the bootloader. Previously applications had to catch the corresponding error and re-create the driver instance.
+
+This is no longer necessary, but applications MUST ensure that they always attach the event handlers for the controller and nodes after receiving the `driver ready` event.
+
+### Features
+* Re-create controller instance instead of destroying driver after certain actions (#7787)
+
+### Bugfixes
+* Fixed an issue where incorrect device info for the controller was exposed until restarting after migration from different hardware (#7776)
+
+### Config file changes
+* Add fingerprint `0x0313:0x0109` to "FortrezZ LLC SSA1/SSA2" (#7773)
+
+## 15.2.1 (2025-04-29)
+### Bugfixes
+* Revert: Work around a possible controller lockup when retransmitting a command to an unreachable device (#7769)
+
+### Changes under the hood
+* Don't traverse `node_modules` in import lint, add some known good modules (#7770)
+* Bundling improvements (#7771, #7772)
+
+## 15.2.0 (2025-04-28)
+### Features
+* Support Basic Window Covering CC (#7768)
+
+### Config file changes
+* Add Ness Smart Plug ZA-216001 (#7339)
+
+## 15.1.3 (2025-04-26)
+### Bugfixes
+* Work around a possible controller lockup when retransmitting a command to an unreachable device (#7766)
+
+## 15.1.2 (2025-04-26)
+### Bugfixes
+* Work around an issue in downstream projects that causes the error `import_serial.isAnySendDataResponse is not a function` (#7762)
+
+### Changes under the hood
+* Eliminate internal usage of `.../safe` entrypoints, merge/format imports consistently (#7758)
+
+## 15.1.1 (2025-04-25)
+### Bugfixes
+* More resilient recovery from disconnected TCP serial ports (#7748)
+* Do not delete battery temperature unit if value is unknown (#7749)
+* Handle endpoint of inbound Multi Channel V1 commands correctly (#7726)
+* Return payload from `sendAndReceiveData` method of Manufacturer Proprietary CC (#7721)
+* Only apply CC-related compat options to the root endpoint before Multi Channel interview (#7728)
+* Respect remove endpoints compat flag in Multi Channel V1 interview (#7729)
+* Ensure that stale cached values are not attributed to newly included nodes (#7755)
+
+### Config file changes
+* Add fingerprint `0x0311:0x0109` to "FortrezZ LLC SSA1/SSA2" (#7754)
+
+## 15.1.0 (2025-04-23)
+### Features
+* Add more proprietary controller features, fix `setValue` when using controller with proprietary features (#7744)
+* Add options to omit optional data during NVM migration (#7746)
+
+### Bugfixes
+* Retry communication with nodes again when the controller indicates that queuing the command failed (#7743)
+
+### Config file changes
+* Add ZWA-2 (#7730)
+
+## 15.0.6 (2025-04-14)
+### Bugfixes
+* Avoid radio TX queue overflows by waiting for complete transmission, even when no ACK is requested (#7732)
+
+### Changes under the hood
+* Implement framework for using proprietary Serial API commands (#7663)
+
 ## 15.0.5 (2025-04-07)
 ### Bugfixes
 * Fixed an issue where updating the driver options before starting would cause custom host bindings to be discarded, causing config sync errors in `pkg` bundles (#7722)

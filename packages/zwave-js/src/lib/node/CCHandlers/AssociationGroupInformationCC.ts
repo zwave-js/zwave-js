@@ -12,7 +12,7 @@ import {
 	EncapsulationFlags,
 	type LogNode,
 } from "@zwave-js/core";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveNode } from "../Node.js";
 
 export async function handleAGINameGet(
 	ctx: PersistValuesContext & LogNode,

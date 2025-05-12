@@ -1,16 +1,14 @@
 import { MessagePriority, encodeNodeID } from "@zwave-js/core";
-import type {
-	MessageEncodingContext,
-	MessageParsingContext,
-	MessageRaw,
-	SuccessIndicator,
-} from "@zwave-js/serial";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageEncodingContext,
 	MessageOrigin,
+	type MessageParsingContext,
+	type MessageRaw,
 	MessageType,
+	type SuccessIndicator,
 	expectedCallback,
 	expectedResponse,
 	messageTypes,

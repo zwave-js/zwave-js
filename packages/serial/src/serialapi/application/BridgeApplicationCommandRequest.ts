@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CommandClass } from "@zwave-js/cc";
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type FrameType,
 	type MessageOrCCLogEntry,
@@ -28,7 +28,7 @@ import {
 } from "@zwave-js/serial";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { tryParseRSSI } from "../transport/SendDataShared.js";
-import { type MessageWithCC } from "../utils.js";
+import type { MessageWithCC } from "../utils.js";
 import { ApplicationCommandStatusFlags } from "./ApplicationCommandRequest.js";
 
 export type BridgeApplicationCommandRequestOptions =

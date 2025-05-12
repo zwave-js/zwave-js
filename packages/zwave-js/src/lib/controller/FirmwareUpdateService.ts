@@ -7,8 +7,13 @@ import {
 	extractFirmware,
 	guessFirmwareFileFormat,
 } from "@zwave-js/core";
-import { Bytes, type Timer, formatId, getenv } from "@zwave-js/shared";
-import { setTimer } from "@zwave-js/shared";
+import {
+	Bytes,
+	type Timer,
+	formatId,
+	getenv,
+	setTimer,
+} from "@zwave-js/shared";
 import type { Options as KyOptions } from "ky";
 import type PQueue from "p-queue";
 import type {

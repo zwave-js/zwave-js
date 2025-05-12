@@ -1,4 +1,4 @@
-import { type ValueDB } from "../values/ValueDB.js";
+import type { ValueDB } from "../values/ValueDB.js";
 
 /** Host application abstractions that provide support for reading and writing values to a database */
 export interface GetValueDB {

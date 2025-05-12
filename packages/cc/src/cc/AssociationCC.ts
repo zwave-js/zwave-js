@@ -1,23 +1,21 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { type GetDeviceConfig } from "@zwave-js/config";
-import type {
-	EndpointId,
-	GetValueDB,
-	MaybeNotKnown,
-	MessageRecord,
-	SupervisionResult,
-	WithAddress,
-} from "@zwave-js/core/safe";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
+	type EndpointId,
+	type GetValueDB,
 	MAX_NODES,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
+	type SupervisionResult,
+	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";

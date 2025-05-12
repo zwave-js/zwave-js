@@ -961,7 +961,65 @@ When accessing the controller memory, the Z-Wave radio **must** be turned off wi
 
 This method returns `true` when turning the radio on or off succeeded, `false` otherwise.
 
+### NVM backup and restore
+
+```ts
+backupNVMRaw(onProgress?: (bytesRead: number, total: number) => void): Promise<Buffer>
+```
+
+Creates a backup of the NVM and returns the raw data as a Buffer. The optional argument can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size. During this time, the Z-Wave radio will be turned off.
+
+```ts
+restoreNVM(
+	nvmData: Buffer,
+	convertProgress?: (bytesRead: number, total: number) => void,
+	restoreProgress?: (bytesWritten: number, total: number) => void,
+	options?: MigrateNVMOptions,
+): Promise<void>
+```
+
+Restores an NVM backup that was created with `backupNVMRaw`.
+
+?> If the given buffer is in a different NVM format, it is **converted automatically**. If the conversion is not supported, the operation fails before restoring the NVM.
+
+> [!WARNING] A failure during the restore operation may brick your controller. Use at your own risk!
+
+The optional `convertProgress` and `restoreProgress` callbacks can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size. During this time, the Z-Wave radio will be turned off.
+
+To control which data is preserved during the migration/conversion, the optional `options` argument can be used, which has the following shape:
+
+<!-- #import MigrateNVMOptions from "zwave-js" -->
+
+```ts
+interface MigrateNVMOptions {
+	/** Whether application data will be preserved */
+	preserveApplicationData?: boolean;
+	/** Whether SUC update entries will be preserved */
+	preserveSUCUpdateEntries?: boolean;
+	/** Whether LWR, NLWR and the priority route flag will be preserved */
+	preserveRoutes?: boolean;
+	/** Whether the neighbor table will be preserved */
+	preserveNeighbors?: boolean;
+}
+```
+
+By default, everything is preserved. However, omitting all these optional entries should be fine in most cases.
+
+> [!NOTE] When migrating between different hardware platforms with potentially different RF characteristics, omitting routing and neighbor information may even be beneficial to avoid using suboptimal routes.
+
+```ts
+restoreNVMRaw(nvmData: Buffer, onProgress?: (bytesWritten: number, total: number) => void): Promise<void>
+```
+
+Restores an NVM backup that was created with `backupNVMRaw`. The optional 2nd argument can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size. The Z-Wave radio will be turned off during this time.
+
+> [!WARNING] The given buffer is **NOT** checked for compatibility with the current stick. To have Z-Wave JS do that, use the `restoreNVM` method instead.
+
+> [!WARNING] A failure during this process may brick your controller. Use at your own risk!
+
 ### Reading from and writing to the controller memory (external NVM)
+
+In most cases, NVM access will be limited to backup and restore operations. For more advanced use cases, low-level operations are also available, see below.
 
 > [!WARNING] The Z-Wave radio **must** be turned off when accessing the NVM.
 
@@ -1045,46 +1103,6 @@ externalNVMWriteBuffer700(offset: number, buffer: Buffer): Promise<boolean>
 Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to [`externalNVMClose`](#externalNVMClose).
 
 > [!WARNING] This method can write in the full NVM address space and are not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
-
-#### NVM backup and restore
-
-```ts
-backupNVMRaw(onProgress?: (bytesRead: number, total: number) => void): Promise<Buffer>
-```
-
-Creates a backup of the NVM and returns the raw data as a Buffer. The optional argument can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size.
-
-> [!NOTE] `backupNVMRaw` automatically turns the Z-Wave radio on/off during the backup.
-
-```ts
-restoreNVM(
-	nvmData: Buffer,
-	convertProgress?: (bytesRead: number, total: number) => void,
-	restoreProgress?: (bytesWritten: number, total: number) => void,
-): Promise<void>
-```
-
-Restores an NVM backup that was created with `backupNVMRaw`.
-
-?> If the given buffer is in a different NVM format, it is **converted automatically**. If the conversion is not supported, the operation fails.
-
-The optional `convertProgress` and `restoreProgress` callbacks can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size.
-
-> [!NOTE] `restoreNVM` automatically turns the Z-Wave radio on/off during the restore.
-
-> [!WARNING] A failure during this process may brick your controller. Use at your own risk!
-
-```ts
-restoreNVMRaw(nvmData: Buffer, onProgress?: (bytesWritten: number, total: number) => void): Promise<void>
-```
-
-Restores an NVM backup that was created with `backupNVMRaw`. The optional 2nd argument can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size.
-
-> [!NOTE] `restoreNVMRaw` automatically turns the Z-Wave radio on/off during the restore.
-
-> [!WARNING] The given buffer is **NOT** checked for compatibility with the current stick. To have Z-Wave JS do that, use the `restoreNVM` method instead.
-
-> [!WARNING] A failure during this process may brick your controller. Use at your own risk!
 
 ### Updating the firmware of a node (OTA)
 

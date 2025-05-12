@@ -10,21 +10,19 @@ import {
 	normalizeCCNameOrId,
 } from "@zwave-js/cc";
 import { ZWavePlusCCValues } from "@zwave-js/cc/ZWavePlusCC";
-import type {
-	ControlsCC,
-	EndpointId,
-	GetCCs,
-	IsCCSecure,
-	MaybeNotKnown,
-	ModifyCCs,
-	SupportsCC,
-} from "@zwave-js/core";
 import {
 	BasicDeviceClass,
 	CacheBackedMap,
 	type CommandClassInfo,
 	CommandClasses,
+	type ControlsCC,
+	type EndpointId,
+	type GetCCs,
 	GraphNode,
+	type IsCCSecure,
+	type MaybeNotKnown,
+	type ModifyCCs,
+	type SupportsCC,
 	ZWaveError,
 	ZWaveErrorCodes,
 	actuatorCCs,

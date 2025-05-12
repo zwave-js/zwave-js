@@ -13,12 +13,16 @@ import {
 	messageRecordToLines,
 	tagify,
 } from "@zwave-js/core";
-import type { Message, ResponseRole } from "@zwave-js/serial";
-import { FunctionType, MessageType } from "@zwave-js/serial";
+import {
+	FunctionType,
+	type Message,
+	MessageType,
+	type ResponseRole,
+} from "@zwave-js/serial";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName } from "@zwave-js/shared";
 import type { Driver } from "../driver/Driver.js";
-import { type TransactionQueue } from "../driver/Queue.js";
+import type { TransactionQueue } from "../driver/Queue.js";
 import type { Transaction } from "../driver/Transaction.js";
 import { NodeStatus } from "../node/_Types.js";
 

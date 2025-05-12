@@ -1,4 +1,4 @@
-import { type AST } from "jsonc-eslint-parser";
+import type { AST } from "jsonc-eslint-parser";
 import { CONFIG_OPTION, CONFIG_PARAM, ROOT } from "../jsonSelectors.js";
 import {
 	type JSONCRule,

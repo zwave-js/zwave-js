@@ -1,17 +1,17 @@
-import {
-	type IndicatorCCDescriptionGet,
-	type IndicatorCCGet,
-	type IndicatorCCSet,
-	type IndicatorCCSupportedGet,
-	type PersistValuesContext,
+import type {
+	IndicatorCCDescriptionGet,
+	IndicatorCCGet,
+	IndicatorCCSet,
+	IndicatorCCSupportedGet,
+	PersistValuesContext,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
 	type LogNode,
 } from "@zwave-js/core";
-import { type ZWaveController } from "../../controller/Controller.js";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveController } from "../../controller/Controller.js";
+import type { ZWaveNode } from "../Node.js";
 
 export function handleIndicatorSupportedGet(
 	ctx: PersistValuesContext & LogNode,

@@ -1,12 +1,12 @@
-import {
-	type DeviceResetLocallyCCNotification,
-	type PersistValuesContext,
+import type {
+	DeviceResetLocallyCCNotification,
+	PersistValuesContext,
 } from "@zwave-js/cc";
-import { type LogNode } from "@zwave-js/core";
+import type { LogNode } from "@zwave-js/core";
 import { getErrorMessage } from "@zwave-js/shared";
-import { type ZWaveController } from "../../controller/Controller.js";
+import type { ZWaveController } from "../../controller/Controller.js";
 import { RemoveNodeReason } from "../../controller/Inclusion.js";
-import { type ZWaveNode } from "../Node.js";
+import type { ZWaveNode } from "../Node.js";
 
 export function handleDeviceResetLocallyNotification(
 	ctx: PersistValuesContext & LogNode,

@@ -1,7 +1,8 @@
-import { type SetValueResult } from "@zwave-js/cc";
-import { type TranslatedValueID, type ValueID } from "@zwave-js/core";
-import { type Driver } from "../driver/Driver.js";
-import { type ZWaveController } from "./Controller.js";
+import type { SetValueResult } from "@zwave-js/cc";
+import type { TranslatedValueID, ValueID } from "@zwave-js/core";
+import type { Message } from "@zwave-js/serial";
+import type { Driver } from "../driver/Driver.js";
+import type { ZWaveController } from "./Controller.js";
 import { ControllerProprietary_NabuCasa } from "./proprietary/NabuCasa.js";
 
 export interface ControllerProprietary {
@@ -32,4 +33,5 @@ export interface ControllerProprietaryCommon {
 	// getValueMetadata(valueId: ValueID): ValueMetadata;
 	pollValue(valueId: ValueID): Promise<unknown>;
 	setValue(valueId: ValueID, value: unknown): Promise<SetValueResult>;
+	handleUnsolicited(msg: Message): Promise<boolean>;
 }

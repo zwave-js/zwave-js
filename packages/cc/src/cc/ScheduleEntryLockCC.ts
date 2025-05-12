@@ -1,7 +1,9 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type EndpointId,
 	type GetValueDB,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
@@ -15,7 +17,6 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { type EndpointId, type MaybeNotKnown } from "@zwave-js/core/safe";
 import {
 	type AllOrNone,
 	Bytes,

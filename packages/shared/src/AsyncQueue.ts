@@ -56,7 +56,20 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 	/** Ends the queue and discards all pending items */
 	public abort(): void {
 		this.ended = true;
-		this.backlog = [];
+
+		while (this.backlog.length > 0) {
+			const removed = this.backlog.pop();
+			if (
+				typeof removed === "object"
+				&& removed !== null
+				&& Symbol.dispose in removed
+				&& typeof removed[Symbol.dispose] === "function"
+			) {
+				console.log("dispose");
+				(removed as any)[Symbol.dispose]();
+			}
+		}
+
 		for (const p of this.listeners) {
 			p.resolve(undefined);
 		}

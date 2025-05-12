@@ -1,4 +1,4 @@
-import { type ExpectStatic } from "vitest";
+import type { ExpectStatic } from "vitest";
 import type { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 export interface AssertZWaveErrorOptions {

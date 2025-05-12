@@ -1,13 +1,13 @@
 import { noop } from "@zwave-js/shared";
-import { type SerialLogger } from "../log/Logger.js";
+import type { SerialLogger } from "../log/Logger.js";
 import {
 	BootloaderParser,
 	BootloaderScreenParser,
 } from "../parsers/BootloaderParsers.js";
 import { CLIParser } from "../parsers/CLIParser.js";
 import { SerialAPIParser } from "../parsers/SerialAPIParser.js";
-import { type ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
-import { type ZWaveSerialMode } from "../serialport/definitions.js";
+import type { ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
+import type { ZWaveSerialMode } from "../serialport/definitions.js";
 import { mergeReadableStreams } from "./Merge.js";
 import { SerialModeSwitch } from "./SerialModeSwitch.js";
 

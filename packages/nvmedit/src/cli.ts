@@ -1,10 +1,10 @@
+import { fs } from "@zwave-js/core/bindings/fs/node";
 import { readJSON, writeTextFile } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
-import "reflect-metadata";
-import { fs } from "@zwave-js/core/bindings/fs/node";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+	type MigrateNVMOptions,
 	json500To700,
 	json700To500,
 	jsonToNVM,
@@ -224,11 +224,57 @@ Create a backup of the target stick, use the nvm2json command to convert it to J
 						type: "string",
 						required: true,
 					},
+					noAppData: {
+						describe:
+							"Whether application data should be stripped during the migration",
+						type: "boolean",
+						default: false,
+					},
+					noRoutes: {
+						describe:
+							"Whether known routes should be stripped during the migration",
+						type: "boolean",
+						default: false,
+					},
+					noNeighbors: {
+						describe:
+							"Whether information about neighbors should be stripped during the migration",
+						type: "boolean",
+						default: false,
+					},
+					noSUCEntries: {
+						describe:
+							"Whether SUC update entries should be stripped during the migration",
+						type: "boolean",
+						default: false,
+					},
+					noOptional: {
+						describe:
+							"Strip all optional information from the NVM. Overrides all other noXYZ flags.",
+						type: "boolean",
+						default: false,
+					},
 				}),
 		async (argv) => {
+			const {
+				noAppData,
+				noNeighbors,
+				noRoutes,
+				noSUCEntries,
+				noOptional,
+			} = argv;
+			const options: MigrateNVMOptions = {
+				preserveApplicationData: !noOptional && !noAppData,
+				preserveRoutes: !noOptional && !noRoutes,
+				preserveNeighbors: !noOptional && !noNeighbors,
+				preserveSUCUpdateEntries: !noOptional && !noSUCEntries,
+			};
+
 			const source = await fs.readFile(argv.source);
 			const target = await fs.readFile(argv.target);
-			const output = await migrateNVM(source, target);
+
+			const output = await migrateNVM(source, target, options);
+
 			await fs.writeFile(argv.out, output);
 			console.error(`Converted NVM written to ${argv.out}`);
 

@@ -1,14 +1,14 @@
 import path from "node:path";
 import { Project, type SourceFile, type Type, ts as tsm } from "ts-morph";
-import { type PluginConfig, type ProgramTransformerExtras } from "ts-patch";
-import {
-	type CompilerHost,
-	type CompilerOptions,
-	type Program,
-	type SourceFile as TSSourceFile,
+import type { PluginConfig, ProgramTransformerExtras } from "ts-patch";
+import type {
+	CompilerHost,
+	CompilerOptions,
+	Program,
+	SourceFile as TSSourceFile,
 } from "typescript";
 import type ts from "typescript";
-import { type ValidateArgsOptions } from "..";
+import type { ValidateArgsOptions } from "..";
 // import "ts-expose-internals";
 
 /* ****************************************************************************************************************** */
@@ -85,6 +85,7 @@ export default function transformProgram(
 	// Create a "shadow" program for ts-morph. This needs the @@dev condition so it can find types
 	// without @zwave-js/core and /shared being built
 	const project = new Project({
+		// @ts-expect-error Some mismatch between ts-morph and ts types
 		compilerOptions: {
 			...compilerOptions,
 			customConditions: [

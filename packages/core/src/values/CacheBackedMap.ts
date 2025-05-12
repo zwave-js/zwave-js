@@ -1,4 +1,4 @@
-import { type Database } from "@zwave-js/shared/bindings";
+import type { Database } from "@zwave-js/shared/bindings";
 
 export interface CacheBackedMapKeys<K extends string | number> {
 	/** The common prefix all keys start with */

@@ -4,7 +4,7 @@ import {
 	Bytes,
 	createWrappingCounter,
 	getEnumMemberName,
-} from "@zwave-js/shared/safe";
+} from "@zwave-js/shared";
 import {
 	computeNoncePRK,
 	deriveMEI,
