@@ -1,5 +1,5 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
-import { ObjectKeyMap } from "@zwave-js/shared/safe";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { ObjectKeyMap } from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
 import { evaluate } from "../Logic.js";
 import { throwInvalidConfig } from "../utils_safe.js";

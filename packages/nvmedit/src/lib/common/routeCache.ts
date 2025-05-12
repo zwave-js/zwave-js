@@ -3,8 +3,8 @@ import {
 	MAX_REPEATERS,
 	RouteProtocolDataRate,
 	protocolDataRateMask,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 
 const ROUTE_SIZE = MAX_REPEATERS + 1;
 export const ROUTECACHE_SIZE = 2 * ROUTE_SIZE;

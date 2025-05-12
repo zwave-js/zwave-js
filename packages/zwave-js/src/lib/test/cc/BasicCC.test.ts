@@ -10,7 +10,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 import * as nodeUtils from "../../node/utils.js";
 import { type CreateTestNodeOptions, createTestNode } from "../mocks.js";

@@ -3,9 +3,9 @@ import { FunctionType } from "@zwave-js/serial";
 import {
 	GetControllerIdRequest,
 	type GetControllerIdResponse,
+	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
-import { SoftResetRequest } from "@zwave-js/serial/serialapi";
-import { type MockControllerBehavior } from "@zwave-js/testing";
+import type { MockControllerBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { vi } from "vitest";
 import { integrationTest } from "../integrationTestSuite.js";

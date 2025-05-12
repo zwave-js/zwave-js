@@ -1,5 +1,4 @@
 /** A number between -128 and +124 dBm or one of the special values in {@link RssiError} indicating an error */
-
 export type RSSI = number | RssiError;
 
 export enum RssiError {
@@ -11,8 +10,8 @@ export enum RssiError {
 export function isRssiError(rssi: RSSI): rssi is RssiError {
 	return rssi >= RssiError.NoSignalDetected;
 }
-/** Averages RSSI measurements using an exponential moving average with the given weight for the accumulator */
 
+/** Averages RSSI measurements using an exponential moving average with the given weight for the accumulator */
 export function averageRSSI(
 	acc: number | undefined,
 	rssi: RSSI,
@@ -37,10 +36,10 @@ export function averageRSSI(
 	if (acc == undefined) return rssi;
 	return Math.round(acc * weight + rssi * (1 - weight));
 }
+
 /**
  * Converts an RSSI value to a human readable format, i.e. the measurement including the unit or the corresponding error message.
  */
-
 export function rssiToString(rssi: RSSI): string {
 	switch (rssi) {
 		case RssiError.NotAvailable:

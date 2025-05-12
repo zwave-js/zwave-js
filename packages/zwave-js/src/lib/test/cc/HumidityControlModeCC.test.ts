@@ -11,7 +11,7 @@ import {
 import { HumidityControlModeCCValues } from "@zwave-js/cc/HumidityControlModeCC";
 import { CommandClasses, enumValuesToMetadataStates } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 const host = createTestingHost();

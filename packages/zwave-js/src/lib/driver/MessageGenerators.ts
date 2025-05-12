@@ -44,11 +44,12 @@ import {
 } from "@zwave-js/core";
 import type { Message } from "@zwave-js/serial";
 import {
+	type ContainsCC,
 	type SendDataMessage,
+	containsCC,
 	isSendData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
-import { type ContainsCC, containsCC } from "@zwave-js/serial/serialapi";
 import { getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {

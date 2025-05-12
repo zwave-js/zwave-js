@@ -1,5 +1,5 @@
 import path from "node:path";
-import { type PluginConfig, type TransformerExtras } from "ts-patch";
+import type { PluginConfig, TransformerExtras } from "ts-patch";
 import ts from "typescript";
 
 /**

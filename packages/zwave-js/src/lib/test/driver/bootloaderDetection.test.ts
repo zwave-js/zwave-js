@@ -1,5 +1,5 @@
 import { Bytes } from "@zwave-js/shared";
-import { type MockControllerBehavior } from "@zwave-js/testing";
+import type { MockControllerBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { DriverMode } from "../../driver/DriverMode.js";
 import { integrationTest } from "../integrationTestSuite.js";

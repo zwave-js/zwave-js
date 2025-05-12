@@ -4,14 +4,12 @@ import {
 	NUM_NODEMASK_BYTES,
 	NodeType,
 	type SerialApiInitData,
+	type UnknownZWaveChipType,
 	type ZWaveApiVersion,
 	encodeBitMask,
-	parseNodeBitMask,
-} from "@zwave-js/core";
-import {
-	type UnknownZWaveChipType,
 	getChipTypeAndVersion,
 	getZWaveChipType,
+	parseNodeBitMask,
 } from "@zwave-js/core";
 import {
 	FunctionType,
@@ -25,7 +23,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 
 @messageTypes(MessageType.Request, FunctionType.GetSerialApiInitData)
 @expectedResponse(FunctionType.GetSerialApiInitData)

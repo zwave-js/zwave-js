@@ -4,7 +4,7 @@ import {
 	BasicCommand,
 	utils as ccUtils,
 } from "@zwave-js/cc";
-import { CommandClasses, SecurityClass } from "@zwave-js/core/safe";
+import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
 import { test } from "vitest";
 import { type CreateTestNodeOptions, createTestNode } from "../test/mocks.js";

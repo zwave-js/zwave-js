@@ -1,4 +1,4 @@
-import { type InterviewStage, type ValueID } from "../index_browser.js";
+import type { InterviewStage, ValueID } from "../index_browser.js";
 import type { DataDirection, LogContext } from "./shared.js";
 
 export const CONTROLLER_LABEL = "CNTRLR";

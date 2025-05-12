@@ -11,7 +11,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { type Bytes } from "@zwave-js/shared";
+import type { Bytes } from "@zwave-js/shared";
 
 export interface IsFailedNodeRequestOptions {
 	// This must not be called nodeId or rejectAllTransactions may reject the request

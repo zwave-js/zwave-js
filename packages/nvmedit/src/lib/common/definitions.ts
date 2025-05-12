@@ -1,15 +1,15 @@
-import { type CommandClasses } from "@zwave-js/core";
-import { type Expand } from "@zwave-js/shared";
-import {
-	type ApplicationCCsFile,
-	type ApplicationRFConfigFile,
-	type ApplicationTypeFile,
-	type ControllerInfoFile,
-	type LRNodeInfo,
-	type NodeInfo,
+import type { CommandClasses } from "@zwave-js/core";
+import type { Expand } from "@zwave-js/shared";
+import type {
+	ApplicationCCsFile,
+	ApplicationRFConfigFile,
+	ApplicationTypeFile,
+	ControllerInfoFile,
+	LRNodeInfo,
+	NodeInfo,
 } from "../nvm3/files/index.js";
-import { type Route } from "./routeCache.js";
-import { type SUCUpdateEntry } from "./sucUpdateEntry.js";
+import type { Route } from "./routeCache.js";
+import type { SUCUpdateEntry } from "./sucUpdateEntry.js";
 
 export enum NVMAccess {
 	None,

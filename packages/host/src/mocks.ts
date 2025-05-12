@@ -1,4 +1,4 @@
-import { type GetDeviceConfig } from "@zwave-js/config";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	type ControlsCC,
 	type EndpointId,

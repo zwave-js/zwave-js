@@ -1,6 +1,6 @@
 import { CommandClass, EntryControlCommand } from "@zwave-js/cc";
 import { BinarySwitchCCReport } from "@zwave-js/cc/BinarySwitchCC";
-import { type EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
+import type { EntryControlCCNotification } from "@zwave-js/cc/EntryControlCC";
 import { type CommandClassInfo, CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import sinon from "sinon";

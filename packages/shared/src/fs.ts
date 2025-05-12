@@ -1,13 +1,13 @@
-import { type ReadableWritablePair } from "node:stream/web";
+import type { ReadableWritablePair } from "node:stream/web";
 import path from "pathe";
 import { Bytes } from "./Bytes.js";
-import {
-	type CopyFile,
-	type FileHandle,
-	type ManageDirectory,
-	type ReadFile,
-	type ReadFileSystemInfo,
-	type WriteFile,
+import type {
+	CopyFile,
+	FileHandle,
+	ManageDirectory,
+	ReadFile,
+	ReadFileSystemInfo,
+	WriteFile,
 } from "./bindings.js";
 import { getErrorMessage } from "./errors.js";
 

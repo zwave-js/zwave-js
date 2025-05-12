@@ -9,7 +9,7 @@
 // 0 -->               -->     Parsers     --> read
 // 1 └─────────────────┘ └─────────────────┘ └──
 
-import { type LogContainer } from "@zwave-js/core";
+import type { LogContainer } from "@zwave-js/core";
 import { noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
@@ -18,7 +18,7 @@ import type {
 } from "node:stream/web";
 import { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
-import { type ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
+import type { ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
 import { ZWaveSerialParser } from "../plumbing/ZWaveSerialParser.js";
 import { ZWaveSerialMode } from "./definitions.js";
 
@@ -125,6 +125,7 @@ export class ZWaveSerialStream implements
 	public async close(): Promise<void> {
 		this._isOpen = false;
 		// Close the underlying stream
+		this._writer?.releaseLock();
 		this.#abort.abort();
 
 		return Promise.resolve();
@@ -137,6 +138,8 @@ export class ZWaveSerialStream implements
 	public get isOpen(): boolean {
 		return this._isOpen;
 	}
+
+	private _writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
 
 	public async writeAsync(data: Uint8Array): Promise<void> {
 		if (!this.isOpen) {
@@ -160,11 +163,10 @@ export class ZWaveSerialStream implements
 			this.logger.data("outbound", data);
 		}
 
-		const writer = this.writable.getWriter();
-		try {
-			await writer.write(data);
-		} finally {
-			writer.releaseLock();
-		}
+		// Keep a writer instance to avoid locking and unlocking the
+		// writable stream for every write, as this can cause errors
+		// when writing in quick succession.
+		this._writer ??= this.writable.getWriter();
+		await this._writer.write(data);
 	}
 }

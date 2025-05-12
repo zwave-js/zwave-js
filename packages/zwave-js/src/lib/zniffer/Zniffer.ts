@@ -5,6 +5,7 @@ import {
 	Security2CCNonceGet,
 	Security2CCNonceReport,
 	SecurityCCNonceReport,
+	registerCCs,
 } from "@zwave-js/cc";
 import { DeviceConfig } from "@zwave-js/config";
 import {
@@ -32,9 +33,9 @@ import {
 	getChipTypeAndVersion,
 	isLongRangeNodeId,
 	isZWaveError,
+	sdkVersionGte,
 	securityClassIsS2,
 } from "@zwave-js/core";
-import { sdkVersionGte } from "@zwave-js/core";
 import {
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
@@ -84,7 +85,7 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
-import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
+import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ZnifferLogger } from "../log/Zniffer.js";
 import {
 	type CorruptedFrame,
@@ -95,6 +96,9 @@ import {
 	parseMPDU,
 	znifferDataMessageToCorruptedFrame,
 } from "./MPDU.js";
+
+// Force-load all Command Classes:
+registerCCs();
 
 const logo: string = `
 ███████╗ ███╗   ██╗ ██╗ ██████╗ ██████╗ ███████╗ ██████╗          ██╗ ███████╗
@@ -389,11 +393,11 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		// on Node.js internals
 		this.bindings = {
 			fs: this._options.host?.fs
-				?? (await import("@zwave-js/core/bindings/fs/node")).fs,
+				?? (await import("#default_bindings/fs")).fs,
 			serial: this._options.host?.serial
-				?? (await import("@zwave-js/serial/bindings/node")).serial,
+				?? (await import("#default_bindings/serial")).serial,
 			log: this._options.host?.log
-				?? (await import("@zwave-js/core/bindings/log/node")).log,
+				?? (await import("#default_bindings/log")).log,
 		};
 
 		// Initialize logging

@@ -8,7 +8,7 @@ import {
 	type PageStatus,
 	type PageWriteSize,
 } from "./consts.js";
-import { type NVM3Object } from "./object.js";
+import type { NVM3Object } from "./object.js";
 import { computeBergerCode } from "./utils.js";
 
 export interface NVM3PageHeader {

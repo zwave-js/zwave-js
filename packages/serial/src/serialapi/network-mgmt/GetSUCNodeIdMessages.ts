@@ -11,7 +11,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { type Bytes } from "@zwave-js/shared";
+import type { Bytes } from "@zwave-js/shared";
 
 @messageTypes(MessageType.Request, FunctionType.GetSUCNodeId)
 @expectedResponse(FunctionType.GetSUCNodeId)

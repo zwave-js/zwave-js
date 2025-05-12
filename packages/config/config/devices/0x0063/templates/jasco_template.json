@@ -56,6 +56,11 @@
 		"label": "Alternate Exclusion",
 		"description": "Press and release OFF, then ON"
 	},
+	"alternate_exclusion_menu": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Alternate Exclusion",
+		"description": "Press MENU button once"
+	},
 	"smooth_level_changes": {
 		"$import": "~/templates/master_template.json#base_enable_disable",
 		"label": "Smooth Level Changes"

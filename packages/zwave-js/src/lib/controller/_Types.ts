@@ -1,6 +1,6 @@
-import { type DeviceID } from "@zwave-js/config";
-import { type RFRegion } from "@zwave-js/core";
-import { type Expand } from "@zwave-js/shared/safe";
+import type { DeviceID } from "@zwave-js/config";
+import type { RFRegion } from "@zwave-js/core";
+import type { Expand } from "@zwave-js/shared";
 
 export type RebuildRoutesStatus = "pending" | "done" | "failed" | "skipped";
 

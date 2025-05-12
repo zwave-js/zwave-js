@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CommandClass } from "@zwave-js/cc";
+import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	MAX_NODES,
 	type MessageOrCCLogEntry,

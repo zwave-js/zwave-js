@@ -4,7 +4,7 @@ import {
 } from "@zwave-js/core/bindings/log/node";
 import { SpyTransport, assertMessage } from "@zwave-js/core/test";
 import { SerialLogger } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import colors from "ansi-colors";
 import { pseudoRandomBytes } from "node:crypto";
 import { beforeEach, test as baseTest } from "vitest";

@@ -1,17 +1,17 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core/safe";
-import { num2hex } from "@zwave-js/shared/safe";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { num2hex } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
 import { SUC_MAX_UPDATES } from "../../consts.js";
-import { type NVM3 } from "../NVM3.js";
-import {
-	type ControllerNVMProperty,
-	type LRNodeNVMProperty,
-	type NVMAdapter,
-	type NVMProperty,
-	type NVMPropertyToDataType,
-	type NodeNVMProperty,
+import type { NVM3 } from "../NVM3.js";
+import type {
+	ControllerNVMProperty,
+	LRNodeNVMProperty,
+	NVMAdapter,
+	NVMProperty,
+	NVMPropertyToDataType,
+	NodeNVMProperty,
 } from "../common/definitions.js";
-import { type RouteCache } from "../common/routeCache.js";
+import type { RouteCache } from "../common/routeCache.js";
 import {
 	type ApplicationCCsFile,
 	ApplicationCCsFileID,

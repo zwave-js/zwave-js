@@ -1,6 +1,6 @@
 // import "@zwave-js/cc";
 import { Message } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
 test("BridgeApplicationCommandRequest can be parsed without RSSI", async (t) => {

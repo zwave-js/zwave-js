@@ -1,4 +1,4 @@
-import { type MessageHeaders } from "../message/MessageHeaders.js";
+import type { MessageHeaders } from "../message/MessageHeaders.js";
 
 export type ZWaveSerialChunk =
 	| MessageHeaders.ACK

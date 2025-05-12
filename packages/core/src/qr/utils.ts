@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared/safe";
+import { Bytes } from "@zwave-js/shared";
 import { Protocols } from "../definitions/Protocol.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { parseBitMask } from "../values/Primitive.js";

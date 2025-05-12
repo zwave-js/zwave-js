@@ -1,4 +1,4 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	type ApplicationNodeInformation,
 	CommandClasses,
@@ -20,8 +20,8 @@ import {
 	parseApplicationNodeInformation,
 	parseBitMask,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
 import { CCAPI } from "../lib/API.js";
@@ -417,6 +417,7 @@ export class MultiChannelCC extends CommandClass {
 	): MultiChannelCCV1CommandEncapsulation {
 		const ret = new MultiChannelCCV1CommandEncapsulation({
 			nodeId: cc.nodeId,
+			endpointIndex: cc.endpointIndex,
 			encapsulated: cc,
 		});
 
@@ -556,9 +557,7 @@ identical capabilities:      ${multiResponse.identicalCapabilities}`;
 				endpoint: this.endpointIndex,
 				message:
 					`The following endpoints are ignored through the config file: ${
-						removeEndpoints.join(
-							", ",
-						)
+						removeEndpoints.join(", ")
 					}`,
 				direction: "none",
 			});
@@ -706,6 +705,17 @@ supported CCs:`;
 	private async interviewV1(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+		const removeEndpoints = ctx.getDeviceConfig?.(node.id)?.compat
+			?.removeEndpoints;
+		if (removeEndpoints === "*") {
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message:
+					`Skipping ${this.ccName} interview b/c all endpoints are ignored by the device config file...`,
+				direction: "none",
+			});
+			return;
+		}
 		const api = CCAPI.create(
 			CommandClasses["Multi Channel"],
 			ctx,
@@ -778,17 +788,38 @@ supported CCs:`;
 			false,
 		);
 
-		for (let endpoint = 1; endpoint <= numEndpoints; endpoint++) {
-			// Check which CCs exist on this endpoint
-			const endpointCCs = [...endpointCounts.entries()]
-				.filter(([, ccEndpoints]) => ccEndpoints >= endpoint)
-				.map(([ccId]) => ccId);
-			// And store it per endpoint
-			valueDB.setValue(
-				MultiChannelCCValues.endpointCCs.endpoint(endpoint),
-				endpointCCs,
-			);
+		if (removeEndpoints?.length) {
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message:
+					`The following endpoints are ignored through the config file: ${
+						removeEndpoints.join(", ")
+					}`,
+				direction: "none",
+			});
 		}
+
+		const allEndpoints: number[] = [];
+		for (let endpoint = 1; endpoint <= numEndpoints; endpoint++) {
+			// Skip this endpoint if flagged for removal
+			if (!removeEndpoints?.includes(endpoint)) {
+				// Check which CCs exist on this endpoint
+				const endpointCCs = [...endpointCounts.entries()]
+					.filter(([, ccEndpoints]) => ccEndpoints >= endpoint)
+					.map(([ccId]) => ccId);
+				// And store it per endpoint
+				valueDB.setValue(
+					MultiChannelCCValues.endpointCCs.endpoint(endpoint),
+					endpointCCs,
+				);
+				allEndpoints.push(endpoint);
+			}
+		}
+		this.setValue(
+			ctx,
+			MultiChannelCCValues.endpointIndizes,
+			allEndpoints,
+		);
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -1517,6 +1548,14 @@ export class MultiChannelCCV1Report extends MultiChannelCC {
 	public readonly requestedCC: CommandClasses;
 	public readonly endpointCount: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.requestedCC,
+			this.endpointCount,
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -1551,18 +1590,17 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): MultiChannelCCV1Get {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		// V1 won't be extended in the future, so do an exact check
+		validatePayload(raw.payload.length === 1);
+		const requestedCC: CommandClasses = raw.payload[0];
 
-		// return new MultiChannelCCV1Get({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			requestedCC,
+		});
 	}
 
 	public requestedCC: CommandClasses;
@@ -1614,8 +1652,22 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 	) {
 		super(options);
 		this.encapsulated = options.encapsulated;
-		// No need to distinguish between source and destination in V1
-		this.endpointIndex = this.encapsulated.endpointIndex;
+		this.encapsulated.encapsulatingCC = this as any;
+		// Propagate the endpoint index all the way down
+		let cur: CommandClass = this;
+		while (cur) {
+			if (isMultiEncapsulatingCommandClass(cur)) {
+				for (const cc of cur.encapsulated) {
+					cc.endpointIndex = this.endpointIndex;
+				}
+				break;
+			} else if (isEncapsulatingCommandClass(cur)) {
+				cur.encapsulated.endpointIndex = this.endpointIndex;
+				cur = cur.encapsulated;
+			} else {
+				break;
+			}
+		}
 	}
 
 	public static async from(

@@ -7,7 +7,7 @@ import {
 	type MessageOrCCLogEntry,
 	type WithAddress,
 	validatePayload,
-} from "@zwave-js/core/safe";
+} from "@zwave-js/core";
 import { CCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -18,8 +18,8 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { Bytes } from "@zwave-js/shared/safe";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import { Bytes } from "@zwave-js/shared";
 import { CRC16Command } from "../lib/_Types.js";
 
 const headerBuffer = Bytes.from([

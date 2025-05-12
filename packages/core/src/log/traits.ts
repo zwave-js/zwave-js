@@ -1,8 +1,4 @@
-import {
-	type LogConfig,
-	type LogContext,
-	type ZWaveLogInfo,
-} from "./shared.js";
+import type { LogConfig, LogContext, ZWaveLogInfo } from "./shared.js";
 
 export interface LogVisibility {
 	isLoglevelVisible(loglevel: string): boolean;

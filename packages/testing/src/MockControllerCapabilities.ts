@@ -1,5 +1,5 @@
-import { type ZWaveApiVersion, ZWaveLibraryTypes } from "@zwave-js/core/safe";
-import { FunctionType } from "@zwave-js/serial/safe";
+import { type ZWaveApiVersion, ZWaveLibraryTypes } from "@zwave-js/core";
+import { FunctionType } from "@zwave-js/serial";
 
 export interface MockControllerCapabilities {
 	firmwareVersion: string;

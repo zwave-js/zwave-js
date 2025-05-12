@@ -1,43 +1,38 @@
-import { type CCEncodingContext, type CCParsingContext } from "@zwave-js/cc";
-import { type GetDeviceConfig } from "@zwave-js/config";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
+	CommandClasses,
+	type ControlsCC,
+	type EndpointId,
+	type GetEndpoint,
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
 	type LogNode,
+	type MaybeNotKnown,
+	type MessageOrCCLogEntry,
+	MessagePriority,
+	type MessageRecord,
+	type NodeId,
+	type Scale,
+	type SinglecastCC,
+	type SupervisionResult,
+	type SupportsCC,
+	type ValueID,
+	ValueMetadata,
 	type WithAddress,
 	encodeBitMask,
+	encodeFloatWithScale,
 	getSensor,
 	getSensorName,
 	getSensorScale,
 	getUnknownScale,
-	timespan,
-} from "@zwave-js/core";
-import type {
-	ControlsCC,
-	EndpointId,
-	GetEndpoint,
-	MessageOrCCLogEntry,
-	MessageRecord,
-	NodeId,
-	Scale,
-	SinglecastCC,
-	SupervisionResult,
-	SupportsCC,
-	ValueID,
-} from "@zwave-js/core/safe";
-import {
-	CommandClasses,
-	type MaybeNotKnown,
-	MessagePriority,
-	ValueMetadata,
-	encodeFloatWithScale,
 	parseBitMask,
 	parseFloatWithScale,
+	timespan,
 	validatePayload,
-} from "@zwave-js/core/safe";
-import { Bytes } from "@zwave-js/shared/safe";
-import { type AllOrNone, num2hex } from "@zwave-js/shared/safe";
+} from "@zwave-js/core";
+import { type AllOrNone, Bytes, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -70,7 +65,7 @@ import {
 	MultilevelSensorCommand,
 	type MultilevelSensorValue,
 } from "../lib/_Types.js";
-import { type GetUserPreferences } from "../lib/traits.js";
+import type { GetUserPreferences } from "../lib/traits.js";
 
 export const MultilevelSensorCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Sensor"],

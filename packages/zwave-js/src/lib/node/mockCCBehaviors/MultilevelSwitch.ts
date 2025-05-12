@@ -13,9 +13,9 @@ import {
 	type MaybeUnknown,
 	UNKNOWN_STATE,
 } from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	type MultilevelSwitchCCCapabilities,
+import type {
+	MockNodeBehavior,
+	MultilevelSwitchCCCapabilities,
 } from "@zwave-js/testing";
 
 const defaultCapabilities: MultilevelSwitchCCCapabilities = {
