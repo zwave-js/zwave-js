@@ -7,7 +7,7 @@
 import { ControlsCC } from '@zwave-js/core';
 import { EndpointId } from '@zwave-js/core';
 import { GetAllNodes } from '@zwave-js/core';
-import { GetDeviceConfig } from '@zwave-js/config';
+import type { GetDeviceConfig } from '@zwave-js/config';
 import { GetEndpoint } from '@zwave-js/core';
 import { GetNode } from '@zwave-js/core';
 import { GetSupportedCCVersion } from '@zwave-js/core';
@@ -49,11 +49,6 @@ export interface TestingHost extends HostIDs, GetValueDB, GetSupportedCCVersion,
     // (undocumented)
     setNode(nodeId: number, node: BaseTestNode): void;
 }
-
-// Warnings were encountered during analysis:
-//
-// /home/runner/work/zwave-js/zwave-js/packages/core/src/bindings/log/node.ts:8:47 - (TS2307) Cannot find module 'winston/lib/winston/transports' or its corresponding type declarations.
-// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 

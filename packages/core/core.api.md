@@ -4,16 +4,15 @@
 
 ```ts
 
-import { Bytes } from '@zwave-js/shared/safe';
-import { Database } from '@zwave-js/shared/bindings';
-import { ExpectStatic } from 'vitest';
-import type { JSONObject } from '@zwave-js/shared';
-import { JSONObject as JSONObject_2 } from '@zwave-js/shared/safe';
+import { Bytes } from '@zwave-js/shared';
+import type { Database } from '@zwave-js/shared/bindings';
+import type { ExpectStatic } from 'vitest';
+import { JSONObject } from '@zwave-js/shared';
 import { KeyPair } from '@zwave-js/shared/bindings';
 import type { TransformableInfo } from 'logform';
 import type Transport from 'winston-transport';
 import type { TypedClassDecorator } from '@zwave-js/shared';
-import { TypedEventTarget } from '@zwave-js/shared/safe';
+import { TypedEventTarget } from '@zwave-js/shared';
 
 // Warning: (ae-missing-release-tag) "actuatorCCs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3406,7 +3405,7 @@ export function serializeCacheValue(value: unknown): SerializedValue;
 // Warning: (ae-missing-release-tag) "SerializedValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type SerializedValue = number | string | boolean | JSONObject_2 | undefined;
+export type SerializedValue = number | string | boolean | JSONObject | undefined;
 
 // Warning: (ae-missing-release-tag) "SetNonceOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3667,6 +3666,11 @@ export const timespan: Readonly<{
     hours: (num: number) => number;
     days: (num: number) => number;
 }>;
+
+// Warning: (ae-missing-release-tag) "timestampFormat" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const timestampFormat = "YYYY-MM-DD HH:mm:ss.SSS";
 
 // Warning: (ae-missing-release-tag) "timestampFormatShort" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4741,7 +4745,6 @@ export interface ZWaveLogInfo<TContext extends LogContext = LogContext> extends 
 // src/qr/definitions.ts:63:3 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
 // src/security/Manager2.ts:64:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/security/Manager2.ts:64:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 

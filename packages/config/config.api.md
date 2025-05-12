@@ -4,18 +4,17 @@
 
 ```ts
 
-import { CommandClasses } from '@zwave-js/core/safe';
-import { CommandClassInfo } from '@zwave-js/core/safe';
-import { FileSystem } from '@zwave-js/shared/bindings';
+import { CommandClasses } from '@zwave-js/core';
+import { CommandClassInfo } from '@zwave-js/core';
+import type { FileSystem } from '@zwave-js/shared/bindings';
 import { JSONObject } from '@zwave-js/shared';
-import { JSONObject as JSONObject_2 } from '@zwave-js/shared/safe';
 import { LogContainer } from '@zwave-js/core';
-import type { LogContext } from '@zwave-js/core/safe';
-import { ReadFile } from '@zwave-js/shared/bindings';
-import { ReadFileSystemInfo } from '@zwave-js/shared/bindings';
-import { ReadonlyObjectKeyMap } from '@zwave-js/shared/safe';
-import { ValueID } from '@zwave-js/core/safe';
-import { WriteFile } from '@zwave-js/shared/bindings';
+import type { LogContext } from '@zwave-js/core';
+import type { ReadFile } from '@zwave-js/shared/bindings';
+import type { ReadFileSystemInfo } from '@zwave-js/shared/bindings';
+import { ReadonlyObjectKeyMap } from '@zwave-js/shared';
+import { ValueID } from '@zwave-js/core';
+import type { WriteFile } from '@zwave-js/shared/bindings';
 
 // Warning: (ae-missing-release-tag) "AssociationConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -38,7 +37,7 @@ export type BasicSetMapping = typeof basicSetMappings[number];
 //
 // @public (undocumented)
 export class CompatAddCC {
-    constructor(filename: string, definition: JSONObject_2);
+    constructor(filename: string, definition: JSONObject);
     // (undocumented)
     readonly endpoints: ReadonlyMap<number, Partial<CommandClassInfo>>;
 }
@@ -52,7 +51,7 @@ export type CompatConfig = Omit<ConditionalCompatConfig, "condition" | "evaluate
 //
 // @public (undocumented)
 export class CompatMapAlarm {
-    constructor(filename: string, definition: JSONObject_2, index: number);
+    constructor(filename: string, definition: JSONObject, index: number);
     // (undocumented)
     readonly from: CompatMapAlarmFrom;
     // (undocumented)
@@ -85,7 +84,7 @@ export interface CompatMapAlarmTo {
 //
 // @public (undocumented)
 export class CompatOverrideQueries {
-    constructor(filename: string, definition: JSONObject_2);
+    constructor(filename: string, definition: JSONObject);
     // (undocumented)
     hasOverride(ccId: CommandClasses): boolean;
     // (undocumented)
@@ -109,7 +108,7 @@ export interface CompatOverrideQuery {
 //
 // @public (undocumented)
 export class ConditionalAssociationConfig implements ConditionalItem<AssociationConfig> {
-    constructor(filename: string, groupId: number, definition: JSONObject_2);
+    constructor(filename: string, groupId: number, definition: JSONObject);
     // (undocumented)
     readonly condition?: string;
     // (undocumented)
@@ -130,7 +129,7 @@ export class ConditionalAssociationConfig implements ConditionalItem<Association
 //
 // @public (undocumented)
 export class ConditionalCompatConfig implements ConditionalItem<CompatConfig> {
-    constructor(filename: string, definition: JSONObject_2);
+    constructor(filename: string, definition: JSONObject);
     // (undocumented)
     readonly addCCs?: ReadonlyMap<CommandClasses, CompatAddCC>;
     // (undocumented)
@@ -277,7 +276,7 @@ export class ConditionalDeviceConfig {
 //
 // @public (undocumented)
 export class ConditionalDeviceMetadata implements ConditionalItem<DeviceMetadata> {
-    constructor(filename: string, definition: JSONObject_2);
+    constructor(filename: string, definition: JSONObject);
     readonly comments?: ConditionalDeviceComment | ConditionalDeviceComment[];
     // (undocumented)
     readonly condition?: string;
@@ -294,7 +293,7 @@ export class ConditionalDeviceMetadata implements ConditionalItem<DeviceMetadata
 //
 // @public (undocumented)
 export class ConditionalEndpointConfig implements ConditionalItem<EndpointConfig> {
-    constructor(parent: ConditionalDeviceConfig, index: number, definition: JSONObject_2);
+    constructor(parent: ConditionalDeviceConfig, index: number, definition: JSONObject);
     // (undocumented)
     readonly associations?: ReadonlyMap<number, ConditionalAssociationConfig>;
     // (undocumented)
@@ -321,7 +320,7 @@ export type ConditionalParamInfoMap = ReadonlyObjectKeyMap<{
 //
 // @public (undocumented)
 export class ConditionalParamInformation implements ConditionalItem<ParamInformation> {
-    constructor(parent: ConditionalDeviceConfig, parameterNumber: number, valueBitMask: number | undefined, definition: JSONObject_2);
+    constructor(parent: ConditionalDeviceConfig, parameterNumber: number, valueBitMask: number | undefined, definition: JSONObject);
     // (undocumented)
     readonly allowManualEntry: boolean;
     // (undocumented)
@@ -638,7 +637,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.1.0";
+export const PACKAGE_VERSION = "15.3.2";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -660,16 +659,12 @@ export type ParamInformation = Omit<ConditionalParamInformation, "condition" | "
 // Warning: (ae-missing-release-tag) "parseConditionalParamInformationMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseConditionalParamInformationMap(definition: JSONObject_2, parent: ConditionalDeviceConfig, errorPrefix?: string): ConditionalParamInfoMap;
+export function parseConditionalParamInformationMap(definition: JSONObject, parent: ConditionalDeviceConfig, errorPrefix?: string): ConditionalParamInfoMap;
 
 // Warning: (ae-missing-release-tag) "saveManufacturersInternal" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
 export function saveManufacturersInternal(fs: WriteFile, manufacturers: ManufacturersMap): Promise<void>;
-
-// Warnings were encountered during analysis:
-//
-// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 
