@@ -3621,7 +3621,10 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		this.updateStatistics((current) => {
 			const ret = { ...current };
 			// Update ACK RSSI
-			if (txReport.ackRSSI != undefined) {
+			if (
+				txReport.ackRSSI != undefined
+				&& txReport.ackRSSI !== RssiError.NotAvailable
+			) {
 				ret.rssi =
 					ret.rssi == undefined || isRssiError(txReport.ackRSSI)
 						? txReport.ackRSSI
@@ -3632,9 +3635,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			const newStats: RouteStatistics = {
 				protocolDataRate: txReport.routeSpeed,
 				repeaters: (txReport.repeaterNodeIds ?? []) as number[],
-				rssi: txReport.ackRSSI
-					?? ret.lwr?.rssi
-					?? RssiError.NotAvailable,
+				rssi: txReport.ackRSSI ?? ret.lwr?.rssi,
 			};
 			if (txReport.ackRepeaterRSSI != undefined) {
 				newStats.repeaterRSSI = txReport.ackRepeaterRSSI as number[];
