@@ -43,19 +43,13 @@
 		},
 		{
 			"#": "2",
-			"label": "LED Backlight Brightness Level ON",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 10,
-			"defaultValue": 10
+			"$import": "templates/mcohome_template.json#backlight_brightness",
+			"label": "LED Backlight Brightness Level ON"
 		},
 		{
 			"#": "3",
-			"label": "LED Backlight Brightness Level OFF",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 10,
-			"defaultValue": 10
+			"$import": "templates/mcohome_template.json#backlight_brightness",
+			"label": "LED Backlight Brightness Level OFF"
 		},
 		{
 			"#": "4[0x01]",
@@ -277,52 +271,77 @@
 		{
 			"#": "11",
 			"label": "Relay On Duration",
-			"description": "0 for infinite",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32767,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "12",
 			"label": "Button 1 On Duration",
-			"description": "0 for infinite",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32767,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "13",
 			"label": "Button 2 On Duration",
-			"description": "0 for infinite",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32767,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "14",
 			"label": "Button 3 On Duration",
-			"description": "0 for infinite",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32767,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "15",
 			"label": "Button 4 On Duration",
-			"description": "0 for infinite",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32767,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "23[0x01]",
@@ -381,12 +400,18 @@
 		{
 			"#": "26",
 			"label": "Button 1 Activate Scene Dim Duration",
-			"description": "0-127 seconds, +128 for minutes",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 255,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "27",
@@ -425,12 +450,18 @@
 		{
 			"#": "29",
 			"label": "Button 2 Activate Scene Dim Duration",
-			"description": "0-127 seconds, +128 for minutes",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 255,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "30",
@@ -469,12 +500,18 @@
 		{
 			"#": "32",
 			"label": "Button 3 Activate Scene Dim Duration",
-			"description": "0-127 seconds, +128 for minutes",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 255,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "33",
@@ -513,12 +550,18 @@
 		{
 			"#": "35",
 			"label": "Button 4 Activate Scene Dim Duration",
-			"description": "0-127 seconds, +128 for minutes",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 255,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "50[0x01]",
@@ -642,20 +685,7 @@
 		},
 		{
 			"#": "255",
-			"label": "Factory Reset",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Normal operation",
-					"value": 0
-				},
-				{
-					"label": "Reset",
-					"value": 85
-				}
-			]
+			"$import": "templates/mcohome_template.json#factory_reset"
 		}
 	],
 	"metadata": {
