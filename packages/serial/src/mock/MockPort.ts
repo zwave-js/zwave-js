@@ -82,7 +82,7 @@ export async function createAndOpenMockedZWaveSerialPort(): Promise<{
 	const port = new MockPort();
 	const factory = new ZWaveSerialStreamFactory(
 		port.factory(),
-		(await import("@zwave-js/core/bindings/log/node")).log({
+		(await import("#default_bindings/log")).log({
 			enabled: false,
 		}),
 	);

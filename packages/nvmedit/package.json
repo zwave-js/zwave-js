@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/nvmedit",
-  "version": "15.1.1",
+  "version": "15.3.0",
   "description": "zwave-js: library to edit NVM backups",
   "keywords": [],
   "publishConfig": {
@@ -26,6 +26,7 @@
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
     "build/**/package.json"
   ],
+  "sideEffects": false,
   "bin": "bin/nvmedit.mjs",
   "author": {
     "name": "AlCalzone",
@@ -67,12 +68,12 @@
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
     "@microsoft/api-extractor": "^7.52.2",
-    "@types/node": "^20.17.16",
-    "@types/semver": "^7.5.8",
+    "@types/node": "^20.17.32",
+    "@types/semver": "^7.7.0",
     "@types/yargs": "^17.0.33",
     "del-cli": "^6.0.0",
-    "tsx": "^4.19.2",
-    "typescript": "5.7.3",
+    "tsx": "^4.19.3",
+    "typescript": "5.8.3",
     "vitest": "^2.1.9"
   }
 }

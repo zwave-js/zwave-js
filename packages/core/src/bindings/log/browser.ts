@@ -14,6 +14,7 @@ import {
 	type LogContext,
 	type LogFactory,
 	type ZWaveLogInfo,
+	timestampFormat,
 	timestampFormatShort,
 } from "../../log/shared.js";
 import type { LogContainer, ZWaveLogger } from "../../log/traits.js";
@@ -29,7 +30,7 @@ function createLoggerFormat(
 		label(channel),
 		shortTimestamps
 			? timestamp(timestampFormatShort)
-			: timestamp(),
+			: timestamp(timestampFormat),
 		formatLogMessage,
 		colorize ? colorizer(false) : undefined,
 		printLogMessage(shortTimestamps),

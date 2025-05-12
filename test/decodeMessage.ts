@@ -1,6 +1,5 @@
 // @ts-check
 
-import "reflect-metadata";
 import "zwave-js";
 import { ConfigManager } from "@zwave-js/config";
 import {

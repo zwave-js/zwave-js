@@ -128,18 +128,17 @@ export function parseTXReport(
 		// These might be missing:
 		failedRouteLastFunctionalNodeId: buffer[17],
 		failedRouteFirstNonFunctionalNodeId: buffer[18],
-		txPower: parseTXPower(buffer, 19),
-		measuredNoiseFloor: tryParseRSSI(buffer, 20),
-		destinationAckTxPower: includeACK
-			? parseTXPower(buffer, 21)
-			: undefined,
-		destinationAckMeasuredRSSI: includeACK
-			? tryParseRSSI(buffer, 22)
-			: undefined,
-		destinationAckMeasuredNoiseFloor: includeACK
-			? tryParseRSSI(buffer, 23)
-			: undefined,
 	};
+	// These fields are only available for Z-Wave LR:
+	if (ret.txChannelNo >= 3) {
+		ret.txPower = parseTXPower(buffer, 19);
+		ret.measuredNoiseFloor = tryParseRSSI(buffer, 20);
+		if (includeACK) {
+			ret.destinationAckTxPower = parseTXPower(buffer, 21);
+			ret.destinationAckMeasuredRSSI = tryParseRSSI(buffer, 22);
+			ret.destinationAckMeasuredNoiseFloor = tryParseRSSI(buffer, 23);
+		}
+	}
 	// Remove unused repeaters from arrays
 	ret.repeaterNodeIds = ret.repeaterNodeIds.slice(
 		0,
@@ -150,6 +149,11 @@ export function parseTXReport(
 			0,
 			numRepeaters,
 		) as any;
+	}
+	// Remove ACK RSSI if not available
+	if (ret.ackRSSI === RssiError.NotAvailable) {
+		delete ret.ackRSSI;
+		delete ret.ackChannelNo;
 	}
 
 	return stripUndefined(ret as any) as any;

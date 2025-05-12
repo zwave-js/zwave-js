@@ -4,6 +4,57 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.3.2 (2025-05-08)
+### Bugfixes
+* Fixed a regression from v15 where command delivery verification wouldn't work on S2-capable devices without Supervision (#7795)
+
+### Config file changes
+* Disallow manual entry for param 3 on Zooz ZSE70 (#7794)
+
+## 15.3.1 (2025-05-07)
+### Bugfixes
+* Fixed an issue where some CCs could be missing when Z-Wave JS was bundled (#7791)
+
+## 15.3.0 (2025-05-05)
+As of this release, Z-Wave JS no longer destroys the driver instance after NVM restore, OTW upgrades and leaving the bootloader. Previously applications had to catch the corresponding error and re-create the driver instance.
+
+This is no longer necessary, but applications MUST ensure that they always attach the event handlers for the controller and nodes after receiving the `driver ready` event.
+
+### Features
+* Re-create controller instance instead of destroying driver after certain actions (#7787)
+
+### Bugfixes
+* Fixed an issue where incorrect device info for the controller was exposed until restarting after migration from different hardware (#7776)
+
+### Config file changes
+* Add fingerprint `0x0313:0x0109` to "FortrezZ LLC SSA1/SSA2" (#7773)
+
+## 15.2.1 (2025-04-29)
+### Bugfixes
+* Revert: Work around a possible controller lockup when retransmitting a command to an unreachable device (#7769)
+
+### Changes under the hood
+* Don't traverse `node_modules` in import lint, add some known good modules (#7770)
+* Bundling improvements (#7771, #7772)
+
+## 15.2.0 (2025-04-28)
+### Features
+* Support Basic Window Covering CC (#7768)
+
+### Config file changes
+* Add Ness Smart Plug ZA-216001 (#7339)
+
+## 15.1.3 (2025-04-26)
+### Bugfixes
+* Work around a possible controller lockup when retransmitting a command to an unreachable device (#7766)
+
+## 15.1.2 (2025-04-26)
+### Bugfixes
+* Work around an issue in downstream projects that causes the error `import_serial.isAnySendDataResponse is not a function` (#7762)
+
+### Changes under the hood
+* Eliminate internal usage of `.../safe` entrypoints, merge/format imports consistently (#7758)
+
 ## 15.1.1 (2025-04-25)
 ### Bugfixes
 * More resilient recovery from disconnected TCP serial ports (#7748)

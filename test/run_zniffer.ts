@@ -1,7 +1,6 @@
 import { RFRegion, ZnifferLRChannelConfig } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { wait as _wait } from "alcalzone-shared/async";
-import "reflect-metadata";
 import { Zniffer } from "zwave-js";
 
 const wait = _wait;

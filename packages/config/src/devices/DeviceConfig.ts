@@ -1,3 +1,4 @@
+import { configDir } from "#config_dir";
 import { ZWaveError, ZWaveErrorCodes, digest } from "@zwave-js/core";
 import {
 	Bytes,
@@ -24,7 +25,6 @@ import path from "pathe";
 import semverGt from "semver/functions/gt.js";
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
-import { configDir } from "../utils.js";
 import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
 import {
 	type AssociationConfig,

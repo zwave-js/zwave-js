@@ -1,6 +1,6 @@
+import { log as createZWaveLogContainer } from "#default_bindings/log";
 import type { LogContainer } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
-import { log as createZWaveLogContainer } from "@zwave-js/core/bindings/log/node";
 import { pathExists } from "@zwave-js/shared";
 import fsp from "node:fs/promises";
 import { tmpdir } from "node:os";

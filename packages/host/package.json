@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/host",
-  "version": "15.1.1",
+  "version": "15.3.2",
   "description": "zwave-js: Host abstractions",
   "keywords": [],
   "publishConfig": {
@@ -19,6 +19,7 @@
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
     "build/**/package.json"
   ],
+  "sideEffects": false,
   "author": {
     "name": "AlCalzone",
     "email": "d.griesel@gmx.net"
@@ -55,8 +56,8 @@
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
     "@microsoft/api-extractor": "^7.52.2",
-    "@types/node": "^20.17.16",
+    "@types/node": "^20.17.32",
     "del-cli": "^6.0.0",
-    "typescript": "5.7.3"
+    "typescript": "5.8.3"
   }
 }

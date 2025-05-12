@@ -5,7 +5,6 @@ import { configs } from "triple-beam";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import type Transport from "winston-transport";
-import type { ConsoleTransportInstance } from "winston/lib/winston/transports";
 import { colorizer } from "../../log/Colorizer.js";
 import {
 	combine,
@@ -20,6 +19,7 @@ import {
 	type LogFactory,
 	nonUndefinedLogConfigKeys,
 	stringToNodeList,
+	timestampFormat,
 	timestampFormatShort,
 } from "../../log/shared.js";
 import type { LogContainer, ZWaveLogger } from "../../log/traits.js";
@@ -28,6 +28,8 @@ const isTTY = process.stdout.isTTY;
 const isUnitTest = process.env.NODE_ENV === "test";
 
 const loglevels = configs.npm.levels;
+
+type ConsoleTransportInstance = winston.transports.ConsoleTransportInstance;
 
 function getTransportLoglevel(): string {
 	const loglevel = getenv("LOGLEVEL")!;
@@ -48,7 +50,7 @@ export function createLoggerFormat(channel: string): Format {
 		// add the channel as a label
 		label(channel),
 		// default to short timestamps
-		timestamp(),
+		timestamp(timestampFormat),
 	) as unknown as Format;
 }
 
