@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Prevent the interview of battery-powered devices to stop after the first stage when re-interviewing after a firmware update (#7816)
+
 ## 15.4.0 (2025-05-12)
 ### Features
 * Update Notification definitions to 2024B-3 specs (#7796)
