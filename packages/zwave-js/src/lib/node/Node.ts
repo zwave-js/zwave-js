@@ -825,23 +825,20 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		const { resetSecurityClasses = false, waitForWakeup = true } = options;
 		// Unless desired, don't forget the information about sleeping nodes immediately, so they continue to function
 		let didWakeUp = false;
-		let wasAwake = false;
+		const wasAwake = this.status === NodeStatus.Awake;
 		if (
 			waitForWakeup
 			&& this.canSleep
+			&& !wasAwake
 			&& this.supportsCC(CommandClasses["Wake Up"])
 		) {
-			if (this.status === NodeStatus.Awake) {
-				wasAwake = true;
-			} else {
-				this.driver.controllerLog.logNode(
-					this.id,
-					"Re-interview scheduled, waiting for node to wake up...",
-				);
-				didWakeUp = await this.waitForWakeup()
-					.then(() => true)
-					.catch(() => false);
-			}
+			this.driver.controllerLog.logNode(
+				this.id,
+				"Re-interview scheduled, waiting for node to wake up...",
+			);
+			didWakeUp = await this.waitForWakeup()
+				.then(() => true)
+				.catch(() => false);
 		}
 
 		// preserve the node name and location, since they might not be stored on the node
