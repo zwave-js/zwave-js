@@ -1,4 +1,5 @@
 import type {
+	CommandClasses,
 	FileSystem as LegacyFileSystemBindings,
 	LogConfig,
 	LogFactory,
@@ -280,6 +281,17 @@ export interface ZWaveOptions {
 		 * Default: `false`
 		 */
 		watchdog?: boolean;
+
+		/**
+		 * Z-Wave JS normally uses all Command Classes it implements and responds to version queries for all of them.
+		 *
+		 * However, some Command Classes come with certification requirements that might not be fulfilled by the application.
+		 * To allow for deploying products based on Z-Wave JS without having to implement all of them,
+		 * this option allows you to disable certain Command Classes. Z-Wave JS will act as if the specified Command Classes are not implemented.
+		 *
+		 * Note that this only affects a subset of CCs that is not mandatory.
+		 */
+		disableCommandClasses: CommandClasses[];
 	};
 
 	preferences: {
