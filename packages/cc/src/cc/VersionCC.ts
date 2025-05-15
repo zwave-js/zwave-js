@@ -279,7 +279,13 @@ export class VersionCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
-	public async reportCCVersion(requestedCC: CommandClasses): Promise<void> {
+	/**
+	 * @param version The version to report. If not given, the implemented version will be used for the report.
+	 */
+	public async reportCCVersion(
+		requestedCC: CommandClasses,
+		version?: number,
+	): Promise<void> {
 		this.assertSupportsCommand(
 			VersionCommand,
 			VersionCommand.CommandClassReport,
@@ -301,7 +307,7 @@ export class VersionCCAPI extends PhysicalCCAPI {
 				break;
 
 			default:
-				ccVersion = getImplementedVersion(requestedCC);
+				ccVersion = version ?? getImplementedVersion(requestedCC);
 				break;
 		}
 

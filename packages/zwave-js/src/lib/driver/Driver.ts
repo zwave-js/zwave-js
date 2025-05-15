@@ -332,6 +332,8 @@ const defaultOptions: ZWaveOptions = {
 		),
 		// By default disable the watchdog
 		watchdog: false,
+		// Support all CCs unless specified otherwise
+		disableCommandClasses: [],
 	},
 	// By default, try to recover from bootloader mode
 	bootloaderMode: "recover",
@@ -542,6 +544,38 @@ function checkOptions(options: ZWaveOptions): void {
 			) {
 				throw new ZWaveError(
 					`rf.txPower must contain the following numeric properties: powerlevel, measured0dBm!`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
+		}
+
+		if (options.features.disableCommandClasses?.length) {
+			// Ensure that all CCs may be disabled
+			const mandatory = [
+				// Encapsulation CCs are always supported
+				...encapsulationCCs,
+				// All Root Devices or nodes MUST support
+				CommandClasses.Association,
+				CommandClasses["Association Group Information"],
+				CommandClasses["Device Reset Locally"],
+				CommandClasses["Firmware Update Meta Data"],
+				CommandClasses.Indicator,
+				CommandClasses["Manufacturer Specific"],
+				CommandClasses["Multi Channel Association"],
+				CommandClasses.Powerlevel,
+				CommandClasses.Version,
+				CommandClasses["Z-Wave Plus Info"],
+			];
+
+			const mandatoryDisabled = options.features.disableCommandClasses
+				.filter(
+					(cc) => mandatory.includes(cc),
+				);
+			if (mandatoryDisabled.length > 0) {
+				throw new ZWaveError(
+					`The following CCs are mandatory and cannot be disabled using features.disableCommandClasses: ${
+						mandatoryDisabled.map((cc) => getCCName(cc)).join(", ")
+					}!`,
 					ZWaveErrorCodes.Driver_InvalidOptions,
 				);
 			}

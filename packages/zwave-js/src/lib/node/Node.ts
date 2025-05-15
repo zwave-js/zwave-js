@@ -2368,7 +2368,24 @@ protocol version:      ${this.protocolVersion}`;
 				this.driver.options.vendor,
 			);
 		} else if (command instanceof VersionCCCommandClassGet) {
-			return handleVersionCommandClassGet(this.driver, this, command);
+			// If the application has disabled this CC, set the version to 0
+			// This should be all we need to do, as there are currently no CCs with
+			// requirements for applications where we also respond to Get requests
+			let reportVersion: number | undefined;
+			if (
+				this.driver.options.features.disableCommandClasses?.includes(
+					command.requestedCC,
+				)
+			) {
+				reportVersion = 0;
+			}
+
+			return handleVersionCommandClassGet(
+				this.driver,
+				this,
+				command,
+				reportVersion,
+			);
 		} else if (command instanceof VersionCCCapabilitiesGet) {
 			return handleVersionCapabilitiesGet(this.driver, this, command);
 		} else if (command instanceof ManufacturerSpecificCCGet) {
