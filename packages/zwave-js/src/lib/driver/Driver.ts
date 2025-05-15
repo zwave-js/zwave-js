@@ -6613,6 +6613,11 @@ ${handlers.length} left`,
 	}
 
 	private triggerQueues(): void {
+		// The queues might not have been initialized yet
+		for (const queue of this.queues) {
+			if (!queue) return;
+		}
+
 		for (const queue of this.queues) {
 			queue.trigger();
 		}
