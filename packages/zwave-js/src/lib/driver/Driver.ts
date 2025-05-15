@@ -300,14 +300,14 @@ const libNameString = `
 
 const defaultOptions: ZWaveOptions = {
 	timeouts: {
-		ack: 1000,
+		ack: 1600, // A sending interface MUST wait for 1600ms or more for an ACK Frame after transmitting a Data Frame.
 		byte: 150,
 		// Ideally we'd want to have this as low as possible, but some
 		// 500 series controllers can take several seconds to respond sometimes.
 		response: 10000,
 		report: 1000, // ReportTime timeout SHOULD be set to CommandTime + 1 second
 		nonce: 5000,
-		sendDataAbort: 20000, // If a controller takes over 15s to reach a node, it's probably not going to happen
+		sendDataAbort: 20000, // If a controller takes over 20 seconds to reach a node, it's probably not going to happen
 		sendDataCallback: 30000, // INS13954 defines this to be 65000 ms, but waiting that long causes issues with reporting devices
 		sendToSleep: 250, // The default should be enough time for applications to react to devices waking up
 		retryJammed: 1000,
@@ -6440,8 +6440,9 @@ ${handlers.length} left`,
 		// Step through the transaction as long as it gives us a next message
 		while ((msg = await transaction.generateNextMessage(prevResult))) {
 			// Keep track of how often the controller failed to send a command, to prevent ending up in an infinite loop
-			let jammedAttempts = 0;
-			let queueAttempts = 0;
+			let jammedAttempts = 0; // SendData failed with status Fail
+			let queueAttempts = 0; // SendData returned a negative response
+			let commandAttempts = 0; // The command was not acknowledged
 			attemptMessage: for (let attemptNumber = 1;; attemptNumber++) {
 				try {
 					prevResult = await this.queueSerialAPICommand(
@@ -6460,6 +6461,7 @@ ${handlers.length} left`,
 							&& prevResult.txReport?.txTicks === 0
 						) {
 							jammedAttempts++;
+							attemptNumber--;
 							if (jammedAttempts < maxJammedAttempts) {
 								// The controller is jammed. Wait a bit, then try again.
 								this.controller.setStatus(
@@ -6502,19 +6504,27 @@ ${handlers.length} left`,
 					break attemptMessage;
 				} catch (e: any) {
 					let zwError: ZWaveError;
-					let waitDurationMs = 0;
 
 					if (!isZWaveError(e)) {
 						zwError = createMessageDroppedUnexpectedError(e);
 					} else {
-						if (
-							isSendData(msg) && isMissingControllerCallback(e)
-						) {
+						// Handle a couple of special cases
+						if (isSendData(msg) && isMissingControllerCallback(e)) {
 							// The controller is unresponsive. Reject the transaction, so we can attempt to recover
 							throw e;
 						} else if (isMissingControllerACK(e)) {
-							// The controller is unresponsive. Reject the transaction, so we can attempt to recover
-							throw e;
+							commandAttempts++;
+							attemptNumber--;
+							if (
+								commandAttempts
+									< this.options.attempts.controller
+							) {
+								// Try again
+								continue attemptMessage;
+							} else {
+								// The controller is unresponsive. Reject the transaction, so we can attempt to recover
+								throw e;
+							}
 						} else if (wasControllerReset(e)) {
 							// The controller was reset unexpectedly. Reject the transaction, so we can attempt to recover
 							throw e;
@@ -6524,11 +6534,14 @@ ${handlers.length} left`,
 						) {
 							// If a SendData command could not be queued, try again after a short delay
 							queueAttempts++;
+							attemptNumber--;
 							if (queueAttempts < 3) {
-								waitDurationMs = 500;
-							} else {
-								throw e;
+								await wait(500, true);
+								continue attemptMessage;
 							}
+
+							// Give up
+							throw e;
 						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
 						) {
@@ -6537,16 +6550,8 @@ ${handlers.length} left`,
 						}
 
 						if (
-							this.mayRetrySerialAPICommand(
-								msg,
-								// Ignore the number of attempts while jammed or where queuing failed
-								attemptNumber - jammedAttempts - queueAttempts,
-								e,
-							)
+							this.mayRetrySerialAPICommand(msg, attemptNumber, e)
 						) {
-							if (waitDurationMs) {
-								await wait(waitDurationMs, true);
-							}
 							// Retry the command
 							continue attemptMessage;
 						}

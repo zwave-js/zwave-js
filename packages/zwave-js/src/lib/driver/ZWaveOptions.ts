@@ -17,7 +17,7 @@ export interface ZWaveOptions {
 	/** Specify timeouts in milliseconds */
 	timeouts: {
 		/** how long to wait for an ACK */
-		ack: number; // >=1, default: 1000 ms
+		ack: number; // >=1, default: 1600 ms
 
 		/** not sure */
 		byte: number; // >=1, default: 150 ms
