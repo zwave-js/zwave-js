@@ -4,6 +4,11 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixed a regression from v15 where Z-Wave JS would immediately soft-reset the controller instead of retrying after an ACK timeout (#7819)
+* Fixed a type error after OTW firmware upgrade (#7820)
+
 ## 15.4.1 (2025-05-13)
 ### Bugfixes
 * Prevent the interview of battery-powered devices to stop after the first stage when re-interviewing after a firmware update (#7816)
