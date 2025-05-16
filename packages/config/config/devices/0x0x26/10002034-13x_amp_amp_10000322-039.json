@@ -1,0 +1,141 @@
+{
+	"manufacturer": "Silicon Labs",
+	"manufacturerId": "0x0x26",
+	"label": "10002034-13X &AMP;&AMP; 10000322-039",
+	"description": "Switch IO",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0000",
+			"zwaveAllianceId": 1869
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 3,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Association Led",
+			"description": "Used during association process by simon shortcut switch io to turn on the main LED of all devices already associated to this shortcut",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Turns the main LED off",
+					"value": 0
+				},
+				{
+					"label": "Turns the main LED on",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Delay On",
+			"description": "Delay from activation request until load activation.  please note that possible values are referenced in hex format from 0x00 to 0xff (unsigned 1 byte values).  please refer to \"Z-Wave command class specification, a-m\" --> \"multilevel switch set command\" --> \"duration table\" specification to lean more about these values meaning",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "11",
+			"label": "Activation Time",
+			"description": "Time that load performs activated after complete an activation process.  please note that possible values are referenced in hex format from 0x00 to 0xff (unsigned 1 byte values).  please refer to \"Z-Wave command class specification, a-m\" --> \"multilevel switch set command\" --> \"duration table\" specification to lean more about these values meaning",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "12",
+			"label": "Behavior of LED in Repose",
+			"description": "Configuration of main LED as identification at 20%",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Led off",
+					"value": 0
+				},
+				{
+					"label": "Led on at 20% of maximum level",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "13",
+			"label": "Lock Input",
+			"description": "Locks the pushbutton and wired input actions",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Unlock the direct control of load",
+					"value": 0
+				},
+				{
+					"label": "Lock the direct control of load",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "15",
+			"label": "Reset Default",
+			"description": "Device persorms a factoy default reset",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 39015,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Device persorms a factoy default reset",
+					"value": 39015
+				}
+			]
+		},
+		{
+			"#": "16",
+			"label": "Delay Off",
+			"description": "Delay from deactivation request until load deactivation.  please note that possible values are referenced in hex format from 0x00 to 0xff (unsigned 1 byte values)  please refer to \"Z-Wave command class specification, a-m\" --> \"multilevel switch set command\" --> \"duration table\" specification to lean more about these values meaning",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "When the pushbutton is released after a press of (2sec<T<20sec) the device will send a NIF to include from Z-Wave network or perform an association with other Z-Wave device.\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton",
+		"exclusion": "When the pushbutton is released after a press of (2sec<T<20sec) the device will send a NIF to exclude from Z-Wave network or perform an association with other Z-Wave device.\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton",
+		"reset": "When the pushbutton is released after a press of (20sec<T) the device will perform a factory default values operation, excluding it from network and resetíng the configuration parameters.\n\nMain LED will perform 1 Blink with 5 sec.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1869/10002034_13x.pdf"
+	}
+}
