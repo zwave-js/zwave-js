@@ -1,7 +1,7 @@
 {
 	"manufacturer": "HANK Electronics, Ltd.",
 	"manufacturerId": "0x0208",
-	"label": "10002214-039",
+	"label": "HKZW-DWS01",
 	"description": "Door and Window Sensor",
 	"devices": [
 		{
@@ -18,17 +18,6 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
-		},
-		"2": {
-			"label": "Control:Key01",
-			"maxNodes": 5
-		}
-	},
 	"paramInformation": [
 		{
 			"#": "14",
@@ -37,35 +26,30 @@
 		},
 		{
 			"#": "15",
-			"label": "Value of The Basic Set",
-			"description": "Door/window sensor can reverse its value of Basic Set when the magnet is triggered",
+			"label": "Value of Basic Set",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
 			"defaultValue": 0,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Send Basic Set value = 255 to nodes associated with group 2 when door/window is opened.send Basic Set value = 0 to nodes associated with group 2 when door/window is closed",
+					"label": "Send 255 when open",
 					"value": 0
 				},
 				{
-					"label": "Send Basic Set value = 0 to nodes associated with group 2 when door/window is opened.send Basic Set value = 255 to nodes associated with group 2 when door/window is closed",
+					"label": "Send 0 when open",
 					"value": 1
 				}
 			]
 		},
 		{
 			"#": "32",
-			"label": "Level of Low Battery",
-			"description": "The value here defines the low battery",
+			"label": "Level for Low Battery Alarm",
+			"description": "Adjust the percent of battery left before a low battery level alarm is sent",
 			"valueSize": 1,
-			"unit": "%",
+			"unit": "Battery %",
 			"minValue": 10,
 			"maxValue": 50,
-			"defaultValue": 20,
-			"unsigned": true
+			"defaultValue": 20
 		}
 	],
 	"metadata": {

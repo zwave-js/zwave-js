@@ -2,7 +2,7 @@
 	"manufacturer": "SimonTech S.L.U",
 	"manufacturerId": "0x0267",
 	"label": "10002041-13X",
-	"description": "iO Cover for the Simon 100 Schuko Plug Socket",
+	"description": "Cover for IO Socket",
 	"devices": [
 		{
 			"productType": "0x0009",
@@ -14,71 +14,43 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Group 1",
-			"maxNodes": 3,
-			"isLifeline": true
-		}
-	},
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Association Led",
-			"description": "Activates the central led. configuration used by masters io in order to identify the devices associated to their group2 during manual association process",
-			"valueSize": 1,
-			"unit": "HEXADECIMAL",
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"writeOnly": true,
-			"options": [
-				{
-					"label": "Turns central LED off",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Association LED"
 		},
 		{
 			"#": "2",
-			"label": "Custom Consumption Limit",
+			"label": "Overload Protection",
 			"valueSize": 2,
-			"unit": "HEXADECIMAL",
+			"unit": "W",
 			"defaultValue": 0,
-			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Default",
+					"label": "Disable",
 					"value": 0
-				},
-				{
-					"label": "Power in watts",
-					"value": 255
 				}
 			]
 		},
 		{
 			"#": "3",
-			"label": "Beacon",
-			"description": "Sets the beacon intensity, turning on all device leds al percentage set in this configuration",
+			"label": "Beacon LED Level",
 			"valueSize": 1,
-			"unit": "%",
 			"minValue": 0,
 			"maxValue": 99,
 			"defaultValue": 0,
-			"unsigned": true,
 			"options": [
 				{
-					"label": "Disables the beacon",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "10",
-			"label": "Delay On",
-			"description": "Sets a delay from activation request until the activation is performed.  this configuration must be set in hexadecimal values. 0x00 disables the delay. 0x01 to 0x7f sets the delay in seconds from 1 to 127 0x80 to 0xef sets the delay in minutes from 1 to 127",
+			"label": "Delay ON",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
 			"unit": "minutes",
 			"minValue": 0,
@@ -87,58 +59,62 @@
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Delay is disabled",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "11",
-			"label": "Activation Time",
-			"description": "Sets the time when the load will be turned off after it is activated.  this configuration must be set in hexadecimal values. 0x00 disables the delay. 0x01 to 0x7f time is set in seconds from 1 to 127 0x80 to 0xef time is set in minutes from 1 to 127",
+			"label": "Auto-Off Timer",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Time is disabled",
+					"label": "Disable",
 					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "LED Indicator",
+			"valueSize": 1,
+			"defaultValue": 255,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Indicate status for 5 seconds after switching, off otherwise",
+					"value": 0
+				},
+				{
+					"label": "Follow load status",
+					"value": 255
 				}
 			]
 		},
 		{
 			"#": "13",
-			"label": "Lock Input",
-			"description": "Locks the local control of the load. this configuration does not modifies the control via Z-Wave",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Local control is available",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
 		},
 		{
 			"#": "15",
 			"label": "Reset Default",
-			"description": "Write only parameter used to restore configurations or perform a completely restore default",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 39015,
 			"defaultValue": 0,
 			"unsigned": true,
 			"writeOnly": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Configuration values are restored",
+					"label": "Restore configuration values to default",
 					"value": 17170
 				},
 				{
@@ -150,57 +126,54 @@
 		{
 			"#": "16",
 			"label": "Delay Off",
-			"description": "Sets a delay from deactivation request until the deactivation is performed.  this configuration must be set in hexadecimal values. 0x00 disables the delay. 0x01 to 0x7f sets the delay in seconds from 1 to 127 0x80 to 0xef sets the delay in minutes from 1 to 127",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Delay is disabled",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "17",
-			"label": "Postreset State",
-			"description": "Sets the device state after a reset",
+			"label": "State After Power Failure",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255,
 			"unsigned": true,
+			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "After a reset the load starts off",
+					"label": "Always off",
 					"value": 0
+				},
+				{
+					"label": "Always on",
+					"value": 255
 				}
 			]
 		},
 		{
 			"#": "19",
-			"label": "Press Action",
-			"description": "Defines the function performed by the device when keypad is pressed",
+			"label": "Short Press Action",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
 			"defaultValue": 0,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Short press toggles the load",
+					"label": "Toggle",
 					"value": 0
 				},
 				{
-					"label": "Short press activates the load",
+					"label": "On",
 					"value": 1
 				},
 				{
-					"label": "Short press deactivates the load",
+					"label": "Off",
 					"value": 2
 				}
 			]
@@ -208,23 +181,27 @@
 		{
 			"#": "20",
 			"label": "Identify",
-			"description": "Central LED performs a fast blink",
+			"description": "Central LED flashes",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
-			"writeOnly": true
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Identify",
+					"value": 255
+				}
+			]
 		},
 		{
 			"#": "21",
 			"label": "Device State",
 			"description": "Read only configuration used to report the device state and last value   this value is represented in hexadecimal.  byte 0 informs about load state (0 load is off and 1 load is on)  byte 1 informs about load value (0x00 or 0xff)",
-			"valueSize": 1,
+			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 511,
 			"defaultValue": 2,
-			"unsigned": true,
 			"readOnly": true,
 			"options": [
 				{
@@ -239,33 +216,20 @@
 		},
 		{
 			"#": "27",
-			"label": "Lock Hold Press",
-			"description": "Locks the major part of hold press effects in order to avoid undesired Z-Wave changes, or restores default. 0xff hold press from 2sec to 30 sec does not performs a node info. hold press of 30sec restores configuration except lock hold press, and sends a node info in order to add or remove from Z-Wave network",
+			"label": "Long Press Key",
+			"description": "Determines function of long press",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
+			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Hold press is available",
+					"label": "Default",
 					"value": 0
-				}
-			]
-		},
-		{
-			"#": "12",
-			"label": "Behavior of LED in Repose",
-			"description": "Modifies the led1 state when socket io is in repose mode",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
+				},
 				{
-					"label": "Led1 remains off and only informs of load state during 5 sec. after pressing the button",
-					"value": 0
+					"label": "Reset config parameters",
+					"value": 255
 				}
 			]
 		}

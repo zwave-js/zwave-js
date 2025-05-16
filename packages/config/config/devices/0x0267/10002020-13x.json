@@ -28,78 +28,64 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Association Led",
-			"description": "Activates the central led.  configuration used by masters io in order to identify the devices associated to their group2 during manual association process",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Turns the LED off",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Association LED"
 		},
 		{
 			"#": "4",
-			"label": "Set Time",
-			"description": "Sets the \"set time\" that will take the dimmer to go from 0% to 100%  this value must be set in hexadecimal format, and can accept these values:  0 --> set time is 0. 0x01...0x7f --> set time is from 1 to 127 seconds. (1 second resolution) 0x80...0xfe --> set time is from 1 to 127 seconds. (1 minute resolution)",
+			"label": "Fade Duration (Off to On)",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Sets time is 0",
+					"label": "Instantly",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "5",
-			"label": "Fade Time",
-			"description": "Sets the \"fade time\" that will take the dimmer to go from 100% to 0%  this value must be set in hexadecimal format, and can accept these values:  0 --> fade time is 0. 0x01...0x7f --> fade time is from 1 to 127 seconds. (1 second resolution) 0x80...0xfe --> fade time is from 1 to 127 seconds. (1 minute resolution)",
+			"label": "Fade Duration (On to Off)",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Fade time is 0 seconds",
+					"label": "Instantly",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "6",
-			"label": "Min Dimming %",
+			"label": "Minimum Brightness",
 			"description": "Minimum internal dimming value",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 1,
-			"defaultValue": 1,
-			"unsigned": true
+			"defaultValue": 1
 		},
 		{
 			"#": "7",
-			"label": "Max Dimming %",
+			"label": "Maximum Brightness",
 			"description": "Maximum internal dimming value",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
-			"defaultValue": 100,
-			"unsigned": true
+			"defaultValue": 100
 		},
 		{
 			"#": "9",
-			"label": "Callibration",
-			"description": "Sunblind starts its callibration process",
+			"label": "Calibrate",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 255,
@@ -108,84 +94,60 @@
 			"writeOnly": true,
 			"options": [
 				{
-					"label": "Sunblind starts its callibration process",
+					"label": "Perform calibration",
 					"value": 255
 				}
 			]
 		},
 		{
 			"#": "10",
-			"label": "Delay On",
-			"description": "Time that dimmer delays the activation of the load after it receives an on request.  this value must be set in hexadecimal format, and can accept these values:  0 --> on delay is 0. 0x01...0x7f --> delay on is from 1 to 127 seconds. (1 second resolution) 0x80...0xfe --> delay on is from 1 to 127 seconds. (1 minute resolution)",
+			"label": "Delay ON",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
 				{
-					"label": "On delay is 0 seconds",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "11",
-			"label": "Activation Time",
-			"description": "Time that dimmer activates of the load after it turns the load on.  this value must be set in hexadecimal format, and can accept these values:  0 --> activation time is 0. 0x01...0x7f --> activation time is from 1 to 127 seconds. (1 second resolution) 0x80...0xfe --> activation time is from 1 to 127 seconds. (1 minute resolution)",
+			"label": "Auto-Off Timer",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
-			"maxValue": 154,
+			"maxValue": 254,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Activation time is 0 seconds",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "12",
-			"label": "Behavior of LED in Repose",
-			"description": "Sets the left and right leds to 20% in order to find the device and the touch areas at night",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Left and right leds off",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Night Light",
+			"description": "Sets the left and right LEDs to 20% brightness"
 		},
 		{
 			"#": "13",
-			"label": "Lock Input",
-			"description": "Locks the local control of the sunblind.  this configuration does not modifies the control via Z-Wave",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Local action enabled",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
 		},
 		{
 			"#": "15",
 			"label": "Reset Default",
 			"description": "Write only parameter used to restore configurations or perform a completely restore default",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 39015,
 			"defaultValue": 0,
 			"unsigned": true,
 			"writeOnly": true,
@@ -204,16 +166,15 @@
 		{
 			"#": "16",
 			"label": "Delay Off",
-			"description": "Time that dimmer delays the deactivation of the load after it receives an off request.  this value must be set in hexadecimal format, and can accept these values:  0 --> delay off is 0. 0x01...0x7f --> delay off is from 1 to 127 seconds. (1 second resolution) 0x80...0xfe --> delay off is from 1 to 127 seconds. (1 minute resolution)",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Off delay is 0 seconds",
+					"label": "Disable",
 					"value": 0
 				}
 			]
@@ -221,32 +182,28 @@
 		{
 			"#": "19",
 			"label": "Press Action",
-			"description": "Defines the action to be performed when key is pressed",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 5,
 			"defaultValue": 5,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "When short press, the device toggles the load. the slider does not work",
+					"label": "Short press: Toggle",
 					"value": 0
 				},
 				{
-					"label": "When short press, the device turns on the load. the slider does not work",
+					"label": "Short press: Turn on",
 					"value": 1
 				},
 				{
-					"label": "When short press, the device turns off the load. the slider does not works",
+					"label": "Short press: Turn off",
 					"value": 2
 				},
 				{
-					"label": "When short press, the device turns on the load. when hold press from 2seconds to 10seconds device turns off the load. the slider does not works with this configuration, the device will not send the node info neither show the leds feedback with this press action. the slider does not work",
+					"label": "Short press: Turn on. Long press: Turn off",
 					"value": 4
 				},
 				{
-					"label": "When short press, the device toggles the load. the slider dims the load when it is on",
+					"label": "Short press: Toggle. Slider: Dim up/down while on",
 					"value": 5
 				}
 			]
@@ -254,13 +211,18 @@
 		{
 			"#": "20",
 			"label": "Identify",
-			"description": "Central LED performs a fast blink",
+			"description": "Central LED flashes",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
-			"writeOnly": true
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Identify",
+					"value": 255
+				}
+			]
 		},
 		{
 			"#": "21",
@@ -270,16 +232,13 @@
 			"unit": "%",
 			"minValue": 0,
 			"maxValue": 355,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "23",
 			"label": "Calibration Required",
 			"description": "Read only configuration used to know is device needs to be calibrated in order to work properly",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
 			"allowManualEntry": false,

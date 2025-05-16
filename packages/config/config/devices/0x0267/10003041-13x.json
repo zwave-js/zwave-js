@@ -28,56 +28,40 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Association Led",
-			"description": "Turns on the central led",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Turns off the center led",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Association LED"
 		},
 		{
 			"#": "2",
-			"label": "Custom Consumption Limit",
-			"description": "Limits the máximum load that can be powered by the socket of hub io",
+			"label": "Overload Protection",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 3680,
+			"unit": "W",
 			"defaultValue": 0,
-			"unsigned": true,
 			"options": [
 				{
-					"label": "Disables custom consumption limit",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "3",
-			"label": "Beacon",
-			"description": "Sets the leds lighting intensity",
+			"label": "Beacon LED Level",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 99,
 			"defaultValue": 0,
-			"unsigned": true,
 			"options": [
 				{
-					"label": "Disables the beacon function",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "10",
-			"label": "Delay On",
-			"description": "Delays the load activation after an on request.  values must be set in hex format",
+			"label": "Delay ON",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 254,
@@ -85,15 +69,15 @@
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Disables timing",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "11",
-			"label": "Activation Time",
-			"description": "Sets the time that load will be activated after it is switch on.  values must be set in hex format",
+			"label": "Auto-Off Timer",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 254,
@@ -101,50 +85,40 @@
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Disables timing",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "12",
-			"label": "Behavior of LED in Repose",
-			"description": "Sets led1 informing about socket load state",
+			"label": "LED Indicator",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255,
 			"unsigned": true,
+			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Led1 remains off and only informs of load state during 5 sec. after pressing the button",
+					"label": "Indicate status for 5 seconds after pressing the button, off otherwise",
 					"value": 0
+				},
+				{
+					"label": "Follow load status",
+					"value": 255
 				}
 			]
 		},
 		{
 			"#": "13",
-			"label": "Lock Input",
-			"description": "Locks the hub io pushbutton",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Enables the pushbutton to control the load",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
 		},
 		{
 			"#": "15",
 			"label": "Reset Default",
 			"description": "Write only parameter with 2 possible values:  0x9867 -> allows remove the device from the network without performing any action on hub io. parameters, groups and Z-Wave status are restored to the default values. 0x4312 -> allows set all device configuration values to default the exception of long pulse lock configuration",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 39015,
+			"valueSize": 2,
 			"defaultValue": 0,
 			"unsigned": true,
 			"writeOnly": true,
@@ -163,7 +137,7 @@
 		{
 			"#": "16",
 			"label": "Delay Off",
-			"description": "Delays the load deactivation after an off request.  values must be set in hex format",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 254,
@@ -171,48 +145,46 @@
 			"unsigned": true,
 			"options": [
 				{
-					"label": "Disables timing",
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "17",
-			"label": "Postreset State",
-			"description": "Defines the load state when hub io is powered",
+			"label": "State After Power Failure",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255,
 			"unsigned": true,
+			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "After a reset the load starts off",
+					"label": "Always off",
 					"value": 0
+				},
+				{
+					"label": "Always on",
+					"value": 255
 				}
 			]
 		},
 		{
 			"#": "19",
-			"label": "Pulse Action",
-			"description": "Defines the action to be performed when pushbutton is short pressed",
+			"label": "Short Press Action",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
 			"defaultValue": 0,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Toggle, a short press switches the",
+					"label": "Toggle",
 					"value": 0
 				},
 				{
-					"label": "On. a short press activates the load",
+					"label": "On",
 					"value": 1
 				},
 				{
-					"label": "Off. a short press deactivates the load",
+					"label": "Off",
 					"value": 2
 				}
 			]
@@ -220,30 +192,28 @@
 		{
 			"#": "20",
 			"label": "Identify",
-			"description": "The central LED flashes for 5 seconds at a frequency of 0.1s",
+			"description": "Central LED flashes",
 			"valueSize": 1,
-			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
+			"writeOnly": true,
+			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "The central LED flashes for 5 seconds at a frequency of 0.1s",
+					"label": "Identify",
 					"value": 255
 				}
 			]
 		},
 		{
 			"#": "21",
-			"label": "Loas State",
-			"description": "Allows to know the load state and value",
+			"label": "Device State",
+			"description": "Read only configuration used to report the device state and last value   this value is represented in hexadecimal.  byte 0 informs about load state (0 load is off and 1 load is on)  byte 1 informs about load value (0x00 or 0xff)",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 511,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
+			"defaultValue": 2,
+			"readOnly": true,
 			"options": [
 				{
 					"label": "Load is off",

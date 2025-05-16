@@ -1,7 +1,7 @@
 {
-	"manufacturer": "Silicon Labs",
-	"manufacturerId": "0x0x26",
-	"label": "10002034-13X &AMP;&AMP; 10000322-039",
+	"manufacturer": "SimonTech S.L.U",
+	"manufacturerId": "0x0267",
+	"label": "10002034-13X / 10000322-039",
 	"description": "Switch IO",
 	"devices": [
 		{
@@ -24,86 +24,53 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Association Led",
-			"description": "Used during association process by simon shortcut switch io to turn on the main LED of all devices already associated to this shortcut",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Turns the main LED off",
-					"value": 0
-				},
-				{
-					"label": "Turns the main LED on",
-					"value": 255
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Association LED"
 		},
 		{
 			"#": "10",
-			"label": "Delay On",
-			"description": "Delay from activation request until load activation.  please note that possible values are referenced in hex format from 0x00 to 0xff (unsigned 1 byte values).  please refer to \"Z-Wave command class specification, a-m\" --> \"multilevel switch set command\" --> \"duration table\" specification to lean more about these values meaning",
+			"label": "Delay ON",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
+			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "11",
-			"label": "Activation Time",
-			"description": "Time that load performs activated after complete an activation process.  please note that possible values are referenced in hex format from 0x00 to 0xff (unsigned 1 byte values).  please refer to \"Z-Wave command class specification, a-m\" --> \"multilevel switch set command\" --> \"duration table\" specification to lean more about these values meaning",
+			"label": "Auto-Off Timer",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "12",
-			"label": "Behavior of LED in Repose",
-			"description": "Configuration of main LED as identification at 20%",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Led off",
-					"value": 0
-				},
-				{
-					"label": "Led on at 20% of maximum level",
-					"value": 255
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Night Light",
+			"description": "Sets the main LED to 20% brightness"
 		},
 		{
 			"#": "13",
-			"label": "Lock Input",
-			"description": "Locks the pushbutton and wired input actions",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Unlock the direct control of load",
-					"value": 0
-				},
-				{
-					"label": "Lock the direct control of load",
-					"value": 255
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
 		},
 		{
 			"#": "15",
@@ -124,12 +91,18 @@
 		{
 			"#": "16",
 			"label": "Delay Off",
-			"description": "Delay from deactivation request until load deactivation.  please note that possible values are referenced in hex format from 0x00 to 0xff (unsigned 1 byte values)  please refer to \"Z-Wave command class specification, a-m\" --> \"multilevel switch set command\" --> \"duration table\" specification to lean more about these values meaning",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		}
 	],
 	"metadata": {

@@ -28,59 +28,26 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Association Led",
-			"description": "Activates the central led. configuration used by masters io in order to identify the devices associated to their group2 during manual association process",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Turns central LED off",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Association LED"
 		},
 		{
 			"#": "12",
-			"label": "Behavior of LED in Repose",
-			"description": "Sets the central LED to 20% in order to find the device at night",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Central LED off",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Night Light",
+			"description": "Sets the central LED to 20% brightness"
 		},
 		{
 			"#": "13",
-			"label": "Lock Input",
-			"description": "Locks the local control of associated devices and controller. this configuration does not modifies the control via Z-Wave, where if a set is received it will retransmitted to all group 2 associated nodes",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Local control is available",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
 		},
 		{
 			"#": "15",
 			"label": "Reset Default",
 			"description": "Write only parameter used to restore configurations or perform a completely restore default",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 39015,
 			"defaultValue": 0,
 			"unsigned": true,
 			"writeOnly": true,
@@ -115,32 +82,28 @@
 		{
 			"#": "19",
 			"label": "Press Action",
-			"description": "Defines the function performed by the device when keypad is pressed",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 5,
 			"defaultValue": 5,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Short press switches between the last power on and off (depending on the status of the associated control) by sending a Basic Set to 0x00 or 0xff to the associated nodes",
+					"label": "Short press: Toggle",
 					"value": 0
 				},
 				{
-					"label": "Short press activates those associated by sending Basic Set to 0xff",
+					"label": "Short press: Turn on",
 					"value": 1
 				},
 				{
-					"label": "Short press deactivates those associated by sending Basic Set to 0x00",
+					"label": "Short press: Turn off",
 					"value": 2
 				},
 				{
-					"label": "Short press always turn on the associated nodes by sending a Basic Set to 0xff. press from 2sec to 10sec always turns off the associated nodes by sending a Basic Set to 0x00",
+					"label": "Short press: Turn on. Long press: Turn off",
 					"value": 4
 				},
 				{
-					"label": "When short press master inverts the load state via Basic Set, when the slider is enabled and load is on, multilevel sets are sent to modify the dimming value",
+					"label": "Short press: Toggle. Slider: Dim up/down while on",
 					"value": 5
 				}
 			]
@@ -148,23 +111,27 @@
 		{
 			"#": "20",
 			"label": "Identify",
-			"description": "Central LED performs a fast blink",
+			"description": "Central LED flashes",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
-			"writeOnly": true
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Identify",
+					"value": 255
+				}
+			]
 		},
 		{
 			"#": "21",
 			"label": "Device State",
 			"description": "Configuration used to know the device state and last active dimming value in case of act retransmitting values different from 0 or 0xff. this value is represented in hexadecimal. byte 0 informs about load state (0 load is off and 1 load is on) byte 1 informs about last active load value (0-0x63 or 0xff)",
-			"valueSize": 1,
+			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 355,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "27",
@@ -200,19 +167,9 @@
 		},
 		{
 			"#": "29",
-			"label": "Send Central Scene",
-			"description": "Disables the sending of central scene notifications to avoid perform 2 actions at same time (central scene action and group 2 action)",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Device does not sends central scene notifications",
-					"value": 0
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Send Central Scene Notifications",
+			"defaultValue": 255
 		}
 	],
 	"metadata": {

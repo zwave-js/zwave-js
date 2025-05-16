@@ -1,7 +1,7 @@
 {
 	"manufacturer": "HANK Electronics, Ltd.",
 	"manufacturerId": "0x0208",
-	"label": "10002860-039",
+	"label": "HKZW-FLD01",
 	"description": "Flood Sensor",
 	"devices": [
 		{
@@ -18,27 +18,13 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
-		},
-		"2": {
-			"label": "Control:Key01",
-			"maxNodes": 5
-		}
-	},
 	"paramInformation": [
 		{
 			"#": "14",
 			"label": "Enable/Disable Basic Set Command",
-			"description": "Flood sensor can send Basic Set command to nodes associated with group 2",
+			"description": "The flood sensor can send BASIC SET command to nodes associated",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
-			"defaultValue": 0,
-			"unsigned": true,
+			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -53,69 +39,64 @@
 		},
 		{
 			"#": "15",
-			"label": "Value of The Basic Set",
-			"description": "Flood sensor can reverse its value of Basic Set when flooding is triggered",
+			"label": "Value of the Basic Set",
+			"description": "The flood sensor can send BASIC SET command to nodes associated",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
 			"defaultValue": 0,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Send Basic Set value = 255 to nodes associated with group 2 when flooding alarm is triggered. send Basic Set value = 0 to nodes associated with group 2 when flooding alarm is canceled",
+					"label": "Disable",
 					"value": 0
 				},
 				{
-					"label": "Send Basic Set value = 0 to nodes associated with group 2 when flooding alarm is triggered. send Basic Set value = 255 to nodes associated with group 2 when flooding alarm is canceled",
+					"label": "Enable",
 					"value": 1
 				}
 			]
 		},
 		{
 			"#": "17",
-			"label": "Set Flooding Alarm Interval (minute)",
+			"label": "Flooding Alarm",
+			"description": "Enable/Disable flooding alarm",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 240,
-			"defaultValue": 5,
-			"unsigned": true,
+			"defaultValue": 1,
+			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable flooding alarm",
+					"label": "Disable",
 					"value": 0
+				},
+				{
+					"label": "Enable",
+					"value": 1
 				}
 			]
 		},
 		{
 			"#": "18",
-			"label": "Enable/Disable Shock Alarm",
+			"label": "Shock Alarm",
+			"description": "Enable/Disable shock alarm",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
 			"defaultValue": 1,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "When the value is 0, the product will not sends a vibration alarm after moving or shaking;",
+					"label": "Disable",
 					"value": 0
 				},
 				{
-					"label": "When the value is 1, the product will sends a vibration alarm after moving or shaking",
+					"label": "Enable",
 					"value": 1
 				}
 			]
 		},
 		{
 			"#": "19",
-			"label": "Temperature Report Time (minute)",
-			"description": "The higher the value ,the long the report time",
+			"label": "High Temperature Alarm",
 			"valueSize": 1,
-			"minValue": 30,
-			"maxValue": 240,
-			"defaultValue": 240,
-			"unsigned": true,
+			"defaultValue": 1,
+			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Disable",
@@ -129,13 +110,12 @@
 		},
 		{
 			"#": "20",
-			"label": "Set The High Temperature Alarm Trigger Value",
-			"description": "The precision of the temperature value is 1. available settings(us): -670 - 2570（-67 – 257°f） available settings(other): -550 - 1250（-55 – 125°c） default setting (us): 1040 (104°f) default setting (other): 400(40°c)",
+			"label": "Set the High Temperature Alarm Trigger Value",
+			"description": "Available setting(US):-67 °C to -257 °C",
 			"valueSize": 2,
 			"minValue": -670,
 			"maxValue": 2570,
-			"defaultValue": 1040,
-			"unsigned": true
+			"defaultValue": 1040
 		},
 		{
 			"#": "21",
@@ -157,31 +137,27 @@
 		},
 		{
 			"#": "22",
-			"label": "Set The Low Temperature Alarm Trigger Value",
-			"description": "The precision of the temperature value is 1. available settings(us): -670 - 2570（-67 – 257°f） available settings(other): -550 - 1250（-55 – 125°c） default setting (us): 320 (32°f) default setting (other): 0 (0°c)",
+			"label": "Set the Low Temperature Alarm Trigger Value",
+			"description": "Available setting(US):-67 °C to -257 °C",
 			"valueSize": 2,
 			"minValue": -670,
 			"maxValue": 2570,
-			"defaultValue": 320,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "24",
-			"label": "Enable/Disable Blinking LED When Alarm Being Triggered",
-			"description": "0 –disable. 1 –enable",
+			"label": "Blinking LED",
+			"description": "Enable/Disable blinking LED when alarm being triggered",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
 			"defaultValue": 1,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "When the value is 0, the product will not blink LED when being triggered;",
+					"label": "Disable",
 					"value": 0
 				},
 				{
-					"label": "When the value is 1, the product will blink LED when being triggered",
+					"label": "Enable",
 					"value": 1
 				}
 			]
@@ -189,12 +165,11 @@
 		{
 			"#": "32",
 			"label": "Level of Low Battery",
-			"description": "Set the trigger value for the low battery alarm",
+			"description": "This parameter defines a battery level as the \"low battery\"",
 			"valueSize": 1,
-			"minValue": 0,
+			"minValue": 10,
 			"maxValue": 50,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 20
 		}
 	],
 	"metadata": {

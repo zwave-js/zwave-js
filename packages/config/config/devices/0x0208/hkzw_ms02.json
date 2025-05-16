@@ -1,7 +1,7 @@
 {
 	"manufacturer": "HANK Electronics, Ltd.",
 	"manufacturerId": "0x0208",
-	"label": "10002343-039",
+	"label": "HKZW-MS02",
 	"description": "Motion Sensor",
 	"devices": [
 		{
@@ -22,33 +22,15 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
-		},
-		"2": {
-			"label": "Control:Key01",
-			"maxNodes": 5
-		}
-	},
 	"paramInformation": [
 		{
 			"#": "12",
-			"label": "Motion Sensor’s Sensitivity",
-			"description": "The higher the value, the more sensitive the PIR sensor",
+			"label": "Motion Sensor Sensitivity",
+			"description": "The higher the value,the more sensitive the PIR sensor",
 			"valueSize": 1,
-			"minValue": 0,
+			"minValue": 1,
 			"maxValue": 8,
-			"defaultValue": 8,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Disabled motion detection",
-					"value": 0
-				}
-			]
+			"defaultValue": 8
 		},
 		{
 			"#": "14",
@@ -58,21 +40,17 @@
 		},
 		{
 			"#": "15",
-			"label": "Value of The Basic Set",
-			"description": "Motion sensor can reverse its value of Basic Set when motion is triggered",
+			"label": "Value of Basic Set Command",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
 			"defaultValue": 0,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Send Basic Set value = 255 to nodes associated with group 2 when motion alarm is triggered. send Basic Set value = 0 to nodes associated with group 2 when motion alarm is canceled",
+					"label": "Disable",
 					"value": 0
 				},
 				{
-					"label": "Send Basic Set value = 0 to nodes associated with group 2 when motion alarm is triggered. send Basic Set value = 255 to nodes associated with group 2 when motion alarm is canceled",
+					"label": "Enable",
 					"value": 1
 				}
 			]
@@ -85,29 +63,22 @@
 		{
 			"#": "18",
 			"label": "Motion Alarm Cancellation Delay",
-			"description": "Motion alarm will be cancelled in the main controller after 3 seconds, the alarm cancellation can be delay by this parameter. any motion detected during the cancellation delay time countdown will result in the countdown being restarted",
+			"description": "Period of time after which Motion alarm will be cancelled.",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 65535,
-			"defaultValue": 30,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Reports are not sent",
-					"value": 0
-				}
-			]
+			"defaultValue": 0,
+			"unsigned": true
 		},
 		{
 			"#": "32",
 			"label": "Level of Low Battery",
-			"description": "The low level from 10% to 50%",
+			"description": "Define a battery level ad the \"low battery\"",
 			"valueSize": 1,
-			"minValue": 0,
+			"minValue": 10,
 			"maxValue": 50,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 20
 		}
 	],
 	"metadata": {
