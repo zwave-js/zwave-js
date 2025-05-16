@@ -1,0 +1,279 @@
+{
+	"manufacturer": "SimonTech S.L.U",
+	"manufacturerId": "0x0267",
+	"label": "10003041-13X",
+	"description": "HUB iO",
+	"devices": [
+		{
+			"productType": "0x000a",
+			"productId": "0x0000",
+			"zwaveAllianceId": 2845
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 3,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 20
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Association Led",
+			"description": "Turns on the central led",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Turns off the center led",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Custom Consumption Limit",
+			"description": "Limits the máximum load that can be powered by the socket of hub io",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 3680,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disables custom consumption limit",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "3",
+			"label": "Beacon",
+			"description": "Sets the leds lighting intensity",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 99,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disables the beacon function",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Delay On",
+			"description": "Delays the load activation after an on request.  values must be set in hex format",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disables timing",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "11",
+			"label": "Activation Time",
+			"description": "Sets the time that load will be activated after it is switch on.  values must be set in hex format",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disables timing",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Behavior of LED in Repose",
+			"description": "Sets led1 informing about socket load state",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Led1 remains off and only informs of load state during 5 sec. after pressing the button",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "13",
+			"label": "Lock Input",
+			"description": "Locks the hub io pushbutton",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Enables the pushbutton to control the load",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "15",
+			"label": "Reset Default",
+			"description": "Write only parameter with 2 possible values:  0x9867 -> allows remove the device from the network without performing any action on hub io. parameters, groups and Z-Wave status are restored to the default values. 0x4312 -> allows set all device configuration values to default the exception of long pulse lock configuration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 39015,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Performs a reset devault",
+					"value": 39015
+				},
+				{
+					"label": "Performs configuration default values process",
+					"value": 17170
+				}
+			]
+		},
+		{
+			"#": "16",
+			"label": "Delay Off",
+			"description": "Delays the load deactivation after an off request.  values must be set in hex format",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disables timing",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "17",
+			"label": "Postreset State",
+			"description": "Defines the load state when hub io is powered",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "After a reset the load starts off",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "19",
+			"label": "Pulse Action",
+			"description": "Defines the action to be performed when pushbutton is short pressed",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 2,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Toggle, a short press switches the",
+					"value": 0
+				},
+				{
+					"label": "On. a short press activates the load",
+					"value": 1
+				},
+				{
+					"label": "Off. a short press deactivates the load",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "20",
+			"label": "Identify",
+			"description": "The central LED flashes for 5 seconds at a frequency of 0.1s",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "The central LED flashes for 5 seconds at a frequency of 0.1s",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "21",
+			"label": "Loas State",
+			"description": "Allows to know the load state and value",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 511,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Load is off",
+					"value": 0
+				},
+				{
+					"label": "Load is on",
+					"value": 511
+				}
+			]
+		},
+		{
+			"#": "27",
+			"label": "Lock Hold Press",
+			"description": "Locks any press hold acción",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Hold press works as expected",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"reset": "Pressing pushbutton t>30s. \nOr removing HUB iO using the APP.\n\nIf HUB iO is the primary controller for your network, resetting it will result in the nodes in your network being orphaned and it will be necessary after the reset to exclude and re-include all of the nodes in the network. If HUB iO is being used as a secondary controller in the network, use this procedure to reset this controller only in the event that the network primary controller is missing or otherwise inoperable",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2845/Simon%20100%20iO%20Guide%20-%20HUB%20iO%20Datasheet.pdf"
+	}
+}
