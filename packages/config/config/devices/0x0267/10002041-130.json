@@ -1,37 +1,42 @@
 {
 	"manufacturer": "SimonTech S.L.U",
 	"manufacturerId": "0x0267",
-	"label": "10002041-130",
+	"label": "10002041-13X",
 	"description": "iO Cover for the Simon 100 Schuko Plug Socket",
 	"devices": [
 		{
 			"productType": "0x0009",
-			"productId": "0x0000"
+			"productId": "0x0000",
+			"zwaveAllianceId": 2674
 		}
 	],
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 3,
+			"isLifeline": true
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Association LED",
-			"description": "Turns ON/OFF the Association LED",
+			"label": "Association Led",
+			"description": "Activates the central led. configuration used by masters io in order to identify the devices associated to their group2 during manual association process",
 			"valueSize": 1,
 			"unit": "HEXADECIMAL",
+			"minValue": 0,
+			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
 			"writeOnly": true,
-			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Default",
+					"label": "Turns central LED off",
 					"value": 0
-				},
-				{
-					"label": "Center LED on",
-					"value": 255
 				}
 			]
 		},
@@ -55,119 +60,147 @@
 		},
 		{
 			"#": "3",
-			"label": "Beacon LEDs",
+			"label": "Beacon",
+			"description": "Sets the beacon intensity, turning on all device leds al percentage set in this configuration",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 99,
 			"defaultValue": 0,
+			"unsigned": true,
 			"options": [
 				{
-					"label": "Disables the beacon function",
+					"label": "Disables the beacon",
 					"value": 0
 				}
 			]
 		},
 		{
 			"#": "10",
-			"label": "Delay ON",
+			"label": "Delay On",
+			"description": "Sets a delay from activation request until the activation is performed.  this configuration must be set in hexadecimal values. 0x00 disables the delay. 0x01 to 0x7f sets the delay in seconds from 1 to 127 0x80 to 0xef sets the delay in minutes from 1 to 127",
 			"valueSize": 1,
+			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Delay is disabled",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "11",
-			"label": "Activation TIME",
+			"label": "Activation Time",
+			"description": "Sets the time when the load will be turned off after it is activated.  this configuration must be set in hexadecimal values. 0x00 disables the delay. 0x01 to 0x7f time is set in seconds from 1 to 127 0x80 to 0xef time is set in minutes from 1 to 127",
 			"valueSize": 1,
+			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Time is disabled",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "13",
 			"label": "Lock Input",
+			"description": "Locks the local control of the load. this configuration does not modifies the control via Z-Wave",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
-			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Default",
+					"label": "Local control is available",
 					"value": 0
-				},
-				{
-					"label": "Disables pushbutton",
-					"value": 255
 				}
 			]
 		},
 		{
 			"#": "15",
-			"label": "Reset",
-			"description": "Reset default",
+			"label": "Reset Default",
+			"description": "Write only parameter used to restore configurations or perform a completely restore default",
 			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 39015,
 			"defaultValue": 0,
 			"unsigned": true,
 			"writeOnly": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "All parameters except long pulse lock",
-					"value": 0
+					"label": "Configuration values are restored",
+					"value": 17170
 				},
 				{
-					"label": "Restored to default",
+					"label": "Factory reset",
 					"value": 39015
 				}
 			]
 		},
 		{
 			"#": "16",
-			"label": "Delay OFF",
+			"label": "Delay Off",
+			"description": "Sets a delay from deactivation request until the deactivation is performed.  this configuration must be set in hexadecimal values. 0x00 disables the delay. 0x01 to 0x7f sets the delay in seconds from 1 to 127 0x80 to 0xef sets the delay in minutes from 1 to 127",
 			"valueSize": 1,
+			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Delay is disabled",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "17",
-			"label": "Post Reset State",
-			"description": "Load state after reset",
+			"label": "Postreset State",
+			"description": "Sets the device state after a reset",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
 			"defaultValue": 255,
 			"unsigned": true,
-			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Off after reset",
+					"label": "After a reset the load starts off",
 					"value": 0
-				},
-				{
-					"label": "Activated after reset",
-					"value": 255
 				}
 			]
 		},
 		{
 			"#": "19",
-			"label": "Action When Pressing",
+			"label": "Press Action",
+			"description": "Defines the function performed by the device when keypad is pressed",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 2,
 			"defaultValue": 0,
+			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Toggle",
+					"label": "Short press toggles the load",
 					"value": 0
 				},
 				{
-					"label": "On",
+					"label": "Short press activates the load",
 					"value": 1
 				},
 				{
-					"label": "Off",
+					"label": "Short press deactivates the load",
 					"value": 2
 				}
 			]
@@ -175,42 +208,72 @@
 		{
 			"#": "20",
 			"label": "Identify",
-			"description": "The center LED flashes",
+			"description": "Central LED performs a fast blink",
 			"valueSize": 1,
-			"minValue": 255,
+			"minValue": 0,
 			"maxValue": 255,
-			"defaultValue": 255,
+			"defaultValue": 0,
 			"unsigned": true,
 			"writeOnly": true
 		},
 		{
 			"#": "21",
-			"label": "Charge Status",
-			"description": "Charge status (read-only)",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 0,
-			"defaultValue": 0,
-			"readOnly": true
-		},
-		{
-			"#": "27",
-			"label": "Long Press Key",
-			"description": "Determines function of long press",
+			"label": "Device State",
+			"description": "Read only configuration used to report the device state and last value   this value is represented in hexadecimal.  byte 0 informs about load state (0 load is off and 1 load is on)  byte 1 informs about load value (0x00 or 0xff)",
 			"valueSize": 1,
-			"defaultValue": 0,
+			"minValue": 0,
+			"maxValue": 511,
+			"defaultValue": 2,
 			"unsigned": true,
-			"allowManualEntry": false,
+			"readOnly": true,
 			"options": [
 				{
-					"label": "Default",
+					"label": "Load is off",
 					"value": 0
 				},
 				{
-					"label": "Reset config parameters",
-					"value": 255
+					"label": "Load is on",
+					"value": 511
+				}
+			]
+		},
+		{
+			"#": "27",
+			"label": "Lock Hold Press",
+			"description": "Locks the major part of hold press effects in order to avoid undesired Z-Wave changes, or restores default. 0xff hold press from 2sec to 30 sec does not performs a node info. hold press of 30sec restores configuration except lock hold press, and sends a node info in order to add or remove from Z-Wave network",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Hold press is available",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Behavior of LED in Repose",
+			"description": "Modifies the led1 state when socket io is in repose mode",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Led1 remains off and only informs of load state during 5 sec. after pressing the button",
+					"value": 0
 				}
 			]
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "When the pushbutton is released after a press of (2sec<T<30sec) the device will send a NIF to include from Z-Wave network or perform an association with other Z-Wave device.\nCentral LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nCentral LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton",
+		"exclusion": "When the pushbutton is released after a press of (2sec<T<30sec) the device will send a NIF to exclude from Z-Wave network or perform an association with other Z-Wave device.\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.",
+		"reset": "When the pushbutton is released after a press of (30sec<T) the device will perform a factory default values operation, excluding it from network and reset the configuration parameters.\n\nMain LED will perform 1 Blink with 5 sec.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2674/S100%20iO%20Socket_990922_990921.pdf"
+	}
 }
