@@ -1,18 +1,29 @@
 {
 	"manufacturer": "SimonTech S.L.U",
 	"manufacturerId": "0x0267",
-	"label": "10002041-13X",
-	"description": "Cover for IO Socket",
+	"label": "10003041-13X",
+	"description": "HUB iO",
 	"devices": [
 		{
-			"productType": "0x0009",
+			"productType": "0x000a",
 			"productId": "0x0000",
-			"zwaveAllianceId": 2674
+			"zwaveAllianceId": 2845
 		}
 	],
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 3,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 20
+		}
 	},
 	"paramInformation": [
 		{
@@ -53,9 +64,8 @@
 		{
 			"#": "10",
 			"label": "Delay ON",
-			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
 			"valueSize": 1,
-			"unit": "minutes",
 			"minValue": 0,
 			"maxValue": 254,
 			"defaultValue": 0,
@@ -92,7 +102,7 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Indicate status for 5 seconds after switching, off otherwise",
+					"label": "Indicate status for 5 seconds after pressing the button, off otherwise",
 					"value": 0
 				},
 				{
@@ -110,6 +120,7 @@
 		{
 			"#": "15",
 			"label": "Reset Default",
+			"description": "Write only parameter with 2 possible values:  0x9867 -> allows remove the device from the network without performing any action on hub io. parameters, groups and Z-Wave status are restored to the default values. 0x4312 -> allows set all device configuration values to default the exception of long pulse lock configuration",
 			"valueSize": 2,
 			"defaultValue": 0,
 			"unsigned": true,
@@ -117,12 +128,12 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Restore configuration values to default",
-					"value": 17170
+					"label": "Performs a reset devault",
+					"value": 39015
 				},
 				{
-					"label": "Factory reset",
-					"value": 39015
+					"label": "Performs configuration default values process",
+					"value": 17170
 				}
 			]
 		},
@@ -219,28 +230,23 @@
 		},
 		{
 			"#": "27",
-			"label": "Long Press Key",
-			"description": "Determines function of long press",
+			"label": "Lock Hold Press",
+			"description": "Locks any press hold acción",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
-			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Default",
+					"label": "Hold press works as expected",
 					"value": 0
-				},
-				{
-					"label": "Reset config parameters",
-					"value": 255
 				}
 			]
 		}
 	],
 	"metadata": {
-		"inclusion": "When the pushbutton is released after a press of (2sec<T<30sec) the device will send a NIF to include from Z-Wave network or perform an association with other Z-Wave device.\nCentral LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nCentral LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton",
-		"exclusion": "When the pushbutton is released after a press of (2sec<T<30sec) the device will send a NIF to exclude from Z-Wave network or perform an association with other Z-Wave device.\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.",
-		"reset": "When the pushbutton is released after a press of (30sec<T) the device will perform a factory default values operation, excluding it from network and reset the configuration parameters.\n\nMain LED will perform 1 Blink with 5 sec.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
-		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2674/S100%20iO%20Socket_990922_990921.pdf"
+		"reset": "Pressing pushbutton t>30s. \nOr removing HUB iO using the APP.\n\nIf HUB iO is the primary controller for your network, resetting it will result in the nodes in your network being orphaned and it will be necessary after the reset to exclude and re-include all of the nodes in the network. If HUB iO is being used as a secondary controller in the network, use this procedure to reset this controller only in the event that the network primary controller is missing or otherwise inoperable",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2845/Simon%20100%20iO%20Guide%20-%20HUB%20iO%20Datasheet.pdf"
 	}
 }
