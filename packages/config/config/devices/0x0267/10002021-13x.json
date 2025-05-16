@@ -1,0 +1,222 @@
+{
+	"manufacturer": "SimonTech S.L.U",
+	"manufacturerId": "0x0267",
+	"label": "10002021-13X",
+	"description": "S100 Master Roller Dimmer iO",
+	"devices": [
+		{
+			"productType": "0x0008",
+			"productId": "0x0000",
+			"zwaveAllianceId": 2673
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 3,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 20
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Association Led",
+			"description": "Activates the central led. configuration used by masters io in order to identify the devices associated to their group2 during manual association process",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Turns central LED off",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Behavior of LED in Repose",
+			"description": "Sets the central LED to 20% in order to find the device at night",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Central LED off",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "13",
+			"label": "Lock Input",
+			"description": "Locks the local control of associated devices and controller. this configuration does not modifies the control via Z-Wave, where if a set is received it will retransmitted to all group 2 associated nodes",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Local control is available",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "15",
+			"label": "Reset Default",
+			"description": "Write only parameter used to restore configurations or perform a completely restore default",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 39015,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Configuration values are restored",
+					"value": 17170
+				},
+				{
+					"label": "Factory reset",
+					"value": 39015
+				}
+			]
+		},
+		{
+			"#": "18",
+			"label": "Lock Manual Association",
+			"description": "Enables or disables the manual association process",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Hold press of 10sec to 30sec starts manual association of devices to group 2",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "19",
+			"label": "Press Action",
+			"description": "Defines the function performed by the device when keypad is pressed",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 5,
+			"defaultValue": 5,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Short press switches between the last power on and off (depending on the status of the associated control) by sending a Basic Set to 0x00 or 0xff to the associated nodes",
+					"value": 0
+				},
+				{
+					"label": "Short press activates those associated by sending Basic Set to 0xff",
+					"value": 1
+				},
+				{
+					"label": "Short press deactivates those associated by sending Basic Set to 0x00",
+					"value": 2
+				},
+				{
+					"label": "Short press always turn on the associated nodes by sending a Basic Set to 0xff. press from 2sec to 10sec always turns off the associated nodes by sending a Basic Set to 0x00",
+					"value": 4
+				},
+				{
+					"label": "When short press master inverts the load state via Basic Set, when the slider is enabled and load is on, multilevel sets are sent to modify the dimming value",
+					"value": 5
+				}
+			]
+		},
+		{
+			"#": "20",
+			"label": "Identify",
+			"description": "Central LED performs a fast blink",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true
+		},
+		{
+			"#": "21",
+			"label": "Device State",
+			"description": "Configuration used to know the device state and last active dimming value in case of act retransmitting values different from 0 or 0xff. this value is represented in hexadecimal. byte 0 informs about load state (0 load is off and 1 load is on) byte 1 informs about last active load value (0-0x63 or 0xff)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 355,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "27",
+			"label": "Lock Hold Press",
+			"description": "Locks the major part of hold press effects in order to avoid undesired Z-Wave changes, associations or restores default. 0xff hold press from 2sec to 10 sec does not performs a node info. hold press of 10 to 30 does not performs a manual association process. hold press of 30sec restores configuration except lock hold press, and sends a node info in order to add or remove from Z-Wave network",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Hold press is available",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "28",
+			"label": "Consult On Touch",
+			"description": "This configuration has only effects when there is only 1 associated node in group 2. is used to set if master has to be always informed about the controlled device state or it is consulted when user touches the keypad",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Device must receive reports about controlled device state",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "29",
+			"label": "Send Central Scene",
+			"description": "Disables the sending of central scene notifications to avoid perform 2 actions at same time (central scene action and group 2 action)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Device does not sends central scene notifications",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"reset": "When the pushbutton is released after a press of (30sec<T) the device will perform a factory default values operation, excluding it from network and reset the configuration parameters.\n\nMain LED will perform 1 Blink with 5 sec.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2673/S100%20iO%20MarterDimmer_991029_990916.pdf"
+	}
+}
