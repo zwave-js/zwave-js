@@ -2919,6 +2919,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@zwave-js/waddle@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@zwave-js/waddle@npm:1.0.0"
+  dependencies:
+    alcalzone-shared: "npm:^5.0.0"
+  checksum: 10/ecc3400b1069ac5c524af439ef95908863152747dd76493d89534bc56a94e4db1ade8f07404784301da5b3e6d270b905a3d5533d331de79ab36482fbb26ec0e5
+  languageName: node
+  linkType: hard
+
 "@zwave-js/web@workspace:packages/web":
   version: 0.0.0-use.local
   resolution: "@zwave-js/web@workspace:packages/web"
@@ -10639,6 +10648,7 @@ __metadata:
     "@zwave-js/shared": "workspace:*"
     "@zwave-js/testing": "workspace:*"
     "@zwave-js/transformers": "workspace:*"
+    "@zwave-js/waddle": "npm:^1.0.0"
     alcalzone-shared: "npm:^5.0.0"
     ansi-colors: "npm:^4.1.3"
     del-cli: "npm:^6.0.0"

@@ -803,7 +803,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this.getSupportedCCVersion(cc, nodeId, endpointIndex),
 		};
 
-		this._scheduler = new TaskScheduler();
+		this._scheduler = new TaskScheduler(() => {
+			return new ZWaveError(
+				"Task was removed",
+				ZWaveErrorCodes.Driver_TaskRemoved,
+			);
+		});
 	}
 
 	private serialFactory: ZWaveSerialStreamFactory | undefined;

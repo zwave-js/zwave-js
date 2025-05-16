@@ -4684,6 +4684,7 @@ export class ZWaveController
 		return {
 			priority: TaskPriority.Lower,
 			tag: { id: "rebuild-routes" },
+			// @ts-expect-error FIXME: Figure out why the return types are not compatible
 			task: async function* rebuildRoutesTask() {
 				// We work our way outwards from the controller and start with non-sleeping nodes, one by one
 				try {
