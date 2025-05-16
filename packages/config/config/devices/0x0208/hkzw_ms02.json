@@ -1,12 +1,13 @@
 {
-	"manufacturer": "HANK Electronics Ltd.",
+	"manufacturer": "HANK Electronics, Ltd.",
 	"manufacturerId": "0x0208",
-	"label": "HKZW-MS02",
+	"label": "10002343-039",
 	"description": "Motion Sensor",
 	"devices": [
 		{
 			"productType": "0x0200",
-			"productId": "0x0012"
+			"productId": "0x0012",
+			"zwaveAllianceId": 3897
 		},
 		{
 			"productType": "0x0201",
@@ -21,15 +22,33 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Control:Key01",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "12",
-			"label": "Motion Sensor Sensitivity",
-			"description": "The higher the value,the more sensitive the PIR sensor",
+			"label": "Motion Sensor’s Sensitivity",
+			"description": "The higher the value, the more sensitive the PIR sensor",
 			"valueSize": 1,
-			"minValue": 1,
+			"minValue": 0,
 			"maxValue": 8,
-			"defaultValue": 8
+			"defaultValue": 8,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disabled motion detection",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "14",
@@ -39,17 +58,21 @@
 		},
 		{
 			"#": "15",
-			"label": "Value of Basic Set Command",
+			"label": "Value of The Basic Set",
+			"description": "Motion sensor can reverse its value of Basic Set when motion is triggered",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
 			"defaultValue": 0,
+			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable",
+					"label": "Send Basic Set value = 255 to nodes associated with group 2 when motion alarm is triggered. send Basic Set value = 0 to nodes associated with group 2 when motion alarm is canceled",
 					"value": 0
 				},
 				{
-					"label": "Enable",
+					"label": "Send Basic Set value = 0 to nodes associated with group 2 when motion alarm is triggered. send Basic Set value = 255 to nodes associated with group 2 when motion alarm is canceled",
 					"value": 1
 				}
 			]
@@ -62,22 +85,35 @@
 		{
 			"#": "18",
 			"label": "Motion Alarm Cancellation Delay",
-			"description": "Period of time after which Motion alarm will be cancelled.",
+			"description": "Motion alarm will be cancelled in the main controller after 3 seconds, the alarm cancellation can be delay by this parameter. any motion detected during the cancellation delay time countdown will result in the countdown being restarted",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 65535,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 30,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Reports are not sent",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "32",
 			"label": "Level of Low Battery",
-			"description": "Define a battery level ad the \"low battery\"",
+			"description": "The low level from 10% to 50%",
 			"valueSize": 1,
-			"minValue": 10,
+			"minValue": 0,
 			"maxValue": 50,
-			"defaultValue": 20
+			"defaultValue": 0,
+			"unsigned": true
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "1) Open the cover.\n2) Place the device within the direct range of your Z-Wave controller.\n3) Set the main controller in add mode (see the controller’s manual).\n4) Click the Z-button once or triple click the Z-button quickly, the LED indicator should blink fast. \n5) Wait for the adding process to end.\n6) Successful adding will be confirmed by the Z-Wave controller’s message.",
+		"exclusion": "1) Open the cover.\n2) Place the device within the direct range of your Z-Wave controller.\n3) Set the main controller remove mode (see the controller’s manual).\n4) Triple click the Z-button quickly, the LED indicator should blink fast.\n5) Wait for the removing process to end.\n6) Successful adding will be confirmed by the Z-Wave controller’s message.",
+		"reset": "1)Power on the device,\n2) Press and hold the Z button for more than 20 seconds,\n3) If holding time more than 20seconds, the LED indicator will keep on for 2 seconds, which means resetting is complete.\n4) The reset feature works only when the device has been included into a Z-Wave network.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3897/991556%20motion%20sensor.pdf"
+	}
 }
