@@ -25,7 +25,10 @@
 			"label": "Overload Protection",
 			"valueSize": 2,
 			"unit": "W",
+			"minValue": 0,
+			"maxValue": 65535,
 			"defaultValue": 0,
+			"unsigned": true,
 			"options": [
 				{
 					"label": "Disable",
