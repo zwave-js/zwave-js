@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.5.0 (2025-05-19)
 ### Features
 * Allow the application to disable support for specific CCs (#7821)
 * Support OTW updates for the controller via the firmware update service (#7840)
