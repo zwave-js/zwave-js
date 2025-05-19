@@ -4,6 +4,20 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Allow the application to disable support for specific CCs (#7821)
+* Support OTW updates for the controller via the firmware update service (#7840)
+
+### Bugfixes
+* Make the device ID check during OTA updates actually do something (#7839)
+
+### Config file changes
+* Add/update several Simon iO devices (#7838)
+
+### Changes under the hood
+* Extract TaskScheduler into own library (#7837)
+
 ## 15.4.2 (2025-05-15)
 ### Bugfixes
 * Fixed a regression from v15 where Z-Wave JS would immediately soft-reset the controller instead of retrying after an ACK timeout (#7819)
