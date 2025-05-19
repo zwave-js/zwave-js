@@ -45,6 +45,23 @@ export type FirmwareUpdateInfo = Expand<
 	}
 >;
 
+export function isFirmwareUpdateInfo(
+	info: any,
+): info is FirmwareUpdateInfo {
+	return typeof info === "object"
+		&& info !== null
+		&& typeof info.version === "string"
+		&& typeof info.normalizedVersion === "string"
+		&& typeof info.changelog === "string"
+		&& typeof info.channel === "string"
+		&& typeof info.device === "object"
+		&& info.device !== null
+		&& typeof info.device.manufacturerId === "number"
+		&& typeof info.device.productType === "number"
+		&& typeof info.device.productId === "number"
+		&& typeof info.device.firmwareVersion === "string";
+}
+
 export interface GetFirmwareUpdatesOptions {
 	/** Allows overriding the API key for the firmware update service */
 	apiKey?: string;

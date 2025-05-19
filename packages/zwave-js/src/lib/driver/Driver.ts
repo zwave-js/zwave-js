@@ -65,6 +65,7 @@ import {
 	ControllerStatus,
 	Duration,
 	EncapsulationFlags,
+	type Firmware,
 	type HostIDs,
 	type LogConfig,
 	type LogContainer,
@@ -213,12 +214,17 @@ import { isArray, isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
 import { PACKAGE_NAME, PACKAGE_VERSION } from "../_version.js";
 import { ZWaveController } from "../controller/Controller.js";
+import { downloadFirmwareUpdate } from "../controller/FirmwareUpdateService.js";
 import {
 	type FoundNode,
 	InclusionState,
 	RemoveNodeReason,
 } from "../controller/Inclusion.js";
 import { determineNIF } from "../controller/NodeInformationFrame.js";
+import {
+	type FirmwareUpdateInfo,
+	isFirmwareUpdateInfo,
+} from "../controller/_Types.js";
 import { DriverLogger } from "../log/Driver.js";
 import type { Endpoint } from "../node/Endpoint.js";
 import type { ZWaveNode } from "../node/Node.js";
@@ -8234,6 +8240,8 @@ ${handlers.length} left`,
 
 	/**
 	 * Updates the firmware of the controller using the given firmware file.
+	 * The file can be provided as binary data or as a {@link FirmwareUpdateInfo} object as returned
+	 * from the firmware update service. The latter will be downloaded automatically.
 	 *
 	 * The return value indicates whether the update was successful.
 	 * **WARNING:** After a successful update, the Z-Wave driver will destroy itself so it can be restarted.
@@ -8241,7 +8249,7 @@ ${handlers.length} left`,
 	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
 	 */
 	public async firmwareUpdateOTW(
-		data: Uint8Array,
+		data: Uint8Array | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
@@ -8257,6 +8265,11 @@ ${handlers.length} left`,
 				`Failed to start the update: The controller is currently being updated!`;
 			this.controllerLog.print(message, "error");
 			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
+		}
+
+		// If the data is provided as a FirmwareUpdateInfo, we need to download the firmware first
+		if (isFirmwareUpdateInfo(data)) {
+			data = await this.extractOTWUpdateInfo(data);
 		}
 
 		// When in bootloader mode, we can use the 700 series update method
@@ -8292,6 +8305,93 @@ ${handlers.length} left`,
 			`Firmware updates are not supported on this Z-Wave module`,
 			ZWaveErrorCodes.Controller_NotSupported,
 		);
+	}
+
+	/**
+	 * Downloads the desired firmware update from the Z-Wave JS firmware update service and extracts the firmware data.
+	 * @param updateInfo The desired entry from the updates array that was returned by {@link getAvailableFirmwareUpdates}.
+	 * Before applying the update, Z-Wave JS will check whether the device IDs, firmware version and region match.
+	 */
+	private async extractOTWUpdateInfo(
+		updateInfo: FirmwareUpdateInfo,
+	): Promise<Uint8Array> {
+		// Controller updates must have exactly one file
+		if (updateInfo.files?.length !== 1) {
+			throw new ZWaveError(
+				`Invalid number of update files for OTW firmware updates.`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		const update = updateInfo.files[0];
+
+		// The controller must also not be downgraded this way
+		if (updateInfo.downgrade) {
+			throw new ZWaveError(
+				`Invalid update file: Downgrades are not supported!`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		// Make sure we're not applying the update to the wrong device
+		if (
+			updateInfo.device.manufacturerId !== this.controller.manufacturerId
+			|| updateInfo.device.productType !== this.controller.productType
+			|| updateInfo.device.productId !== this.controller.productId
+		) {
+			throw new ZWaveError(
+				`Cannot update controller firmware: The firmware update is for a different device!`,
+				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
+			);
+		} else if (
+			updateInfo.device.firmwareVersion
+				!== this.controller.firmwareVersion
+		) {
+			throw new ZWaveError(
+				`Cannot update controller firmware: The update is for a different original firmware version!`,
+				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
+			);
+		}
+
+		const loglevel = this.getLogConfig().level;
+
+		let logMessage = `Downloading OTW firmware update...`;
+		if (loglevel === "silly") {
+			logMessage += `
+URL:       ${update.url}
+integrity: ${update.integrity}`;
+		}
+		this.controllerLog.print(logMessage);
+
+		let firmware: Firmware;
+		try {
+			firmware = await downloadFirmwareUpdate(update);
+		} catch (e: any) {
+			let message = `Downloading the OTW firmware update failed:\n`;
+			if (isZWaveError(e)) {
+				// Pass "real" Z-Wave errors through
+				throw new ZWaveError(message + e.message, e.code);
+			} else if (e.response) {
+				// And construct a better error message for HTTP errors
+				if (
+					isObject(e.response.data)
+					&& typeof e.response.data.message === "string"
+				) {
+					message += `${e.response.data.message} `;
+				}
+				message += `[${e.response.status} ${e.response.statusText}]`;
+			} else if (typeof e.message === "string") {
+				message += e.message;
+			} else {
+				message += `Failed to download firmware update!`;
+			}
+
+			throw new ZWaveError(
+				message,
+				ZWaveErrorCodes.FWUpdateService_RequestError,
+			);
+		}
+
+		return firmware.data;
 	}
 
 	private async firmwareUpdateOTW500(
