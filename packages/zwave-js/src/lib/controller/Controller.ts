@@ -8290,19 +8290,16 @@ export class ZWaveController
 			}
 		}
 
-		const { manufacturerId, productType, productId, firmwareVersion } =
-			node;
-
 		if (
-			manufacturerId !== node.manufacturerId
-			|| productType !== node.productType
-			|| productId !== node.productId
+			node.manufacturerId !== deviceId.manufacturerId
+			|| node.productType !== deviceId.productType
+			|| node.productId !== deviceId.productId
 		) {
 			throw new ZWaveError(
 				`Cannot update firmware for node ${node.id}: The firmware update is for a different device!`,
 				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
 			);
-		} else if (firmwareVersion !== deviceId.firmwareVersion) {
+		} else if (node.firmwareVersion !== deviceId.firmwareVersion) {
 			throw new ZWaveError(
 				`Cannot update firmware for node ${node.id}: The update is for a different original firmware version!`,
 				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
