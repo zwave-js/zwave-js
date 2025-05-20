@@ -759,10 +759,53 @@ export async function nvmToJSON(
 		return lrNodes.get(id)!;
 	};
 
-	const protocolFileFormat = await adapter.get({
-		domain: "controller",
-		type: "protocolFileFormat",
-	}, true);
+	let protocolFileFormat: number;
+	let protocolVersion: string;
+	try {
+		protocolFileFormat = await adapter.get({
+			domain: "controller",
+			type: "protocolFileFormat",
+		}, true);
+		protocolVersion = await adapter.get({
+			domain: "controller",
+			type: "protocolVersion",
+		}, true);
+	} catch (e) {
+		// Firmwares based on SDK 7.23.0 and 7.23.1 do not write the protocol format/version to NVM,
+		// so file 0x50000 is missing. Those are out in the wild, so we need to work around this.
+		// There are a few heuristics we can use, assuming that Silabs doesn't break this again in a later version:
+		//   - SDK < 7.23.0 are not affected, also 7.23.2+ is fixed
+		let isSDK723 = true;
+		//   - The ApplicationRFConfigFile (0x68) exists and has 9 bytes
+		isSDK723 &&= (await nvm3.get(ApplicationRFConfigFileID))?.length == 9;
+		//   - The ApplicationVersionFile800 (0x41000) exists
+		isSDK723 &&= !!(await nvm3.get(ApplicationVersionFile800ID));
+		//   - The ProtocolLRNodeListFile (0x5000c) exists
+		isSDK723 &&= !!(await nvm3.get(ProtocolLRNodeListFileID));
+		//   - The ControllerInfoFile (0x50004) exists and has 22 bytes
+		isSDK723 &&= (await nvm3.get(ControllerInfoFileID))?.length == 22;
+
+		if (isSDK723) {
+			// Remember the expected format
+			protocolVersion = "7.23.0";
+			protocolFileFormat = 5;
+			// And also mirror it back to the NVM adapter. We never save it to NVM,
+			// so we can just set the file.
+			adapter.setFile(
+				new ProtocolVersionFile({
+					fileVersion: protocolVersion,
+					format: protocolFileFormat,
+					major: 7,
+					minor: 23,
+					patch: 0,
+				}),
+			);
+			// And we need to init the adapter again
+			await adapter["init"]();
+		} else {
+			throw e;
+		}
+	}
 
 	// Bail early if the NVM uses a protocol file format that's newer than we support
 	if (protocolFileFormat > MAX_PROTOCOL_FILE_FORMAT) {
@@ -772,11 +815,6 @@ export async function nvmToJSON(
 			{ protocolFileFormat },
 		);
 	}
-
-	const protocolVersion = await adapter.get({
-		domain: "controller",
-		type: "protocolVersion",
-	}, true);
 
 	// Read all flags for all nodes
 	const appRouteLock = new Set(
