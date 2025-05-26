@@ -3894,20 +3894,42 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				});
 			}
 		} catch (e) {
-			if (isAbortError(e)) {
-				return;
-			} else if (
-				isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_Failed
+			if (isAbortError(e)) return;
+
+			if (
+				isZWaveError(e)
+				&& e.code === ZWaveErrorCodes.Driver_SerialPortClosed
 			) {
 				// A disconnection while soft resetting is to be expected.
 				// The soft reset method will handle reopening
 				if (this.isSoftResetting || this._isOpeningSerialPort) return;
 
-				void this.destroyWithMessage(e.message);
+				void this.handleSerialPortClosedUnexpectedly();
 				return;
 			}
 			throw e;
 		}
+	}
+
+	private async handleSerialPortClosedUnexpectedly(): Promise<void> {
+		// Otherwise, try to recover by reopening the serial port
+		this.driverLog.print(
+			"Serial port closed unexpectedly, attempting to reopen...",
+			"warn",
+		);
+
+		await wait(1000);
+		try {
+			await this.openSerialport();
+		} catch (ee) {
+			void this.destroyWithMessage(getErrorMessage(ee));
+			return;
+		}
+
+		this.driverLog.print(
+			"Serial port reopened",
+			"warn",
+		);
 	}
 
 	/**
@@ -5172,6 +5194,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			case SerialAPIWakeUpReason.Reset:
 			case SerialAPIWakeUpReason.WatchdogReset:
 			case SerialAPIWakeUpReason.SoftwareReset:
+			case SerialAPIWakeUpReason.PowerUp:
 			case SerialAPIWakeUpReason.EmergencyWatchdogReset:
 			case SerialAPIWakeUpReason.BrownoutCircuit: {
 				// The Serial API restarted unexpectedly
