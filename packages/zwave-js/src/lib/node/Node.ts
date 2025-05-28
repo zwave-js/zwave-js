@@ -300,6 +300,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * Cleans up all resources used by this node
 	 */
 	public destroy(): void {
+		super.destroy();
 		// Remove all timeouts
 		for (
 			const timeout of [

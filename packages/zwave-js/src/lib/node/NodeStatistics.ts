@@ -14,6 +14,7 @@ export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
 			commandsDroppedRX: 0,
 			commandsDroppedTX: 0,
 			timeoutResponse: 0,
+			commandRateRX: 0,
 		};
 	}
 }
@@ -37,6 +38,11 @@ export interface NodeStatistics {
 	 * Consecutive measurements are combined using an exponential moving average.
 	 */
 	rtt?: number;
+
+	/**
+	 * Averate rate of commands received from this node, measured in commands per minute.
+	 */
+	commandRateRX: number;
 
 	/**
 	 * Average RSSI of frames received by this node in dBm.

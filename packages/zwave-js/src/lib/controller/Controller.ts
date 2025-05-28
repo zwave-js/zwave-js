@@ -2728,7 +2728,9 @@ export class ZWaveController
 				node.updateNodeInfo(msg.nodeInformation);
 
 				// This came from the node
-				node.lastSeen = new Date();
+				const now = new Date();
+				node.lastSeen = now;
+				node.lastCommandTimestampRX = now;
 
 				// Resolve active pings that would fail otherwise
 				this.driver.resolvePendingPings(node.id);

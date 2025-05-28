@@ -14,7 +14,7 @@ import {
 	nodeStatusMachineStateToNodeStatus,
 } from "../NodeStatusMachine.js";
 import { NodeStatus } from "../_Types.js";
-import { NodeEventsMixin } from "./10_Events.js";
+import { NodeRateMonitorMixin } from "./11_RateMonitor.js";
 
 export interface NodeWithStatus {
 	/**
@@ -57,7 +57,7 @@ export interface NodeWithStatus {
 	interviewStage: InterviewStage;
 }
 
-export abstract class NodeStatusMixin extends NodeEventsMixin
+export abstract class NodeStatusMixin extends NodeRateMonitorMixin
 	implements NodeWithStatus
 {
 	public constructor(

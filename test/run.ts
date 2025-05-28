@@ -23,7 +23,7 @@ process.on("unhandledRejection", (_r) => {
 // 800 series
 const port = os.platform() === "win32"
 	? "COM5"
-	: "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_D83BDA7524E4-if00";
+	: "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_8CBFEA8F69D8-if00";
 // const port = "tcp://127.0.0.1:5555";
 
 const driver = new Driver(port, {
@@ -72,21 +72,15 @@ const driver = new Driver(port, {
 	.on("error", console.error)
 	.once("driver ready", async () => {
 		// Test code goes here
-		const node = driver.controller.nodes.getOrThrow(2);
-		node.once("ready", async () => {
-			await wait(500);
-			debugger;
-			void node.commandClasses["Binary Switch"].withOptions({
-				maxSendAttempts: 3,
-			}).set(false);
-
-			await wait(30000);
-			debugger;
-
-			await node.commandClasses["Binary Switch"].withOptions({
-				maxSendAttempts: 3,
-			}).set(false);
-		});
+		for (const node of driver.controller.nodes.values()) {
+			node.on("statistics updated", (node, stats) => {
+				if (stats.commandRateRX) {
+					console.debug(
+						`Node ${node.id} command rate RX: ${stats.commandRateRX} commands/min`,
+					);
+				}
+			});
+		}
 	})
 	.once("bootloader ready", async () => {
 		// What to do when stuck in the bootloader

@@ -3984,7 +3984,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 				// Whether successful or not, a message from a node should update last seen
 				const node = this.tryGetNode(msg);
-				if (node) node.lastSeen = new Date();
+				if (node) {
+					const now = new Date();
+					node.lastSeen = now;
+					node.lastCommandTimestampRX = now;
+				}
 
 				// Ensure there are no errors
 				assertValidCCs(msg as ContainsCC);

@@ -11,4 +11,9 @@ export abstract class ZWaveNodeBase extends Endpoint implements NodeId {
 	public get id(): number {
 		return this.nodeId;
 	}
+
+	/** Cleans up all resources used by this node */
+	public destroy(): void {
+		// Nothing to do here by default
+	}
 }
