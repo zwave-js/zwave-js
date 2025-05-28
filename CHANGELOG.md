@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.6.0 (2025-05-28)
 ### Features
 * Add options to set powerlevel within legal limits on region change during startup (#7853)
 
