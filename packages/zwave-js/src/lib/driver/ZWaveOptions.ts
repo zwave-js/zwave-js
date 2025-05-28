@@ -342,14 +342,25 @@ export interface ZWaveOptions {
 		preferLRRegion?: boolean;
 
 		txPower?: {
-			/** The desired TX power in dBm. */
-			powerlevel: number;
+			/**
+			 * The desired TX power in dBm.
+			 *
+			 * The special value "auto" will apply the known legal limits for the configured RF region,
+			 * but only if the region is actually changed as a result of using the `rf.region` setting.
+			 */
+			powerlevel: number | "auto";
+
 			/** A hardware-specific calibration value. */
-			measured0dBm: number;
+			measured0dBm?: number;
 		};
 
-		/** The desired max. powerlevel setting for Z-Wave Long Range in dBm. */
-		maxLongRangePowerlevel?: number;
+		/**
+		 * The desired max. powerlevel setting for Z-Wave Long Range in dBm.
+		 *
+		 * The special value "auto" will apply the known legal limits for the configured RF region,
+		 * but only if the region is actually changed as a result of using the `rf.region` setting.
+		 */
+		maxLongRangePowerlevel?: number | "auto";
 
 		/**
 		 * The desired channel to use for Z-Wave Long Range.

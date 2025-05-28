@@ -75,3 +75,27 @@ export enum ZnifferLRChannelConfig {
 	"Classic & LR B" = 2,
 	"LR A & B" = 3,
 }
+
+export function getLegalPowerlevelMesh(region: RFRegion): number | undefined {
+	switch (region) {
+		case RFRegion.Europe:
+		case RFRegion["Europe (Long Range)"]:
+			return +13; // dBm
+		case RFRegion.USA:
+		case RFRegion["USA (Long Range)"]:
+			return -1; // dBm
+	}
+	// Nobody knows
+}
+
+export function getLegalPowerlevelLR(region: RFRegion): number | undefined {
+	switch (region) {
+		case RFRegion.Europe:
+		case RFRegion["Europe (Long Range)"]:
+			return +14; // dBm
+		case RFRegion.USA:
+		case RFRegion["USA (Long Range)"]:
+			return +20; // dBm
+	}
+	// Nobody knows
+}

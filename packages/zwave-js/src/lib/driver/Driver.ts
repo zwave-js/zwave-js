@@ -544,12 +544,24 @@ function checkOptions(options: ZWaveOptions): void {
 					`rf.txPower must be an object!`,
 					ZWaveErrorCodes.Driver_InvalidOptions,
 				);
-			} else if (
+			}
+
+			if (
 				typeof options.rf.txPower.powerlevel !== "number"
-				|| typeof options.rf.txPower.measured0dBm !== "number"
+				&& options.rf.txPower.powerlevel !== "auto"
 			) {
 				throw new ZWaveError(
-					`rf.txPower must contain the following numeric properties: powerlevel, measured0dBm!`,
+					`rf.txPower.powerlevel must be a number or "auto"!`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
+
+			if (
+				options.rf.txPower.measured0dBm != undefined
+				&& typeof options.rf.txPower.measured0dBm !== "number"
+			) {
+				throw new ZWaveError(
+					`rf.txPower.measured0dBm must be a number!`,
 					ZWaveErrorCodes.Driver_InvalidOptions,
 				);
 			}
