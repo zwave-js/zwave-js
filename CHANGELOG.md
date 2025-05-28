@@ -4,6 +4,15 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Add options to set powerlevel within legal limits on region change during startup (#7853)
+
+### Bugfixes
+* When the serialport closes unexpectedly, try to reopen it first before throwing an error (#7851)
+* Work around missing protocol version file in NVM backed up from SDK `7.23.0` and `.1` (#7846)
+* The default region is no longer considered to be Europe for firmware updates (#7842)
+
 ## 15.5.0 (2025-05-19)
 ### Features
 * Allow the application to disable support for specific CCs (#7821)
