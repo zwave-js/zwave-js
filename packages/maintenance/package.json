@@ -42,7 +42,7 @@
     "@dprint/formatter": "^0.4.1",
     "@dprint/json": "^0.20.0",
     "@dprint/markdown": "^0.18.0",
-    "@dprint/typescript": "^0.95.0",
+    "@dprint/typescript": "^0.95.5",
     "@types/globrex": "^0.1.4",
     "@types/node": "^20.17.32",
     "@types/yargs": "^17.0.33",
