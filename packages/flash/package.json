@@ -47,7 +47,7 @@
     "lint:ts:fix": "yarn run lint:ts --fix"
   },
   "devDependencies": {
-    "@types/node": "^20.17.32",
+    "@types/node": "^20.17.57",
     "@types/yargs": "^17.0.33",
     "del-cli": "^6.0.0",
     "typescript": "5.8.3"
