@@ -2583,7 +2583,7 @@ __metadata:
     es-main: "npm:^1.3.0"
     eslint: "npm:^9.28.0"
     reflect-metadata: "npm:^0.2.2"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
   languageName: unknown
@@ -2619,7 +2619,7 @@ __metadata:
     semver: "npm:^7.6.3"
     sinon: "npm:^19.0.2"
     ts-pegjs: "patch:ts-pegjs@npm%3A4.2.1#~/.yarn/patches/ts-pegjs-npm-4.2.1-0f567a1059.patch"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
     winston: "npm:^3.17.0"
@@ -2652,7 +2652,7 @@ __metadata:
     semver: "npm:^7.6.3"
     sinon: "npm:^19.0.2"
     triple-beam: "npm:*"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
     winston: "npm:^3.17.0"
@@ -2749,7 +2749,7 @@ __metadata:
     piscina: "npm:^4.8.0"
     reflect-metadata: "npm:^0.2.2"
     ts-morph: "npm:^25.0.1"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     yargs: "npm:^17.7.2"
   languageName: unknown
@@ -2770,7 +2770,7 @@ __metadata:
     del-cli: "npm:^6.0.0"
     reflect-metadata: "npm:^0.2.2"
     semver: "npm:^7.6.3"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
     yargs: "npm:^17.7.2"
@@ -2838,7 +2838,7 @@ __metadata:
     source-map-support: "npm:^0.5.21"
     ts-morph: "npm:^25.0.1"
     ts-patch: "npm:3.3.0"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     turbo: "npm:2.4.4"
     typescript: "npm:5.8.3"
     typescript-eslint: "npm:^8.32.0"
@@ -2868,7 +2868,7 @@ __metadata:
     del-cli: "npm:^6.0.0"
     serialport: "npm:^13.0.0"
     sinon: "npm:^19.0.2"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
     winston: "npm:^3.17.0"
@@ -2887,7 +2887,7 @@ __metadata:
     del-cli: "npm:^6.0.0"
     pathe: "npm:^2.0.1"
     sinon: "npm:^19.0.2"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
   languageName: unknown
@@ -2910,7 +2910,7 @@ __metadata:
     ansi-colors: "npm:^4.1.3"
     del-cli: "npm:^6.0.0"
     triple-beam: "npm:*"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     winston-transport: "npm:^4.9.0"
   languageName: unknown
@@ -9298,9 +9298,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.19.3":
-  version: 4.19.3
-  resolution: "tsx@npm:4.19.3"
+"tsx@npm:^4.19.4":
+  version: 4.19.4
+  resolution: "tsx@npm:4.19.4"
   dependencies:
     esbuild: "npm:~0.25.0"
     fsevents: "npm:~2.3.3"
@@ -9310,7 +9310,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10/a7e7f41e5593b242772050abacf51908aa8a6d4d9ea6c29e80161eb557d664a0f4cc8d38d0c8c151fddb6c2e9e337af27ba0e269c9707ccd7eeff0e0ea7fcf98
+  checksum: 10/4dde315aeda70b9cadfecbc8d05b1625f5831018b9cb2db25cbbd03c5f5ee9c59cdc6652a0fd8492176b50944a5af1d5af352b944d024f4a719f58d6f2ac3a7f
   languageName: node
   linkType: hard
 
@@ -10085,7 +10085,7 @@ __metadata:
     serialport: "npm:^13.0.0"
     sinon: "npm:^19.0.2"
     source-map-support: "npm:^0.5.21"
-    tsx: "npm:^4.19.3"
+    tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
     winston: "npm:^3.17.0"
