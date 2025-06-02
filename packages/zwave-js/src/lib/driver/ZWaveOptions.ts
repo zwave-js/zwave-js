@@ -345,8 +345,9 @@ export interface ZWaveOptions {
 			/**
 			 * The desired TX power in dBm.
 			 *
-			 * The special value "auto" will apply the known legal limits for the configured RF region,
-			 * but only if the region is actually changed as a result of using the `rf.region` setting.
+			 * The special value "auto" will apply the known legal limits for the configured RF region
+			 * whenever the region is actually changed. Switching from a non-LR region to the corresponding
+			 * LR region will not cause the powerlevel to be changed.
 			 */
 			powerlevel: number | "auto";
 
@@ -357,8 +358,9 @@ export interface ZWaveOptions {
 		/**
 		 * The desired max. powerlevel setting for Z-Wave Long Range in dBm.
 		 *
-		 * The special value "auto" will apply the known legal limits for the configured RF region,
-		 * but only if the region is actually changed as a result of using the `rf.region` setting.
+		 * The special value "auto" will apply the known legal limits for the configured RF region
+		 * whenever the region is actually changed. Switching from a non-LR region to the corresponding
+		 * LR region will not cause the powerlevel to be changed.
 		 */
 		maxLongRangePowerlevel?: number | "auto";
 
