@@ -126,7 +126,7 @@
     "fflate": "^0.8.2",
     "logform": "^2.7.0",
     "nrf-intel-hex": "^1.4.0",
-    "pathe": "^2.0.1",
+    "pathe": "^2.0.3",
     "reflect-metadata": "^0.2.2",
     "semver": "^7.6.3",
     "triple-beam": "*",

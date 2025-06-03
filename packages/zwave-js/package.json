@@ -145,7 +145,7 @@
     "ky": "^1.8.1",
     "mdns-server": "^1.0.11",
     "p-queue": "^8.1.0",
-    "pathe": "^2.0.1",
+    "pathe": "^2.0.3",
     "reflect-metadata": "^0.2.2",
     "semver": "^7.6.3",
     "serialport": "^13.0.0",

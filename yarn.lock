@@ -2617,7 +2617,7 @@ __metadata:
     json-logic-js: "npm:^2.0.5"
     json5: "npm:^2.2.3"
     ky: "npm:^1.8.1"
-    pathe: "npm:^2.0.1"
+    pathe: "npm:^2.0.3"
     peggy: "npm:^3.0.2"
     semver: "npm:^7.6.3"
     sinon: "npm:^19.0.2"
@@ -2650,7 +2650,7 @@ __metadata:
     fflate: "npm:^0.8.2"
     logform: "npm:^2.7.0"
     nrf-intel-hex: "npm:^1.4.0"
-    pathe: "npm:^2.0.1"
+    pathe: "npm:^2.0.3"
     reflect-metadata: "npm:^0.2.2"
     semver: "npm:^7.6.3"
     sinon: "npm:^19.0.2"
@@ -2687,7 +2687,7 @@ __metadata:
     "@types/yargs": "npm:^17.0.33"
     "@zwave-js/core": "workspace:*"
     del-cli: "npm:^6.0.0"
-    pathe: "npm:^2.0.1"
+    pathe: "npm:^2.0.3"
     typescript: "npm:5.8.3"
     yargs: "npm:^17.7.2"
     zwave-js: "workspace:*"
@@ -2888,7 +2888,7 @@ __metadata:
     "@types/sinon": "npm:^17.0.4"
     alcalzone-shared: "npm:^5.0.0"
     del-cli: "npm:^6.0.0"
-    pathe: "npm:^2.0.1"
+    pathe: "npm:^2.0.3"
     sinon: "npm:^19.0.2"
     tsx: "npm:^4.19.4"
     typescript: "npm:5.8.3"
@@ -7805,6 +7805,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pathe@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "pathe@npm:2.0.3"
+  checksum: 10/01e9a69928f39087d96e1751ce7d6d50da8c39abf9a12e0ac2389c42c83bc76f78c45a475bd9026a02e6a6f79be63acc75667df855862fe567d99a00a540d23d
+  languageName: node
+  linkType: hard
+
 "pathval@npm:^2.0.0":
   version: 2.0.0
   resolution: "pathval@npm:2.0.0"
@@ -10082,7 +10089,7 @@ __metadata:
     mdns-server: "npm:^1.0.11"
     mockdate: "npm:^3.0.5"
     p-queue: "npm:^8.1.0"
-    pathe: "npm:^2.0.1"
+    pathe: "npm:^2.0.3"
     reflect-metadata: "npm:^0.2.2"
     semver: "npm:^7.6.3"
     serialport: "npm:^13.0.0"
