@@ -2749,7 +2749,7 @@ __metadata:
     execa: "npm:^9.5.2"
     globrex: "npm:^0.1.2"
     json5: "npm:^2.2.3"
-    piscina: "npm:^4.8.0"
+    piscina: "npm:^5.0.0"
     reflect-metadata: "npm:^0.2.2"
     ts-morph: "npm:^25.0.1"
     tsx: "npm:^4.19.4"
@@ -7861,15 +7861,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"piscina@npm:^4.8.0":
-  version: 4.8.0
-  resolution: "piscina@npm:4.8.0"
+"piscina@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "piscina@npm:5.0.0"
   dependencies:
     "@napi-rs/nice": "npm:^1.0.1"
   dependenciesMeta:
     "@napi-rs/nice":
       optional: true
-  checksum: 10/5c28396c2fa3001bcf669d3c5d2678a2e89de622f6a8dcf0ba00ed58412d9aa8fc4aca2cd28c6901a8dbf718ce3520b92bb2cd701d8309ca04258472267a2972
+  checksum: 10/b5dc82d311b216739b12e084dfb9a2f1352a01164687129f108ad01901135c4a0dc5a86204bb69e81d4df0699b6567158202ae8465c212186841f0ee05f596f1
   languageName: node
   linkType: hard
 
