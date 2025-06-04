@@ -4,17 +4,15 @@
 
 ```ts
 
-import { AllOrNone } from '@zwave-js/shared/safe';
+import { AllOrNone } from '@zwave-js/shared';
 import { Bytes } from '@zwave-js/shared';
-import { Bytes as Bytes_2 } from '@zwave-js/shared/safe';
-import { CommandClasses } from '@zwave-js/core/safe';
-import { CommandClasses as CommandClasses_2 } from '@zwave-js/core';
-import { Expand } from '@zwave-js/shared';
-import { FLiRS } from '@zwave-js/core/safe';
-import { NodeIDType } from '@zwave-js/core/safe';
-import { NodeProtocolInfo } from '@zwave-js/core/safe';
-import { RFRegion } from '@zwave-js/core/safe';
-import { RouteProtocolDataRate } from '@zwave-js/core/safe';
+import { CommandClasses } from '@zwave-js/core';
+import type { Expand } from '@zwave-js/shared';
+import { FLiRS } from '@zwave-js/core';
+import { NodeIDType } from '@zwave-js/core';
+import { NodeProtocolInfo } from '@zwave-js/core';
+import { RFRegion } from '@zwave-js/core';
+import { RouteProtocolDataRate } from '@zwave-js/core';
 import { TypedClassDecorator } from '@zwave-js/shared';
 
 // Warning: (ae-missing-release-tag) "ApplicationCCsFile" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -30,7 +28,7 @@ export class ApplicationCCsFile extends NVMFile {
     includedSecurelySecureCCs: CommandClasses[];
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -63,8 +61,8 @@ export interface ApplicationCCsFileOptions extends NVMFileCreationOptions {
 export class ApplicationDataFile extends NVMFile {
     constructor(options: NVMFileDeserializationOptions | ApplicationDataFileOptions);
     // (undocumented)
-    get applicationData(): Bytes_2;
-    set applicationData(value: Bytes_2);
+    get applicationData(): Bytes;
+    set applicationData(value: Bytes);
 }
 
 // Warning: (ae-missing-release-tag) "ApplicationDataFileID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -77,7 +75,7 @@ export const ApplicationDataFileID = 200;
 // @public (undocumented)
 export interface ApplicationDataFileOptions extends NVMFileCreationOptions {
     // (undocumented)
-    applicationData: Bytes_2;
+    applicationData: Bytes;
 }
 
 // Warning: (ae-missing-release-tag) "ApplicationNameFile" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -123,7 +121,7 @@ export class ApplicationRFConfigFile extends NVMFile {
     rfRegion: RFRegion;
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): Record<string, any>;
@@ -163,7 +161,7 @@ export class ApplicationTypeFile extends NVMFile {
     optionalFunctionality: boolean;
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     specificDeviceClass: number;
@@ -424,7 +422,7 @@ export class LRNodeInfoFileV5 extends NVMFile {
     nodeInfos: LRNodeInfo[];
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -524,7 +522,7 @@ export class NodeInfoFileV0 extends NVMFile {
     nodeInfo: NodeInfo;
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -554,7 +552,7 @@ export class NodeInfoFileV1 extends NVMFile {
     nodeInfos: NodeInfo[];
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -1295,7 +1293,7 @@ export class ProtocolLRNodeListFile extends NVMFile {
     nodeIdSet: Set<number>;
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -1331,7 +1329,7 @@ export class ProtocolNodeMaskFile extends NVMFile {
     nodeIdSet: Set<number>;
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -1435,7 +1433,7 @@ export class RouteCacheFileV0 extends NVMFile {
     routeCache: RouteCache;
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -1465,7 +1463,7 @@ export class RouteCacheFileV1 extends NVMFile {
     routeCaches: RouteCache[];
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -1516,7 +1514,7 @@ export class SUCUpdateEntriesFileV0 extends NVMFile {
     constructor(options: NVMFileDeserializationOptions | SUCUpdateEntriesFileOptions);
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -1533,7 +1531,7 @@ export class SUCUpdateEntriesFileV5 extends NVMFile {
     constructor(options: NVMFileDeserializationOptions | SUCUpdateEntriesFileOptions);
     // (undocumented)
     serialize(): NVM3Object & {
-        data: Bytes_2;
+        data: Bytes;
     };
     // (undocumented)
     toJSON(): {
@@ -1604,7 +1602,6 @@ export interface VersionFileOptions extends NVMFileCreationOptions {
 // src/lib/common/definitions.ts:208:2 - (ae-forgotten-export) The symbol "ControllerNVMPropertyTypes" needs to be exported by the entry point index.d.ts
 // src/lib/common/definitions.ts:217:2 - (ae-forgotten-export) The symbol "NodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
 // src/lib/common/definitions.ts:228:2 - (ae-forgotten-export) The symbol "LRNodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
-// /home/runner/work/zwave-js/zwave-js/packages/shared/src/utils.ts:236:64 - (TS2322) Type 'T' is not assignable to type 'ReturnTypeOrStatic<T>'.
 
 // (No @packageDocumentation comment for this package)
 

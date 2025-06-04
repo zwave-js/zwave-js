@@ -13,9 +13,20 @@ import { integrationTest } from "../integrationTestSuite.js";
 let shouldRespond = true;
 
 integrationTest(
-	"When the controller is unresponsive, soft-reset it to recover",
+	"When the controller is unresponsive, retry the command as configured, then soft-reset it to recover",
 	{
 		// debug: true,
+
+		additionalDriverOptions: {
+			timeouts: {
+				// Shorten the timeouts to speed up the test
+				ack: 400,
+			},
+			// Attempt communication 2 times before considering the controller unresponsive
+			attempts: {
+				controller: 2,
+			},
+		},
 
 		async customSetup(driver, mockController, mockNode) {
 			const doNotRespond: MockControllerBehavior = {
@@ -51,6 +62,13 @@ integrationTest(
 			);
 
 			t.expect(ids.ownNodeId).toBe(mockController.ownNodeId);
+
+			// The controller should have tried the command a total of 3 times.
+			// Twice before the soft reset, and once after
+			const attempts = mockController.receivedHostMessages.filter(
+				(msg) => msg.functionType === FunctionType.GetControllerId,
+			).length;
+			t.expect(attempts).toBe(3);
 		},
 	},
 );

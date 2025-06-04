@@ -52,7 +52,7 @@ export function wrapLegacySerialBinding(
 					controller.error(
 						new ZWaveError(
 							`The serial port closed unexpectedly!`,
-							ZWaveErrorCodes.Driver_Failed,
+							ZWaveErrorCodes.Driver_SerialPortClosed,
 						),
 					);
 				});

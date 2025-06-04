@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/shared",
-  "version": "15.3.0",
+  "version": "15.4.0",
   "description": "zwave-js: shared utilities",
   "keywords": [],
   "publishConfig": {
@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "alcalzone-shared": "^5.0.0",
-    "pathe": "^2.0.1"
+    "pathe": "^2.0.3"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
@@ -67,11 +67,11 @@
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
     "@microsoft/api-extractor": "^7.52.2",
-    "@types/node": "^20.17.32",
+    "@types/node": "^20.17.57",
     "@types/sinon": "^17.0.4",
     "del-cli": "^6.0.0",
-    "sinon": "^19.0.2",
-    "tsx": "^4.19.3",
+    "sinon": "^20.0.0",
+    "tsx": "^4.19.4",
     "typescript": "5.8.3",
     "vitest": "^2.1.9"
   }

@@ -125,7 +125,11 @@ export class ZWaveSerialStream implements
 	public async close(): Promise<void> {
 		this._isOpen = false;
 		// Close the underlying stream
-		this._writer?.releaseLock();
+		try {
+			this._writer?.releaseLock();
+		} catch {
+			// ignore
+		}
 		this.#abort.abort();
 
 		return Promise.resolve();

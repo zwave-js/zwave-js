@@ -309,10 +309,12 @@ Updates a subset of the driver options without having to restart the driver. The
 ### Updating the firmware of the Z-Wave module (OTW)
 
 ```ts
-firmwareUpdateOTW(data: Buffer): Promise<OTWFirmwareUpdateResult>
+firmwareUpdateOTW(data: Buffer | FirmwareUpdateInfo): Promise<OTWFirmwareUpdateResult>
 ```
 
 > [!WARNING] We don't take any responsibility if devices upgraded using Z-Wave JS don't work after an update. Always double-check that the correct update is about to be installed.
+
+Besides the raw firmware image, you can also pass a `FirmwareUpdateInfo` object as returned from the [`getAvailableFirmwareUpdates` controller method](api/controller.md#getavailablefirmwareupdates). In that case, the firmware image will automatically be downloaded and validated before performing the update.
 
 Performs an over-the-wire (OTW) firmware update for the Z-Wave module (controller) using the given firmware image. To do so, the device gets put in bootloader mode where a new firmware image can be uploaded. This method can be called in bootloader mode, while connected to a Serial API controller, or with a CLI based firmware that has an option to return to bootloader.
 
@@ -1026,14 +1028,16 @@ interface ZWaveOptions {
 		 * Default: `true`, except when the ZWAVEJS_DISABLE_UNRESPONSIVE_CONTROLLER_RECOVERY env variable is set.
 		 */
 		unresponsiveControllerRecovery?: boolean;
-
 		/**
-		 * Controllers of the 700 series and newer have a hardware watchdog that can be enabled to automatically
-		 * reset the chip in case it becomes unresponsive. This option controls whether the watchdog should be enabled.
+		 * Z-Wave JS normally uses all Command Classes it implements and responds to version queries for all of them.
 		 *
-		 * Default: `true`, except when the ZWAVEJS_DISABLE_WATCHDOG env variable is set.
+		 * However, some Command Classes come with certification requirements that might not be fulfilled by the application.
+		 * To allow for deploying products based on Z-Wave JS without having to implement all of them,
+		 * this option allows you to disable certain Command Classes. Z-Wave JS will act as if the specified Command Classes are not implemented.
+		 *
+		 * Note that this only affects a subset of CCs that is not mandatory.
 		 */
-		watchdog?: boolean;
+		disableCommandClasses: CommandClasses[];
 	};
 
 	preferences: {

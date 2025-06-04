@@ -4,6 +4,59 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.6.0 (2025-05-28)
+### Features
+* Add options to set powerlevel within legal limits on region change during startup (#7853)
+
+### Bugfixes
+* When the serialport closes unexpectedly, try to reopen it first before throwing an error (#7851)
+* Work around missing protocol version file in NVM backed up from SDK `7.23.0` and `.1` (#7846)
+* The default region is no longer considered to be Europe for firmware updates (#7842)
+
+## 15.5.0 (2025-05-19)
+### Features
+* Allow the application to disable support for specific CCs (#7821)
+* Support OTW updates for the controller via the firmware update service (#7840)
+
+### Bugfixes
+* Make the device ID check during OTA updates actually do something (#7839)
+
+### Config file changes
+* Add/update several Simon iO devices (#7838)
+
+### Changes under the hood
+* Extract TaskScheduler into own library (#7837)
+
+## 15.4.2 (2025-05-15)
+### Bugfixes
+* Fixed a regression from v15 where Z-Wave JS would immediately soft-reset the controller instead of retrying after an ACK timeout (#7819)
+* Fixed a type error after OTW firmware upgrade (#7820)
+
+## 15.4.1 (2025-05-13)
+### Bugfixes
+* Prevent the interview of battery-powered devices to stop after the first stage when re-interviewing after a firmware update (#7816)
+
+## 15.4.0 (2025-05-12)
+### Features
+* Update Notification definitions to 2024B-3 specs (#7796)
+* Add static methods to query Door Lock CC capabilities (#7799)
+* The hardware watchdog no longer gets enabled by default, since this is now handled by recent firmwares. The corresponding driver option and preset have been deprecated. (#7802)
+
+### Bugfixes
+* Omit empty fields from TX reports, ignore missing RSSI in routing statistics (#7808)
+* Use local time for logging to file (#7800)
+
+### Config file changes
+* Add Enbrighten (Jasco) 58446 / ZWA4013 Fan Control (#7673)
+* Add Aeotec ZWA046 Home Energy Meter 8 (#7510)
+* Add PE653 endpoints for VSP speeds and P5043ME pool/spa mode (#7805)
+* Add ZVIDAR WM25C (#7686)
+* Add MCO Home MH-S314-7102 (#7733)
+* Add McoHome thermostats MH4936, MH5-2D and MH5-4A (#7765)
+* Update Inovelli VZW31-SN to FW 1.04 (#7731)
+* Add param 29 (load sense) to HomePro ZDP100 (#7713)
+* Add Yale YDM3109A Smart Lock (#7670)
+
 ## 15.3.2 (2025-05-08)
 ### Bugfixes
 * Fixed a regression from v15 where command delivery verification wouldn't work on S2-capable devices without Supervision (#7795)

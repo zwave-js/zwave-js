@@ -14,6 +14,41 @@
 		"min": "0.3",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 10,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Basic Set",
+					"maxNodes": 10
+				},
+				"3": {
+					"label": "Multilevel Switch Set",
+					"maxNodes": 10
+				},
+				"4": {
+					"label": "Multilevel Switch Start/Stop",
+					"maxNodes": 10
+				},
+				"5": {
+					"label": "Basic Set Double-tap",
+					"maxNodes": 10
+				},
+				"6": {
+					"label": "Basic Set Triple-tap",
+					"maxNodes": 10
+				},
+				"7": {
+					"label": "Multilevel Switch Set (Config Button)",
+					"maxNodes": 10
+				}
+			}
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
@@ -284,6 +319,33 @@
 			]
 		},
 		{
+			"#": "23",
+			"$if": "firmwareVersion >= 1.4",
+			"label": "Quick Start Time",
+			"description": "Duration of initial increased power output when light turns on",
+			"valueSize": 1,
+			"unit": "1/60 seconds",
+			"minValue": 0,
+			"maxValue": 60,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "24",
+			"$if": "firmwareVersion >= 1.4",
+			"label": "Quick Start Level",
+			"description": "Level of initial increased power output when light turns on.",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 99
+		},
+		{
 			"#": "25",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Increase Output Power (Non-Neutral)",
@@ -309,6 +371,24 @@
 					"value": 1
 				}
 			]
+		},
+		{
+			"#": "32",
+			"$if": "firmwareVersion >= 1.2",
+			"label": "Internal Temperature",
+			"description": "Temperature inside of the switch",
+			"valueSize": 1,
+			"unit": "°C",
+			"minValue": 0,
+			"maxValue": 127,
+			"readOnly": true
+		},
+		{
+			"#": "33",
+			"$if": "firmwareVersion >= 1.2",
+			"$import": "~/templates/master_template.json#base_true_false",
+			"label": "Overheat Detected",
+			"readOnly": true
 		},
 		{
 			"#": "50",
@@ -371,12 +451,12 @@
 		{
 			"#": "53",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Double Up to Param 55 Level"
+			"label": "Double Up Level Enable"
 		},
 		{
 			"#": "54",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Double Down to Param 56 Level"
+			"label": "Double Down Level Enable"
 		},
 		{
 			"#": "55",
@@ -627,10 +707,78 @@
 			]
 		},
 		{
+			"#": "120",
+			"$if": "firmwareVersion >= 1.4",
+			"label": "Single-Tap Behavior",
+			"description": "What happens when the switch is single-tapped",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Up - On, down - Off",
+					"value": 0
+				},
+				{
+					"label": "Up - Increment level up (Off > low > medium > high), down - Increment level down (High > medium > low > off)",
+					"value": 1
+				},
+				{
+					"label": "Up - Increment level up (Off > low > medium > high > low > ...), down - Off",
+					"value": 2
+				}
+			]
+		},
+		{
 			"#": "123",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Aux Switch Scenes",
 			"description": "Send different scene numbers when the Aux switch is clicked"
+		},
+		{
+			"#": "130",
+			"$if": "firmwareVersion >= 1.4",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Group 7: Enable"
+		},
+		{
+			"#": "131",
+			"$if": "firmwareVersion >= 1.4",
+			"label": "Group 7: Low Level",
+			"description": "Low level to use when group 7 cycles levels",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 97,
+			"defaultValue": 25
+		},
+		{
+			"#": "132",
+			"$if": "firmwareVersion >= 1.4",
+			"label": "Group 7: Medium Level",
+			"description": "Medium level to use when group 7 cycles levels",
+			"valueSize": 1,
+			"minValue": 2,
+			"maxValue": 98,
+			"defaultValue": 50
+		},
+		{
+			"#": "133",
+			"$if": "firmwareVersion >= 1.4",
+			"label": "Group 7: High Level",
+			"description": "High level to use when group 7 cycles levels",
+			"valueSize": 1,
+			"minValue": 3,
+			"maxValue": 99,
+			"defaultValue": 99
+		},
+		{
+			"#": "134",
+			"$if": "firmwareVersion >= 1.4",
+			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
+			"label": "Group 7: LED Color",
+			"description": "Color to use for the LED bar while briefly indicating group 7 command transmission",
+			"valueSize": 1,
+			"defaultValue": 255
 		},
 		{
 			"#": "158",
@@ -700,7 +848,7 @@
 	"metadata": {
 		"inclusion": "Triple-click config button",
 		"exclusion": "Triple-click config button",
-		"reset": "Simultaniously hold the config button and the up button until the LED bar turns red.  Release the buttons and the switch will reset to factory defaults.",
+		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red.  Release the buttons and the switch will reset to factory defaults.",
 		"manual": "https://community.inovelli.com/t/resources-red-series-smart-2-1-switch-on-off-dimmer-manual/13706"
 	}
 }

@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/maintenance",
-  "version": "15.3.0",
+  "version": "15.6.0",
   "description": "zwave-js: maintenance scripts",
   "private": true,
   "keywords": [],
@@ -42,9 +42,9 @@
     "@dprint/formatter": "^0.4.1",
     "@dprint/json": "^0.20.0",
     "@dprint/markdown": "^0.18.0",
-    "@dprint/typescript": "^0.95.0",
+    "@dprint/typescript": "^0.95.5",
     "@types/globrex": "^0.1.4",
-    "@types/node": "^20.17.32",
+    "@types/node": "^20.17.57",
     "@types/yargs": "^17.0.33",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/fmt": "^1.0.4",
@@ -57,10 +57,10 @@
     "execa": "^9.5.2",
     "globrex": "^0.1.2",
     "json5": "^2.2.3",
-    "piscina": "^4.8.0",
+    "piscina": "^5.0.0",
     "reflect-metadata": "^0.2.2",
     "ts-morph": "^25.0.1",
-    "tsx": "^4.19.3",
+    "tsx": "^4.19.4",
     "typescript": "5.8.3",
     "yargs": "^17.7.2"
   }

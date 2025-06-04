@@ -798,6 +798,102 @@ latch status:       ${status.latchStatus}`;
 			});
 		}
 	}
+
+	/**
+	 * Returns whether the node supports auto relock.
+	 * This only works AFTER the node has been interviewed.
+	 */
+	public static supportsAutoRelockCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+	): boolean {
+		return !!ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				DoorLockCCValues.autoRelockSupported.endpoint(endpoint.index),
+			);
+	}
+
+	/**
+	 * Returns whether the node supports hold and release.
+	 * This only works AFTER the node has been interviewed.
+	 */
+	public static supportsHoldAndReleaseCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+	): boolean {
+		return !!ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				DoorLockCCValues.holdAndReleaseSupported.endpoint(
+					endpoint.index,
+				),
+			);
+	}
+
+	/**
+	 * Returns whether the node supports twist assist.
+	 * This only works AFTER the node has been interviewed.
+	 */
+	public static supportsTwistAssistCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+	): boolean {
+		return !!ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				DoorLockCCValues.twistAssistSupported.endpoint(endpoint.index),
+			);
+	}
+
+	/**
+	 * Returns whether the node supports block to block.
+	 * This only works AFTER the node has been interviewed.
+	 */
+	public static supportsBlockToBlockCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+	): boolean {
+		return !!ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				DoorLockCCValues.blockToBlockSupported.endpoint(endpoint.index),
+			);
+	}
+
+	/**
+	 * Returns the supported outside handles.
+	 * This only works AFTER the node has been interviewed.
+	 */
+	public static getSupportedOutsideHandlesCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+	): MaybeNotKnown<DoorHandleStatus> {
+		return ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				DoorLockCCValues.supportedOutsideHandles.endpoint(
+					endpoint.index,
+				),
+			);
+	}
+
+	/**
+	 * Returns the supported inside handles.
+	 * This only works AFTER the node has been interviewed.
+	 */
+	public static getSupportedInsideHandlesCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+	): MaybeNotKnown<DoorHandleStatus> {
+		return ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				DoorLockCCValues.supportedInsideHandles.endpoint(
+					endpoint.index,
+				),
+			);
+	}
 }
 
 // @publicAPI

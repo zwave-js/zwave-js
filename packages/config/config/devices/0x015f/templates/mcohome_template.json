@@ -17,9 +17,8 @@
 	},
 	"level_report_mode": {
 		"label": "Level Report Mode",
-		"valueSize": 1,
+		"$import": "~/templates/master_template.json#base_options_nounit",
 		"defaultValue": 2,
-		"allowManualEntry": false,
 		"options": [
 			{
 				"label": "Every 5 seconds while moving",
@@ -47,9 +46,7 @@
 	"demo_trip": {
 		"label": "Demo Trip",
 		"description": "Run the motor for 3 seconds to read motor data",
-		"valueSize": 1,
-		"defaultValue": 0,
-		"allowManualEntry": false,
+		"$import": "~/templates/master_template.json#base_options_nounit",
 		"options": [
 			{
 				"label": "Idle",
@@ -63,9 +60,7 @@
 	},
 	"auto_calibrate": {
 		"label": "Auto Calibrate",
-		"valueSize": 1,
-		"defaultValue": 0,
-		"allowManualEntry": false,
+		"$import": "~/templates/master_template.json#base_options_nounit",
 		"options": [
 			{
 				"label": "Idle",
@@ -79,9 +74,7 @@
 	},
 	"demo_trip_and_calibrate": {
 		"label": "Demo Trip and Auto Calibrate",
-		"valueSize": 1,
-		"defaultValue": 0,
-		"allowManualEntry": false,
+		"$import": "~/templates/master_template.json#base_options_nounit",
 		"options": [
 			{
 				"label": "Idle",
@@ -109,9 +102,7 @@
 	},
 	"factory_reset": {
 		"label": "Factory Reset",
-		"valueSize": 1,
-		"defaultValue": 0,
-		"allowManualEntry": false,
+		"$import": "~/templates/master_template.json#base_options_nounit",
 		"options": [
 			{
 				"label": "Normal operation",
@@ -120,6 +111,269 @@
 			{
 				"label": "Reset",
 				"value": 85
+			}
+		]
+	},
+	"temperature_reporting_threshold": {
+		"label": "Temperature Reporting Threshold",
+		"$import": "~/templates/master_template.json#base_0-255_nounit",
+		"description": "Valid range: 3-255; Variation in temperature to induce automatic report",
+		"valueSize": 2,
+		"unit": "0.1 °F/C",
+		"defaultValue": 5,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			},
+			{
+				"label": "Default (Celsius)",
+				"value": 5
+			},
+			{
+				"label": "Default (Fahrenheit)",
+				"value": 10
+			}
+		]
+	},
+	"humidity_reporting_threshold": {
+		"label": "Humidity Reporting Threshold",
+		"$import": "~/templates/master_template.json#base_0-99_nounit",
+		"description": "Variation in humidity to induce automatic report",
+		"defaultValue": 6,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
+	},
+	"display_brightness": {
+		"label": "Display Brightness",
+		"$import": "~/templates/master_template.json#base_options_nounit",
+		"defaultValue": 2,
+		"options": [
+			{
+				"label": "Dim",
+				"value": 1
+			},
+			{
+				"label": "Low",
+				"value": 2
+			},
+			{
+				"label": "Medium",
+				"value": 3
+			},
+			{
+				"label": "High",
+				"value": 4
+			},
+			{
+				"label": "Always on",
+				"value": 5
+			}
+		]
+	},
+	"beep_volume": {
+		"label": "Beep Volume",
+		"$import": "~/templates/master_template.json#base_options_nounit",
+		"defaultValue": 5,
+		"options": [
+			{
+				"label": "Off",
+				"value": 1
+			},
+			{
+				"label": "Low",
+				"value": 2
+			},
+			{
+				"label": "Medium",
+				"value": 3
+			},
+			{
+				"label": "High",
+				"value": 4
+			},
+			{
+				"label": "Standard",
+				"value": 5
+			}
+		]
+	},
+	"temperature_upper_limit": {
+		"label": "Temperature: Upper Limit",
+		"$import": "~/templates/master_template.json#base_1-99_nounit",
+		"defaultValue": 37,
+		"options": [
+			{
+				"label": "Default (Celsius)",
+				"value": 37
+			},
+			{
+				"label": "Default (Fahrenheit)",
+				"value": 98
+			}
+		]
+	},
+	"temperature_lower_limit": {
+		"label": "Temperature: Lower Limit",
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 98,
+		"defaultValue": 5,
+		"options": [
+			{
+				"label": "Default (Celsius)",
+				"value": 5
+			},
+			{
+				"label": "Default (Fahrenheit)",
+				"value": 41
+			}
+		]
+	},
+	"indoor_temperature_calibration": {
+		"label": "Indoor Temperature Calibration",
+		"valueSize": 1,
+		"unit": "0.1 °F/C",
+		"minValue": -99,
+		"maxValue": 99,
+		"defaultValue": 0
+	},
+	"indoor_humidity_calibration": {
+		"label": "Indoor Humidity Calibration",
+		"valueSize": 1,
+		"unit": "%",
+		"minValue": -20,
+		"maxValue": 20,
+		"defaultValue": 0
+	},
+	"outdoor_temperature_calibration": {
+		"label": "Outdoor Temperature Calibration",
+		"valueSize": 1,
+		"unit": "0.1 °F/C",
+		"minValue": -99,
+		"maxValue": 99,
+		"defaultValue": 0
+	},
+	"outdoor_temperature_sensor_type": {
+		"label": "Outdoor Temperature Sensor Type",
+		"$import": "~/templates/master_template.json#base_options_nounit",
+		"options": [
+			{
+				"label": "Protection sensor",
+				"value": 0
+			},
+			{
+				"label": "Controlled sensor",
+				"value": 1
+			}
+		]
+	},
+	"antifreeze_protection": {
+		"label": "Antifreeze Protection",
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"description": "Automatic heating at 41 °F / 5 °C"
+	},
+	"fan_mode_above_set_temperature": {
+		"label": "Fan Mode Above Set Temperature",
+		"$import": "~/templates/master_template.json#base_options_nounit",
+		"options": [
+			{
+				"label": "Normal operation",
+				"value": 0
+			},
+			{
+				"label": "Always off",
+				"value": 1
+			}
+		]
+	},
+	"fan_working_mode": {
+		"label": "Fan Working Mode",
+		"$import": "~/templates/master_template.json#base_options_nounit",
+		"options": [
+			{
+				"label": "Cool and heat modes",
+				"value": 0
+			},
+			{
+				"label": "Cool mode only",
+				"value": 1
+			},
+			{
+				"label": "Heat mode only",
+				"value": 2
+			},
+			{
+				"label": "Disable",
+				"value": 3
+			}
+		]
+	},
+	"key_lock_function": {
+		"label": "Key Lock Function",
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"defaultValue": 1
+	},
+	"ventilation_function": {
+		"label": "Ventilation Function",
+		"$import": "~/templates/master_template.json#base_enable_disable"
+	},
+	"ventilation_duration": {
+		"label": "Ventilation Duration",
+		"valueSize": 1,
+		"unit": "minutes",
+		"minValue": 1,
+		"maxValue": 30,
+		"defaultValue": 5
+	},
+	"temperature_deadband_10_20": {
+		"label": "Temperature Deadband",
+		"$import": "~/templates/master_template.json#base_0-99_nounit",
+		"unit": "0.1 °F/C",
+		"defaultValue": 10,
+		"options": [
+			{
+				"label": "Default (Celsius)",
+				"value": 10
+			},
+			{
+				"label": "Default (Fahrenheit)",
+				"value": 20
+			}
+		]
+	},
+	"temperature_deadband_15_30": {
+		"label": "Temperature Deadband",
+		"$import": "~/templates/master_template.json#base_0-99_nounit",
+		"unit": "0.1 °F/C",
+		"defaultValue": 15,
+		"options": [
+			{
+				"label": "Default (Celsius)",
+				"value": 15
+			},
+			{
+				"label": "Default (Fahrenheit)",
+				"value": 30
+			}
+		]
+	},
+	"factory_reset_53_55": {
+		"label": "Factory Reset",
+		"$import": "~/templates/master_template.json#base_options_nounit",
+		"defaultValue": 53,
+		"options": [
+			{
+				"label": "Normal operation",
+				"value": 53
+			},
+			{
+				"label": "Reset",
+				"value": 55
 			}
 		]
 	}

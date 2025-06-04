@@ -825,9 +825,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		const { resetSecurityClasses = false, waitForWakeup = true } = options;
 		// Unless desired, don't forget the information about sleeping nodes immediately, so they continue to function
 		let didWakeUp = false;
+		const wasAwake = this.status === NodeStatus.Awake;
 		if (
 			waitForWakeup
 			&& this.canSleep
+			&& !wasAwake
 			&& this.supportsCC(CommandClasses["Wake Up"])
 		) {
 			this.driver.controllerLog.logNode(
@@ -917,7 +919,14 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// If we did wait for the wakeup, mark the node as awake again so it does not
 		// get considered asleep after querying protocol info.
-		if (didWakeUp) this.markAsAwake();
+		if (didWakeUp || wasAwake) {
+			// Re-interviewing forgets the node's capabilities. To be able to mark it
+			// as awake, we need to set those again.
+			this.isListening = false;
+			this.isFrequentListening = false;
+
+			this.markAsAwake();
+		}
 
 		void this.driver.interviewNodeInternal(this);
 		this._refreshInfoPending = false;
@@ -2359,7 +2368,24 @@ protocol version:      ${this.protocolVersion}`;
 				this.driver.options.vendor,
 			);
 		} else if (command instanceof VersionCCCommandClassGet) {
-			return handleVersionCommandClassGet(this.driver, this, command);
+			// If the application has disabled this CC, set the version to 0
+			// This should be all we need to do, as there are currently no CCs with
+			// requirements for applications where we also respond to Get requests
+			let reportVersion: number | undefined;
+			if (
+				this.driver.options.features.disableCommandClasses?.includes(
+					command.requestedCC,
+				)
+			) {
+				reportVersion = 0;
+			}
+
+			return handleVersionCommandClassGet(
+				this.driver,
+				this,
+				command,
+				reportVersion,
+			);
 		} else if (command instanceof VersionCCCapabilitiesGet) {
 			return handleVersionCapabilitiesGet(this.driver, this, command);
 		} else if (command instanceof ManufacturerSpecificCCGet) {
@@ -3621,7 +3647,10 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		this.updateStatistics((current) => {
 			const ret = { ...current };
 			// Update ACK RSSI
-			if (txReport.ackRSSI != undefined) {
+			if (
+				txReport.ackRSSI != undefined
+				&& txReport.ackRSSI !== RssiError.NotAvailable
+			) {
 				ret.rssi =
 					ret.rssi == undefined || isRssiError(txReport.ackRSSI)
 						? txReport.ackRSSI
@@ -3632,9 +3661,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			const newStats: RouteStatistics = {
 				protocolDataRate: txReport.routeSpeed,
 				repeaters: (txReport.repeaterNodeIds ?? []) as number[],
-				rssi: txReport.ackRSSI
-					?? ret.lwr?.rssi
-					?? RssiError.NotAvailable,
+				rssi: txReport.ackRSSI ?? ret.lwr?.rssi,
 			};
 			if (txReport.ackRepeaterRSSI != undefined) {
 				newStats.repeaterRSSI = txReport.ackRepeaterRSSI as number[];

@@ -27,6 +27,9 @@ export enum ZWaveErrorCodes {
 	/** The task was removed from the task queue */
 	Driver_TaskRemoved,
 
+	/** The serial port closed unexpectedly */
+	Driver_SerialPortClosed,
+
 	/** There was a timeout while waiting for a message from the controller */
 	Controller_Timeout = 200,
 	/** There was a timeout while waiting for a response from a node */

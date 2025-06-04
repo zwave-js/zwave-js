@@ -1,0 +1,98 @@
+{
+	"manufacturer": "McoHome Technology Co., Ltd.",
+	"manufacturerId": "0x015f",
+	"label": "MH5-4A",
+	"description": "Fan Coil Thermostat",
+	"devices": [
+		{
+			"productType": "0xf523",
+			"productId": "0x7101"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#temperature_scale_celsius_fahrenheit"
+		},
+		{
+			"#": "2",
+			"$import": "templates/mcohome_template.json#temperature_reporting_threshold"
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev",
+			"defaultValue": 1
+		},
+		{
+			"#": "13",
+			"$import": "templates/mcohome_template.json#display_brightness"
+		},
+		{
+			"#": "14",
+			"$import": "templates/mcohome_template.json#beep_volume"
+		},
+		{
+			"#": "16",
+			"$import": "templates/mcohome_template.json#temperature_upper_limit"
+		},
+		{
+			"#": "17",
+			"$import": "templates/mcohome_template.json#temperature_lower_limit"
+		},
+		{
+			"#": "18",
+			"$import": "templates/mcohome_template.json#indoor_temperature_calibration"
+		},
+		{
+			"#": "20",
+			"$import": "templates/mcohome_template.json#outdoor_temperature_calibration"
+		},
+		{
+			"#": "21",
+			"$import": "templates/mcohome_template.json#outdoor_temperature_sensor_type"
+		},
+		{
+			"#": "22",
+			"$import": "templates/mcohome_template.json#antifreeze_protection"
+		},
+		{
+			"#": "23",
+			"$import": "templates/mcohome_template.json#fan_mode_above_set_temperature"
+		},
+		{
+			"#": "24",
+			"$import": "templates/mcohome_template.json#fan_working_mode"
+		},
+		{
+			"#": "25",
+			"$import": "templates/mcohome_template.json#key_lock_function"
+		},
+		{
+			"#": "27",
+			"$import": "templates/mcohome_template.json#ventilation_function"
+		},
+		{
+			"#": "28",
+			"$import": "templates/mcohome_template.json#ventilation_duration"
+		},
+		{
+			"#": "29",
+			"$import": "templates/mcohome_template.json#temperature_deadband_10_20"
+		},
+		{
+			"#": "255",
+			"$import": "templates/mcohome_template.json#factory_reset_53_55"
+		}
+	]
+}

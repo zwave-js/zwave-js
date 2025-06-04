@@ -1,12 +1,13 @@
 {
-	"manufacturer": "Hank",
+	"manufacturer": "HANK Electronics, Ltd.",
 	"manufacturerId": "0x0208",
 	"label": "HKZW-SO08",
 	"description": "Smart Plug",
 	"devices": [
 		{
 			"productType": "0x0100",
-			"productId": "0x0019"
+			"productId": "0x0019",
+			"zwaveAllianceId": 3893
 		}
 	],
 	"firmwareVersion": {
@@ -180,5 +181,11 @@
 				}
 			]
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Add for inclusion (non-security and security):\n1)Connect the power supply.\n2)Set the Z-Wave network main controller into learning mode.\n3)Triple click the Z-button, the LED indicator will be flashing 3 times in Blue.\n4)Smart Plug should be recognized and included into the Z-Wave network",
+		"exclusion": "1) Insert the Plug into a socket.\n2) Set the Z-Wave network controller into the exclusion mode. \n3) Triple click the Z button.\n4) LED will blink in blue for 3 times, and then start slow flashing to indicate that the remove for exclusion is successful. LED will indicate network status after it is removed from Z-Wave network",
+		"reset": "Long press the button for 20 seconds and the blue LED will speed up the flash and then LED will keep on for 3 seconds in blue and Smart Plug will send ”Device Reset Locally Notification” to the main controller and exclude from the Z-Wave network, this procedure will reset Smart Plug to factory default. Please use this procedure only when the network primary controller is missing or otherwise inoperable.Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3893/991559%20smart%20plug.pdf"
+	}
 }
