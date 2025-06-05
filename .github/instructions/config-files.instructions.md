@@ -37,3 +37,5 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Remove phrases like "to start inclusion", "to start exclusion" and similar
 - Use individual sentences for instructions with one or two steps.
 - Turn instructions with 3 or more steps into a numbered list.
+- Remove the explanation for when factory reset should be used.
+- Do not tell the user to repeat the procedure when it failed.
