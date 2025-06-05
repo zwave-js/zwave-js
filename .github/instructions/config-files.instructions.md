@@ -5,6 +5,7 @@ applyTo: "packages/config/config/devices/*/*.json"
 # Device Configuration Files
 
 - Treat the files as JSON files with support for comments.
+- When making changes, keep your explanation brief and to the point.
 
 ## Device Metadata
 
@@ -34,8 +35,13 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Do not refer to the controller, Z-Wave controller or hub in these instructions
 - Focus exclusively on the steps needed on the device itself
 - Steps should be concise and clear
-- Remove phrases like "to start inclusion", "to start exclusion" and similar
+- Do not say "to start inclusion" or similar
+- Do not say "to start exclusion" and similar
 - Use individual sentences for instructions with one or two steps.
 - Turn instructions with 3 or more steps into a numbered list.
+- If instructions explain LED feedback, keep that feedback in.
 - Remove the explanation for when factory reset should be used.
 - Do not tell the user to repeat the procedure when it failed.
+- Do not refer to auto-inclusion in the inclusion or exclusion instructions.
+- Do not refer to exclusion mode in the reset instructions.
+- Do not change the `manual` URL
