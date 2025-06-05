@@ -60,9 +60,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Enter your Z-Wave controller into inclusion mode\n2. Press the socket on/off button three times within 1.5 seconds to be included",
-		"exclusion": "1. Enter your Z-Wave controller into exclusion mode\n2. Press the socket on/off button three times within 1.5 seconds to be excluded",
-		"reset": "1. To reset, press the socket on/off button three times within 1.5 seconds\n2. then the fourth time, press and hold for seconds until the socket LED is off\n3. the socket reset successfully\n\nUse the \"Reset\" procedure only in the event that the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the socket on/off button three times within 1.5 seconds.",
+		"exclusion": "Press the socket on/off button three times within 1.5 seconds.",
+		"reset": "Press the socket on/off button four times within 1.5 seconds. On the fourth press, hold for 5 seconds until the socket LED turns off.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2428/FX69.pdf"
 	}
 }

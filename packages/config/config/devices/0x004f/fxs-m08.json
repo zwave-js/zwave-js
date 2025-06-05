@@ -93,9 +93,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Put your Z-Wave controller into inclusion mode by following the instructions provided by the controller manufacturer. \n2. Pressing Include button three times within 2 seconds will enter inclusion mode",
-		"exclusion": "1. Put your Z-Wave controller into exclusion mode by following the instructions provided by the controller manufacturer. \n2. Pressing Include button three times within 2 seconds will enter exclusion mode",
-		"reset": "Use this procedure only in the event that the primary controller is lost or otherwise inoperable. \n1. Pressing Include button three times within 2 seconds will enter inclusion mode. \n2. Within 1 second, press Include button again for 5 seconds.",
+		"inclusion": "Press the Include button three times within 2 seconds.",
+		"exclusion": "Press the Include button three times within 2 seconds.",
+		"reset": "Press the Include button three times within 2 seconds to enter inclusion mode. Within 1 second, press the Include button again for 5 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2598/FXS-M08%20User%20Manual_ZWPlus_v4.pdf"
 	}
 }
