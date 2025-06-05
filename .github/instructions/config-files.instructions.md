@@ -31,9 +31,9 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Ensure proper escaping of characters for embedding in JSON strings.
 - Use proper english grammar and punctuation.
 - Write instructions in the second person, addressing the user directly.
-- Steps should be concise and clear
-- For one or two steps, use individual sentences.
-- For three or more steps, use a numbered list.
-- Avoid using lists for one or two steps.
 - Do not refer to the controller, Z-Wave controller or hub in these instructions
 - Focus exclusively on the steps needed on the device itself
+- Steps should be concise and clear
+- Remove phrases like "to start inclusion", "to start exclusion" and similar
+- Use individual sentences for instructions with one or two steps.
+- Turn instructions with 3 or more steps into a numbered list.
