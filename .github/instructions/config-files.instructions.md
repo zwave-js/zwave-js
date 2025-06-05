@@ -24,6 +24,7 @@ applyTo: "packages/config/config/devices/*/*.json"
   }
   ```
 - All properties in `metadata` are optional.
+- Do not add metadata if there is none
 
 ### `wakeup`, `inclusion`, `exclusion`, and `reset` Instructions
 
@@ -39,9 +40,12 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Do not say "to start exclusion" and similar
 - Use individual sentences for instructions with one or two steps.
 - Turn instructions with 3 or more steps into a numbered list.
-- If instructions explain LED feedback, keep that feedback in.
+- If an instruction explains what the LED does, keep this information.
 - Remove the explanation for when factory reset should be used.
 - Do not tell the user to repeat the procedure when it failed.
 - Do not refer to auto-inclusion in the inclusion or exclusion instructions.
 - Do not refer to exclusion mode in the reset instructions.
 - Do not change the `manual` URL
+- Avoid double line breaks (\n\n) in the instructions.
+- Replace line breaks in lists with additional list items.
+- Remove steps referring to QR codes or entering PIN codes
