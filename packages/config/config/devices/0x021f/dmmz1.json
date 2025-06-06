@@ -46,7 +46,7 @@
 		{
 			"#": "2",
 			"label": "Set Firing Mode",
-			"description": "This parameter sets the “firing mode” of the Mouser.",
+			"description": "This parameter sets the 'firing mode' of the Mouser.",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,

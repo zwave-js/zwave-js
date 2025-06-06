@@ -28,9 +28,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. have your Z-Wave controller enter into Inclusion mode\n2. press the dimmer socket button three times within 1.5 seconds",
-		"exclusion": "1. have your Z-Wave controller enter into Exclusion mode\n2. press the dimmer socket button three times within 1.5 seconds",
-		"reset": "1. Press your dimmer socket button four times within 1.5 seconds\n2. the fourth time press and hold on the socket button for 5 seconds until socket LED button off \n3. Use the \"RESET\" procedure only in the event that the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the dimmer socket button three times within 1.5 seconds.",
+		"exclusion": "Press the dimmer socket button three times within 1.5 seconds.",
+		"reset": "Press the dimmer socket button four times within 1.5 seconds. On the fourth press, hold the socket button for 5 seconds until socket LED turns off.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2427/FX67.pdf"
 	}
 }

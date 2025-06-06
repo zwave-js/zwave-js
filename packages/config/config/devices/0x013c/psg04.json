@@ -28,9 +28,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Have Z-WaveTM Controller entered inclusion mode.\n2. Pressing button three times within 1.5 seconds to enter the inclusion mode.\n3. After add successful, the device will wake to receive the setting command from Z-WaveTM Controller about 20 seconds",
-		"exclusion": "1. Have Z-WaveTM Controller entered exclusion mode.\n2. Pressing button three times within 1.5 seconds to enter the exclusion mode.\nNode ID has been removed.",
-		"reset": "1. Pressing button four times within 1.5 seconds and do not release the button in the 4th pressed.\n2. After 3 secands and release the button within 2 seconds.\n3. IDs are removed and all settings will reset to factory default",
+		"inclusion": "Press the button three times within 1.5 seconds.",
+		"exclusion": "Press the button three times within 1.5 seconds.",
+		"reset": "1. Press the button four times within 1.5 seconds and hold on the fourth press\n2. After 3 seconds, release the button within 2 seconds",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3672/PSG04_UserManual-V1.pdf"
 	}
 }

@@ -48,7 +48,7 @@
 	"metadata": {
 		"inclusion": "Refer to your primary controller instructions to process the inclusion / exclusion setup procedure.\nWhen prompted by your primary controller, press the button 3 times.",
 		"exclusion": "Refer to your primary controller instructions to process the inclusion / exclusion setup procedure.\nWhen prompted by your primary controller, press the button 3 times.",
-		"reset": "Power off device, press and hold the button, then power on the device, after 5 seconds the device will reset.\nThis should only be used in the event your network’s primary controller is missing or otherwise inoperable.",
+		"reset": "Power off device, press and hold the button, then power on the device, after 5 seconds the device will reset.\nThis should only be used in the event your network's primary controller is missing or otherwise inoperable.",
 		"manual": "https://www.evalogik.com/uploads/202024315/ZW96-Manual.pdf?rnd=213"
 	}
 }

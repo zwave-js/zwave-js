@@ -63,9 +63,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Have Z-WaveTM Controller enter inclusion mode.\n2. Enter the Programming Code (PC) by pressing the correct number keys (default programming code is 0000) and then enter, then press 1 and 0 and enter.\n3. After successful addition, the device buzzer will beep twice.",
-		"exclusion": "1. Have Z-WaveTM Controller enter exclusion mode.\n2. Enter the Programming Code (PC) by pressing the correct number keys (default programming code is 0000) and then enter, then press 1 and 0 and enter.\n3. After successful removal, the device buzzer will beep twice.",
-		"reset": "Method 1. Enter the Programming Code (PC) by pressing the correct number keys (default programming code is 0000) and then enter, then press 9 and enter.\nMethod 2. Press tamper key 3 times in 1.5 seconds. 3 long beeps will occur after two seconds on successful reset.",
+		"inclusion": "1. Enter the Programming Code (default is 0000) and press enter\n2. Press 1, then 0, then enter",
+		"exclusion": "1. Enter the Programming Code (default is 0000) and press enter\n2. Press 1, then 0, then enter",
+		"reset": "Method 1: Enter the Programming Code (default is 0000), press enter, then press 9 and enter.\n\nMethod 2: Press the tamper key 3 times in 1.5 seconds.",
 		"manual": "https://www.zwavetaiwan.com.tw/s/PSK01_UserManual-A2-20240731.pdf"
 	}
 }

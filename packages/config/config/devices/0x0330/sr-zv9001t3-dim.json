@@ -34,7 +34,7 @@
 		}
 	},
 	"metadata": {
-		"reset": "Press and hold down “inclusion/exclusion” button for over 8 seconds, LED indicator blinks slowly to indicate successful factory reset, release “inclusion/exclusion” button, the wall controller will restart automatically.\n\nNote: Factory reset is not recommended for exclusion, please use this procedure only if the primary controller/gateway is missing or otherwise inoperable",
+		"reset": "Press and hold down 'inclusion/exclusion' button for over 8 seconds, LED indicator blinks slowly to indicate successful factory reset, release 'inclusion/exclusion' button, the wall controller will restart automatically.\n\nNote: Factory reset is not recommended for exclusion, please use this procedure only if the primary controller/gateway is missing or otherwise inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2949/Z-Wave%20Wall%20Controller%20SR-ZV9001T3-DIM-US.pdf"
 	}
 }

@@ -173,9 +173,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "To include the SSP 302 onto a network, put the controller into inclusion mode. Now, press and hold the button on SSP 302 for 4 to 7 seconds then release. The network status LED will start flashing (twice per second) on successful start of inclusion process. \nOn successful inclusion the LED will turn off",
-		"exclusion": "To exclude the SSP 302 from a network, put the controller into exclusion mode. Now, press and hold the button on SSP 302 for 4 to 7 seconds then release. The network status LED will start flashing (twice per second) on successful start of exclusion process.\nAfter successful exclusion the network status LED will start flashing once per second, and the device will reset to factory default.",
-		"reset": "Please use this procedure only when the primary controller is missing or otherwise inoperable. Power cycle the device and press and hold the button for more than 11 seconds and less than 15 seconds within the 60 seconds of power cycle to put the device in factory default, that include setting all the configuration, Association to factory default and removing the device from Z-Wave network",
+		"inclusion": "Press and hold the button on SSP 302 for 4 to 7 seconds then release. The network status LED will start flashing (twice per second) on successful start of inclusion process. On successful inclusion the LED will turn off",
+		"exclusion": "Press and hold the button on SSP 302 for 4 to 7 seconds then release. The network status LED will start flashing (twice per second) on successful start of exclusion process. After successful exclusion the network status LED will start flashing once per second, and the device will reset to factory default",
+		"reset": "Power cycle the device and press and hold the button for more than 11 seconds and less than 15 seconds within the 60 seconds of power cycle to put the device in factory default",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1271/SSP%20302%20User%20Manual%20for%20Web.pdf"
 	}
 }

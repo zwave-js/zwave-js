@@ -378,15 +378,15 @@
 					"value": 0
 				},
 				{
-					"label": "2nd group ”Control” sent as secure",
+					"label": "2nd group 'Control' sent as secure",
 					"value": 1
 				},
 				{
-					"label": "3rd group ”Alarm” sent as secure",
+					"label": "3rd group 'Alarm' sent as secure",
 					"value": 2
 				},
 				{
-					"label": "4th group ”Tamper” sent as secure",
+					"label": "4th group 'Tamper' sent as secure",
 					"value": 3
 				}
 			]

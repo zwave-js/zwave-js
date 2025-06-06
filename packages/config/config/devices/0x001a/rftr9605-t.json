@@ -118,9 +118,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. To include this device in a Z-Wave network, select the command on your Z Wave controller for inclusion (Install, Add Device,\nAdd Node, Include Device, etc.). Then press the device ON/OFF button one time to include it in the network.\n2. Based on the controller, the controller may ask you to scan the QR code or manually enter 5 digit code under the QR code\nto install the device as a secured device. You may find this QR code on the device or included in device packaging.\n3. After the Device is added to the network, the blue indicator LED will stop blinking. This indicates the device is installed in the Z-Wave\nnetwork",
-		"exclusion": "1. To exclude this device from a Z-Wave network, select the setting on your Z-Wave controller for exclusion\n(Uninstall, Remove Device, Remove Node, Exclude Device, etc.).\n2. Once your controller is in exclusion mode, press the device ON/OFF button one time to exclude it from the network. The LED will start blinking.",
-		"reset": "Please use this procedure only when the network primary controller is missing or otherwise inoperable\n\nThe device could be reset locally. This will cause the device to be excluded from its network and restore to factory default.\nBefore leaving the network the switch will send a notification to the controller indicating its departure from the Z-Wave network.\n1. Turn the device ON.\n2. Press and hold ON/OFF button for 20 second till the LED flashes for the third time.\n3. Release the ON/OFF button.\n4. LED will start flashing rapidly. Once the LED starts blinking slowly, that indicates the device is not part of the network.",
+		"inclusion": "Press the device ON/OFF button one time. The blue LED will stop blinking when inclusion is complete.",
+		"exclusion": "Press the device ON/OFF button one time. The LED will start blinking when exclusion is complete.",
+		"reset": "1. Turn the device ON.\n2. Press and hold ON/OFF button for 20 seconds until the LED flashes for the third time.\n3. Release the ON/OFF button.\n4. The LED will start flashing rapidly, then blink slowly when reset is complete.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3039/RFTR9605-T%20Instruction%20Sheet.pdf"
 	}
 }

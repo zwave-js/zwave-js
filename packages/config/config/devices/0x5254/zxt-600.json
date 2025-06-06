@@ -288,6 +288,6 @@
 	"metadata": {
 		"inclusion": "When it is prompted to enter it, please triple click the PROG button within 1 second. Green Indicator flashes TWICE then stay off.",
 		"exclusion": "When it is prompted to enter it, please triple click the PROG button within 1 second. Green Indicator flashes TWICE then stay off.",
-		"reset": "Press and Hold “PROG” button for 3 seconds on AC Master, the Green Indicator will light up. DO NOT Release the “PROG” Button until Green Indicator flashes TWICE."
+		"reset": "Press and Hold 'PROG' button for 3 seconds on AC Master, the Green Indicator will light up. DO NOT Release the 'PROG' Button until Green Indicator flashes TWICE."
 	}
 }

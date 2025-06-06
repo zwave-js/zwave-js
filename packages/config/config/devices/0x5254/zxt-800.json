@@ -230,9 +230,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Classic inclusion\nRefer to your primary controller to enter into the Inclusion Mode or Exclusion Mode\nOnce the primary controller is ready to include/exclude the device, press the “PROG” button once",
-		"exclusion": "Refer to your primary controller to enter into the Inclusion Mode or Exclusion Mode\nOnce the primary controller is ready to include/exclude the device, press the “PROG” button once",
-		"reset": "Please use this procedure only when the network primary controller is missing or otherwise inoperable\nPress and keep holding “PROG” button not less than 10 seconds:\nLED will light up at first 5 seconds, LED flashes twice then stay off after reset process completed",
+		"inclusion": "Classic inclusion\nRefer to your primary controller to enter into the Inclusion Mode or Exclusion Mode\nOnce the primary controller is ready to include/exclude the device, press the 'PROG' button once",
+		"exclusion": "Refer to your primary controller to enter into the Inclusion Mode or Exclusion Mode\nOnce the primary controller is ready to include/exclude the device, press the 'PROG' button once",
+		"reset": "Please use this procedure only when the network primary controller is missing or otherwise inoperable\nPress and keep holding 'PROG' button not less than 10 seconds:\nLED will light up at first 5 seconds, LED flashes twice then stay off after reset process completed",
 		"manual": "https://remotec.com.hk/wp-content/uploads/2023/07/ZXT-800_USER_MANUAL_V1.0.pdf"
 	}
 }

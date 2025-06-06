@@ -299,8 +299,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, triple click tamper switch within 1.5 seconds",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, triple click tamper switch within 1.5 seconds",
-		"reset": "Pressing tamper key four times within 1.5 seconds and do not release the tamper key in the 4th  pressed, and the LED will light on. After 3 seconds the LED will turn off, after that within 2 seconds, release the tamper key. If successful, the LED will light on one second. Otherwise, the LED will flash once. IDs are excluded and all settings will reset to factory default."
+		"inclusion": "Triple-click the tamper switch within 1.5 seconds.",
+		"exclusion": "Triple-click the tamper switch within 1.5 seconds.",
+		"reset": "1. Press and hold the tamper key four times within 1.5 seconds, keeping it held on the 4th press until the LED lights up\n2. Release the tamper key within 2 seconds after the LED turns off."
 	}
 }

@@ -104,7 +104,7 @@
 	"metadata": {
 		"inclusion": "1. Power on your Door Sensor, set your Z-Wave controller into add/inclusion mode.\n2. Trigger this action\n3. LED will flash green during the inclusion, and then solid green for 2 seconds to indicate the inclusion is successful, otherwise the LED will solid red for 2 seconds in which you need to repeat the process form step 2",
 		"exclusion": "1. Power on your Door Sensor, and let the Z-Wave primary controller into remove/exclusion mode.\n2. Trigger this action.\n3. LED will flash red during the exclusion, and then solid red for 2 seconds to indicate that the exclusion is successful, otherwise the LED will solid green for 2 seconds in which you need to repeat the process form step 2.",
-		"reset": "LED will blink red faster and faster within 5 seconds and then keep solid red until the button is released. Device will reset itself to factory default by sending a “Device Reset Locally Notification” to gateway when the button is released.",
+		"reset": "LED will blink red faster and faster within 5 seconds and then keep solid red until the button is released. Device will reset itself to factory default by sending a 'Device Reset Locally Notification' to gateway when the button is released.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4298/zwave700%20DW%20sensor%207AA-SS-VE-A0%20user%20manual-20210910.pdf"
 	}
 }

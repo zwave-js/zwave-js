@@ -106,9 +106,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Set the controller in inclusion mode\n2. Push the switch once.\n3. Wait 5 seconds",
-		"exclusion": "1. Set the controller in exclusion mode\n2. Push the switch once.\n3. Wait 5 seconds",
-		"reset": "The Danalock can be set to factory settings by pushing the switch ten times. Please use this procedure only when the primary controller is missing or otherwise inoperable",
+		"inclusion": "Push the switch once. Wait 5 seconds",
+		"exclusion": "Push the switch once. Wait 5 seconds",
+		"reset": "Push the switch ten times",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4295/Danalock_V3_Product_manual_Z_Wave_V_0.9.5.pdf"
 	}
 }

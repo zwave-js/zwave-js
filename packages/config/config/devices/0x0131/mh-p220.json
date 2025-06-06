@@ -155,7 +155,7 @@
 		{
 			"#": "8",
 			"label": "Single Dimming Step Size (Manual)",
-			"description": "1~99 percentage value (modification isn’t recommended)",
+			"description": "1~99 percentage value (modification isn't recommended)",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 99,
@@ -173,7 +173,7 @@
 		{
 			"#": "10",
 			"label": "Single Dimming Step Size (Auto)",
-			"description": "1~99 percentage value (modification isn’t recommended)",
+			"description": "1~99 percentage value (modification isn't recommended)",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 99,

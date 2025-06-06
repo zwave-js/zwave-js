@@ -67,7 +67,7 @@
 	"metadata": {
 		"inclusion": "Adding your device to a Z-Wave network\n1. Follow the instructions for your Z-Wave certified controller to\nadd a device to the Z-Wave network.\n2. Once the controller is ready to add your device, press\nand release the top or bottom of the wireless smart dimmer\n(rocker)",
 		"exclusion": "To remove and reset the device\n1. Follow the instructions for your Z-Wave certified controller to\nremove a device from the Z-Wave network.\n2. Once the controller is ready to remove your device, press\nand release the top or bottom of the wireless smart dimmer\n(rocker)",
-		"reset": "1. Quickly press ON (top) button three times then immediately\npress the OFF (bottom) button three times. The LED will flash\nON/OFF five times when completed successfully.\nNote: This should only be used if your network’s primary\ncontroller is missing or otherwise inoperable",
+		"reset": "1. Quickly press ON (top) button three times then immediately\npress the OFF (bottom) button three times. The LED will flash\nON/OFF five times when completed successfully.\nNote: This should only be used if your network's primary\ncontroller is missing or otherwise inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4319/61303-1%20EnFrSp%20QSG%20v1.pdf"
 	}
 }

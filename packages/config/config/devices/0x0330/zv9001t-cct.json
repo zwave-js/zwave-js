@@ -20,9 +20,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Short press the “inclusion/exclusion” button, or press and hold down “ALL ON/OFF” button for over 3 seconds, the wall controller will be set to inclusion mode, and waiting to be included, then LED indicator turns on and blinks 6 times quickly to indicate successful inclusion.",
-		"exclusion": "Short press the “inclusion/exclusion” button, or press and hold down “ALL ON/OFF” button for over 3 seconds, the wall controller will be set to exclusion mode, and waiting to be excluded, then LED indicator turns on and shows 3 short blinks and 1 long blink to indicate successful exclusion.",
-		"reset": "Press and hold down “inclusion/exclusion” button for over 8 seconds, LED indicator blinks slowly to indicate successful factory reset, release “inclusion/exclusion” button, the wall controller will restart automatically.",
+		"inclusion": "Short press the 'inclusion/exclusion' button, or press and hold down 'ALL ON/OFF' button for over 3 seconds, the wall controller will be set to inclusion mode, and waiting to be included, then LED indicator turns on and blinks 6 times quickly to indicate successful inclusion.",
+		"exclusion": "Short press the 'inclusion/exclusion' button, or press and hold down 'ALL ON/OFF' button for over 3 seconds, the wall controller will be set to exclusion mode, and waiting to be excluded, then LED indicator turns on and shows 3 short blinks and 1 long blink to indicate successful exclusion.",
+		"reset": "Press and hold down 'inclusion/exclusion' button for over 8 seconds, LED indicator blinks slowly to indicate successful factory reset, release 'inclusion/exclusion' button, the wall controller will restart automatically.",
 		"manual": "https://www.sunricher.com/media/resources/manual/SR-ZV9001T-CCT-EU%20Instruction.pdf"
 	}
 }

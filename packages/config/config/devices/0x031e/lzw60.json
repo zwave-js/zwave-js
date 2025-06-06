@@ -192,7 +192,7 @@
 	],
 	"metadata": {
 		"inclusion": "Press the sensor button 1x and the sensor will flash red rapidly. If successful, the sensor will stop flashing and the red light will be solid for 1-2 seconds, followed by the red light turning off. If unsuccessful, the red light will continue to rapidly flash until it times out after 25 seconds",
-		"exclusion": "Put your HUB in Exclusion mode and press the sensor button 1x. Your sensor will rapidly blink, indicating it’s in exclusion mode. When exclusion is successful, the red light will stop blinking, turn solid red and then turn off",
+		"exclusion": "Put your HUB in Exclusion mode and press the sensor button 1x. Your sensor will rapidly blink, indicating it's in exclusion mode. When exclusion is successful, the red light will stop blinking, turn solid red and then turn off",
 		"reset": "You may hold the Sensor Button for 5 seconds or use a certified controller to remove the device from your network to factory default. The sensors red LED will blink fast and then if successful, will turn off.\n\n \n\nOnly use this procedure in the event that the network primary controller is missing or otherwise inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3723/Inovelli%204-1%20Sensor%20Manual.pdf"
 	}

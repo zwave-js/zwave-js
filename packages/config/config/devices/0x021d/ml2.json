@@ -105,8 +105,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Follow the user guide of hub to enter inclusion mode.\n2. Operate on lock following guide below:\n 1) Enter master mode(** + Master PIN Code + √)\n 2) Input “8” to enter “function extension settings”\n 3) Input “1” to enter “Inclusion mode”",
-		"exclusion": "1. Follow the user guide of hub to enter exclusion mode.\n2. Operate on lock following guide below:\n 1) Enter master mode(** + Master PIN Code + √)\n 2) Input “8” to enter “function extension settings”\n 3) Input “2” to enter “Exclusion mode”",
+		"inclusion": "1. Follow the user guide of hub to enter inclusion mode.\n2. Operate on lock following guide below:\n 1) Enter master mode(** + Master PIN Code + √)\n 2) Input '8' to enter 'function extension settings'\n 3) Input '1' to enter 'Inclusion mode'",
+		"exclusion": "1. Follow the user guide of hub to enter exclusion mode.\n2. Operate on lock following guide below:\n 1) Enter master mode(** + Master PIN Code + √)\n 2) Input '8' to enter 'function extension settings'\n 3) Input '2' to enter 'Exclusion mode'",
 		"reset": "1) Open the door and keep the lock in \"unlock\" status\n 2) Open battery box and find the reset button. \n 3) Use a sharp thing to press and hold the reset button.\n 4) Keep holding the reset button and remove the battery from battery box then replace it.\n 5) Keep holding the reset button down until you hear the lock beep (Can take up to 10 seconds).\n2. Please use this procedure only when the network primary controller is missing or otherwise inoperable.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4120/ML2%20-%20Product%20Manual_new.pdf"
 	}

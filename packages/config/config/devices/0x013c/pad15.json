@@ -84,9 +84,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Add(Classic Inclusion) : 1. Put your Z-Wave™ controller into inclusion mode by following the instructions\nprovided by the controller manufacturer. 2. Press the include button three times within 3 seconds to enter\ninclusion mode",
-		"exclusion": "Remove (Exclusion) 1. Put your Z-Wave™ controller into exclusion mode by following the instructions\nprovided by the controller manufacturer. 2. Press the include button three times within 3 seconds to enter\nexclusion mode. 3. Node ID will be excluded",
-		"reset": "Reset : 1. Press the include button four times within 3 seconds and hold on the button press without\nreleasing. 2. Keep pressing the button for 3 seconds then LED will be o ,release the button within 2 seconds.\n3. Device has been reset. ※Function Reset : Please use this procedure only when the network primary\ncontroller is missing or otherwise inoperable",
+		"inclusion": "Press the include button three times within 3 seconds.",
+		"exclusion": "Press the include button three times within 3 seconds.",
+		"reset": "1. Press the include button four times within 3 seconds and hold on the fourth press\n2. Keep pressing for 3 seconds until the LED turns off\n3. Release the button within 2 seconds",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4209/PAD15_UserManual_V3.pdf"
 	}
 }

@@ -102,9 +102,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Put your Z-Wave controller into inclusion mode by following the instructions provided by the controller manufacturer. \n2. Pressing Include button of PAD07 three times within 2 seconds will enter inclusion mode",
-		"exclusion": "1. Put your Z-Wave controller into exclusion mode by following the instructions provided by the controller manufacturer.\n2. Pressing Include button of PAD07 three times within 2 seconds will enter exclusion mode.\n3. Node ID has been excluded.",
-		"reset": "1. Pressing Include button of PAD07 three times within 2 seconds will enter inclusion mode.\n2. Within 1 second, press Include button of PAD07 again for 5 seconds.\n3. IDs are excluded.\n\n*Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the Include button three times within 2 seconds.",
+		"exclusion": "Press the Include button three times within 2 seconds.",
+		"reset": "1. Press the Include button three times within 2 seconds\n2. Within 1 second, press the Include button again for 5 seconds",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2356/PAD07-A1%20manual-20170413.pdf"
 	}
 }

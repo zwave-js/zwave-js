@@ -23,7 +23,7 @@
 		}
 	},
 	"metadata": {
-		"reset": "Press and hold the “Reset button” for 5 seconds on DCH-G022\n\nIf this controller is the primary controller for your network, resetting it will result in the nodes in your network being orphaned and it will be necessary after the reset to exclude and re-include all of the nodes in the network. If this controller is being used as a secondary controller in the network, use this procedure to reset this controller only in the event that the network primary controller is missing or otherwise inoperable",
+		"reset": "Press and hold the 'Reset button' for 5 seconds on DCH-G022\n\nIf this controller is the primary controller for your network, resetting it will result in the nodes in your network being orphaned and it will be necessary after the reset to exclude and re-include all of the nodes in the network. If this controller is being used as a secondary controller in the network, use this procedure to reset this controller only in the event that the network primary controller is missing or otherwise inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2052/DLink_DCH-G022_manual%20v2.pdf"
 	}
 }
