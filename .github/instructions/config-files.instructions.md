@@ -33,15 +33,14 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Ensure proper escaping of characters for embedding in JSON strings.
 - Use proper english grammar and punctuation.
 - Write instructions in the second person, addressing the user directly.
-- Do not refer to the controller, Z-Wave controller, network, or hub in these instructions
+- Do not refer to the controller, Z-Wave controller, network, hub, or any external system in these instructions
 - Focus exclusively on the steps needed on the device itself
 - Steps should be concise and clear
-- Do not say "to start inclusion" or similar
-- Do not say "to start exclusion" and similar
+- Do not say "to start inclusion", "to start exclusion" or similar phrases
 - Use individual sentences for instructions with one or two steps.
 - Turn instructions with 3 or more steps into a numbered list.
 - If an instruction explains what the LED does, keep this information.
-- Remove the explanation for when factory reset should be used.
+- Remove verbose explanations about when factory reset should be used.
 - Do not tell the user to repeat the procedure when it failed.
 - Do not refer to auto-inclusion in the inclusion or exclusion instructions.
 - Do not refer to exclusion mode in the reset instructions.
@@ -50,3 +49,5 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Replace line breaks in lists with additional list items.
 - Remove steps referring to QR codes or entering PIN codes
 - Do not refer to external URLs in the instructions
+- Remove steps about "waiting for the process to end" or similar waiting instructions
+- Remove confirmations from the controller or network in the instructions
