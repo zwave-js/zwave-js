@@ -55,7 +55,7 @@
 		},
 		{
 			"#": "33",
-			"label": "Get the Bulb’s Color Value",
+			"label": "Get the Bulb's Color Value",
 			"valueSize": 4,
 			"defaultValue": 0,
 			"readOnly": true,
@@ -79,7 +79,7 @@
 		{
 			"#": "35",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Use External Switch to Changes the Bulb’s Color",
+			"label": "Use External Switch to Changes the Bulb's Color",
 			"defaultValue": 1
 		},
 		{

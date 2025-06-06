@@ -444,8 +444,8 @@
 		"preserveRootApplicationCCValueIDs": true
 	},
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product’s Action button that you can find on the product's housing",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, short press the product’s Action button that you can find on the product's housing",
+		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product's Action button that you can find on the product's housing",
+		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, short press the product's Action button that you can find on the product's housing",
 		"reset": "Press and hold the Action button that you can find on the product's housing for 10 seconds and then release. This procedure should only be used when the primary controller is inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2046/Home%20Energy%20Meter%20Gen5%20manual.pdf"
 	}

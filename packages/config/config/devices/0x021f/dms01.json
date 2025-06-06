@@ -248,8 +248,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "When prompted by the controller:\n1. The Siren should be within 10’ of your Z-Wave controller for the inclusion process. After successful pairing, the device can be brought to the desired lo-cation.\n2. Remove the BACK COVER by twisting it CLOCKWISE.\n3. Remove the BATTERY TABS.\n4. Press the CONNECT BUTTON quickly 3 times in a row.\n\nThe LED RING will flash five times indicating exclusion/disconnection.",
+		"inclusion": "When prompted by the controller:\n1. The Siren should be within 10' of your Z-Wave controller for the inclusion process. After successful pairing, the device can be brought to the desired lo-cation.\n2. Remove the BACK COVER by twisting it CLOCKWISE.\n3. Remove the BATTERY TABS.\n4. Press the CONNECT BUTTON quickly 3 times in a row.\n\nThe LED RING will flash five times indicating exclusion/disconnection.",
 		"exclusion": "When prompted by the controller:\n1. Remove the BACK COVER from the MAIN BODY.\n2. Press the CONNECT BUTTON quickly 3 times in a row.\n\nThe LED RING will flash five times indicating exclusion/disconnection.",
-		"reset": "If needed, the Siren can be reset locally by following these steps. Only do this when your Z-Wave controller is disconnected or otherwise unreachable. Beware that resetting your device will disconnect it from the system:\n1. Remove the BACK COVER and confirm that your Siren is powered up.\n2. Press and hold the CONNECT BUTTON for at least 10 seconds then release. A flashing light indicates a successful factory reset.\n3. The Siren’s memory will be erased to factory settings."
+		"reset": "If needed, the Siren can be reset locally by following these steps. Only do this when your Z-Wave controller is disconnected or otherwise unreachable. Beware that resetting your device will disconnect it from the system:\n1. Remove the BACK COVER and confirm that your Siren is powered up.\n2. Press and hold the CONNECT BUTTON for at least 10 seconds then release. A flashing light indicates a successful factory reset.\n3. The Siren's memory will be erased to factory settings."
 	}
 }
