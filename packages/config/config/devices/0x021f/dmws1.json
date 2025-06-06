@@ -81,7 +81,7 @@
 			"#": "5",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Audible Alarm",
-			"description": "Enables or disables the audible alarm (“beeping”)",
+			"description": "Enables or disables the audible alarm ('beeping')",
 			"defaultValue": 1
 		},
 		{
