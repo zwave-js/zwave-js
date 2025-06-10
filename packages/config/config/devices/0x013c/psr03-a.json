@@ -65,9 +65,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Have Z-Wave™ Controller entered add mode.\n2. Press the key three times within 1.5 seconds to enter the add mode.\n3. After add successful, the device will wake to receive the setting command from Z-Wave ™ Controller about 20 seconds",
-		"exclusion": "1. Have Z-Wave ™ Controller entered remove mode.\n2. Press the key three times within 1.5 seconds to enter the \nremove mode.\nNode ID has been excluded",
-		"reset": "Notice: Use this procedure only in the event that the primary controller is lost or otherwise inoperable.\n1. Press the key three times,and do not release the key in the 4 th pressed, and the LED will light ON.\n2. After 3 seconds the LED will turn OFF, after that within 2 seconds, release the keys. If successful, the LED will light ON one second. Otherwise, the LED will flash once.\n3. IDs are remove and all settings will reset to factory \ndefault",
+		"inclusion": "Press the key three times within 1.5 seconds.",
+		"exclusion": "Press the key three times within 1.5 seconds.",
+		"reset": "1. Press and hold the key four times within 1.5 seconds, keeping it held on the 4th press\n2. Wait for the LED to light up for 3 seconds, then turn off\n3. Release the key within 2 seconds after the LED turns off",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1407/PSR03_ABC_version_Manual.pdf"
 	},
 	"compat": {

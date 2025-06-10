@@ -165,7 +165,7 @@
 		{
 			"#": "10",
 			"label": "Scenes Sent to the Controller",
-			"description": "Defines which actions result in sending scenes to 1st “Lifeline” group.",
+			"description": "Defines which actions result in sending scenes to 1st 'Lifeline' group.",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 63,
@@ -212,30 +212,30 @@
 			"defaultValue": 31,
 			"options": [
 				{
-					"label": "2nd group ”Flick up” sent as secure",
+					"label": "2nd group 'Flick up' sent as secure",
 					"value": 1
 				},
 				{
-					"label": "3rd group ”Flick down” sent as secure",
+					"label": "3rd group 'Flick down' sent as secure",
 					"value": 2
 				},
 				{
-					"label": "4th group \"Flick left” sent as secure",
+					"label": "4th group \"Flick left' sent as secure",
 					"value": 4
 				},
 				{
-					"label": "5th group \"Flick right” sent as secure",
+					"label": "5th group \"Flick right' sent as secure",
 					"value": 8
 				},
 				{
-					"label": "6th group \"Circular airWheel” sent as secure",
+					"label": "6th group \"Circular airWheel' sent as secure",
 					"value": 16
 				}
 			]
 		},
 		{
 			"#": "12",
-			"label": "Mode of 2nd-5th \"Flick UP/DOWN/LEFT/RIGHT”",
+			"label": "Mode of 2nd-5th \"Flick UP/DOWN/LEFT/RIGHT'",
 			"description": "Choose control mode for 2nd-5th groups and scenes.",
 			"valueSize": 1,
 			"minValue": 1,

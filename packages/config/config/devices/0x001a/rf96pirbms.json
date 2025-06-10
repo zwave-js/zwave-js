@@ -62,9 +62,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "The sensor supports Auto Inclusion feature where it will automatically enter Inclusion mode when first\npowered up after a factory reset.\n1. Use a screwdriver to detach the rear cover.\n2. Put a Z-Wave Controller into inclusion mode.\n3. Insert 1 CR123 3V battery to the battery compartment with the correct polarity. The LED on the device should turn ON.\n4. The Inclusion process should be completed when the LED stops blinking.\n5. Do not refit the rear cover yet and proceed to the Testing section before mounting.\n\nNote: If Auto Inclusion fails, refer to the Troubleshooting section regarding Manual Inclusion.\n\n1. Put the Z-Wave Controller into Inclusion mode\n2. Press the tamper switch 3 times within 1.5\nseconds to put the unit into inclusion mode",
-		"exclusion": "1. Put the Z-Wave Controller into Exclusion mode\n2. Press the tamper switch 3 times within 1.5\nseconds to put the unit into exclusion mode",
-		"reset": "This procedure should only be used when the controller is inoperable:\n\n1. Press the tamper switch 3 times within 1.5\nseconds to put the unit into exclusion mode\n2. Within 1 second of step 1, press the tamper switch\nagain and hold until LED is off (about 5 seconds)\n3. Node ID is excluded. The device reverts to factory\ndefault state and will be in auto-inclusion mode for\n4 minutes",
+		"inclusion": "1. Detach the rear cover with a screwdriver.\n2. Insert 1 CR123 3V battery with correct polarity.\n3. Press the tamper switch 3 times within 1.5 seconds.",
+		"exclusion": "Press the tamper switch 3 times within 1.5 seconds.",
+		"reset": "Press the tamper switch 3 times within 1.5 seconds. Within 1 second, press the tamper switch again and hold until LED is off (about 5 seconds).",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3189/EIS-0246-E%20(REV.%20B).pdf"
 	}
 }

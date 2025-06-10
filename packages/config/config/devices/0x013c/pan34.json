@@ -96,9 +96,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Put your Z-Wave controller into inclusion mode by following the instructions provided by the controller manufacturer. \n2. Pressing INCLUDE_BUTTON three times within 2 seconds will enter inclusion mode",
-		"exclusion": "1. Put your Z-Wave controller into exclusion mode by following the instructions provided by the controller manufacturer. \n2. Pressing INCLUDE_BUTTON three times within 2 seconds will enter exclusion mode. \n3. Node ID has been excluded",
-		"reset": "1. Pressing INCLUDE_BUTTON three times within 2 seconds will enter inclusion mode. \n2. Within 1 second, press On/Off button again for 5 seconds. \n3. IDs are excluded",
+		"inclusion": "Press the Include Button three times within 2 seconds.",
+		"exclusion": "Press the Include Button three times within 2 seconds.",
+		"reset": "1. Press the Include Button three times within 2 seconds\n2. Within 1 second, press the On/Off button for 5 seconds",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4250/PAN34%20manual-20210713.pdf"
 	}
 }

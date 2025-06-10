@@ -68,8 +68,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Put the Z-WaveTM Interface Controller into\n“inclusion” mode, and following its instruction to add the ZD2301 to your controller. To get in the “inclusion” mode, the distance between sensor and controller is suggested to be one meter. Press the program switch of ZD2301 for sending the NIF. After sending NIF, Z-Wave will send the auto inclusion; otherwise, ZD2301 will go to sleep after 20 seconds",
-		"exclusion": "Put the Z-WaveTM Interface\nController into “exclusion” mode, and following its instruction to delete the ZD2301 from your controller. Press the program switch of ZD2301 for 1 second at least to be excluded",
+		"inclusion": "Put the Z-WaveTM Interface Controller into\n'inclusion' mode, and following its instruction to add the ZD2301 to your controller. To get in the 'inclusion' mode, the distance between sensor and controller is suggested to be one meter. Press the program switch of ZD2301 for sending the NIF. After sending NIF, Z-Wave will send the auto inclusion; otherwise, ZD2301 will go to sleep after 20 seconds",
+		"exclusion": "Put the Z-WaveTM Interface\nController into 'exclusion' mode, and following its instruction to delete the ZD2301 from your controller. Press the program switch of ZD2301 for 1 second at least to be excluded",
 		"reset": "All user and network settings will be cleared and the device reset to factory\ndefaults when the device is excluded.\n\nPlease use this procedure only in the event if the network\ncontroller is missing or is otherwise inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2346/zp2301.pdf"
 	}

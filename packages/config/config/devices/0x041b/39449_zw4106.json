@@ -60,6 +60,6 @@
 	"metadata": {
 		"inclusion": "1. Follow the instructions for your Z-Wave certified\ncontroller to add a device to the Z-Wave network.\n2. Once the controller is ready to add your device, press\nand release the manual/program button on the smart\nswitch. Repeat as necessary to add the switch to\nthe network",
 		"exclusion": "1. Follow the instructions for your Z-Wave certified\ncontroller to remove a device from the Z-Wave network.\n2. Once the controller is ready to remove your device, press\nand release the manual/program button on the smart\nswitch to remove it from the network",
-		"reset": "1. If plugged in, unplug the device from the receptacle.\n2. Press and hold the top button, plug the device in and\ncontinue to hold for at least 3 seconds.\nNOTE: This should only be used in the event your network’s\nprimary controller is missing or otherwise inoperable"
+		"reset": "1. If plugged in, unplug the device from the receptacle.\n2. Press and hold the top button, plug the device in and\ncontinue to hold for at least 3 seconds.\nNOTE: This should only be used in the event your network's\nprimary controller is missing or otherwise inoperable"
 	}
 }

@@ -88,9 +88,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Adding to a Z-Wave Network (Classic Inclusion Method)\nMake sure the device has power. Press the Pair Button which is the smaller of the two buttons, and the device will enter classic inclusion mode which implements both classic inclusion with a Node Information Frame, and Network Wide Inclusion. During Classic Inclusion mode, the Green LED will blink two times every three seconds. When Classic inclusion times-out, the device will blink red and green",
-		"exclusion": "Removing a Sensor from a Z-Wave Network\nTo remove the device, place the controller into Remove or “Z-Wave Exclusion” mode. Press the smaller of the two buttons (Add/Test) following the same procedure to add for removal. Upon successful removal, the device’s red led will come on solid for 1 second. Note: Any Z-Wave Inclusion Controller can remove a Z-Wave device regardless of manufacturer or which network the device is currently added to.",
-		"reset": "Factory Default\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable. \nTo restore the device back to factory settings and remove it from any Z-Wave network. Hold the Pair button for 10 seconds. During the 10 seconds of continuing to hold the Add/Test button the green LED with flash, and after 10 seconds the red LED will come on solid for 1 second indicating that the factory default of the device has been successful, and the device is ready to add back into a Z-Wave network.",
+		"inclusion": "Press the Pair Button (the smaller of the two buttons). During inclusion mode, the Green LED will blink two times every three seconds. When inclusion times-out, the device will blink red and green.",
+		"exclusion": "Press the smaller of the two buttons (Add/Test). The device's red led will come on solid for 1 second when removed.",
+		"reset": "Hold the Pair button for 10 seconds. During the 10 seconds the green LED will flash, and after 10 seconds the red LED will come on solid for 1 second after factory reset.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4000/ISZW7-ECO%20-%20Operation%20Manual%20v9.pdf"
 	}
 }
