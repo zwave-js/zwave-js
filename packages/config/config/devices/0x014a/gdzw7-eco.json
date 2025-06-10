@@ -70,9 +70,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Follow the instructions of the Z-Wave controller to put the Z-Wave controller into manual or classic Z-Wave inclusion mode.\n2. Locate and press the hub button on the device.\n3. When it is successfully added, the device will beep and blink green once.",
-		"exclusion": "1. Follow the Z-Wave controller's instructions on putting the Z-Wave controller into removal/exclusion mode.\n2. Locate and press the hub button.\n3. Device's status indicator will blink red and beep three times to indicate successful removal",
-		"reset": "Hold the reset button down for ten seconds. The status indicator will blink red while the reset button is pressed and will go out after ten seconds.\nThe device's status indicator will turn green when the reset operation is complete.",
+		"inclusion": "Locate and press the hub button on the device. The device will beep and blink green once when added.",
+		"exclusion": "Locate and press the hub button. Device's status indicator will blink red and beep three times when removed.",
+		"reset": "Hold the reset button down for ten seconds. The status indicator will blink red while the reset button is pressed and will go out after ten seconds. The device's status indicator will turn green when the reset operation is complete.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/74/GarageDoorControllerUserManualV3.pdf"
 	}
 }

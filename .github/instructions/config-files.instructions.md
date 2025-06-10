@@ -41,7 +41,7 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Turn instructions with 3 or more steps into a numbered list.
 - If an instruction explains what the LED does, keep this information.
 - Remove verbose explanations about when factory reset should be used.
-- Do not tell the user to repeat the procedure when it failed.
+- Do not tell the user to repeat the procedure when it failed, but mention which LED behavior indicates failure.
 - Do not refer to auto-inclusion in the inclusion or exclusion instructions.
 - Do not refer to exclusion mode in the reset instructions.
 - Do not change the `manual` URL
@@ -51,3 +51,6 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Do not refer to external URLs in the instructions
 - Remove steps about "waiting for the process to end" or similar waiting instructions
 - Remove confirmations from the controller or network in the instructions
+- Remove steps about moving the device close to its final location
+- Remove steps about bringing the device close to the controller or hub
+- Remove steps about testing the device after inclusion
