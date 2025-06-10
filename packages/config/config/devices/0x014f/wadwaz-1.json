@@ -24,8 +24,8 @@
 		"mapBasicSet": "auto"
 	},
 	"metadata": {
-		"inclusion": "With your Controller in Inclusion mode, depress the internal program switch for 1 second then release.",
-		"exclusion": "With your Controller in Exclusion mode, depress the internal program switch for 1 second then release.",
+		"inclusion": "Depress the internal program switch for 1 second then release.",
+		"exclusion": "Depress the internal program switch for 1 second then release.",
 		"manual": "https://www.gocontrol.com/manuals/WADWAZ-1-Install.pdf"
 	}
 }

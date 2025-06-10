@@ -37,8 +37,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "With the controller in inclusion mode, tap the button on the face of the outlet. The LED will blink slowly when adding.",
-		"exclusion": "Remove the switch by tapping the button on the face of the outlet 2 times. The LED will begin blinking slowly for 10 seconds indicating that it has been removed.",
+		"inclusion": "Tap the button on the face of the outlet. The LED will blink slowly when adding.",
+		"exclusion": "Tap the button on the face of the outlet 2 times. The LED will begin blinking slowly for 10 seconds indicating removal.",
 		"manual": "https://www.gocontrol.com/manuals/ps15emz5-1_installation_guide_10008371c.pdf"
 	}
 }

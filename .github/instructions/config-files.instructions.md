@@ -33,6 +33,7 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Ensure proper escaping of characters for embedding in JSON strings.
 - Use proper english grammar and punctuation.
 - Write instructions in the second person, addressing the user directly.
+- Ensure a consistent style and formatting across all instructions.
 - Do not refer to the controller, Z-Wave controller, network, hub, or any external system in these instructions
 - Focus exclusively on the steps needed on the device itself
 - Steps should be concise and clear
