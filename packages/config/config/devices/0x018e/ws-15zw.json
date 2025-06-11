@@ -22,9 +22,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "This product can be included and operated in any Z-Wave network with other Z-Wave certified devices from other manufactures and/or other applications. All non-battery operated nodes within the network will act as repeaters regardless of vendor to increase reliability of the network.\n-Open the cover by removing the bottom fixing screw (using a Philips screwdriver) on the Water Sensor.\n-Insert the battery in the battery compartment\n-Put the Z-wave gateway or control panel into Inclusion or Learning mode (please refer to the Z-wave gateway or control panel manual).\n-Within 1.5 seconds, press the Test Button 3 times.\n-Refer to the operation manual of the Z-wave gateway or control panel to complete the learn-in process.\n-If the sensor has already been included (learnt) into another Z-wave Gateway/Control Panel, or if the sensor is unable to be learnt into the current Z-wave Gateway/Control Panel, please exclude it first (see Exclusion) before attempting to include it into the current Z-wave Gateway/Control Panel.\n-Reattach the cover to the base and tighten the bottom-fixing screw.",
-		"exclusion": "The Water sensor must be removed from existing Z-wave network before being included into another. There are two methods available to exclude a device:\nExclusion Mode\n-Put the Z-wave gateway or control panel into Exclusion mode (please refer to the Z-wave gateway or control panel manual).\n-Within 1.5 seconds, press the Test Button 3 times and the Water sensor will be removed from the Z-wave network.",
-		"reset": "(Only use factory reset when network Control Panel/Gateway is missing or inoperable).\n-Press and hold the Test Button of the Water sensor for 12 seconds to factory reset",
+		"inclusion": "1. Open the cover by removing the bottom fixing screw\n2. Insert the battery in the battery compartment\n3. Press the Test Button 3 times within 1.5 seconds\n4. Reattach the cover and tighten the fixing screw",
+		"exclusion": "Press the Test Button 3 times within 1.5 seconds. The Water sensor will be removed from the Z-wave network.",
+		"reset": "Press and hold the Test Button for 12 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1430/WS-15ZW%2020150804.doc"
 	}
 }
