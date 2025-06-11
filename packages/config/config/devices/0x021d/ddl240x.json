@@ -110,9 +110,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Enter master mode(input X + X + Master PIN Code + √)\n2. Input \"0\" to enter \"Network settings\"\n3. Input \"1 + √\" to enter \"Include mode\"",
-		"exclusion": "1. Enter master mode(input X + X + Master PIN Code + √ )\n2. Input \"0\" to enter \"Network settings\"\n3. Input \"2 + √\" to enter \"Exclusion mode\"",
-		"reset": "1. Operations on lock\n1) Remove one of the batteries.\n2) Press and hold the Reset Button.\n3) While pressing, insert the removed battery. When you hear the voice prompt, the factory reset is complete.\n\n2. Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "1. Enter master mode (press X + X + Master PIN Code + √)\n2. Press \"0\" to enter Network settings\n3. Press \"1 + √\" to enter Include mode",
+		"exclusion": "1. Enter master mode (press X + X + Master PIN Code + √)\n2. Press \"0\" to enter Network settings\n3. Press \"2 + √\" to enter Exclusion mode",
+		"reset": "1. Remove one of the batteries\n2. Press and hold the Reset Button\n3. While pressing, insert the removed battery\n4. When you hear the voice prompt, the factory reset is complete",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/1010/DDL240X-15HZWManualV2.0.pdf"
 	}
 }
