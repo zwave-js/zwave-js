@@ -26,9 +26,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "a. Press & hold Inclusion/Exclusion button for 5 seconds when Door Sensor is exclusion status.\nb. LED of Door sensor will be on 5 seconds later.\nc. Door sensor will try Inclusion for 30sec when button is released.\nd. LED will blink 3 times with 250ms interval if Inclusion is successful",
-		"exclusion": "a. Receiver will stay exclusion waiting mode.\nb. Press & hold Inclusion/Exclusion button for 5 seconds when Door Sensor is Inclusion status.\nc. LED of Door sensor will be on 5 seconds later.\nd. Door sensor will try Exclusion when button is released.\ne. LED will blink 3 times with 250ms interval if Exclusion is successful",
-		"reset": "a. Press & hold Inclusion/Exclusion button for 10sec.\nb. LED will blink while holding the button.\nc. Factory reset will be done in 5sec after releasing button and LED will blink 5 times with 100ms interval. Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "1. Press and hold the Inclusion/Exclusion button for 5 seconds.\n2. The LED will turn on after 5 seconds.\n3. Release the button to start inclusion for 30 seconds.\n4. The LED will blink 3 times with 250ms interval if inclusion is successful.",
+		"exclusion": "1. Press and hold the Inclusion/Exclusion button for 5 seconds.\n2. The LED will turn on after 5 seconds.\n3. Release the button to start exclusion.\n4. The LED will blink 3 times with 250ms interval if exclusion is successful.",
+		"reset": "1. Press and hold the Inclusion/Exclusion button for 10 seconds.\n2. The LED will blink while holding the button.\n3. Release the button to start factory reset.\n4. The LED will blink 5 times with 100ms interval when reset is complete.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3625/DoorSensor_UsersManual.pdf"
 	}
 }
