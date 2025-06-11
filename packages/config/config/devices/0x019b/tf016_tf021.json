@@ -264,9 +264,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Press Center (confirm) for 10 seconds. The display will show OFF.\n2. Press Right (down) 4 times till you see Con in the display.\n3. Press Center (confirm) for approximately 2 seconds. The inclusion/exclusion icon will appear in the display.\n4. Confirmation will show Inc/EcL in the display. If inclusion fails, Err (error) will appear.\n5. Leave programming mode by choosing ESC in menu",
-		"exclusion": "1. Press Center (confirm) for 10 seconds. The display will show OFF.\n2. Press Right (down) 4 times till you see Con in the display.\n3. Press Center (confirm) for approximately 2 seconds. The inclusion/exclusion icon will appear in the display.\n4. Confirmation will show Inc/EcL in the display. If exclusion fails, Err (error) will appear.\n5. Leave programming mode by choosing ESC in menu",
-		"reset": "Press buttons Left and Center (up and confirm) for 20 seconds",
+		"inclusion": "1. Press center (confirm) for 10 seconds. The display will show OFF\n2. Press right (down) 4 times till you see Con in the display\n3. Press center (confirm) for approximately 2 seconds. The inclusion/exclusion icon will appear in the display\n4. Confirmation will show Inc/EcL in the display. If inclusion fails, Err (error) will appear\n5. Leave programming mode by choosing ESC in menu",
+		"exclusion": "1. Press center (confirm) for 10 seconds. The display will show OFF\n2. Press right (down) 4 times till you see Con in the display\n3. Press center (confirm) for approximately 2 seconds. The inclusion/exclusion icon will appear in the display\n4. Confirmation will show Inc/EcL in the display. If exclusion fails, Err (error) will appear\n5. Leave programming mode by choosing ESC in menu",
+		"reset": "Press buttons left and center (up and confirm) for 20 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1234/Manual_Multireg%20Z-Wave_Ver2015-A.pdf"
 	}
 }
