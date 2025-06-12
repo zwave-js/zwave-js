@@ -242,9 +242,9 @@
 	],
 	"metadata": {
 		"wakeup": "Press the button briefly",
-		"inclusion": "Press the button 3 times within 1.5s to enter inclusion mode.",
-		"exclusion": "Press the button 3 times within 1.5s",
-		"reset": "Press and hold the button for 10s until LED light is on, then release the button.",
+		"inclusion": "Press the button 3 times within 1.5 seconds",
+		"exclusion": "Press the button 3 times within 1.5 seconds",
+		"reset": "Press and hold the button for 10 seconds until LED turns on, then release the button",
 		"manual": "http://downloads.inteset.com/Motion2In1ManualS2.pdf"
 	}
 }
