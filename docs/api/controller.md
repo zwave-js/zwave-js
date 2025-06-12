@@ -1264,6 +1264,14 @@ enum JoinNetworkResult {
 
 The progress will be reported through the [`"network found"`](#quotnetwork-foundquot), [`"network joined"`](#quotnetwork-joinedquot), and/or [`"joining network failed"`](#quotjoining-network-failedquot) events.
 
+> [!NOTE]
+> Joining another network is not permitted under the following conditions:
+>
+> - **Primary controllers:** If they have already included any other nodes in their network
+> - **Secondary controllers:** If they are functioning as a SUC (Static Update Controller)
+>
+> In these cases, the controller needs to be [hard reset](api/driver.md#hardreset) before it can join another network.
+
 The options parameter is used to specify the joining strategy and provide callbacks to the application which may be necessary to support joining with Security S2. Currently, only one strategy is defined:
 
 - `JoinStrategy.Default`: Leave the choice of encryption (Security S2, Security S0 or no encryption) up to the including controller. This is the default when no options are specified.
