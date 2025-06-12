@@ -15,8 +15,8 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "1. Touch any button to take the thermostat out of sleep mode\n2. Touch and hold MODE button for 5 seconds (SETUP will be displayed in the status display line)\n3. Scroll to 'Z-Wave' using buttons and touch FAN (Select)\n4. Select YES in the Z-Wave Install screen\n5. Touch FAN (Select) to add thermostat to network\nThe display line should flash WAIT and then SUCCESS if Z-Wave connection is made. If Z-Wave does not connect, WAIT, then FAIL will flash in status display line.",
-		"exclusion": "1. Touch any button to take the thermostat out of sleep mode\n2. Touch and hold the MODE button for 5 seconds (SETUP will be displayed in the status display line)\n3. Scroll to 'Z-Wave' using buttons and touch FAN (Select)\n4. Select YES in the Z-Wave exclude screen\n5. Touch FAN (Select) to remove thermostat from network\nThe display line should flash WAIT then SUCCESS if the thermostat is removed from the network. If the removal operation is not successful, WAIT will flash, then FAIL will flash in status display line.",
+		"inclusion": "1. Touch any button to wake the thermostat\n2. Touch and hold the MODE button for 5 seconds\n3. Scroll to 'Z-Wave' using buttons and touch FAN (Select)\n4. Select YES in the Z-Wave Install screen\n5. Touch FAN (Select)\nThe display will flash WAIT and then SUCCESS if inclusion is successful. WAIT then FAIL will flash if inclusion fails.",
+		"exclusion": "1. Touch any button to wake the thermostat\n2. Touch and hold the MODE button for 5 seconds\n3. Scroll to 'Z-Wave' using buttons and touch FAN (Select)\n4. Select YES in the Z-Wave exclude screen\n5. Touch FAN (Select)\nThe display will flash WAIT then SUCCESS if exclusion is successful. WAIT then FAIL will flash if exclusion fails.",
 		"reset": "1. Touch and hold MODE button to go to Setup menu\n2. Touch and hold MODE and the down arrow key to enter Advanced Menu\n3. Navigate to Restore Defaults to perform a factory reset",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3884/10028238%20Rev-E%20-%202GIG-STZ-1%20User%20Guide_PRINT.pdf"
 	}
