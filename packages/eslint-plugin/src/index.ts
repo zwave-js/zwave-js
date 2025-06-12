@@ -27,12 +27,12 @@ export default {
 		"consistent-param-units": consistentParamUnits,
 		"no-debug-in-tests": noDebugInTests,
 		"no-forbidden-imports": noForbiddenImports,
+		"no-internal-cc-types": noInternalCCTypes,
 		"no-misspelled-names": noMisspelledNames,
 		"no-surrounding-whitespace": noSurroundingWhitespace,
 		"no-unnecessary-min-max-value": noUnnecessaryMinMaxValue,
 		"no-useless-description": noUselessDescription,
 		"no-value-in-option-label": noValueInOptionLabel,
 		"prefer-defaultvalue": preferDefaultValue,
-		"no-internal-cc-types": noInternalCCTypes,
 	},
 };
