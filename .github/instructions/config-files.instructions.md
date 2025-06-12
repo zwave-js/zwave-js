@@ -55,3 +55,4 @@ applyTo: "packages/config/config/devices/*/*.json"
 - Remove steps about moving the device close to its final location
 - Remove steps about bringing the device close to the controller or hub
 - Remove steps about testing the device after inclusion
+- Avoid putting steps in parentheses, put them in a separate sentence instead

@@ -91,7 +91,7 @@
 		{
 			"#": "9",
 			"label": "Rf Off Command Mode",
-			"description": "Whenever a switch off command, basic_set、binary_switch_set、switch_all_off, is received, it could be interpreted as 4 variety of commands.  1.switch off：it switches to off state. the default setting is switch off.  2.ignore：the switch off command will be ignored.  3.switch toggle：it switches to the inverse of current state.  4.switch on：it switches to on state",
+			"description": "Whenever a switch off command, basic_set、binary_switch_set、switch_all_off, is received, it could be interpreted as 4 variety of commands.  1.switch off: it switches to off state. the default setting is switch off.  2.ignore: the switch off command will be ignored.  3.switch toggle: it switches to the inverse of current state.  4.switch on: it switches to on state",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
