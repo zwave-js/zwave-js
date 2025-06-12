@@ -119,9 +119,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Ensure the RF LED is flashing on the SIR 321, if not then follow exclusion steps first.\n2. Press and hold the pairing button on the SIR 321 until the RF LED starts flashing at a fast rate, then release the button.\n3. The SIR 321 has been added when the RF LED stops flashing.",
-		"exclusion": "1. Press and hold the pairing button on the SIR 321 until the RF LED starts flashing at a fast rate, then release the button.\n2. The SIR 321 has been removed when the RF LED starts flashing.",
-		"reset": "Press pairing button and boost button simultaneously until RF LED starts flashing.",
+		"inclusion": "1. Ensure the RF LED is flashing\n2. Press and hold the pairing button until the RF LED starts flashing at a fast rate, then release\n3. The RF LED stops flashing when successful",
+		"exclusion": "Press and hold the pairing button until the RF LED starts flashing at a fast rate, then release. The RF LED starts flashing when successful.",
+		"reset": "Press the pairing button and boost button simultaneously until the RF LED starts flashing.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4045/SIR321%20BGX501-867%20R07.pdf"
 	}
 }
