@@ -146,6 +146,10 @@ As a reminder, here's how to create one:
 			);
 
 			return;
+		} else if (!message) {
+			// No need to have a comment, all is ok
+			console.log("No message to post, no need for a comment");
+			return;
 		}
 	} catch {
 		// Ok make a new one maybe
