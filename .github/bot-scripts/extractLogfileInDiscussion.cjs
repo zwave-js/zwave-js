@@ -3,7 +3,7 @@
 /// <reference path="types.d.ts" />
 
 const markdownLinkRegex = /\[.*\]\((http.*?)\)/;
-const codeBlockRegex = /`{3,4}?(.*?)`{3,4}?/s;
+const codeBlockRegex = /`{3,4}(.*?)`{3,4}/s;
 
 /**
  * @param {{github: Github, context: Context}} param
