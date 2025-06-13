@@ -16,7 +16,10 @@ async function main(param) {
 
 	const logfileSectionHeader = "### Attach Driver Logfile";
 	// Check if this is a bug report which requires a logfile
-	console.log("logfile section header exists:", body.includes(logfileSectionHeader));
+	console.log(
+		"logfile section header exists:",
+		body.includes(logfileSectionHeader),
+	);
 	if (!body.includes(logfileSectionHeader)) return;
 
 	const logfileSection = body.slice(
@@ -33,6 +36,13 @@ async function main(param) {
 		let logFile;
 		try {
 			const resp = await fetch(link);
+			if (!resp.ok) {
+				console.error(
+					`Failed to fetch logfile from ${link}:`,
+					resp.statusText,
+				);
+				return "ERROR_FETCH";
+			}
 			logFile = await resp.text();
 		} catch (e) {
 			console.error(`Failed to fetch logfile from ${link}:`, e);
