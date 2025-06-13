@@ -14,7 +14,7 @@ async function main(param, feedback) {
 	const discussion = context.payload.discussion;
 	if (!discussion) return;
 
-	const user = context.payload.issue.user.login;
+	const user = discussion.user.login;
 
 	let message = "";
 	switch (feedback) {
