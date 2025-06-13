@@ -165,9 +165,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1) Connect the power supply.\n2) Set the Z-Wave network main controller into inclusion mode (see Z-Wave network controller operating manual).\n3) Triple click the Z-button or power up the device , RGB LED indicator should blink fast in blue.\n4) Smart Plug should be recognized and included into the Z-Wave network.",
-		"exclusion": "1) Insert the Plug into a socket.\n2) Set the Z-Wave network controller into the exclusion mode (see Z-Wave controller operating manual).\n3) Triple click the Z button.\n4) RGB LED indicator will blink orange till the removing process is completed, than the indicator will keep orange for 3 seconds.",
-		"reset": "1) Insert the Plug into a socket,\n2) Press and hold the Z button for more than 20 seconds,\n3) If holding time more than 20seconds, the RGB LED indicator will keep yellow for 2 seconds, which means resetting is complete. \n Use this procedure only in the event that the network primary controller is missing or otherwise inoperable.",
+		"inclusion": "1. Connect the power supply\n2. Start inclusion\n3. Triple click the Z-button - the RGB LED will blink fast in blue\n4. The smart plug will be included",
+		"exclusion": "1. Insert the plug into a socket\n2. Start exclusion\n3. Triple click the Z-button\n4. The RGB LED will blink orange until complete, then stay orange for 3 seconds",
+		"reset": "1. Insert the plug into a socket\n2. Press and hold the Z-button for more than 20 seconds\n3. The RGB LED will turn yellow for 2 seconds when reset is complete",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1854/HKZW-SO03_manual.pdf"
 	}
 }

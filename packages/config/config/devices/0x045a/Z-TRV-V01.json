@@ -152,8 +152,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power on your TRV. \n2. Set your Z-Wave controller into add/inclusion mode.\n3. In 'OF' state, short press rotary plate three times unit this screen shows '--'.\n4. The screen will show 'PA' after few seconds, whick meant the inclusion is successful. And the signal icon will light on. Otherwise, the inclusion is failed, which you will need to repeat the process.",
-		"exclusion": "1. Power on your TRV. \n2. Put your Z-Wave controller into exclusion mode by following the instructions provided by the controller manufacturer. \n3. In 'OF' state, short press rotary plate three times unit this screen shows '--'.\n4. The screen will turn back to 'OF' after few seconds. which meant the exclusion is successful. The signal light turn off.",
-		"reset": "Use this procedure only in the event that the primary controller is lost or otherwise inoperable. \n1. In 'OF' state, hold rotary plate for at least 5 seconds and release when screen will blink 'OF'. When successful, the screen will show 'OF' in solid for 2 seconds then turn off."
+		"inclusion": "1. Power on the TRV\n2. When the display shows 'OF', quickly press the rotary plate three times until the screen shows '--'\n3. The screen will show 'PA' if inclusion is successful",
+		"exclusion": "1. Power on the TRV\n2. When the display shows 'OF', quickly press the rotary plate three times until the screen shows '--'\n3. The screen will return to 'OF' if exclusion is successful",
+		"reset": "When the display shows 'OF', press and hold the rotary plate for at least 5 seconds until the screen blinks 'OF'"
 	}
 }

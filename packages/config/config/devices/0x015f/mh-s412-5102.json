@@ -423,9 +423,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Hold any key for >8s OR 3 fast clicks",
-		"exclusion": "Hold any key for >8s OR 3 fast clicks",
-		"reset": "20 fast clicks on any key",
+		"inclusion": "Hold any key for more than 8 seconds or click any key 3 times quickly.",
+		"exclusion": "Hold any key for more than 8 seconds or click any key 3 times quickly.",
+		"reset": "Click any key 20 times quickly.",
 		"manual": "https:\/\/www.mcohome.com\/index.php?c=Front\/DownDetail&a=downloadFujian&name=MH-S412&path=L2NvbWRhdGEvOTUzMDEvcHJvZHVjdGZ1amlhbi8yMDIxMDIwMzE3Mjc0NjYwMWE2YzkyYjIxMTQucGRm"
 	}
 }

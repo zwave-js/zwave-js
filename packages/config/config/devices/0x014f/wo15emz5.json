@@ -32,9 +32,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Put the controller in to INCLUDE mode. Press the button on the unit once.",
-		"exclusion": "Put the controller in to EXCLUDE mode. Press the button on the unit twice.",
-		"reset": "Press the button on the unit five times then press and hold the button for 15 seconds.",
+		"inclusion": "Press the button once.",
+		"exclusion": "Press the button twice.",
+		"reset": "Press the button five times then press and hold the button for 15 seconds.",
 		"manual": "https://www.gocontrol.com/manuals/10010070ax2_wo15emz5-1_instructions.pdf"
 	}
 }

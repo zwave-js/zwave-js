@@ -51,9 +51,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Let your primary Controller/gateway into Inclusion mode, then press once the \"Learn\" Button in the app of Touch.",
-		"exclusion": "Let your primary Controller/gateway into Exclusion mode, then press once the \"Learn\" Button in the app of Touch.",
-		"reset": "Press the \"Reset\" button in the app of Touch. This procedure only be used when the primary controller is missing or inoperable",
+		"inclusion": "Press once the \"Learn\" Button in the app of Touch.",
+		"exclusion": "Press once the \"Learn\" Button in the app of Touch.",
+		"reset": "Press the \"Reset\" button in the app of Touch.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1613/Oomi%20Touch%20manual.pdf"
 	}
 }

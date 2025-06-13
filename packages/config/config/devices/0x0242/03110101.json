@@ -15,9 +15,9 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "A. Press Button switch 3 times in a row to link device to Z-Wave network or remove device from Z-Wave network. \nB. Press Button switch 3 times in a row again to cancel to link device to Z-Wave network.",
-		"exclusion": "A. Acknowledge of Green LED lightning. \nB. Press Button switch 3 times in a row to link device to Z-Wave network or remove device from Z-Wave network.",
-		"reset": "A. Press Fn switch over 2minutes to initialize connecting network information. \nUse this procedure only in the event that the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the button switch 3 times in a row. Press 3 times again to cancel inclusion",
+		"exclusion": "1. Wait for green LED to light\n2. Press the button switch 3 times in a row",
+		"reset": "Press the Fn switch for over 2 minutes to reset network information",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1664/Repeater_Q_160205.pdf"
 	}
 }

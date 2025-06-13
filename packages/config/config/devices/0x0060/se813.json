@@ -59,9 +59,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Put the Z-Wave Controller into inclusion mode.\n2. Press the Link button 3 times within 1.5 seconds to put the unit into inclusion mode.",
-		"exclusion": "1. Put the Z-Wave Controller into exclusion mode.\n2. Press the Link button 3 times within 1.5 seconds to put the unit into exclusion mode.",
-		"reset": "1. Press the Link button 3 times within 1.5 seconds to put the unit into exclusion mode.\n2. Within 1 second of step 1, press the Link button again and hold for 5 seconds.\n3. Node ID is excluded. The unit reverts to factory default state.\n(This procedure should only be used when the controller is missing or inoperable.)",
+		"inclusion": "Press the Link button 3 times within 1.5 seconds",
+		"exclusion": "Press the Link button 3 times within 1.5 seconds",
+		"reset": "1. Press the Link button 3 times within 1.5 seconds\n2. Within 1 second, press the Link button again and hold for 5 seconds",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3138/SE813%20user%20manual_1031.pdf"
 	}
 }

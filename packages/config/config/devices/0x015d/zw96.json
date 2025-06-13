@@ -35,9 +35,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1:Refer to your primary controller instructions to process the inclusion / exclusion setup procedure.\n2:When prompted by your primary controller, click the PROG button five times in one second",
-		"exclusion": "1:Refer to your primary controller instructions to process the inclusion / exclusion setup procedure.\n2:When prompted by your primary controller, click the PROG button five times in one second",
-		"reset": "---Power off ZW96\n---keep holding the PROG button\n---Power on,Press and keep holding the PROG button for no less than 10 seconds.\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Click the PROG button 5 times in one second.",
+		"exclusion": "Click the PROG button 5 times in one second.",
+		"reset": "Power on the device while holding the PROG button and keep holding for at least 10 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2692/ZW96-Manual171115.pdf"
 	}
 }

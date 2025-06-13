@@ -153,10 +153,10 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Put your Z-Wave hub into inclusion mode and click the upper paddle 6 times quickly. The LED indicator\nwill blink blue during the process and light up green once added successfully. It will light up red if failed",
-		"exclusion": "1. Bring the Remote Switch within direct range of your Z-Wave gateway (hub).\n2. Put the Z-Wave hub into exclusion mode (not sure how to do that? ask@getzooz.com).\n3. Click the lower paddle 6 times very quickly\n4. Your hub will confirm exclusion and the device will disappear from your controller's device list",
-		"wakeup": "1. Bring the Remote Switch within direct range of your Z-Wave gateway (hub).\n2. Click the lower left button 6 times as quickly as possible to wake the device up\n3. Your device's indicator light will remain on to indicate that the device is awake.",
-		"reset": "When your network's primary controller is missing or otherwise inoperable, you may need to reset the device to factory settings manually. In order to complete the process, make sure the device is powered, then click the bottom right small button 6 times quickly. The LED indicator will start blinking red, then immediately click the same button 6 more times. The LED indicator will stay red for 2 seconds.",
+		"inclusion": "Click the upper paddle 6 times quickly. The LED indicator will blink blue during the process and light up green once added successfully. It will light up red if failed.",
+		"exclusion": "Click the lower paddle 6 times very quickly.",
+		"wakeup": "Click the lower left button 6 times as quickly as possible to wake the device up. The device's indicator light will remain on to indicate that the device is awake.",
+		"reset": "Click the bottom right small button 6 times quickly. The LED indicator will start blinking red. Immediately click the same button 6 more times. The LED indicator will stay red for 2 seconds.",
 		"manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-800-series-z-wave-long-range-wall-remote-zen37-800lr-manual.pdf"
 	}
 }

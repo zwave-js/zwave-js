@@ -86,9 +86,9 @@
 		]
 	},
 	"metadata": {
-		"inclusion": "How to add (pairing) the product into Z-Wave network\n 1. Operate on lock following guide below:\n 1) Enter Master Code-> 'R' -> '9' -> '#' -> '1' -> '#' (only can be activated in advanced mode)",
-		"exclusion": "How to remove the product from Z-Wave network\n 1. Operate on lock following guide below:\n 1) Enter Master Code-> 'R' -> '9' -> '#' -> '3' -> '#' ->  Master Code -> '#' (only can be activated in advanced mode)",
-		"reset": "How to factory reset for Z-Wave\nNote: please use this procedure only when the network primary controller is missing or otherwise inoperable.\n 1) Press and hold the \"factory reset\" key after the lock body\n 2) Power off the lock body for more than 5S, and plug in the battery again\n 3) Plug in the battery again and wait for 5S to release the \"factory reset\" key",
+		"inclusion": "1. Enter Master Code\n2. Press 'R' -> '9' -> '#' -> '1' -> '#' (only available in advanced mode)",
+		"exclusion": "1. Enter Master Code\n2. Press 'R' -> '9' -> '#' -> '3' -> '#'\n3. Enter Master Code -> '#' (only available in advanced mode)",
+		"reset": "1. Press and hold the \"factory reset\" key behind the lock body\n2. Power off the lock body for more than 5 seconds and reinstall the battery\n3. Wait for 5 seconds then release the \"factory reset\" key",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/459/DoorLockManualforYDM3109A_4.docx"
 	}
 }

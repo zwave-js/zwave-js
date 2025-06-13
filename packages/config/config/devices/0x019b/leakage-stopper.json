@@ -289,9 +289,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Set your Z-Wave Gateway into Inclusion mode / Add device.\ni. Start: Short press Touch Sense Button 3 times.\nii. Processing: Yellow LED and short beep sound keeping continue. For security inclusion support, you may need to entering first 5 digit\nthat show on QR Code label, please refer to the instructions of central controller.\niii. Success: Green LED on 1 second with 2 short beep sounds.\niv. The LED indication changes to Green LED slow blinking from Yellow LED blinking.",
-		"exclusion": "Set your Z-Wave Gateway into Exclusion mode / Remove device.\ni. Start: Short press Touch Sense Button 3 times.\nii. Processing: Yellow LED and short beep sound keeping continue.\niii. Success: Green LED on 1 second with 2 short beep sounds.\niv. The LED indication Changes to Yellow LED blinking",
-		"reset": "Start: Long hold Touch Sense Button for 10 seconds then short click 5 times.\nii. Processing: Yellow LED ON 1 second then wait 2-5 seconds.\niii. Success: Green LED on 2 second with long beep sounds for 2 seconds.\n*Factory Default Reset will:\na. Remote the BVS from Z-Wave Network;\nb. Delete the association setting;\nc. Restore the configuration settings to the default",
+		"inclusion": "Short press Touch Sense Button 3 times.",
+		"exclusion": "Short press Touch Sense Button 3 times.",
+		"reset": "Long hold Touch Sense Button for 10 seconds, then short click 5 times.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3885/BVS_ZWU_v1.0.9.pdf"
 	}
 }

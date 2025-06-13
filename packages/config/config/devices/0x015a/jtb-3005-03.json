@@ -44,9 +44,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Start master controller add device mode as instruction, press 3 time of PB button located on the back side of thermostat panel in 1.5 second,\nLED flash indicator inclusion processing until included or 60 second timeout no detect any master controller",
-		"exclusion": "Start master controller remove device mode as instruction, press 3 time of PB button located on the back side of thermostat panel in 1.5 second, LED flash indicator exclusion processing until excluded or 5 second timeout no detect any master controller",
-		"reset": "Please use this procedure only when the network primary controller is missing or otherwise inoperable.\n\nPress and hold PB button located on the back side of thermostat\npanel for 10 seconds retrieve thermostat panel factory default",
+		"inclusion": "Press the PB button on the back side 3 times within 1.5 seconds. The LED will flash during inclusion.",
+		"exclusion": "Press the PB button on the back side 3 times within 1.5 seconds. The LED will flash during exclusion.",
+		"reset": "Press and hold the PB button on the back side for 10 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2634/JTB-3005-03-Manual_20171016.pdf"
 	}
 }

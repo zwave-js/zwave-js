@@ -35,9 +35,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "This must be done at GAS valve and when closed. Press Timer UP button for 5 seconds till hearing beep once",
-		"exclusion": "This must be done at GAS valve and when closed. Press Timer UP button for 5 seconds till hearing beep once",
-		"reset": "This must be done at GAS valve and when closed. Press Timer UP button for 10 seconds till hearing beep once. Use this procedure only in the event that the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Close the gas valve and press the Timer UP button for 5 seconds until you hear one beep.",
+		"exclusion": "Close the gas valve and press the Timer UP button for 5 seconds until you hear one beep.",
+		"reset": "Close the gas valve and press the Timer UP button for 10 seconds until you hear one beep.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1687/Manual_soosanhometech.pdf"
 	}
 }

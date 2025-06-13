@@ -65,9 +65,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "After mounting the UZB controller to your PC and running the PC Controller program, click the Add button in the PC Controller program. Press the button on the Smart Power Strip for more than five seconds after you plug the Smart Power Strip into a power outlet and it will include to the network controller, while flashing the red button on the LED Smart Power Strip",
-		"exclusion": "After mounting the UZB controller to your PC and run the PC Controller program you can click the Remove button in the PC Controller program. Press the button on the Smart Power Strip for more than five seconds after you plug the Smart Power Strip into a power outlet will Exclusion in the network controller, while the flashing red button LED Smart Power Strip",
-		"reset": "With the device powered, press and hold the third button for 10 seconds.\nThe LED of the button will flash red after 5 seconds, it will turn green, then it will flash red again. Then release the button.\nAfter a few moments, the entire LED is blinking and the green LED stops flashing.\nPlease use the procedure only in the event that the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Plug the Smart Power Strip into a power outlet and press the button for more than 5 seconds. The red LED will flash during inclusion.",
+		"exclusion": "Plug the Smart Power Strip into a power outlet and press the button for more than 5 seconds. The red LED will flash during exclusion.",
+		"reset": "1. With the device powered, press and hold the third button for 10 seconds\n2. The LED will flash red after 5 seconds, turn green, then flash red again\n3. Release the button when the entire LED blinks and the green LED stops flashing",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3314/Light%20switch%20user%20manual.pdf"
 	}
 }

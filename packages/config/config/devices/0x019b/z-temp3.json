@@ -234,9 +234,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Hold the Center button for 5 seconds. The display will show 'OFF'\n Press the '+' button once to see 'CON' in the display.\n Start the add/remove device process in your primary controller.\n Start the configuration mode on the thermostat by holding the Center button for approximately 2 seconds.",
-		"exclusion": "Hold the Center button for 5 seconds. The display will show 'OFF'\n Press the '+' button once to see 'CON' in the display.\n Start the add/remove device process in your primary controller.\n Start the configuration mode on the thermostat by holding the Center button for approximately 2 seconds.",
-		"reset": "Enter the menu by holding the Center button for about 5seconds, navigate in the menu with the '+' button til you see FACT. Press the Center button until you see '-- --' blinking in the display, then hold for about 5 seconds to perform a reset. You may also initiate a reset by holding the Right and Center buttons for 55 seconds.",
+		"inclusion": "1. Hold the Center button for 5 seconds.\n2. Press the '+' button once to see 'CON' in the display.\n3. Hold the Center button for approximately 2 seconds.",
+		"exclusion": "1. Hold the Center button for 5 seconds.\n2. Press the '+' button once to see 'CON' in the display.\n3. Hold the Center button for approximately 2 seconds.",
+		"reset": "1. Hold the Center button for about 5 seconds.\n2. Navigate with the '+' button until you see FACT.\n3. Press the Center button until you see '-- --' blinking.\n4. Hold for about 5 seconds to perform a reset.",
 		"manual": "https://media.heatit.com/3872"
 	}
 }

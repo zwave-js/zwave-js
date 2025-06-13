@@ -173,9 +173,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Press and hold the button on SSP 302 for 4 to 7 seconds then release. The network status LED will start flashing (twice per second) on successful start of inclusion process. On successful inclusion the LED will turn off",
-		"exclusion": "Press and hold the button on SSP 302 for 4 to 7 seconds then release. The network status LED will start flashing (twice per second) on successful start of exclusion process. After successful exclusion the network status LED will start flashing once per second, and the device will reset to factory default",
-		"reset": "Power cycle the device and press and hold the button for more than 11 seconds and less than 15 seconds within the 60 seconds of power cycle to put the device in factory default",
+		"inclusion": "Press and hold the button for 4 to 7 seconds, then release. The LED flashes twice per second during the process and turns off when successful.",
+		"exclusion": "Press and hold the button for 4 to 7 seconds, then release. The LED flashes twice per second during the process, then once per second when successful.",
+		"reset": "1. Power cycle the device\n2. Press and hold the button for 11-15 seconds within 60 seconds of power cycle",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1271/SSP%20302%20User%20Manual%20for%20Web.pdf"
 	}
 }

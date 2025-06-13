@@ -15,9 +15,9 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": " Put the Z-Wave gateway or control panel into Inclusion mode (please refer to the Z-Wave gateway or control panel manual).\n Within 1.5 seconds, press the Function Button 3 times.\n Refer to the operation manual of the Z-Wave gateway or control panel to complete the adding process.\n If the Sensor has already been added (included) into another Z-Wave Gateway/Control Panel, or if the device is unable to be added into the current Z-Wave Gateway/Control Panel, try removing it first (see Removing Device).",
-		"exclusion": " Put the Z-Wave gateway or control panel into Exclusion mode (please refer to the Z-Wave gateway or control panel manual).\n Within 1.5 seconds, press the Function Button 3 times and the Sensor will be removed from the Z-Wave network, the LED will light on for 1 second to indicate.",
-		"reset": "(Only use factory reset when network Control Panel/Gateway is missing or inoperable)\n Remove the battery of the Sensor first.\n Press and hold the Function Button. While holding the Function Button, power on the Sensor by re-inserting the battery, wait for 10 seconds to factory reset, the LED will light on for 1 second to indicate.",
+		"inclusion": "Press the Function Button 3 times within 1.5 seconds.",
+		"exclusion": "Press the Function Button 3 times within 1.5 seconds. The LED will light for 1 second to indicate removal.",
+		"reset": "1. Remove the battery from the Sensor\n2. Press and hold the Function Button\n3. While holding the Function Button, re-insert the battery and wait for 10 seconds\n4. The LED will light for 1 second to indicate factory reset",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2485/LM-1ZW_20170608.pdf"
 	}
 }

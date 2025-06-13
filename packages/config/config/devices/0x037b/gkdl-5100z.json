@@ -70,9 +70,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Ensure the door lock is open.\n1. Open the battery cover of the indoor unit and press the [REG] button.\n2. Press the [#] button, then enter the Master PIN: [1][2][3][4] (default value).\n3. Press the [*] button, then press [8][8].",
-		"exclusion": "Ensure the door lock is open.\n1. Open the battery cover of the indoor unit and press the [REG] button.\n2. Press the [#] button, then enter the Master PIN: [1][2][3][4] (default value).\n3. Press the [*] button, then press [9][9].",
-		"reset": "Ensure the door lock is open.\n1. Open the battery cover of the indoor unit and press the [REG] button.\n2. Press the [#] button, then enter the Master PIN: [1][2][3][4] (default value).\n3. Press the [*] button, then press [5].\n4. Press the [*] button, then press [2].\n5. Press the [#] button, then enter the Master PIN: [1][2][3][4] (default value).",
+		"inclusion": "1. Ensure the door lock is open\n2. Open the battery cover and press the [REG] button\n3. Press [*] then [8][8]",
+		"exclusion": "1. Ensure the door lock is open\n2. Open the battery cover and press the [REG] button\n3. Press [*] then [9][9]",
+		"reset": "1. Ensure the door lock is open\n2. Open the battery cover and press the [REG] button\n3. Press [*] then [5]\n4. Press [*] then [2]",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3952/GKDL-5100Z_Z-Wave%20Manual_20200808.pdf"
 	}
 }

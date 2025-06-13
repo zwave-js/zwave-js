@@ -195,7 +195,7 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "By pressing the FUNCTIONS button for 8 seconds",
-		"exclusion": "By pressing the FUNCTIONS button for 8 seconds"
+		"inclusion": "Press and hold the FUNCTIONS button for 8 seconds.",
+		"exclusion": "Press and hold the FUNCTIONS button for 8 seconds."
 	}
 }
