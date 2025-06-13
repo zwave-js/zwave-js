@@ -16,14 +16,18 @@ async function main(param) {
 
 	const logfileSectionHeader = "### Attach Driver Logfile";
 	// Check if this is a bug report which requires a logfile
+	console.log("logfile section header exists:", body.includes(logfileSectionHeader));
 	if (!body.includes(logfileSectionHeader)) return;
 
 	const logfileSection = body.slice(
 		body.indexOf(logfileSectionHeader) + logfileSectionHeader.length,
 	);
+	console.log("logfile section:", logfileSection);
 
 	const link = markdownLinkRegex.exec(logfileSection)?.[1]?.trim();
+	console.log("logfile link:", link);
 	const codeBlockContent = codeBlockRegex.exec(logfileSection)?.[1]?.trim();
+	console.log("code block content:", codeBlockContent);
 
 	if (link) {
 		let logFile;
