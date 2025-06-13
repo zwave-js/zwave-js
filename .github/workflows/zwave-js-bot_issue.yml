@@ -23,8 +23,6 @@ jobs:
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           const extractResult = await bot.extractLogfile({github, context});
 
-          console.log("Extract result:", extractResult);
-
           if (!extractResult) {
             // No log file required
             core.setOutput("shouldContinue", "false");
@@ -177,8 +175,6 @@ jobs:
               feedback = "UNRELATED";
               break;
           }
-
-          console.log("Feedback:", feedback);
 
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.ensureLogfileFeedback({github, context}, feedback);

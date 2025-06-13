@@ -75,8 +75,6 @@ As a reminder, here's how to create one:
 `;
 	}
 
-	console.log("Logfile feedback message:", message);
-
 	const options = {
 		owner: context.repo.owner,
 		repo: context.repo.repo,
@@ -95,8 +93,8 @@ As a reminder, here's how to create one:
 		});
 		const existing = comments.find(
 			(c) =>
-				/*c.user.login === "zwave-js-bot"
-				&&*/ c.body.includes(LOGFILE_COMMENT_TAG),
+				c.user.login === "zwave-js-bot"
+				&& c.body.includes(LOGFILE_COMMENT_TAG),
 		);
 		if (existing) {
 			if (message) {
