@@ -23,6 +23,8 @@ jobs:
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           const extractResult = await bot.extractLogfile({github, context});
 
+          console.log("Extract result:", extractResult);
+
           if (!extractResult) {
             // No log file required
             core.setOutput("shouldContinue", "false");
@@ -31,7 +33,8 @@ jobs:
 
           if (extractResult === "ERROR_FETCH" || extractResult === "ERROR_CODE_BLOCK_TOO_LONG") {
             core.setOutput("shouldContinue", "false");
-            return bot.ensureLogfileFeedback({github, context}, extractResult);
+            await bot.ensureLogfileFeedback({github, context}, extractResult);
+            return;
           }
 
           core.setOutput("shouldContinue", "true");
