@@ -11,9 +11,18 @@ const codeBlockRegex = /`{3,4}(.*?)`{3,4}/s;
 async function main(param) {
 	const { github, context } = param;
 
-	const body = context.payload.issue.body;
+	const discussion = context.payload.discussion;
+	if (!discussion) return;
 
-	const logfileSectionHeader = "### Attach Driver Logfile";
+	const user = discussion.user.login;
+	const body = discussion.body;
+	const categorySlug = discussion.category.slug;
+
+	// Only check for logfiles in categories that require one
+	if (categorySlug !== "request-support-investigate-issue") return;
+
+	const logfileSectionHeader = "### Upload Logfile";
+
 	// Check if this is a bug report which requires a logfile
 	if (!body.includes(logfileSectionHeader)) return;
 

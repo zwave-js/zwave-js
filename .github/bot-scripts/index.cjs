@@ -11,7 +11,9 @@ module.exports = {
 	ensureLogfileInDiscussion: (...args) =>
 		require("./ensureLogfileInDiscussion.cjs")(...args),
 	extractLogfile: (...args) => require("./extractLogfile.cjs")(...args),
+	extractLogfileInDiscussion: (...args) => require("./extractLogfileInDiscussion.cjs")(...args),
 	ensureLogfileFeedback: (...args) => require("./ensureLogfileFeedback.cjs")(...args),
+	ensureLogfileFeedbackInDiscussion: (...args) => require("./ensureLogfileFeedbackInDiscussion.cjs")(...args),
 	fixLintFeedback: (...args) => require("./fixLintFeedback.cjs")(...args),
 	getFixLintInfo: (...args) => require("./getFixLintInfo.cjs")(...args),
 	rebaseFeedback: (...args) => require("./rebaseFeedback.cjs")(...args),

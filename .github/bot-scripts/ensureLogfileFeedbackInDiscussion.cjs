@@ -11,6 +11,9 @@ const LOGFILE_COMMENT_TAG = "<!-- LOGFILE_COMMENT_TAG -->";
 async function main(param, feedback) {
 	const { github, context } = param;
 
+	const discussion = context.payload.discussion;
+	if (!discussion) return;
+
 	const user = context.payload.issue.user.login;
 
 	let message = "";
@@ -74,56 +77,98 @@ As a reminder, here's how to create one:
 `;
 	}
 
-	const options = {
+	// Check if there is a comment from the bot already
+	const queryComments = /* GraphQL */ `
+		query Discussion($owner: String!, $repo: String!, $number: Int!) {
+			repository(owner: $owner, name: $repo) {
+				discussion(number: $number) {
+					comments(first: 100) {
+						nodes {
+							id
+							author {
+								login
+							}
+							body
+			
+							# replies(first: 100) {
+							#   nodes {
+							#     id
+							#     author {
+							#       login
+							#     }
+							#     body
+							#   }
+							# }
+						}
+					}
+				}
+			}
+		}
+	`;
+	const updateCommentQuery = /* GraphQL */ `
+		mutation updateComment($commentId: ID!, $body: String!) {
+			updateDiscussionComment(input: {commentId: $commentId, body: $body}) {
+				comment {
+					id
+				}
+			}
+		}
+	`;
+	const queryVars = {
 		owner: context.repo.owner,
 		repo: context.repo.repo,
+		number: discussion.number,
 	};
 
-	// When all is good, remove any existing comment
-	if (message) {
-		message += LOGFILE_COMMENT_TAG;
-	}
-
-	// Existing comments are tagged with LOGFILE_COMMENT_TAG
 	try {
-		const { data: comments } = await github.rest.issues.listComments({
-			...options,
-			issue_number: context.issue.number,
-		});
+		// Existing comments are tagged with LOGFILE_COMMENT_TAG
+		const queryResult = await github.graphql(queryComments, queryVars);
+		const comments = queryResult.repository.discussion.comments.nodes;
+
 		const existing = comments.find(
 			(c) =>
-				c.user.login === "zwave-js-bot"
-				&& c.body.includes(LOGFILE_COMMENT_TAG),
+				/*c.author.login === "zwave-js-bot"
+				&&*/ c.body.includes(LOGFILE_COMMENT_TAG),
 		);
+
 		if (existing) {
-			if (message) {
-				// Comment found, update it
-				await github.rest.issues.updateComment({
-					...options,
-					comment_id: existing.id,
-					body: message,
-				});
-			} else {
-				// No need to have a comment, all is ok
-				await github.rest.issues.deleteComment({
-					...options,
-					comment_id: existing.id,
-				});
-			}
+			message ||= "All good now, thanks!" + LOGFILE_COMMENT_TAG;
+
+			// Update the existing comment
+			const updateCommentVars = {
+				commentId: existing.id,
+				body: message,
+			};
+
+			await github.graphql(
+				updateCommentQuery,
+				updateCommentVars,
+			);
+
 			return;
 		}
 	} catch {
 		// Ok make a new one maybe
 	}
 
-	if (message) {
-		// Make a new one otherwise
-		await github.rest.issues.createComment({
-			...options,
-			issue_number: context.issue.number,
-			body: message,
-		});
-	}
+	// Tag the message so it's easier to find the comments later
+	message += LOGFILE_COMMENT_TAG;
+
+	const addCommentQuery = /* GraphQL */ `
+		mutation reply($discussionId: ID!, $body: String!) {
+			addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+				comment {
+					id
+				}
+			}
+		}
+	`;
+	const addCommentVars = {
+		discussionId: discussion.node_id,
+		body: message,
+	};
+
+	await github.graphql(addCommentQuery, addCommentVars);
 }
 
 module.exports = main;
