@@ -273,6 +273,22 @@ async function lintDevices(): Promise<void> {
 		);
 	}
 
+	const filesWithWhitespace = await enumFilesRecursive(
+		fs,
+		rootDir,
+		(filename) => {
+			const basename = path.basename(filename);
+			// Check for whitespace in filename
+			return /\s/.test(basename);
+		},
+	);
+	for (const file of filesWithWhitespace) {
+		addError(
+			path.relative(rootDir, file),
+			`Invalid filename: Must not contain whitespace.`,
+		);
+	}
+
 	await configManager.loadDeviceIndex();
 	const index = configManager.getIndex()!;
 	// Device config files are lazy-loaded, so we need to parse them all
