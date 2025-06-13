@@ -154,7 +154,7 @@ jobs:
           let feedback = "UNKNOWN";
           switch (aiResponse) {
             case "Z-Wave JS: correct log level":
-              // All good, no feedback needed
+              feedback = "OK";
               return;
             case "Z-Wave JS: wrong log level":
               feedback = "WRONG_LOG_LEVEL";
@@ -166,7 +166,7 @@ jobs:
               feedback = "HA_ONLY";
               break;
             case "Home Assistant: Includes Z-Wave JS":
-              // All good, no feedback needed
+              feedback = "OK";
               return;
             case "Unrelated":
               feedback = "UNRELATED";
@@ -176,4 +176,4 @@ jobs:
           console.log("Feedback:", feedback);
 
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
-          return bot.extractLogfileFeedback({github, context}, feedback);
+          return bot.ensureLogfileFeedback({github, context}, feedback);

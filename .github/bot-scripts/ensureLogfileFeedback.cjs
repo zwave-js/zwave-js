@@ -16,6 +16,11 @@ async function main(param, feedback) {
 
 	let message = "";
 	switch (feedback) {
+		case "OK":
+			// No message needed, all is good
+			message = "";
+			break;
+
 		case "ERROR_FETCH":
 			message = `👋 Hey @${user}!
 
@@ -70,8 +75,6 @@ As a reminder, here's how to create one:
 `;
 	}
 
-	if (!message) return;
-
 	console.log("Logfile feedback message:", message);
 
 	const options = {
@@ -80,7 +83,9 @@ As a reminder, here's how to create one:
 	};
 
 	// When all is good, remove any existing comment
-	message += LOGFILE_COMMENT_TAG;
+	if (message) {
+		message += LOGFILE_COMMENT_TAG;
+	}
 
 	// Existing comments are tagged with LOGFILE_COMMENT_TAG
 	try {
@@ -90,8 +95,8 @@ As a reminder, here's how to create one:
 		});
 		const existing = comments.find(
 			(c) =>
-				c.user.login === "zwave-js-bot"
-				&& c.body.includes(LOGFILE_COMMENT_TAG),
+				/*c.user.login === "zwave-js-bot"
+				&&*/ c.body.includes(LOGFILE_COMMENT_TAG),
 		);
 		if (existing) {
 			if (message) {
