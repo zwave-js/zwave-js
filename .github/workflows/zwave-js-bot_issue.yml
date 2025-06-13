@@ -155,7 +155,7 @@ jobs:
           switch (aiResponse) {
             case "Z-Wave JS: correct log level":
               feedback = "OK";
-              return;
+              break;
             case "Z-Wave JS: wrong log level":
               feedback = "WRONG_LOG_LEVEL";
               break;
@@ -167,7 +167,7 @@ jobs:
               break;
             case "Home Assistant: Includes Z-Wave JS":
               feedback = "OK";
-              return;
+              break;
             case "Unrelated":
               feedback = "UNRELATED";
               break;
