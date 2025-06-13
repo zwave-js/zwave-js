@@ -127,8 +127,8 @@ As a reminder, here's how to create one:
 
 		const existing = comments.find(
 			(c) =>
-				/*c.author.login === "zwave-js-bot"
-				&&*/ c.body.includes(LOGFILE_COMMENT_TAG),
+				c.author.login === "zwave-js-bot"
+				&& c.body.includes(LOGFILE_COMMENT_TAG),
 		);
 
 		if (existing) {
