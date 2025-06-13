@@ -38,7 +38,6 @@ async function main(param) {
 	const link = markdownLinkRegex.exec(logfileSection)?.[1]?.trim();
 	const codeBlockContent = codeBlockRegex.exec(logfileSection)?.[1]?.trim();
 
-
 	console.log("link:", link);
 	console.log("codeBlockContent:", codeBlockContent);
 
