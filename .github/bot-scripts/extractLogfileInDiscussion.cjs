@@ -3,7 +3,7 @@
 /// <reference path="types.d.ts" />
 
 const markdownLinkRegex = /\[.*\]\((http.*?)\)/;
-const codeBlockRegex = /`{3,4}(.*?)`{3,4}/s;
+const codeBlockRegex = /`{3,4}?(.*?)`{3,4}?/s;
 
 /**
  * @param {{github: Github, context: Context}} param
@@ -14,14 +14,17 @@ async function main(param) {
 	const discussion = context.payload.discussion;
 	if (!discussion) return;
 
-	const user = discussion.user.login;
 	const body = discussion.body;
 	const categorySlug = discussion.category.slug;
+
+	console.log("categorySlug:", categorySlug);
 
 	// Only check for logfiles in categories that require one
 	if (categorySlug !== "request-support-investigate-issue") return;
 
 	const logfileSectionHeader = "### Upload Logfile";
+
+	console.log("secitonHeader found:", body.includes(logfileSectionHeader));
 
 	// Check if this is a bug report which requires a logfile
 	if (!body.includes(logfileSectionHeader)) return;
@@ -30,8 +33,14 @@ async function main(param) {
 		body.indexOf(logfileSectionHeader) + logfileSectionHeader.length,
 	);
 
+	console.log("logfileSection:", logfileSection);
+
 	const link = markdownLinkRegex.exec(logfileSection)?.[1]?.trim();
 	const codeBlockContent = codeBlockRegex.exec(logfileSection)?.[1]?.trim();
+
+
+	console.log("link:", link);
+	console.log("codeBlockContent:", codeBlockContent);
 
 	if (link) {
 		let logFile;
