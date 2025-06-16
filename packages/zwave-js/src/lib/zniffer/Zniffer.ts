@@ -1255,7 +1255,8 @@ function captureToZLFEntry(
 	// Convert the date to a .NET datetime
 	let ticks = BigInt(capture.timestamp.getTime()) * 10000n
 		+ 621355968000000000n;
-	ticks = ticks | 4000000000000000n; // marks the time as .NET DateTimeKind.Local
+	// https://github.com/dotnet/runtime/blob/179473d3c8a1012b036ad732d02804b062923e8d/src/libraries/System.Private.CoreLib/src/System/DateTime.cs#L161
+	ticks = ticks | (2n << 62n); // DateTimeKind.Local << KindShift
 
 	buffer.writeBigUInt64LE(ticks, 0);
 	const direction = 0b0000_0000; // inbound, outbound would be 0b1000_0000
