@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.7.0 (2025-06-17)
 ### Features
 * Zniffer: Support loading existing captures from file or a buffer (#7889)
 
