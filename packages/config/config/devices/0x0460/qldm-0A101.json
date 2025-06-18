@@ -88,7 +88,7 @@
         },
         {
             "#": "125",
-            "$import": "templates/wave_template.json#dimming_time\"",
+            "$import": "templates/wave_template.json#dimming_time",
             "label": "O1: Dimming Time (Short Press)"
         },
         {
