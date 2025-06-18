@@ -26,6 +26,7 @@
   - [Virtual nodes and endpoints](api/virtual-node-endpoint.md)
   - [Values and Metadata](api/valueid.md)
   - [ConfigManager](api/config-manager.md)
+  - [Registries](api/registries.md)
   - [Utilities](api/utils.md)
   - [Zniffer](api/zniffer.md)
   - [Command Classes](api/CCs/index.md)

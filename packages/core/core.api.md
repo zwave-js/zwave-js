@@ -1312,6 +1312,16 @@ export function getIntegerLimits(size: 1 | 2 | 3 | 4, signed: boolean): {
     max: number;
 };
 
+// Warning: (ae-missing-release-tag) "getLegalPowerlevelLR" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getLegalPowerlevelLR(region: RFRegion): number | undefined;
+
+// Warning: (ae-missing-release-tag) "getLegalPowerlevelMesh" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getLegalPowerlevelMesh(region: RFRegion): number | undefined;
+
 // Warning: (ae-missing-release-tag) "getLegalRangeForBitMask" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -4618,6 +4628,7 @@ export enum ZWaveErrorCodes {
     Driver_NotSupported = 105,
     // (undocumented)
     Driver_Reset = 101,
+    Driver_SerialPortClosed = 112,
     Driver_TaskRemoved = 111,
     FirmwareUpdateCC_Busy = 1500,
     FirmwareUpdateCC_FailedToAbort = 1504,
