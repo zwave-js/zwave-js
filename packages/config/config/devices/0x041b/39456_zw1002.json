@@ -58,8 +58,8 @@
 		"mapBasicSet": "event"
 	},
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified controller to add a\ndevice to the Z-Wave network.\n2. Once the controller is ready to add your device, press and release the\nprogram button. Repeat as necessary to add the smart outlet to\nthe network.\nYou have complete control",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller to remove a\ndevice from the Z-Wave network.\n2. Once the controller is ready to remove your device, press and release the\nmanual/program button",
-		"reset": "Quickly press the button three times. Then, press the button for at least three\nseconds. The LED will blink five times to confirm.\nNote: This should only be used in the event your network's primary controller\nis missing or otherwise inoperable"
+		"inclusion": "Press and release the program button.",
+		"exclusion": "Press and release the program button.",
+		"reset": "1. Quickly press the button three times\n2. Press the button for at least three seconds\n3. The LED will blink five times to confirm"
 	}
 }

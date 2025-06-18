@@ -46,9 +46,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified\ncontroller to add the device in the Z-Wave network.\n2. Once the controller is ready to add your\nmotion sensor, press and release the button\non the sensor to add it in the network.\n3. The blue LED will activate for 3 seconds to\nconfirm it has been included in the network",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller\nto remove the device from the Z-Wave network.\n2. Once the controller is ready to remove your\nmotion sensor, press and release the button on\nthe sensor to exclude it from the network.\n3. The LED will blink for 3 seconds at a time.\n\nNOTE: If the sensor's power source is changed\nafter initial setup (ex: USB power instead of\nbattery power), the sensor must be excluded\nfrom the network and then re-included",
-		"reset": "1. Press the button 10 times within 6 seconds\n(interval between 2 presses of the button\ncannot be longer than 1 second).\n2. The blue LED will blink for 3 seconds",
+		"inclusion": "Press and release the button on the sensor. The blue LED will activate for 3 seconds to confirm inclusion.",
+		"exclusion": "Press and release the button on the sensor. The LED will blink for 3 seconds at a time.",
+		"reset": "1. Press the button 10 times within 6 seconds (interval between presses cannot be longer than 1 second).\n2. The blue LED will blink for 3 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2157/35530%20QSG%20and%20Parameters.pdf"
 	}
 }
