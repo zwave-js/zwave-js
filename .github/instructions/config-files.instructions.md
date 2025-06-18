@@ -44,6 +44,7 @@ Ensure the instructions follow these guidelines:
 - Remove verbose explanations about when factory reset should be used.
 - Do not tell the user to repeat the procedure when it failed, but mention which LED behavior indicates failure.
 - Do not refer to auto-inclusion in the inclusion or exclusion instructions.
+- If inclusion instructions have one part about automatic inclusion and one part about manual inclusion, keep only the manual part.
 - Do not refer to exclusion mode in the reset instructions.
 - Avoid double line breaks (\n\n) in the instructions.
 - Replace line breaks in lists with additional list items.
@@ -56,7 +57,7 @@ Ensure the instructions follow these guidelines:
 - Remove steps about testing the device after inclusion
 - Avoid putting steps in parentheses, put them in a separate sentence instead
 - Avoid phrases like "The device reverts to factory default state" or "The device will be reset to factory defaults"
-- Avoid referring to the same thing with two different phrases. Keep naming consistent across different instructions.
+- Avoid clarifying phrases with another word in parentheses, such as "the ON (top) button" or "the OFF (bottom) button". Decide on one term and use it consistently.
 - Avoid repetitive language in subsequent steps
 
 After rewording instructions, double check them for the following requirements:
