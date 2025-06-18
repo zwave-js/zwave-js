@@ -32,12 +32,12 @@
         {
             "#": "159",
             "$import": "templates/wave_template.json#motion_blind_time",
-            "label": "Motion blind Time"
+            "label": "Motion Blind Time"
         },
         {
             "#": "160",
             "$import": "templates/wave_template.json#no_detection_time",
-            "label": "Motion No Detection time"
+            "label": "Motion No Detection Time"
         },
         {
             "#": "117",

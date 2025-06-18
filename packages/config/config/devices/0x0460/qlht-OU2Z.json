@@ -17,7 +17,7 @@
         {
             "#": "161",
             "$import": "templates/wave_template.json#treshold_50",
-            "label": "Temperature treshold"
+            "label": "Temperature Treshold"
         },
         {
             "#": "162",
@@ -27,7 +27,7 @@
         {
             "#": "163",
             "$import": "templates/wave_template.json#treshold_50",
-            "label": "Humidity treshold"
+            "label": "Humidity Treshold"
         },
         {
             "#": "164",
