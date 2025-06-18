@@ -314,9 +314,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product's Z-Wave button that you can find on the product's housing",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, short press the product's Z-Wave button that you can find on the product's housing",
-		"reset": "Press and hold the Z-Wave button that you can find on the product's housing for 20 seconds and then release. This procedure should only be used when the primary controller is missing or inoperable",
+		"inclusion": "Short press the Z-Wave button.",
+		"exclusion": "Short press the Z-Wave button.",
+		"reset": "Press and hold the Z-Wave button for 20 seconds, then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1445/Aeon%20Labs%20Garage%20Door%20Controller%20Gen5%20manual.pdf"
 	}
 }

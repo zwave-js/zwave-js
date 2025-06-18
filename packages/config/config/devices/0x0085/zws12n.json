@@ -58,9 +58,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Autoinclusion - This feature allow you to add hard to reach devices to Z-Wave network. 3-times ON and OFF the power actuator (OFF-ON-OFFON-OFF-ON) causes the introduction of actuator to Autoinclusion mode.\nPlease note that the procedure has been started the time between on and off can not exceed 20s. Autoinclusion mode is activated for a maximum of 10 minutes. During this time, we can add an actuator to any Z-Wave controller running in the Include procedure.\n\nInclude - This function allow you to add actuator to the network Z-Wave.\nFollow the procedure adding device to the network Z-Wave according to user manual supplied with the product. Then, press the programming button P on the actuator for 1 second",
-		"exclusion": "Exclude - This function allow you to remove actuator from the network Z-Wave. Follow the procedure removing device from the network Z-Wave\naccording to user manual supplied with the product. Then, press the\nprogramming button P on the actuator for 1 second. Function removes\ninformation only about network Z-Wave",
-		"reset": "Device Reset Locally – This function allows you to reset the Z-Wave\nnetwork without the use of Z-Wave controller. Press 5 times the\nprogramming button P fast, the actuator was removed from the Z-Wave\nnetwork, restore the default parameters, name and locations. \nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "1. Turn the power OFF and ON 3 times (OFF-ON-OFF-ON-OFF-ON) with no more than 20 seconds between each step. 2. Wait up to 10 minutes for automatic inclusion. 3. Alternatively, press the programming button P for 1 second.",
+		"exclusion": "Press the programming button P for 1 second.",
+		"reset": "Press the programming button P 5 times quickly.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2477/170511%20ZWS12%20User%20Manual.pdf"
 	}
 }

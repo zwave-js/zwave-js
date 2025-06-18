@@ -56,9 +56,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Push the button three times in 1.5 seconds.\nWhen inclusion successful, the LED will be RED blink three times.",
-		"exclusion": "Push the button three times in 1.5 seconds.\nWhen exclusion successful, the LED will be RED blink three times. And the LED will be red blinking for 30 seconds at one blink per two seconds. The device is now waiting to inclusion.",
-		"reset": "Push the button three times in 1.5 seconds and hold the third push for 10 seconds till the LED is red blinking. When reset is successful, the device is set to factory default and now waiting to inclusion\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the button 3 times within 1.5 seconds. The LED will blink red 3 times when successful.",
+		"exclusion": "Press the button 3 times within 1.5 seconds. The LED will blink red 3 times when successful, then blink red for 30 seconds at one blink per two seconds.",
+		"reset": "Press the button 3 times within 1.5 seconds and hold the third press for 10 seconds until the LED blinks red.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3124/TR1B120Z1_Manual_V1.0_20181018-1.pdf"
 	}
 }

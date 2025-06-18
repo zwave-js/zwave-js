@@ -37,9 +37,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "To manually include the device, press Tamper three times repeatedly to perform the actions.\nLED Status:Blue LED solid light",
-		"exclusion": "To manually exclude the device, press Tamper three times repeatedly to perform the actions.\nLED Status:Blue LED 1 sec. flashes 3 times",
-		"reset": "The Device Reset Locally Notification Command is used to advertise that the device will be reset to default.\nIn Wake up time, Press tamp key 2 times, then the third long press 5s, then device will clear the data back to the factory default.\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
+		"inclusion": "Press the tamper button 3 times repeatedly. The LED will show a solid blue light when successful.",
+		"exclusion": "Press the tamper button 3 times repeatedly. The LED will flash blue 3 times for 1 second each when successful.",
+		"reset": "1. Press the tamper button 2 times\n2. On the third press, hold for 5 seconds",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2087/TS2001Z1_User%20Manual(Z-Wave%20plus)1209.pdf"
 	}
 }

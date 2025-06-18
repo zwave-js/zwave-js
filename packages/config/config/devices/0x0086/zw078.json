@@ -50,7 +50,7 @@
 		},
 		{
 			"#": "80",
-			"$import": "/templates/aeotec_template.json#enable_notifications"
+			"$import": "templates/aeotec_template.json#enable_notifications"
 		},
 		{
 			"#": "90",
@@ -143,17 +143,17 @@
 		},
 		{
 			"#": "252",
-			"$import": "/templates/aeotec_template.json#lock_configuration"
+			"$import": "templates/aeotec_template.json#lock_configuration"
 		},
 		{
 			"#": "255",
-			"$import": "/templates/aeotec_template.json#factory_reset_exclude"
+			"$import": "templates/aeotec_template.json#factory_reset_exclude"
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product's Z-Wave button",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, short press the product's Z-Wave button",
-		"reset": "Press and hold the Z-Wave button for 20 seconds and then release",
+		"inclusion": "Short press the Z-Wave button.",
+		"exclusion": "Short press the Z-Wave button.",
+		"reset": "Press and hold the Z-Wave button for 20 seconds, then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/998/Engineering%20Spec%20-%20Aeon%20Labs%20Heavy%20Duty%20Smart%20Switch%20Gen5.pdf"
 	}
 }

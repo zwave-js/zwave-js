@@ -375,9 +375,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, press the external switch of LED Bulb to turn it off and then press the external switch again to turn it on",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, press the external switch of LED Bulb to turn off and then press the external switch again to turn on it, repeat the operation 3 times",
-		"reset": "Turn the controller of Z-Wave network into exclusion mode, press the external switch of LED Bulb to turn off and then press the external switch again to turn on it, repeat the operation 3 times.\nAfter the LED Bulb is excluded from network, it will be reset to factory default state.\nUse this procedure only in the event that your primary network controller is missing or inoperable",
+		"inclusion": "Press the external switch to turn the LED Bulb off and then press the external switch again to turn it on",
+		"exclusion": "Press the external switch to turn the LED Bulb off and then press the external switch again to turn it on. Repeat this operation 3 times",
+		"reset": "Press the external switch to turn the LED Bulb off and then press the external switch again to turn it on. Repeat this operation 3 times",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1851/LED%20Bulb%20manual.pdf"
 	}
 }
