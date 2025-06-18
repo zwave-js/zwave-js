@@ -10,6 +10,7 @@ import {
 	extractFirmware,
 	getEnumMemberName,
 	guessFirmwareFileFormat,
+	tryUnzipFirmwareFile,
 } from "zwave-js";
 
 const argv = yargs(hideBin(process.argv)).parseSync();
@@ -112,8 +113,30 @@ async function main() {
 	}
 
 	try {
-		const format = guessFirmwareFileFormat(filename, rawFile);
-		firmware = (await extractFirmware(rawFile, format)).data;
+		let firmwareFile: Uint8Array;
+		let firmwareFilename: string;
+
+		// Check if the file is a ZIP archive and try to extract a single firmware file
+		if (filename.toLowerCase().endsWith(".zip")) {
+			const unzippedFirmware = tryUnzipFirmwareFile(rawFile);
+			if (!unzippedFirmware) {
+				console.error(
+					"Could not extract a valid firmware file from the ZIP archive. The ZIP must contain exactly one firmware file.",
+				);
+				process.exit(1);
+			}
+			console.log(
+				`Extracted firmware file "${unzippedFirmware.filename}" from ZIP archive`,
+			);
+			firmwareFile = unzippedFirmware.rawData;
+			firmwareFilename = unzippedFirmware.filename;
+		} else {
+			firmwareFile = rawFile;
+			firmwareFilename = filename;
+		}
+
+		const format = guessFirmwareFileFormat(firmwareFilename, firmwareFile);
+		firmware = (await extractFirmware(firmwareFile, format)).data;
 	} catch (e: any) {
 		console.error("Could not parse firmware file:", e.message);
 		process.exit(1);
