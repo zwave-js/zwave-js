@@ -292,7 +292,7 @@
 			}
 		]
 	},
-		"power_source_selection": {
+	"power_source_selection": {
 		"valueSize": 1,
 		"defaultValue": 0,
 		"allowManualEntry": false,
