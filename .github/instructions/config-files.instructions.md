@@ -57,6 +57,7 @@ Ensure the instructions follow these guidelines:
 - Avoid putting steps in parentheses, put them in a separate sentence instead
 - Avoid phrases like "The device reverts to factory default state" or "The device will be reset to factory defaults"
 - Avoid referring to the same thing with two different phrases. Keep naming consistent across different instructions.
+- Avoid repetitive language in subsequent steps
 
 After rewording instructions, double check them for the following requirements:
 
