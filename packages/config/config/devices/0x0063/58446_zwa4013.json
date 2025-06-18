@@ -91,8 +91,8 @@
 		"mapBasicSet": "event"
 	},
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified Controller to add a device to the Z-Wave network.\n2. Once the controller is ready to add your device, press the top of bottom of the wireless smart Fan controller",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller to remove a device from the Z-wave network\n2. Once the controller is ready to remove your device, press the top or bottom of the wireless smart Fan controller",
-		"reset": "Pull the airgap switch. Press and hold the bottom button, push the airgap switch in and continue holding the bottom button for 10 seconds. The LED will flash once each of the 8 colors then stop"
+		"inclusion": "Press the top or bottom of the fan controller.",
+		"exclusion": "Press the top or bottom of the fan controller.",
+		"reset": "1. Pull the airgap switch.\n2. Press and hold the bottom button.\n3. Push the airgap switch in and continue holding the bottom button for 10 seconds.\n4. The LED will flash once each of the 8 colors then stop."
 	}
 }
