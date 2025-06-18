@@ -180,9 +180,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Short press the Action button on the device housing.",
-		"exclusion": "Short press the Action button on the device housing.",
-		"reset": "Press and hold the Action button on the device housing for 20 seconds and then release.",
+		"inclusion": "Short press the Action button on the device housing",
+		"exclusion": "Short press the Action button on the device housing",
+		"reset": "Press and hold the Action button on the device housing for 20 seconds and then release",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3119/Instructions%20-%20Aeon%20Labs%20Smart%20Switch%206%20(2).pdf"
 	}
 }
