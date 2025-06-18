@@ -51,6 +51,22 @@
 			}
 		]
 	},
+		"detached_mode": {
+		"label": "Detached Mode",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Normal",
+				"value": 0
+			},
+			{
+				"label": "Detached",
+				"value": 1
+			}
+		]
+	},
 	"auto_off_timer": {
 		"description": "The timer resets to zero each time the device receives an ON command",
 		"valueSize": 2,
