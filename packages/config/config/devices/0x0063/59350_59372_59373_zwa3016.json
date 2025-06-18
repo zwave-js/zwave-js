@@ -85,8 +85,8 @@
 		"mapBasicSet": "event"
 	},
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified controller to add a device to the Z-Wave network.\n2. Once the controller is ready to add your device, press and release the top or bottom of the smart dimmer (rocker)",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller to remove a device from the Z-Wave network.\n2. Once the controller is ready to remove your device, press and release the top or bottom of the smart dimmer (rocker)",
-		"reset": "1. Pull up the air gap switch. 2. While pressing the OFF (bottom) button,push in the air gap and continue pressing the OFF button. The LED flashes through the eight colors once"
+		"inclusion": "Press and release the top or bottom of the smart dimmer.",
+		"exclusion": "Press and release the top or bottom of the smart dimmer.",
+		"reset": "1. Pull up the air gap switch.\n2. While pressing the bottom button, push in the air gap and continue pressing the bottom button.\n3. The LED flashes through the eight colors once."
 	}
 }
