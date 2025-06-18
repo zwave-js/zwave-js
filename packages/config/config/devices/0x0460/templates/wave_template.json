@@ -51,7 +51,7 @@
 			}
 		]
 	},
-		"detached_mode": {
+	"detached_mode": {
 		"label": "Detached Mode",
 		"valueSize": 1,
 		"defaultValue": 0,
