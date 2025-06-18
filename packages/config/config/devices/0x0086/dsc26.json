@@ -60,10 +60,10 @@
 		}
 	],
 	"metadata": {
-		"wakeup": "Press and release the button on the Micro Smart Energy Switch G2.",
-		"inclusion": "1. While the device is powered in a 3-wire system, toggle the external switch/button to initiate pairing.\n2. Alternatively, press the internal button if the device is not installed in-wall.",
-		"exclusion": "1. While the device is powered in a 3-wire system, toggle the external switch/button 10 times in quick succession.\n2. Alternatively, press the internal button if the device is not installed in-wall.",
-		"reset": "Press and hold the button on the Micro Smart Energy Switch G2 for 20 seconds.",
+		"wakeup": "Press and release the button on the device.",
+		"inclusion": "1. Toggle the external switch/button to start inclusion.\n2. Alternatively, press the internal button if the device is not installed in-wall.",
+		"exclusion": "1. Toggle the external switch/button 10 times in quick succession.\n2. Alternatively, press the internal button if the device is not installed in-wall.",
+		"reset": "Press and hold the button on the device for 20 seconds.",
 		"manual": "https://help.aeotec.com/support/solutions/articles/6000165733-micro-switch-g2-user-guide-"
 	}
 }
