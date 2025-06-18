@@ -4,6 +4,25 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.7.0 (2025-06-17)
+### Features
+* Zniffer: Support loading existing captures from file or a buffer (#7889)
+
+### Bugfixes
+* Encode timestamps in Zniffer traces correctly (#7887)
+
+### Config file changes
+* Clean up inclusion/exclusion/reset instructions of lots of config files (#7871)
+
+### Changes under the hood
+* The "wrong logfile" detection in issue reports now classifies the log file contents using AI instead of simply looking at the file name. This should significantly reduce noise from Z-Wave JS bot (#7883)
+* Added documentation for the utility methods for retrieving Z-Wave registry information (#7881)
+* Mention `lowSecurityReason` in S2 documentation (#7882)
+* Add missing ConfigManager properties to documentation (#7880)
+* Detect forbidden whitespace in config filenames (#7879)
+* Add documentation explaining under which circumstances joining another network is not permitted (#7878)
+* Add Copilot instructions for authoring device config files (#7872)
+
 ## 15.6.0 (2025-05-28)
 ### Features
 * Add options to set powerlevel within legal limits on region change during startup (#7853)

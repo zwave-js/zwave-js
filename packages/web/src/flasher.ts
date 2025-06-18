@@ -16,7 +16,10 @@ import {
 	Driver,
 	DriverMode,
 	OTWFirmwareUpdateStatus,
+	extractFirmware,
 	getEnumMemberName,
+	guessFirmwareFileFormat,
+	tryUnzipFirmwareFile,
 } from "zwave-js";
 
 const flashButton = document.getElementById("flash") as HTMLButtonElement;
@@ -197,15 +200,50 @@ function checkApp() {
 	selectSystemIndication.disabled = driver.mode !== DriverMode.SerialAPI;
 }
 
-fileInput.addEventListener("change", (event) => {
+fileInput.addEventListener("change", async (event) => {
 	const file = (event.target as HTMLInputElement).files?.[0];
 	if (file) {
-		const reader = new FileReader();
-		reader.onload = () => {
-			firmwareFileContent = reader.result as ArrayBuffer;
+		try {
+			const rawFile = new Uint8Array(await file.arrayBuffer());
+
+			let firmwareFile: Uint8Array;
+			let firmwareFilename: string;
+
+			// Check if the file is a ZIP archive and try to extract a single firmware file
+			if (file.name.toLowerCase().endsWith(".zip")) {
+				const unzippedFirmware = tryUnzipFirmwareFile(rawFile);
+				if (!unzippedFirmware) {
+					alert(
+						"Could not extract a valid firmware file from the ZIP archive. The ZIP must contain exactly one firmware file.",
+					);
+					return;
+				}
+				console.log(
+					`Extracted firmware file "${unzippedFirmware.filename}" from ZIP archive`,
+				);
+				firmwareFile = unzippedFirmware.rawData;
+				firmwareFilename = unzippedFirmware.filename;
+			} else {
+				firmwareFile = rawFile;
+				firmwareFilename = file.name;
+			}
+
+			const format = guessFirmwareFileFormat(
+				firmwareFilename,
+				firmwareFile,
+			);
+			const firmware = await extractFirmware(firmwareFile, format);
+
+			// Convert Uint8Array to ArrayBuffer
+			const arrayBuffer = new ArrayBuffer(firmware.data.length);
+			const view = new Uint8Array(arrayBuffer);
+			view.set(firmware.data);
+
+			firmwareFileContent = arrayBuffer;
 			flashButton.disabled = false;
-		};
-		reader.readAsArrayBuffer(file);
+		} catch (e: any) {
+			alert(`Could not parse firmware file: ${e.message}`);
+		}
 	}
 });
 

@@ -42,7 +42,13 @@ export class ZnifferMessageRaw {
 	) {}
 
 	public static parse(data: Uint8Array): ZnifferMessageRaw {
-		// Assume that we're dealing with a complete frame
+		if (data.length < 3) {
+			throw new ZWaveError(
+				"Incomplete Zniffer message",
+				ZWaveErrorCodes.PacketFormat_Truncated,
+			);
+		}
+
 		const type = data[0];
 		if (type === ZnifferMessageType.Command) {
 			const functionType = data[1];
@@ -221,6 +227,13 @@ export class ZnifferDataMessage extends ZnifferMessage
 	}
 
 	public static from(raw: ZnifferMessageRaw): ZnifferDataMessage {
+		if (raw.payload.length < 6) {
+			throw new ZWaveError(
+				"Incomplete Zniffer message",
+				ZWaveErrorCodes.PacketFormat_Truncated,
+			);
+		}
+
 		const frameType: ZnifferFrameType = raw.payload[0];
 
 		// bytes 1-2 are 0
@@ -237,37 +250,56 @@ export class ZnifferDataMessage extends ZnifferMessage
 		let payload: Bytes;
 
 		if (frameType === ZnifferFrameType.Data) {
+			if (raw.payload.length < 9 + checksumLength) {
+				throw new ZWaveError(
+					"Incomplete Zniffer message",
+					ZWaveErrorCodes.PacketFormat_Truncated,
+				);
+			}
+
 			validatePayload.withReason(
 				`ZnifferDataMessage[6] = ${raw.payload[6]}`,
 			)(raw.payload[6] === 0x21);
 			validatePayload.withReason(
 				`ZnifferDataMessage[7] = ${raw.payload[7]}`,
 			)(raw.payload[7] === 0x03);
-			// Length is already validated, so we just skip the length byte
 
+			const remainingLength = raw.payload[8];
 			const mpduOffset = 9;
+			if (raw.payload.length < mpduOffset + remainingLength) {
+				throw new ZWaveError(
+					"Incomplete Zniffer message",
+					ZWaveErrorCodes.PacketFormat_Truncated,
+				);
+			}
+
+			const mpdu = raw.payload.subarray(
+				mpduOffset,
+				mpduOffset + remainingLength - checksumLength,
+			);
+
 			const checksum = raw.payload.readUIntBE(
-				raw.payload.length - checksumLength,
+				mpduOffset + remainingLength - checksumLength,
 				checksumLength,
 			);
 
 			// Compute checksum over the entire MPDU
 			const expectedChecksum = checksumLength === 1
-				? computeChecksumXOR(
-					raw.payload.subarray(mpduOffset, -checksumLength),
-				)
-				: CRC16_CCITT(
-					raw.payload.subarray(mpduOffset, -checksumLength),
-				);
+				? computeChecksumXOR(mpdu)
+				: CRC16_CCITT(mpdu);
 
 			checksumOK = checksum === expectedChecksum;
-			payload = raw.payload.subarray(
-				mpduOffset,
-				-checksumLength,
-			);
+			payload = mpdu;
 		} else if (
 			frameType === ZnifferFrameType.BeamStart
 		) {
+			if (raw.payload.length < 7) {
+				throw new ZWaveError(
+					"Incomplete Zniffer message",
+					ZWaveErrorCodes.PacketFormat_Truncated,
+				);
+			}
+
 			validatePayload.withReason(
 				`ZnifferDataMessage[6] = ${raw.payload[6]}`,
 			)(raw.payload[6] === 0x55);

@@ -115,7 +115,10 @@
 			"User Code": [
 				{
 					"method": "getUsersCount",
-					"result": 251
+					"result": 251,
+					"persistValues": {
+						"supportedUsers": 251
+					}
 				}
 			]
 		}
