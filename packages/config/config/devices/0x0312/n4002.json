@@ -37,7 +37,7 @@
 		},
 		{
 			"#": "9",
-			"label": "Ramp Rate (On/Off Control)",
+			"label": "Dimming Rate (Normal)",
 			"valueSize": 1,
 			"unit": "seconds",
 			"minValue": 0,
@@ -46,7 +46,7 @@
 		},
 		{
 			"#": "10",
-			"label": "Ramp Rate (Dimmer/Z-Wave Control)",
+			"label": "Dimming Rate (Local Dimmer Control)",
 			"valueSize": 1,
 			"unit": "seconds",
 			"minValue": 0,
