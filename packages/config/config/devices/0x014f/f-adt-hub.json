@@ -15,9 +15,9 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "In the SmartThings mobile app, go to the \"My Home\" section, \"Things\" tab, and tap \"Add a Thing.\" When the app shows \"Looking for devices...\" the panel is ready to include Z-Wave devices.",
+		"inclusion": "In the SmartThings mobile app, go to the \"My Home\" section, \"Things\" tab, and tap \"Add a Thing.\"",
 		"exclusion": "In the SmartThings mobile app, go to the \"My Home\" section, \"Things\" tab, and tap the name of the device to show the device details. Then, tap the gear icon in the upper right and tap \"Remove.\"",
-		"reset": "Open the side menu (\"More\" in the iOS app) and tap on \"Hub is Online.\" Tap \"Z-Wave Utilities\" then \"General Device Exclusion\" and then the \"Remove\" button to confirm.",
+		"reset": "Open the side menu and tap on \"Hub is Online.\" Tap \"Z-Wave Utilities\" then \"General Device Exclusion\" and then the \"Remove\" button to confirm.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2616/SmartThings.pdf"
 	}
 }
