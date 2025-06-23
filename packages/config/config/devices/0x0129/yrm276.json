@@ -65,9 +65,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Enter the 4-8 digit master PIN code followed by the gear key.\n2. Press the 7 key followed by the gear key.\n3. Press the 1 key followed by the gear key",
-		"exclusion": "1. Enter the 4-8 digit master PIN code followed by the gear key.\n2. Press the 7 key followed by the gear key.\n3. Press the 3 key followed by the gear key",
-		"reset": "1. Remove the battery cover and batteries\n2. Remove the interior lock to access the reset button\n3. The reset button is located above the cable connectors on the PCB\n4. Re-insert 3 batteries and hold the reset button for 3 seconds\n5. While still holding the reset button, insert the 4th battery, and hold the reset button for an additional 3 seconds\n6. Release the reset button\n7. Re-install the interior lock onto the door",
+		"inclusion": "1. Enter the 4-8 digit master PIN code followed by the gear key\n2. Press the 7 key followed by the gear key\n3. Press the 1 key followed by the gear key",
+		"exclusion": "1. Enter the 4-8 digit master PIN code followed by the gear key\n2. Press the 7 key followed by the gear key\n3. Press the 3 key followed by the gear key",
+		"reset": "1. Remove the battery cover and batteries\n2. Remove the interior lock to access the reset button above the cable connectors on the PCB\n3. Re-insert 3 batteries and hold the reset button for 3 seconds\n4. While still holding the reset button, insert the 4th battery and hold for an additional 3 seconds\n5. Release the reset button and re-install the interior lock onto the door",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2911/YRM276_YRM476-INST-FUL%20Rev%20A%20WEB_SystemGuide.pdf"
 	}
 }

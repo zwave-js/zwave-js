@@ -160,9 +160,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Refer to the instructions for your Z-Wave certified controller to add a device to the Z-Wave network.\n• Locate the Device Specific Key (DSK) label located on the back(plug side) of the SmartPlug, scan QR code to obtain DSK.\n• Plug the SmartPlug switch into an AC outlet at the desired location to account for any radio interference.\n• Press the Multi Button once to initiate adding the device to the network",
-		"exclusion": "Refer to the instructions for your Z-Wave certified controller to remove a device to the Z-Wave network.\n• Press the Multi Button once to remove the switch from the network",
-		"reset": "Press and hold the Multi Button for more than 10 seconds.\nThe amber LED will be illuminated for 2 seconds while it searches\nfor the network. Please use this procedure only when the network\nprimary controller is missing or otherwise inoperable",
+		"inclusion": "Press the Multi Button once.",
+		"exclusion": "Press the Multi Button once.",
+		"reset": "Press and hold the Multi Button for more than 10 seconds. The amber LED will be illuminated for 2 seconds while it searches for the network.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4098/SMC-QG-SC428ZW-20213v1_20210308.pdf"
 	}
 }

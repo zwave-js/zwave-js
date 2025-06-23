@@ -27,7 +27,7 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Swipe down to access Settings\n2. Touch Advanced Settings\n3. Enter code\n4. Touch Installation\n5. Touch Devices\n6. Touch Z-Wave Devices\n7. Touch Add Device\n8. Touch Pair\n9. Press pair or learn button on device\n10. Adjust device name as needed\n11. Select Automation\n12. Click Add to save",
+		"inclusion": "1. Swipe down to access Settings\n2. Touch Advanced Settings\n3. Enter code\n4. Touch Installation\n5. Touch Devices\n6. Touch Z-Wave Devices\n7. Touch Add Device\n8. Touch Pair\n9. Press pair or learn button on device",
 		"exclusion": "1. Swipe down to access Settings\n2. Touch Advanced Settings\n3. Enter code\n4. Touch Installation\n5. Touch Devices\n6. Touch Z-Wave Devices\n7. Touch Delete failed device from panel\n8. Check boxes next to devices you want to delete\n9. Touch Delete",
 		"reset": "1. Swipe down from the top of the screen\n2. Touch Settings\n3. Touch Advanced Settings\n4. Enter installer code\n5. Touch Installation\n6. Touch Devices\n7. Touch Z-Wave Devices\n8. Touch Remove All Devices\n9. Touch Yes to confirm",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3821/IQ%20Panel%20Installation%20Manual%202.5.0%20FINAL.pdf"

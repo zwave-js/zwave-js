@@ -28,8 +28,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Press the tamper key three times within 3 seconds. If successful, the LED will flash slowly.",
-		"exclusion": "Press the tamper key three times within 3 seconds. If successful, the code light will flash for 30 seconds.",
+		"inclusion": "Press the tamper key three times within 3 seconds.",
+		"exclusion": "Press the tamper key three times within 3 seconds.",
 		"reset": "1. Press the button three times in three seconds\n2. The LED will flash slowly for one second\n3. Press and hold the button until the LED lights up\n4. After about three seconds, the LED will turn off\n5. Release the button within two seconds\nIf successful, the LED will flash once per second.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3462/PSM09_UserManual_0624.pdf"
 	}

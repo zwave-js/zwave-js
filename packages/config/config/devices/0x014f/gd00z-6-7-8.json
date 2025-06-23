@@ -17,7 +17,7 @@
 	"metadata": {
 		"inclusion": "Press and release the link button.",
 		"exclusion": "Press and release the link button.",
-		"reset": "Press the link button 5 times. A quick beep followed by a longer beep will indicate the reset.",
+		"reset": "Press the link button 5 times. A quick beep followed by a longer beep will indicate success.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3710/10025383%20Rev-B%20-%20GD00Z-8%20GC_WEB.pdf"
 	}
 }

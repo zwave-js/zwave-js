@@ -106,9 +106,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Push the switch once. Wait 5 seconds",
-		"exclusion": "Push the switch once. Wait 5 seconds",
-		"reset": "Push the switch ten times",
+		"inclusion": "Push the switch once.",
+		"exclusion": "Push the switch once.",
+		"reset": "Push the switch ten times.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4295/Danalock_V3_Product_manual_Z_Wave_V_0.9.5.pdf"
 	}
 }

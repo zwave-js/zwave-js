@@ -142,9 +142,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Include/Exclude Button - Inclusion/exclusion, press 3 times in 2 seconds",
-		"exclusion": "Include/Exclude Button - Inclusion/exclusion, press 3 times in 2 seconds",
-		"reset": "Press the pairing button 3 times in 2 seconds and press and hold the pairing button for more than 5 seconds at the 3rd time.\nThe module is excluded and restores to factory default setting.\nThen the module will be in auto-inclusion mode for 2 minutes.\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.\n\nThe Device Reset Locally Command Class is used to notify central controllers that a Z-Wave device is resetting its network specific parameters.",
+		"inclusion": "Press the pairing button 3 times within 2 seconds.",
+		"exclusion": "Press the pairing button 3 times within 2 seconds.",
+		"reset": "Press the pairing button 3 times within 2 seconds, then press and hold the pairing button for more than 5 seconds on the 3rd press. The device will enter auto-inclusion mode for 2 minutes after reset.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2948/TD13010Z1_Manual_V2.0_20180601.pdf"
 	}
 }

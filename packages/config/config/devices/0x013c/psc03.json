@@ -15,7 +15,7 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"reset": "Click Reset Gateway to reset the Z-Wave controller.",
+		"reset": "Click the Reset Gateway button.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2964/PSC03%20Gateway%20User%20ManualV1.1_20180613.pdf"
 	}
 }

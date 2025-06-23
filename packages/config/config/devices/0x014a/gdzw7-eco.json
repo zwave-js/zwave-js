@@ -70,9 +70,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Locate and press the hub button on the device. The device will beep and blink green once when added.",
-		"exclusion": "Locate and press the hub button. Device's status indicator will blink red and beep three times when removed.",
-		"reset": "Hold the reset button down for ten seconds. The status indicator will blink red while the reset button is pressed and will go out after ten seconds. The device's status indicator will turn green when the reset operation is complete.",
+		"inclusion": "Press the hub button on the device. The device will beep and blink green once when added.",
+		"exclusion": "Press the hub button. The status indicator will blink red and beep three times when removed.",
+		"reset": "Hold the reset button down for ten seconds. The status indicator will blink red while the reset button is pressed and will go out after ten seconds. The status indicator will turn green when complete.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/74/GarageDoorControllerUserManualV3.pdf"
 	}
 }

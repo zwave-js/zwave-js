@@ -28,7 +28,7 @@
 	"metadata": {
 		"inclusion": "Single click the button on the front of the IQ Outlet.",
 		"exclusion": "Single click the button on the front of the IQ Outlet.",
-		"reset": "1. Unplug the IQ Outlet from the AC outlet and also unplug the power plugs of the lighting from the module (if plugged in)\n2. Press and hold the button on the IQ Outlet\n3. Plug the IQ Outlet back into the AC outlet with the button pressed\n4. After 3 seconds, release the button\nIf you see the button blink, the IQ Outlet has been reset successfully.",
+		"reset": "1. Unplug the IQ Outlet from the AC outlet and also unplug the power plugs of the lighting from the module (if plugged in)\n2. Press and hold the button on the IQ Outlet\n3. Plug the IQ Outlet back into the AC outlet with the button pressed\n4. After 3 seconds, release the button. If you see the button blink, the IQ Outlet has been reset successfully.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3032/IQ%20Outlet%20User%20Manual%20060718.pdf"
 	}
 }

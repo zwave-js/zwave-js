@@ -20,9 +20,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Touch any key on the device.\n2. The device will flash LEDs yellow three times and switch on all outputs if inclusion succeeds.",
-		"exclusion": "1. Press and hold the top left button for at least 8 seconds.\n2. LED will flash red three times and sound a tone to confirm exclusion.",
-		"reset": "1. Remove the unit from the wall mounting box.\n2. Press and hold the hidden Factory Reset button for at least 3 seconds.\n3. LED will flash red three times and sound a tone to confirm factory reset.",
+		"inclusion": "1. Touch any key on the device.\n2. LEDs will flash yellow 3 times and all outputs will switch on when successfully included.",
+		"exclusion": "1. Press and hold the top left button for at least 8 seconds.\n2. LED will flash red 3 times and sound a tone when successfully excluded.",
+		"reset": "1. Remove the unit from the wall mounting box.\n2. Press and hold the hidden factory reset button for at least 3 seconds.\n3. LED will flash red 3 times and sound a tone when reset is complete.",
 		"manual": "https://docplayer.net/31994823-Vitrum-satellite-wireless-installation-and-operation.html"
 	}
 }

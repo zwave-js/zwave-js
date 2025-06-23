@@ -69,7 +69,7 @@
 	"metadata": {
 		"inclusion": "Single click the button on the top of the IQ Dimmer.",
 		"exclusion": "Single click the button on the top of the IQ Dimmer.",
-		"reset": "1. Unplug the IQ Dimmer from the AC outlet and also unplug the power plug of the appliance from the IQ Dimmer (if plugged in)\n2. Press and hold the button on the IQ Dimmer\n3. Plug the IQ Dimmer back into the AC outlet with the button pressed",
+		"reset": "1. Unplug the IQ Dimmer from the AC outlet and unplug the power plug of the appliance from the IQ Dimmer\n2. Press and hold the button on the IQ Dimmer\n3. Plug the IQ Dimmer back into the AC outlet with the button pressed",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4089/IQ%20Dimmer%20User%20Guide%20031921.pdf"
 	}
 }

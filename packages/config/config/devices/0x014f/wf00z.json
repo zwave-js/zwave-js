@@ -15,7 +15,7 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "Press the program switch for at least 1 second. The LED should go solid when inclusion is successful.",
+		"inclusion": "Press the program switch for at least 1 second. The LED will go solid when successful.",
 		"exclusion": "Press the program switch for at least 1 second.",
 		"reset": "Trigger the water sensor 10 times within 10 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1590/10008416X4%20WF00Z-1%20Instructions.pdf"

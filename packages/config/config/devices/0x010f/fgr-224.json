@@ -257,8 +257,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power the device.\n2. Identify the PROG button or the S1/S2 switches.\n3. Quickly click PROG button three times. Optionally, click S1 or S2 three times.\n4. LED indicator will blink yellow.\n5. Successful adding will be confirmed by the device's LED indicator: Green (non-secure, S0, S2 non-authenticated), Magenta (Security S2 Authenticated), Red (not successful).",
-		"exclusion": "1. Make sure the device is powered.\n2. Identify the PROG button or the S1/S2 switches.\n3. Quickly click PROG button three times. Optionally, click S1 or S2 three times within 10 minutes of powering up the device.\n4. Successful removing will be confirmed by the device's LED indicator - Red.",
+		"inclusion": "1. Power the device.\n2. Identify the PROG button or the S1/S2 switches.\n3. Quickly click PROG button three times. Optionally, click S1 or S2 three times.\n4. LED indicator will blink yellow.\n5. LED indicator will show: Green (non-secure, S0, S2 non-authenticated), Magenta (Security S2 Authenticated), Red (not successful).",
+		"exclusion": "1. Make sure the device is powered.\n2. Identify the PROG button or the S1/S2 switches.\n3. Quickly click PROG button three times. Optionally, click S1 or S2 three times within 10 minutes of powering up the device.\n4. LED indicator will turn red if unsuccessful.",
 		"reset": "1. Switch off the mains voltage (disable the fuse).\n2. Remove the device from the wall switch box.\n3. Switch on the mains voltage.\n4. Press and hold the PROG button to enter the menu.\n5. Wait for the LED indicator to glow yellow.\n6. Quickly release and click the PROG button again.\n7. During the factory reset, the LED indicator will blink yellow.\n8. After few seconds the device will be restarted, which is signalled with the red LED indicator colour.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/948/FGR-224-T-EN-v1.22.pdf"
 	}

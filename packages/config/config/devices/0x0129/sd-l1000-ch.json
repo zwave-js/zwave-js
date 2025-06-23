@@ -82,9 +82,9 @@
 		]
 	},
 	"metadata": {
-		"inclusion": "Put the Z-Wave controller into add or learn mode\n\nPress the R button on the lock 3 times quickly (within 1.5 seconds)\n\nRefer to the operation manual of the Z-Wave controller to complete the learn in process\n\nFor more information on this please visit:\nwww.yale.co.uk/smart-living",
-		"exclusion": "Put the existing Z-Wave controller into Remove Mode\n\nPress the R button on the lock 3 times quickly (within 1.5 secs)\n\nThe lock is now ready to be added to a new Z-Wave controller\n\nFor more information on this please visit:\nwww.yale.co.uk/smart-living",
-		"reset": "Only use this when the existing Z-Wave controller is missing or inoperable\n\n Lift up the lever handle\n\nWhile holding the handle up, press the R button 3 times within 1.5 seconds",
+		"inclusion": "Press the R button on the lock 3 times quickly within 1.5 seconds.",
+		"exclusion": "Press the R button on the lock 3 times quickly within 1.5 seconds.",
+		"reset": "1. Lift up the lever handle\n2. While holding the handle up, press the R button 3 times within 1.5 seconds",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2535/Instruction%20Manual%20V2a.pdf"
 	}
 }

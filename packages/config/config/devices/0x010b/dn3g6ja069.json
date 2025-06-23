@@ -119,8 +119,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Insert a CR123A battery and LED blinks.\n2. Press the button for over 3 seconds and release.\n3. LED turns off when inclusion is completed.",
-		"exclusion": "1. Press the button for over 3 seconds and release.\n2. LED blinks when exclusion is completed.",
+		"inclusion": "1. Insert a CR123A battery and LED blinks.\n2. Press the button for over 3 seconds and release.\n3. LED turns off when completed.",
+		"exclusion": "1. Press the button for over 3 seconds and release.\n2. LED blinks when completed.",
 		"reset": "Press the button for more than 10 seconds and release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2852/UsersGuide%20DN3G6JA069%20rev1.pdf"
 	}

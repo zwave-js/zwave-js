@@ -96,6 +96,6 @@
 	"metadata": {
 		"inclusion": "Press the On/Off button three times within 2 seconds.",
 		"exclusion": "Press the On/Off button three times within 2 seconds.",
-		"reset": "1. Press the On/Off button three times within 2 seconds\n2. Within 1 second, press the On/Off button again for 5 seconds"
+		"reset": "1. Press the On/Off button three times within 2 seconds.\n2. Within 1 second, press the On/Off button again for 5 seconds."
 	}
 }

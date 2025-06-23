@@ -15,8 +15,8 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "1. Locate the power outlet desired to be used with the Z-Wave Plus Siren.\n2. Plug in the Z-Wave Siren and verify a single beep sound is heard.\n3. The LED on the front of the unit will turn off when included.",
-		"exclusion": "1. Unplug and re-plug in your Z-Wave Plus Siren.\n2. The device will play a long beep and the LED will begin to breathe when removed.",
+		"inclusion": "1. Plug in the Z-Wave Siren and verify a single beep sound is heard.\n2. The LED on the front of the unit will turn off when included.",
+		"exclusion": "Unplug and re-plug in your Z-Wave Plus Siren. The device will play a long beep and the LED will begin to breathe when removed.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1899/0%20-%20Ecolink%20Siren%20Z-Wave%20Plus%20Manual%20(standard).pdf"
 	}
 }

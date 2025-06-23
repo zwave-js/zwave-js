@@ -449,8 +449,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Place the Button within the direct range of your Z-Wave controller.\n2. Click the Button at least six times.",
-		"exclusion": "1. Place the Button within the direct range of your Z-Wave controller.\n2. Click the Button at least six times.",
+		"inclusion": "Click the Button at least six times.",
+		"exclusion": "Click the Button at least six times.",
 		"reset": "1. Click the Button exactly five times.\n2. Press and hold the Button for at least 5 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3486/tech_panic_en_9.pdf"
 	}
