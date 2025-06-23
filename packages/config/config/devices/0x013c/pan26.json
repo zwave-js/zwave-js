@@ -15,9 +15,9 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "Press the middle button (button ⑤) three times within 2 seconds.",
-		"exclusion": "Press the middle button (button ⑤) three times within 2 seconds.",
-		"reset": "Press and hold the middle button (button ⑤) four times, keeping it held on the 4th press for 3-10 seconds, then release.",
+		"inclusion": "Press the middle button three times within 2 seconds.",
+		"exclusion": "Press the middle button three times within 2 seconds.",
+		"reset": "Press and hold the middle button four times, keeping it held on the 4th press for 3-10 seconds, then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3603/PAN26%20manual-20190806.pdf"
 	}
 }
