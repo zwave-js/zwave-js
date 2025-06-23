@@ -22,7 +22,7 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Locate the light switch desired to be used with the Light Switch.\n2. Press the inclusion button on the Light Switch.\n3. The LED on the front of the unit will turn off when included.",
+		"inclusion": "Press the inclusion button on the Light Switch. The LED on the front of the unit will turn off when included.",
 		"exclusion": "Press the inclusion / exclusion button on the Light Switch.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2164/Ecolink%20Decora%20Light%20Switch%20Z-Wave%20Plus%20Manual.pdf"
 	}

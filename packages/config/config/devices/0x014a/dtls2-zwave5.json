@@ -15,8 +15,8 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "Press the inclusion / exclusion button on the Z-Wave Plus Smart Switch. The LED on the front of the unit will turn off when network inclusion occurs.",
-		"exclusion": "Press the inclusion / exclusion button on the Z-Wave Plus Smart Switch. The LED in front of the unit will blink steadily when network exclusion occurs.",
+		"inclusion": "Press the inclusion / exclusion button on the Z-Wave Plus Smart Switch. The LED on the front of the unit will turn off when included.",
+		"exclusion": "Press the inclusion / exclusion button on the Z-Wave Plus Smart Switch. The LED in front of the unit will blink steadily when excluded.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2863/DTLS2-ZWAVE5_Prod_Rev06.pdf"
 	}
 }

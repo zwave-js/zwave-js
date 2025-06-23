@@ -14,7 +14,6 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"reset": "Z-Wave Serial API SetDefault command is used to reset the RaZberry7 Pro board to factory default settings.",
 		"manual": "https://rus.z-wave.me/drive/?file=24e4716409e82d0e27379e3e5208c8667b99"
 	}
 }
