@@ -88,9 +88,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Press the Pair Button (the smaller of the two buttons). During inclusion mode, the Green LED will blink two times every three seconds. When inclusion times-out, the device will blink red and green.",
-		"exclusion": "Press the smaller of the two buttons (Add/Test). The device's red led will come on solid for 1 second when removed.",
-		"reset": "Hold the Pair button for 10 seconds. During the 10 seconds the green LED will flash, and after 10 seconds the red LED will come on solid for 1 second after factory reset.",
+		"inclusion": "Press the Pair Button (the smaller of the two buttons). During inclusion mode, the green LED will blink two times every three seconds. If inclusion times out, the device will blink red and green.",
+		"exclusion": "Press the smaller of the two buttons (Add/Test). The red LED will come on solid for 1 second when removed.",
+		"reset": "Hold the Pair button for 10 seconds. During the 10 seconds the green LED will flash, and after 10 seconds the red LED will come on solid for 1 second.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4000/ISZW7-ECO%20-%20Operation%20Manual%20v9.pdf"
 	}
 }

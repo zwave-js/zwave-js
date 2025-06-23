@@ -31,8 +31,8 @@
 		"forceNotificationIdleReset": true
 	},
 	"metadata": {
-		"wakeup": "Removing the top case from the sensor will put in device into a tampered mode in which the sensor will stay awake and able to receive messages.",
-		"inclusion": "1. Activate inclusion mode for the sensor by removing the plastic pull-tab from the back of the sensor.\n2. When the inclusion process is complete, the LED on the sensor will be solid blue, then go out.",
+		"wakeup": "Remove the top case from the sensor to put the device into a tampered mode in which the sensor will stay awake and able to receive messages.",
+		"inclusion": "1. Remove the plastic pull-tab from the back of the sensor.\n2. The LED on the sensor will be solid blue, then go out when inclusion is complete.",
 		"exclusion": "1. Remove the cover of the sensor.\n2. Remove the battery for 10 seconds.\n3. Reinsert the battery and replace the sensor cover.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1498/D.W.%20Zwave%20Manual%20R1.04.docx"
 	}
