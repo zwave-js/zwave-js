@@ -22,7 +22,7 @@
 		}
 	},
 	"metadata": {
-		"reset": "To reset the One Link to factory defaults, push and hold the \"Reset\" button for at least 15 seconds (or until all LED's begin flashing simultaneously). Note: resetting your One Link will remove it and all associated devices from your Icontrol system",
+		"reset": "Push and hold the Reset button for at least 15 seconds until all LEDs begin flashing simultaneously.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1535/One%20Link%20QIG%2010.2015.pdf"
 	}
 }

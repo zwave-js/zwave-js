@@ -36,7 +36,7 @@ Ensure the instructions follow these guidelines:
 - Use proper english grammar and punctuation.
 - Write instructions in the second person, addressing the user directly.
 - Ensure a consistent style and formatting across all instructions.
-- Do not refer to the controller, Z-Wave controller, network, hub, or any external system in these instructions
+- Do not refer to the controller, Z-Wave controller, network, hub, or any external system in these instructions. If an App must be used to perform the steps, do mention it.
 - Focus exclusively on the steps needed on the device itself
 - Steps should be concise and clear
 - Do not say "to start inclusion", "to start exclusion" or similar phrases
