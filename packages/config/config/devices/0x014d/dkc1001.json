@@ -15,7 +15,7 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"reset": "Tap \"RESET\" button in controller functions menu.",
+		"reset": "Tap RESET button in the controller functions menu.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2642/DK_DKC1001_Ver0.1.pdf"
 	}
 }

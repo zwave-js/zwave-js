@@ -703,8 +703,8 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Press and hold the FAN button on the Thermostat until the screen changes to the Menu screen.\n2. Press the UP button until ZWAVE is shown in the Status Display line then press Select.\n3. INSTALL should be shown on the status line.\n4. Press the 'Select' button to install.\n5. Press Done on the Thermostat to exit the ZWAVE screen.\n6. Press Done on the Thermostat again to exit the Menu screen.",
-		"exclusion": "1. Press and hold the FAN button for 3 seconds until the Menu screen is displayed.\n2. Press the UP arrow button to scroll to the 'ZWAVE' menu.\n3. Press 'Select' to select the ZWAVE screen.\n4. The display will show 'REMOVE' in the text line.\n5. Press 'Select' to perform the remove action.\n6. Press 'Done' to exit back to the thermostat screen.",
+		"inclusion": "1. Press and hold the FAN button until the Menu screen appears.\n2. Press the UP button until ZWAVE is shown, then press Select.\n3. INSTALL should be shown on the status line.\n4. Press Select to install.\n5. Press Done to exit the ZWAVE screen.\n6. Press Done again to exit the Menu screen.",
+		"exclusion": "1. Press and hold the FAN button for 3 seconds until the Menu screen is displayed.\n2. Press the UP arrow button to scroll to ZWAVE.\n3. Press Select to select the ZWAVE screen.\n4. REMOVE will be shown on the text line.\n5. Press Select to perform the remove action.\n6. Press Done to exit back to the thermostat screen.",
 		"reset": "1. Remove power from the TBZ500.\n2. Restore power to the TBZ500.\n3. When 'TBZ500' appears on the screen, hold down the MODE and FAN buttons at the same time.\n4. Release the buttons when RESET appears on the Status Line.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4093/TBZ500_manual_8_5x5_5_inch__SC_20210325.pdf"
 	}

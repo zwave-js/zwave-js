@@ -25,7 +25,7 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"reset": "In setting app, enter into following menu: \"About Enblink > Factory reset\".",
+		"reset": "In the setting app, enter the following menu: About Enblink > Factory reset.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2023/Manual.pdf"
 	}
 }
