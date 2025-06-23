@@ -67,7 +67,7 @@
 	"metadata": {
 		"inclusion": "Single click the button on the top of the IQ Outlet.",
 		"exclusion": "Single click the button on the top of the IQ Outlet.",
-		"reset": "1. Unplug the IQ Outlet from the AC outlet and also unplug the power plug of the appliance from the IQ Outlet (if plugged in)\n2. Press and hold the button on the IQ Outlet\n3. Plug the IQ Outlet back into the AC outlet with the button pressed",
+		"reset": "1. Unplug the IQ Outlet from the AC outlet and unplug the power plug of the appliance from the IQ Outlet\n2. Press and hold the button on the IQ Outlet\n3. Plug the IQ Outlet back into the AC outlet with the button pressed",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4133/IQ%20Outlet%20User%20Guide%20032421.pdf"
 	}
 }
