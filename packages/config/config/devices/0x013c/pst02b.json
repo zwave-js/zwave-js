@@ -221,8 +221,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Triple-click the tamper switch within 1.5 seconds.",
-		"exclusion": "Triple-click the tamper switch within 1.5 seconds.",
-		"reset": "1. Press and hold the tamper key four times within 1.5 seconds, keeping it held on the 4th press until the LED lights up\n2. Release the tamper key within 2 seconds after the LED turns off."
+		"inclusion": "Press the tamper switch three times within 1.5 seconds.",
+		"exclusion": "Press the tamper switch three times within 1.5 seconds.",
+		"reset": "1. Press and hold the tamper key four times within 1.5 seconds, keeping it held on the 4th press\n2. Wait for the LED to light up for 3 seconds, then turn off\n3. Release the tamper key within 2 seconds after the LED turns off"
 	}
 }
