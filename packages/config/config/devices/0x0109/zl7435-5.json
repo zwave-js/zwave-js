@@ -35,9 +35,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "For 'Inclusion' in (adding to) a network: Put the Z-Wave™ Interface Controller into 'inclusion' mode, and following its instruction to add the ZL 7435EU-5 to your controller. To get in the 'inclusion' mode, the distance between module and controller is suggested to be in one meter. \nPress 3 times within 2 seconds or turn on the wall switch 3 times within 2 seconds (or press toggle switch 3 times) to be included.",
-		"exclusion": "For 'Exclusion' from (removing from) a network: Put the Z-Wave™ Interface Controller into 'exclusion' mode, and following its instruction to delete the ZL 7435EU-5 from your controller. Press 3 times within 2 seconds or turn on the wall switch 3 times within 2 seconds (or press toggle switch 3 times) to be excluded.",
-		"reset": "Factory Default Reset: Power off first, press Program Switch and power on till 10 seconds, ZL7435EU-5 will send the 'Device Reset Locally Notification' command and reset to the factory default. (Remark: This is to be used only in the case of primary controller being inoperable or otherwise unavailable.)",
+		"inclusion": "Press 3 times within 2 seconds or turn on the wall switch 3 times within 2 seconds.",
+		"exclusion": "Press 3 times within 2 seconds or turn on the wall switch 3 times within 2 seconds.",
+		"reset": "1. Power off first.\n2. Press program switch and power on for 10 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1367/ZL7435-5%20In-Wall%20Switch%20-%202%20Relays_20141205.pdf"
 	}
 }
