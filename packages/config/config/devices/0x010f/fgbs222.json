@@ -398,8 +398,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power the device.\n2. Quickly triple click the button on the device housing or switch connected to IN1 or IN2.\n3. LED will start blinking yellow.\n4. Successful adding will be confirmed by the LED indicator.",
-		"exclusion": "1. Power the device.\n2. Quickly triple click the button on the device housing or switch connected to IN1 or IN2.\n3. LED will start blinking yellow.\n4. Successful removing will be confirmed by the LED indicator.",
+		"inclusion": "1. Power the device.\n2. Quickly triple click the button on the device housing or switch connected to IN1 or IN2.\n3. LED will start blinking yellow.",
+		"exclusion": "1. Power the device.\n2. Quickly triple click the button on the device housing or switch connected to IN1 or IN2.\n3. LED will start blinking yellow.",
 		"reset": "1. Press and hold the button to enter the menu.\n2. Release button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After few seconds the device will be restarted, which is signalled with the red colour.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4153/FGBS-222-T-EN-1.2.pdf"
 	}
