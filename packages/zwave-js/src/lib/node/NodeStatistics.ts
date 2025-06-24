@@ -1,4 +1,9 @@
-import type { ProtocolDataRate, RSSI } from "@zwave-js/core";
+import {
+	type NodeId,
+	ProtocolDataRate,
+	type RSSI,
+	isLongRangeNodeId,
+} from "@zwave-js/core";
 import { StatisticsHost } from "../driver/Statistics.js";
 
 export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
@@ -8,13 +13,23 @@ export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
 	}
 
 	createEmpty(): NodeStatistics {
-		return {
+		const stats: NodeStatistics = {
 			commandsTX: 0,
 			commandsRX: 0,
 			commandsDroppedRX: 0,
 			commandsDroppedTX: 0,
 			timeoutResponse: 0,
 		};
+
+		// ZWLR nodes always have a direct connection at 100 kbps
+		if (isLongRangeNodeId((this as unknown as NodeId).id)) {
+			stats.lwr = {
+				protocolDataRate: ProtocolDataRate.LongRange_100k,
+				repeaters: [],
+			};
+		}
+
+		return stats;
 	}
 }
 
