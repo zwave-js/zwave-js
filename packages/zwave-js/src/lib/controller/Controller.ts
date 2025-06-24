@@ -4925,7 +4925,7 @@ export class ZWaveController
 			|| (node.status === NodeStatus.Asleep
 				&& node.interviewStage === InterviewStage.ProtocolInfo)
 		) {
-			if (!(await node.ping())) {
+			if (!(await node.ping(true))) {
 				this.driver.controllerLog.logNode(
 					nodeId,
 					`Cannot rebuild routes because the node is not responding.`,
