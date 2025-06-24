@@ -294,6 +294,7 @@ import {
 	num2hex,
 	pick,
 } from "@zwave-js/shared";
+import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
 import {
@@ -4738,7 +4739,6 @@ export class ZWaveController
 		return {
 			priority: TaskPriority.Lower,
 			tag: { id: "rebuild-routes" },
-			// @ts-expect-error FIXME: Figure out why the return types are not compatible
 			task: async function* rebuildRoutesTask() {
 				// We work our way outwards from the controller and start with non-sleeping nodes, one by one
 				try {
@@ -4757,8 +4757,9 @@ export class ZWaveController
 					let result: boolean;
 					try {
 						const node = self.nodes.getOrThrow(nodeId);
-						result = yield () =>
-							self.getRebuildNodeRoutesTask(node);
+						result = yield* waitFor(
+							self.getRebuildNodeRoutesTask(node),
+						);
 					} catch {
 						result = false;
 					}
@@ -4825,9 +4826,7 @@ export class ZWaveController
 						const wakeUpPromise = Promise.race(
 							wakeupPromises.values(),
 						);
-						const wokenUpNode = (
-							yield () => wakeUpPromise
-						) as Awaited<typeof wakeUpPromise>;
+						const wokenUpNode = yield* waitFor(wakeUpPromise);
 						if (wokenUpNode.status === NodeStatus.Asleep) {
 							// The node has gone to sleep again since the promise was resolved. Wait again
 							wakeupPromises.set(
@@ -4971,7 +4970,7 @@ export class ZWaveController
 				if (
 					node.canSleep && node.supportsCC(CommandClasses["Wake Up"])
 				) {
-					yield () => node.waitForWakeup();
+					yield* waitFor(node.waitForWakeup());
 				}
 
 				self.driver.controllerLog.logNode(node.id, {
@@ -6405,15 +6404,15 @@ export class ZWaveController
 			group: {
 				id: "remove-failed-node",
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			task: async function* removeFailedNodeTask() {
 				// It is possible that this method is called while the node is still in the process of resetting or leaving the network
 				// Therefore, we ping multiple times in case of success and wait a bit in between
 				let didFail = false;
 				const MAX_ATTEMPTS = 3;
 				for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-					if (yield () => node.ping()) {
-						if (attempt < MAX_ATTEMPTS) yield () => wait(2000);
+					const pingResult = yield* waitFor(node.ping());
+					if (pingResult) {
+						if (attempt < MAX_ATTEMPTS) yield* waitFor(wait(2000));
 						continue;
 					}
 
@@ -6427,16 +6426,16 @@ export class ZWaveController
 					);
 				}
 
-				const result = (
-					yield () =>
-						self.driver.sendMessage(
-							new RemoveFailedNodeRequest({
-								failedNodeId: node.id,
-							}),
-						)
-				) as
-					| RemoveFailedNodeRequestStatusReport
-					| RemoveFailedNodeResponse;
+				const result = yield* waitFor(
+					self.driver.sendMessage<
+						| RemoveFailedNodeRequestStatusReport
+						| RemoveFailedNodeResponse
+					>(
+						new RemoveFailedNodeRequest({
+							failedNodeId: node.id,
+						}),
+					),
+				);
 
 				if (result instanceof RemoveFailedNodeResponse) {
 					// This implicates that the process was unsuccessful.

@@ -7529,6 +7529,18 @@ ${handlers.length} left`,
 		});
 	}
 
+	public waitForCommand<T extends CCId, U extends T>(
+		predicate: (cc: CCId) => cc is U,
+		timeout: number,
+		abortSignal?: AbortSignal,
+	): Promise<U>;
+
+	public waitForCommand<T extends CCId>(
+		predicate: (cc: CCId) => boolean,
+		timeout: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
 	 * Waits until a CommandClass is received or a timeout has elapsed. Returns the received command.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected

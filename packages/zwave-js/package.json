@@ -139,7 +139,7 @@
     "@zwave-js/serial": "workspace:*",
     "@zwave-js/shared": "workspace:*",
     "@zwave-js/testing": "workspace:*",
-    "@zwave-js/waddle": "^1.1.0",
+    "@zwave-js/waddle": "^1.2.1",
     "alcalzone-shared": "^5.0.0",
     "ansi-colors": "^4.1.3",
     "ky": "^1.8.1",
