@@ -34,6 +34,7 @@ This repository holds the Z-Wave JS driver library, a TypeScript implementation 
 - All code and comments and other text are written in American English
 - Follow existing code style patterns as much as possible
 - Prefer `async`/`await` over callbacks and Promises wherever possible
+- After making code changes, always run `yarn fmt` to fix the formatting
 
 ## Testing
 
