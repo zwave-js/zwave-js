@@ -152,8 +152,6 @@ export class RemoveFailedNodeResponse extends Message
 		options: RemoveFailedNodeResponseOptions & MessageBaseOptions,
 	) {
 		super(options);
-
-		// TODO: Check implementation:
 		this.removeStatus = options.removeStatus;
 	}
 

@@ -6380,96 +6380,137 @@ export class ZWaveController
 		reason: RemoveNodeReason,
 	): Promise<void> {
 		const node = this.nodes.getOrThrow(nodeId);
+		const task = this.getRemoveFailedNodeTask(node, reason);
+		if (task instanceof Promise) return task;
 
-		// It is possible that this method is called while the node is still in the process of resetting or leaving the network
-		// Therefore, we ping multiple times in case of success and wait a bit in between
-		let didFail = false;
-		const MAX_ATTEMPTS = 3;
-		for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-			if (await node.ping()) {
-				if (attempt < MAX_ATTEMPTS) await wait(2000);
-				continue;
-			}
+		return this.driver.scheduler.queueTask(task);
+	}
 
-			didFail = true;
-			break;
-		}
-		if (!didFail) {
-			throw new ZWaveError(
-				`The node removal process could not be started because the node responded to a ping.`,
-				ZWaveErrorCodes.RemoveFailedNode_Failed,
-			);
-		}
+	private getRemoveFailedNodeTask(
+		node: ZWaveNode,
+		reason: RemoveNodeReason,
+	): Promise<void> | TaskBuilder<void> {
+		const existingTask = this.driver.scheduler.findTask<void>((t) =>
+			t.tag?.id === "remove-failed-node" && t.tag.nodeId === node.id
+		);
+		if (existingTask) return existingTask;
 
-		const result = await this.driver.sendMessage<
-			RemoveFailedNodeRequestStatusReport | RemoveFailedNodeResponse
-		>(new RemoveFailedNodeRequest({ failedNodeId: nodeId }));
+		const self = this;
 
-		if (result instanceof RemoveFailedNodeResponse) {
-			// This implicates that the process was unsuccessful.
-			let message =
-				`The node removal process could not be started due to the following reasons:`;
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.NotPrimaryController
-				)
-			) {
-				message += "\n· This controller is not the primary controller";
-			}
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.NodeNotFound
-				)
-			) {
-				message +=
-					`\n· Node ${nodeId} is not in the list of failed nodes`;
-			}
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.RemoveProcessBusy
-				)
-			) {
-				message += `\n· The node removal process is currently busy`;
-			}
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.RemoveFailed
-				)
-			) {
-				message +=
-					`\n· The controller is busy or the node has responded`;
-			}
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.RemoveFailedNode_Failed,
-			);
-		} else {
-			switch (result.removeStatus) {
-				case RemoveFailedNodeStatus.NodeOK:
+		// FIXME: We should probably disable smart start temporarily, just like replacing a failed node does
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "remove-failed-node", nodeId: node.id },
+			group: {
+				id: "remove-failed-node",
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			task: async function* removeFailedNodeTask() {
+				// It is possible that this method is called while the node is still in the process of resetting or leaving the network
+				// Therefore, we ping multiple times in case of success and wait a bit in between
+				let didFail = false;
+				const MAX_ATTEMPTS = 3;
+				for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+					if (yield () => node.ping()) {
+						if (attempt < MAX_ATTEMPTS) yield () => wait(2000);
+						continue;
+					}
+
+					didFail = true;
+					break;
+				}
+				if (!didFail) {
 					throw new ZWaveError(
-						`The node could not be removed because it has responded`,
-						ZWaveErrorCodes.RemoveFailedNode_NodeOK,
-					);
-				case RemoveFailedNodeStatus.NodeNotRemoved:
-					throw new ZWaveError(
-						`The removal process could not be completed`,
+						`The node removal process could not be started because the node responded to a ping.`,
 						ZWaveErrorCodes.RemoveFailedNode_Failed,
 					);
-				default:
-					// If everything went well, the status is RemoveFailedNodeStatus.NodeRemoved
+				}
 
-					// Emit the removed event so the driver and applications can react
-					this.emit("node removed", this.nodes.get(nodeId)!, reason);
-					// and forget the node
-					this._nodes.delete(nodeId);
+				const result = (
+					yield () =>
+						self.driver.sendMessage(
+							new RemoveFailedNodeRequest({
+								failedNodeId: node.id,
+							}),
+						)
+				) as
+					| RemoveFailedNodeRequestStatusReport
+					| RemoveFailedNodeResponse;
 
-					return;
-			}
-		}
+				if (result instanceof RemoveFailedNodeResponse) {
+					// This implicates that the process was unsuccessful.
+					let message =
+						`The node removal process could not be started due to the following reasons:`;
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.NotPrimaryController
+						)
+					) {
+						message +=
+							"\n· This controller is not the primary controller";
+					}
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.NodeNotFound
+						)
+					) {
+						message +=
+							`\n· Node ${node.id} is not in the list of failed nodes`;
+					}
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.RemoveProcessBusy
+						)
+					) {
+						message +=
+							`\n· The node removal process is currently busy`;
+					}
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.RemoveFailed
+						)
+					) {
+						message +=
+							`\n· The controller is busy or the node has responded`;
+					}
+					throw new ZWaveError(
+						message,
+						ZWaveErrorCodes.RemoveFailedNode_Failed,
+					);
+				} else {
+					switch (result.removeStatus) {
+						case RemoveFailedNodeStatus.NodeOK:
+							throw new ZWaveError(
+								`The node could not be removed because it has responded`,
+								ZWaveErrorCodes.RemoveFailedNode_NodeOK,
+							);
+						case RemoveFailedNodeStatus.NodeNotRemoved:
+							throw new ZWaveError(
+								`The removal process could not be completed`,
+								ZWaveErrorCodes.RemoveFailedNode_Failed,
+							);
+						default:
+							// If everything went well, the status is RemoveFailedNodeStatus.NodeRemoved
+
+							// Emit the removed event so the driver and applications can react
+							self.emit(
+								"node removed",
+								node,
+								reason,
+							);
+							// and forget the node
+							self._nodes.delete(node.id);
+
+							return;
+					}
+				}
+			},
+		};
 	}
 
 	/**
