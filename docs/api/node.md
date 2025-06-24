@@ -538,10 +538,12 @@ Aborts an active firmware update process.
 ### `ping`
 
 ```ts
-ping(): Promise<boolean>
+ping(tryReallyHard?: boolean): Promise<boolean>
 ```
 
 Pings the node and returns whether it responded or not.
+
+The optional `tryReallyHard` parameter can be set to `true` to have the controller resort to route resolution and explorer frames if the communication fails. This should only be done when really necessary, because it can block the communication with other nodes for several seconds.
 
 ### `testPowerlevel`
 
