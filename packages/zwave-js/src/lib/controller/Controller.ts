@@ -2335,7 +2335,7 @@ export class ZWaveController
 
 				// in any case, stop the inclusion process so we don't accidentally add another node
 				try {
-					await self.stopInclusion();
+					yield* waitFor(self.stopInclusion());
 				} catch {
 					/* ok */
 				}
@@ -2449,14 +2449,14 @@ export class ZWaveController
 		let nodeId: number | undefined;
 		try {
 			// Stop the inclusion process so we don't accidentally add another node
-			nodeId = await this.finishInclusion();
+			nodeId = yield* waitFor(this.finishInclusion());
 		} catch {
 			// ignore the error
 		}
 
 		try {
 			// It is recommended to send another STOP command to the controller
-			await this.stopInclusionNoCallback();
+			yield* waitFor(this.stopInclusionNoCallback());
 		} catch {
 			// ignore the error
 		}
@@ -2548,10 +2548,9 @@ export class ZWaveController
 
 		if (newNode.protocol == Protocols.ZWave) {
 			// Assign SUC return route to make sure the node knows where to get its routes from
-			newNode.hasSUCReturnRoute = await self
-				.assignSUCReturnRoutes(
-					newNode.id,
-				);
+			newNode.hasSUCReturnRoute = yield* waitFor(
+				self.assignSUCReturnRoutes(newNode.id),
+			);
 		}
 
 		let bootstrapFailure:
@@ -2590,10 +2589,10 @@ export class ZWaveController
 				|| opts.strategy
 					=== InclusionStrategy.SmartStart)
 		) {
-			bootstrapFailure = await this.secureBootstrapS2(
+			bootstrapFailure = yield* waitFor(this.secureBootstrapS2(
 				newNode,
 				opts,
-			);
+			));
 			const actualSecurityClass = newNode
 				.getHighestSecurityClass();
 
@@ -2648,10 +2647,10 @@ export class ZWaveController
 									?.generic
 						)?.requiresSecurity)))
 		) {
-			bootstrapFailure = await this.secureBootstrapS0(
+			bootstrapFailure = yield* waitFor(this.secureBootstrapS0(
 				newNode,
 				newNodeIsController,
-			);
+			));
 			if (bootstrapFailure == undefined) {
 				const actualSecurityClass = newNode
 					.getHighestSecurityClass();
@@ -2667,9 +2666,11 @@ export class ZWaveController
 								.Security_S0
 					) {
 						// S0 is considered insecure if both controller and node are S2-capable
-						const nif = await newNode
-							.requestNodeInfo()
-							.catch(() => undefined);
+						const nif = yield* waitFor(
+							newNode
+								.requestNodeInfo()
+								.catch(() => undefined),
+						);
 						if (
 							nif?.supportedCCs.includes(
 								CommandClasses[
@@ -2719,10 +2720,10 @@ export class ZWaveController
 					},
 				);
 
-				await this.removeFailedNodeInternal(
+				yield* waitFor(this.removeFailedNodeInternal(
 					newNode.id,
 					RemoveNodeReason.SmartStartFailed,
-				);
+				));
 
 				this.driver.controllerLog.logNode(
 					newNode.id,
@@ -6551,6 +6552,12 @@ export class ZWaveController
 		const task = this.getRemoveFailedNodeTask(node, reason);
 		if (task instanceof Promise) return task;
 
+		// By default, the task cannot happen during an inclusion. By deleting
+		// the concurrency group, we allow it to run anyways.
+		if (reason === RemoveNodeReason.SmartStartFailed) {
+			delete task.group;
+		}
+
 		return this.driver.scheduler.queueTask(task);
 	}
 
@@ -6568,13 +6575,13 @@ export class ZWaveController
 		// FIXME: We should probably disable smart start temporarily, just like replacing a failed node does
 
 		return {
-			priority: TaskPriority.Normal,
+			// The priority must be high, so it can be nested in the inclusion task when necessary
+			priority: TaskPriority.High,
 			tag: { id: "remove-failed-node", nodeId: node.id },
 			group: {
 				id: "inclusion-exclusion",
 			},
 			task: async function* removeFailedNodeTask() {
-				self.driver.driverLog.print("Start task removeFailedNodeTask");
 				// It is possible that this method is called while the node is still in the process of resetting or leaving the network
 				// Therefore, we ping multiple times in case of success and wait a bit in between
 				let didFail = false;
@@ -6596,15 +6603,13 @@ export class ZWaveController
 					);
 				}
 
-				const result = yield* waitFor(
-					self.driver.sendMessage<
-						| RemoveFailedNodeRequestStatusReport
-						| RemoveFailedNodeResponse
-					>(
-						new RemoveFailedNodeRequest({
-							failedNodeId: node.id,
-						}),
-					),
+				const result = await self.driver.sendMessage<
+					| RemoveFailedNodeRequestStatusReport
+					| RemoveFailedNodeResponse
+				>(
+					new RemoveFailedNodeRequest({
+						failedNodeId: node.id,
+					}),
 				);
 
 				if (result instanceof RemoveFailedNodeResponse) {
