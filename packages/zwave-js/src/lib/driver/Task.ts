@@ -24,6 +24,10 @@ export type TaskTag =
 		nodeId: number;
 	}
 	| {
+		// Handle inclusion of a node
+		id: "inclusion";
+	}
+	| {
 		// Remove a failed node
 		id: "remove-failed-node";
 		nodeId: number;

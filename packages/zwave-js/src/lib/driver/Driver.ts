@@ -7479,6 +7479,20 @@ ${handlers.length} left`,
 		});
 	}
 
+	public waitForMessage<T extends Message>(
+		predicate: (msg: Message) => msg is T,
+		timeout: number,
+		refreshPredicate?: (msg: Message) => boolean,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForMessage<T extends Message>(
+		predicate: (msg: Message) => boolean,
+		timeout: number,
+		refreshPredicate?: (msg: Message) => boolean,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
 	 * Waits until an unsolicited serial message is received or a timeout has elapsed. Returns the received message.
 	 *
