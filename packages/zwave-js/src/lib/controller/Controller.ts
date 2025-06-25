@@ -2135,7 +2135,7 @@ export class ZWaveController
 		void this.driver.scheduler.queueTask(this.getBeginClassicInclusionTask(
 			startedPromise,
 			options,
-		));
+		)).catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
 		await startedPromise;
@@ -2233,7 +2233,7 @@ export class ZWaveController
 				startedPromise,
 				provisioningEntry,
 			),
-		);
+		).catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
 		await startedPromise;
