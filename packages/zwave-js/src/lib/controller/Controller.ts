@@ -2136,6 +2136,7 @@ export class ZWaveController
 		options: InclusionOptionsInternal,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		return {
 			priority: TaskPriority.Normal,
@@ -2152,15 +2153,20 @@ export class ZWaveController
 						getEnumMemberName(InclusionStrategy, options.strategy)
 					}...`,
 				);
+
+				// Keep track of the callback ID for the inclusion process
+				// All related callbacks will use this ID.
+				let callbackId: number;
+
 				try {
 					// kick off the inclusion process
-					yield* waitFor(self.driver.sendMessage(
-						new AddNodeToNetworkRequest({
-							addNodeType: AddNodeType.Any,
-							highPower: true,
-							networkWide: true,
-						}),
-					));
+					const msg = new AddNodeToNetworkRequest({
+						addNodeType: AddNodeType.Any,
+						highPower: true,
+						networkWide: true,
+					});
+					yield* waitFor(self.driver.sendMessage(msg));
+					callbackId = msg.callbackId!;
 
 					self.driver.controllerLog.print(
 						`The controller is now ready to add nodes`,
@@ -2192,7 +2198,16 @@ export class ZWaveController
 				}
 
 				// Handle the actual process
-				yield* self.performInclusion(options);
+				yield* self.performInclusion(
+					callbackId,
+					options,
+					abortWaiting.signal,
+				);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
@@ -2230,6 +2245,7 @@ export class ZWaveController
 		provisioningEntry: PlannedProvisioningEntry,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		const options: InclusionOptionsInternal = {
 			strategy: InclusionStrategy.SmartStart,
@@ -2242,9 +2258,13 @@ export class ZWaveController
 			group: { id: "inclusion-exclusion" },
 			task: async function* smartStartInclusionTask() {
 				// Disable listening mode so we can switch to inclusion mode
-				yield* waitFor(self.stopInclusion());
+				yield* waitFor(self.pauseSmartStart());
 
 				self.setInclusionState(InclusionState.Including);
+
+				// Keep track of the callback ID for the inclusion process
+				// All related callbacks will use this ID.
+				let callbackId: number;
 
 				try {
 					// Kick off the inclusion process using either the
@@ -2262,15 +2282,15 @@ export class ZWaveController
 						}`,
 					);
 
-					yield* waitFor(self.driver.sendMessage(
-						new AddNodeDSKToNetworkRequest({
-							nwiHomeId: nwiHomeIdFromDSK(dskBuffer),
-							authHomeId: authHomeIdFromDSK(dskBuffer),
-							protocol,
-							highPower: true,
-							networkWide: true,
-						}),
-					));
+					const msg = new AddNodeDSKToNetworkRequest({
+						nwiHomeId: nwiHomeIdFromDSK(dskBuffer),
+						authHomeId: authHomeIdFromDSK(dskBuffer),
+						protocol,
+						highPower: true,
+						networkWide: true,
+					});
+					yield* waitFor(self.driver.sendMessage(msg));
+					callbackId = msg.callbackId!;
 
 					self.emit(
 						"inclusion started",
@@ -2286,13 +2306,25 @@ export class ZWaveController
 				}
 
 				// Handle the actual process
-				yield* self.performInclusion(options);
+				yield* self.performInclusion(
+					callbackId,
+					options,
+					abortWaiting.signal,
+				);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
 
 	private async *performInclusion(
+		// The callback ID that was used to start the inclusion
+		callbackId: number,
 		opts: InclusionOptionsInternal,
+		abortWaiting: AbortSignal,
 	): AsyncGenerator<any, void, any> {
 		const self = this;
 
@@ -2300,11 +2332,13 @@ export class ZWaveController
 		async function* awaitStatusReport() {
 			const msg = yield* waitFor(
 				self.driver.waitForMessage(
-					(msg) =>
+					(msg): msg is AddNodeToNetworkRequestStatusReport =>
 						msg
-							instanceof AddNodeToNetworkRequestStatusReport,
-					60000, // 60 seconds // FIXME: double-check
-					// FIXME: Do we need to store the AbortController?
+							instanceof AddNodeToNetworkRequestStatusReport
+						&& msg.callbackId === callbackId,
+					undefined, // Wait indefinitely
+					undefined,
+					abortWaiting,
 				),
 			);
 
@@ -2317,7 +2351,7 @@ export class ZWaveController
 
 				// in any case, stop the inclusion process so we don't accidentally add another node
 				try {
-					yield* waitFor(self.stopInclusion());
+					yield* waitFor(self.stopInclusionInternal());
 				} catch {
 					/* ok */
 				}
@@ -2350,7 +2384,7 @@ export class ZWaveController
 				}`;
 			}
 			self.driver.controllerLog.print(message, "error");
-			yield* waitFor(self.stopInclusion());
+			yield* waitFor(self.stopInclusionInternal());
 		}
 
 		// Step 1: Wait for NodeFound
@@ -2360,9 +2394,10 @@ export class ZWaveController
 
 			if (msg.status !== AddNodeStatus.NodeFound) {
 				// Unexpected status, abort
-				yield* abortInclusion(msg.status, [
-					AddNodeStatus.NodeFound,
-				]);
+				yield* abortInclusion(
+					msg.status,
+					[AddNodeStatus.NodeFound],
+				);
 				return;
 			}
 
@@ -2795,6 +2830,22 @@ export class ZWaveController
 	 * and false if the inclusion was not active.
 	 */
 	public async stopInclusion(): Promise<boolean> {
+		const result = await this.stopInclusionInternal();
+		// If this stopped an inclusion process, we need to drop the task
+		if (result) {
+			await this.driver.scheduler.removeTasks((t) =>
+				t.tag?.id === "inclusion"
+			);
+		}
+		return result;
+	}
+
+	/**
+	 * Stops an active inclusion process, but does not remove the corresponding task.
+	 * This should only be used from within an inclusion task, or other methods that
+	 * handle task removal
+	 */
+	private async stopInclusionInternal(): Promise<boolean> {
 		if (this._inclusionState !== InclusionState.Including) {
 			return false;
 		}
@@ -3019,9 +3070,25 @@ export class ZWaveController
 
 	/**
 	 * Stops an active exclusion process. Resolves to true when the controller leaves exclusion mode,
-	 * and false if the inclusion was not active.
+	 * and false if the exclusion was not active.
 	 */
 	public async stopExclusion(): Promise<boolean> {
+		const result = await this.stopExclusionInternal();
+		// If this stopped an exclusion process, we need to drop the task
+		if (result) {
+			await this.driver.scheduler.removeTasks((t) =>
+				t.tag?.id === "exclusion"
+			);
+		}
+		return result;
+	}
+
+	/**
+	 * Stops an active exclusion process, but does not remove the corresponding task.
+	 * This should only be used from within an exclusion task, or other methods that
+	 * handle task removal
+	 */
+	private async stopExclusionInternal(): Promise<boolean> {
 		if (this._inclusionState !== InclusionState.Excluding) {
 			return false;
 		}
@@ -3068,6 +3135,7 @@ export class ZWaveController
 		options: ExclusionOptions,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		return {
 			priority: TaskPriority.Normal,
@@ -3083,15 +3151,19 @@ export class ZWaveController
 					`starting exclusion process...`,
 				);
 
+				// Keep track of the callback ID for the exclusion process
+				// All related callbacks will use this ID.
+				let callbackId: number;
+
 				try {
-					// kick off the inclusion process
-					yield* waitFor(self.driver.sendMessage(
-						new RemoveNodeFromNetworkRequest({
-							removeNodeType: RemoveNodeType.Any,
-							highPower: true,
-							networkWide: true,
-						}),
-					));
+					// kick off the exclusion process
+					const msg = new RemoveNodeFromNetworkRequest({
+						removeNodeType: RemoveNodeType.Any,
+						highPower: true,
+						networkWide: true,
+					});
+					yield* waitFor(self.driver.sendMessage(msg));
+					callbackId = msg.callbackId!;
 
 					self.driver.controllerLog.print(
 						`The controller is now ready to remove nodes`,
@@ -3123,13 +3195,25 @@ export class ZWaveController
 				}
 
 				// Handle the actual process
-				yield* self.performExclusion(options);
+				yield* self.performExclusion(
+					callbackId,
+					options,
+					abortWaiting.signal,
+				);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
 
 	private async *performExclusion(
+		// The callback ID that was used to start the exclusion
+		callbackId: number,
 		options: ExclusionOptions,
+		abortWaiting: AbortSignal,
 	): AsyncGenerator<any, void, any> {
 		const self = this;
 
@@ -3137,11 +3221,13 @@ export class ZWaveController
 		async function* awaitStatusReport() {
 			const msg = yield* waitFor(
 				self.driver.waitForMessage(
-					(msg) =>
+					(msg): msg is RemoveNodeFromNetworkRequestStatusReport =>
 						msg
-							instanceof RemoveNodeFromNetworkRequestStatusReport,
-					60000, // 60 seconds // FIXME: double-check
-					// FIXME: Do we need to store the AbortController?
+							instanceof RemoveNodeFromNetworkRequestStatusReport
+						&& msg.callbackId === callbackId,
+					undefined, // Wait indefinitely
+					undefined,
+					abortWaiting,
 				),
 			);
 
@@ -3154,7 +3240,7 @@ export class ZWaveController
 
 				// in any case, stop the exclusion process so we don't accidentally remove another node
 				try {
-					yield* waitFor(self.stopExclusion());
+					yield* waitFor(self.stopExclusionInternal());
 				} catch {
 					/* ok */
 				}
@@ -3187,7 +3273,7 @@ export class ZWaveController
 				}`;
 			}
 			self.driver.controllerLog.print(message, "error");
-			yield* waitFor(self.stopExclusion());
+			yield* waitFor(self.stopExclusionInternal());
 		}
 
 		// Step 1: Wait for NodeFound
@@ -6658,6 +6744,7 @@ export class ZWaveController
 		options: ReplaceNodeOptions,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		return {
 			priority: TaskPriority.Normal,
@@ -6668,7 +6755,13 @@ export class ZWaveController
 					startedPromise,
 					node,
 					options,
+					abortWaiting.signal,
 				);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
@@ -6677,6 +6770,7 @@ export class ZWaveController
 		startedPromise: DeferredPromise<void>,
 		node: ZWaveNode,
 		options: ReplaceNodeOptions,
+		abortWaiting: AbortSignal,
 	): AsyncGenerator<any, void, any> {
 		const self = this;
 
@@ -6768,8 +6862,9 @@ export class ZWaveController
 					(msg) =>
 						msg
 							instanceof ReplaceFailedNodeRequestStatusReport,
-					60000, // 60 seconds // FIXME: double-check
-					// FIXME: Do we need to store the AbortController?
+					undefined, // Wait indefinitely
+					undefined,
+					abortWaiting,
 				),
 			);
 
