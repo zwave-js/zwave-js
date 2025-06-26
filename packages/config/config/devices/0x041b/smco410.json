@@ -1,0 +1,61 @@
+{
+	"manufacturer": "Resideo",
+	"manufacturerId": "0x041b",
+	"label": "SMCO410",
+	"description": "",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0410",
+			"zwaveAllianceId": 5196
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Supervision Report Timeout",
+			"description": "0",
+			"valueSize": 2,
+			"minValue": 500,
+			"maxValue": 5000,
+			"defaultValue": 1500,
+			"unsigned": true
+		},
+		{
+			"#": "2",
+			"label": "Supervision Retry Count",
+			"description": "0",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 2,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "3",
+			"label": "Supervision Wait Time",
+			"description": "0",
+			"valueSize": 2,
+			"minValue": 1,
+			"maxValue": 60,
+			"defaultValue": 5,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Press and hold the button until 2 consecutive chirps and green LED flashes are heard and seen",
+		"exclusion": "Press and hold the button until 2 consecutive chirps and green LED flashes are heard and seen",
+		"reset": "Press and hold the button until 3 consecutive chirps are heard. This may take 20+ seconds"
+	}
+}
