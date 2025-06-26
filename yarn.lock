@@ -97,16 +97,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@alcalzone/monopack@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@alcalzone/monopack@npm:1.3.0"
+"@alcalzone/monopack@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "@alcalzone/monopack@npm:1.4.0"
   dependencies:
     "@alcalzone/pak": "npm:^0.11.0"
     fs-extra: "npm:^10.1.0"
+    p-queue: "npm:^8.1.0"
     tar: "npm:^6.1.13"
   bin:
     monopack: bin/cli.js
-  checksum: 10/41246bd75cb54b85456ad41f1e75eea6cbf96e0ec848a639ba14273708b986346ae5a01139663fb913363f750ad8c436d8d144076b69f8039e60274ab5d6714f
+  checksum: 10/4820cc6a08ff0d202054ab98a101fb16433c312276ff8c27d460c4ff6d45a3a1aca06af79863d1571066d6a6bc22c4579d4e3c61070408abb49e558ddf592515
   languageName: node
   linkType: hard
 
@@ -2784,7 +2785,7 @@ __metadata:
     "@actions/github": "npm:^6.0.1"
     "@alcalzone/esm2cjs": "npm:^1.4.1"
     "@alcalzone/jsonl-db": "npm:^3.1.1"
-    "@alcalzone/monopack": "npm:^1.3.0"
+    "@alcalzone/monopack": "npm:^1.4.0"
     "@alcalzone/release-script": "npm:~3.8.0"
     "@commitlint/cli": "npm:^19.5.0"
     "@commitlint/config-conventional": "npm:^19.8.1"
