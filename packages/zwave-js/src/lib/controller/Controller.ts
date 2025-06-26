@@ -2136,6 +2136,7 @@ export class ZWaveController
 		options: InclusionOptionsInternal,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		return {
 			priority: TaskPriority.Normal,
@@ -2192,7 +2193,12 @@ export class ZWaveController
 				}
 
 				// Handle the actual process
-				yield* self.performInclusion(options);
+				yield* self.performInclusion(options, abortWaiting.signal);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
@@ -2230,6 +2236,7 @@ export class ZWaveController
 		provisioningEntry: PlannedProvisioningEntry,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		const options: InclusionOptionsInternal = {
 			strategy: InclusionStrategy.SmartStart,
@@ -2286,13 +2293,19 @@ export class ZWaveController
 				}
 
 				// Handle the actual process
-				yield* self.performInclusion(options);
+				yield* self.performInclusion(options, abortWaiting.signal);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
 
 	private async *performInclusion(
 		opts: InclusionOptionsInternal,
+		abortWaiting: AbortSignal,
 	): AsyncGenerator<any, void, any> {
 		const self = this;
 
@@ -2303,8 +2316,9 @@ export class ZWaveController
 					(msg) =>
 						msg
 							instanceof AddNodeToNetworkRequestStatusReport,
-					60000, // 60 seconds // FIXME: double-check
-					// FIXME: Do we need to store the AbortController?
+					undefined, // Wait indefinitely
+					undefined,
+					abortWaiting,
 				),
 			);
 
@@ -3068,6 +3082,7 @@ export class ZWaveController
 		options: ExclusionOptions,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		return {
 			priority: TaskPriority.Normal,
@@ -3123,13 +3138,19 @@ export class ZWaveController
 				}
 
 				// Handle the actual process
-				yield* self.performExclusion(options);
+				yield* self.performExclusion(options, abortWaiting.signal);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
 
 	private async *performExclusion(
 		options: ExclusionOptions,
+		abortWaiting: AbortSignal,
 	): AsyncGenerator<any, void, any> {
 		const self = this;
 
@@ -3140,8 +3161,9 @@ export class ZWaveController
 					(msg) =>
 						msg
 							instanceof RemoveNodeFromNetworkRequestStatusReport,
-					60000, // 60 seconds // FIXME: double-check
-					// FIXME: Do we need to store the AbortController?
+					undefined, // Wait indefinitely
+					undefined,
+					abortWaiting,
 				),
 			);
 
@@ -6658,6 +6680,7 @@ export class ZWaveController
 		options: ReplaceNodeOptions,
 	): TaskBuilder<void> {
 		const self = this;
+		const abortWaiting = new AbortController();
 
 		return {
 			priority: TaskPriority.Normal,
@@ -6668,7 +6691,13 @@ export class ZWaveController
 					startedPromise,
 					node,
 					options,
+					abortWaiting.signal,
 				);
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			async cleanup() {
+				// If this task gets dropped, abort all pending wait operations
+				abortWaiting.abort();
 			},
 		};
 	}
@@ -6677,6 +6706,7 @@ export class ZWaveController
 		startedPromise: DeferredPromise<void>,
 		node: ZWaveNode,
 		options: ReplaceNodeOptions,
+		abortWaiting: AbortSignal,
 	): AsyncGenerator<any, void, any> {
 		const self = this;
 
@@ -6768,8 +6798,9 @@ export class ZWaveController
 					(msg) =>
 						msg
 							instanceof ReplaceFailedNodeRequestStatusReport,
-					60000, // 60 seconds // FIXME: double-check
-					// FIXME: Do we need to store the AbortController?
+					undefined, // Wait indefinitely
+					undefined,
+					abortWaiting,
 				),
 			);
 
