@@ -217,7 +217,7 @@ import {
 	RemoveFailedNodeStartFlags,
 	RemoveFailedNodeStatus,
 	RemoveNodeFromNetworkRequest,
-	type RemoveNodeFromNetworkRequestStatusReport,
+	RemoveNodeFromNetworkRequestStatusReport,
 	RemoveNodeStatus,
 	RemoveNodeType,
 	ReplaceFailedNodeRequest,
@@ -421,10 +421,6 @@ export class ZWaveController
 		});
 
 		// register message handlers
-		driver.registerRequestHandler(
-			FunctionType.RemoveNodeFromNetwork,
-			this.handleRemoveNodeStatusReport.bind(this),
-		);
 		driver.registerRequestHandler(
 			FunctionType.ReplaceFailedNode,
 			this.handleReplaceNodeStatusReport.bind(this),
@@ -2094,9 +2090,7 @@ export class ZWaveController
 
 	private _smartStartEnabled: boolean = false;
 
-	private _exclusionOptions: ExclusionOptions | undefined;
 	private _inclusionOptions: InclusionOptionsInternal | undefined;
-	private _nodePendingExclusion: ZWaveNode | undefined;
 	private _nodePendingReplace: ZWaveNode | undefined;
 	private _replaceFailedPromise: DeferredPromise<boolean> | undefined;
 
@@ -2161,16 +2155,12 @@ export class ZWaveController
 
 				// Start the inclusion process
 				self.setInclusionState(InclusionState.Including);
+				self.driver.controllerLog.print(
+					`Starting inclusion process with strategy ${
+						getEnumMemberName(InclusionStrategy, options.strategy)
+					}...`,
+				);
 				try {
-					self.driver.controllerLog.print(
-						`Starting inclusion process with strategy ${
-							getEnumMemberName(
-								InclusionStrategy,
-								options.strategy,
-							)
-						}...`,
-					);
-
 					// kick off the inclusion process
 					yield* waitFor(self.driver.sendMessage(
 						new AddNodeToNetworkRequest({
@@ -2820,7 +2810,6 @@ export class ZWaveController
 		this.driver.controllerLog.print(`stopping inclusion process...`);
 
 		try {
-			// stop the inclusion process
 			await this.driver.sendMessage(
 				new AddNodeToNetworkRequest({
 					addNodeType: AddNodeType.Stop,
@@ -3008,44 +2997,15 @@ export class ZWaveController
 			return false;
 		}
 
-		// Leave SmartStart listening mode so we can switch to exclusion mode
-		await this.pauseSmartStart();
+		const startedPromise = createDeferredPromise<void>();
+		void this.driver.scheduler.queueTask(this.getExclusionTask(
+			startedPromise,
+			options,
+		)).catch(noop); // Errors will be exposed through events
 
-		this.setInclusionState(InclusionState.Excluding);
-		this.driver.controllerLog.print(`starting exclusion process...`);
-
-		try {
-			// kick off the inclusion process
-			await this.driver.sendMessage(
-				new RemoveNodeFromNetworkRequest({
-					removeNodeType: RemoveNodeType.Any,
-					highPower: true,
-					networkWide: true,
-				}),
-			);
-			this.driver.controllerLog.print(
-				`The controller is now ready to remove nodes`,
-			);
-			this._exclusionOptions = options;
-			this.emit("exclusion started");
-			return true;
-		} catch (e) {
-			this.setInclusionState(InclusionState.Idle);
-			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
-			) {
-				this.driver.controllerLog.print(
-					`Starting the exclusion failed`,
-					"error",
-				);
-				throw new ZWaveError(
-					"The exclusion could not be started.",
-					ZWaveErrorCodes.Controller_ExclusionFailed,
-				);
-			}
-			throw e;
-		}
+		// Wait for the inclusion to actually start, then return to the caller
+		await startedPromise;
+		return true;
 	}
 
 	/**
@@ -3077,7 +3037,6 @@ export class ZWaveController
 		this.driver.controllerLog.print(`stopping exclusion process...`);
 
 		try {
-			// kick off the inclusion process
 			await this.driver.sendMessage(
 				new RemoveNodeFromNetworkRequest({
 					removeNodeType: RemoveNodeType.Stop,
@@ -3107,6 +3066,246 @@ export class ZWaveController
 			}
 			throw e;
 		}
+	}
+
+	/**
+	 * Returns the task to handle the complete exclusion process
+	 */
+	private getExclusionTask(
+		startedPromise: DeferredPromise<void>,
+		options: ExclusionOptions,
+	): TaskBuilder<void> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "exclusion" },
+			group: { id: "inclusion-exclusion" },
+			task: async function* exclusionTask() {
+				// Leave SmartStart listening mode so we can switch to exclusion mode
+				yield* waitFor(self.pauseSmartStart());
+
+				// Start the exclusion process
+				self.setInclusionState(InclusionState.Excluding);
+				self.driver.controllerLog.print(
+					`starting exclusion process...`,
+				);
+
+				try {
+					// kick off the inclusion process
+					yield* waitFor(self.driver.sendMessage(
+						new RemoveNodeFromNetworkRequest({
+							removeNodeType: RemoveNodeType.Any,
+							highPower: true,
+							networkWide: true,
+						}),
+					));
+
+					self.driver.controllerLog.print(
+						`The controller is now ready to remove nodes`,
+					);
+
+					self.emit("exclusion started");
+					// Notify the caller that the process has started
+					startedPromise.resolve();
+				} catch (e) {
+					self.setInclusionState(InclusionState.Idle);
+					if (
+						isZWaveError(e)
+						&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
+					) {
+						self.driver.controllerLog.print(
+							`Starting the exclusion failed`,
+							"error",
+						);
+						startedPromise.reject(
+							new ZWaveError(
+								"The exclusion could not be started.",
+								ZWaveErrorCodes.Controller_ExclusionFailed,
+							),
+						);
+					} else {
+						startedPromise.reject(e as Error);
+					}
+					return;
+				}
+
+				// Handle the actual process
+				yield* self.performExclusion(options);
+			},
+		};
+	}
+
+	private async *performExclusion(
+		options: ExclusionOptions,
+	): AsyncGenerator<any, void, any> {
+		const self = this;
+
+		/** Waits for the next RemoveNode status report and aborts if the status indicates failure */
+		async function* awaitStatusReport() {
+			const msg = yield* waitFor(
+				self.driver.waitForMessage(
+					(msg) =>
+						msg
+							instanceof RemoveNodeFromNetworkRequestStatusReport,
+					60000, // 60 seconds // FIXME: double-check
+					// FIXME: Do we need to store the AbortController?
+				),
+			);
+
+			if (msg.status === RemoveNodeStatus.Failed) {
+				self.driver.controllerLog.print(
+					`Removing the node failed`,
+					"error",
+				);
+				self.emit("exclusion failed");
+
+				// in any case, stop the exclusion process so we don't accidentally remove another node
+				try {
+					yield* waitFor(self.stopExclusion());
+				} catch {
+					/* ok */
+				}
+				return;
+			}
+
+			// Unless the status indicates failure, return the report
+			return msg;
+		}
+
+		/** Aborts the ongoing inclusion process when reaching an unexpected status */
+		async function* abortExclusion(
+			status: RemoveNodeStatus,
+			expected: RemoveNodeStatus[],
+		) {
+			// Unexpected status, abort
+			let message = `Unexpected status during exclusion: ${
+				getEnumMemberName(
+					RemoveNodeStatus,
+					status,
+				)
+			}, expected `;
+			if (expected.length === 1) {
+				message += getEnumMemberName(RemoveNodeStatus, expected[0]);
+			} else {
+				message += `one of: ${
+					expected
+						.map((s) => getEnumMemberName(RemoveNodeStatus, s))
+						.join(", ")
+				}`;
+			}
+			self.driver.controllerLog.print(message, "error");
+			yield* waitFor(self.stopExclusion());
+		}
+
+		// Step 1: Wait for NodeFound
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			if (msg.status !== RemoveNodeStatus.NodeFound) {
+				// Unexpected status, abort
+				yield* abortExclusion(msg.status, [
+					RemoveNodeStatus.NodeFound,
+				]);
+				return;
+			}
+
+			// Nothing to do actually
+		}
+
+		let nodePendingExclusion: ZWaveNode | undefined;
+
+		// Step 2: Wait for RemovingController or RemovingSlave
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			if (
+				msg.status !== RemoveNodeStatus.RemovingController
+				&& msg.status !== RemoveNodeStatus.RemovingSlave
+			) {
+				// Unexpected status, abort
+				yield* abortExclusion(msg.status, [
+					RemoveNodeStatus.RemovingController,
+					RemoveNodeStatus.RemovingSlave,
+				]);
+				return;
+			}
+
+			nodePendingExclusion = this.nodes.get(
+				msg.statusContext!.nodeId,
+			);
+		}
+
+		// Step 3: Wait for Done
+		let wasRemoved = false;
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			// The reserved status can be triggered on some controllers by doing the following:
+			// - factory reset the controller without excluding nodes
+			// - include a new node with the same node ID as one on the previous network
+			// - attempt to exclude the old node while the new node is responsive
+			if (
+				msg.status !== RemoveNodeStatus.Reserved_0x05
+				&& msg.status !== RemoveNodeStatus.Done
+			) {
+				// Unexpected status, abort
+				yield* abortExclusion(msg.status, [
+					RemoveNodeStatus.Reserved_0x05,
+					RemoveNodeStatus.Done,
+				]);
+				return;
+			}
+
+			wasRemoved = msg.status === RemoveNodeStatus.Done;
+		}
+
+		// Step 4: Finish the exclusion process
+		try {
+			// Stop the exclusion process so we don't accidentally remove another node
+			yield* waitFor(this.stopExclusionNoCallback());
+		} catch {
+			// ignore the error
+		}
+
+		if (!wasRemoved || !nodePendingExclusion) {
+			// The exclusion did not succeed
+			this.setInclusionState(InclusionState.Idle);
+			return;
+		}
+
+		const nodeId = nodePendingExclusion.id;
+		this.driver.controllerLog.print(`Node ${nodeId} was removed`);
+
+		// Avoid automatic re-inclusion using SmartStart if desired
+		switch (options.strategy) {
+			case ExclusionStrategy.Unprovision:
+				this.unprovisionSmartStartNode(nodeId);
+				break;
+
+			case ExclusionStrategy.DisableProvisioningEntry: {
+				const entry = this.getProvisioningEntryInternal(nodeId);
+				if (entry) {
+					entry.status = ProvisioningEntryStatus.Inactive;
+					this.provisionSmartStartNode(entry);
+				}
+				break;
+			}
+		}
+
+		// notify listeners
+		this.emit(
+			"node removed",
+			nodePendingExclusion,
+			RemoveNodeReason.Excluded,
+		);
+		// and forget the node
+		this._nodes.delete(nodeId);
+
+		this.setInclusionState(InclusionState.Idle);
 	}
 
 	private _proxyInclusionMachine: ProxyInclusionMachine | undefined;
@@ -4657,114 +4856,6 @@ export class ZWaveController
 		this.emit("inclusion failed");
 
 		return false; // Don't invoke any more handlers
-	}
-
-	/**
-	 * Is called when a RemoveNode request is received from the controller.
-	 * Handles and controls the exclusion process.
-	 */
-	private async handleRemoveNodeStatusReport(
-		msg: RemoveNodeFromNetworkRequestStatusReport,
-	): Promise<boolean> {
-		this.driver.controllerLog.print(
-			`handling remove node request (status = ${
-				RemoveNodeStatus[msg.status]
-			})`,
-		);
-		if (this._inclusionState !== InclusionState.Excluding) {
-			this.driver.controllerLog.print(
-				`  exclusion is NOT active, ignoring it...`,
-			);
-			return true; // Don't invoke any more handlers
-		}
-
-		switch (msg.status) {
-			case RemoveNodeStatus.Failed:
-				// This code is handled elsewhere for starting the exclusion, so this means
-				// that removing a node failed
-				this.driver.controllerLog.print(
-					`Removing the node failed`,
-					"error",
-				);
-				this.emit("exclusion failed");
-
-				// in any case, stop the exclusion process so we don't accidentally remove another node
-				try {
-					await this.stopExclusion();
-				} catch {
-					/* ok */
-				}
-				return true; // Don't invoke any more handlers
-
-			case RemoveNodeStatus.RemovingSlave:
-			case RemoveNodeStatus.RemovingController: {
-				// this is called when a node is removed
-				this._nodePendingExclusion = this.nodes.get(
-					msg.statusContext!.nodeId,
-				);
-				return true; // Don't invoke any more handlers
-			}
-
-			case RemoveNodeStatus.Reserved_0x05:
-			// The reserved status can be triggered on some controllers by doing the following:
-			// - factory reset the controller without excluding nodes
-			// - include a new node with the same node ID as one on the previous network
-			// - attempt to exclude the old node while the new node is responsive
-			case RemoveNodeStatus.Done: {
-				// this is called when the exclusion was completed
-				// stop the exclusion process so we don't accidentally remove another node
-				try {
-					await this.stopExclusionNoCallback();
-				} catch {
-					/* ok */
-				}
-
-				if (
-					msg.status === RemoveNodeStatus.Reserved_0x05
-					|| !this._nodePendingExclusion
-				) {
-					// The exclusion did not succeed
-					this.setInclusionState(InclusionState.Idle);
-					return true;
-				}
-
-				const nodeId = this._nodePendingExclusion.id;
-				this.driver.controllerLog.print(`Node ${nodeId} was removed`);
-
-				// Avoid automatic re-inclusion using SmartStart if desired
-				switch (this._exclusionOptions?.strategy) {
-					case ExclusionStrategy.Unprovision:
-						this.unprovisionSmartStartNode(nodeId);
-						break;
-
-					case ExclusionStrategy.DisableProvisioningEntry: {
-						const entry = this.getProvisioningEntryInternal(nodeId);
-						if (entry) {
-							entry.status = ProvisioningEntryStatus.Inactive;
-							this.provisionSmartStartNode(entry);
-						}
-						break;
-					}
-				}
-
-				this._exclusionOptions = undefined;
-
-				// notify listeners
-				this.emit(
-					"node removed",
-					this._nodePendingExclusion,
-					RemoveNodeReason.Excluded,
-				);
-				// and forget the node
-				this._nodes.delete(nodeId);
-				this._nodePendingExclusion = undefined;
-
-				this.setInclusionState(InclusionState.Idle);
-				return true; // Don't invoke any more handlers
-			}
-		}
-		// not sure what to do with this message
-		return false;
 	}
 
 	private _rebuildRoutesProgress = new Map<number, RebuildRoutesStatus>();

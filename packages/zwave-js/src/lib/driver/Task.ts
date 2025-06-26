@@ -28,6 +28,10 @@ export type TaskTag =
 		id: "inclusion";
 	}
 	| {
+		// Handle exclusion of a node
+		id: "exclusion";
+	}
+	| {
 		// Remove a failed node
 		id: "remove-failed-node";
 		nodeId: number;
