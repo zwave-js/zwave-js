@@ -6582,6 +6582,10 @@ export class ZWaveController
 				id: "inclusion-exclusion",
 			},
 			task: async function* removeFailedNodeTask() {
+				// Leave SmartStart listening mode so nothing interferes with the removal
+				yield* waitFor(self.pauseSmartStart());
+				self.setInclusionState(InclusionState.Busy);
+
 				// It is possible that this method is called while the node is still in the process of resetting or leaving the network
 				// Therefore, we ping multiple times in case of success and wait a bit in between
 				let didFail = false;
@@ -6682,6 +6686,15 @@ export class ZWaveController
 
 							return;
 					}
+				}
+			},
+			// eslint-disable-next-line @typescript-eslint/require-await
+			cleanup: async () => {
+				// When SmartStart failed, this is called from inside the inclusion handler
+				// so we do not want to set the inclusion state back to idle. In all other
+				// cases, we do.
+				if (reason !== RemoveNodeReason.SmartStartFailed) {
+					this.setInclusionState(InclusionState.Idle);
 				}
 			},
 		};
