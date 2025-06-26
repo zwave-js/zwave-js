@@ -124,7 +124,7 @@ import {
 	AddNodeDSKToNetworkRequest,
 	AddNodeStatus,
 	AddNodeToNetworkRequest,
-	type AddNodeToNetworkRequestStatusReport,
+	AddNodeToNetworkRequestStatusReport,
 	AddNodeType,
 	type ApplicationUpdateRequest,
 	ApplicationUpdateRequestNodeAdded,
@@ -294,6 +294,7 @@ import {
 	num2hex,
 	pick,
 } from "@zwave-js/shared";
+import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
 import {
@@ -420,10 +421,6 @@ export class ZWaveController
 		});
 
 		// register message handlers
-		driver.registerRequestHandler(
-			FunctionType.AddNodeToNetwork,
-			this.handleAddNodeStatusReport.bind(this),
-		);
 		driver.registerRequestHandler(
 			FunctionType.RemoveNodeFromNetwork,
 			this.handleRemoveNodeStatusReport.bind(this),
@@ -2097,10 +2094,8 @@ export class ZWaveController
 
 	private _smartStartEnabled: boolean = false;
 
-	private _includeController: boolean = false;
 	private _exclusionOptions: ExclusionOptions | undefined;
 	private _inclusionOptions: InclusionOptionsInternal | undefined;
-	private _nodePendingInclusion: ZWaveNode | undefined;
 	private _nodePendingExclusion: ZWaveNode | undefined;
 	private _nodePendingReplace: ZWaveNode | undefined;
 	private _replaceFailedPromise: DeferredPromise<boolean> | undefined;
@@ -2136,55 +2131,88 @@ export class ZWaveController
 			);
 		}
 
-		// Leave SmartStart listening mode so we can switch to exclusion mode
-		await this.pauseSmartStart();
+		const startedPromise = createDeferredPromise<void>();
+		void this.driver.scheduler.queueTask(this.getBeginClassicInclusionTask(
+			startedPromise,
+			options,
+		)).catch(noop); // Errors will be exposed through events
 
-		this.setInclusionState(InclusionState.Including);
-		this._inclusionOptions = options;
-
-		try {
-			this.driver.controllerLog.print(
-				`Starting inclusion process with strategy ${
-					getEnumMemberName(
-						InclusionStrategy,
-						options.strategy,
-					)
-				}...`,
-			);
-
-			// kick off the inclusion process
-			await this.driver.sendMessage(
-				new AddNodeToNetworkRequest({
-					addNodeType: AddNodeType.Any,
-					highPower: true,
-					networkWide: true,
-				}),
-			);
-
-			this.driver.controllerLog.print(
-				`The controller is now ready to add nodes`,
-			);
-
-			this.emit("inclusion started", options.strategy);
-		} catch (e) {
-			this.setInclusionState(InclusionState.Idle);
-			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
-			) {
-				this.driver.controllerLog.print(
-					`Starting the inclusion failed`,
-					"error",
-				);
-				throw new ZWaveError(
-					"The inclusion could not be started.",
-					ZWaveErrorCodes.Controller_InclusionFailed,
-				);
-			}
-			throw e;
-		}
-
+		// Wait for the inclusion to actually start, then return to the caller
+		await startedPromise;
 		return true;
+	}
+
+	/**
+	 * Returns the task to handle the complete classic inclusion process
+	 */
+	private getBeginClassicInclusionTask(
+		startedPromise: DeferredPromise<void>,
+		options: InclusionOptionsInternal,
+	): TaskBuilder<void> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "inclusion" },
+			group: { id: "inclusion-exclusion" },
+			task: async function* classicInclusionTask() {
+				// Leave SmartStart listening mode so we can switch to inclusion mode
+				yield* waitFor(self.pauseSmartStart());
+
+				// Start the inclusion process
+				self.setInclusionState(InclusionState.Including);
+				try {
+					self.driver.controllerLog.print(
+						`Starting inclusion process with strategy ${
+							getEnumMemberName(
+								InclusionStrategy,
+								options.strategy,
+							)
+						}...`,
+					);
+
+					// kick off the inclusion process
+					yield* waitFor(self.driver.sendMessage(
+						new AddNodeToNetworkRequest({
+							addNodeType: AddNodeType.Any,
+							highPower: true,
+							networkWide: true,
+						}),
+					));
+
+					self.driver.controllerLog.print(
+						`The controller is now ready to add nodes`,
+					);
+
+					self.emit("inclusion started", options.strategy);
+					// Notify the caller that the process has started
+					startedPromise.resolve();
+				} catch (e) {
+					self.setInclusionState(InclusionState.Idle);
+					if (
+						isZWaveError(e)
+						&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
+					) {
+						self.driver.controllerLog.print(
+							`Starting the inclusion failed`,
+							"error",
+						);
+						startedPromise.reject(
+							new ZWaveError(
+								"The inclusion could not be started.",
+								ZWaveErrorCodes.Controller_InclusionFailed,
+							),
+						);
+					} else {
+						startedPromise.reject(e as Error);
+					}
+					return;
+				}
+
+				// Handle the actual process
+				yield* self.performInclusion(options);
+			},
+		};
 	}
 
 	/** @internal */
@@ -2199,49 +2227,538 @@ export class ZWaveController
 			return false;
 		}
 
-		// Disable listening mode so we can switch to inclusion mode
-		await this.stopInclusion();
+		const startedPromise = createDeferredPromise<void>();
+		void this.driver.scheduler.queueTask(
+			this.getBeginSmartStartInclusionTask(
+				startedPromise,
+				provisioningEntry,
+			),
+		).catch(noop); // Errors will be exposed through events
 
-		this.setInclusionState(InclusionState.Including);
-		this._inclusionOptions = {
+		// Wait for the inclusion to actually start, then return to the caller
+		await startedPromise;
+		return true;
+	}
+
+	/**
+	 * Returns the task to handle the complete classic inclusion process
+	 */
+	private getBeginSmartStartInclusionTask(
+		startedPromise: DeferredPromise<void>,
+		provisioningEntry: PlannedProvisioningEntry,
+	): TaskBuilder<void> {
+		const self = this;
+
+		const options: InclusionOptionsInternal = {
 			strategy: InclusionStrategy.SmartStart,
 			provisioning: provisioningEntry,
 		};
 
-		try {
-			// Kick off the inclusion process using either the
-			// specified protocol or the first supported one
-			const dskBuffer = dskFromString(provisioningEntry.dsk);
-			const protocol = provisioningEntry.protocol
-				?? provisioningEntry.supportedProtocols?.[0]
-				?? Protocols.ZWave;
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "inclusion" },
+			group: { id: "inclusion-exclusion" },
+			task: async function* smartStartInclusionTask() {
+				// Disable listening mode so we can switch to inclusion mode
+				yield* waitFor(self.stopInclusion());
 
-			this.driver.controllerLog.print(
-				`Including SmartStart node with DSK ${provisioningEntry.dsk}${
-					protocol == Protocols.ZWaveLongRange
-						? " using Z-Wave Long Range"
-						: ""
-				}`,
+				self.setInclusionState(InclusionState.Including);
+
+				try {
+					// Kick off the inclusion process using either the
+					// specified protocol or the first supported one
+					const dskBuffer = dskFromString(provisioningEntry.dsk);
+					const protocol = provisioningEntry.protocol
+						?? provisioningEntry.supportedProtocols?.[0]
+						?? Protocols.ZWave;
+
+					self.driver.controllerLog.print(
+						`Including SmartStart node with DSK ${provisioningEntry.dsk}${
+							protocol == Protocols.ZWaveLongRange
+								? " using Z-Wave Long Range"
+								: ""
+						}`,
+					);
+
+					yield* waitFor(self.driver.sendMessage(
+						new AddNodeDSKToNetworkRequest({
+							nwiHomeId: nwiHomeIdFromDSK(dskBuffer),
+							authHomeId: authHomeIdFromDSK(dskBuffer),
+							protocol,
+							highPower: true,
+							networkWide: true,
+						}),
+					));
+
+					self.emit(
+						"inclusion started",
+						InclusionStrategy.SmartStart,
+					);
+					// Notify the caller that the process has started
+					startedPromise.resolve();
+				} catch (e) {
+					self.setInclusionState(InclusionState.Idle);
+					// Error handling for this happens at the call site
+					startedPromise.reject(e as Error);
+					return;
+				}
+
+				// Handle the actual process
+				yield* self.performInclusion(options);
+			},
+		};
+	}
+
+	private async *performInclusion(
+		opts: InclusionOptionsInternal,
+	): AsyncGenerator<any, void, any> {
+		const self = this;
+
+		/** Waits for the next AddNode status report and aborts if the status indicates failure */
+		async function* awaitStatusReport() {
+			const msg = yield* waitFor(
+				self.driver.waitForMessage(
+					(msg) =>
+						msg
+							instanceof AddNodeToNetworkRequestStatusReport,
+					60000, // 60 seconds // FIXME: double-check
+					// FIXME: Do we need to store the AbortController?
+				),
 			);
 
-			await this.driver.sendMessage(
-				new AddNodeDSKToNetworkRequest({
-					nwiHomeId: nwiHomeIdFromDSK(dskBuffer),
-					authHomeId: authHomeIdFromDSK(dskBuffer),
-					protocol,
-					highPower: true,
-					networkWide: true,
-				}),
-			);
+			if (msg.status === AddNodeStatus.Failed) {
+				self.driver.controllerLog.print(
+					`Adding the node failed`,
+					"error",
+				);
+				self.emit("inclusion failed");
 
-			this.emit("inclusion started", InclusionStrategy.SmartStart);
-		} catch (e) {
-			this.setInclusionState(InclusionState.Idle);
-			// Error handling for this happens at the call site
-			throw e;
+				// in any case, stop the inclusion process so we don't accidentally add another node
+				try {
+					yield* waitFor(self.stopInclusion());
+				} catch {
+					/* ok */
+				}
+				return;
+			}
+
+			// Unless the status indicates failure, return the report
+			return msg;
 		}
 
-		return true;
+		/** Aborts the ongoing inclusion process when reaching an unexpected status */
+		async function* abortInclusion(
+			status: AddNodeStatus,
+			expected: AddNodeStatus[],
+		) {
+			// Unexpected status, abort
+			let message = `Unexpected status during inclusion: ${
+				getEnumMemberName(
+					AddNodeStatus,
+					status,
+				)
+			}, expected `;
+			if (expected.length === 1) {
+				message += getEnumMemberName(AddNodeStatus, expected[0]);
+			} else {
+				message += `one of: ${
+					expected
+						.map((s) => getEnumMemberName(AddNodeStatus, s))
+						.join(", ")
+				}`;
+			}
+			self.driver.controllerLog.print(message, "error");
+			yield* waitFor(self.stopInclusion());
+		}
+
+		// Step 1: Wait for NodeFound
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			if (msg.status !== AddNodeStatus.NodeFound) {
+				// Unexpected status, abort
+				yield* abortInclusion(msg.status, [
+					AddNodeStatus.NodeFound,
+				]);
+				return;
+			}
+
+			// Nothing to do actually
+		}
+
+		let newNodeIsController = false;
+		let nodePendingInclusion: ZWaveNode;
+
+		// Step 2: Wait for AddingController or AddingSlave
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			if (
+				msg.status !== AddNodeStatus.AddingController
+				&& msg.status !== AddNodeStatus.AddingSlave
+			) {
+				// Unexpected status, abort
+				yield* abortInclusion(msg.status, [
+					AddNodeStatus.AddingController,
+					AddNodeStatus.AddingSlave,
+				]);
+				return;
+			}
+
+			newNodeIsController = msg.status === AddNodeStatus.AddingController;
+
+			nodePendingInclusion = new ZWaveNode(
+				msg.statusContext!.nodeId,
+				this.driver,
+				new DeviceClass(
+					msg.statusContext!.basicDeviceClass!,
+					msg.statusContext!.genericDeviceClass!,
+					msg.statusContext!.specificDeviceClass!,
+				),
+				msg.statusContext!.supportedCCs,
+				msg.statusContext!.controlledCCs,
+				// Create an empty value DB and specify that it contains no values
+				// to avoid indexing the existing values
+				this.createValueDBForNode(
+					msg.statusContext!.nodeId,
+					new Set(),
+				),
+			);
+
+			// TODO: According to INS13954, there are several more steps and different timeouts when including a controller
+			// For now do the absolute minimum - that is include the controller
+		}
+
+		// Step 3: Wait for ProtocolDone
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			if (msg.status !== AddNodeStatus.ProtocolDone) {
+				// Unexpected status, abort
+				yield* abortInclusion(msg.status, [
+					AddNodeStatus.ProtocolDone,
+				]);
+				return;
+			}
+		}
+
+		// Step 4: Finish the protocol-level inclusion process
+		let nodeId: number | undefined;
+		try {
+			// Stop the inclusion process so we don't accidentally add another node
+			nodeId = yield* waitFor(this.finishInclusion());
+		} catch {
+			// ignore the error
+		}
+
+		try {
+			// It is recommended to send another STOP command to the controller
+			yield* waitFor(this.stopInclusionNoCallback());
+		} catch {
+			// ignore the error
+		}
+
+		if (!nodeId) {
+			// The inclusion did not succeed
+			this.setInclusionState(InclusionState.Idle);
+			return;
+		} else if (
+			nodeId === NODE_ID_BROADCAST
+			|| nodeId === NODE_ID_BROADCAST_LR
+		) {
+			// No idea how this can happen but it dit at least once
+			this.driver.controllerLog.print(
+				`Cannot add a node with the broadcast node ID, aborting...`,
+				"warn",
+			);
+			this.setInclusionState(InclusionState.Idle);
+			return;
+		} else if (this._nodes.has(nodeId)) {
+			// Someone tried to include a node again, although it is part of the network already.
+			this.driver.controllerLog.print(
+				`Cannot add node ${nodeId} as it is already part of the network. Aborting...`,
+				"warn",
+			);
+			this.setInclusionState(InclusionState.Idle);
+			return;
+		}
+
+		// Step 5: Populate the node information in Z-Wave JS
+		// and optionally perform Security bootstrapping
+
+		// We're technically done with the inclusion but should not include
+		// anything else until the node has been bootstrapped
+		this.setInclusionState(InclusionState.Busy);
+
+		// Inclusion is now completed, bootstrap the node
+		const newNode = nodePendingInclusion;
+
+		const supportedCCs = [
+			...newNode.implementedCommandClasses.entries(),
+		]
+			.filter(([, info]) => info.isSupported)
+			.map(([cc]) => cc);
+		const controlledCCs = [
+			...newNode.implementedCommandClasses.entries(),
+		]
+			.filter(([, info]) => info.isControlled)
+			.map(([cc]) => cc);
+
+		this.emit("node found", {
+			id: newNode.id,
+			deviceClass: newNode.deviceClass,
+			supportedCCs,
+			controlledCCs,
+		});
+
+		this.driver.controllerLog.print(
+			`finished adding node ${newNode.id}:${
+				newNode.deviceClass
+					? `
+  basic device class:    ${
+						getEnumMemberName(
+							BasicDeviceClass,
+							newNode.deviceClass.basic,
+						)
+					}
+  generic device class:  ${newNode.deviceClass.generic.label}
+  specific device class: ${newNode.deviceClass.specific.label}`
+					: ""
+			}
+  supported CCs: ${
+				supportedCCs
+					.map((cc) => `\n  · ${CommandClasses[cc]} (${num2hex(cc)})`)
+					.join("")
+			}
+  controlled CCs: ${
+				controlledCCs
+					.map((cc) => `\n  · ${CommandClasses[cc]} (${num2hex(cc)})`)
+					.join("")
+			}`,
+		);
+		// remember the node
+		this._nodes.set(newNode.id, newNode);
+
+		// We're communicating with the device, so assume it is alive
+		// If it is actually a sleeping device, it will be marked as such later
+		newNode.markAsAlive();
+
+		if (newNode.protocol == Protocols.ZWave) {
+			// Assign SUC return route to make sure the node knows where to get its routes from
+			newNode.hasSUCReturnRoute = yield* waitFor(
+				self.assignSUCReturnRoutes(newNode.id),
+			);
+		}
+
+		let bootstrapFailure:
+			| SecurityBootstrapFailure
+			| undefined;
+		let smartStartFailed = false;
+
+		// A controller performing a SmartStart network inclusion shall perform S2 bootstrapping,
+		// even if the joining node does not show the S2 Command Class in its supported Command Class list.
+		let forceAddedS2Support = false;
+		if (
+			opts.strategy === InclusionStrategy.SmartStart
+			&& !newNode.supportsCC(
+				CommandClasses["Security 2"],
+			)
+		) {
+			this.driver.controllerLog.logNode(newNode.id, {
+				message:
+					"does not list S2 as supported, but was included using SmartStart which implies S2 support.",
+				level: "warn",
+			});
+
+			forceAddedS2Support = true;
+			newNode.addCC(CommandClasses["Security 2"], {
+				isSupported: true,
+				version: 1,
+			});
+		}
+
+		// The default inclusion strategy is: Use S2 if possible, only use S0 if necessary, use no encryption otherwise
+		if (
+			newNode.supportsCC(CommandClasses["Security 2"])
+			&& (opts.strategy === InclusionStrategy.Default
+				|| opts.strategy
+					=== InclusionStrategy.Security_S2
+				|| opts.strategy
+					=== InclusionStrategy.SmartStart)
+		) {
+			bootstrapFailure = yield* waitFor(this.secureBootstrapS2(
+				newNode,
+				opts,
+			));
+			const actualSecurityClass = newNode
+				.getHighestSecurityClass();
+
+			if (bootstrapFailure == undefined) {
+				if (
+					actualSecurityClass
+						== SecurityClass.S0_Legacy
+				) {
+					// Notify user about potential S0 downgrade attack.
+					// S0 is considered insecure if both controller and node are S2-capable
+					bootstrapFailure = SecurityBootstrapFailure
+						.S0Downgrade;
+
+					this.driver.controllerLog.logNode(
+						newNode.id,
+						{
+							message: "Possible S0 downgrade attack detected!",
+							level: "warn",
+						},
+					);
+				} else if (
+					!securityClassIsS2(actualSecurityClass)
+				) {
+					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+				}
+			} else if (
+				opts.strategy
+					=== InclusionStrategy.SmartStart
+			) {
+				smartStartFailed = true;
+			}
+
+			if (
+				forceAddedS2Support
+				&& !securityClassIsS2(actualSecurityClass)
+			) {
+				// Remove the fake S2 support again
+				newNode.removeCC(
+					CommandClasses["Security 2"],
+				);
+			}
+		} else if (
+			newNode.supportsCC(CommandClasses.Security)
+			&& (opts.strategy
+					=== InclusionStrategy.Security_S0
+				|| (opts.strategy
+						=== InclusionStrategy.Default
+					&& (opts.forceSecurity
+						|| (
+							newNode.deviceClass?.specific
+								?? newNode.deviceClass
+									?.generic
+						)?.requiresSecurity)))
+		) {
+			bootstrapFailure = yield* waitFor(this.secureBootstrapS0(
+				newNode,
+				newNodeIsController,
+			));
+			if (bootstrapFailure == undefined) {
+				const actualSecurityClass = newNode
+					.getHighestSecurityClass();
+				if (
+					actualSecurityClass
+						== SecurityClass.S0_Legacy
+				) {
+					// If the user chose this, i.e. InclusionStrategy.Security_S0 was used,
+					// then this is the expected outcome and not a failure
+					if (
+						opts.strategy
+							!== InclusionStrategy
+								.Security_S0
+					) {
+						// S0 is considered insecure if both controller and node are S2-capable
+						const nif = yield* waitFor(
+							newNode
+								.requestNodeInfo()
+								.catch(() => undefined),
+						);
+						if (
+							nif?.supportedCCs.includes(
+								CommandClasses[
+									"Security 2"
+								],
+							)
+						) {
+							// Notify user about potential S0 downgrade attack.
+							bootstrapFailure = SecurityBootstrapFailure
+								.S0Downgrade;
+
+							this.driver.controllerLog
+								.logNode(
+									newNode.id,
+									{
+										message:
+											"Possible S0 downgrade attack detected!",
+										level: "warn",
+									},
+								);
+						}
+					}
+				} else {
+					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+				}
+			}
+		} else {
+			// Remember that no security classes were granted
+			for (const secClass of securityClassOrder) {
+				newNode.securityClasses.set(
+					secClass,
+					false,
+				);
+			}
+		}
+
+		// After an unsuccessful SmartStart inclusion, the node MUST leave the network and return to SmartStart learn mode
+		// The controller should consider the node to be failed.
+		if (smartStartFailed) {
+			try {
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message:
+							"SmartStart inclusion failed. Checking if the node needs to be removed.",
+						level: "warn",
+					},
+				);
+
+				yield* waitFor(this.removeFailedNodeInternal(
+					newNode.id,
+					RemoveNodeReason.SmartStartFailed,
+				));
+
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message: "was removed",
+					},
+				);
+
+				// The node was removed. Do not emit the "node added" event
+				this.setInclusionState(InclusionState.Idle);
+				return;
+			} catch {
+				// The node could not be removed, continue
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message:
+							"The node is still part of the network, continuing with insecure communication.",
+						level: "warn",
+					},
+				);
+			}
+		}
+
+		this.setInclusionState(InclusionState.Idle);
+
+		// We're done adding this node, notify listeners
+		const result: InclusionResult = bootstrapFailure != undefined
+			? {
+				lowSecurity: true,
+				lowSecurityReason: bootstrapFailure,
+			}
+			: { lowSecurity: false };
+
+		this.emit("node added", newNode, result);
 	}
 
 	/**
@@ -3211,6 +3728,7 @@ export class ZWaveController
 
 	private async secureBootstrapS0(
 		node: ZWaveNode,
+		nodeIsController: boolean,
 		assumeSupported: boolean = false,
 	): Promise<SecurityBootstrapFailure | undefined> {
 		// When bootstrapping with S0, no other keys are granted
@@ -3257,7 +3775,7 @@ export class ZWaveController
 				() =>
 					api.setNetworkKey(this.driver.securityManager!.networkKey),
 			];
-			if (this._includeController) {
+			if (nodeIsController) {
 				// Tell the controller which security scheme to use
 				tasks.push(async () => {
 					// Request nonce (for security scheme) manually, so it has the longer timeout
@@ -3329,6 +3847,14 @@ export class ZWaveController
 
 	private async secureBootstrapS2(
 		node: ZWaveNode,
+		// inclusionOptions is passed during normal inclusion, and undefined
+		// when we do proxy bootstrapping for an inclusion controller
+		inclusionOptions?: InclusionOptionsInternal & {
+			strategy:
+				| InclusionStrategy.Default
+				| InclusionStrategy.Security_S2
+				| InclusionStrategy.SmartStart;
+		},
 		assumeSupported: boolean = false,
 	): Promise<SecurityBootstrapFailure | undefined> {
 		const unGrantSecurityClasses = () => {
@@ -3348,15 +3874,6 @@ export class ZWaveController
 		}
 
 		let userCallbacks: InclusionUserCallbacks;
-		const inclusionOptions = this._inclusionOptions as
-			| (InclusionOptionsInternal & {
-				// This is the type when we end up here during normal inclusion
-				strategy:
-					| InclusionStrategy.Security_S2
-					| InclusionStrategy.SmartStart;
-			})
-			// And this when we do proxy bootstrapping for an inclusion controller
-			| undefined;
 		if (
 			inclusionOptions
 			&& "provisioning" in inclusionOptions
@@ -3978,353 +4495,6 @@ export class ZWaveController
 	}
 
 	/**
-	 * Is called when an AddNode request is received from the controller.
-	 * Handles and controls the inclusion process.
-	 */
-	private async handleAddNodeStatusReport(
-		msg: AddNodeToNetworkRequestStatusReport,
-	): Promise<boolean> {
-		this.driver.controllerLog.print(
-			`handling add node request (status = ${AddNodeStatus[msg.status]})`,
-		);
-
-		if (
-			this._inclusionState !== InclusionState.Including
-			|| this._inclusionOptions == undefined
-		) {
-			this.driver.controllerLog.print(
-				`  inclusion is NOT active, ignoring it...`,
-			);
-			return true; // Don't invoke any more handlers
-		}
-
-		switch (msg.status) {
-			case AddNodeStatus.Failed:
-				// This code is handled elsewhere for starting the inclusion, so this means
-				// that adding a node failed
-				this.driver.controllerLog.print(
-					`Adding the node failed`,
-					"error",
-				);
-				this.emit("inclusion failed");
-
-				// in any case, stop the inclusion process so we don't accidentally add another node
-				try {
-					await this.stopInclusion();
-				} catch {
-					/* ok */
-				}
-				return true; // Don't invoke any more handlers
-			case AddNodeStatus.AddingController:
-				this._includeController = true;
-			// fall through!
-			case AddNodeStatus.AddingSlave: {
-				// this is called when a new node is added
-				this._nodePendingInclusion = new ZWaveNode(
-					msg.statusContext!.nodeId,
-					this.driver,
-					new DeviceClass(
-						msg.statusContext!.basicDeviceClass!,
-						msg.statusContext!.genericDeviceClass!,
-						msg.statusContext!.specificDeviceClass!,
-					),
-					msg.statusContext!.supportedCCs,
-					msg.statusContext!.controlledCCs,
-					// Create an empty value DB and specify that it contains no values
-					// to avoid indexing the existing values
-					this.createValueDBForNode(
-						msg.statusContext!.nodeId,
-						new Set(),
-					),
-				);
-				// TODO: According to INS13954, there are several more steps and different timeouts when including a controller
-				// For now do the absolute minimum - that is include the controller
-				return true; // Don't invoke any more handlers
-			}
-			case AddNodeStatus.ProtocolDone: {
-				// this is called after a new node is added
-				// stop the inclusion process so we don't accidentally add another node
-				let nodeId: number | undefined;
-				try {
-					nodeId = await this.finishInclusion();
-				} catch {
-					// ignore the error
-				}
-
-				// It is recommended to send another STOP command to the controller
-				try {
-					await this.stopInclusionNoCallback();
-				} catch {
-					// ignore the error
-				}
-
-				if (!nodeId || !this._nodePendingInclusion) {
-					// The inclusion did not succeed
-					this.setInclusionState(InclusionState.Idle);
-					this._nodePendingInclusion = undefined;
-					return true;
-				} else if (
-					nodeId === NODE_ID_BROADCAST
-					|| nodeId === NODE_ID_BROADCAST_LR
-				) {
-					// No idea how this can happen but it dit at least once
-					this.driver.controllerLog.print(
-						`Cannot add a node with the broadcast node ID, aborting...`,
-						"warn",
-					);
-					this.setInclusionState(InclusionState.Idle);
-					this._nodePendingInclusion = undefined;
-					return true;
-				} else if (this._nodes.has(nodeId)) {
-					// Someone tried to include a node again, although it is part of the network already.
-					this.driver.controllerLog.print(
-						`Cannot add node ${nodeId} as it is already part of the network. Aborting...`,
-						"warn",
-					);
-					this.setInclusionState(InclusionState.Idle);
-					this._nodePendingInclusion = undefined;
-					return true;
-				}
-
-				// We're technically done with the inclusion but should not include
-				// anything else until the node has been bootstrapped
-				this.setInclusionState(InclusionState.Busy);
-
-				// Inclusion is now completed, bootstrap the node
-				const newNode = this._nodePendingInclusion;
-
-				const supportedCCs = [
-					...newNode.implementedCommandClasses.entries(),
-				]
-					.filter(([, info]) => info.isSupported)
-					.map(([cc]) => cc);
-				const controlledCCs = [
-					...newNode.implementedCommandClasses.entries(),
-				]
-					.filter(([, info]) => info.isControlled)
-					.map(([cc]) => cc);
-
-				this.emit("node found", {
-					id: newNode.id,
-					deviceClass: newNode.deviceClass,
-					supportedCCs,
-					controlledCCs,
-				});
-
-				this.driver.controllerLog.print(
-					`finished adding node ${newNode.id}:${
-						newNode.deviceClass
-							? `
-  basic device class:    ${
-								getEnumMemberName(
-									BasicDeviceClass,
-									newNode.deviceClass.basic,
-								)
-							}
-  generic device class:  ${newNode.deviceClass.generic.label}
-  specific device class: ${newNode.deviceClass.specific.label}`
-							: ""
-					}
-  supported CCs: ${
-						supportedCCs
-							.map((cc) =>
-								`\n  · ${CommandClasses[cc]} (${num2hex(cc)})`
-							)
-							.join("")
-					}
-  controlled CCs: ${
-						controlledCCs
-							.map((cc) =>
-								`\n  · ${CommandClasses[cc]} (${num2hex(cc)})`
-							)
-							.join("")
-					}`,
-				);
-				// remember the node
-				this._nodes.set(newNode.id, newNode);
-				this._nodePendingInclusion = undefined;
-
-				// We're communicating with the device, so assume it is alive
-				// If it is actually a sleeping device, it will be marked as such later
-				newNode.markAsAlive();
-
-				if (newNode.protocol == Protocols.ZWave) {
-					// Assign SUC return route to make sure the node knows where to get its routes from
-					newNode.hasSUCReturnRoute = await this
-						.assignSUCReturnRoutes(
-							newNode.id,
-						);
-				}
-
-				const opts = this._inclusionOptions;
-
-				let bootstrapFailure: SecurityBootstrapFailure | undefined;
-				let smartStartFailed = false;
-
-				// A controller performing a SmartStart network inclusion shall perform S2 bootstrapping,
-				// even if the joining node does not show the S2 Command Class in its supported Command Class list.
-				let forceAddedS2Support = false;
-				if (
-					opts.strategy === InclusionStrategy.SmartStart
-					&& !newNode.supportsCC(CommandClasses["Security 2"])
-				) {
-					this.driver.controllerLog.logNode(newNode.id, {
-						message:
-							"does not list S2 as supported, but was included using SmartStart which implies S2 support.",
-						level: "warn",
-					});
-
-					forceAddedS2Support = true;
-					newNode.addCC(CommandClasses["Security 2"], {
-						isSupported: true,
-						version: 1,
-					});
-				}
-
-				// The default inclusion strategy is: Use S2 if possible, only use S0 if necessary, use no encryption otherwise
-				if (
-					newNode.supportsCC(CommandClasses["Security 2"])
-					&& (opts.strategy === InclusionStrategy.Default
-						|| opts.strategy === InclusionStrategy.Security_S2
-						|| opts.strategy === InclusionStrategy.SmartStart)
-				) {
-					bootstrapFailure = await this.secureBootstrapS2(newNode);
-					const actualSecurityClass = newNode
-						.getHighestSecurityClass();
-
-					if (bootstrapFailure == undefined) {
-						if (actualSecurityClass == SecurityClass.S0_Legacy) {
-							// Notify user about potential S0 downgrade attack.
-							// S0 is considered insecure if both controller and node are S2-capable
-							bootstrapFailure =
-								SecurityBootstrapFailure.S0Downgrade;
-
-							this.driver.controllerLog.logNode(newNode.id, {
-								message:
-									"Possible S0 downgrade attack detected!",
-								level: "warn",
-							});
-						} else if (!securityClassIsS2(actualSecurityClass)) {
-							bootstrapFailure = SecurityBootstrapFailure.Unknown;
-						}
-					} else if (opts.strategy === InclusionStrategy.SmartStart) {
-						smartStartFailed = true;
-					}
-
-					if (
-						forceAddedS2Support
-						&& !securityClassIsS2(actualSecurityClass)
-					) {
-						// Remove the fake S2 support again
-						newNode.removeCC(CommandClasses["Security 2"]);
-					}
-				} else if (
-					newNode.supportsCC(CommandClasses.Security)
-					&& (opts.strategy === InclusionStrategy.Security_S0
-						|| (opts.strategy === InclusionStrategy.Default
-							&& (opts.forceSecurity
-								|| (
-									newNode.deviceClass?.specific
-										?? newNode.deviceClass?.generic
-								)?.requiresSecurity)))
-				) {
-					bootstrapFailure = await this.secureBootstrapS0(newNode);
-					if (bootstrapFailure == undefined) {
-						const actualSecurityClass = newNode
-							.getHighestSecurityClass();
-						if (actualSecurityClass == SecurityClass.S0_Legacy) {
-							// If the user chose this, i.e. InclusionStrategy.Security_S0 was used,
-							// then this is the expected outcome and not a failure
-							if (
-								opts.strategy !== InclusionStrategy.Security_S0
-							) {
-								// S0 is considered insecure if both controller and node are S2-capable
-								const nif = await newNode
-									.requestNodeInfo()
-									.catch(() => undefined);
-								if (
-									nif?.supportedCCs.includes(
-										CommandClasses["Security 2"],
-									)
-								) {
-									// Notify user about potential S0 downgrade attack.
-									bootstrapFailure =
-										SecurityBootstrapFailure.S0Downgrade;
-
-									this.driver.controllerLog.logNode(
-										newNode.id,
-										{
-											message:
-												"Possible S0 downgrade attack detected!",
-											level: "warn",
-										},
-									);
-								}
-							}
-						} else {
-							bootstrapFailure = SecurityBootstrapFailure.Unknown;
-						}
-					}
-				} else {
-					// Remember that no security classes were granted
-					for (const secClass of securityClassOrder) {
-						newNode.securityClasses.set(secClass, false);
-					}
-				}
-				this._includeController = false;
-
-				// After an unsuccessful SmartStart inclusion, the node MUST leave the network and return to SmartStart learn mode
-				// The controller should consider the node to be failed.
-				if (smartStartFailed) {
-					try {
-						this.driver.controllerLog.logNode(newNode.id, {
-							message:
-								"SmartStart inclusion failed. Checking if the node needs to be removed.",
-							level: "warn",
-						});
-
-						await this.removeFailedNodeInternal(
-							newNode.id,
-							RemoveNodeReason.SmartStartFailed,
-						);
-
-						this.driver.controllerLog.logNode(newNode.id, {
-							message: "was removed",
-						});
-
-						// The node was removed. Do not emit the "node added" event
-						this.setInclusionState(InclusionState.Idle);
-						return true;
-					} catch {
-						// The node could not be removed, continue
-						this.driver.controllerLog.logNode(newNode.id, {
-							message:
-								"The node is still part of the network, continuing with insecure communication.",
-							level: "warn",
-						});
-					}
-				}
-
-				this.setInclusionState(InclusionState.Idle);
-
-				// We're done adding this node, notify listeners
-				const result: InclusionResult = bootstrapFailure != undefined
-					? {
-						lowSecurity: true,
-						lowSecurityReason: bootstrapFailure,
-					}
-					: { lowSecurity: false };
-
-				this.emit("node added", newNode, result);
-
-				return true; // Don't invoke any more handlers
-			}
-		}
-		// not sure what to do with this message
-		return false;
-	}
-
-	/**
 	 * Is called when an ReplaceFailed request is received from the controller.
 	 * Handles and controls the replace process.
 	 */
@@ -4429,6 +4599,7 @@ export class ZWaveController
 					if (strategy === InclusionStrategy.Security_S2) {
 						bootstrapFailure = await this.secureBootstrapS2(
 							newNode,
+							this._inclusionOptions,
 							true,
 						);
 						if (bootstrapFailure == undefined) {
@@ -4738,7 +4909,6 @@ export class ZWaveController
 		return {
 			priority: TaskPriority.Lower,
 			tag: { id: "rebuild-routes" },
-			// @ts-expect-error FIXME: Figure out why the return types are not compatible
 			task: async function* rebuildRoutesTask() {
 				// We work our way outwards from the controller and start with non-sleeping nodes, one by one
 				try {
@@ -4757,8 +4927,9 @@ export class ZWaveController
 					let result: boolean;
 					try {
 						const node = self.nodes.getOrThrow(nodeId);
-						result = yield () =>
-							self.getRebuildNodeRoutesTask(node);
+						result = yield* waitFor(
+							self.getRebuildNodeRoutesTask(node),
+						);
 					} catch {
 						result = false;
 					}
@@ -4825,9 +4996,7 @@ export class ZWaveController
 						const wakeUpPromise = Promise.race(
 							wakeupPromises.values(),
 						);
-						const wokenUpNode = (
-							yield () => wakeUpPromise
-						) as Awaited<typeof wakeUpPromise>;
+						const wokenUpNode = yield* waitFor(wakeUpPromise);
 						if (wokenUpNode.status === NodeStatus.Asleep) {
 							// The node has gone to sleep again since the promise was resolved. Wait again
 							wakeupPromises.set(
@@ -4971,7 +5140,7 @@ export class ZWaveController
 				if (
 					node.canSleep && node.supportsCC(CommandClasses["Wake Up"])
 				) {
-					yield () => node.waitForWakeup();
+					yield* waitFor(node.waitForWakeup());
 				}
 
 				self.driver.controllerLog.logNode(node.id, {
@@ -6380,96 +6549,142 @@ export class ZWaveController
 		reason: RemoveNodeReason,
 	): Promise<void> {
 		const node = this.nodes.getOrThrow(nodeId);
+		const task = this.getRemoveFailedNodeTask(node, reason);
+		if (task instanceof Promise) return task;
 
-		// It is possible that this method is called while the node is still in the process of resetting or leaving the network
-		// Therefore, we ping multiple times in case of success and wait a bit in between
-		let didFail = false;
-		const MAX_ATTEMPTS = 3;
-		for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-			if (await node.ping()) {
-				if (attempt < MAX_ATTEMPTS) await wait(2000);
-				continue;
-			}
-
-			didFail = true;
-			break;
-		}
-		if (!didFail) {
-			throw new ZWaveError(
-				`The node removal process could not be started because the node responded to a ping.`,
-				ZWaveErrorCodes.RemoveFailedNode_Failed,
-			);
+		// By default, the task cannot happen during an inclusion. By deleting
+		// the concurrency group, we allow it to run anyways.
+		if (reason === RemoveNodeReason.SmartStartFailed) {
+			delete task.group;
 		}
 
-		const result = await this.driver.sendMessage<
-			RemoveFailedNodeRequestStatusReport | RemoveFailedNodeResponse
-		>(new RemoveFailedNodeRequest({ failedNodeId: nodeId }));
+		return this.driver.scheduler.queueTask(task);
+	}
 
-		if (result instanceof RemoveFailedNodeResponse) {
-			// This implicates that the process was unsuccessful.
-			let message =
-				`The node removal process could not be started due to the following reasons:`;
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.NotPrimaryController
-				)
-			) {
-				message += "\n· This controller is not the primary controller";
-			}
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.NodeNotFound
-				)
-			) {
-				message +=
-					`\n· Node ${nodeId} is not in the list of failed nodes`;
-			}
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.RemoveProcessBusy
-				)
-			) {
-				message += `\n· The node removal process is currently busy`;
-			}
-			if (
-				!!(
-					result.removeStatus
-					& RemoveFailedNodeStartFlags.RemoveFailed
-				)
-			) {
-				message +=
-					`\n· The controller is busy or the node has responded`;
-			}
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.RemoveFailedNode_Failed,
-			);
-		} else {
-			switch (result.removeStatus) {
-				case RemoveFailedNodeStatus.NodeOK:
+	private getRemoveFailedNodeTask(
+		node: ZWaveNode,
+		reason: RemoveNodeReason,
+	): Promise<void> | TaskBuilder<void> {
+		const existingTask = this.driver.scheduler.findTask<void>((t) =>
+			t.tag?.id === "remove-failed-node" && t.tag.nodeId === node.id
+		);
+		if (existingTask) return existingTask;
+
+		const self = this;
+
+		// FIXME: We should probably disable smart start temporarily, just like replacing a failed node does
+
+		return {
+			// The priority must be high, so it can be nested in the inclusion task when necessary
+			priority: TaskPriority.High,
+			tag: { id: "remove-failed-node", nodeId: node.id },
+			group: {
+				id: "inclusion-exclusion",
+			},
+			task: async function* removeFailedNodeTask() {
+				// It is possible that this method is called while the node is still in the process of resetting or leaving the network
+				// Therefore, we ping multiple times in case of success and wait a bit in between
+				let didFail = false;
+				const MAX_ATTEMPTS = 3;
+				for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+					const pingResult = yield* waitFor(node.ping());
+					if (pingResult) {
+						if (attempt < MAX_ATTEMPTS) yield* waitFor(wait(2000));
+						continue;
+					}
+
+					didFail = true;
+					break;
+				}
+				if (!didFail) {
 					throw new ZWaveError(
-						`The node could not be removed because it has responded`,
-						ZWaveErrorCodes.RemoveFailedNode_NodeOK,
-					);
-				case RemoveFailedNodeStatus.NodeNotRemoved:
-					throw new ZWaveError(
-						`The removal process could not be completed`,
+						`The node removal process could not be started because the node responded to a ping.`,
 						ZWaveErrorCodes.RemoveFailedNode_Failed,
 					);
-				default:
-					// If everything went well, the status is RemoveFailedNodeStatus.NodeRemoved
+				}
 
-					// Emit the removed event so the driver and applications can react
-					this.emit("node removed", this.nodes.get(nodeId)!, reason);
-					// and forget the node
-					this._nodes.delete(nodeId);
+				const result = await self.driver.sendMessage<
+					| RemoveFailedNodeRequestStatusReport
+					| RemoveFailedNodeResponse
+				>(
+					new RemoveFailedNodeRequest({
+						failedNodeId: node.id,
+					}),
+				);
 
-					return;
-			}
-		}
+				if (result instanceof RemoveFailedNodeResponse) {
+					// This implicates that the process was unsuccessful.
+					let message =
+						`The node removal process could not be started due to the following reasons:`;
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.NotPrimaryController
+						)
+					) {
+						message +=
+							"\n· This controller is not the primary controller";
+					}
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.NodeNotFound
+						)
+					) {
+						message +=
+							`\n· Node ${node.id} is not in the list of failed nodes`;
+					}
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.RemoveProcessBusy
+						)
+					) {
+						message +=
+							`\n· The node removal process is currently busy`;
+					}
+					if (
+						!!(
+							result.removeStatus
+							& RemoveFailedNodeStartFlags.RemoveFailed
+						)
+					) {
+						message +=
+							`\n· The controller is busy or the node has responded`;
+					}
+					throw new ZWaveError(
+						message,
+						ZWaveErrorCodes.RemoveFailedNode_Failed,
+					);
+				} else {
+					switch (result.removeStatus) {
+						case RemoveFailedNodeStatus.NodeOK:
+							throw new ZWaveError(
+								`The node could not be removed because it has responded`,
+								ZWaveErrorCodes.RemoveFailedNode_NodeOK,
+							);
+						case RemoveFailedNodeStatus.NodeNotRemoved:
+							throw new ZWaveError(
+								`The removal process could not be completed`,
+								ZWaveErrorCodes.RemoveFailedNode_Failed,
+							);
+						default:
+							// If everything went well, the status is RemoveFailedNodeStatus.NodeRemoved
+
+							// Emit the removed event so the driver and applications can react
+							self.emit(
+								"node removed",
+								node,
+								reason,
+							);
+							// and forget the node
+							self._nodes.delete(node.id);
+
+							return;
+					}
+				}
+			},
+		};
 	}
 
 	/**

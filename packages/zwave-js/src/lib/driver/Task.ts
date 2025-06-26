@@ -22,6 +22,15 @@ export type TaskTag =
 		// Perform an OTA firmware update for a node
 		id: "firmware-update-ota";
 		nodeId: number;
+	}
+	| {
+		// Handle inclusion of a node
+		id: "inclusion";
+	}
+	| {
+		// Remove a failed node
+		id: "remove-failed-node";
+		nodeId: number;
 	};
 
 export type Task<T> = WaddleTask<T, TaskTag, ZWaveError>;
