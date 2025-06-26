@@ -707,8 +707,8 @@
 		},
 		{
 			"#": "109[0xff]",
-			"label": "After Hours Time Range Start Hour",
-			"description": "The UTC hour where After Hours mode should start",
+			"label": "After Hours Time Range End Minute",
+			"description": "The minute where After Hours mode should end",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 23,
@@ -716,8 +716,8 @@
 		},
 		{
 			"#": "109[0xff00]",
-			"label": "After Hours Time Range Start Minute",
-			"description": "The minute where After Hours mode should start",
+			"label": "After Hours Time Range End Hour",
+			"description": "The UTC hour where After Hours mode should end",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 59,
@@ -725,8 +725,8 @@
 		},
 		{
 			"#": "109[0xff0000]",
-			"label": "After Hours Time Range End Hour",
-			"description": "The UTC hour where After Hours mode should end",
+			"label": "After Hours Time Range Start Minute",
+			"description": "The minute where After Hours mode should start",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 23,
@@ -734,8 +734,8 @@
 		},
 		{
 			"#": "109[0xff000000]",
-			"label": "After Hours Time Range End Minute",
-			"description": "The minute where After Hours mode should end",
+			"label": "After Hours Time Range Start Hour",
+			"description": "The UTC hour where After Hours mode should start",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 59,
