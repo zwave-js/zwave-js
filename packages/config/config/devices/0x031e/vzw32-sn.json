@@ -1002,41 +1002,6 @@
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "Double-Tap Config to Clear Notification",
 			"defaultValue": 0
-		},
-		{
-			"#": "107",
-			"label": "mmWave Target Info Report",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"isAdvanced": true,
-			// Inovelli parameter for advanced mmwave debugging. Not needed in most cases.
-			// Used to enable sending of frequent mmwave data to controller so it may
-			// cause excess network traffic if enabled.
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Enabled",
-					"value": 1
-				}
-			]
-		},
-		{
-			"#": "116",
-			"label": "mmWave Person in the Reporting Areas",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 4294967295,
-			"defaultValue": 0,
-			"isAdvanced": true,
-			// Inovelli parameter for advanced mmwave debugging. Not needed in most cases.
-			// Used to show which reporting area has presence (1-4). Can be used in future
-			// releases when more reporting areas are enabled.
-			"unsigned": true,
-			"readOnly": true
 		}
 	],
 	"metadata": {
