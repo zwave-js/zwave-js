@@ -221,7 +221,7 @@ import {
 	RemoveNodeStatus,
 	RemoveNodeType,
 	ReplaceFailedNodeRequest,
-	type ReplaceFailedNodeRequestStatusReport,
+	ReplaceFailedNodeRequestStatusReport,
 	type ReplaceFailedNodeResponse,
 	ReplaceFailedNodeStartFlags,
 	ReplaceFailedNodeStatus,
@@ -421,10 +421,6 @@ export class ZWaveController
 		});
 
 		// register message handlers
-		driver.registerRequestHandler(
-			FunctionType.ReplaceFailedNode,
-			this.handleReplaceNodeStatusReport.bind(this),
-		);
 		driver.registerRequestHandler(
 			FunctionType.SetLearnMode,
 			this.handleLearnModeCallback.bind(this),
@@ -2089,10 +2085,6 @@ export class ZWaveController
 	}
 
 	private _smartStartEnabled: boolean = false;
-
-	private _inclusionOptions: InclusionOptionsInternal | undefined;
-	private _nodePendingReplace: ZWaveNode | undefined;
-	private _replaceFailedPromise: DeferredPromise<boolean> | undefined;
 
 	/**
 	 * Starts the inclusion process of new nodes.
@@ -4693,171 +4685,6 @@ export class ZWaveController
 		}
 	}
 
-	/**
-	 * Is called when an ReplaceFailed request is received from the controller.
-	 * Handles and controls the replace process.
-	 */
-	private async handleReplaceNodeStatusReport(
-		msg: ReplaceFailedNodeRequestStatusReport,
-	): Promise<boolean> {
-		this.driver.controllerLog.print(
-			`handling replace node request (status = ${
-				ReplaceFailedNodeStatus[msg.replaceStatus]
-			})`,
-		);
-
-		if (this._inclusionOptions == undefined) {
-			this.driver.controllerLog.print(
-				`  currently NOT replacing a node, ignoring it...`,
-			);
-			return true; // Don't invoke any more handlers
-		}
-
-		switch (msg.replaceStatus) {
-			case ReplaceFailedNodeStatus.NodeOK:
-				this.setInclusionState(InclusionState.Idle);
-				this._replaceFailedPromise?.reject(
-					new ZWaveError(
-						`The node could not be replaced because it has responded`,
-						ZWaveErrorCodes.ReplaceFailedNode_NodeOK,
-					),
-				);
-				break;
-			case ReplaceFailedNodeStatus.FailedNodeReplaceFailed:
-				this.setInclusionState(InclusionState.Idle);
-				this._replaceFailedPromise?.reject(
-					new ZWaveError(
-						`The failed node has not been replaced`,
-						ZWaveErrorCodes.ReplaceFailedNode_Failed,
-					),
-				);
-				break;
-			case ReplaceFailedNodeStatus.FailedNodeReplace:
-				// failed node is now ready to be replaced and controller is ready to add a new
-				// node with the nodeID of the failed node
-				this.driver.controllerLog.print(
-					`The failed node is ready to be replaced, inclusion started...`,
-				);
-				this.emit("inclusion started", this._inclusionOptions.strategy);
-				this.setInclusionState(InclusionState.Including);
-				this._replaceFailedPromise?.resolve(true);
-
-				// stop here, don't emit inclusion failed
-				return true;
-			case ReplaceFailedNodeStatus.FailedNodeReplaceDone:
-				this.driver.controllerLog.print(`The failed node was replaced`);
-				this.emit("inclusion stopped");
-
-				if (this._nodePendingReplace) {
-					this.emit(
-						"node removed",
-						this._nodePendingReplace,
-						RemoveNodeReason.Replaced,
-					);
-					this._nodes.delete(this._nodePendingReplace.id);
-
-					// We're technically done with the replacing but should not include
-					// anything else until the node has been bootstrapped
-					this.setInclusionState(InclusionState.Busy);
-
-					// Create a fresh node instance and forget the old one
-					const newNode = new ZWaveNode(
-						this._nodePendingReplace.id,
-						this.driver,
-						undefined,
-						undefined,
-						undefined,
-						// Create an empty value DB and specify that it contains no values
-						// to avoid indexing the existing values
-						this.createValueDBForNode(
-							this._nodePendingReplace.id,
-							new Set(),
-						),
-					);
-					this._nodePendingReplace = undefined;
-					this._nodes.set(newNode.id, newNode);
-
-					this.emit("node found", {
-						id: newNode.id,
-					});
-
-					// We're communicating with the device, so assume it is alive
-					// If it is actually a sleeping device, it will be marked as such later
-					newNode.markAsAlive();
-
-					if (newNode.protocol == Protocols.ZWave) {
-						// Assign SUC return route to make sure the node knows where to get its routes from
-						newNode.hasSUCReturnRoute = await this
-							.assignSUCReturnRoutes(newNode.id);
-					}
-
-					// Try perform the security bootstrap process. When replacing a node, we don't know any supported CCs
-					// yet, so we need to trust the chosen inclusion strategy.
-					const strategy = this._inclusionOptions.strategy;
-					let bootstrapFailure: SecurityBootstrapFailure | undefined;
-					if (strategy === InclusionStrategy.Security_S2) {
-						bootstrapFailure = await this.secureBootstrapS2(
-							newNode,
-							this._inclusionOptions,
-							true,
-						);
-						if (bootstrapFailure == undefined) {
-							const actualSecurityClass = newNode
-								.getHighestSecurityClass();
-							if (
-								actualSecurityClass == undefined
-								|| actualSecurityClass
-									< SecurityClass.S2_Unauthenticated
-							) {
-								bootstrapFailure =
-									SecurityBootstrapFailure.Unknown;
-							}
-						}
-					} else if (strategy === InclusionStrategy.Security_S0) {
-						bootstrapFailure = await this.secureBootstrapS0(
-							newNode,
-							true,
-						);
-						if (bootstrapFailure == undefined) {
-							const actualSecurityClass = newNode
-								.getHighestSecurityClass();
-							if (
-								actualSecurityClass == undefined
-								|| actualSecurityClass < SecurityClass.S0_Legacy
-							) {
-								bootstrapFailure =
-									SecurityBootstrapFailure.Unknown;
-							}
-						}
-					} else {
-						// Remember that no security classes were granted
-						for (const secClass of securityClassOrder) {
-							newNode.securityClasses.set(secClass, false);
-						}
-					}
-
-					// We're done adding this node, notify listeners. This also kicks off the node interview
-					const result: InclusionResult =
-						bootstrapFailure != undefined
-							? {
-								lowSecurity: true,
-								lowSecurityReason: bootstrapFailure,
-							}
-							: { lowSecurity: false };
-
-					this.setInclusionState(InclusionState.Idle);
-					this.emit("node added", newNode, result);
-				}
-
-				// stop here, don't emit inclusion failed
-				return true;
-		}
-
-		this.emit("inclusion failed");
-
-		return false; // Don't invoke any more handlers
-	}
-
 	private _rebuildRoutesProgress = new Map<number, RebuildRoutesStatus>();
 	/**
 	 * If routes are currently being rebuilt for the entire network, this returns the current progress.
@@ -6663,8 +6490,6 @@ export class ZWaveController
 
 		const self = this;
 
-		// FIXME: We should probably disable smart start temporarily, just like replacing a failed node does
-
 		return {
 			// The priority must be high, so it can be nested in the inclusion task when necessary
 			priority: TaskPriority.High,
@@ -6810,39 +6635,87 @@ export class ZWaveController
 			return false;
 		}
 
-		// Leave SmartStart listening mode so we can switch to exclusion mode
-		await this.pauseSmartStart();
+		const node = this._nodes.getOrThrow(nodeId);
 
-		this.setInclusionState(InclusionState.Busy);
+		const startedPromise = createDeferredPromise<void>();
+		void this.driver.scheduler.queueTask(this.getReplaceFailedNodeTask(
+			startedPromise,
+			node,
+			options,
+		)).catch(noop); // Errors will be exposed through events
 
-		this.driver.controllerLog.print(
+		// Wait for the inclusion to actually start, then return to the caller
+		await startedPromise;
+		return true;
+	}
+
+	/**
+	 * Returns the task to handle the complete exclusion process
+	 */
+	private getReplaceFailedNodeTask(
+		startedPromise: DeferredPromise<void>,
+		node: ZWaveNode,
+		options: ReplaceNodeOptions,
+	): TaskBuilder<void> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "replace-failed-node", nodeId: node.id },
+			group: { id: "inclusion-exclusion" },
+			task: async function*() {
+				yield* self.replaceFailedNodeTask(
+					startedPromise,
+					node,
+					options,
+				);
+			},
+		};
+	}
+
+	private async *replaceFailedNodeTask(
+		startedPromise: DeferredPromise<void>,
+		node: ZWaveNode,
+		options: ReplaceNodeOptions,
+	): AsyncGenerator<any, void, any> {
+		const self = this;
+
+		// Leave SmartStart listening mode so we can switch to replace mode
+		yield* waitFor(self.pauseSmartStart());
+
+		self.setInclusionState(InclusionState.Busy);
+
+		self.driver.controllerLog.print(
 			`starting replace failed node process...`,
 		);
 
-		const node = this.nodes.getOrThrow(nodeId);
 		if (await node.ping()) {
-			this.setInclusionState(InclusionState.Idle);
-			throw new ZWaveError(
-				`The node replace process could not be started because the node responded to a ping.`,
-				ZWaveErrorCodes.ReplaceFailedNode_Failed,
+			self.setInclusionState(InclusionState.Idle);
+			startedPromise.reject(
+				new ZWaveError(
+					`The node replace process could not be started because the node responded to a ping.`,
+					ZWaveErrorCodes.ReplaceFailedNode_Failed,
+				),
 			);
+			return;
 		}
 
-		this._inclusionOptions = options;
-
-		const result = await this.driver.sendMessage<ReplaceFailedNodeResponse>(
-			new ReplaceFailedNodeRequest({
-				failedNodeId: nodeId,
-			}),
+		// Kick off the replace process
+		const startResult = yield* waitFor(
+			self.driver.sendMessage<ReplaceFailedNodeResponse>(
+				new ReplaceFailedNodeRequest({
+					failedNodeId: node.id,
+				}),
+			),
 		);
 
-		if (!result.isOK()) {
+		if (!startResult.isOK()) {
 			// This implicates that the process was unsuccessful.
 			let message =
 				`The node replace process could not be started due to the following reasons:`;
 			if (
 				!!(
-					result.replaceStatus
+					startResult.replaceStatus
 					& ReplaceFailedNodeStartFlags.NotPrimaryController
 				)
 			) {
@@ -6850,16 +6723,16 @@ export class ZWaveController
 			}
 			if (
 				!!(
-					result.replaceStatus
+					startResult.replaceStatus
 					& ReplaceFailedNodeStartFlags.NodeNotFound
 				)
 			) {
 				message +=
-					`\n· Node ${nodeId} is not in the list of failed nodes`;
+					`\n· Node ${node.id} is not in the list of failed nodes`;
 			}
 			if (
 				!!(
-					result.replaceStatus
+					startResult.replaceStatus
 					& ReplaceFailedNodeStartFlags.ReplaceProcessBusy
 				)
 			) {
@@ -6867,24 +6740,202 @@ export class ZWaveController
 			}
 			if (
 				!!(
-					result.replaceStatus
+					startResult.replaceStatus
 					& ReplaceFailedNodeStartFlags.ReplaceFailed
 				)
 			) {
 				message +=
 					`\n· The controller is busy or the node has responded`;
 			}
-			this.setInclusionState(InclusionState.Idle);
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.ReplaceFailedNode_Failed,
+
+			self.setInclusionState(InclusionState.Idle);
+
+			startedPromise.reject(
+				new ZWaveError(
+					message,
+					ZWaveErrorCodes.ReplaceFailedNode_Failed,
+				),
 			);
-		} else {
-			// Remember which node we're trying to replace
-			this._nodePendingReplace = this.nodes.get(nodeId);
-			this._replaceFailedPromise = createDeferredPromise();
-			return this._replaceFailedPromise;
+			return;
 		}
+
+		// Starting was successful, now handle the actual replacement
+
+		/** Waits for the next ReplaceFailedNode status report and aborts if the status indicates failure */
+		async function* awaitStatusReport() {
+			const msg = yield* waitFor(
+				self.driver.waitForMessage(
+					(msg) =>
+						msg
+							instanceof ReplaceFailedNodeRequestStatusReport,
+					60000, // 60 seconds // FIXME: double-check
+					// FIXME: Do we need to store the AbortController?
+				),
+			);
+
+			if (msg.replaceStatus === ReplaceFailedNodeStatus.NodeOK) {
+				startedPromise.reject(
+					new ZWaveError(
+						`The node could not be replaced because it has responded`,
+						ZWaveErrorCodes.ReplaceFailedNode_NodeOK,
+					),
+				);
+				self.setInclusionState(InclusionState.Idle);
+				self.emit("inclusion failed");
+				return;
+			}
+
+			if (
+				msg.replaceStatus
+					=== ReplaceFailedNodeStatus.FailedNodeReplaceFailed
+			) {
+				startedPromise.reject(
+					new ZWaveError(
+						`The failed node has not been replaced`,
+						ZWaveErrorCodes.ReplaceFailedNode_Failed,
+					),
+				);
+				self.setInclusionState(InclusionState.Idle);
+				self.emit("inclusion failed");
+				return;
+			}
+
+			// Unless the status indicates failure, return the report
+			return msg;
+		}
+
+		// Step 1: Wait for FailedNodeReplace
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			if (
+				msg.replaceStatus !== ReplaceFailedNodeStatus.FailedNodeReplace
+			) {
+				// Unexpected status, abort
+				return;
+			}
+
+			self.driver.controllerLog.print(
+				`The failed node is ready to be replaced, inclusion started...`,
+			);
+			self.emit("inclusion started", options.strategy);
+			self.setInclusionState(InclusionState.Including);
+			startedPromise.resolve();
+		}
+
+		// Step 2: Inclusion is being handled by the protocol, wait for it
+		// to be done
+		{
+			const msg = yield* awaitStatusReport();
+			if (!msg) return; // Failed
+
+			if (
+				msg.replaceStatus
+					!== ReplaceFailedNodeStatus.FailedNodeReplaceDone
+			) {
+				// Unexpected status, abort
+				return;
+			}
+		}
+
+		self.driver.controllerLog.print(`The failed node was replaced`);
+		self.emit("inclusion stopped");
+
+		this.emit(
+			"node removed",
+			node,
+			RemoveNodeReason.Replaced,
+		);
+		this._nodes.delete(node.id);
+
+		// We're technically done with the replacing but should not include
+		// anything else until the node has been bootstrapped
+		this.setInclusionState(InclusionState.Busy);
+
+		// Create a fresh node instance and forget the old one
+		const newNode = new ZWaveNode(
+			node.id,
+			this.driver,
+			undefined,
+			undefined,
+			undefined,
+			// Create an empty value DB and specify that it contains no values
+			// to avoid indexing the existing values
+			this.createValueDBForNode(
+				node.id,
+				new Set(),
+			),
+		);
+		this._nodes.set(newNode.id, newNode);
+
+		this.emit("node found", {
+			id: newNode.id,
+		});
+
+		// We're communicating with the device, so assume it is alive
+		// If it is actually a sleeping device, it will be marked as such later
+		newNode.markAsAlive();
+
+		if (newNode.protocol == Protocols.ZWave) {
+			// Assign SUC return route to make sure the node knows where to get its routes from
+			newNode.hasSUCReturnRoute = await this
+				.assignSUCReturnRoutes(newNode.id);
+		}
+
+		// Try perform the security bootstrap process. When replacing a node, we don't know any supported CCs
+		// yet, so we need to trust the chosen inclusion strategy.
+		const strategy = options.strategy;
+		let bootstrapFailure: SecurityBootstrapFailure | undefined;
+		if (strategy === InclusionStrategy.Security_S2) {
+			bootstrapFailure = await this.secureBootstrapS2(
+				newNode,
+				options,
+				true,
+			);
+			if (bootstrapFailure == undefined) {
+				const actualSecurityClass = newNode
+					.getHighestSecurityClass();
+				if (
+					actualSecurityClass == undefined
+					|| actualSecurityClass
+						< SecurityClass.S2_Unauthenticated
+				) {
+					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+				}
+			}
+		} else if (strategy === InclusionStrategy.Security_S0) {
+			bootstrapFailure = await this.secureBootstrapS0(
+				newNode,
+				true,
+			);
+			if (bootstrapFailure == undefined) {
+				const actualSecurityClass = newNode
+					.getHighestSecurityClass();
+				if (
+					actualSecurityClass == undefined
+					|| actualSecurityClass < SecurityClass.S0_Legacy
+				) {
+					bootstrapFailure = SecurityBootstrapFailure.Unknown;
+				}
+			}
+		} else {
+			// Remember that no security classes were granted
+			for (const secClass of securityClassOrder) {
+				newNode.securityClasses.set(secClass, false);
+			}
+		}
+
+		// We're done adding this node, notify listeners. This also kicks off the node interview
+		const inclusionResult: InclusionResult = bootstrapFailure != undefined
+			? {
+				lowSecurity: true,
+				lowSecurityReason: bootstrapFailure,
+			}
+			: { lowSecurity: false };
+
+		this.setInclusionState(InclusionState.Idle);
+		this.emit("node added", newNode, inclusionResult);
 	}
 
 	/** Configure the RF region at the Z-Wave API Module */

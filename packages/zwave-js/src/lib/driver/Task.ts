@@ -35,6 +35,11 @@ export type TaskTag =
 		// Remove a failed node
 		id: "remove-failed-node";
 		nodeId: number;
+	}
+	| {
+		// Replace a failed node
+		id: "replace-failed-node";
+		nodeId: number;
 	};
 
 export type Task<T> = WaddleTask<T, TaskTag, ZWaveError>;
