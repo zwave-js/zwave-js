@@ -4,6 +4,26 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+In this release, we reworked the inclusion, exclusion, remove failed and replace failed node processes. Under the hood, they are now driven by the task scheduler that was introduced in v13.5.0. This gives us more control over their execution and prevents individual processes from interfering with each other, especially the removal of nodes that failed to include via SmartStart. Previously this could lead to some odd issues.
+
+### Features
+* The OTW firmware flasher CLI and web flasher now support ZIP files containing a single firmware image (#7892)
+* Pinging a node no longer uses automatic route resolution or explorer frames by default. This massively reduces latency in the case of communication failures (a few hundred milliseconds vs. several seconds). The old behavior can be restored using a new option to the `ping` method (#7903)
+
+### Bugfixes
+* Migrate inclusion, exclusion, remove failed and replace failed node processes to tasks and ensure they do not interfere with each other (#7904, #7910, #7913, #7915, #7916, #7917, #7918)
+* The routing statistics for LR nodes are now initialized on startup to indicate a direct connection (#7900)
+
+### Config file changes
+* Add Aeotec Z-Stick 10 Pro (#7906)
+* Clean up inclusion/exclusion/reset instructions in many more config files (#7873, #7893)
+* Fixed an issue with Yale YRD226 and similar locks where the number of user codes was not stored during the interview (#7890)
+* Add Shelly Wave Dimmer, Motion and H&T (#7891)
+
+### Changes under the hood
+* The repository now contains instructions that should make it more productive to work with GitHub Copilot (#7898, #7899)
+
 ## 15.7.0 (2025-06-17)
 ### Features
 * Zniffer: Support loading existing captures from file or a buffer (#7889)
