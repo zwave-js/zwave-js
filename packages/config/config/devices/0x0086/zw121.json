@@ -373,9 +373,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, press the Action Button on the LED Strip Controller",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, press the Action Button on the LED Strip Controller",
-		"reset": "Press and hold the Action Button on the LED Strip Controller for 20 seconds and then release it.\nUse this procedure only in the event that your primary network controller is missing or inoperable",
+		"inclusion": "Press the Action Button on the LED Strip Controller.",
+		"exclusion": "Press the Action Button on the LED Strip Controller.",
+		"reset": "Press and hold the Action Button on the LED Strip Controller for 20 seconds and then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1963/LED%20Strip%20manual.pdf"
 	}
 }

@@ -119,9 +119,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Insert a CR123A, and LED blinks. \nSet the controller to the status for “Add”.\nPress the button over 3 seconds and release.\nAbout 30 second later, LED turns off when “Add” is completed.",
-		"exclusion": "Set the controller to the status for “Remove”.\nPress the button over 3 seconds and release.\nLED blinks when “Remove” is completed.",
-		"reset": "Press the button over 10 seconds and release",
+		"inclusion": "1. Insert a CR123A battery and LED blinks.\n2. Press the button for over 3 seconds and release.\n3. LED turns off when completed.",
+		"exclusion": "1. Press the button for over 3 seconds and release.\n2. LED blinks when completed.",
+		"reset": "Press the button for more than 10 seconds and release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2852/UsersGuide%20DN3G6JA069%20rev1.pdf"
 	}
 }

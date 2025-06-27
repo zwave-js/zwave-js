@@ -22,9 +22,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "Press On/OFF button for 5 seconds till hearing beep once.\nWhen inclusion completes, you will hear ‘beep’ sound with voice message alert. When inclusion completes, Connection LED will be on.",
-		"exclusion": "Press On/OFF button for 5 seconds till hearing beep once.\nWhen exclusion completes, you will hear ‘beep’ sound with voice message alert. When exclusion completes, Connection LED will be off. (The same as the inclusion method)",
-		"reset": "Press On/OFF button for 10 seconds till hearing beep once.\n When reset completes, you will hear ‘beep’ sound with voice message alert.\n(Reset function, the primary controller will be used only when does not exist or inoperative.)",
+		"inclusion": "Press the On/Off button for 5 seconds until you hear one beep. When inclusion completes, you will hear a 'beep' sound with voice message alert and the Connection LED will turn on.",
+		"exclusion": "Press the On/Off button for 5 seconds until you hear one beep. When exclusion completes, you will hear a 'beep' sound with voice message alert and the Connection LED will turn off.",
+		"reset": "Press the On/Off button for 10 seconds until you hear one beep. When reset completes, you will hear a 'beep' sound with voice message alert.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1884/Product%20Manual.pdf"
 	}
 }

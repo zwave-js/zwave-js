@@ -119,9 +119,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "STEP 1: Ensure the RF LED is flashing on the SIR 321, if not than follow ‘Exclusion’ steps first.\nSTEP 2: Put the third party controller into inclusion mode.\nSTEP 3: Press and hold the pairing button on the SIR 321 until the RF LED start flashing at a fast rate. Then release the button.\nThe SIR 321 has been added onto the network when the RF LED stop flashing",
-		"exclusion": "STEP 1: Put the third party controller into exclusion mode.\nSTEP 2: Press and hold the pairing button on the SIR 321 until the RF LED start flashing at a fast rate. Then release the button.\nThe SIR 321 has been removed from the network when the RF LED starts flashing",
-		"reset": "\"Please use this procedure only when the primary controller is missing or otherwise inoperable.\"\n\nPress pairing button and boost button simultaneously until RF LED starts flashing to put the device in a factory default mode, all the configuration and association set to factory default and removing the device from Z-wave network",
+		"inclusion": "1. Ensure the RF LED is flashing\n2. Press and hold the pairing button until the RF LED starts flashing at a fast rate, then release\n3. The RF LED stops flashing when successful",
+		"exclusion": "Press and hold the pairing button until the RF LED starts flashing at a fast rate, then release. The RF LED starts flashing when successful.",
+		"reset": "Press the pairing button and boost button simultaneously until the RF LED starts flashing.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4045/SIR321%20BGX501-867%20R07.pdf"
 	}
 }

@@ -4,7 +4,7 @@
 
 const zjsLogRegex =
 	/\[.*\]\(http.*zwavejs_.*\.(log|txt|zip|t?gz|(log|txt)\.(zip|t?gz))\)/;
-const markdownLinkRegex = /\[.*\]\(http.*\)/;
+const markdownLinkRegex = /\[.*\]\(http.*?\)/;
 const codeBlockRegex = /`{3,4}(.*?)`{3,4}/s;
 
 const LOGFILE_COMMENT_TAG = "<!-- LOGFILE_COMMENT_TAG -->";

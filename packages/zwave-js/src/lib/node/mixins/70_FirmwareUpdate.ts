@@ -32,6 +32,7 @@ import {
 } from "@zwave-js/core";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName, throttle } from "@zwave-js/shared";
+import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
 import {
@@ -567,7 +568,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 						// If we've resumed the previous file, there's no need to resume the next one too
 						shouldResume = false;
 
-						yield () => wait(conservativeWaitTime * 1000, true);
+						yield* waitFor(wait(conservativeWaitTime * 1000, true));
 					}
 				}
 
@@ -775,14 +776,15 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		// On some devices the response can take a minute or so to be received,
 		// probably because of a manual out-of-band activation.
 		if (!result) {
-			result = (yield () =>
+			result = yield* waitFor(
 				this.driver
 					.waitForCommand(
-						(cc) =>
+						(cc): cc is FirmwareUpdateMetaDataCCRequestReport =>
 							cc instanceof FirmwareUpdateMetaDataCCRequestReport
 							&& cc.nodeId === this.id,
 						60000,
-					)) as FirmwareUpdateMetaDataCCRequestReport;
+					),
+			);
 		}
 
 		switch (result.status) {
@@ -974,7 +976,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 				this._firmwareUpdatePrematureRequest = undefined;
 			} else {
 				try {
-					fragmentRequest = yield () =>
+					fragmentRequest = yield* waitFor(
 						this.driver
 							.waitForCommand<FirmwareUpdateMetaDataCCGet>(
 								(cc) =>
@@ -984,7 +986,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 								// Wait up to 2 minutes for each fragment request.
 								// Some users try to update devices with unstable connections, where 30s can be too short.
 								timespan.minutes(2),
-							);
+							),
+					);
 				} catch {
 					// In some cases it can happen that the device stops requesting update frames
 					// We need to timeout the update in this case so it can be restarted
@@ -1101,10 +1104,10 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 		const statusReport:
 			| FirmwareUpdateMetaDataCCStatusReport
-			| undefined = yield () =>
+			| undefined = yield* waitFor(
 				this.driver
 					.waitForCommand(
-						(cc) =>
+						(cc): cc is FirmwareUpdateMetaDataCCStatusReport =>
 							cc.nodeId === this.id
 							&& cc
 								instanceof FirmwareUpdateMetaDataCCStatusReport,
@@ -1112,7 +1115,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 						// don't say anything specific
 						5 * 60000,
 					)
-					.catch(() => undefined);
+					.catch(() => undefined),
+			);
 
 		if (abortContext.abort) {
 			abortContext.abortPromise.resolve(

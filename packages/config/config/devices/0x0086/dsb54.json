@@ -41,8 +41,7 @@
 		{
 			"#": "111",
 			"$import": "templates/aeotec_template.json#low_battery_interval",
-			"maxValue": 4294967295,
-			"defaultValue": 86640
+			"maxValue": 4294967295
 		},
 		{
 			"#": "121[0x01]",

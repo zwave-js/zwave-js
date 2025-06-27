@@ -7438,15 +7438,28 @@ ${handlers.length} left`,
 		return this.serial?.writeAsync(data);
 	}
 
+	public waitForMessageHeader<T extends MessageHeaders>(
+		predicate: (header: MessageHeaders) => header is T,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForMessageHeader(
+		predicate: (header: MessageHeaders) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<MessageHeaders>;
+
 	/**
-	 * Waits until a matching message header is received or a timeout has elapsed. Returns the received message.
+	 * Waits until a matching message header is received or an optional timeout has elapsed. Returns the received message.
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming message headers.
 	 */
 	public waitForMessageHeader(
 		predicate: (header: MessageHeaders) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<MessageHeaders> {
 		return new Promise<MessageHeaders>((resolve, reject) => {
 			const promise = createDeferredPromise<MessageHeaders>();
@@ -7458,38 +7471,57 @@ ${handlers.length} left`,
 			this.awaitedMessageHeaders.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessageHeaders.indexOf(entry);
 				if (index !== -1) this.awaitedMessageHeaders.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching serial frame within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching serial frame within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
+	public waitForMessage<T extends Message>(
+		predicate: (msg: Message) => msg is T,
+		timeout?: number,
+		refreshPredicate?: (msg: Message) => boolean,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForMessage<T extends Message>(
+		predicate: (msg: Message) => boolean,
+		timeout?: number,
+		refreshPredicate?: (msg: Message) => boolean,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until an unsolicited serial message is received or a timeout has elapsed. Returns the received message.
+	 * Waits until an unsolicited serial message is received or an optional timeout has elapsed. Returns the received message.
 	 *
 	 * **Note:** To wait for a certain CommandClass, better use {@link waitForCommand}.
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected.
 	 * @param predicate A predicate function to test all incoming messages.
 	 * @param refreshPredicate A predicate function to test partial messages. If this returns `true` for a message, the timer will be restarted.
 	 */
 	public waitForMessage<T extends Message>(
 		predicate: (msg: Message) => boolean,
-		timeout: number,
+		timeout?: number,
 		refreshPredicate?: (msg: Message) => boolean,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
@@ -7504,39 +7536,52 @@ ${handlers.length} left`,
 			this.awaitedMessages.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessages.indexOf(entry);
 				if (index !== -1) this.awaitedMessages.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching message within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching message within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
+	public waitForCommand<T extends CCId, U extends T>(
+		predicate: (cc: CCId) => cc is U,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<U>;
+
+	public waitForCommand<T extends CCId>(
+		predicate: (cc: CCId) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until a CommandClass is received or a timeout has elapsed. Returns the received command.
+	 * Waits until a CommandClass is received or an optional timeout has elapsed. Returns the received command.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming command classes
 	 */
 	public waitForCommand<T extends CCId>(
 		predicate: (cc: CCId) => boolean,
-		timeout: number,
+		timeout?: number,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
@@ -7549,28 +7594,29 @@ ${handlers.length} left`,
 			this.awaitedCommands.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedCommands.indexOf(entry);
 				if (index !== -1) this.awaitedCommands.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching command within the provided timeout!`,
-						ZWaveErrorCodes.Controller_NodeTimeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching command within the provided timeout!`,
+							ZWaveErrorCodes.Controller_NodeTimeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
@@ -8875,14 +8921,27 @@ integrity: ${update.integrity}`;
 		}
 	}
 
+	public waitForBootloaderChunk<T extends BootloaderChunk>(
+		predicate: (chunk: BootloaderChunk) => chunk is T,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForBootloaderChunk<T extends BootloaderChunk>(
+		predicate: (chunk: BootloaderChunk) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until a specific chunk is received from the bootloader or a timeout has elapsed. Returns the received chunk.
+	 * Waits until a specific chunk is received from the bootloader or an optional timeout has elapsed. Returns the received chunk.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming chunks
 	 */
 	public waitForBootloaderChunk<T extends BootloaderChunk>(
 		predicate: (chunk: BootloaderChunk) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const promise = createDeferredPromise<BootloaderChunk>();
@@ -8894,35 +8953,53 @@ integrity: ${update.integrity}`;
 			this.awaitedBootloaderChunks.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedBootloaderChunks.indexOf(entry);
 				if (index !== -1) this.awaitedBootloaderChunks.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching chunk within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching chunk within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((chunk) => {
 				removeEntry();
 				resolve(chunk as T);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
+	public waitForCLIChunk<T extends CLIChunk>(
+		predicate: (chunk: CLIChunk) => chunk is T,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForCLIChunk<T extends CLIChunk>(
+		predicate: (chunk: CLIChunk) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until a specific chunk is received from the end device CLI or a timeout has elapsed. Returns the received chunk.
+	 * Waits until a specific chunk is received from the end device CLI or an optional timeout has elapsed. Returns the received chunk.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming chunks
 	 */
 	public waitForCLIChunk<T extends CLIChunk>(
 		predicate: (chunk: CLIChunk) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const promise = createDeferredPromise<CLIChunk>();
@@ -8934,24 +9011,29 @@ integrity: ${update.integrity}`;
 			this.awaitedCLIChunks.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedCLIChunks.indexOf(entry);
 				if (index !== -1) this.awaitedCLIChunks.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching chunk within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching chunk within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((chunk) => {
 				removeEntry();
 				resolve(chunk as T);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 

@@ -15,9 +15,9 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "-Follow the user guide of hub to enter inclusion mode.\n-Operate on lock following guide below:\n1.Enter master mode(refer to programming instruction)\n2.Input “8” to enter “function extension settings”\n3.Input “1” to join a network",
-		"exclusion": "-Follow the user guide of hub to enter exclusion mode.\n-Operate on lock following guide below:\n1.Enter master mode(refer to programming instruction)\n2.Input “8” to enter “function extension settings”\n3.Input “2” to log off a network",
-		"reset": "※Please use this procedure only when the network primary controller is missing or inoperable.\n-Operations on lock\n1.Open the door and keep the lock in \"unlock\" status\n2.Open battery box and find the reset button. \n3.Use a sharp thing to press and hold the reset button.\n4.Keep holding the reset button and remove a battery from battery box then replace it.\n5.Keep holding the reset button until hearing voice guide",
+		"inclusion": "1. Enter master mode (refer to programming instructions)\n2. Press '8' to enter function extension settings\n3. Press '1' to join the network",
+		"exclusion": "1. Enter master mode (refer to programming instructions)\n2. Press '8' to enter function extension settings\n3. Press '2' to leave the network",
+		"reset": "1. Open the door and unlock the lock\n2. Open the battery box and locate the reset button\n3. Press and hold the reset button with a pointed object\n4. While holding the reset button, remove a battery, then replace it\n5. Continue holding the reset button until you hear the voice guide",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3324/Alfred%20Z-Wave%20Plus%20System%20Integrators%20Guide%20V5.1.pdf"
 	}
 }

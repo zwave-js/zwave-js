@@ -43,9 +43,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "To include the SSP 301 onto a network, put the controller into inclusion mode. Now press and hold the button on SSP 301 for 4 to 7 seconds then\nrelease. The network status LED will start flashing (twice per second) on successful start of inclusion process. On successful inclusion the LED will turn off.",
-		"exclusion": "To exclude the SSP 301 from a network, put the controller into exclusion mode. Now press and hold the button on SSP 301 for 4 to 7 seconds then\nrelease. After successful exclusion the network status LED will start flashing once per second, and the device will reset to factory default.",
-		"reset": "Please use this procedure only when the primary controller is missing or otherwise inoperable, Power cycle the device, press and hold the button\nfor 7-11 seconds within the 60 seconds of power cycle to put the device in factory default. It reset all configuration and association to factory default. It also removes the device from Z-Wave network",
+		"inclusion": "Press and hold the button for 4 to 7 seconds, then release. The LED flashes twice per second during the process and turns off when successful.",
+		"exclusion": "Press and hold the button for 4 to 7 seconds, then release. The LED flashes once per second when successful.",
+		"reset": "Power cycle the device, then press and hold the button for 7-11 seconds within 60 seconds of power cycle.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1246/SSP%20301%20User%20Manual%20for%20Web.pdf"
 	}
 }

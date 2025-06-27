@@ -1,4 +1,4 @@
-import { MessagePriority, encodeNodeID } from "@zwave-js/core";
+import { MessagePriority, encodeNodeID, parseNodeID } from "@zwave-js/core";
 import {
 	FunctionType,
 	Message,
@@ -72,6 +72,22 @@ export class RemoveFailedNodeRequest extends RemoveFailedNodeRequestBase {
 		this.failedNodeId = options.failedNodeId;
 	}
 
+	public static from(
+		raw: MessageRaw,
+		ctx: MessageParsingContext,
+	): RemoveFailedNodeRequest {
+		const { nodeId: failedNodeId, bytesRead } = parseNodeID(
+			raw.payload,
+			ctx.nodeIdType,
+		);
+		const callbackId = raw.payload[bytesRead];
+
+		return new this({
+			failedNodeId,
+			callbackId,
+		});
+	}
+
 	// This must not be called nodeId or rejectAllTransactions may reject the request
 	/** The node that should be removed */
 	public failedNodeId: number;
@@ -136,8 +152,6 @@ export class RemoveFailedNodeResponse extends Message
 		options: RemoveFailedNodeResponseOptions & MessageBaseOptions,
 	) {
 		super(options);
-
-		// TODO: Check implementation:
 		this.removeStatus = options.removeStatus;
 	}
 

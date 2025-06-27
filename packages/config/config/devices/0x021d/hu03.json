@@ -15,9 +15,9 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"inclusion": "Join a network: inclusion Z-Wave network and add the lock.\n1.Follow the user guide of hub to enter inclusion mode.\n2.Operate on lock following guide below:\n3.Enter master mode(** + Master PIN Code + #), Wait for 2 Green Lights + 2 Beeps\n4.Input “8+1+#” to enter “Inclusion mode” (2 Green Lights + 2 Beeps)",
-		"exclusion": "Log off a network: Exclusion Z-Wave network and remove the lock\n1.Follow the user guide of hub to enter exclusion mode.\n2.Operate on lock following guide below:\n3.Enter master mode(** + Master PIN Code + #), Wait for 2 Green Lights + 2 Beeps\n4.Input “8+2+#” to enter “Exclusion mode”(2 Green Lights + 2 Beeps)",
-		"reset": "Factory reset:\n1.Operations on lock\n2.Open the door and keep the lock in \"unlock\" status\n3.Open battery box and find the reset button. \n4.Use a sharp thing to press and hold the reset button.\n5.Keep holding the reset button for 5 seconds until hearing voice guide",
+		"inclusion": "1. Enter master mode (press ** + Master PIN Code + #)\n2. Wait for 2 green lights and 2 beeps\n3. Press '8+1+#' to enter Inclusion mode\n4. Wait for 2 green lights and 2 beeps",
+		"exclusion": "1. Enter master mode (press ** + Master PIN Code + #)\n2. Wait for 2 green lights and 2 beeps\n3. Press '8+2+#' to enter Exclusion mode\n4. Wait for 2 green lights and 2 beeps",
+		"reset": "1. Open the door and unlock the lock\n2. Open the battery box and locate the reset button\n3. Press and hold the reset button with a pointed object for 5 seconds until you hear the voice guide",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4035/HU04-Product%20Manual%20V1.0.pdf"
 	}
 }

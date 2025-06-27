@@ -119,6 +119,7 @@ Security bootstrapping (exchanging keys) happens after a node was included into 
 driver.controller.on("node added", (node, result) => {
 	if (result.lowSecurity) {
 		// WARN user about low security
+		// result.lowSecurityReason contains the specific reason for the lower security
 	} else {
 		// Confirm node was added as intended
 	}
@@ -127,6 +128,29 @@ driver.controller.on("node added", (node, result) => {
 
 Therefore, the inclusion result should be displayed and a user MUST be warned about a problem during the inclusion, e.g. by displaying one of these dialogs:
 ![inclusion result](../_images/s2-inclusion-result.png)
+
+When `result.lowSecurity` is `true`, `result.lowSecurityReason` contains a value of the `SecurityBootstrapFailure` enum that indicates why the security is lower than intended. There are multiple groups of bootstrapping failures:
+
+#### Configuration problems
+
+Typically a misconfiguration of Z-Wave JS or a misbehaving application:
+
+- `NoKeysConfigured` - The required security keys were not configured in the driver
+- `S2NoUserCallbacks` - No S2 user callbacks (or provisioning information) were provided
+
+#### User errors
+
+- `UserCanceled` - Security bootstrapping was canceled by the user
+- `S2IncorrectPIN` - An incorrect PIN was entered, so the device could not decode the key exchange commands
+- `S2WrongSecurityLevel` - There was a mismatch in security classes between the controller and the device, e.g. because the user deselected all security classes that the device requested
+
+#### Communication problems and device issues
+
+- `Timeout` - An expected message was not received within the corresponding timeout
+- `ParameterMismatch` - There was no possible match in encryption parameters between the controller and the device. This most likely indicates backwards incompatible specification changes that the device does not support.
+- `NodeCanceled` - Security authentication was canceled by the device
+- `S0Downgrade` - The node has been bootstrapped using S0 in an S2-capable network. This indicates a possible downgrade attack and MUST be exposed to the user.
+- `Unknown` - Some other unspecified error happened
 
 ## SmartStart
 

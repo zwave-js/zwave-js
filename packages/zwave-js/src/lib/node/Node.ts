@@ -1113,8 +1113,13 @@ protocol version:      ${this.protocolVersion}`;
 		this.setInterviewStage(InterviewStage.ProtocolInfo);
 	}
 
-	/** Node interview: pings the node to see if it responds */
-	public async ping(): Promise<boolean> {
+	/**
+	 * Pings the node to see if it responds
+	 * @param tryReallyHard Whether the controller should resort to route resolution
+	 * and explorer frames if the communication fails. Setting this option to `true`
+	 * can result in multi-second delays.
+	 */
+	public async ping(tryReallyHard: boolean = false): Promise<boolean> {
 		if (this.isControllerNode) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1130,7 +1135,14 @@ protocol version:      ${this.protocolVersion}`;
 		});
 
 		try {
-			await this.commandClasses["No Operation"].send();
+			let api = this.commandClasses["No Operation"];
+			// Enable route resolution and explorer frames if desired
+			if (tryReallyHard) {
+				api = api.withOptions({
+					transmitOptions: TransmitOptions.DEFAULT,
+				});
+			}
+			await api.send();
 			this.driver.controllerLog.logNode(this.id, {
 				message: "ping successful",
 				direction: "inbound",

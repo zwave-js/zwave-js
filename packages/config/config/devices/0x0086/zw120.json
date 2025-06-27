@@ -84,9 +84,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product’s Action Button that you can find in the back of the product",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, short press the product’s Action Button that you can find in back of the product",
-		"reset": "Press the Action Button once that you can find in back of the product for 20 seconds and then release. This procedure should only be used when the primary controller is inoperable",
+		"inclusion": "Short press the Action Button on the back of the product.",
+		"exclusion": "Short press the Action Button on the back of the product.",
+		"reset": "Press and hold the Action Button on the back of the product for 20 seconds and then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1574/Door%20Window%20Sensor%20Gen5%20manual.pdf"
 	}
 }

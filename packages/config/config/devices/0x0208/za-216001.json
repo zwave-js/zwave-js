@@ -183,9 +183,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Connect the power supply.\n2. Set the Z-Wave™ network main controller into learning mode.\n3. Triple click the Z-button, the LED indicator will be flashing 3 times in Blue.\n4. Smart Plug should be recognized and included into the Z-Wave™ network",
-		"exclusion": "1. Insert the Plug into a socket.\n2. Set the Z-Wave™ network controller into the exclusion mode.\n3. Triple click the Z button.\n4. LED will blink in blue for 3 times, and then start slow flashing to indicate that the remove for exclusion is successful. LED will indicate network status after it is removed from Z-Wave™ network",
-		"reset": "Long press the button for 20 seconds and the blue LED will speed up the flash and then LED will keep on for 3 seconds in blue and Smart Plug will send ”Device Reset Locally Notification” to the main controller and exclude from the Z-Wave™ network, this procedure will reset Smart Plug to factory default.",
+		"inclusion": "1. Connect the power supply\n2. Triple click the Z-button - the LED will flash 3 times in blue",
+		"exclusion": "1. Insert the plug into a socket\n2. Triple click the Z-button\n3. The LED will blink blue 3 times, then flash slowly when exclusion is successful",
+		"reset": "Press and hold the button for 20 seconds. The blue LED will flash rapidly then stay on for 3 seconds when reset is complete",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4196/Manual-SmartPlug.pdf"
 	}
 }

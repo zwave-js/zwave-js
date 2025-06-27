@@ -143,9 +143,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "The primary controller/gateway has a mode for adding devices. Please refer to your primary controller manual on how to set the primary controller in add mode. The device may only be added to the network if the primary controller is in add mode.\n\nThere are two ways to add the device to a Z-Wave network.\nMethod 1: Standard (Manual)\nAdd mode is indicated on the device by a blinking green LED. It indicated this for 90 seconds until a timeout occurs, or until the module has been added to the network. To start the configuration process, press the configuration button 3 times in rapid succession. The LED will light up green for 3 seconds if adding is successful.\nThe device is now ready for use with default settings.\n\nMethod 2: SmartStart (Automatic)\nSmartStart enabled products may be added to a Z-Wave network by scanning the Z-Wave QR-Code on the product if your primary controller supports SmartStart inclusion. No further action is required and the SmartStart product will be added automatically after being powered on within range of the primary controller.",
-		"exclusion": "The primary controller/gateway has a mode for removing devices. Please refer to your primary controller manual on how to set the primary controller in remove mode. The device may only be removed from the network if the primary controller is in remove mode.\n\nRemove mode is indicated on the device by a blinking green LED. It indicated this for 90 seconds until a timeout occurs, or until the module has been removed from the network. To start the configuration process, press the configuration button 3 times in rapid succession. The LED will light up green for 3 seconds if removing is successful",
-		"reset": "Press and hold the configuration button. After 3 seconds the LED will start to blink in green. After 20 seconds the LED will start to blink green rapidly for 5 seconds. You may now release the button",
+		"inclusion": "Press the configuration button 3 times in rapid succession.",
+		"exclusion": "Press the configuration button 3 times in rapid succession.",
+		"reset": "Press and hold the configuration button for 20 seconds until LED blinks green rapidly.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4305/Manual_Heatit_ZM_Thermostat%2016A.pdf"
 	}
 }

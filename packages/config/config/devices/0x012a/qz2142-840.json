@@ -222,9 +222,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "When prompted by your primary controller, click the button three times in one second",
-		"exclusion": "When prompted by your primary controller, click the button three times in one second",
-		"reset": "Press click Z-Wave button 3 times quickly, and hold for at least 10 seconds at the third time to restore the device to the factory",
+		"inclusion": "Click the button three times within one second.",
+		"exclusion": "Click the button three times within one second.",
+		"reset": "Click the Z-Wave button 3 times quickly and hold for at least 10 seconds on the third click to restore factory settings.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4463/IQSmartDimmerManual_v2.pdf"
 	}
 }

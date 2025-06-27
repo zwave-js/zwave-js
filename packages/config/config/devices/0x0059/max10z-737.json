@@ -88,9 +88,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Put network controller in Inclusion mode.\n2. Hold the button on the top of the Beanbag Receiver for more than 2 seconds until the Network Indicator LED turns red then release the button to put the Beanbag Receiver into Learn Mode. \n3. Beanbag Receiver will indicate success with sold white Network LED",
-		"exclusion": "1. Put network controller in Exclusion mode.\n2. Hold the button on the top of the Beanbag Receiver for more than 2 seconds until the Network Indicator LED turns red then release the button to put the Beanbag Receiver into Learn Mode. \n3. Beanbag Receiver will indicate success with flashing white Network LED (3Sec ON and 30Sec OFF)",
-		"reset": "Long press the bottom button (located underside the unit) for around 4 Sec until the Network indicator LED turns red then release the button.\n\nThis function should only be used in case of primary controller is missing or inoperable",
+		"inclusion": "Hold the button on top for more than 2 seconds until the LED turns red, then release. The LED becomes solid white when successful.",
+		"exclusion": "Hold the button on top for more than 2 seconds until the LED turns red, then release. The LED flashes white when successful.",
+		"reset": "Press and hold the bottom button for about 4 seconds until the LED turns red, then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2395/BeanbagReceiverZWaveManual.pdf"
 	}
 }

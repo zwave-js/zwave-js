@@ -34,7 +34,7 @@
 		}
 	},
 	"metadata": {
-		"reset": "Press and hold down “inclusion/exclusion” button for over 8 seconds, LED indicator will blink slowly to indicate successful factory reset, release “inclusion/exclusion” button,the wall controller will restart automatically.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"reset": "Press and hold down 'inclusion/exclusion' button for over 8 seconds, LED indicator will blink slowly to indicate successful factory reset, release 'inclusion/exclusion' button,the wall controller will restart automatically.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2902/Z-Wave%20Wall%20Controller%20SR-ZV9002T3-CCT-US.pdf"
 	}
 }

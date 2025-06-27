@@ -57,9 +57,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Remove the battery cover.\n2. Press and hold reset/pair button on left side of device until unit beeps two (2) times.\n3. Release button and network inclusion begins.\n4. Replace battery cover.",
-		"exclusion": "1. Remove the battery cover.\n2. Press and hold reset/pair button on left side of device until unit beeps five (5) times.\n3. Release button and network exclusion begins.\n4. Replace battery cover.",
-		"reset": "Please use this procedure only when the network primary controller is missing or otherwise inoperable.\n1. Remove the battery cover.\n2. Remove four (4) AA batteries.\n3. On the left side of the device, push and hold the Reset Button with the lever removal tool for at least 3 seconds.\n4. While continuing to hold the reset button, reinstall the batteries\n5. Release reset button and wait 15 seconds.\n6. Reinstall battery cover",
+		"inclusion": "1. Remove the battery cover.\n2. Press and hold reset/pair button on left side of device until unit beeps two (2) times.\n3. Release button.\n4. Replace battery cover.",
+		"exclusion": "1. Remove the battery cover.\n2. Press and hold reset/pair button on left side of device until unit beeps five (5) times.\n3. Release button.\n4. Replace battery cover.",
+		"reset": "1. Remove the battery cover.\n2. Remove four (4) AA batteries.\n3. On the left side of the device, push and hold the Reset Button with the lever removal tool for at least 3 seconds.\n4. While continuing to hold the reset button, reinstall the batteries.\n5. Release reset button.\n6. Reinstall battery cover.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3170/YRD156_YaleRealLivingAssureDeadbolt_Z-WavePlus_SystemIntegratorsGuide.pdf"
 	}
 }

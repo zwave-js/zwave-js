@@ -304,9 +304,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "There are two tamper keys in the device, one is in the back side, another is in the front side. Both of them can add, remove, reset or association from Z-Wave network.\nTo add into a Z-Wave network: \n1. Have Z-Wave Controller entered inclusion mode.\n2. Pressing tamper key three times within 1.5 seconds to enter the inclusion mode.\n3. After add successful, the device will wake to receive the setting command from Z-Wave Controller about 20 seconds",
-		"exclusion": "There are two tamper keys in the device, one is in the back side, another is in the front side. Both of them can add, remove, reset or association from Z-Wave network.\nTo remove the device from a Z-Wave network: \n1. Have Z-Wave Controller entered exclusion mode.\n2. Pressing tamper key three times within 1.5 seconds to enter the exclusion mode.\nNode ID has been excluded",
-		"reset": "There are two tamper keys in the device, one is in the back side, another is in the front side. Both of them can add, remove, reset or association from Z-Wave network.\nTo reset the device: \nNotice: Use this procedure only in the event that the primary controller is lost or otherwise inoperable.\n1. Pressing tamper key four times within 1.5 seconds and do not release the tamper key in the 4th pressed, and the LED will light ON.\n2. After 3 seconds the LED will turn OFF, after that within 2 seconds, release the tamper key. If successful, the LED will light ON one second. Otherwise, the LED will flash once.\n3. IDs are excluded and all settings will reset to factory default",
+		"inclusion": "Press any tamper key three times within 1.5 seconds.",
+		"exclusion": "Press any tamper key three times within 1.5 seconds.",
+		"reset": "1. Press and hold any tamper key four times within 1.5 seconds, keeping it held on the 4th press\n2. Wait for the LED to light up for 3 seconds, then turn off\n3. Release the tamper key within 2 seconds after the LED turns off",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2625/Manual.pdf"
 	}
 }

@@ -110,9 +110,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product’s Action button that you can find on the product's housing.\n\nIf the Nano Dimmer has been successfully added to your Z-Wave network, its RGB LED will be solid. If unsuccessful, the red LED will be on for 2 seconds and then remain a colorful gradient, repeat the instructions above from step 1.",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, quick press the product’s Action button 6 times that you can find on the product's housing or toggle the external manual switch 2 times in fast succession.\n\nIf the Nano Dimmer has been successfully removed from your Z-Wave network, its RGB LED will remain colorful gradient. If the removal was unsuccessful, the RGB LED will still be solid (following the state of the output load), repeat the instructions above from step 1",
-		"reset": "Press and hold the Action button that you can find on the product's housing for 20 seconds and then release. This procedure should only be used when the primary controller is missing or otherwise inoperable",
+		"inclusion": "Short press the Action button on the product's housing. If successful, the RGB LED will be solid. If unsuccessful, the red LED will be on for 2 seconds and then remain a colorful gradient.",
+		"exclusion": "Quick press the Action button 6 times on the product's housing or toggle the external manual switch 2 times in fast succession. If successful, the RGB LED will remain colorful gradient. If unsuccessful, the RGB LED will still be solid.",
+		"reset": "Press and hold the Action button on the product's housing for 20 seconds and then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3269/Aeon%20Labs%20Nano%20Shutter%20-manual%20-%202.pdf"
 	}
 }

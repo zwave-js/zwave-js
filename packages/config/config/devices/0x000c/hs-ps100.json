@@ -106,9 +106,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1) Set the main controller in inclusion mode (see the controller’s manual).\n2) Press and release the sensor’s Z-Wave network button.",
-		"exclusion": "1) Set the main controller in exclusion mode (see the controller’s manual).\n2) Press and release the sensor’s Z-Wave network button.",
-		"reset": "1) Power on the device\n2) Press and hold the Z-Wave network button for 30 seconds.",
+		"inclusion": "Press and release the Z-Wave network button.",
+		"exclusion": "Press and release the Z-Wave network button.",
+		"reset": "Press and hold the Z-Wave network button for 30 seconds.",
 		"manual": "https://docs.homeseer.com/products/ps100-g8-user-guide"
 	}
 }
