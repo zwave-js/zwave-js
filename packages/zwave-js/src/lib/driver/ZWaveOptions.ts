@@ -343,10 +343,13 @@ export interface ZWaveOptions {
 
 		txPower?: {
 			/**
-			 * The desired TX power in dBm.
+			 * The desired TX power in dBm, or "auto" to automatically apply the legal limits whenever the RF region is changed.
 			 *
-			 * The special value "auto" will apply the known legal limits for the configured RF region,
-			 * but only if the region is actually changed as a result of using the `rf.region` setting.
+			 * The "auto" setting has two caveats:
+			 *   - It will only apply when actually changing the region (e.g. from `Europe` to `USA`), but not when
+			 *     switching from a non-LR region to the corresponding LR region (e.g. from `Europe` to `Europe (Long Range)`).
+			 *   - It requires the legal limits for the configured RF region to be known. Currently, this
+			 *     is only the case for Europe and the USA.
 			 */
 			powerlevel: number | "auto";
 
@@ -355,10 +358,13 @@ export interface ZWaveOptions {
 		};
 
 		/**
-		 * The desired max. powerlevel setting for Z-Wave Long Range in dBm.
+		 * The desired max. powerlevel setting for Z-Wave Long Range in dBm, or "auto" to automatically apply the legal limits whenever the RF region is changed.
 		 *
-		 * The special value "auto" will apply the known legal limits for the configured RF region,
-		 * but only if the region is actually changed as a result of using the `rf.region` setting.
+		 * The "auto" setting has two caveats:
+		 *   - It will only apply when actually changing the region (e.g. from `Europe` to `USA`), but not when
+		 *     switching from a non-LR region to the corresponding LR region (e.g. from `Europe` to `Europe (Long Range)`).
+		 *   - It requires the legal limits for the configured RF region to be known. Currently, this
+		 *     is only the case for Europe and the USA.
 		 */
 		maxLongRangePowerlevel?: number | "auto";
 
