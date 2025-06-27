@@ -238,8 +238,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Follow the user guide of hub to enter inclusion mode.\nPress and hold the Config Button more than 6s, enter Include Mode",
-		"exclusion": "Follow the user guide of hub to enter exclusion mode.\nPress and hold the Config Button more than 6s, enter Exclusion Mode",
-		"reset": "Press and hold the Config Button more than 10s. The Curtain will reset itself to factory default by sending a Device Reset Locally Notification to gateway when the button is released.\nNote:Please use this procedure only when the network primary controller is missing or otherwise inoperable"
+		"inclusion": "Press and hold the Config Button for more than 6 seconds",
+		"exclusion": "Press and hold the Config Button for more than 6 seconds",
+		"reset": "Press and hold the Config Button for more than 10 seconds"
 	}
 }

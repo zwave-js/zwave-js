@@ -27,7 +27,7 @@ async getCCVersion(
 ### `reportCCVersion`
 
 ```ts
-async reportCCVersion(requestedCC: CommandClasses): Promise<void>;
+async reportCCVersion(requestedCC: CommandClasses, version?: number): Promise<void>;
 ```
 
 ### `getCapabilities`

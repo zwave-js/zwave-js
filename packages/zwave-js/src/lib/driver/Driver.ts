@@ -65,6 +65,7 @@ import {
 	ControllerStatus,
 	Duration,
 	EncapsulationFlags,
+	type Firmware,
 	type HostIDs,
 	type LogConfig,
 	type LogContainer,
@@ -213,12 +214,17 @@ import { isArray, isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
 import { PACKAGE_NAME, PACKAGE_VERSION } from "../_version.js";
 import { ZWaveController } from "../controller/Controller.js";
+import { downloadFirmwareUpdate } from "../controller/FirmwareUpdateService.js";
 import {
 	type FoundNode,
 	InclusionState,
 	RemoveNodeReason,
 } from "../controller/Inclusion.js";
 import { determineNIF } from "../controller/NodeInformationFrame.js";
+import {
+	type FirmwareUpdateInfo,
+	isFirmwareUpdateInfo,
+} from "../controller/_Types.js";
 import { DriverLogger } from "../log/Driver.js";
 import type { Endpoint } from "../node/Endpoint.js";
 import type { ZWaveNode } from "../node/Node.js";
@@ -300,14 +306,14 @@ const libNameString = `
 
 const defaultOptions: ZWaveOptions = {
 	timeouts: {
-		ack: 1000,
+		ack: 1600, // A sending interface MUST wait for 1600ms or more for an ACK Frame after transmitting a Data Frame.
 		byte: 150,
 		// Ideally we'd want to have this as low as possible, but some
 		// 500 series controllers can take several seconds to respond sometimes.
 		response: 10000,
 		report: 1000, // ReportTime timeout SHOULD be set to CommandTime + 1 second
 		nonce: 5000,
-		sendDataAbort: 20000, // If a controller takes over 15s to reach a node, it's probably not going to happen
+		sendDataAbort: 20000, // If a controller takes over 20 seconds to reach a node, it's probably not going to happen
 		sendDataCallback: 30000, // INS13954 defines this to be 65000 ms, but waiting that long causes issues with reporting devices
 		sendToSleep: 250, // The default should be enough time for applications to react to devices waking up
 		retryJammed: 1000,
@@ -332,6 +338,8 @@ const defaultOptions: ZWaveOptions = {
 		),
 		// By default disable the watchdog
 		watchdog: false,
+		// Support all CCs unless specified otherwise
+		disableCommandClasses: [],
 	},
 	// By default, try to recover from bootloader mode
 	bootloaderMode: "recover",
@@ -536,12 +544,56 @@ function checkOptions(options: ZWaveOptions): void {
 					`rf.txPower must be an object!`,
 					ZWaveErrorCodes.Driver_InvalidOptions,
 				);
-			} else if (
+			}
+
+			if (
 				typeof options.rf.txPower.powerlevel !== "number"
-				|| typeof options.rf.txPower.measured0dBm !== "number"
+				&& options.rf.txPower.powerlevel !== "auto"
 			) {
 				throw new ZWaveError(
-					`rf.txPower must contain the following numeric properties: powerlevel, measured0dBm!`,
+					`rf.txPower.powerlevel must be a number or "auto"!`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
+
+			if (
+				options.rf.txPower.measured0dBm != undefined
+				&& typeof options.rf.txPower.measured0dBm !== "number"
+			) {
+				throw new ZWaveError(
+					`rf.txPower.measured0dBm must be a number!`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
+		}
+
+		if (options.features.disableCommandClasses?.length) {
+			// Ensure that all CCs may be disabled
+			const mandatory = [
+				// Encapsulation CCs are always supported
+				...encapsulationCCs,
+				// All Root Devices or nodes MUST support
+				CommandClasses.Association,
+				CommandClasses["Association Group Information"],
+				CommandClasses["Device Reset Locally"],
+				CommandClasses["Firmware Update Meta Data"],
+				CommandClasses.Indicator,
+				CommandClasses["Manufacturer Specific"],
+				CommandClasses["Multi Channel Association"],
+				CommandClasses.Powerlevel,
+				CommandClasses.Version,
+				CommandClasses["Z-Wave Plus Info"],
+			];
+
+			const mandatoryDisabled = options.features.disableCommandClasses
+				.filter(
+					(cc) => mandatory.includes(cc),
+				);
+			if (mandatoryDisabled.length > 0) {
+				throw new ZWaveError(
+					`The following CCs are mandatory and cannot be disabled using features.disableCommandClasses: ${
+						mandatoryDisabled.map((cc) => getCCName(cc)).join(", ")
+					}!`,
 					ZWaveErrorCodes.Driver_InvalidOptions,
 				);
 			}
@@ -769,7 +821,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this.getSupportedCCVersion(cc, nodeId, endpointIndex),
 		};
 
-		this._scheduler = new TaskScheduler();
+		this._scheduler = new TaskScheduler(() => {
+			return new ZWaveError(
+				"Task was removed",
+				ZWaveErrorCodes.Driver_TaskRemoved,
+			);
+		});
 	}
 
 	private serialFactory: ZWaveSerialStreamFactory | undefined;
@@ -3849,20 +3906,42 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				});
 			}
 		} catch (e) {
-			if (isAbortError(e)) {
-				return;
-			} else if (
-				isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_Failed
+			if (isAbortError(e)) return;
+
+			if (
+				isZWaveError(e)
+				&& e.code === ZWaveErrorCodes.Driver_SerialPortClosed
 			) {
 				// A disconnection while soft resetting is to be expected.
 				// The soft reset method will handle reopening
 				if (this.isSoftResetting || this._isOpeningSerialPort) return;
 
-				void this.destroyWithMessage(e.message);
+				void this.handleSerialPortClosedUnexpectedly();
 				return;
 			}
 			throw e;
 		}
+	}
+
+	private async handleSerialPortClosedUnexpectedly(): Promise<void> {
+		// Otherwise, try to recover by reopening the serial port
+		this.driverLog.print(
+			"Serial port closed unexpectedly, attempting to reopen...",
+			"warn",
+		);
+
+		await wait(1000);
+		try {
+			await this.openSerialport();
+		} catch (ee) {
+			void this.destroyWithMessage(getErrorMessage(ee));
+			return;
+		}
+
+		this.driverLog.print(
+			"Serial port reopened",
+			"warn",
+		);
 	}
 
 	/**
@@ -5127,6 +5206,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			case SerialAPIWakeUpReason.Reset:
 			case SerialAPIWakeUpReason.WatchdogReset:
 			case SerialAPIWakeUpReason.SoftwareReset:
+			case SerialAPIWakeUpReason.PowerUp:
 			case SerialAPIWakeUpReason.EmergencyWatchdogReset:
 			case SerialAPIWakeUpReason.BrownoutCircuit: {
 				// The Serial API restarted unexpectedly
@@ -6440,8 +6520,9 @@ ${handlers.length} left`,
 		// Step through the transaction as long as it gives us a next message
 		while ((msg = await transaction.generateNextMessage(prevResult))) {
 			// Keep track of how often the controller failed to send a command, to prevent ending up in an infinite loop
-			let jammedAttempts = 0;
-			let queueAttempts = 0;
+			let jammedAttempts = 0; // SendData failed with status Fail
+			let queueAttempts = 0; // SendData returned a negative response
+			let commandAttempts = 0; // The command was not acknowledged
 			attemptMessage: for (let attemptNumber = 1;; attemptNumber++) {
 				try {
 					prevResult = await this.queueSerialAPICommand(
@@ -6460,6 +6541,7 @@ ${handlers.length} left`,
 							&& prevResult.txReport?.txTicks === 0
 						) {
 							jammedAttempts++;
+							attemptNumber--;
 							if (jammedAttempts < maxJammedAttempts) {
 								// The controller is jammed. Wait a bit, then try again.
 								this.controller.setStatus(
@@ -6502,19 +6584,27 @@ ${handlers.length} left`,
 					break attemptMessage;
 				} catch (e: any) {
 					let zwError: ZWaveError;
-					let waitDurationMs = 0;
 
 					if (!isZWaveError(e)) {
 						zwError = createMessageDroppedUnexpectedError(e);
 					} else {
-						if (
-							isSendData(msg) && isMissingControllerCallback(e)
-						) {
+						// Handle a couple of special cases
+						if (isSendData(msg) && isMissingControllerCallback(e)) {
 							// The controller is unresponsive. Reject the transaction, so we can attempt to recover
 							throw e;
 						} else if (isMissingControllerACK(e)) {
-							// The controller is unresponsive. Reject the transaction, so we can attempt to recover
-							throw e;
+							commandAttempts++;
+							attemptNumber--;
+							if (
+								commandAttempts
+									< this.options.attempts.controller
+							) {
+								// Try again
+								continue attemptMessage;
+							} else {
+								// The controller is unresponsive. Reject the transaction, so we can attempt to recover
+								throw e;
+							}
 						} else if (wasControllerReset(e)) {
 							// The controller was reset unexpectedly. Reject the transaction, so we can attempt to recover
 							throw e;
@@ -6524,11 +6614,14 @@ ${handlers.length} left`,
 						) {
 							// If a SendData command could not be queued, try again after a short delay
 							queueAttempts++;
+							attemptNumber--;
 							if (queueAttempts < 3) {
-								waitDurationMs = 500;
-							} else {
-								throw e;
+								await wait(500, true);
+								continue attemptMessage;
 							}
+
+							// Give up
+							throw e;
 						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
 						) {
@@ -6537,16 +6630,8 @@ ${handlers.length} left`,
 						}
 
 						if (
-							this.mayRetrySerialAPICommand(
-								msg,
-								// Ignore the number of attempts while jammed or where queuing failed
-								attemptNumber - jammedAttempts - queueAttempts,
-								e,
-							)
+							this.mayRetrySerialAPICommand(msg, attemptNumber, e)
 						) {
-							if (waitDurationMs) {
-								await wait(waitDurationMs, true);
-							}
 							// Retry the command
 							continue attemptMessage;
 						}
@@ -6608,6 +6693,11 @@ ${handlers.length} left`,
 	}
 
 	private triggerQueues(): void {
+		// The queues might not have been initialized yet
+		for (const queue of this.queues) {
+			if (!queue) return;
+		}
+
 		for (const queue of this.queues) {
 			queue.trigger();
 		}
@@ -7348,15 +7438,28 @@ ${handlers.length} left`,
 		return this.serial?.writeAsync(data);
 	}
 
+	public waitForMessageHeader<T extends MessageHeaders>(
+		predicate: (header: MessageHeaders) => header is T,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForMessageHeader(
+		predicate: (header: MessageHeaders) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<MessageHeaders>;
+
 	/**
-	 * Waits until a matching message header is received or a timeout has elapsed. Returns the received message.
+	 * Waits until a matching message header is received or an optional timeout has elapsed. Returns the received message.
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming message headers.
 	 */
 	public waitForMessageHeader(
 		predicate: (header: MessageHeaders) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<MessageHeaders> {
 		return new Promise<MessageHeaders>((resolve, reject) => {
 			const promise = createDeferredPromise<MessageHeaders>();
@@ -7368,38 +7471,57 @@ ${handlers.length} left`,
 			this.awaitedMessageHeaders.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessageHeaders.indexOf(entry);
 				if (index !== -1) this.awaitedMessageHeaders.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching serial frame within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching serial frame within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
+	public waitForMessage<T extends Message>(
+		predicate: (msg: Message) => msg is T,
+		timeout?: number,
+		refreshPredicate?: (msg: Message) => boolean,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForMessage<T extends Message>(
+		predicate: (msg: Message) => boolean,
+		timeout?: number,
+		refreshPredicate?: (msg: Message) => boolean,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until an unsolicited serial message is received or a timeout has elapsed. Returns the received message.
+	 * Waits until an unsolicited serial message is received or an optional timeout has elapsed. Returns the received message.
 	 *
 	 * **Note:** To wait for a certain CommandClass, better use {@link waitForCommand}.
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected.
 	 * @param predicate A predicate function to test all incoming messages.
 	 * @param refreshPredicate A predicate function to test partial messages. If this returns `true` for a message, the timer will be restarted.
 	 */
 	public waitForMessage<T extends Message>(
 		predicate: (msg: Message) => boolean,
-		timeout: number,
+		timeout?: number,
 		refreshPredicate?: (msg: Message) => boolean,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
@@ -7414,39 +7536,52 @@ ${handlers.length} left`,
 			this.awaitedMessages.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessages.indexOf(entry);
 				if (index !== -1) this.awaitedMessages.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching message within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching message within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
+	public waitForCommand<T extends CCId, U extends T>(
+		predicate: (cc: CCId) => cc is U,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<U>;
+
+	public waitForCommand<T extends CCId>(
+		predicate: (cc: CCId) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until a CommandClass is received or a timeout has elapsed. Returns the received command.
+	 * Waits until a CommandClass is received or an optional timeout has elapsed. Returns the received command.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming command classes
 	 */
 	public waitForCommand<T extends CCId>(
 		predicate: (cc: CCId) => boolean,
-		timeout: number,
+		timeout?: number,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
@@ -7459,28 +7594,29 @@ ${handlers.length} left`,
 			this.awaitedCommands.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedCommands.indexOf(entry);
 				if (index !== -1) this.awaitedCommands.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching command within the provided timeout!`,
-						ZWaveErrorCodes.Controller_NodeTimeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching command within the provided timeout!`,
+							ZWaveErrorCodes.Controller_NodeTimeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
@@ -8185,6 +8321,8 @@ ${handlers.length} left`,
 
 	/**
 	 * Updates the firmware of the controller using the given firmware file.
+	 * The file can be provided as binary data or as a {@link FirmwareUpdateInfo} object as returned
+	 * from the firmware update service. The latter will be downloaded automatically.
 	 *
 	 * The return value indicates whether the update was successful.
 	 * **WARNING:** After a successful update, the Z-Wave driver will destroy itself so it can be restarted.
@@ -8192,7 +8330,7 @@ ${handlers.length} left`,
 	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
 	 */
 	public async firmwareUpdateOTW(
-		data: Uint8Array,
+		data: Uint8Array | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
@@ -8208,6 +8346,11 @@ ${handlers.length} left`,
 				`Failed to start the update: The controller is currently being updated!`;
 			this.controllerLog.print(message, "error");
 			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
+		}
+
+		// If the data is provided as a FirmwareUpdateInfo, we need to download the firmware first
+		if (isFirmwareUpdateInfo(data)) {
+			data = await this.extractOTWUpdateInfo(data);
 		}
 
 		// When in bootloader mode, we can use the 700 series update method
@@ -8243,6 +8386,93 @@ ${handlers.length} left`,
 			`Firmware updates are not supported on this Z-Wave module`,
 			ZWaveErrorCodes.Controller_NotSupported,
 		);
+	}
+
+	/**
+	 * Downloads the desired firmware update from the Z-Wave JS firmware update service and extracts the firmware data.
+	 * @param updateInfo The desired entry from the updates array that was returned by {@link getAvailableFirmwareUpdates}.
+	 * Before applying the update, Z-Wave JS will check whether the device IDs, firmware version and region match.
+	 */
+	private async extractOTWUpdateInfo(
+		updateInfo: FirmwareUpdateInfo,
+	): Promise<Uint8Array> {
+		// Controller updates must have exactly one file
+		if (updateInfo.files?.length !== 1) {
+			throw new ZWaveError(
+				`Invalid number of update files for OTW firmware updates.`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		const update = updateInfo.files[0];
+
+		// The controller must also not be downgraded this way
+		if (updateInfo.downgrade) {
+			throw new ZWaveError(
+				`Invalid update file: Downgrades are not supported!`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		// Make sure we're not applying the update to the wrong device
+		if (
+			updateInfo.device.manufacturerId !== this.controller.manufacturerId
+			|| updateInfo.device.productType !== this.controller.productType
+			|| updateInfo.device.productId !== this.controller.productId
+		) {
+			throw new ZWaveError(
+				`Cannot update controller firmware: The firmware update is for a different device!`,
+				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
+			);
+		} else if (
+			updateInfo.device.firmwareVersion
+				!== this.controller.firmwareVersion
+		) {
+			throw new ZWaveError(
+				`Cannot update controller firmware: The update is for a different original firmware version!`,
+				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
+			);
+		}
+
+		const loglevel = this.getLogConfig().level;
+
+		let logMessage = `Downloading OTW firmware update...`;
+		if (loglevel === "silly") {
+			logMessage += `
+URL:       ${update.url}
+integrity: ${update.integrity}`;
+		}
+		this.controllerLog.print(logMessage);
+
+		let firmware: Firmware;
+		try {
+			firmware = await downloadFirmwareUpdate(update);
+		} catch (e: any) {
+			let message = `Downloading the OTW firmware update failed:\n`;
+			if (isZWaveError(e)) {
+				// Pass "real" Z-Wave errors through
+				throw new ZWaveError(message + e.message, e.code);
+			} else if (e.response) {
+				// And construct a better error message for HTTP errors
+				if (
+					isObject(e.response.data)
+					&& typeof e.response.data.message === "string"
+				) {
+					message += `${e.response.data.message} `;
+				}
+				message += `[${e.response.status} ${e.response.statusText}]`;
+			} else if (typeof e.message === "string") {
+				message += e.message;
+			} else {
+				message += `Failed to download firmware update!`;
+			}
+
+			throw new ZWaveError(
+				message,
+				ZWaveErrorCodes.FWUpdateService_RequestError,
+			);
+		}
+
+		return firmware.data;
 	}
 
 	private async firmwareUpdateOTW500(
@@ -8691,14 +8921,27 @@ ${handlers.length} left`,
 		}
 	}
 
+	public waitForBootloaderChunk<T extends BootloaderChunk>(
+		predicate: (chunk: BootloaderChunk) => chunk is T,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForBootloaderChunk<T extends BootloaderChunk>(
+		predicate: (chunk: BootloaderChunk) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until a specific chunk is received from the bootloader or a timeout has elapsed. Returns the received chunk.
+	 * Waits until a specific chunk is received from the bootloader or an optional timeout has elapsed. Returns the received chunk.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming chunks
 	 */
 	public waitForBootloaderChunk<T extends BootloaderChunk>(
 		predicate: (chunk: BootloaderChunk) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const promise = createDeferredPromise<BootloaderChunk>();
@@ -8710,35 +8953,53 @@ ${handlers.length} left`,
 			this.awaitedBootloaderChunks.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedBootloaderChunks.indexOf(entry);
 				if (index !== -1) this.awaitedBootloaderChunks.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching chunk within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching chunk within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((chunk) => {
 				removeEntry();
 				resolve(chunk as T);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
+	public waitForCLIChunk<T extends CLIChunk>(
+		predicate: (chunk: CLIChunk) => chunk is T,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
+	public waitForCLIChunk<T extends CLIChunk>(
+		predicate: (chunk: CLIChunk) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<T>;
+
 	/**
-	 * Waits until a specific chunk is received from the end device CLI or a timeout has elapsed. Returns the received chunk.
+	 * Waits until a specific chunk is received from the end device CLI or an optional timeout has elapsed. Returns the received chunk.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming chunks
 	 */
 	public waitForCLIChunk<T extends CLIChunk>(
 		predicate: (chunk: CLIChunk) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const promise = createDeferredPromise<CLIChunk>();
@@ -8750,24 +9011,29 @@ ${handlers.length} left`,
 			this.awaitedCLIChunks.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedCLIChunks.indexOf(entry);
 				if (index !== -1) this.awaitedCLIChunks.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching chunk within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching chunk within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((chunk) => {
 				removeEntry();
 				resolve(chunk as T);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 

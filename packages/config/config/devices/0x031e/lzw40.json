@@ -34,9 +34,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "With the power to the smart bulb turned off, start the inclusion process on your HUB/Gateway.\nOnce the inclusion process has started, turn on power to the bulb and it will blink twice (2x) indicating it’s in inclusion mode. If the bulb was included successfully, it will blink one more (1x) time. If it was not included successfully, you may have to run an exclusion as mentioned above. If there’s still issues, please ensure your bulb is within range",
-		"exclusion": "If you are having issues pairing/including your device, please ensure your bulb is within range of your HUB (pages 2-3). If you believe you’re within range and it’s still not working, then you may have to run an Exclusion. Put your HUB in Exclusion mode and turn the power on. Your bulb will blink twice (2x), indicating it’s in exclusion mode. When exclusion is successful, it will blink one more time (1x) to confirm. Your HUB should say that the device is excluded",
-		"reset": "You may power on/off the bulb 6x (between 0.5-2 seconds each time) or use a certified controller to remove the device from your network to factory default. Only use this procedure in the event that the network primary controller is missing or otherwise inoperable. Your bulb will flash twice to confirm factory reset",
+		"inclusion": "Turn off power to the smart bulb, then turn on power - the bulb will blink twice indicating inclusion mode. If successful, the bulb will blink once more",
+		"exclusion": "Turn the power on - the bulb will blink twice indicating exclusion mode. The bulb will blink once more when exclusion is successful",
+		"reset": "Power the bulb on/off 6 times (between 0.5-2 seconds each time). The bulb will flash twice to indicate factory reset",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3657/LZW40%20-%20Manual%20(Compressed).pdf"
 	}
 }

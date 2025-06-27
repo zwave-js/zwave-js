@@ -44,9 +44,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "To enter learn mode(inclusion), press UP arrow for 5 seconds while the valve is open",
-		"exclusion": "To enter learn mode(exclusion), press UP arrow for 5 seconds while the valve is open",
-		"reset": "To reset, Press DOWN arrow for 5 seconds while the valve is open.\nPlease use this procedure only in the event that the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the UP arrow for 5 seconds while the valve is open.",
+		"exclusion": "Press the UP arrow for 5 seconds while the valve is open.",
+		"reset": "Press the DOWN arrow for 5 seconds while the valve is open.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1317/TIMEVALVE_SMART_MANUAL.pdf"
 	}
 }

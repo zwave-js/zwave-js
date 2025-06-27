@@ -1,0 +1,279 @@
+{
+	"manufacturer": "SimonTech S.L.U",
+	"manufacturerId": "0x0267",
+	"label": "10002020-13X",
+	"description": "S100 Rocker iO for Dimmer",
+	"devices": [
+		{
+			"productType": "0x0007",
+			"productId": "0x0000",
+			"zwaveAllianceId": 2590
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 3,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 20
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Association LED"
+		},
+		{
+			"#": "4",
+			"label": "Fade Duration (Off to On)",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Fade Duration (On to Off)",
+			"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "6",
+			"label": "Minimum Brightness",
+			"description": "Minimum internal dimming value",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "7",
+			"label": "Maximum Brightness",
+			"description": "Maximum internal dimming value",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 100
+		},
+		{
+			"#": "9",
+			"label": "Calibrate",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true,
+			"options": [
+				{
+					"label": "Perform calibration",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Delay ON",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "11",
+			"label": "Auto-Off Timer",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Night Light",
+			"description": "Sets the left and right LEDs to 20% brightness"
+		},
+		{
+			"#": "13",
+			"$import": "~/templates/master_template.json#base_enable_disable_255_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
+		},
+		{
+			"#": "15",
+			"label": "Reset Default",
+			"description": "Write only parameter used to restore configurations or perform a completely restore default",
+			"valueSize": 2,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Configuration values are restored",
+					"value": 17170
+				},
+				{
+					"label": "Factory reset",
+					"value": 39015
+				}
+			]
+		},
+		{
+			"#": "16",
+			"label": "Delay Off",
+			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "19",
+			"label": "Press Action",
+			"valueSize": 1,
+			"defaultValue": 5,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Short press: Toggle",
+					"value": 0
+				},
+				{
+					"label": "Short press: Turn on",
+					"value": 1
+				},
+				{
+					"label": "Short press: Turn off",
+					"value": 2
+				},
+				{
+					"label": "Short press: Turn on. Long press: Turn off",
+					"value": 4
+				},
+				{
+					"label": "Short press: Toggle. Slider: Dim up/down while on",
+					"value": 5
+				}
+			]
+		},
+		{
+			"#": "20",
+			"label": "Identify",
+			"description": "Central LED flashes",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Identify",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "21",
+			"label": "Load State",
+			"description": "Read only 2 byte configuration parameter used to read the dimmer state.  byte 0 is used to know the load state on or off.  0 dimmer is off.  1 dimmer is on. byte 1 is used to know the last active dimming percentage",
+			"valueSize": 2,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 355,
+			"defaultValue": 0
+		},
+		{
+			"#": "23",
+			"label": "Calibration Required",
+			"description": "Read only configuration used to know is device needs to be calibrated in order to work properly",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Device is calibrated",
+					"value": 0
+				},
+				{
+					"label": "Calibration must be performed",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "27",
+			"label": "Lock Hold Press",
+			"description": "Locks the major part of hold press effects in order to avoid undesired callibrations, Z-Wave changes or restores default.  0xff hold press from 2sec to 20 sec does not performs a node info hold press of 10 to 15 does not performs a automatic callibration hold press of 15 to 30 does not changes the sunblind or awing reports hold press of 30sec restores configuration except lock hold press, and sends a node info in order to add or remove from Z-Wave network",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Hold press is available",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "When the pushbutton is released after a press of (2sec<T<10sec) the device will send a NIF to include from Z-Wave network or perform an association with other Z-Wave device.\nCentral LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.",
+		"exclusion": "When the pushbutton is released after a press of (2sec<T<10sec) the device will send a NIF to exclude from Z-Wave network or perform an association with other Z-Wave device.\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.",
+		"reset": "When the pushbutton is released after a press of (30sec<T) the device will perform a factory default values operation, excluding it from network and reset the configuration parameters.\n\nMain LED will perform 1 Blink with 5 sec.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2590/DIMMER_991024_990912.pdf"
+	}
+}

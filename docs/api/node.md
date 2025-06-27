@@ -538,10 +538,12 @@ Aborts an active firmware update process.
 ### `ping`
 
 ```ts
-ping(): Promise<boolean>
+ping(tryReallyHard?: boolean): Promise<boolean>
 ```
 
 Pings the node and returns whether it responded or not.
+
+The optional `tryReallyHard` parameter can be set to `true` to have the controller resort to route resolution and explorer frames if the communication fails. This should only be done when really necessary, because it can block the communication with other nodes for several seconds.
 
 ### `testPowerlevel`
 
@@ -1358,8 +1360,8 @@ The node is passed as the single argument to the callback:
 
 There are two situations when this event is emitted:
 
-1. The interview of a node is completed for the first time ever.
-2. The node that has previously been interviewed completely and it either responds or is asleep.
+1. The interview of a node is completed (either for the first time or during a re-interview).
+2. When the driver restarts and a node that has previously been interviewed completely either responds or is asleep.
 
 > [!NOTE]
 > This event does not imply that the node is currently awake or will respond to requests.

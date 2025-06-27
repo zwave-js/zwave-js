@@ -404,9 +404,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Select menu item “Net”, then find IN and long-press M for 2s.",
-		"exclusion": "Select menu item “Net”, then find OUT and long-press M for 2s.",
-		"reset": "Select menu item “Net”, then find OUT and long-press M for 2s.",
+		"inclusion": "Select menu item 'Net', then find IN and long-press M for 2s.",
+		"exclusion": "Select menu item 'Net', then find OUT and long-press M for 2s.",
+		"reset": "Select menu item 'Net', then find OUT and long-press M for 2s.",
 		"manual": "https://www.elektroimportoren.no/docs/lib/4512757-Manual-18.pdf"
 	},
 	"compat": {

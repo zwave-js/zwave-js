@@ -33,9 +33,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified controller to include a device to the Z-Wave network. \n2. Once the controller is ready to include your device, press and release the program button to include it in the network. \n3. The blue LED will activate for 3 seconds to confirm it has been included",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller to exclude a device from the Z-Wave network. \n 2. Once the controller is ready to exclude your device, press and release the program button to exclude it from the network.",
-		"reset": "1. Press the program button 10 times within 6 seconds. \n2. The blue LED will blink for 3 seconds. \nNote: This should only be done in the event your primary controller is missing or otherwise inoperable",
+		"inclusion": "Press and release the program button. The blue LED will activate for 3 seconds to confirm inclusion.",
+		"exclusion": "Press and release the program button.",
+		"reset": "Press the program button 10 times within 6 seconds. The blue LED will blink for 3 seconds if successful.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1902/50359%20manual%20w:parameters.pdf"
 	}
 }

@@ -848,7 +848,7 @@
 	"metadata": {
 		"inclusion": "Triple-click config button",
 		"exclusion": "Triple-click config button",
-		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red.  Release the buttons and the switch will reset to factory defaults.",
+		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red. Release the buttons and the switch will reset to factory defaults.",
 		"manual": "https://community.inovelli.com/t/resources-red-series-smart-2-1-switch-on-off-dimmer-manual/13706"
 	}
 }

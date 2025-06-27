@@ -44,9 +44,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1.check Z-WaveTM Controller entered inclusion mode.\n2.Pressing Include button of PAD09 three times within 2 seconds will \nenter inclusion mode.",
-		"exclusion": "1.check Z-WaveTM Controller entered exclusion mode.\n2.Pressing Include button of PAD09 three times within 2 seconds will \nenter exclusion mode",
-		"reset": "1. Pressing Include button of PAD09 three times within 2 seconds will enter inclusion mode. \n2. Within 1 second, press Include button of PAD09 again for 5 seconds. \n3. IDs are excluded. \n\nnote : Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the Include button three times within 2 seconds.",
+		"exclusion": "Press the Include button three times within 2 seconds.",
+		"reset": "1. Press the Include button three times within 2 seconds.\n2. Within 1 second, press the Include button again for 5 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3142/PAD09_UserManual_Philio.pdf"
 	}
 }

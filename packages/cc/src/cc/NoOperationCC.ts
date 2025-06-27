@@ -1,4 +1,8 @@
-import { CommandClasses, MessagePriority } from "@zwave-js/core";
+import {
+	CommandClasses,
+	MessagePriority,
+	TransmitOptions,
+} from "@zwave-js/core";
 import { PhysicalCCAPI } from "../lib/API.js";
 import { CommandClass } from "../lib/CommandClass.js";
 import {
@@ -19,6 +23,10 @@ export class NoOperationCCAPI extends PhysicalCCAPI {
 				endpointIndex: this.endpoint.index,
 			}),
 			{
+				// Unless instructed otherwise, don't try too hard to
+				// reach the node. Pings are supposed to be short commands
+				// and not block the send queue for multiple seconds.
+				transmitOptions: TransmitOptions.ACK,
 				...this.commandOptions,
 				// Don't retry sending ping packets
 				maxSendAttempts: 1,

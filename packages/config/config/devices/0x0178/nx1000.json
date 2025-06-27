@@ -427,9 +427,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Put primary controller into inclusion mode\n2. Press any button to wake the One Touch\n3. Press and hold the middle page button (round button) until the Installer Setup menu appears\n4. Select the 'Z-Wave' button\n5. Select the 'Include' button\n6. Include will fast flash and then SUCCESS will display briefly",
-		"exclusion": "1. Put primary controller into exclusion mode\n2. Press any button to wake the One Touch\n3. Press and hold the middle page button (round button) until the Installer Setup menu appears\n4. Select the 'Z-Wave' button\n5. Select the 'Exclude' button\n6. Exclude will fast flash and then SUCCESS will display briefly",
-		"reset": "Please use Factory Reset as a last resort option only as all network settings and associations will be cleared. \n\n1. Press any button to wake the One Touch\n2. Press and hold the middle page button (round button) until the Installer Setup menu appears\n3. Select the 'System' button\n4. Select the 'Factory Reset' button\n5. Select 'Yes' to proceed with the factory reset",
+		"inclusion": "1. Press any button to wake the One Touch.\n2. Press and hold the middle page button (round button) until the Installer Setup menu appears.\n3. Select the 'Z-Wave' button.\n4. Select the 'Include' button.\n5. Include will fast flash and then SUCCESS will display briefly.",
+		"exclusion": "1. Press any button to wake the One Touch.\n2. Press and hold the middle page button (round button) until the Installer Setup menu appears.\n3. Select the 'Z-Wave' button.\n4. Select the 'Exclude' button.\n5. Exclude will fast flash and then SUCCESS will display briefly.",
+		"reset": "1. Press any button to wake the One Touch.\n2. Press and hold the middle page button (round button) until the Installer Setup menu appears.\n3. Select the 'System' button.\n4. Select the 'Factory Reset' button.\n5. Select 'Yes' to proceed with the factory reset.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1344/18-HD79D1-1-EN%20NX1000%20One%20Touch%20Controller.pdf"
 	}
 }

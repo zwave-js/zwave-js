@@ -20,6 +20,7 @@ const whitelistedImports = [
 	"alcalzone-shared/math",
 	"alcalzone-shared/sorted-list",
 	"alcalzone-shared/typeguards",
+	"@zwave-js/waddle",
 ];
 const whitelistedImportsRegex: RegExp[] = [];
 

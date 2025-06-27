@@ -1,0 +1,16 @@
+{
+	"manufacturer": "Aeotec Ltd.",
+	"manufacturerId": "0x0371",
+	"label": "ZWA060",
+	"description": "Z-Stick 10 Pro",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x003c"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	}
+}

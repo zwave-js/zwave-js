@@ -39,7 +39,7 @@ import {
 import {
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
-	type ZnifferDataMessage,
+	ZnifferDataMessage,
 	ZnifferFrameType,
 	ZnifferGetFrequenciesRequest,
 	ZnifferGetFrequenciesResponse,
@@ -88,8 +88,13 @@ import {
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ZnifferLogger } from "../log/Zniffer.js";
 import {
+	BeamStop,
 	type CorruptedFrame,
 	type Frame,
+	LongRangeBeamStart,
+	LongRangeMPDU,
+	ZWaveBeamStart,
+	ZWaveMPDU,
 	beamToFrame,
 	mpduToFrame,
 	parseBeamFrame,
@@ -674,190 +679,37 @@ supported frequencies: ${
 		capture: CapturedData,
 	): Promise<void> {
 		try {
-			let convertedRSSI: RSSI | undefined;
-			if (this._options.convertRSSI && this._chipType) {
-				convertedRSSI = tryConvertRSSI(
-					msg.rssiRaw,
-					this._chipType,
-				);
-			}
+			const frame = await this.parseFrame(msg);
+			capture.parsedFrame = frame.external;
 
-			// Short-circuit if we're dealing with beam frames
 			if (
-				msg.frameType === ZnifferFrameType.BeamStart
-				|| msg.frameType === ZnifferFrameType.BeamStop
+				frame.internal instanceof ZWaveBeamStart
+				|| frame.internal instanceof LongRangeBeamStart
+				|| frame.internal instanceof BeamStop
 			) {
-				const beam = parseBeamFrame(msg);
-				beam.frameInfo.rssi = convertedRSSI;
-
-				// Emit the captured frame in a format that's easier to work with for applications.
-				this.znifferLog.beam(beam);
-				const frame = beamToFrame(beam);
-				capture.parsedFrame = frame;
-				this.emit("frame", frame, capture.frameData);
+				this.znifferLog.beam(frame.internal);
+				this.emit("frame", frame.external as Frame, capture.frameData);
 				return;
 			}
 
-			// Only handle messages with a valid checksum, expose the others as CRC errors
-			if (!msg.checksumOK) {
+			if (frame.internal === undefined) {
+				// Corrupted frame, expose as a CRC error
 				this.znifferLog.crcError(msg);
-				const frame = znifferDataMessageToCorruptedFrame(msg);
-				capture.parsedFrame = frame;
-				this.emit("corrupted frame", frame, capture.frameData);
+				this.emit(
+					"corrupted frame",
+					frame.external as CorruptedFrame,
+					capture.frameData,
+				);
 				return;
 			}
 
-			const mpdu = parseMPDU(msg);
-			mpdu.frameInfo.rssi = convertedRSSI;
-
-			// Try to decode the CC while assuming the role of the receiver
-			let destSecurityManager: SecurityManager | undefined;
-			let destSecurityManager2: SecurityManager2 | undefined;
-			let destSecurityManagerLR: SecurityManager2 | undefined;
-			// Only frames with a destination node id contains something that requires access to the own node ID
-			let destNodeId = 0xff;
-
-			let cc: CommandClass | undefined;
-
-			// FIXME: Cache data => parsed CC, so we can understand re-transmitted S2 frames
-
 			if (
-				mpdu.payload.length > 0
-				&& mpdu.headerType !== MPDUHeaderType.Acknowledgement
+				frame.internal instanceof ZWaveMPDU
+				|| frame.internal instanceof LongRangeMPDU
 			) {
-				if ("destinationNodeId" in mpdu) {
-					destNodeId = mpdu.destinationNodeId;
-					({
-						securityManager: destSecurityManager,
-						securityManager2: destSecurityManager2,
-						securityManagerLR: destSecurityManagerLR,
-					} = await this.getSecurityManagers(mpdu.destinationNodeId));
-				}
-
-				// TODO: Support parsing multicast S2 frames
-				const frameType: FrameType =
-					mpdu.headerType === MPDUHeaderType.Multicast
-						? "multicast"
-						: (destNodeId === NODE_ID_BROADCAST
-								|| destNodeId === NODE_ID_BROADCAST_LR)
-						? "broadcast"
-						: "singlecast";
-				try {
-					cc = await CommandClass.parse(
-						mpdu.payload,
-						{
-							homeId: mpdu.homeId,
-							ownNodeId: destNodeId,
-							sourceNodeId: mpdu.sourceNodeId,
-							frameType,
-							securityManager: destSecurityManager,
-							securityManager2: destSecurityManager2,
-							securityManagerLR: destSecurityManagerLR,
-							...this.parsingContext,
-						},
-					);
-				} catch (e: any) {
-					// Ignore
-					console.error(e.stack);
-				}
-			}
-
-			this.znifferLog.mpdu(mpdu, cc);
-
-			// Emit the captured frame in a format that's easier to work with for applications.
-			const frame = mpduToFrame(mpdu, cc);
-			capture.parsedFrame = frame;
-			this.emit("frame", frame, capture.frameData);
-
-			// Update the security managers when nonces are exchanged, so we can
-			// decrypt the communication
-			if (cc?.ccId === CommandClasses["Security 2"]) {
-				const securityManagers = await this.getSecurityManagers(
-					mpdu.sourceNodeId,
-				);
-				const isLR = isLongRangeNodeId(mpdu.sourceNodeId)
-					|| isLongRangeNodeId(destNodeId);
-				const senderSecurityManager = isLR
-					? securityManagers.securityManagerLR
-					: securityManagers.securityManager2;
-				const destSecurityManager = isLR
-					? destSecurityManagerLR
-					: destSecurityManager2;
-
-				if (senderSecurityManager && destSecurityManager) {
-					if (cc instanceof Security2CCNonceGet) {
-						// Nonce Get -> all nonces are now invalid
-						senderSecurityManager.deleteNonce(destNodeId);
-						destSecurityManager.deleteNonce(mpdu.sourceNodeId);
-					} else if (cc instanceof Security2CCNonceReport && cc.SOS) {
-						// Nonce Report (SOS) -> We only know the receiver's nonce
-						senderSecurityManager.setSPANState(destNodeId, {
-							type: SPANState.LocalEI,
-							receiverEI: cc.receiverEI!,
-						});
-						destSecurityManager.storeRemoteEI(
-							mpdu.sourceNodeId,
-							cc.receiverEI!,
-						);
-					} else if (cc instanceof Security2CCMessageEncapsulation) {
-						const senderEI = cc.getSenderEI();
-						if (senderEI) {
-							// The receiver should now have a valid SPAN state, since decoding the S2 CC updates it.
-							// The security manager for the sender however, does not. Therefore, update it manually,
-							// if the receiver SPAN is indeed valid.
-
-							const receiverSPANState = destSecurityManager
-								.getSPANState(mpdu.sourceNodeId);
-							if (receiverSPANState.type === SPANState.SPAN) {
-								senderSecurityManager.setSPANState(
-									destNodeId,
-									receiverSPANState,
-								);
-							}
-						}
-					}
-				}
-			} else if (
-				cc?.ccId === CommandClasses.Security
-				&& cc instanceof SecurityCCNonceReport
-			) {
-				const senderSecurityManager =
-					(await this.getSecurityManagers(mpdu.sourceNodeId))
-						.securityManager;
-				const destSecurityManager =
-					(await this.getSecurityManagers(destNodeId))
-						.securityManager;
-
-				if (senderSecurityManager && destSecurityManager) {
-					// Both nodes have a shared nonce now
-					senderSecurityManager.setNonce(
-						{
-							issuer: mpdu.sourceNodeId,
-							nonceId: senderSecurityManager.getNonceId(
-								cc.nonce,
-							),
-						},
-						{
-							nonce: cc.nonce,
-							receiver: destNodeId,
-						},
-						{ free: true },
-					);
-
-					destSecurityManager.setNonce(
-						{
-							issuer: mpdu.sourceNodeId,
-							nonceId: senderSecurityManager.getNonceId(
-								cc.nonce,
-							),
-						},
-						{
-							nonce: cc.nonce,
-							receiver: destNodeId,
-						},
-						{ free: true },
-					);
-				}
+				this.znifferLog.mpdu(frame.internal, frame.cc);
+				this.emit("frame", frame.external as Frame, capture.frameData);
+				return;
 			}
 		} catch (e: any) {
 			console.error(e);
@@ -1246,6 +1098,248 @@ supported frequencies: ${
 
 		this._destroyPromise.resolve();
 	}
+
+	/**
+	 * Loads captured frames from a `.zlf` file that was written by the official Zniffer application or Z-Wave JS.
+	 */
+	public async loadCaptureFromFile(filePath: string): Promise<void> {
+		const buffer = await this.bindings.fs.readFile(filePath);
+		await this.loadCaptureFromBuffer(buffer);
+	}
+
+	/**
+	 * Load captured frames from a buffer
+	 */
+	public async loadCaptureFromBuffer(buffer: Uint8Array): Promise<void> {
+		// Parse and validate header
+		let { bytesRead: offset } = parseZLFHeader(buffer);
+
+		this.clearCapturedFrames();
+		let accumulator: CapturedData | undefined;
+
+		while (offset < buffer.length) {
+			const {
+				bytesRead,
+				complete,
+				type,
+				entry,
+				msg,
+				accumulator: newAccumulator,
+			} = parseZLFEntry(
+				buffer,
+				offset,
+				accumulator,
+			);
+			// Avoid infinite loops
+			if (bytesRead <= 0) break;
+			offset += bytesRead;
+
+			if (complete) {
+				accumulator = undefined;
+			} else {
+				accumulator = newAccumulator;
+				continue;
+			}
+
+			if (type === ZnifferMessageType.Data) {
+				entry.parsedFrame =
+					// FIXME: Figure out which values the Zniffer application actually stores
+					// as RSSI. Both the attempted conversion and the raw values seem wrong.
+					(await this.parseFrame(msg, false)).external;
+				this._capturedFrames.push(entry);
+			}
+		}
+	}
+
+	private async parseFrame(
+		msg: ZnifferDataMessage,
+		convertRSSI: boolean = this._options.convertRSSI ?? false,
+	): Promise<{
+		internal: any;
+		cc?: CommandClass;
+		external: Frame | CorruptedFrame;
+	}> {
+		let convertedRSSI: RSSI | undefined;
+		if (convertRSSI && this._chipType) {
+			convertedRSSI = tryConvertRSSI(
+				msg.rssiRaw,
+				this._chipType,
+			);
+		}
+
+		// Short-circuit if we're dealing with beam frames
+		if (
+			msg.frameType === ZnifferFrameType.BeamStart
+			|| msg.frameType === ZnifferFrameType.BeamStop
+		) {
+			const beam = parseBeamFrame(msg);
+			beam.frameInfo.rssi = convertedRSSI;
+			return {
+				internal: beam,
+				external: beamToFrame(beam),
+			};
+		}
+
+		// Only handle messages with a valid checksum, expose the others as CRC errors
+		if (!msg.checksumOK) {
+			return {
+				internal: undefined,
+				external: znifferDataMessageToCorruptedFrame(msg),
+			};
+		}
+
+		const mpdu = parseMPDU(msg);
+		mpdu.frameInfo.rssi = convertedRSSI;
+
+		// Try to decode the CC while assuming the role of the receiver
+		let destSecurityManager: SecurityManager | undefined;
+		let destSecurityManager2: SecurityManager2 | undefined;
+		let destSecurityManagerLR: SecurityManager2 | undefined;
+		// Only frames with a destination node id contains something that requires access to the own node ID
+		let destNodeId = 0xff;
+
+		let cc: CommandClass | undefined;
+
+		// FIXME: Cache data => parsed CC, so we can understand re-transmitted S2 frames
+
+		if (
+			mpdu.payload.length > 0
+			&& mpdu.headerType !== MPDUHeaderType.Acknowledgement
+		) {
+			if ("destinationNodeId" in mpdu) {
+				destNodeId = mpdu.destinationNodeId;
+				({
+					securityManager: destSecurityManager,
+					securityManager2: destSecurityManager2,
+					securityManagerLR: destSecurityManagerLR,
+				} = await this.getSecurityManagers(mpdu.destinationNodeId));
+			}
+
+			// TODO: Support parsing multicast S2 frames
+			const frameType: FrameType =
+				mpdu.headerType === MPDUHeaderType.Multicast
+					? "multicast"
+					: (destNodeId === NODE_ID_BROADCAST
+							|| destNodeId === NODE_ID_BROADCAST_LR)
+					? "broadcast"
+					: "singlecast";
+			try {
+				cc = await CommandClass.parse(
+					mpdu.payload,
+					{
+						homeId: mpdu.homeId,
+						ownNodeId: destNodeId,
+						sourceNodeId: mpdu.sourceNodeId,
+						frameType,
+						securityManager: destSecurityManager,
+						securityManager2: destSecurityManager2,
+						securityManagerLR: destSecurityManagerLR,
+						...this.parsingContext,
+					},
+				);
+			} catch (e: any) {
+				// Ignore
+				console.error(e.stack);
+			}
+		}
+
+		// Update the security managers when nonces are exchanged, so we can
+		// decrypt the communication
+		if (cc?.ccId === CommandClasses["Security 2"]) {
+			const securityManagers = await this.getSecurityManagers(
+				mpdu.sourceNodeId,
+			);
+			const isLR = isLongRangeNodeId(mpdu.sourceNodeId)
+				|| isLongRangeNodeId(destNodeId);
+			const senderSecurityManager = isLR
+				? securityManagers.securityManagerLR
+				: securityManagers.securityManager2;
+			const destSecurityManager = isLR
+				? destSecurityManagerLR
+				: destSecurityManager2;
+
+			if (senderSecurityManager && destSecurityManager) {
+				if (cc instanceof Security2CCNonceGet) {
+					// Nonce Get -> all nonces are now invalid
+					senderSecurityManager.deleteNonce(destNodeId);
+					destSecurityManager.deleteNonce(mpdu.sourceNodeId);
+				} else if (cc instanceof Security2CCNonceReport && cc.SOS) {
+					// Nonce Report (SOS) -> We only know the receiver's nonce
+					senderSecurityManager.setSPANState(destNodeId, {
+						type: SPANState.LocalEI,
+						receiverEI: cc.receiverEI!,
+					});
+					destSecurityManager.storeRemoteEI(
+						mpdu.sourceNodeId,
+						cc.receiverEI!,
+					);
+				} else if (cc instanceof Security2CCMessageEncapsulation) {
+					const senderEI = cc.getSenderEI();
+					if (senderEI) {
+						// The receiver should now have a valid SPAN state, since decoding the S2 CC updates it.
+						// The security manager for the sender however, does not. Therefore, update it manually,
+						// if the receiver SPAN is indeed valid.
+
+						const receiverSPANState = destSecurityManager
+							.getSPANState(mpdu.sourceNodeId);
+						if (receiverSPANState.type === SPANState.SPAN) {
+							senderSecurityManager.setSPANState(
+								destNodeId,
+								receiverSPANState,
+							);
+						}
+					}
+				}
+			}
+		} else if (
+			cc?.ccId === CommandClasses.Security
+			&& cc instanceof SecurityCCNonceReport
+		) {
+			const senderSecurityManager =
+				(await this.getSecurityManagers(mpdu.sourceNodeId))
+					.securityManager;
+			const destSecurityManager =
+				(await this.getSecurityManagers(destNodeId))
+					.securityManager;
+
+			if (senderSecurityManager && destSecurityManager) {
+				// Both nodes have a shared nonce now
+				senderSecurityManager.setNonce(
+					{
+						issuer: mpdu.sourceNodeId,
+						nonceId: senderSecurityManager.getNonceId(
+							cc.nonce,
+						),
+					},
+					{
+						nonce: cc.nonce,
+						receiver: destNodeId,
+					},
+					{ free: true },
+				);
+
+				destSecurityManager.setNonce(
+					{
+						issuer: mpdu.sourceNodeId,
+						nonceId: senderSecurityManager.getNonceId(
+							cc.nonce,
+						),
+					},
+					{
+						nonce: cc.nonce,
+						receiver: destNodeId,
+					},
+					{ free: true },
+				);
+			}
+		}
+
+		return {
+			internal: mpdu,
+			cc,
+			external: mpduToFrame(mpdu, cc),
+		};
+	}
 }
 
 function captureToZLFEntry(
@@ -1255,7 +1349,8 @@ function captureToZLFEntry(
 	// Convert the date to a .NET datetime
 	let ticks = BigInt(capture.timestamp.getTime()) * 10000n
 		+ 621355968000000000n;
-	ticks = ticks | 4000000000000000n; // marks the time as .NET DateTimeKind.Local
+	// https://github.com/dotnet/runtime/blob/179473d3c8a1012b036ad732d02804b062923e8d/src/libraries/System.Private.CoreLib/src/System/DateTime.cs#L161
+	ticks = ticks | (2n << 62n); // DateTimeKind.Local << KindShift
 
 	buffer.writeBigUInt64LE(ticks, 0);
 	const direction = 0b0000_0000; // inbound, outbound would be 0b1000_0000
@@ -1266,4 +1361,168 @@ function captureToZLFEntry(
 	buffer.set(capture.rawData, 13);
 	buffer[buffer.length - 1] = 0xfe; // end of frame
 	return buffer;
+}
+
+function parseZLFHeader(buffer: Uint8Array): {
+	znifferVersion: number;
+	checksum: number;
+	bytesRead: number;
+} {
+	if (buffer.length < 2048) {
+		throw new ZWaveError(
+			"Invalid ZLF file: header too small",
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+
+	const bytes = Bytes.view(buffer);
+
+	const znifferVersion = bytes[0];
+	const checksum = bytes.readUInt16BE(2046);
+
+	return {
+		znifferVersion,
+		checksum,
+		bytesRead: 2048,
+	};
+}
+
+type ParseZLFEntryResult =
+	| (
+		& {
+			complete: true;
+			bytesRead: number;
+			accumulator?: undefined;
+		}
+		& (
+			| {
+				type: ZnifferMessageType.Data;
+				msg: ZnifferDataMessage;
+				entry: CapturedData;
+			}
+			| {
+				type: ZnifferMessageType.Command;
+				msg: ZnifferMessage;
+				entry: CapturedData;
+			}
+			| {
+				type?: undefined;
+				msg?: undefined;
+				entry?: undefined;
+			}
+		)
+	)
+	| ({
+		complete: false;
+		bytesRead: number;
+		accumulator: CapturedData;
+		type?: undefined;
+		msg?: undefined;
+		entry?: undefined;
+	});
+
+/** @internal */
+export function parseZLFEntry(
+	buffer: Uint8Array,
+	offset: number,
+	accumulator?: CapturedData,
+): ParseZLFEntryResult {
+	const bytes = Bytes.view(buffer.subarray(offset));
+
+	// Each ZLF entry has a 14-byte overhead, so the buffer must have at least that size
+	if (bytes.length < 14) {
+		throw new ZWaveError(
+			"Invalid ZLF file: entry truncated",
+			ZWaveErrorCodes.PacketFormat_Truncated,
+		);
+	}
+
+	// Parse .NET DateTime ticks (8 bytes, little-endian)
+	const ticks = bytes.readBigUInt64LE(0);
+	// Kind: 1 = UTC, 2 = Local
+	// const dateTimeKind = Number((ticks >> 62n) & 0b11n);
+	const timeStampMask = (1n << 62n) - 1n;
+	const jsTimestamp = Number(
+		((ticks & timeStampMask) - 621355968000000000n) / 10000n,
+	);
+	// FIXME: dateTimeKind should always be local. Properly support UTC
+	const timestamp = new Date(jsTimestamp);
+
+	// Ignore the direction and session ID byte
+	const rawDataLength = bytes[9];
+	const totalLength = 14 + rawDataLength;
+	if (bytes.length < totalLength) {
+		throw new ZWaveError(
+			"Invalid ZLF file: entry truncated",
+			ZWaveErrorCodes.PacketFormat_Truncated,
+		);
+	}
+	const eod = bytes[totalLength - 1];
+	// 0xfe designates a Zniffer entry
+	if (eod !== 0xfe) {
+		// Skip unsupported entries
+		return {
+			complete: true,
+			bytesRead: totalLength,
+		};
+	}
+	// bytes 10-12 are empty
+
+	let rawData = bytes.subarray(13, totalLength - 1);
+	if (accumulator) {
+		rawData = Bytes.concat([
+			accumulator.rawData,
+			rawData,
+		]);
+	}
+
+	try {
+		const msg = ZnifferMessage.parse(rawData);
+
+		const entry: CapturedData = {
+			timestamp,
+			rawData,
+			frameData: msg.payload,
+		};
+
+		// Help TypeScript out a bit
+		if (msg instanceof ZnifferDataMessage) {
+			return {
+				complete: true,
+				bytesRead: totalLength,
+				type: ZnifferMessageType.Data,
+				msg,
+				entry,
+			};
+		} else {
+			// We are dealing with a command frame
+			return {
+				complete: true,
+				bytesRead: totalLength,
+				type: ZnifferMessageType.Command,
+				msg,
+				entry,
+			};
+		}
+	} catch (e) {
+		if (
+			isZWaveError(e) && e.code === ZWaveErrorCodes.PacketFormat_Truncated
+		) {
+			// We are dealing with an incomplete frame, so we need to accumulate the data for the next iteration
+			accumulator ??= {
+				timestamp,
+				rawData: new Bytes(),
+				frameData: new Bytes(), // Cannot be determined yet
+			};
+			accumulator.rawData = rawData; // rawData is already concatenated
+
+			return {
+				complete: false,
+				bytesRead: totalLength,
+				accumulator,
+			};
+		}
+
+		throw e;
+	}
 }

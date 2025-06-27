@@ -203,9 +203,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Press the motor setting button three times within 1.5 seconds. (Press P1 (1 beep), Press P1 (1 beep), Press P1( 1 beep and 1 jog))",
-		"exclusion": "Press the motor setting button three times within 1.5 seconds. (Press P1 (1 beep), Press P1 (1 beep), Press P1 (1 beep and 1 jog))",
-		"reset": "Press and hold P1 for 10 seconds (Press and hold P1 button for 2 seconds, the motor will long beep once and jog once; for 5 seconds, 3 beeps and jog once if no limits; for 10 seconds, 3 beeps and jog once; release the P1 button, 16 beeps and jog once.)\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the motor setting button three times within 1.5 seconds. The motor will beep and jog after the third press.",
+		"exclusion": "Press the motor setting button three times within 1.5 seconds. The motor will beep and jog after the third press.",
+		"reset": "Press and hold P1 for 10 seconds. The motor will long beep once and jog once after 2 seconds, 3 beeps and jog once after 5 seconds, 3 beeps and jog once after 10 seconds. Release the P1 button, the motor will beep 16 times and jog once.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3343/DM35ECB-F.pdf"
 	}
 }

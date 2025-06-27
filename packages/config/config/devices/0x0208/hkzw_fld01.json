@@ -1,12 +1,13 @@
 {
-	"manufacturer": "HANK Electronics Ltd.",
+	"manufacturer": "HANK Electronics, Ltd.",
 	"manufacturerId": "0x0208",
 	"label": "HKZW-FLD01",
 	"description": "Flood Sensor",
 	"devices": [
 		{
 			"productType": "0x0200",
-			"productId": "0x000f"
+			"productId": "0x000f",
+			"zwaveAllianceId": 3895
 		},
 		{
 			"productType": "0x0201",
@@ -170,5 +171,11 @@
 			"maxValue": 50,
 			"defaultValue": 20
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "1. Open the cover\n2. Click the Z-button once or triple click quickly - the LED will blink fast",
+		"exclusion": "1. Open the cover\n2. Triple click the Z-button quickly - the LED will blink fast",
+		"reset": "1. Power on the device\n2. Press and hold the Z-button for more than 20 seconds\n3. The LED will stay on for 2 seconds when reset is complete",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3895/991557%20flood%20sensor-compressed.pdf"
+	}
 }

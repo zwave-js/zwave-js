@@ -1,12 +1,13 @@
 {
 	"manufacturer": "SimonTech S.L.U",
 	"manufacturerId": "0x0267",
-	"label": "10002080-13x",
-	"description": "Simon IO: Roller Blind",
+	"label": "10002080-13X",
+	"description": "Roller Blind",
 	"devices": [
 		{
 			"productType": "0x0004",
-			"productId": "0x0000"
+			"productId": "0x0000",
+			"zwaveAllianceId": 2669
 		},
 		{
 			"productType": "0x0004",
@@ -48,105 +49,54 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Association LED",
-			"description": "Activates the Central LED.",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Turns the LED off",
-					"value": 0
-				},
-				{
-					"label": "Turns the LED on",
-					"value": 255
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Association LED"
 		},
 		{
 			"#": "4",
 			"label": "Up Time",
 			"valueSize": 1,
-			"defaultValue": 60,
-			"readOnly": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Sets the up time in seconds",
-					"value": 1
-				},
-				{
-					"label": "Default",
-					"value": 60
-				}
-			]
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 120,
+			"defaultValue": 60
 		},
 		{
 			"#": "5",
 			"label": "Down Time",
 			"valueSize": 1,
-			"defaultValue": 60,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Sets the down time in seconds",
-					"value": 1
-				},
-				{
-					"label": "Default",
-					"value": 60
-				}
-			]
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 120,
+			"defaultValue": 60
 		},
 		{
 			"#": "9",
-			"label": "Calibration",
+			"label": "Calibrate",
 			"valueSize": 1,
-			"minValue": 255,
+			"minValue": 0,
 			"maxValue": 255,
-			"defaultValue": 255,
+			"defaultValue": 0,
 			"unsigned": true,
-			"writeOnly": true
+			"writeOnly": true,
+			"options": [
+				{
+					"label": "Perform calibration",
+					"value": 255
+				}
+			]
 		},
 		{
 			"#": "12",
-			"label": "Behavior of LED in Repose",
-			"description": "Configuration of Main LED as identification at 20%.",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "LED off",
-					"value": 0
-				},
-				{
-					"label": "LED on at 20% of maximum level",
-					"value": 255
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Night Light",
+			"description": "Sets LED to 20% brightness"
 		},
 		{
 			"#": "13",
-			"label": "Lock Input",
-			"description": "Unlock/lock the direct control of load.",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Unlock the direct control of load",
-					"value": 0
-				},
-				{
-					"label": "Lock the direct control of load",
-					"value": 255
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_255_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
 		},
 		{
 			"#": "21[0xff00]",
@@ -154,7 +104,6 @@
 			"valueSize": 2,
 			"defaultValue": 0,
 			"readOnly": true,
-			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Stopped",
@@ -200,21 +149,56 @@
 		},
 		{
 			"#": "27",
-			"label": "Lock Long Press",
+			"label": "Lock Hold Press",
+			"description": "Locks the major part of hold press effects in order to avoid undesired callibrations, Z-Wave changes or restores default.  0xff hold press from 2sec to 20 sec does not performs a node info hold press of 10 to 15 does not performs a automatic callibration hold press of 15 to 30 does not changes the sunblind or awing reports hold press of 30sec restores configuration except lock hold press, and sends a node info in order to add or remove from Z-Wave network",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
+			"options": [
+				{
+					"label": "Hold press is available",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "15",
+			"label": "Reset Default",
+			"description": "Write only parameter used to restore configurations or perform a completely restore default",
+			"valueSize": 2,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Long press works as default",
-					"value": 0
+					"label": "Configuration values are restored",
+					"value": 17170
 				},
 				{
-					"label": "Long press works as overview",
-					"value": 255
+					"label": "Factory reset",
+					"value": 39015
 				}
 			]
+		},
+		{
+			"#": "20",
+			"label": "Identify",
+			"description": "Central LED flashes",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "When the pushbutton is released after a press of (2sec<T<10sec) the device will send a NIF to include from Z-Wave network or perform an association with other Z-Wave device.\nCentral LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.",
+		"exclusion": "When the pushbutton is released after a press of (2sec<T<10sec) the device will send a NIF to exclude from Z-Wave network or perform an association with other Z-Wave device.\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.\n\nThis process does not perform a default reset of configurations.\n\nMain LED will Blink with 0,3 sec period to inform that NIF can be send after release of pushbutton.",
+		"reset": "When the pushbutton is released after a press of (30sec<T) the device will perform a factory default values operation, excluding it from network and reset the configuration parameters.\n\nMain LED will perform 1 Blink with 5 sec.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2669/ROLLERBLIND_991025_990913.pdf"
+	}
 }

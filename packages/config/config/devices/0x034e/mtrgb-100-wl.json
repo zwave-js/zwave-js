@@ -26,9 +26,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Inclusion (Add)\nTo include (Add) the device to a Z-Wave network, press the button four times in quick succession. When the device is in Add mode, the LED flashes green. When finished, the new status is:\nAdd: The LED lights up briefly in green\nRemove: The LED lights up briefly in red",
-		"exclusion": "Exclusion (Remove)\nTo exclude (Remove) the device from a Z-Wave network, press the button four times in quick succession. When the device is in Add mode, the LED flashes green. When finished, the new status is:\nAdd: The LED lights up briefly in green\nRemove: The LED lights up briefly in red",
-		"reset": "Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the button four times in quick succession. The LED flashes green when in add mode and lights up briefly in green when successful.",
+		"exclusion": "Press the button four times in quick succession. The LED flashes green when in add mode and lights up briefly in red when successful.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3234/Operating_manual_myTEM_Radio_RGBW_en.pdf"
 	}
 }

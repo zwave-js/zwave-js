@@ -69,6 +69,8 @@ export class DeviceResetLocallyCC extends CommandClass {
 
 @CCCommand(DeviceResetLocallyCommand.Notification)
 export class DeviceResetLocallyCCNotification extends DeviceResetLocallyCC {
+	// @noLogEntry: This CC has no properties to log
+
 	public static from(
 		raw: CCRaw,
 		ctx: CCParsingContext,

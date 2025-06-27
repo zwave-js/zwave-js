@@ -55,6 +55,7 @@ export async function handleVersionCommandClassGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
 	command: VersionCCCommandClassGet,
+	reportVersion?: number,
 ): Promise<void> {
 	const endpoint = node.getEndpoint(command.endpointIndex) ?? node;
 
@@ -69,7 +70,7 @@ export async function handleVersionCommandClassGet(
 				& ~EncapsulationFlags.Supervision,
 		});
 
-	await api.reportCCVersion(command.requestedCC);
+	await api.reportCCVersion(command.requestedCC, reportVersion);
 }
 
 export async function handleVersionCapabilitiesGet(

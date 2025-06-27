@@ -136,6 +136,16 @@ await zniffer.getCaptureAsZLFBuffer((frame) => {
 });
 ```
 
+Previously saved captures and those created by the official Zniffer applications can be loaded from disk using the `loadCaptureFromFile` or `loadCaptureFromBuffer` methods.
+
+```ts
+await zniffer.loadCaptureFromFile("/path/to/file.zlf");
+// or
+await zniffer.loadCaptureFromBuffer(buffer);
+```
+
+The loaded data is available through the `capturedFrames` property and can be processed in the same way as live captured data.
+
 ## Frequency selection
 
 The configured frequency of the Zniffer has to match the frequency of the Z-Wave network it is capturing. Zniffers based on 700/800 series firmware support frequencies that match the `ZnifferRegion` enum:

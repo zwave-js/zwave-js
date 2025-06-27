@@ -81,9 +81,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "On thermostat in advance mode scroll to option “Add device”, then click OK button. On other Z-Wave device start learn process, thermostat will display outcome on completion of the process.",
-		"exclusion": "On thermostat in advance mode scroll to option “Remove device”, then click OK button. On other Z-Wave device start learn process, thermostat will display outcome on completion of the process.",
-		"reset": "On thermostat in advance mode scroll to option “Factory Reset”, then click OK button.\n\nNote: Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "In advanced mode, navigate to 'Add device' and press OK.",
+		"exclusion": "In advanced mode, navigate to 'Remove device' and press OK.",
+		"reset": "In advanced mode, navigate to 'Factory Reset' and press OK.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2396/Thermostat%20Manual%20V3.pdf"
 	}
 }

@@ -23,7 +23,7 @@ export function createNodeSocketFactory(
 					reject(
 						new ZWaveError(
 							`The socket closed unexpectedly!`,
-							ZWaveErrorCodes.Driver_Failed,
+							ZWaveErrorCodes.Driver_SerialPortClosed,
 						),
 					);
 				};
@@ -94,7 +94,7 @@ export function createNodeSocketFactory(
 					controller.error(
 						new ZWaveError(
 							`The serial port closed unexpectedly!`,
-							ZWaveErrorCodes.Driver_Failed,
+							ZWaveErrorCodes.Driver_SerialPortClosed,
 						),
 					);
 				});
@@ -103,7 +103,7 @@ export function createNodeSocketFactory(
 					controller.error(
 						new ZWaveError(
 							`The serial port closed unexpectedly!`,
-							ZWaveErrorCodes.Driver_Failed,
+							ZWaveErrorCodes.Driver_SerialPortClosed,
 						),
 					);
 				});

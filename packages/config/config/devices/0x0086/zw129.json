@@ -106,7 +106,7 @@
 		}
 	],
 	"metadata": {
-		"reset": "Press and hold the Action button that you can find on the product's housing for 20 seconds and then release. This procedure should only be used when the primary controller is inoperable",
+		"reset": "Press and hold the Action button on the product's housing for 20 seconds and then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2232/Aeon%20Labs%20WallMote%20manual.pdf"
 	}
 }

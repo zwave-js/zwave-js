@@ -825,9 +825,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		const { resetSecurityClasses = false, waitForWakeup = true } = options;
 		// Unless desired, don't forget the information about sleeping nodes immediately, so they continue to function
 		let didWakeUp = false;
+		const wasAwake = this.status === NodeStatus.Awake;
 		if (
 			waitForWakeup
 			&& this.canSleep
+			&& !wasAwake
 			&& this.supportsCC(CommandClasses["Wake Up"])
 		) {
 			this.driver.controllerLog.logNode(
@@ -917,7 +919,14 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// If we did wait for the wakeup, mark the node as awake again so it does not
 		// get considered asleep after querying protocol info.
-		if (didWakeUp) this.markAsAwake();
+		if (didWakeUp || wasAwake) {
+			// Re-interviewing forgets the node's capabilities. To be able to mark it
+			// as awake, we need to set those again.
+			this.isListening = false;
+			this.isFrequentListening = false;
+
+			this.markAsAwake();
+		}
 
 		void this.driver.interviewNodeInternal(this);
 		this._refreshInfoPending = false;
@@ -1104,8 +1113,13 @@ protocol version:      ${this.protocolVersion}`;
 		this.setInterviewStage(InterviewStage.ProtocolInfo);
 	}
 
-	/** Node interview: pings the node to see if it responds */
-	public async ping(): Promise<boolean> {
+	/**
+	 * Pings the node to see if it responds
+	 * @param tryReallyHard Whether the controller should resort to route resolution
+	 * and explorer frames if the communication fails. Setting this option to `true`
+	 * can result in multi-second delays.
+	 */
+	public async ping(tryReallyHard: boolean = false): Promise<boolean> {
 		if (this.isControllerNode) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1121,7 +1135,14 @@ protocol version:      ${this.protocolVersion}`;
 		});
 
 		try {
-			await this.commandClasses["No Operation"].send();
+			let api = this.commandClasses["No Operation"];
+			// Enable route resolution and explorer frames if desired
+			if (tryReallyHard) {
+				api = api.withOptions({
+					transmitOptions: TransmitOptions.DEFAULT,
+				});
+			}
+			await api.send();
 			this.driver.controllerLog.logNode(this.id, {
 				message: "ping successful",
 				direction: "inbound",
@@ -2359,7 +2380,24 @@ protocol version:      ${this.protocolVersion}`;
 				this.driver.options.vendor,
 			);
 		} else if (command instanceof VersionCCCommandClassGet) {
-			return handleVersionCommandClassGet(this.driver, this, command);
+			// If the application has disabled this CC, set the version to 0
+			// This should be all we need to do, as there are currently no CCs with
+			// requirements for applications where we also respond to Get requests
+			let reportVersion: number | undefined;
+			if (
+				this.driver.options.features.disableCommandClasses?.includes(
+					command.requestedCC,
+				)
+			) {
+				reportVersion = 0;
+			}
+
+			return handleVersionCommandClassGet(
+				this.driver,
+				this,
+				command,
+				reportVersion,
+			);
 		} else if (command instanceof VersionCCCapabilitiesGet) {
 			return handleVersionCapabilitiesGet(this.driver, this, command);
 		} else if (command instanceof ManufacturerSpecificCCGet) {

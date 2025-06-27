@@ -63,9 +63,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "After mounting the UZB controller to your PC and running the PC Controller program, click the Add button in the PC Controller program. Press the button on the Smart Plug for more than five seconds after you plug the Smart Plug into a power outlet and it will include to the network controller, while flashing the red button on the LED Smart Plug",
-		"exclusion": "After mounting the UZB controller to your PC and run the PC Controller program you can click the Remove button in the PC Controller program. Press the button on the Smart Plug for more than five seconds after you plug the Smart Plug into a power outlet will Exclusion in the network controller, while the flashing red button LED Smart Plug",
-		"reset": "Press the button on the Smart Plug for more than 10 seconds after you plug the Smart Plug into a power outlet will make a Exclusion in the network controller, while the flashing red button LED Smart Plug. And all the variables are initialized.\n\n※ Please use this procedure only in the event that the network primary \n controller is missing or otherwise inoperable",
+		"inclusion": "Plug the Smart Plug into a power outlet and press the button for more than 5 seconds. The red LED will flash during inclusion.",
+		"exclusion": "Plug the Smart Plug into a power outlet and press the button for more than 5 seconds. The red LED will flash during exclusion.",
+		"reset": "Plug the Smart Plug into a power outlet and press the button for more than 10 seconds. The red LED will flash and all variables will be initialized.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1870/PB-B400ZWN_Manual.pdf"
 	}
 }

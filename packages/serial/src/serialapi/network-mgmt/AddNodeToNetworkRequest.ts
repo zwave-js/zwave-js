@@ -227,6 +227,20 @@ export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
 	}
 }
 
+function testCallbackForAddNodeDSKRequest(
+	sent: AddNodeDSKToNetworkRequest,
+	received: Message,
+) {
+	if (!(received instanceof AddNodeToNetworkRequestStatusReport)) {
+		return false;
+	}
+	return (
+		received.status === AddNodeStatus.Ready
+		|| received.status === AddNodeStatus.Failed
+	);
+}
+
+@expectedCallback(testCallbackForAddNodeDSKRequest)
 export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 	public constructor(
 		options: AddNodeDSKToNetworkRequestOptions & MessageBaseOptions,

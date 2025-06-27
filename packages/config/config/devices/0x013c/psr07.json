@@ -63,9 +63,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Have Z-Wave™ Controller entered inclusion mode.\n2. Rotate to area A and then press button three times within 1.5 seconds to enter the inclusion mode.\n3. After add successful, the device will wake to receive the setting command from Z-Wave™ Controller about 20 seconds",
-		"exclusion": "1. Have Z-Wave™ Controller entered exclusion mode.\n2. Rotate to area A and then press button three times within 1.5 seconds to enter the exclusion mode. Node ID has been removed",
-		"reset": "Notice: Use this procedure only in the event that the primary controller is lost or otherwise inoperable.\n1. Rotate to area A and then press button four times within 1.5 seconds and do not release the button in the 4 th pressed, and the red LED will light ON.\n2. After the red LED goes out, release the button within 2 seconds.\n3. IDs are removed and all settings will reset to factory default",
+		"inclusion": "1. Rotate to area A\n2. Press the button three times within 1.5 seconds",
+		"exclusion": "1. Rotate to area A\n2. Press the button three times within 1.5 seconds",
+		"reset": "1. Rotate to area A\n2. Press and hold the button four times within 1.5 seconds, keeping it held on the 4th press\n3. Wait for the red LED to light up for 3 seconds, then turn off\n4. Release the button within 2 seconds after the red LED turns off",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1988/PSR07_UserManual.pdf"
 	}
 }

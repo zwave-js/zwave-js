@@ -21,7 +21,7 @@
 	"metadata": {
 		"inclusion": "1. Turn your gateway/ main controller into adding mode.\n2. Press once the Action Button on the product",
 		"exclusion": "1. Turn your gateway/ main controller into removing mode.\n2. Press once the Action Button on the product",
-		"reset": "Press and hold the Action Button on product for 10s.\n\nNote: Please use this procedure only when the network’s primary controller is missing or otherwise inoperable."
+		"reset": "Press and hold the Action Button on product for 10s.\n\nNote: Please use this procedure only when the network's primary controller is missing or otherwise inoperable."
 	},
 	"associations": {
 		"1": {

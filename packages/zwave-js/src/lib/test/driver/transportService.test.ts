@@ -74,7 +74,7 @@ integrationTest("Receiving Transport Service commands works (happy path)", {
 		// And the ConfigurationCCInfoReport should have been assembled correctly
 		const received = await awaitedCommand;
 		t.expect(received).toBeInstanceOf(ConfigurationCCInfoReport);
-		t.expect((received as ConfigurationCCInfoReport).info).toBe(cc.info);
+		t.expect(received.info).toBe(cc.info);
 	},
 });
 
@@ -224,7 +224,7 @@ integrationTest(
 			// And the ConfigurationCCInfoReport should have been assembled correctly
 			const received = await awaitedCommand;
 			t.expect(received).toBeInstanceOf(ConfigurationCCInfoReport);
-			t.expect((received as ConfigurationCCInfoReport).info).toBe(
+			t.expect(received.info).toBe(
 				cc.info,
 			);
 		},
@@ -309,7 +309,7 @@ integrationTest(
 			// And the ConfigurationCCInfoReport should have been assembled correctly
 			const received = await awaitedCommand;
 			t.expect(received).toBeInstanceOf(ConfigurationCCInfoReport);
-			t.expect((received as ConfigurationCCInfoReport).info).toBe(
+			t.expect(received.info).toBe(
 				cc.info,
 			);
 		},
@@ -386,7 +386,7 @@ integrationTest(
 			// And the ConfigurationCCInfoReport should have been assembled correctly
 			const received = await awaitedCommand;
 			t.expect(received).toBeInstanceOf(ConfigurationCCInfoReport);
-			t.expect((received as ConfigurationCCInfoReport).info).toBe(
+			t.expect(received.info).toBe(
 				cc.info,
 			);
 

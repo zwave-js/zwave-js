@@ -1,4 +1,5 @@
 import type {
+	CommandClasses,
 	FileSystem as LegacyFileSystemBindings,
 	LogConfig,
 	LogFactory,
@@ -17,7 +18,7 @@ export interface ZWaveOptions {
 	/** Specify timeouts in milliseconds */
 	timeouts: {
 		/** how long to wait for an ACK */
-		ack: number; // >=1, default: 1000 ms
+		ack: number; // >=1, default: 1600 ms
 
 		/** not sure */
 		byte: number; // >=1, default: 150 ms
@@ -280,6 +281,17 @@ export interface ZWaveOptions {
 		 * Default: `false`
 		 */
 		watchdog?: boolean;
+
+		/**
+		 * Z-Wave JS normally uses all Command Classes it implements and responds to version queries for all of them.
+		 *
+		 * However, some Command Classes come with certification requirements that might not be fulfilled by the application.
+		 * To allow for deploying products based on Z-Wave JS without having to implement all of them,
+		 * this option allows you to disable certain Command Classes. Z-Wave JS will act as if the specified Command Classes are not implemented.
+		 *
+		 * Note that this only affects a subset of CCs that is not mandatory.
+		 */
+		disableCommandClasses: CommandClasses[];
 	};
 
 	preferences: {
@@ -330,14 +342,25 @@ export interface ZWaveOptions {
 		preferLRRegion?: boolean;
 
 		txPower?: {
-			/** The desired TX power in dBm. */
-			powerlevel: number;
+			/**
+			 * The desired TX power in dBm.
+			 *
+			 * The special value "auto" will apply the known legal limits for the configured RF region,
+			 * but only if the region is actually changed as a result of using the `rf.region` setting.
+			 */
+			powerlevel: number | "auto";
+
 			/** A hardware-specific calibration value. */
-			measured0dBm: number;
+			measured0dBm?: number;
 		};
 
-		/** The desired max. powerlevel setting for Z-Wave Long Range in dBm. */
-		maxLongRangePowerlevel?: number;
+		/**
+		 * The desired max. powerlevel setting for Z-Wave Long Range in dBm.
+		 *
+		 * The special value "auto" will apply the known legal limits for the configured RF region,
+		 * but only if the region is actually changed as a result of using the `rf.region` setting.
+		 */
+		maxLongRangePowerlevel?: number | "auto";
 
 		/**
 		 * The desired channel to use for Z-Wave Long Range.
