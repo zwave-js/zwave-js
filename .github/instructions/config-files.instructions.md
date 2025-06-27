@@ -103,14 +103,17 @@ When authoring and reviewing configuration files, consistency is key for maintai
 - Use Sentence case formatting
 - Only include if it adds significant value beyond the label
 - Remove descriptions that merely restate the label or repeat information available elsewhere
+- Keep descriptions that do add additional explanation, but keep them concise
 - Remove ranges/units that are defined in other properties
 - Do not include unnecessary whitespace, newlines, or tabs
 - **When editing new or uncleaned files**: If possible, convert description information to proper fields instead of removing:
   - If description states available options, convert those to the `options` field
   - If description states min/max values, convert those to `minValue`/`maxValue` fields
   - If description explains the parameter unit, convert to the `unit` field
-- **Exception 1**: When parameter has gaps in valid ranges (e.g., 0-99 plus 255), explain the allowable range
-  - Example: `"description": "Allowable range: 0-99, 255"`
+- **Exception 1**: When parameter has gaps in valid ranges (e.g., 0-99 plus 255), explain the allowable range. This includes cases with a single option outside of the allowable range.
+  - Examples:
+    - `"description": "Allowable range: 0-99, 255"`
+    - `"description": "Allowable range: 30-1000"` plus an option for 0 (Disabled)
 - **Exception 2**: When units change based on parameter value, describe this in the description
   - Examples:
     - `"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)"`
@@ -355,3 +358,4 @@ After rewording instructions, double check them for the following requirements:
 - Run `yarn run lint:configjson:fix` to ensure correct formatting - this command runs quickly, so you can use it frequently. This command does not take the filename as an argument, use it verbatim.
 - After doing edits, always run `yarn run lint:zwave` again to ensure no new issues were introduced
 - After doing edits, always run `yarn run lint:configjson:fix` again to ensure no new issues were introduced
+- Also check for any other issues that would be caught by common sense and that are not specifically covered by the instructions listed here, for example value ranges that do not make sense in the context they are used in.
