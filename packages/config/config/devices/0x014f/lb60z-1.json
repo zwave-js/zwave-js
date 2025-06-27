@@ -35,8 +35,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "With the controller in inclusion mode, turn the power to the light bulb socket ON.",
-		"exclusion": "Reset the bulb by using the wall switch to turn the power to the bulb ON while the controller is in exclusion mode. The Smart LED Light Bulb will flash twice to confirm the removal.",
+		"inclusion": "Turn the power to the light bulb socket ON.",
+		"exclusion": "Use the wall switch to turn the power to the bulb ON. The Smart LED Light Bulb will flash twice to confirm removal.",
 		"manual": "https://www.gocontrol.com/manuals/LB60Z-1-Install.pdf"
 	}
 }

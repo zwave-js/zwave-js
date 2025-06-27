@@ -337,10 +337,10 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Set your controller in include mode (see your controller’s manual). Follow the instruction below for Wake up. A long LED blink indicates that the inclusion was successful.\n\nTo wake up Strips manually for communication with the Z-Wave controller, move the magnet towards and away from the rounded edge. Repeat 3 times.",
-		"exclusion": "Set your controller in exclude mode (see your controller’s manual). Follow the instruction below for Wake up. A long LED blink indicates that the exclusion was successful.\n\nTo wake up Strips manually for communication with the Z-Wave controller, move the magnet towards and away from the rounded edge. Repeat 3 times.",
-		"reset": "You may need to reset Strips if your Z-Wave controller is missing or not responding.\n\nFollow the instructions for “Wake up” above, but on the 3rd repetition, keep the magnet at the rounded edge for 10 seconds. A long LED signal indicates success",
-		"wakeup": "Place a magnet at the rounded edge. When the LED blinks, move the magnet away. Repeat a total of 3 times within 10 seconds, A LED blink indicates success.",
+		"inclusion": "Move the magnet towards and away from the rounded edge, then repeat 3 times. A long LED blink indicates successful inclusion.",
+		"exclusion": "Move the magnet towards and away from the rounded edge, then repeat 3 times. A long LED blink indicates successful exclusion.",
+		"reset": "1. Move the magnet towards and away from the rounded edge\n2. Repeat 3 times\n3. On the 3rd repetition, keep the magnet at the rounded edge for 10 seconds\n4. A long LED signal indicates success",
+		"wakeup": "1. Place a magnet at the rounded edge\n2. When the LED blinks, move the magnet away\n3. Repeat a total of 3 times within 10 seconds\n4. A LED blink indicates success",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3346/Strips%20Multi-Sensors%20EU%20manuals.pdf"
 	}
 }

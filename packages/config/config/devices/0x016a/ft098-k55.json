@@ -55,7 +55,7 @@
 		},
 		{
 			"#": "33",
-			"label": "Get the Bulb’s Color Value",
+			"label": "Get the Bulb's Color Value",
 			"valueSize": 4,
 			"defaultValue": 0,
 			"readOnly": true,
@@ -79,7 +79,7 @@
 		{
 			"#": "35",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Use External Switch to Changes the Bulb’s Color",
+			"label": "Use External Switch to Changes the Bulb's Color",
 			"defaultValue": 1
 		},
 		{
@@ -278,9 +278,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, press the external switch of LED Bulb to turn it off and then press the external switch again to turn it on",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, press the external switch of LED Bulb to turn off and then press the external switch again to turn on it, repeat the operation 3 times",
-		"reset": "Turn the controller of Z-Wave network into exclusion mode, press the external switch of LED Bulb to turn off and then press the external switch again to turn on it, repeat the operation 3 times.\nAfter the LED Bulb is excluded from network, it will be reset to factory default state.\nUse this procedure only in the event that your primary network controller is missing or inoperable",
+		"inclusion": "Press the external switch of LED Bulb to turn it off and then press the external switch again to turn it on.",
+		"exclusion": "Press the external switch of LED Bulb to turn off and then press the external switch again to turn on it, repeat the operation 3 times.",
+		"reset": "Press the external switch of LED Bulb to turn off and then press the external switch again to turn on it, repeat the operation 3 times.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2607/Bulb%20manual.pdf"
 	}
 }

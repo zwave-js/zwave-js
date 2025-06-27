@@ -171,9 +171,9 @@
 		"forceNotificationIdleReset": true
 	},
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product’s Z-Wave button that you can find in the back of the product",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, short press the product’s Z-Wave button that you can find in back of the product",
-		"reset": "Press and hold the Z-Wave button that you can find in back of the product for 20 seconds and then release. This procedure should only be used when the primary controller is inoperable",
+		"inclusion": "Short press the Z-Wave button on the back of the device.",
+		"exclusion": "Short press the Z-Wave button on the back of the device.",
+		"reset": "Press and hold the Z-Wave button on the back of the device for 20 seconds, then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1163/Instructions%20-%20MultiSensor%20Gen5%20MCert1.pdf"
 	}
 }

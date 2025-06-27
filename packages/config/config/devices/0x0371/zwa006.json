@@ -113,8 +113,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power on the device, and the power led will blink blue slowly.\n2. Put the Z-Wave Primary Controller into inclusion mode (If you don’t know how to do this, refer to its manual)\n3. Press and hold the action button, and when the yellow LED is on, release the button. It indicates the device has enter learn mode.\n4. If added successfully, the power LED will remain green for 2 seconds, then turn off",
-		"exclusion": "1. Power on the device.\n2. Put the Primary Controller into exclusion mode (If you don’t know how to do this refer to its manual)\n3. Press and hold the action button, and when the purple LED turns on, release the button. This indicates that the device has entered learn mode. If removal is successful, the blue LED will blink slowly",
+		"inclusion": "1. Power on the device, and the power led will blink blue slowly.\n2. Put the Z-Wave Primary Controller into inclusion mode (If you don't know how to do this, refer to its manual)\n3. Press and hold the action button, and when the yellow LED is on, release the button. It indicates the device has enter learn mode.\n4. If added successfully, the power LED will remain green for 2 seconds, then turn off",
+		"exclusion": "1. Power on the device.\n2. Put the Primary Controller into exclusion mode (If you don't know how to do this refer to its manual)\n3. Press and hold the action button, and when the purple LED turns on, release the button. This indicates that the device has entered learn mode. If removal is successful, the blue LED will blink slowly",
 		"reset": "Please use this procedure only when the primary controller is missing or inoperable.\n\n1. Make sure the device has been powered.\n2. Press and hold the action button for 15 seconds. When the red LED turns on, release the button. Then, the device will enter factory reset mode. If the reset is successful, the LED will blink blue slowly.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3067/Smart%20Boost%20Timer%20Switch%20User%20Manual-V1.9.pdf"
 	}

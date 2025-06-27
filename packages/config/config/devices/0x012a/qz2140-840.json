@@ -45,9 +45,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Place your network controller into inclusion mode by following the controller manufacturer's instructions.\n2. When the controller is ready, single click the button on the front of the IQ Dimmer. The controller should indicate that the new device was added successfully.\n3. Once the IQ Dimmer has been successfully added to your home network, you can move it to the preferred location in the home",
-		"exclusion": "1. Place your network controller into exclusion mode by following the controller manufacturer's instructions.\n2. When the controller is ready, single click the button on the front of the IQ Dimmer. The controller should indicate that the new device was removed successfully.\n3. Once the IQ Dimmer has been successfully added to your home network, you can move it to the preferred location in the home",
-		"reset": "1. Unplug the IQ Dimmer from the AC outlet and also unplug the power plugs of the lighting from the module (if plugged in)\n2. Press and hold the button on the IQ Dimmer\n3. Plug the IQ Dimmer back into the AC outlet with the button pressed. After 3 seconds, release the button. If you see the button blink, that means that IQ Dimmer has been reset successfully.\n\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable.",
+		"inclusion": "Single click the button on the front of the IQ Dimmer.",
+		"exclusion": "Single click the button on the front of the IQ Dimmer.",
+		"reset": "1. Unplug the IQ Dimmer from the AC outlet and also unplug the power plugs of the lighting from the module (if plugged in)\n2. Press and hold the button on the IQ Dimmer\n3. Plug the IQ Dimmer back into the AC outlet with the button pressed\n4. After 3 seconds, release the button. The button will blink to confirm successful reset.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2912/IQ%20Dimmer%20UG%20Online.pdf"
 	}
 }

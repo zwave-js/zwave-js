@@ -22,7 +22,7 @@
 		}
 	},
 	"metadata": {
-		"reset": "To reset a device Smart Brain™, press button “Add Devices” and press ‘Z+’ icon.\nWhen the list of Z-Wave commands is shown, press “Reset” menu in commands.",
+		"reset": "To reset a device Smart Brain™, press button 'Add Devices' and press 'Z+' icon.\nWhen the list of Z-Wave commands is shown, press 'Reset' menu in commands.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1568/SmartBrain_User%20Guide_En(20151109).pdf"
 	}
 }

@@ -36,7 +36,7 @@
 		{
 			"#": "2",
 			"label": "LED Indication Mode",
-			"description": "1. show dimmer state：when dimmer is on, LED is on. when dimmer is off, LED is off. the default setting is show dimmer state.  2. show night mode：when dimmer is on, LED is off. when dimmer is off, LED is on.  3. one flash mode : when dimmer on/off state changes, LED will light on one second and then off",
+			"description": "1. show dimmer state: when dimmer is on, LED is on. when dimmer is off, LED is off. the default setting is show dimmer state.  2. show night mode: when dimmer is on, LED is off. when dimmer is off, LED is on.  3. one flash mode : when dimmer on/off state changes, LED will light on one second and then off",
 			"valueSize": 1,
 			"unit": "seconds",
 			"defaultValue": 1,
@@ -59,7 +59,7 @@
 		{
 			"#": "3",
 			"label": "External Switch Type",
-			"description": "1. one switch mode：only s1 can dim up the light bulb to brightest level, then dim down to darkest level, and so on…  2. two switch mode：s1 and s2 can dim up the light bulb to brightest level, then dim down to darkest level, and so on…  3. up/down switch mode：s1 can only dim up the light bulb to brightest level, and s2 can only dim down to off",
+			"description": "1. one switch mode: only s1 can dim up the light bulb to brightest level, then dim down to darkest level, and so on…  2. two switch mode: s1 and s2 can dim up the light bulb to brightest level, then dim down to darkest level, and so on…  3. up/down switch mode: s1 can only dim up the light bulb to brightest level, and s2 can only dim down to off",
 			"valueSize": 1,
 			"defaultValue": 1,
 			"allowManualEntry": false,
@@ -102,9 +102,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Put your Z-Wave controller into inclusion mode by following the instructions provided by the controller manufacturer. \n2. Pressing Include button of PAD07 three times within 2 seconds will enter inclusion mode",
-		"exclusion": "1. Put your Z-Wave controller into exclusion mode by following the instructions provided by the controller manufacturer.\n2. Pressing Include button of PAD07 three times within 2 seconds will enter exclusion mode.\n3. Node ID has been excluded.",
-		"reset": "1. Pressing Include button of PAD07 three times within 2 seconds will enter inclusion mode.\n2. Within 1 second, press Include button of PAD07 again for 5 seconds.\n3. IDs are excluded.\n\n*Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Press the Include button three times within 2 seconds.",
+		"exclusion": "Press the Include button three times within 2 seconds.",
+		"reset": "1. Press the Include button three times within 2 seconds.\n2. Within 1 second, press the Include button again for 5 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2356/PAD07-A1%20manual-20170413.pdf"
 	}
 }

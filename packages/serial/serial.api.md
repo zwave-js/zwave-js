@@ -3354,6 +3354,8 @@ export class RemoveFailedNodeRequest extends RemoveFailedNodeRequestBase {
     constructor(options: RemoveFailedNodeRequestOptions & MessageBaseOptions_2);
     failedNodeId: number;
     // (undocumented)
+    static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): RemoveFailedNodeRequest;
+    // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
 }
 

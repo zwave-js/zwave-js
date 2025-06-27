@@ -96,9 +96,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "To add the device to a Z-Wave network, the Z-Wave Controller must first be set into Add (Learn) mode. Then use a paperclip or a small pointy tool to push and hold the button in the button hole for approximately a second. The device LED will blink twice to indicate that it sends information to the Controller",
-		"exclusion": "To remove the device from a Z-Wave network, the Z-Wave Controller must first be set into Remove (Learn) mode. Then use a paperclip or a small pointy tool to push and hold the button in the button hole for approximately a second. The device LED will blink twice to indicate that it sends information to the Controller",
-		"reset": "WARNING! Executing a Factory Reset on a device may make it stop working as wanted and WILL remove it from the Z-Wave network. Please DO NOT execute this procedure unless it’s absolutely necessary.\n\nPress and Hold the Add/Remove button for about 15 seconds - until LED indicator starts blinking. Then release the button. The device will now be factory reset and removed from the Z-Wave network.\n\nThe button is located about 10 mm down in the middle of the three holes on the front. A thin tool (a very small screwdriver, a toothpick, a paper clip or similar) is needed to access the button",
+		"inclusion": "Push and hold the button in the button hole for approximately one second using a paperclip. The device LED will blink twice.",
+		"exclusion": "Push and hold the button in the button hole for approximately one second using a paperclip. The device LED will blink twice.",
+		"reset": "Push and hold the button in the button hole for about 15 seconds using a paperclip until the LED indicator starts blinking.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2859/ARxP%20-%20Standalone%20Z-Wave%20Relay%20-%20User%20Manual.pdf"
 	}
 }

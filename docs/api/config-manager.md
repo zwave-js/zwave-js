@@ -9,6 +9,14 @@ The constructor takes no arguments.
 
 ## ConfigManager methods
 
+### `loadAll`
+
+```ts
+loadAll(): Promise<void>;
+```
+
+Loads all configuration data including manufacturers and device indices. This method will attempt to sync and use an external configuration directory if available, falling back to the embedded configuration.
+
 ### `loadManufacturers`
 
 ```ts
@@ -191,6 +199,14 @@ interface ConditionalConfigOption {
 ```
 
 ## ConfigManager properties
+
+### `configVersion`
+
+```ts
+readonly configVersion: string;
+```
+
+Returns the version of the currently loaded configuration package.
 
 ### `manufacturers`
 

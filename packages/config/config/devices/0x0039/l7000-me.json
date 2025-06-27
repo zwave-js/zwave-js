@@ -22,7 +22,7 @@
 		}
 	},
 	"metadata": {
-		"reset": "Press the Automation icon on the LYNX Touch Home Screen to access Z-Wave Home Automation features.\nUse down arrow to scroll to the Automation Screen Page 2, and press Tools button to access Advanced Tools option.\nPress Advanced Tools button to access additional Z-Wave options, and then press Reset Controller button",
+		"reset": "1. Press the Automation icon on the LYNX Touch Home Screen to access Z-Wave Home Automation features\n2. Use down arrow to scroll to the Automation Screen Page 2, and press Tools button to access Advanced Tools option\n3. Press Advanced Tools button to access additional Z-Wave options\n4. Press Reset Controller button",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1520/LYNX_Touch_QG.pdf"
 	}
 }

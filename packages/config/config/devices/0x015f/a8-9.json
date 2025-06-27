@@ -429,9 +429,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Activate Add mode in the gateway. When device is powered on, hold F1 to choose interface for Add into Z-Wave network. Click F2 five times until \"cycle icon\" turns blue. Hold F2 and the device enters into learning mode, then \"wifi icon\" turns blue and the device is added into Z-Wave network",
-		"exclusion": "Activate Remove mode in the gateway. When device is powered on, hold F1 to choose interface for Remove into Z-Wave network. Click F2 five times until \"cycle icon\" turns blue. Hold F2 and the device enters into learning mode, then \"wifi icon\" turns blue and the device is added into Z-Wave network",
-		"reset": "1. Remove the device from network.\n2. By manual: 1, Press & hold F1 to enter Z-Wave setting interface, then press & hold F1 again to enter parameters setting interface;\n2, Press & hold F2 to enter setting interface and select “default”;\n3, Click F2 3 times and displays “OFF”-->“ON”-->“OK”-->“OFF”, factory setting is restored.\n3. Input 0xFF to ==0x55 Restore factory setting\n ==0xAA Restore default para.\nNote: Please use this procedure only when the network primary controller is missing or otherwise inoperable",
+		"inclusion": "When device is powered on, hold F1 to choose interface for Add into Z-Wave network. Click F2 five times until \"cycle icon\" turns blue. Hold F2 and the device enters learning mode, then \"wifi icon\" turns blue.",
+		"exclusion": "When device is powered on, hold F1 to choose interface for Remove into Z-Wave network. Click F2 five times until \"cycle icon\" turns blue. Hold F2 and the device enters learning mode, then \"wifi icon\" turns blue.",
+		"reset": "1. Press & hold F1 to enter Z-Wave setting interface, then press & hold F1 again to enter parameters setting interface.\n2. Press & hold F2 to enter setting interface and select 'default'.\n3. Click F2 3 times and displays 'OFF'-->'ON'-->'OK'-->'OFF', factory setting is restored.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3456/A8-9.pdf"
 	}
 }

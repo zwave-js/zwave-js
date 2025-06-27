@@ -513,6 +513,8 @@ export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
 @fibaroCCCommand(FibaroVenetianBlindCCCommand.Get)
 @expectedCCResponse(FibaroVenetianBlindCCReport)
 export class FibaroVenetianBlindCCGet extends FibaroVenetianBlindCC {
+	// @noLogEntry: This CC has no properties to log
+
 	public constructor(
 		options: CommandClassOptions,
 	) {

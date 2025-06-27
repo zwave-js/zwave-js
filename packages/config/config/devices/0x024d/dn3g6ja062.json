@@ -51,9 +51,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Using a paper clip or equivalent, push the button over 3 seconds.\n(Please note that this product is reset if switch is pushed over 10 seconds)\nStatus LED turns off after adding",
-		"exclusion": "Using a paper clip or equivalent, push the button over 3 seconds.\n(Please note that this product is reset if switch is pushed over 10 seconds)\nStatus LED starts flashing after removal is finished",
-		"reset": "Using a paper clip or equivalent, push the button over 10 seconds.\nUse this procedure only in the event that the network primary controller is missing or otherwise inoperable",
+		"inclusion": "Using a paper clip, push the button for over 3 seconds. The status LED turns off after successful inclusion.",
+		"exclusion": "Using a paper clip, push the button for over 3 seconds. The status LED starts flashing after successful removal.",
+		"reset": "Using a paper clip, push the button for over 10 seconds.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1651/User's%20Guide%20151215_160310_updated.pdf"
 	}
 }

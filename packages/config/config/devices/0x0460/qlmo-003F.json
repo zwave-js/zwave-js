@@ -1,0 +1,70 @@
+{
+	"manufacturer": "Shelly Europe Ltd.",
+	"manufacturerId": "0x0460",
+	"label": "QLMO-003F",
+	"description": "Shelly Wave Motion Sensor",
+	"devices": [
+		{
+			"productType": "0x0100",
+			"productId": "0x0082"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "155",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Illumination Mesurement"
+		},
+		{
+			"#": "157",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Detection Indication"
+		},
+		{
+			"#": "158",
+			"$import": "templates/wave_template.json#motion_sensitivity",
+			"label": "Motion Sensitivity"
+		},
+		{
+			"#": "159",
+			"$import": "templates/wave_template.json#motion_blind_time",
+			"label": "Motion Blind Time"
+		},
+		{
+			"#": "160",
+			"$import": "templates/wave_template.json#no_detection_time",
+			"label": "Motion No Detection Time"
+		},
+		{
+			"#": "117",
+			"$import": "templates/wave_template.json#remote_reboot",
+			"label": "Remote Reboot"
+		},
+		{
+			"#": "120",
+			"$import": "templates/wave_template.json#factory_reset"
+		},
+		{
+			"#": "201",
+			"$import": "templates/wave_template.json#serial_number",
+			"label": "Serial Number: Part 1"
+		},
+		{
+			"#": "202",
+			"$import": "templates/wave_template.json#serial_number",
+			"label": "Serial Number: Part 2"
+		},
+		{
+			"#": "203",
+			"$import": "templates/wave_template.json#serial_number",
+			"label": "Serial Number: Part 3"
+		}
+	],
+	"metadata": {
+		"$import": "templates/wave_template.json#default_metadata"
+	}
+}

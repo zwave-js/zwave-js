@@ -689,8 +689,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Press any button 3 times quickly to include.",
-		"exclusion": "Press any button 3 times quickly to exclude.",
+		"inclusion": "Press any button 3 times quickly.",
+		"exclusion": "Press any button 3 times quickly.",
 		"reset": "Press any button 20 times to perform a factory reset.",
 		"manual": "https://manuals-backend.z-wave.info/make.php?lang=en&sku=MCOETPS314_700&cert="
 	}

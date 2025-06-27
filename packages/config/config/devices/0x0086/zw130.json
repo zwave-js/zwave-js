@@ -132,9 +132,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Turn the primary controller of Z-Wave network into inclusion mode, short press the product’s Action button that you can find on the product's housing",
-		"exclusion": "Turn the primary controller of Z-Wave network into exclusion mode, short press the product’s Action button that you can find on the product's housing",
-		"reset": "Press and hold the Action button that you can find on the product's housing for 20 seconds and then release. This procedure should only be used when the primary controller is missing or inoperable",
+		"inclusion": "Short press the Action button on the product's housing.",
+		"exclusion": "Short press the Action button on the product's housing.",
+		"reset": "Press and hold the Action button on the product's housing for 20 seconds and then release.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3264/Aeon%20Labs%20WallMote%20Quad%20manual.pdf"
 	}
 }

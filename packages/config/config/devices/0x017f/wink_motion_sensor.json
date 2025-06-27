@@ -143,9 +143,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Follow the instructions for your Z-Wave certified Controller to enter inclusion mode.\nWhen prompted by the Controller:\n1. For proper inclusion, bring the Motion Detector within range of your Controller.\n2. Pull the tab on the side of the sensor to power on, or remove then re-install the batteries.\nThe LED indicator will flash five times indicating inclusion",
-		"exclusion": "Follow the instructions for your Z-Wave certified Controller to enter exclusion mode. When prompted by the Controller:\n1. Remove the cover of the Motion Detector and be sure it is powered on.\n2. Press the Connect Button on the bottom of the device quickly 3 times in a row.\nThe LED Indicator will flash five times indicating exclusion/disconnection.",
-		"reset": "To disconnect from the Z-Wave Network and restore factory default settings:\n1. Remove the cover of the Motion Detector and be sure it is powered on.\n2. Hold the Connect Button for 10 seconds until the LED indicator blinks once, then release the button.\nOnly do this if the controller is disconnected or otherwise unreachable!",
+		"inclusion": "Pull the tab on the side of the sensor, or remove then re-install the batteries. The LED will flash five times indicating inclusion.",
+		"exclusion": "1. Remove the Motion Detector cover\n2. Press the Connect Button on the bottom quickly 3 times in a row. The LED will flash five times indicating exclusion.",
+		"reset": "1. Remove the Motion Detector cover\n2. Hold the Connect Button for 10 seconds until the LED blinks once, then release",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2482/wink-motion-manual.pdf"
 	}
 }

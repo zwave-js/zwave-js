@@ -129,9 +129,9 @@
 		"mapBasicSet": "event"
 	},
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified controller to add a device to the Z-Wave network.\n2. Once the controller is ready to add your device, press up and release the toggle.\nIf prompted by the controller to enter the S2 security code, refer to the QR code/security number on the back of the box, or the QR code label on the product",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller to remove a device from the Z-Wave network.\n2. Once the controller is ready to remove your device, press up and release the toggle",
-		"reset": "Quickly press UP button three times, then, immediately press the DOWN button three times.\nNote: This should only be used in the event your network’s primary controller is missing or otherwise inoperable",
+		"inclusion": "Press up and release the toggle.",
+		"exclusion": "Press up and release the toggle.",
+		"reset": "1. Quickly press the UP button 3 times\n2. Immediately press the DOWN button 3 times",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3601/39357%20Binder.pdf"
 	}
 }

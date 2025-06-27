@@ -22,9 +22,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "O2 Smart Box is mainly controlled from within O2 Smart Box application for smartphones. \nIn section Add new device in our application, customer selects type of device and application activates inclusion mode at the gateway",
-		"exclusion": "O2 Smart Box is mainly controlled from within O2 Smart Box application for smartphones. \nIn detail of every Z-Wave device, customer can find option to \"Unpair device\". When he selects this option, gateway enters exclusion mode and instruction how to exclude this device is shown in application (e.g. Click the pairing button three times within one second)",
-		"reset": "Select the Factory Reset item in the Advanced drop-down menu in WebUI.\nSelect the Factory Reset item in settings section in O2 Smart Box application",
+		"inclusion": "In the Add new device section of the O2 Smart Box smartphone app, select the device type to activate inclusion mode.",
+		"exclusion": "In the device details of the O2 Smart Box smartphone app, select \"Unpair device\" to enter exclusion mode and follow the displayed instructions.",
+		"reset": "Select Factory Reset from the Advanced drop-down menu in the WebUI or from the settings section in the O2 Smart Box app.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4476/sb2_manual%20(1).pdf"
 	}
 }
