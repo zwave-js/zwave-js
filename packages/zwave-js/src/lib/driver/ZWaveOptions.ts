@@ -348,7 +348,7 @@ export interface ZWaveOptions {
 			 * The "auto" setting has two caveats:
 			 *   - It will only apply when actually changing the region (e.g. from `Europe` to `USA`), but not when
 			 *     switching from a non-LR region to the corresponding LR region (e.g. from `Europe` to `Europe (Long Range)`).
-			 *   - It will only apply when the legal limits for the configured RF region are known. Currently, this
+			 *   - It requires the legal limits for the configured RF region to be known. Currently, this
 			 *     is only the case for Europe and the USA.
 			 */
 			powerlevel: number | "auto";
@@ -363,7 +363,7 @@ export interface ZWaveOptions {
 		 * The "auto" setting has two caveats:
 		 *   - It will only apply when actually changing the region (e.g. from `Europe` to `USA`), but not when
 		 *     switching from a non-LR region to the corresponding LR region (e.g. from `Europe` to `Europe (Long Range)`).
-		 *   - It will only apply when the legal limits for the configured RF region are known. Currently, this
+		 *   - It requires the legal limits for the configured RF region to be known. Currently, this
 		 *     is only the case for Europe and the USA.
 		 */
 		maxLongRangePowerlevel?: number | "auto";
