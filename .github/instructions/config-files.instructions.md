@@ -276,6 +276,7 @@ Compatibility flags require domain knowledge about Z-Wave protocol issues and de
 - Use JSON5 comments to explain omitted parameters or compat flags
 - Explain why certain decisions were made
 - Document workarounds and their necessity
+- Multiline comments are allowed, but make sure each line starts with `//`. Do not use `/* ... */` style comments.
 
 Example:
 
