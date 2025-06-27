@@ -7332,7 +7332,7 @@ export class ZWaveController
 		}
 
 		// Only change the powerlevel if needed to avoid unneccesary writes to the NVM
-		if (this.maxLongRangePowerlevel !== powerlevel) {
+		if (this.maxLongRangePowerlevel === powerlevel) {
 			return;
 		}
 
