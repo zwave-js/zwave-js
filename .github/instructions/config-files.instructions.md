@@ -18,7 +18,7 @@ Device configuration files must follow this property order for consistency:
 3. `label` - Short device label (usually model number/SKU)
 4. `description` - Longer device description (marketed name)
 5. `devices` - Array of product type/ID combinations
-6. `firmwareVersion` - Firmware version range (use sparingly)
+6. `firmwareVersion` - Firmware version range the config applies to
 7. `preferred` - Mark as preferred over overlapping configs (only rarely needed)
 8. `endpoints` - Endpoint-specific configuration (only if needed)
 9. `associations` - Association groups (only if needed)
@@ -72,6 +72,13 @@ When authoring and reviewing configuration files, consistency is key for maintai
 - Remove manufacturer name from the description
 - Avoid overlap between the device label and description, unless that's how the device is actually marketed and no information on a model number or SKU can be found
 - If the device has no proper marketed product name, use a descriptive device type (e.g., "Motion Sensor", "Power Switch", "Door Lock")
+
+### Firmware Version
+
+- Should be as wide as possible, by default "0.0" to "255.255"
+- Only specify a narrower range if
+  - there are multiple revisions of a device that only differ in firmware version
+  - changes in a firmware version are significant enough that using conditional parameters would introduce too much complexity
 
 ## Configuration Parameters
 
@@ -344,5 +351,7 @@ After rewording instructions, double check them for the following requirements:
 
 - Configuration files must follow the mandatory style guide
 - Files that don't follow standards will not be accepted
-- Check files using `yarn run lint:zwave` for semantic errors that need to be fixed (warnings may be tolerated)
-- Always run `yarn run lint:configjson:fix` after edits to fix formatting - this command runs quickly, so you can use it frequently
+- Check files using `yarn run lint:zwave` for semantic errors that need to be fixed (warnings may be tolerated). This command does not take the filename as an argument, use it verbatim.
+- Run `yarn run lint:configjson:fix` to ensure correct formatting - this command runs quickly, so you can use it frequently. This command does not take the filename as an argument, use it verbatim.
+- After doing edits, always run `yarn run lint:zwave` again to ensure no new issues were introduced
+- After doing edits, always run `yarn run lint:configjson:fix` again to ensure no new issues were introduced
