@@ -325,7 +325,7 @@
 		},
 		{
 			"#": "32",
-			"label": "Internel Temperature",
+			"label": "Internal Temperature",
 			"description": "Temperature inside of the switch",
 			"valueSize": 1,
 			"unit": "°C",
