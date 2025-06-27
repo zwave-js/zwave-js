@@ -341,6 +341,7 @@ Ensure the instructions follow these guidelines:
 - Avoid phrases like "The device reverts to factory default state" or "The device will be reset to factory defaults"
 - Avoid clarifying phrases with another word in parentheses, such as "the ON (top) button" or "the OFF (bottom) button". Decide on one term and use it consistently.
 - Avoid repetitive language in subsequent steps
+- Distinguish clearly which part of the device's feedback (LED/sound) indicates that the inclusion/exclusion/reset process has started and which part confirms success or failure
 
 After rewording instructions, double check them for the following requirements:
 
