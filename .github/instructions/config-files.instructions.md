@@ -355,3 +355,4 @@ After rewording instructions, double check them for the following requirements:
 - Run `yarn run lint:configjson:fix` to ensure correct formatting - this command runs quickly, so you can use it frequently. This command does not take the filename as an argument, use it verbatim.
 - After doing edits, always run `yarn run lint:zwave` again to ensure no new issues were introduced
 - After doing edits, always run `yarn run lint:configjson:fix` again to ensure no new issues were introduced
+- Also check for any other issues that would be caught by common sense and that are not specifically covered by the instructions listed here, for example value ranges that do not make sense in the context they are used in.

@@ -41,3 +41,9 @@ This repository holds the Z-Wave JS driver library, a TypeScript implementation 
 - Use `vitest` for testing.
 - Do not create tests for functionality that interacts with (mock) devices, unless specifically instructed to do so.
 - Unit tests must be located next to the code they test, but with a `.test.ts` extension instead of `.ts`.
+
+## Reviewing Pull Requests
+
+The rules to apply for reviewing pull requests depend on which files were changed:
+
+- If the PR changes device configuration files (`*.json` files in `packages/config/config/devices`), follow the [review-config-pr](prompts/review-config-pr.prompt.md) prompt to review the changes.
