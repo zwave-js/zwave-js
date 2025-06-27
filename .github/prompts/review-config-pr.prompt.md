@@ -20,11 +20,20 @@ and review the changes in that diff.
 
 Check the provided device configuration files against the rules defined in the instructions file.
 
-For each violation you find:
+If no violations are found, say so.
 
-- show the offending code
-- provide a brief explanation of the violation
-- suggest a fix for the violation
+If you do find violations, report the following information for each violation:
+
+- In which file the violation occurs and where in that file (e.g. which config parameter)
+- The offending code
+- A brief explanation of the violation
+- A suggested fix for the violation
+
+For the offending code snippet, use the following rules:
+
+- If the violation is limited to a single line: show that line only.
+- If the violation spans multiple lines: show the entire range of lines that includes the violation, including lines between the start and end of the range that are not part of the violation. This is to provide context.
+- If a violation spans multiple consecutive config parameters: Include all of them completely in the offending code snippet, even if only parts of the parameters need to be changed.
 
 The fix MUST be formatted as a markdown suggestion block that can be applied directly to the file, for example:
 
@@ -33,6 +42,6 @@ Suggested new content.
 This may span multiple lines.
 ```
 
-The fix MUST span the entire range of lines that are in violation, even if only part of the lines need to be changed.
+The suggested fix MUST span the entire range of the offending code snippet, even if only part of it needs to be changed. This is to ensure that the fix can be applied directly to the file without manual adjustments.
 
-If no violations are found, say so.
+It is of utmost importance that the indentation of the suggested fix is correct in the context of the surrounding code. Keep trailing commas if they are present in the original code and if they are required by the syntax. Make sure that you do not introduce any formatting changes.
