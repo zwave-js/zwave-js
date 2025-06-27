@@ -22,7 +22,7 @@ Check the provided device configuration files against the rules defined in the i
 
 For each violation you find:
 
-- list the specific line number (e.g. line 123) or range of lines (e.g. lines 123-137) where the violation occurs
+- show the offending code
 - provide a brief explanation of the violation
 - suggest a fix for the violation
 
