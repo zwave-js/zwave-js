@@ -711,7 +711,7 @@
 			"description": "The UTC hour where After Hours mode should start",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 59,
+			"maxValue": 23,
 			"defaultValue": 0
 		},
 		{
@@ -720,7 +720,7 @@
 			"description": "The minute where After Hours mode should start",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 23,
+			"maxValue": 59,
 			"defaultValue": 0
 		},
 		{
@@ -729,7 +729,7 @@
 			"description": "The UTC hour where After Hours mode should end",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 59,
+			"maxValue": 23,
 			"defaultValue": 0
 		},
 		{
@@ -738,7 +738,7 @@
 			"description": "The minute where After Hours mode should end",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 23,
+			"maxValue": 59,
 			"defaultValue": 0
 		},
 		{
