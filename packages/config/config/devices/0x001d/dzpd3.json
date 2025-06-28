@@ -2,7 +2,7 @@
 	"manufacturer": "Leviton",
 	"manufacturerId": "0x001d",
 	"label": "DZPD3",
-	"description": "Plug-In Lamp Dimming Module",
+	"description": "Decora Smart Dimmer Plug",
 	"devices": [
 		{
 			"productType": "0x1902",
