@@ -100,9 +100,6 @@
 			},
 			{
 				"$import": "templates/schlage_template.json#alarm_map_keypad_busy"
-			},
-			{
-				"$import": "templates/schlage_template.json#alarm_map_keypad_unlock"
 			}
 		]
 	}
