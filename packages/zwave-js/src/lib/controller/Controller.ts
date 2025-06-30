@@ -4723,7 +4723,11 @@ export class ZWaveController
 		// Reset the progress for all nodes
 		this._rebuildRoutesProgress.clear();
 		for (const [id, node] of this._nodes) {
+			// Ignore the controller node
 			if (id === this._ownNodeId) continue;
+			// Ignore LR nodes, they do not route
+			if (isLongRangeNodeId(id)) continue;
+
 			if (
 				// The node is known to be dead
 				node.status === NodeStatus.Dead
