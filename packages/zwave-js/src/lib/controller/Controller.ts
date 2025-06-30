@@ -10027,6 +10027,7 @@ export class ZWaveController
 						.expectSecurityBootstrapS2(
 							bootstrappingNode,
 							grant,
+							this._joinNetworkOptions?.userCallbacks,
 						);
 					if (bootstrapResult !== undefined) {
 						// If there was a failure, mark S2 as not supported
