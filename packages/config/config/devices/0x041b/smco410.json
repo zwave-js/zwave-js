@@ -1,8 +1,8 @@
 {
-	"manufacturer": "Resideo",
+	"manufacturer": "First Alert",
 	"manufacturerId": "0x041b",
 	"label": "SMCO410",
-	"description": "Smoke and CO Alarm",
+	"description": "Smoke & CO Alarm",
 	"devices": [
 		{
 			"productType": "0x0001",
