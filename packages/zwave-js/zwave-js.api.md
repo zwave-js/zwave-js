@@ -171,6 +171,7 @@ import { SetValueResult } from '@zwave-js/cc';
 import { SpecificDeviceClass } from '@zwave-js/core';
 import { SupportsCC } from '@zwave-js/core';
 import { Switchpoint } from '@zwave-js/cc';
+import { TaskScheduler as TaskScheduler_2 } from '@zwave-js/waddle';
 import { TransactionProgress } from '@zwave-js/core';
 import { TransactionProgressListener } from '@zwave-js/core';
 import { TranslatedValueID } from '@zwave-js/core';
@@ -433,7 +434,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     }): Promise<string[]>;
     // (undocumented)
     exceedsMaxPayloadLength(msg: SendDataMessage): Promise<boolean>;
-    firmwareUpdateOTW(data: Uint8Array): Promise<OTWFirmwareUpdateResult>;
+    firmwareUpdateOTW(data: Uint8Array | FirmwareUpdateInfo): Promise<OTWFirmwareUpdateResult>;
     getConservativeWaitTimeAfterFirmwareUpdate(advertisedWaitTime: number | undefined): number;
     // (undocumented)
     getDeviceConfig(nodeId: number): DeviceConfig | undefined;
@@ -536,23 +537,26 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     updateUserAgent(components: Record<string, string | null | undefined>): void;
     get userAgent(): string;
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    waitForBootloaderChunk<T extends BootloaderChunk>(predicate: (chunk: BootloaderChunk) => boolean, timeout: number): Promise<T>;
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    waitForCLIChunk<T extends CLIChunk>(predicate: (chunk: CLIChunk) => boolean, timeout: number): Promise<T>;
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    waitForCommand<T extends CCId>(predicate: (cc: CCId) => boolean, timeout: number, abortSignal?: AbortSignal): Promise<T>;
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "waitForCommand"
-    waitForMessage<T extends Message>(predicate: (msg: Message) => boolean, timeout: number, refreshPredicate?: (msg: Message) => boolean, abortSignal?: AbortSignal): Promise<T>;
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    waitForMessageHeader(predicate: (header: MessageHeaders) => boolean, timeout: number): Promise<MessageHeaders>;
+    // (undocumented)
+    waitForBootloaderChunk<T extends BootloaderChunk>(predicate: (chunk: BootloaderChunk) => chunk is T, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForBootloaderChunk<T extends BootloaderChunk>(predicate: (chunk: BootloaderChunk) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForCLIChunk<T extends CLIChunk>(predicate: (chunk: CLIChunk) => chunk is T, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForCLIChunk<T extends CLIChunk>(predicate: (chunk: CLIChunk) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForCommand<T extends CCId, U extends T>(predicate: (cc: CCId) => cc is U, timeout?: number, abortSignal?: AbortSignal): Promise<U>;
+    // (undocumented)
+    waitForCommand<T extends CCId>(predicate: (cc: CCId) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForMessage<T extends Message>(predicate: (msg: Message) => msg is T, timeout?: number, refreshPredicate?: (msg: Message) => boolean, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForMessage<T extends Message>(predicate: (msg: Message) => boolean, timeout?: number, refreshPredicate?: (msg: Message) => boolean, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForMessageHeader<T extends MessageHeaders>(predicate: (header: MessageHeaders) => header is T, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    // (undocumented)
+    waitForMessageHeader(predicate: (header: MessageHeaders) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<MessageHeaders>;
 }
 
 // Warning: (ae-missing-release-tag) "DriverLogContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1645,6 +1649,8 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
     getCaptureAsZLFBuffer(frameFilter?: (frame: CapturedFrame) => boolean): Uint8Array;
     // (undocumented)
     init(): Promise<void>;
+    loadCaptureFromBuffer(buffer: Uint8Array): Promise<void>;
+    loadCaptureFromFile(filePath: string): Promise<void>;
     get lrRegions(): ReadonlySet<number>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     saveCaptureToFile(filePath: string, frameFilter?: (frame: CapturedFrame) => boolean): Promise<void>;
@@ -2151,7 +2157,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     // (undocumented)
     protected _once<TEvent extends keyof AllNodeEvents>(event: TEvent, callback: AllNodeEvents[TEvent]): this;
     protected overwriteConfig(): Promise<void>;
-    ping(): Promise<boolean>;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    ping(tryReallyHard?: boolean): Promise<boolean>;
     pollValue<T = unknown>(valueId: ValueID, sendCommandOptions?: SendCommandOptions): Promise<MaybeNotKnown<T>>;
     protected queryProtocolInfo(): Promise<void>;
     refreshCCValues(cc: CommandClasses): Promise<void>;
@@ -2429,6 +2436,7 @@ export interface ZWaveOptions {
         softReset?: boolean;
         unresponsiveControllerRecovery?: boolean;
         watchdog?: boolean;
+        disableCommandClasses: CommandClasses[];
     };
     host?: {
         fs?: FileSystem_2;
@@ -2452,10 +2460,10 @@ export interface ZWaveOptions {
         region?: RFRegion;
         preferLRRegion?: boolean;
         txPower?: {
-            powerlevel: number;
-            measured0dBm: number;
+            powerlevel: number | "auto";
+            measured0dBm?: number;
         };
-        maxLongRangePowerlevel?: number;
+        maxLongRangePowerlevel?: number | "auto";
         longRangeChannel?: LongRangeChannel.A | LongRangeChannel.B | LongRangeChannel.Auto;
     };
     securityKeys?: {
@@ -2514,19 +2522,21 @@ export * from "@zwave-js/cc";
 
 // Warnings were encountered during analysis:
 //
-// src/lib/controller/Controller.ts:914:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
-// src/lib/driver/Driver.ts:950:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:5089:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6675:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
-// src/lib/driver/Driver.ts:7149:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7150:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7192:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7193:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7339:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/ZWaveOptions.ts:325:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2120:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:869:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:870:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/controller/Controller.ts:905:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// src/lib/driver/Driver.ts:1007:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/driver/Driver.ts:5168:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6765:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
+// src/lib/driver/Driver.ts:7239:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7240:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7282:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7283:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7429:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8393:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8396:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
+// src/lib/driver/ZWaveOptions.ts:337:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/node/Node.ts:2141:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:721:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:722:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
 
