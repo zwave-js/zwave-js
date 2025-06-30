@@ -2,7 +2,7 @@
 	"manufacturer": "Leviton",
 	"manufacturerId": "0x001d",
 	"label": "DZPA1",
-	"description": "Plug-In Appliance Module",
+	"description": "Decora Smart Plug",
 	"devices": [
 		{
 			"productType": "0x1a02",
@@ -29,5 +29,11 @@
 			"#": "7",
 			"$import": "templates/leviton_template.json#locator_led"
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "1. Hold the control button for 7 seconds until the LED blinks amber\n2. Tap the control button one time\n3. The LED will quickly flash green and then turn off and blink green 3 times upon successful inclusion",
+		"exclusion": "Hold the control button for 7 seconds until the LED turns amber, then tap the control button one time. The LED will quickly flash green upon successful exclusion.",
+		"reset": "Hold the control button down for 14 seconds. The LED will blink red/amber upon successful reset.",
+		"manual": "https://leviton.com/content/dam/leviton/residential/product_documents/instruction_sheet/DI-000-DZPA1-02B-W.pdf"
+	}
 }
