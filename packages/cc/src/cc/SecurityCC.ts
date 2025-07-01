@@ -710,9 +710,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		const sequenceCounter = frameControl & 0b1111;
 		const sequenced = !!(frameControl & 0b1_0000);
 		const secondFrame = !!(frameControl & 0b10_0000);
-		const decryptedCCBytes: BytesView | undefined =
-			frameControlAndDecryptedCC
-				.subarray(1);
+		const decryptedCCBytes = frameControlAndDecryptedCC.subarray(1);
 
 		const ret = new SecurityCCCommandEncapsulation({
 			nodeId: ctx.sourceNodeId,

@@ -5,6 +5,9 @@ const buildArgs = process.argv
 	.slice(3)
 	.filter((a) => a !== "-w" && a !== "--watch");
 
+const useTSGO = process.env.TSGO === "1" || process.env.TSGO === "true";
+const buildCommand = useTSGO ? "build:native" : "build";
+
 // FIXME: Parse package.json dependency graph to figure out if codegen and/or
 // partial builds are necessary, instead of hardcoding it here.
 // FIXME: dependency graph is needed to create CJS builds for affected packages
@@ -44,8 +47,8 @@ async function main() {
 			"workspace",
 			"@zwave-js/maintenance",
 			"run",
-			"build",
-			"--verbose",
+			buildCommand,
+			...(useTSGO ? [] : ["--verbose"]),
 			...buildArgs,
 		],
 		execOptions,
@@ -63,8 +66,8 @@ async function main() {
 			"workspace",
 			"@zwave-js/transformers",
 			"run",
-			"build",
-			"--verbose",
+			buildCommand,
+			...(useTSGO ? [] : ["--verbose"]),
 			...buildArgs,
 		],
 		execOptions,
@@ -104,7 +107,26 @@ async function main() {
 		);
 	}
 
-	if (project === "all") {
+	if (useTSGO) {
+		// TSGO does not support project references yet, but it is 10x faster
+		// so we just build everything
+		await execa(
+			"yarn",
+			[
+				"workspaces",
+				"foreach",
+				"--all",
+				"--topological",
+				"--parallel",
+				"--exclude",
+				"@zwave-js/repo",
+				"run",
+				buildCommand,
+				...buildArgs,
+			],
+			execOptions,
+		);
+	} else if (project === "all") {
 		// Simply build all projects that depend on zwave-js - this will
 		// build everything
 		for (const project of dependsOnZwaveJs) {
@@ -116,7 +138,7 @@ async function main() {
 					"workspace",
 					project,
 					"run",
-					"build",
+					buildCommand,
 					"--verbose",
 					...buildArgs,
 				],
