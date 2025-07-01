@@ -117,6 +117,7 @@ async function main() {
 				"foreach",
 				"--all",
 				"--topological",
+				"--topological-dev",
 				"--parallel",
 				"--exclude",
 				"@zwave-js/repo",
