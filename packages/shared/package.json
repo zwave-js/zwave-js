@@ -56,7 +56,7 @@
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
-    "build:native": "tsgo -p tsconfig.build.json --pretty && yarn postbuild",
+    "build:native": "tsgo -p tsconfig.build.json --pretty",
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
