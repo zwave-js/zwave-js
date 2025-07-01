@@ -104,7 +104,7 @@
     "js-levenshtein": "^1.1.6",
     "ky": "^1.8.1",
     "peggy": "^3.0.2",
-    "sinon": "^20.0.0",
+    "sinon": "^21.0.0",
     "ts-pegjs": "patch:ts-pegjs@npm%3A4.2.1#~/.yarn/patches/ts-pegjs-npm-4.2.1-0f567a1059.patch",
     "tsx": "^4.20.3",
     "typescript": "5.8.3",
