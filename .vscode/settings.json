@@ -107,5 +107,6 @@
 		"**/.yarn": true
 	},
 	"git.ignoredRepositories": ["specs", "vscode-config-editor"],
-	"search.followSymlinks": false
+	"search.followSymlinks": false,
+	"typescript.experimental.useTsgo": true
 }

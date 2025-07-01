@@ -42,6 +42,7 @@
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json --pretty",
+    "build:native": "tsgo -p tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "lint:ts": "eslint --cache \"src/**/*.ts\"",
     "lint:ts:fix": "yarn run lint:ts --fix"
@@ -49,6 +50,7 @@
   "devDependencies": {
     "@types/node": "^20.17.57",
     "@types/yargs": "^17.0.33",
+    "@typescript/native-preview": "^7.0.0-dev.20250701.1",
     "del-cli": "^6.0.0",
     "typescript": "5.8.3"
   }

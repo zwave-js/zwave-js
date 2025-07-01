@@ -2458,6 +2458,87 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript/native-preview-darwin-arm64@npm:7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview-darwin-arm64@npm:7.0.0-dev.20250701.1"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-darwin-x64@npm:7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview-darwin-x64@npm:7.0.0-dev.20250701.1"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-arm64@npm:7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview-linux-arm64@npm:7.0.0-dev.20250701.1"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-arm@npm:7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview-linux-arm@npm:7.0.0-dev.20250701.1"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-x64@npm:7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview-linux-x64@npm:7.0.0-dev.20250701.1"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-win32-arm64@npm:7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview-win32-arm64@npm:7.0.0-dev.20250701.1"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-win32-x64@npm:7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview-win32-x64@npm:7.0.0-dev.20250701.1"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview@npm:^7.0.0-dev.20250701.1":
+  version: 7.0.0-dev.20250701.1
+  resolution: "@typescript/native-preview@npm:7.0.0-dev.20250701.1"
+  dependencies:
+    "@typescript/native-preview-darwin-arm64": "npm:7.0.0-dev.20250701.1"
+    "@typescript/native-preview-darwin-x64": "npm:7.0.0-dev.20250701.1"
+    "@typescript/native-preview-linux-arm": "npm:7.0.0-dev.20250701.1"
+    "@typescript/native-preview-linux-arm64": "npm:7.0.0-dev.20250701.1"
+    "@typescript/native-preview-linux-x64": "npm:7.0.0-dev.20250701.1"
+    "@typescript/native-preview-win32-arm64": "npm:7.0.0-dev.20250701.1"
+    "@typescript/native-preview-win32-x64": "npm:7.0.0-dev.20250701.1"
+  dependenciesMeta:
+    "@typescript/native-preview-darwin-arm64":
+      optional: true
+    "@typescript/native-preview-darwin-x64":
+      optional: true
+    "@typescript/native-preview-linux-arm":
+      optional: true
+    "@typescript/native-preview-linux-arm64":
+      optional: true
+    "@typescript/native-preview-linux-x64":
+      optional: true
+    "@typescript/native-preview-win32-arm64":
+      optional: true
+    "@typescript/native-preview-win32-x64":
+      optional: true
+  bin:
+    tsgo: bin/tsgo.js
+  checksum: 10/ace6a7b035e991b7d0460a2ba20146ccd8198e2f3cd4a396821b172bf060b4c321dfb1fdcf3fb05f7f1eeefda17270b822b606060f1aa035542b61cf9b9b7e54
+  languageName: node
+  linkType: hard
+
 "@vitest/expect@npm:2.1.9":
   version: 2.1.9
   resolution: "@vitest/expect@npm:2.1.9"
@@ -2544,6 +2625,7 @@ __metadata:
   resolution: "@zwave-js/bindings-browser@workspace:packages/bindings-browser"
   dependencies:
     "@types/w3c-web-serial": "npm:^1.0.8"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/serial": "workspace:*"
     "@zwave-js/shared": "workspace:*"
     del-cli: "npm:^6.0.0"
@@ -2559,6 +2641,7 @@ __metadata:
     "@alcalzone/esm2cjs": "npm:^1.4.1"
     "@microsoft/api-extractor": "npm:^7.52.8"
     "@types/node": "npm:^20.17.57"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/host": "workspace:*"
     "@zwave-js/maintenance": "workspace:*"
@@ -2589,6 +2672,7 @@ __metadata:
     "@types/sinon": "npm:^17.0.4"
     "@types/xml2js": "npm:^0.4.14"
     "@types/yargs": "npm:^17.0.33"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/maintenance": "workspace:*"
     "@zwave-js/shared": "workspace:*"
@@ -2626,6 +2710,7 @@ __metadata:
     "@types/semver": "npm:^7.7.0"
     "@types/sinon": "npm:^17.0.4"
     "@types/triple-beam": "npm:^1.3.5"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/shared": "workspace:*"
     alcalzone-shared: "npm:^5.0.0"
     ansi-colors: "npm:^4.1.3"
@@ -2655,6 +2740,7 @@ __metadata:
     "@alcalzone/esm2cjs": "npm:^1.4.1"
     "@types/eslint": "npm:^9.6.1"
     "@typescript-eslint/utils": "npm:^8.32.0"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/core": "workspace:*"
     eslint: "npm:^9.28.0"
     eslint-compat-utils: "npm:^0.6.5"
@@ -2669,6 +2755,7 @@ __metadata:
   dependencies:
     "@types/node": "npm:^20.17.57"
     "@types/yargs": "npm:^17.0.33"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/core": "workspace:*"
     del-cli: "npm:^6.0.0"
     pathe: "npm:^2.0.3"
@@ -2701,6 +2788,7 @@ __metadata:
     "@alcalzone/esm2cjs": "npm:^1.4.1"
     "@microsoft/api-extractor": "npm:^7.52.8"
     "@types/node": "npm:^20.17.57"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/config": "workspace:*"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/shared": "workspace:*"
@@ -2722,6 +2810,7 @@ __metadata:
     "@types/globrex": "npm:^0.1.4"
     "@types/node": "npm:^20.17.57"
     "@types/yargs": "npm:^17.0.33"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/fmt": "npm:^1.0.4"
     "@zwave-js/shared": "workspace:*"
@@ -2751,6 +2840,7 @@ __metadata:
     "@types/node": "npm:^20.17.57"
     "@types/semver": "npm:^7.7.0"
     "@types/yargs": "npm:^17.0.33"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/shared": "workspace:*"
     alcalzone-shared: "npm:^5.0.0"
@@ -2790,6 +2880,7 @@ __metadata:
     "@types/semver": "npm:^7.7.0"
     "@types/source-map-support": "npm:^0.5.10"
     "@types/xml2js": "npm:^0.4.14"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/bindings-browser": "workspace:*"
     "@zwave-js/cc": "workspace:*"
     "@zwave-js/config": "workspace:*"
@@ -2846,6 +2937,7 @@ __metadata:
     "@serialport/stream": "npm:^13.0.0"
     "@types/node": "npm:^20.17.57"
     "@types/sinon": "npm:^17.0.4"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/cc": "workspace:*"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/host": "workspace:*"
@@ -2870,6 +2962,7 @@ __metadata:
     "@microsoft/api-extractor": "npm:^7.52.8"
     "@types/node": "npm:^20.17.57"
     "@types/sinon": "npm:^17.0.4"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     alcalzone-shared: "npm:^5.0.0"
     del-cli: "npm:^6.0.0"
     pathe: "npm:^2.0.3"
@@ -2888,6 +2981,7 @@ __metadata:
     "@microsoft/api-extractor": "npm:^7.52.8"
     "@types/node": "npm:^20.17.57"
     "@types/triple-beam": "npm:^1.3.5"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/cc": "workspace:*"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/host": "workspace:*"
@@ -2907,6 +3001,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/transformers@workspace:packages/transformers"
   dependencies:
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     cpy-cli: "npm:^5.0.0"
     del-cli: "npm:^6.0.0"
     execa: "npm:^9.6.0"
@@ -2932,6 +3027,7 @@ __metadata:
   dependencies:
     "@types/w3c-web-serial": "npm:^1.0.8"
     "@types/w3c-web-usb": "npm:^1.0.10"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/bindings-browser": "workspace:^"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/shared": "workspace:*"
@@ -10087,6 +10183,7 @@ __metadata:
     "@types/semver": "npm:^7.7.0"
     "@types/sinon": "npm:^17.0.4"
     "@types/source-map-support": "npm:^0.5.10"
+    "@typescript/native-preview": "npm:^7.0.0-dev.20250701.1"
     "@zwave-js/cc": "workspace:*"
     "@zwave-js/config": "workspace:*"
     "@zwave-js/core": "workspace:*"
