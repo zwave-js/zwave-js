@@ -45,7 +45,7 @@
     "@microsoft/api-extractor": "^7.52.8",
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.11.0",
     "@tsconfig/node20": "^20.1.6",
-    "@types/node": "^20.17.57",
+    "@types/node": "^20.19.2",
     "@types/semver": "^7.7.0",
     "@types/source-map-support": "^0.5.10",
     "@types/xml2js": "^0.4.14",
