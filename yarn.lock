@@ -2152,10 +2152,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node20@npm:^20.1.5":
-  version: 20.1.5
-  resolution: "@tsconfig/node20@npm:20.1.5"
-  checksum: 10/6d689785f7b6ffd09d2cd0565290235ddc650932f6c110701dd38732b3c0b57ba039a3663268ae4a16b855d55ec2fbd48a53910e5a5fc7f196caaa4074dd0a53
+"@tsconfig/node20@npm:^20.1.6":
+  version: 20.1.6
+  resolution: "@tsconfig/node20@npm:20.1.6"
+  checksum: 10/ddfacb4d50d4395051029fa6350ec26564ff77002d7bf28f0509b3a43f2ab8afeca1210317e9bb536b48738effdccaa56b855a19d06fd106feae6f7e8e21a650
   languageName: node
   linkType: hard
 
@@ -2795,7 +2795,7 @@ __metadata:
     "@dprint/typescript": "npm:^0.95.5"
     "@microsoft/api-extractor": "npm:^7.52.2"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.10.4"
-    "@tsconfig/node20": "npm:^20.1.5"
+    "@tsconfig/node20": "npm:^20.1.6"
     "@types/node": "npm:^20.17.57"
     "@types/semver": "npm:^7.7.0"
     "@types/source-map-support": "npm:^0.5.10"
