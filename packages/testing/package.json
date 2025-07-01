@@ -62,7 +62,7 @@
     "@zwave-js/cc": "workspace:*",
     "del-cli": "^6.0.0",
     "triple-beam": "*",
-    "tsx": "^4.19.4",
+    "tsx": "^4.20.3",
     "typescript": "5.8.3",
     "winston-transport": "^4.9.0"
   }
