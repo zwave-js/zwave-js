@@ -594,10 +594,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dprint/markdown@npm:^0.18.0":
-  version: 0.18.0
-  resolution: "@dprint/markdown@npm:0.18.0"
-  checksum: 10/6d586bafecf1640cc7b57214fbca7e829f06cf5a9c5f235c95d15b600b20ed5aa6e60a3b1f8ca90cf082d88fad76ea34db46e23c9ff6ed0274d92fa9fdc162d8
+"@dprint/markdown@npm:^0.19.0":
+  version: 0.19.0
+  resolution: "@dprint/markdown@npm:0.19.0"
+  checksum: 10/23afb08d3ea3b36f80d0c933289c214b98bea9854f1149693b2366ea6b2b28eff45f5c84c53d123928154ed0a88aa72c83191284a4019bedac78c6785627f02e
   languageName: node
   linkType: hard
 
@@ -2717,7 +2717,7 @@ __metadata:
     "@alcalzone/esm2cjs": "npm:^1.4.1"
     "@dprint/formatter": "npm:^0.4.1"
     "@dprint/json": "npm:^0.20.0"
-    "@dprint/markdown": "npm:^0.18.0"
+    "@dprint/markdown": "npm:^0.19.0"
     "@dprint/typescript": "npm:^0.95.8"
     "@types/globrex": "npm:^0.1.4"
     "@types/node": "npm:^20.17.57"
@@ -2781,7 +2781,7 @@ __metadata:
     "@commitlint/config-conventional": "npm:^19.8.1"
     "@dprint/formatter": "npm:^0.4.1"
     "@dprint/json": "npm:^0.20.0"
-    "@dprint/markdown": "npm:^0.18.0"
+    "@dprint/markdown": "npm:^0.19.0"
     "@dprint/typescript": "npm:^0.95.8"
     "@microsoft/api-extractor": "npm:^7.52.8"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
