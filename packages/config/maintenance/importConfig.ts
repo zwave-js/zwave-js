@@ -34,7 +34,7 @@ import xml2js_parsers from "xml2js/lib/processors.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { ConfigManager } from "../src/ConfigManager.js";
-import { type DeviceConfigIndexEntry } from "../src/devices/DeviceConfig.js";
+import type { DeviceConfigIndexEntry } from "../src/devices/DeviceConfig.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -1338,10 +1338,15 @@ async function parseZWAProduct(
 
 	const newConfig: Record<string, any> = {
 		isNewFile: typeof existingDevice === "undefined",
-		manufacturer,
+		// Prefer the brand name over the manufacturer name
+		manufacturer: product.Brand || manufacturer,
 		manufacturerId: manufacturerIdHex,
 		label: productLabel,
-		description: existingDevice?.description ?? productName, // don't override the description
+		// In order of preference: existing description, short description, long description, cleaned up product name
+		description: existingDevice?.description
+			?? (product.Description_Short
+				|| product.Description
+				|| productName),
 		devices: devices,
 		firmwareVersion: {
 			min: existingDevice?.firmwareVersion.min ?? "0.0",
@@ -1369,7 +1374,7 @@ async function parseZWAProduct(
 	/**********************
 	 *     Parameters     *
 	 **********************/
-	const parameters = product.ConfigurationParameters;
+	const parameters = product.ConfigurationParameters || [];
 
 	for (const param of parameters) {
 		const found = newConfig.paramInformation.find(
@@ -1396,10 +1401,19 @@ async function parseZWAProduct(
 		parsedParam["#"] = param.ParameterNumber.toString();
 		parsedParam.label = param.Name || parsedParam.label;
 		parsedParam.label = normalizeLabel(parsedParam.label);
-		parsedParam.description = param.ConfigurationParameterValues.length > 1 // Sometimes values options are described and not presented as options
-			? param.Description
-			: param.ConfigurationParameterValues[0].Description;
-		parsedParam.description = normalizeDescription(parsedParam.description);
+		let description = "";
+		if (param.ConfigurationParameterValues.length === 1) {
+			// Sometimes values options are described and not presented as options
+			description = normalizeDescription(
+				param.ConfigurationParameterValues[0].Description,
+			);
+		}
+		// In all other cases, use the parameter description
+		description ||= normalizeDescription(param.Description);
+		// ...or fall back to the existing description
+		description ||= normalizeDescription(parsedParam.description);
+		parsedParam.description = description;
+
 		parsedParam.valueSize = updateNumberOrDefault(
 			param.Size,
 			parsedParam.valueSize,
@@ -1414,7 +1428,8 @@ async function parseZWAProduct(
 			parsedParam.writeOnly = true;
 		}
 		parsedParam.allowManualEntry = !parsedParam.readOnly
-			&& param.ConfigurationParameterValues.length <= 1;
+			&& (!param.ConfigurationParameterValues
+				|| param.ConfigurationParameterValues.length <= 1);
 		parsedParam.defaultValue = updateNumberOrDefault(
 			param.DefaultValue,
 			parsedParam.value,
@@ -1461,7 +1476,8 @@ async function parseZWAProduct(
 			|| (parsedParam.minValue === 0 && parsedParam.maxValue === 0)
 		) {
 			parsedParam.options = [];
-			for (const item of param.ConfigurationParameterValues) {
+			const configValues = param.ConfigurationParameterValues || [];
+			for (const item of configValues) {
 				// Values are given as options
 				if (item.From === item.To) {
 					const opt = {
@@ -1522,13 +1538,14 @@ async function parseZWAProduct(
 
 	const newAssociations: Record<string, any> = newConfig.associations || {};
 	let addCompat = false;
-	for (const ass of product.AssociationGroups) {
-		let label: string = ass.group_name.length > 0
+	const associationGroups = product.AssociationGroups || [];
+	for (const ass of associationGroups) {
+		let label: string = ass.group_name?.length
 			? ass.group_name
 			: `Group ${ass.GroupNumber}`;
 		const maxNodes = ass.MaximumNodes;
-		const groupName = ass.group_name.toLowerCase();
-		const description = ass.Description.toLowerCase();
+		const groupName = (ass.group_name || "").toLowerCase();
+		const description = (ass.Description || "").toLowerCase();
 		let lifeline = false;
 		if (
 			groupName.includes("lifeline")
@@ -2206,6 +2223,12 @@ function normalizeDescription(originalString: string) {
 
 	// Clean-up the beginning of labels
 	originalString = originalString.replace(/^[._, -]+/, "");
+
+	// "0" is not a valid description
+	if (originalString === "0") {
+		originalString = "";
+	}
+
 	return originalString;
 }
 /****************************************************************************
