@@ -53,7 +53,7 @@
     "alcalzone-shared": "^5.0.0",
     "reflect-metadata": "^0.2.2",
     "semver": "^7.6.3",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
