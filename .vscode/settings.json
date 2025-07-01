@@ -125,5 +125,6 @@
 		"/^Remove-Item\\b/i": false
 	},
 	"oxc.typeAware": true,
-	"oxc.enable": true
+	"oxc.enable": true,
+	"typescript.experimental.useTsgo": true
 }

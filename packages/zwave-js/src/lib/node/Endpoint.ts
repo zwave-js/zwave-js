@@ -269,7 +269,7 @@ export class Endpoint
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
-		return CommandClass.createInstanceUnchecked(this, cc);
+		return CommandClass.createInstanceUnchecked<T>(this, cc);
 	}
 
 	/**
@@ -281,7 +281,7 @@ export class Endpoint
 	): T | undefined {
 		const ccId = typeof cc === "number" ? cc : getCommandClassStatic(cc);
 		if (this.supportsCC(ccId) || this.controlsCC(ccId)) {
-			return CommandClass.createInstanceUnchecked(this, cc);
+			return CommandClass.createInstanceUnchecked<T>(this, cc);
 		}
 	}
 
