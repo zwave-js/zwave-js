@@ -80,7 +80,7 @@
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
     "@microsoft/api-extractor": "^7.52.8",
-    "@types/node": "^20.17.57",
+    "@types/node": "^20.19.2",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",
     "del-cli": "^6.0.0",
