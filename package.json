@@ -69,7 +69,7 @@
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
     "del-cli": "^6.0.0",
-    "dprint": "^0.49.1",
+    "dprint": "^0.50.1",
     "eslint": "^9.28.0",
     "eslint-plugin-unicorn": "^59.0.1",
     "eslint-plugin-unused-imports": "patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch",
