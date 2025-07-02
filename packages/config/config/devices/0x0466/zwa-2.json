@@ -2,7 +2,7 @@
 	"manufacturer": "Nabu Casa",
 	"manufacturerId": "0x0466",
 	"label": "Home Assistant Connect ZWA-2",
-	"description": "Z-Wave Antenna",
+	"description": "Z-Wave Adapter",
 	"devices": [
 		{
 			"productType": "0x0001",
