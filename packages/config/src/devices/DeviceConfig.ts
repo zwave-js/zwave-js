@@ -1,5 +1,10 @@
 import { configDir } from "#config_dir";
-import { ZWaveError, ZWaveErrorCodes, digest } from "@zwave-js/core";
+import {
+	ZWaveError,
+	ZWaveErrorCodes,
+	deflateSync,
+	digest,
+} from "@zwave-js/core";
 import {
 	Bytes,
 	type JSONObject,
@@ -797,7 +802,7 @@ export class DeviceConfig {
 		}
 	}
 
-	private getHashable(): Uint8Array {
+	private getHashable(): Record<string, any> {
 		// We only need to compare the information that is persisted elsewhere:
 		// - config parameters
 		// - functional association settings
@@ -934,20 +939,104 @@ export class DeviceConfig {
 		}
 
 		hashable = sortObject(hashable);
-
-		return Bytes.from(JSON.stringify(hashable), "utf8");
+		return hashable;
 	}
 
 	/**
 	 * Returns a hash code that can be used to check whether a device config has changed enough to require a re-interview.
 	 */
-	public getHash(
-		algorithm: "md5" | "sha-256" = "sha-256",
+	public async getHash(
+		version: 0 | 1 = DeviceConfig.maxHashVersion,
 	): Promise<Uint8Array> {
 		// Figure out what to hash
-		const buffer = this.getHashable();
+		const hashable = this.getHashable();
 
-		// And create a hash from it. This does not need to be cryptographically secure, just good enough to detect changes.
-		return digest(algorithm, buffer);
+		// And create a "hash" from it. Older versions used a non-cryptographic hash,
+		// newer versions compress a subset of the config file.
+		let hash: Uint8Array;
+		if (version === 0) {
+			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
+			return await digest("md5", buffer);
+		} else if (version === 1) {
+			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
+			return await digest("sha-256", buffer);
+		} else {
+			hash = deflateSync(Bytes.from(JSON.stringify(hashable), "utf8"));
+		}
+
+		// Version the hash, so we can change the format in the future
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+		const prefixBytes = Bytes.from(`$v${version}$`, "utf8");
+		return Bytes.concat([prefixBytes, hash]);
+	}
+
+	public static get maxHashVersion(): 1 {
+		return 1;
+	}
+
+	public static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean {
+		const parsedHash = parseHash(hash);
+		const parsedOther = parseHash(other);
+		// If one of the hashes could not be parsed, they are not equal
+		if (!parsedHash || !parsedOther) return false;
+
+		// For legacy hashes, we only compare the hash data. We already make sure during
+		// parsing of the cache files that we only need to compare hashes of the same version,
+		// so simply comparing the contents is sufficient.
+		if (parsedHash.version < 2 && parsedOther.version < 2) {
+			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		}
+		// We take care during loading to downlevel the current config hash to legacy versions if needed.
+		// If we end up with just one legacy hash here, something went wrong. Just bail in that case.
+		if (parsedHash.version < 2 || parsedOther.version < 2) {
+			return false;
+		}
+
+		// This is a versioned hash. If both versions are equal, it's simple - just compare the hash data
+		if (parsedHash.version === parsedOther.version) {
+			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		}
+
+		// For different versions, we have to do some case by case checks. For example, a newer hash version
+		// might remove or add data into the hashable, so we cannot simply convert between versions easily.
+		// Implement when that is actually needed.
+		return false;
+	}
+}
+
+function parseHash(hash: Uint8Array): {
+	version: number;
+	hashData: Uint8Array;
+} | undefined {
+	const hashString = Bytes.view(hash).toString("utf8");
+	const versionMatch = hashString.match(/^\$v(\d+)\$/);
+	if (versionMatch) {
+		// This is a versioned hash
+		const version = parseInt(versionMatch[1], 10);
+		const hashData = hash.subarray(
+			// The prefix is ASCII, so this is safe to do even in the context of UTF-8
+			versionMatch[0].length,
+		);
+		return {
+			version,
+			hashData,
+		};
+	}
+
+	// This is probably an unversioned legacy hash
+	switch (hash.length) {
+		case 16: // MD5
+			return {
+				version: 0,
+				hashData: hash,
+			};
+		case 32: // SHA-256
+			return {
+				version: 1,
+				hashData: hash,
+			};
+		default:
+			// This is not a valid hash
+			return undefined;
 	}
 }
