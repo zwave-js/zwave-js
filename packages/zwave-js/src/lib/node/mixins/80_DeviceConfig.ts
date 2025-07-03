@@ -1,3 +1,4 @@
+import { refreshMetadataStringsFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
 import { DeviceConfig } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, formatId } from "@zwave-js/shared";
@@ -222,12 +223,23 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 
 		// Update the cached device config hash upon restoring, if the node was previously interviewed
 		// and the device config has not changed since then.
-		if (
-			cachedHashVersion < DeviceConfig.maxHashVersion
-			&& this.hasDeviceConfigChanged() === false
-		) {
-			this.cachedDeviceConfigHash = await this.deviceConfig
-				.getHash();
+		if (this.interviewStage === InterviewStage.Complete) {
+			if (
+				cachedHashVersion < DeviceConfig.maxHashVersion
+				&& this.hasDeviceConfigChanged() === false
+			) {
+				this.cachedDeviceConfigHash = await this.deviceConfig
+					.getHash();
+			}
+
+			// Starting from version 2, we apply labels and descriptions from the device config dynamically
+			for (const ep of this.getAllEndpoints()) {
+				refreshMetadataStringsFromConfigFile(
+					this.driver,
+					this.id,
+					ep.index,
+				);
+			}
 		}
 
 		this.driver.controllerLog.logNode(

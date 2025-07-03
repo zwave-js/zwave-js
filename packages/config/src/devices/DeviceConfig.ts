@@ -8,6 +8,7 @@ import {
 import {
 	Bytes,
 	type JSONObject,
+	cloneDeep,
 	enumFilesRecursive,
 	formatId,
 	getenv,
@@ -887,9 +888,9 @@ export class DeviceConfig {
 				`${param.parameterNumber}${
 					param.valueBitMask ? `[${num2hex(param.valueBitMask)}]` : ""
 				}`;
-			target.paramInformation = [...map.values()].sort((a, b) =>
-				getParamKey(a).localeCompare(getParamKey(b))
-			);
+			target.paramInformation = [...map.values()]
+				.sort((a, b) => getParamKey(a).localeCompare(getParamKey(b)))
+				.map((p) => cloneDeep(p));
 		};
 
 		// Clone associations and param information on the root (ep 0) and endpoints
