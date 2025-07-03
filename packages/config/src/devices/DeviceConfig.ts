@@ -406,6 +406,42 @@ function isFirmwareVersion(val: any): val is string {
 	);
 }
 
+const deflateDict = Bytes.from(
+	// Substrings appearing in the device config files in descending order of frequency
+	// except for very short ones like 0, 1, ...
+	// WARNING: THIS MUST NOT BE CHANGED! Doing so breaks decompressing stored hashes.
+	[
+		`"parameterNumber":`,
+		`255`,
+		`"value":`,
+		`"defaultValue":`,
+		`"valueSize":`,
+		`"maxValue":`,
+		`"minValue":`,
+		`"options":`,
+		`true`,
+		`false`,
+		`"allowManualEntry":`,
+		`"maxNodes":`,
+		`100`,
+		`"unsigned":`,
+		`"paramInformation":`,
+		`"isLifeline":`,
+		`"seconds"`,
+		`99`,
+		`127`,
+		`"%"`,
+		`65535`,
+		`32767`,
+		`"minutes"`,
+		`"endpoints":`,
+		`"hours"`,
+		`"multiChannel":`,
+	]
+		.join(""),
+	"utf8",
+);
+
 /** This class represents a device config entry whose conditional settings have not been evaluated yet */
 export class ConditionalDeviceConfig {
 	public static async from(
@@ -802,7 +838,7 @@ export class DeviceConfig {
 		}
 	}
 
-	private getHashable(): Record<string, any> {
+	private getHashable(version: 0 | 1 | 2): Record<string, any> {
 		// We only need to compare the information that is persisted elsewhere:
 		// - config parameters
 		// - functional association settings
@@ -938,6 +974,23 @@ export class DeviceConfig {
 			}
 		}
 
+		if (version > 1) {
+			// From version 2 and on, we ignore labels and descriptions, and load them dynamically
+			for (
+				const ep of Object.values<Record<string, any>>(
+					hashable.endpoints ?? {},
+				)
+			) {
+				for (const param of ep.paramInformation ?? []) {
+					delete param.label;
+					delete param.description;
+					for (const opt of param.options ?? []) {
+						delete opt.label;
+					}
+				}
+			}
+		}
+
 		hashable = sortObject(hashable);
 		return hashable;
 	}
@@ -946,10 +999,10 @@ export class DeviceConfig {
 	 * Returns a hash code that can be used to check whether a device config has changed enough to require a re-interview.
 	 */
 	public async getHash(
-		version: 0 | 1 = DeviceConfig.maxHashVersion,
+		version: 0 | 1 | 2 = DeviceConfig.maxHashVersion,
 	): Promise<Uint8Array> {
 		// Figure out what to hash
-		const hashable = this.getHashable();
+		const hashable = this.getHashable(version);
 
 		// And create a "hash" from it. Older versions used a non-cryptographic hash,
 		// newer versions compress a subset of the config file.
@@ -961,17 +1014,20 @@ export class DeviceConfig {
 			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
 			return await digest("sha-256", buffer);
 		} else {
-			hash = deflateSync(Bytes.from(JSON.stringify(hashable), "utf8"));
+			hash = deflateSync(
+				Bytes.from(JSON.stringify(hashable), "utf8"),
+				// Try to make the hash as small as possible
+				{ level: 9, dictionary: deflateDict },
+			);
 		}
 
-		// Version the hash, so we can change the format in the future
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+		// Version the hash from v2 onwards, so we can change the format in the future
 		const prefixBytes = Bytes.from(`$v${version}$`, "utf8");
 		return Bytes.concat([prefixBytes, hash]);
 	}
 
-	public static get maxHashVersion(): 1 {
-		return 1;
+	public static get maxHashVersion(): 2 {
+		return 2;
 	}
 
 	public static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean {

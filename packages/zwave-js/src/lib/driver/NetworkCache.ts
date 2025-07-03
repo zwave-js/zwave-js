@@ -375,6 +375,18 @@ function tryParseBuffer(
 	}
 }
 
+function tryParseBufferBase64(
+	value: unknown,
+): Uint8Array | undefined {
+	if (typeof value === "string") {
+		try {
+			return Bytes.from(value, "base64");
+		} catch {
+			// ignore
+		}
+	}
+}
+
 export function deserializeNetworkCacheValue(
 	key: string,
 	value: unknown,
@@ -467,7 +479,22 @@ export function deserializeNetworkCacheValue(
 		}
 
 		case "deviceConfigHash": {
-			value = tryParseBuffer(value);
+			if (typeof value !== "string") fail();
+			const versionMatch = value.match(/^\$v\d+\$/)?.[0];
+			if (versionMatch) {
+				// Versioned hash, stored as base64, preserve the version prefix
+				value = tryParseBufferBase64(value.slice(versionMatch.length));
+				if (value) {
+					value = Bytes.concat([
+						Bytes.from(versionMatch, "utf8"),
+						value as Uint8Array,
+					]);
+				}
+			} else {
+				// Legacy hash, no version prefix, stored as hex
+				value = tryParseBuffer(value);
+			}
+
 			if (value) return value;
 			fail();
 		}
@@ -539,7 +566,20 @@ export function serializeNetworkCacheValue(
 		}
 
 		case "deviceConfigHash": {
-			return Bytes.view(value as Uint8Array).toString("hex");
+			// Preserve the version prefix if it exists
+			const valueAsString = Bytes.view(value as Uint8Array).toString(
+				"utf8",
+			);
+			const versionMatch = valueAsString.match(/^\$v\d+\$/)?.[0];
+			if (versionMatch) {
+				return versionMatch
+					+ Bytes.view(value as Uint8Array).subarray(
+						versionMatch.length,
+					).toString("base64");
+			} else {
+				// For lecacy hashes, just return the hex representation
+				return Bytes.view(value as Uint8Array).toString("hex");
+			}
 		}
 	}
 

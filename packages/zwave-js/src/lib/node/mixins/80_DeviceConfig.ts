@@ -214,7 +214,8 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 					cachedHashVersion < DeviceConfig.maxHashVersion
 					&& this.hasDeviceConfigChanged() === false
 				) {
-					this.cachedDeviceConfigHash = this._currentDeviceConfigHash;
+					this.cachedDeviceConfigHash = await this.deviceConfig
+						.getHash();
 				}
 
 				this.driver.controllerLog.logNode(
