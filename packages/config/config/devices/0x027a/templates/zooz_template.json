@@ -299,6 +299,12 @@
 		"description": "Disable this feature when using the LED indicators in automations.",
 		"defaultValue": 0
 	},
+	"led_button_press": {
+		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+		"label": "LED Indicator: Button Press",
+		"description": "Choose if the LED should flash whenever the corresponding button is pressed.",
+		"defaultValue": 0
+	},
 	"smart_switch_mode_reporting": {
 		"label": "Smart Bulb Mode: Reporting Behavior",
 		"valueSize": 1,
@@ -397,6 +403,81 @@
 				"value": 1
 			}
 		]
+	},
+	"association_reports_scene_controller": {
+		"label": "Association Reports",
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 15,
+		"defaultValue": 15,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+			  "label": "None",
+			  "value": 0
+			},
+			{
+			  "label": "Physical Tap On Button Only",
+			  "value": 1
+			},
+			{
+			  "label": "Physical Tap On Connected 3-Way Switch Only",
+			  "value": 2
+			},
+			{
+			  "label": "Physical Tap On Button Or Connected 3-Way Switch",
+			  "value": 3
+			},
+			{
+			  "label": "Z-Wave Command From Hub",
+			  "value": 4
+			},
+			{
+			  "label": "Physical Tap On Button Or Z-Wave Command From Hub",
+			  "value": 5
+			},
+			{
+			  "label": "Physical Tap On Connected 3-Way Switch Or Z-Wave Command From Hub",
+			  "value": 6
+			},
+			{
+			  "label": "Physical Tap On Button / Connected 3-Way Switch Or Z-Wave Command From Hub",
+			  "value": 7
+			},
+			{
+			  "label": "Timer Only",
+			  "value": 8
+			},
+			{
+			  "label": "Physical Tap On Button Or Timer",
+			  "value": 9
+			},
+			{
+			  "label": "Physical Tap On Connected 3-Way Switch Or Timer",
+			  "value": 10
+			},
+			{
+			  "label": "Physical Tap On Button / Connected 3-Way Switch Or Timer",
+			  "value": 11
+			},
+			{
+			  "label": "Z-Wave Command From Hub Or Timer",
+			  "value": 12
+			},
+			{
+			  "label": "Physical Tap On Button, Z-Wave Command From Hub, Or Timer",
+			  "value": 13
+			},
+			{
+			  "label": "Physical Tap On Button / Connected 3-Way Switch, Z-Wave Command From Hub, Or Timer",
+			  "value": 14
+			},
+			{
+			  "label": "All",
+			  "value": 15
+			}
+		  ]
 	},
 	"dimmer_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
@@ -625,6 +706,27 @@
 				"value": 3
 			}
 		]
+	},
+	"zen35_main_button_tap": {
+			"$import": "#zen7x_double_tap_up_behavior",
+			"options": [
+				{
+					"label": "Full brightness",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (parameter 31)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness",
+					"value": 2
+				},
+				{
+					"label": "Double tap disabled",
+					"value": 3
+				}
+			]
 	},
 	"custom_brightness": {
 		"label": "Custom Brightness Level",
