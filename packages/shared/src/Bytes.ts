@@ -3,6 +3,7 @@
 import {
 	type TypedArray,
 	areUint8ArraysEqual,
+	base64ToUint8Array,
 	concatUint8Arrays,
 	hexToUint8Array,
 	includes,
@@ -79,6 +80,8 @@ export class Bytes extends Uint8Array {
 					return Bytes.view(stringToUint8Array(data));
 				case "hex":
 					return Bytes.view(hexToUint8Array(data));
+				case "base64":
+					return Bytes.view(base64ToUint8Array(data));
 			}
 
 			throw new Error(`Unsupported encoding: ${encoding}`);

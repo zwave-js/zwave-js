@@ -292,6 +292,64 @@ function getParamInformationFromConfigFile(
 	}
 }
 
+/**
+ * Updates the stored metadata labels and descriptions from the device config file.
+ */
+export function refreshMetadataStringsFromConfigFile(
+	ctx: GetValueDB & GetDeviceConfig,
+	nodeId: number,
+	endpointIndex: number,
+): void {
+	const paramInfo = getParamInformationFromConfigFile(
+		ctx,
+		nodeId,
+		endpointIndex,
+	);
+	if (!paramInfo) return;
+
+	const valueDB = ctx.getValueDB(nodeId);
+
+	for (const [param, info] of paramInfo.entries()) {
+		const valueId = ConfigurationCCValues.paramInformation(
+			param.parameter,
+			param.valueBitMask,
+		).endpoint(endpointIndex);
+
+		const existing = valueDB.getMetadata(valueId) as
+			| ConfigurationMetadata
+			| undefined;
+
+		if (!existing) continue;
+		if (!existing.isFromConfig) continue;
+
+		let didChange = false;
+
+		// Update info, description and option labels and remember if something was changed
+		if (info.label !== existing.label) {
+			existing.label = info.label;
+			didChange = true;
+		}
+		if (info.description !== existing.description) {
+			existing.description = info.description;
+			didChange = true;
+		}
+		if (existing.states) {
+			for (const option of info.options) {
+				if (
+					option.value in existing.states
+					&& existing.states[option.value] !== option.label
+				) {
+					existing.states[option.value] = option.label;
+					didChange = true;
+				}
+			}
+		}
+
+		// If something changed, update the metadata
+		if (didChange) valueDB.setMetadata(valueId, existing);
+	}
+}
+
 @API(CommandClasses.Configuration)
 export class ConfigurationCCAPI extends CCAPI {
 	public supportsCommand(cmd: ConfigurationCommand): MaybeNotKnown<boolean> {
