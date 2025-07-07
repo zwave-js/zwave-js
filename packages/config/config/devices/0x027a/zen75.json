@@ -120,7 +120,7 @@
 	"metadata": {
 		"inclusion": "Tap the upper paddle 3 times quickly.",
 		"exclusion": "Tap the lower paddle 3 times quickly. The LED indicator will start blinking blue during the exclusion process, then turn green for 3 seconds when exclusion is complete.",
-		"reset": "reset": "1. Press and hold the lower paddle for 10 seconds until the LED indicator starts blinking\n2. Release paddle\n3. Immediately tap the lower paddle 5 times. The LED indicator will flash blue 3 times and turn red for 3 seconds to confirm successful reset.",
+		"reset": "1. Press and hold the lower paddle for 10 seconds until the LED indicator starts blinking\n2. Release paddle\n3. Immediately tap the lower paddle 5 times. The LED indicator will flash blue 3 times and turn red for 3 seconds to confirm successful reset.",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/1430/zooz-zen75-advanced-manual.pdf"
 	}
 }
