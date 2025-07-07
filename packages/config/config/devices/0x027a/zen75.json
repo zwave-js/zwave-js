@@ -102,6 +102,14 @@
 		{
 			"#": "17",
 			"$import": "templates/zooz_template.json#local_programming"
+		},
+		{
+			"#": "18",
+			"$import": "templates/zooz_template.json#enable_scene_control_3way"
+		},
+		{
+			"#": "19",
+			"$import": "templates/zooz_template.json#led_confirm_config_change"
 		}
 	],
 	"compat": {
