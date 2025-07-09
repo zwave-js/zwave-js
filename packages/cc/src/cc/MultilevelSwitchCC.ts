@@ -10,6 +10,7 @@ import {
 	type MessageRecord,
 	NOT_KNOWN,
 	type SupervisionResult,
+	SupervisionStatus,
 	ValueMetadata,
 	type WithAddress,
 	maybeUnknownToString,
@@ -376,7 +377,7 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
 		{ property },
 		value,
-		_options,
+		options,
 	) => {
 		// Enable restoring the previous non-zero value
 		if (property === "restorePrevious") {
@@ -385,6 +386,7 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 		}
 
 		if (property === "targetValue") {
+			const duration = Duration.from(options?.transitionDuration);
 			const currentValueValueId = MultilevelSwitchCCValues.currentValue
 				.endpoint(
 					this.endpoint.index,
@@ -459,15 +461,34 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 					// If we don't know the actual value, we need to verify the change, regardless of the supervision result
 					return value === 255;
 				},
-				verifyChanges: async () => {
+				verifyChanges: async (result) => {
 					if (
-						this.isSinglecast()
 						// We generally don't want to poll for multicasts because of how much traffic it can cause
 						// However, when setting the value 255 (ON), we don't know the actual state
-						|| (this.isMulticast() && value === 255)
+						!(this.isSinglecast()
+							|| (this.isMulticast() && value === 255))
 					) {
-						// After successful supervised set the value has already changed, no need to wait
-						await this.pollValue!.call(this, currentValueValueId);
+						return;
+					}
+
+					switch (result?.status) {
+						case SupervisionStatus.Success:
+						case SupervisionStatus.Fail:
+							await this.pollValue!.call(
+								this,
+								currentValueValueId,
+							);
+							break;
+						default:
+							(this as this).schedulePoll(
+								currentValueValueId,
+								value === 255 ? undefined : value,
+								{
+									duration: result?.remainingDuration
+										?? duration,
+								},
+							);
+							break;
 					}
 				},
 			};
