@@ -704,6 +704,18 @@ export class ZWaveController
 		return this._rfRegion;
 	}
 
+	private _txPower: MaybeNotKnown<number>;
+	/** The transmit power used for Z-Wave mesh, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setPowerlevel}. */
+	public get txPower(): MaybeNotKnown<number> {
+		return this._txPower;
+	}
+
+	private _powerlevelCalibration: MaybeNotKnown<number>;
+	/** The calibration value for the transmit power, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setPowerlevel}. */
+	public get powerlevelCalibration(): MaybeNotKnown<number> {
+		return this._powerlevelCalibration;
+	}
+
 	private _supportsLongRange: MaybeNotKnown<boolean>;
 	/** Whether the controller supports the Z-Wave Long Range protocol */
 	public get supportsLongRange(): MaybeNotKnown<boolean> {
@@ -1327,7 +1339,7 @@ export class ZWaveController
 			);
 		}
 
-		// Check and possibly update the RF region to the desired value
+		// Check the current RF settings
 		if (
 			this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.GetRFRegion,
@@ -1351,6 +1363,52 @@ export class ZWaveController
 				);
 			}
 		}
+
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.GetPowerlevel,
+			)
+		) {
+			this.driver.controllerLog.print(
+				`Querying configured powerlevel...`,
+			);
+			const resp = await this.getPowerlevel().catch(() => undefined);
+			if (resp != undefined) {
+				this.driver.controllerLog.print(
+					`The powerlevel is ${resp.powerlevel} dBm (${resp.measured0dBm} dBm calibration)`,
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Querying the powerlevel failed!`,
+					"warn",
+				);
+			}
+		}
+
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.GetLongRangeMaximumTxPower,
+			)
+		) {
+			this.driver.controllerLog.print(
+				`Querying configured max. Long Range powerlevel...`,
+			);
+			const resp = await this.getMaxLongRangePowerlevel().catch(() =>
+				undefined
+			);
+			if (resp != undefined) {
+				this.driver.controllerLog.print(
+					`The max. LR powerlevel is ${resp.toFixed(1)} dBm`,
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Querying the max. Long Range powerlevel failed!`,
+					"warn",
+				);
+			}
+		}
+
+		// Now make any changes that are necessary
 
 		let desiredRFRegion: RFRegion | undefined;
 
@@ -1426,6 +1484,7 @@ export class ZWaveController
 			}
 		}
 
+		// When NOT in auto-powerlevel mode, set the desired powerlevels
 		let desiredTXPowerlevelMesh: number | undefined;
 		let desiredTXPowerlevelLR: number | undefined;
 
@@ -1439,36 +1498,43 @@ export class ZWaveController
 				this.driver.options.rf.maxLongRangePowerlevel;
 		}
 
-		// Check and possibly update the powerlevel settings
 		if (desiredTXPowerlevelMesh != undefined) {
 			await this.applyDesiredPowerlevelMesh(desiredTXPowerlevelMesh);
 		}
-
-		// Check and possibly update the Long Range powerlevel settings
-		if (
-			this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.GetLongRangeMaximumTxPower,
-			)
-		) {
-			this.driver.controllerLog.print(
-				`Querying configured max. Long Range powerlevel...`,
-			);
-			const resp = await this.getMaxLongRangePowerlevel().catch(() =>
-				undefined
-			);
-			if (resp != undefined) {
-				this.driver.controllerLog.print(
-					`The max. LR powerlevel is ${resp.toFixed(1)} dBm`,
-				);
-			} else {
-				this.driver.controllerLog.print(
-					`Querying the max. Long Range powerlevel failed!`,
-					"warn",
-				);
-			}
-		}
 		if (desiredTXPowerlevelLR != undefined) {
 			await this.applyDesiredPowerlevelLR(desiredTXPowerlevelLR);
+		}
+
+		// In auto-powerlevel, we check for a possible misconfiguration of the powerlevels, e.g. because of wrong defaults in the firmware.
+		// The values being known implies that setting the powerlevel is supported.
+		if (
+			this.driver.options.rf?.txPower?.powerlevel === "auto"
+			&& this._rfRegion != undefined
+			&& this._txPower === 20
+			&& this._maxLongRangePowerlevel === 20
+		) {
+			// This is the default for 7.23.x firmwares, but it is not legal in the EU or the US
+
+			const legalPowerlevelMesh = getLegalPowerlevelMesh(this._rfRegion);
+			const legalPowerlevelLR = getLegalPowerlevelLR(this._rfRegion);
+			if (
+				legalPowerlevelMesh != undefined
+				|| legalPowerlevelLR != undefined
+			) {
+				this.driver.controllerLog.print(
+					`The controller is set to incorrect powerlevel defaults, correcting them...`,
+				);
+			}
+			if (legalPowerlevelMesh != undefined) {
+				await this.setPowerlevel(
+					legalPowerlevelMesh,
+					this._powerlevelCalibration ?? 0,
+				).catch(noop);
+			}
+			if (legalPowerlevelLR != undefined) {
+				await this.setMaxLongRangePowerlevel(legalPowerlevelLR)
+					.catch(noop);
+			}
 		}
 
 		// Check and possibly update the Long Range channel settings
@@ -7186,6 +7252,12 @@ export class ZWaveController
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
+
+		if (result.success) {
+			this._txPower = powerlevel;
+			this._powerlevelCalibration = measured0dBm;
+		}
+
 		return result.success;
 	}
 
@@ -7218,6 +7290,10 @@ export class ZWaveController
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
+
+		this._txPower = result.powerlevel;
+		this._powerlevelCalibration = result.measured0dBm;
+
 		return pick(result, ["powerlevel", "measured0dBm"]);
 	}
 
@@ -7271,11 +7347,11 @@ export class ZWaveController
 	): Promise<void> {
 		if (
 			!this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.GetPowerlevel,
-			)
-			|| !this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.SetPowerlevel,
 			)
+			// The values being defined implies that we were able to query the current powerlevel
+			|| this._txPower == undefined
+			|| this._powerlevelCalibration == undefined
 		) {
 			return;
 		}
@@ -7284,43 +7360,40 @@ export class ZWaveController
 			powerlevel,
 			measured0dBm: this.driver.options.rf?.txPower?.measured0dBm,
 		};
-		this.driver.controllerLog.print(
-			`Querying configured powerlevel...`,
-		);
-		// Only change the powerlevel if needed to avoid unneccesary writes to the NVM
-		const current = await this.getPowerlevel().catch(() => undefined);
-		if (current != undefined) {
-			if (
-				current.powerlevel !== desired.powerlevel
-				|| (desired.measured0dBm != undefined
-					&& current.measured0dBm !== desired.measured0dBm)
-			) {
-				this.driver.controllerLog.print(
-					`Current powerlevel ${current.powerlevel} dBm (${current.measured0dBm} dBm) differs from desired powerlevel ${desired.powerlevel} dBm (${
-						desired.measured0dBm ?? current.measured0dBm
-					} dBm), configuring it...`,
-				);
 
-				const resp = await this.setPowerlevel(
-					desired.powerlevel,
-					desired.measured0dBm ?? current.measured0dBm,
-				).catch((e) => (e as Error).message);
-				if (resp === true) {
-					this.driver.controllerLog.print(`Powerlevel updated`);
-				} else {
-					this.driver.controllerLog.print(
-						`Changing the powerlevel failed!${
-							resp ? ` Reason: ${resp}` : ""
-						}`,
-						"warn",
-					);
-				}
-			}
-		} else {
+		// Use the cached current powerlevel values if available
+		const current = {
+			powerlevel: this._txPower,
+			measured0dBm: this._powerlevelCalibration,
+		};
+
+		// Only change the powerlevel if needed to avoid unnecessary writes to the NVM
+		if (
+			current.powerlevel !== desired.powerlevel
+			|| (desired.measured0dBm != undefined
+				&& current.measured0dBm !== desired.measured0dBm)
+		) {
 			this.driver.controllerLog.print(
-				`Querying the powerlevel failed!`,
-				"warn",
+				`Current powerlevel ${current.powerlevel} dBm (${current.measured0dBm} dBm) differs from desired powerlevel ${desired.powerlevel} dBm (${
+					desired.measured0dBm ?? current.measured0dBm
+				} dBm), configuring it...`,
 			);
+
+			const resp = await this.setPowerlevel(
+				desired.powerlevel,
+				desired.measured0dBm ?? current.measured0dBm,
+			).catch((e) => (e as Error).message);
+
+			if (resp === true) {
+				this.driver.controllerLog.print(`Powerlevel updated`);
+			} else {
+				this.driver.controllerLog.print(
+					`Changing the powerlevel failed!${
+						resp ? ` Reason: ${resp}` : ""
+					}`,
+					"warn",
+				);
+			}
 		}
 	}
 
