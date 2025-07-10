@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.9.0 (2025-07-10)
 ### Features
 * Apply auto powerlevels on every actual region change (#7862)
 * If auto-powerlevels are enabled, Z-Wave JS now detects when a controller is incorrectly set to the SDK default powerlevels of +20/+20 dBm applies the correct powerlevels for the current RF region if possible (#7965)
