@@ -1861,6 +1861,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     get nodeType(): MaybeNotKnown<NodeType>;
     get nvm(): NVMAdapter;
     get ownNodeId(): MaybeNotKnown<number>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "setPowerlevel"
+    get powerlevelCalibration(): MaybeNotKnown<number>;
     // (undocumented)
     get productId(): MaybeNotKnown<number>;
     // (undocumented)
@@ -1940,6 +1942,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     toggleRF(enabled: boolean): Promise<boolean>;
     // (undocumented)
     trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "setPowerlevel"
+    get txPower(): MaybeNotKnown<number>;
     // (undocumented)
     get type(): MaybeNotKnown<ZWaveLibraryTypes>;
     unprovisionSmartStartNode(dskOrNodeId: string | number): void;
@@ -2522,7 +2526,9 @@ export * from "@zwave-js/cc";
 
 // Warnings were encountered during analysis:
 //
-// src/lib/controller/Controller.ts:905:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:100:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
+// src/lib/controller/Controller.ts:917:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
 // src/lib/driver/Driver.ts:1007:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/driver/Driver.ts:5168:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/Driver.ts:6765:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
