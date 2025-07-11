@@ -17685,7 +17685,7 @@ export type SetValueImplementationHooks = AllOrNone<{
 }> & {
     optimisticallyUpdateRelatedValues?: (supervisedAndSuccessful: boolean) => void;
     forceVerifyChanges?: () => boolean;
-    verifyChanges?: () => void | Promise<void>;
+    verifyChanges?: (result?: SupervisionResult) => void | Promise<void>;
 };
 
 // Warning: (ae-missing-release-tag) "SetValueImplementationHooksFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

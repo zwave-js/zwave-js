@@ -457,6 +457,8 @@ export class DeviceConfig {
         productId: number;
     }[], firmwareVersion: FirmwareVersionRange, preferred: boolean, endpoints?: ReadonlyMap<number, EndpointConfig>, associations?: ReadonlyMap<number, AssociationConfig>, paramInformation?: ParamInfoMap, proprietary?: Record<string, unknown>, compat?: CompatConfig, metadata?: DeviceMetadata);
     // (undocumented)
+    static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean;
+    // (undocumented)
     readonly associations?: ReadonlyMap<number, AssociationConfig>;
     readonly compat?: CompatConfig;
     // (undocumented)
@@ -480,7 +482,7 @@ export class DeviceConfig {
         deviceId?: DeviceID;
     }): Promise<DeviceConfig>;
     getAssociationConfigForEndpoint(endpointIndex: number, group: number): AssociationConfig | undefined;
-    getHash(algorithm?: "md5" | "sha-256"): Promise<Uint8Array>;
+    getHash(version?: 0 | 1 | 2): Promise<Uint8Array>;
     readonly isEmbedded: boolean;
     // (undocumented)
     readonly label: string;
@@ -488,6 +490,8 @@ export class DeviceConfig {
     readonly manufacturer: string;
     // (undocumented)
     readonly manufacturerId: number;
+    // (undocumented)
+    static get maxHashVersion(): 2;
     readonly metadata?: DeviceMetadata;
     // (undocumented)
     readonly paramInformation?: ParamInfoMap;
@@ -637,7 +641,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.8.0";
+export const PACKAGE_VERSION = "15.9.0";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
