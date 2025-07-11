@@ -474,12 +474,10 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 					switch (result?.status) {
 						case SupervisionStatus.Success:
 						case SupervisionStatus.Fail:
-							await this.pollValue!.call(
-								this,
-								currentValueValueId,
-							);
+							await this.pollValue!(currentValueValueId);
 							break;
-						default:
+						case SupervisionStatus.Working:
+						default: // (not supervised)
 							(this as this).schedulePoll(
 								currentValueValueId,
 								value === 255 ? undefined : value,
