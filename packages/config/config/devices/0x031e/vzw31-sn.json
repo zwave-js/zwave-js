@@ -213,6 +213,7 @@
 		{
 			"#": "17",
 			"label": "Load Level Indicator Timeout",
+			"description": "Allowable range: 0-11",
 			"valueSize": 1,
 			"unit": "seconds",
 			"minValue": 0,
@@ -295,9 +296,35 @@
 		},
 		{
 			"#": "22",
+			"$if": "firmwareVersion <= 1.4",
 			"label": "Switch Type",
 			"valueSize": 1,
 			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single pole",
+					"value": 0
+				},
+				{
+					"label": "Multi-Way with dumb/toggle switch",
+					"value": 1
+				},
+				{
+					"label": "Multi-Way with aux switch",
+					"value": 2
+				},
+				{
+					"label": "Single pole full sine wave (On/Off mode only)",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "22",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 2,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -782,9 +809,27 @@
 		},
 		{
 			"#": "158",
+			"$if": "firmwareVersion <= 1.4",
 			"label": "Dimmer Mode",
 			"valueSize": 1,
 			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Dimmer mode",
+					"value": 0
+				},
+				{
+					"label": "On/Off mode",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "158",
+			"label": "Dimmer Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -848,7 +893,7 @@
 	"metadata": {
 		"inclusion": "Triple-click config button",
 		"exclusion": "Triple-click config button",
-		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red. Release the buttons and the switch will reset to factory defaults.",
+		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red.  Release the buttons and the switch will reset to factory defaults.",
 		"manual": "https://community.inovelli.com/t/resources-red-series-smart-2-1-switch-on-off-dimmer-manual/13706"
 	}
 }
