@@ -349,7 +349,7 @@
 			"#": "23",
 			"$if": "firmwareVersion >= 1.4",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on",
+			"description": "Duration of initial increased power output when light turns on. Allowable range: 0-60.",
 			"valueSize": 1,
 			"unit": "1/60 seconds",
 			"minValue": 0,
