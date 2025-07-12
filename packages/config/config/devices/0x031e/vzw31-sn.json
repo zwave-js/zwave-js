@@ -248,7 +248,7 @@
 		{
 			"#": "19",
 			"label": "Power & Energy Report Interval",
-			"description": "Allowable range: 30-32767",
+			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
