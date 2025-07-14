@@ -263,11 +263,6 @@
 			"label": "Custom Brightness Level (Z-Wave Control)"
 		}
 	],
-	"compat": {
-		// The device sends Configuration CC info reports in 4-byte chunks, causing each query to block the network for roughly 1.5 seconds.
-		"skipConfigurationNameQuery": true,
-		"skipConfigurationInfoQuery": true
-	},
 	"metadata": {
 		"inclusion": "Tap the switch button 3 times quickly. The LED indicator will blink green to signal communication and turn green for 3 seconds if inclusion is successful or turn red for 3 seconds if inclusion fails.",
 		"exclusion": "1. Tap the switch button 3 times quickly.\n2. The LED indicator will start blinking green, then turn green for 3 seconds if exclusion is successful or turn red for 3 seconds if exclusion fails.",
