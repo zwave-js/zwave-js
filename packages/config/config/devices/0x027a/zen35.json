@@ -233,8 +233,32 @@
 			"$import": "templates/zooz_template.json#local_programming"
 		},
 		{
-			"#": "35",
-			"$import": "templates/zooz_template.json#association_reports_scene_controller"
+			"#": "35[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: Local Control",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
+		},
+		{
+			"#": "35[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: 3-Way",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
+		},
+		{
+			"#": "35[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: Z-Wave",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
+		},
+		{
+			"#": "35[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: Timer",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
 		},
 		{
 			"#": "36",
