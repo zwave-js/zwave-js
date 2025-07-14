@@ -37,7 +37,7 @@
 			"maxNodes": 10
 		},
 		"6": {
-			"label": "Button 1 - Held (MultiLevel) > in sequence > held = increase brightness, release =  stop level, held = decrease brightness, release =  stop level",
+			"label": "Button 1 - Held (MultiLevel)",
 			"maxNodes": 10
 		},
 		"7": {
@@ -45,7 +45,7 @@
 			"maxNodes": 10
 		},
 		"8": {
-			"label": "Button 2 - Held (MultiLevel) > in sequence > held = increase brightness, release =  stop level, held = decrease brightness, release =  stop level",
+			"label": "Button 2 - Held (MultiLevel)",
 			"maxNodes": 10
 		},
 		"9": {
@@ -53,7 +53,7 @@
 			"maxNodes": 10
 		},
 		"10": {
-			"label": "Button 3 - Held (MultiLevel) > in sequence > held = increase brightness, release =  stop level, held = decrease brightness, release =  stop level",
+			"label": "Button 3 - Held (MultiLevel)",
 			"maxNodes": 10
 		},
 		"11": {
@@ -61,7 +61,7 @@
 			"maxNodes": 10
 		},
 		"12": {
-			"label": "Button 4 - Held (MultiLevel) > in sequence > held = increase brightness, release =  stop level, held = decrease brightness, release =  stop level",
+			"label": "Button 4 - Held (MultiLevel)",
 			"maxNodes": 10
 		}
 	},
