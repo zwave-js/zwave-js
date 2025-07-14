@@ -208,12 +208,12 @@
 		{
 			"#": "29",
 			"$import": "templates/zooz_template.json#zen35_main_button_tap",
-			"label" : "Dimmer Button Double Tap"
+			"label": "Dimmer Button Double Tap"
 		},
 		{
 			"#": "30",
 			"$import": "templates/zooz_template.json#zen35_main_button_tap",
-			"label" : "Dimmer Button Single Tap"
+			"label": "Dimmer Button Single Tap"
 		},
 		{
 			"#": "31",

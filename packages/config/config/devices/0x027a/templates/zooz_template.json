@@ -414,70 +414,70 @@
 		"allowManualEntry": false,
 		"options": [
 			{
-			  "label": "None",
-			  "value": 0
+				"label": "None",
+				"value": 0
 			},
 			{
-			  "label": "Physical Tap On Button Only",
-			  "value": 1
+				"label": "Physical Tap On Button Only",
+				"value": 1
 			},
 			{
-			  "label": "Physical Tap On Connected 3-Way Switch Only",
-			  "value": 2
+				"label": "Physical Tap On Connected 3-Way Switch Only",
+				"value": 2
 			},
 			{
-			  "label": "Physical Tap On Button Or Connected 3-Way Switch",
-			  "value": 3
+				"label": "Physical Tap On Button Or Connected 3-Way Switch",
+				"value": 3
 			},
 			{
-			  "label": "Z-Wave Command From Hub",
-			  "value": 4
+				"label": "Z-Wave Command From Hub",
+				"value": 4
 			},
 			{
-			  "label": "Physical Tap On Button Or Z-Wave Command From Hub",
-			  "value": 5
+				"label": "Physical Tap On Button Or Z-Wave Command From Hub",
+				"value": 5
 			},
 			{
-			  "label": "Physical Tap On Connected 3-Way Switch Or Z-Wave Command From Hub",
-			  "value": 6
+				"label": "Physical Tap On Connected 3-Way Switch Or Z-Wave Command From Hub",
+				"value": 6
 			},
 			{
-			  "label": "Physical Tap On Button / Connected 3-Way Switch Or Z-Wave Command From Hub",
-			  "value": 7
+				"label": "Physical Tap On Button / Connected 3-Way Switch Or Z-Wave Command From Hub",
+				"value": 7
 			},
 			{
-			  "label": "Timer Only",
-			  "value": 8
+				"label": "Timer Only",
+				"value": 8
 			},
 			{
-			  "label": "Physical Tap On Button Or Timer",
-			  "value": 9
+				"label": "Physical Tap On Button Or Timer",
+				"value": 9
 			},
 			{
-			  "label": "Physical Tap On Connected 3-Way Switch Or Timer",
-			  "value": 10
+				"label": "Physical Tap On Connected 3-Way Switch Or Timer",
+				"value": 10
 			},
 			{
-			  "label": "Physical Tap On Button / Connected 3-Way Switch Or Timer",
-			  "value": 11
+				"label": "Physical Tap On Button / Connected 3-Way Switch Or Timer",
+				"value": 11
 			},
 			{
-			  "label": "Z-Wave Command From Hub Or Timer",
-			  "value": 12
+				"label": "Z-Wave Command From Hub Or Timer",
+				"value": 12
 			},
 			{
-			  "label": "Physical Tap On Button, Z-Wave Command From Hub, Or Timer",
-			  "value": 13
+				"label": "Physical Tap On Button, Z-Wave Command From Hub, Or Timer",
+				"value": 13
 			},
 			{
-			  "label": "Physical Tap On Button / Connected 3-Way Switch, Z-Wave Command From Hub, Or Timer",
-			  "value": 14
+				"label": "Physical Tap On Button / Connected 3-Way Switch, Z-Wave Command From Hub, Or Timer",
+				"value": 14
 			},
 			{
-			  "label": "All",
-			  "value": 15
+				"label": "All",
+				"value": 15
 			}
-		  ]
+		]
 	},
 	"dimmer_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
@@ -708,25 +708,25 @@
 		]
 	},
 	"zen35_main_button_tap": {
-			"$import": "#zen7x_double_tap_up_behavior",
-			"options": [
-				{
-					"label": "Full brightness",
-					"value": 0
-				},
-				{
-					"label": "Configured custom brightness (parameter 31)",
-					"value": 1
-				},
-				{
-					"label": "Configured maximum brightness",
-					"value": 2
-				},
-				{
-					"label": "Double tap disabled",
-					"value": 3
-				}
-			]
+		"$import": "#zen7x_double_tap_up_behavior",
+		"options": [
+			{
+				"label": "Full brightness",
+				"value": 0
+			},
+			{
+				"label": "Configured custom brightness (parameter 31)",
+				"value": 1
+			},
+			{
+				"label": "Configured maximum brightness",
+				"value": 2
+			},
+			{
+				"label": "Double tap disabled",
+				"value": 3
+			}
+		]
 	},
 	"custom_brightness": {
 		"label": "Custom Brightness Level",
