@@ -207,12 +207,32 @@
 		},
 		{
 			"#": "29",
-			"$import": "templates/zooz_template.json#zen35_main_button_tap",
-			"label": "Dimmer Button Double Tap"
+			"label": "Dimmer Button Double Tap",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Full brightness",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (Parameter 31)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness",
+					"value": 2
+				},
+				{
+					"label": "Double tap disabled",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "30",
-			"$import": "templates/zooz_template.json#zen35_main_button_tap",
+			"$import": "#paramInformation/29",
 			"label": "Dimmer Button Single Tap"
 		},
 		{

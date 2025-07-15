@@ -302,7 +302,6 @@
 	"led_button_press": {
 		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 		"label": "LED Indicator: Button Press",
-		"description": "Choose if the LED should flash whenever the corresponding button is pressed.",
 		"defaultValue": 0
 	},
 	"smart_switch_mode_reporting": {
@@ -620,27 +619,6 @@
 			},
 			{
 				"label": "Configured custom brightness (parameter 18)",
-				"value": 1
-			},
-			{
-				"label": "Configured maximum brightness",
-				"value": 2
-			},
-			{
-				"label": "Double tap disabled",
-				"value": 3
-			}
-		]
-	},
-	"zen35_main_button_tap": {
-		"$import": "#zen7x_double_tap_up_behavior",
-		"options": [
-			{
-				"label": "Full brightness",
-				"value": 0
-			},
-			{
-				"label": "Configured custom brightness (parameter 31)",
 				"value": 1
 			},
 			{
