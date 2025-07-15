@@ -775,7 +775,7 @@
 			"description": "Low level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 1,
-			"maxValue": 97,
+			"maxValue": 99,
 			"defaultValue": 25
 		},
 		{
@@ -784,8 +784,8 @@
 			"label": "Group 7: Medium Level",
 			"description": "Medium level to use when group 7 cycles levels",
 			"valueSize": 1,
-			"minValue": 2,
-			"maxValue": 98,
+			"minValue": 1,
+			"maxValue": 99,
 			"defaultValue": 50
 		},
 		{
@@ -794,7 +794,7 @@
 			"label": "Group 7: High Level",
 			"description": "High level to use when group 7 cycles levels",
 			"valueSize": 1,
-			"minValue": 3,
+			"minValue": 1,
 			"maxValue": 99,
 			"defaultValue": 99
 		},
