@@ -109,12 +109,6 @@
 		},
 		{
 			"#": "19",
-			"$import": "templates/zooz_template.json#led_confirm_config_change"
-		}
-	],
-	"compat": {
-
-	},
 	"metadata": {
 		"inclusion": "Tap the upper paddle 3 times quickly.",
 		"exclusion": "Tap the lower paddle 3 times quickly. The LED indicator will start blinking blue during the exclusion process, then turn green for 3 seconds when exclusion is complete.",
