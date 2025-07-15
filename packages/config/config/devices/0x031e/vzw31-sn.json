@@ -771,7 +771,7 @@
 		{
 			"#": "131",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7: Low Level",
+			"label": "Group 7: Level 1",
 			"description": "Low level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 1,
@@ -781,7 +781,7 @@
 		{
 			"#": "132",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7: Medium Level",
+			"label": "Group 7: Level 2",
 			"description": "Medium level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 1,
@@ -791,7 +791,7 @@
 		{
 			"#": "133",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7: High Level",
+			"label": "Group 7: Level 3",
 			"description": "High level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 1,
