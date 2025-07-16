@@ -1271,20 +1271,6 @@ export class IndicatorCCReport extends IndicatorCC {
 		ctx: GetValueDB,
 		value: IndicatorObject,
 	): void {
-		// Only expose the value if it should be user-facing
-		if (value.indicatorId === Indicator["Node Identify"]) {
-			return;
-		}
-		const prop = getIndicatorProperty(value.propertyId);
-		if (!prop?.exposeAsValue) return;
-
-		// And only if it is actually supported and not just reported by accident
-		const supportedPropertyIDs = this.getValue<number[]>(
-			ctx,
-			IndicatorCCValues.supportedPropertyIDs(value.indicatorId),
-		) ?? [];
-		if (!supportedPropertyIDs.includes(value.propertyId)) return;
-
 		// Manufacturer-defined indicators may need a custom label
 		const overrideIndicatorLabel = this
 			.getManufacturerDefinedIndicatorLabel(ctx, value.indicatorId);
@@ -1298,6 +1284,20 @@ export class IndicatorCCReport extends IndicatorCC {
 		if (metadata.type === "boolean") {
 			value.value = !!value.value;
 		}
+
+		// Only expose the value if it should be user-facing
+		if (value.indicatorId === Indicator["Node Identify"]) {
+			return;
+		}
+		const prop = getIndicatorProperty(value.propertyId);
+		if (!prop?.exposeAsValue) return;
+
+		// And only if it is actually supported and not just reported by accident
+		const supportedPropertyIDs = this.getValue<number[]>(
+			ctx,
+			IndicatorCCValues.supportedPropertyIDs(value.indicatorId),
+		) ?? [];
+		if (!supportedPropertyIDs.includes(value.propertyId)) return;
 
 		// Publish the value
 		const valueV2 = IndicatorCCValues.valueV2(
