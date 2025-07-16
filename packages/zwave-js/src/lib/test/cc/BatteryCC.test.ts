@@ -13,7 +13,8 @@ import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { test } from "vitest";
+import sinon from "sinon";
+import { expect, test } from "vitest";
 import { integrationTest } from "../integrationTestSuite.js";
 
 test("the Get command should serialize correctly", async (t) => {
@@ -40,7 +41,6 @@ test("the Report command (v1) should be deserialized correctly: when the battery
 	t.expect(batteryCC.constructor).toBe(BatteryCCReport);
 
 	t.expect(batteryCC.level).toBe(55);
-	t.expect(batteryCC.isLow).toBe(false);
 });
 
 test("the Report command (v1) should be deserialized correctly: when the battery is low", async (t) => {
@@ -55,8 +55,7 @@ test("the Report command (v1) should be deserialized correctly: when the battery
 	) as BatteryCCReport;
 	t.expect(batteryCC.constructor).toBe(BatteryCCReport);
 
-	t.expect(batteryCC.level).toBe(0);
-	t.expect(batteryCC.isLow).toBe(true);
+	t.expect(batteryCC.level).toBe(0xff);
 });
 
 test("the Report command (v2) should be deserialized correctly: all flags set", async (t) => {
@@ -157,6 +156,71 @@ integrationTest(
 				.toMatchObject({
 					unit: "°C",
 				});
+		},
+	},
+);
+
+integrationTest.only(
+	"Receiving a BatteryReport with the level marked low should cause a notification to be emitted",
+	{
+		// debug: true,
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Battery,
+			],
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			const onNodeNotifcation = sinon.spy();
+			node.on("notification", onNodeNotifcation);
+
+			let report = new BatteryCCReport({
+				nodeId: node.id,
+				level: "low",
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(report, {
+					ackRequested: false,
+				}),
+			);
+
+			await wait(100);
+			t.expect(onNodeNotifcation.callCount).toBe(1);
+			let args = onNodeNotifcation.getCall(0).args;
+			expect(args[1]).toBe(CommandClasses.Battery);
+			t.expect(args[2].eventType).toBe("battery low");
+			t.expect(args[2].urgency).toBe(
+				BatteryReplacementStatus.Soon,
+			);
+
+			onNodeNotifcation.resetHistory();
+
+			// Now pass the urgency
+			report = new BatteryCCReport({
+				nodeId: node.id,
+				level: "low",
+				rechargeOrReplace: BatteryReplacementStatus.Now,
+
+				chargingStatus: BatteryChargingStatus.Discharging,
+				rechargeable: true,
+				backup: false,
+				overheating: false,
+				lowFluid: false,
+				disconnected: false,
+			});
+
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(report, {
+					ackRequested: false,
+				}),
+			);
+
+			await wait(100);
+			t.expect(onNodeNotifcation.callCount).toBe(1);
+			args = onNodeNotifcation.getCall(0).args;
+			expect(args[1]).toBe(CommandClasses.Battery);
+			t.expect(args[2].eventType).toBe("battery low");
+			t.expect(args[2].urgency).toBe(BatteryReplacementStatus.Now);
 		},
 	},
 );
