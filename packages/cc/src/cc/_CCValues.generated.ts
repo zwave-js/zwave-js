@@ -3658,36 +3658,6 @@ export const IndicatorCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	timeout: {
-		id: {
-			commandClass: CommandClasses.Indicator,
-			property: "timeout",
-		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Indicator,
-			endpoint,
-			property: "timeout",
-		} as const),
-		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Indicator
-				&& valueId.property === "timeout"
-				&& valueId.propertyKey == undefined;
-		},
-		get meta() {
-			return {
-				...ValueMetadata.String,
-				label: "Timeout",
-			} as const;
-		},
-		options: {
-			internal: false,
-			minVersion: 3,
-			secret: false,
-			stateful: true,
-			supportsEndpoints: true,
-			autoCreate: true,
-		} as const satisfies CCValueOptions,
-	},
 	supportedPropertyIDs: Object.assign(
 		(indicatorId: number) => {
 			const property = "supportedPropertyIDs";
@@ -3765,6 +3735,51 @@ export const IndicatorCCValues = Object.freeze({
 			options: {
 				internal: false,
 				minVersion: 2,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	timeout: Object.assign(
+		(indicatorId: number) => {
+			const property = indicatorId;
+			const propertyKey = "timeout";
+
+			return {
+				id: {
+					commandClass: CommandClasses.Indicator,
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses.Indicator,
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return {
+						...ValueMetadata.String,
+						label: "Timeout",
+						ccSpecific: {
+							indicatorId,
+						},
+					} as const;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass === CommandClasses.Indicator
+					&& (({ property, propertyKey }) =>
+						typeof property === "number"
+						&& propertyKey === "timeout")(valueId);
+			},
+			options: {
+				internal: false,
+				minVersion: 3,
 				secret: false,
 				stateful: true,
 				supportsEndpoints: true,
