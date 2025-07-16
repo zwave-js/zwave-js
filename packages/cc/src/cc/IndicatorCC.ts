@@ -57,6 +57,8 @@ function isManufacturerDefinedIndicator(indicatorId: number): boolean {
 const timeoutStringRegex =
 	/^(?:(?<hoursStr>\d+)h)?(?:(?<minutesStr>\d+)m)?(?:(?<secondsStr>\d+(?:\.\d+)?)s)?$/i;
 
+const MAX_INDICATOR_OBJECTS = 31;
+
 function parseIndicatorTimeoutString(
 	text: string,
 ): IndicatorTimeout | undefined {
@@ -76,6 +78,21 @@ function parseIndicatorTimeoutString(
 	}
 	if (secondsStr) {
 		ret.seconds = clamp(roundTo(parseFloat(secondsStr), 2), 0, 59.99);
+	}
+
+	return ret;
+}
+
+function groupByIndicatorId(
+	values: IndicatorObject[],
+): Map<number, IndicatorObject[]> {
+	const ret = new Map();
+
+	for (const value of values) {
+		if (!ret.has(value.indicatorId)) {
+			ret.set(value.indicatorId, []);
+		}
+		ret.get(value.indicatorId)!.push(value);
 	}
 
 	return ret;
@@ -140,14 +157,6 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 		} as const,
 		{ minVersion: 3 } as const,
 	),
-	...V.staticProperty(
-		"timeout",
-		{
-			...ValueMetadata.String,
-			label: "Timeout",
-		} as const,
-		{ minVersion: 3 } as const,
-	),
 	...V.dynamicPropertyAndKeyWithName(
 		"supportedPropertyIDs",
 		"supportedPropertyIDs",
@@ -176,6 +185,22 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 		}),
 		{ minVersion: 2 } as const,
 	),
+	...V.dynamicPropertyAndKeyWithName(
+		"timeout",
+		(indicatorId: number) => indicatorId,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		(indicatorId: number) => "timeout",
+		({ property, propertyKey }) =>
+			typeof property === "number" && propertyKey === "timeout",
+		(indicatorId: number) => ({
+			...ValueMetadata.String,
+			label: "Timeout",
+			ccSpecific: {
+				indicatorId,
+			},
+		}),
+		{ minVersion: 3 } as const,
+	),
 	...V.dynamicPropertyWithName(
 		"indicatorDescription",
 		(indicatorId: number) => indicatorId,
@@ -193,19 +218,18 @@ function getIndicatorMetadata(
 	propertyId: number,
 	overrideIndicatorLabel?: string,
 ): ValueMetadata {
-	const label = overrideIndicatorLabel
-		|| getIndicatorName(indicatorId);
+	const label = getIndicatorLabel(
+		indicatorId,
+		propertyId,
+		overrideIndicatorLabel,
+	);
 	const prop = getIndicatorProperty(propertyId);
 	const baseMetadata = IndicatorCCValues.valueV2(
 		indicatorId,
 		propertyId,
 	).meta;
-	if (!label && !prop) {
-		return {
-			...baseMetadata,
-			...ValueMetadata.UInt8,
-		};
-	} else if (!prop) {
+
+	if (!prop) {
 		return {
 			...baseMetadata,
 			...ValueMetadata.UInt8,
@@ -216,7 +240,7 @@ function getIndicatorMetadata(
 			return {
 				...baseMetadata,
 				...ValueMetadata.Boolean,
-				label: `${label} - ${prop.label}`,
+				label,
 				description: prop.description,
 				readable: !prop.readonly,
 			};
@@ -225,7 +249,7 @@ function getIndicatorMetadata(
 			return {
 				...baseMetadata,
 				...ValueMetadata.UInt8,
-				label: `${label} - ${prop.label}`,
+				label,
 				description: prop.description,
 				min: prop.min,
 				max: prop.max,
@@ -239,15 +263,59 @@ function getIndicatorName(
 	indicatorId: number | undefined,
 ): string {
 	if (indicatorId) {
-		return `${num2hex(indicatorId)} (${
-			indicatorId in Indicator ? Indicator[indicatorId] : "Unknown"
-		})`;
+		if (indicatorId in Indicator) {
+			return `${Indicator[indicatorId]} (${num2hex(indicatorId)})`;
+		} else {
+			return `Unknown (${num2hex(indicatorId)})`;
+		}
 	} else {
 		return "0 (default)";
 	}
 }
 
-const MAX_INDICATOR_OBJECTS = 31;
+/** Returns a user-friendly label for an indicator */
+function getIndicatorLabel(
+	indicatorId: number,
+	propertyId: number,
+	overrideIndicatorLabel?: string,
+): string {
+	// Without a defined property, we cannot suggest a better label
+	const defaultName = overrideIndicatorLabel || getIndicatorName(indicatorId);
+
+	const prop = getIndicatorProperty(propertyId);
+	if (!prop) return defaultName;
+
+	// For indicators that correspond to an LCD or buttons,
+	// the indicator enum names are enough
+	if (
+		indicatorId >= Indicator["LCD backlight"]
+		&& indicatorId <= Indicator["Button 12 indication"]
+		&& (propertyId === 0x01 /* Multilevel */
+			|| propertyId === 0x02 /* Binary */)
+	) {
+		return (Indicator as any)[indicatorId];
+	}
+
+	// Default to the current behavior of <indicator name> - <property label>
+	return `${defaultName} - ${prop.label}`;
+}
+
+export function shouldExposeIndicatorValue(
+	indicatorId: number,
+	propertyId: number,
+): boolean {
+	// Many possible indicator values are not suitable to be exposed as CC values,
+	// usually because they need to be set in groups.
+
+	// Indicator properties that should be exposed are marked as such
+	const prop = getIndicatorProperty(propertyId);
+	if (prop && !prop.exposeAsValue) {
+		return false;
+	}
+
+	// Unless we know better, expose anyways
+	return true;
+}
 
 @API(CommandClasses.Indicator)
 export class IndicatorCCAPI extends CCAPI {
@@ -821,6 +889,11 @@ export class IndicatorCC extends CommandClass {
 			// The indicator property is our property key
 			const prop = getIndicatorProperty(propertyKey);
 			if (prop) return prop.label;
+		} else if (
+			typeof property === "number"
+			&& propertyKey === "timeout"
+		) {
+			return "Timeout";
 		}
 		return super.translatePropertyKey(ctx, property, propertyKey);
 	}
@@ -830,9 +903,11 @@ export class IndicatorCC extends CommandClass {
 		property: string | number,
 		propertyKey?: string | number,
 	): string {
-		if (typeof property === "number" && typeof propertyKey === "number") {
-			// The indicator corresponds to our property
-			if (property in Indicator) return Indicator[property];
+		if (typeof property === "number") {
+			if (typeof propertyKey === "number" || propertyKey === "timeout") {
+				// The indicator corresponds to our property
+				if (property in Indicator) return Indicator[property];
+			}
 		}
 		return super.translateProperty(ctx, property, propertyKey);
 	}
@@ -1102,20 +1177,26 @@ export class IndicatorCCReport extends IndicatorCC {
 			}
 
 			// Then group values into the convenience properties
+			const groupedValues = groupByIndicatorId(this.values);
+			for (const [indicatorId, values] of groupedValues) {
+				// ... timeout
+				const timeout = indicatorObjectsToTimeout(values);
+				if (timeout) {
+					let timeoutString = "";
+					if (timeout?.hours) timeoutString += `${timeout.hours}h`;
+					if (timeout?.minutes) {
+						timeoutString += `${timeout.minutes}m`;
+					}
+					if (timeout?.seconds) {
+						timeoutString += `${timeout.seconds}s`;
+					}
 
-			// ... timeout
-			const timeout = indicatorObjectsToTimeout(this.values);
-			if (timeout) {
-				let timeoutString = "";
-				if (timeout?.hours) timeoutString += `${timeout.hours}h`;
-				if (timeout?.minutes) timeoutString += `${timeout.minutes}m`;
-				if (timeout?.seconds) timeoutString += `${timeout.seconds}s`;
-
-				this.setValue(
-					ctx,
-					IndicatorCCValues.timeout,
-					timeoutString,
-				);
+					this.setValue(
+						ctx,
+						IndicatorCCValues.timeout(indicatorId),
+						timeoutString,
+					);
+				}
 			}
 		}
 
@@ -1129,6 +1210,10 @@ export class IndicatorCCReport extends IndicatorCC {
 		ctx: GetValueDB,
 		value: IndicatorObject,
 	): void {
+		// Only expose the value if it should be user-facing
+		const prop = getIndicatorProperty(value.propertyId);
+		if (!prop?.exposeAsValue) return;
+
 		// Manufacturer-defined indicators may need a custom label
 		const overrideIndicatorLabel = isManufacturerDefinedIndicator(
 				value.indicatorId,

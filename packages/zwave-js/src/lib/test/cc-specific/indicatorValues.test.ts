@@ -47,14 +47,24 @@ integrationTest(
 				// Ignore the legacy v1 value
 				.filter((vid) => vid.property !== "value");
 
-			// There should only be 3 binary/multilevel values
-			// t.expect(indicatorValueIds.length).toBe(3);
 			const humanReadable = indicatorValueIds.map((vid) => {
 				return pick(vid, [
 					"propertyName",
 					"propertyKeyName",
 				]);
+			}).sort((a, b) => {
+				let result = (a.propertyName ?? "").localeCompare(
+					b.propertyName ?? "",
+				);
+				result ||= (a.propertyKeyName ?? "").localeCompare(
+					b.propertyKeyName ?? "",
+				);
+				return result;
 			});
+
+			// There should only be:
+			// - 3 binary/multilevel values
+			// - 2 timeout values for buttons 2 and 3
 
 			t.expect(humanReadable).toEqual([
 				{
@@ -66,8 +76,16 @@ integrationTest(
 					propertyKeyName: "Multilevel",
 				},
 				{
+					propertyName: "Button 2 indication",
+					propertyKeyName: "Timeout",
+				},
+				{
 					propertyName: "Button 3 indication",
 					propertyKeyName: "Binary",
+				},
+				{
+					propertyName: "Button 3 indication",
+					propertyKeyName: "Timeout",
 				},
 			]);
 		},
