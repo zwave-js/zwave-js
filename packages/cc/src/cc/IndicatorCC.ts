@@ -9,6 +9,7 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type SupervisionResult,
+	type ValueID,
 	ValueMetadata,
 	type WithAddress,
 	ZWaveError,
@@ -18,7 +19,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, num2hex } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp, roundTo } from "alcalzone-shared/math";
 import { isArray } from "alcalzone-shared/typeguards";
@@ -263,13 +264,9 @@ function getIndicatorName(
 	indicatorId: number | undefined,
 ): string {
 	if (indicatorId) {
-		if (indicatorId in Indicator) {
-			return `${Indicator[indicatorId]} (${num2hex(indicatorId)})`;
-		} else {
-			return `Unknown (${num2hex(indicatorId)})`;
-		}
+		return getEnumMemberName(Indicator, indicatorId);
 	} else {
-		return "0 (default)";
+		return "Default";
 	}
 }
 
@@ -278,10 +275,11 @@ function getIndicatorLabel(
 	indicatorId: number,
 	propertyId: number,
 	overrideIndicatorLabel?: string,
+	overridePropertyLabel?: string,
 ): string {
-	// Without a defined property, we cannot suggest a better label
 	const defaultName = overrideIndicatorLabel || getIndicatorName(indicatorId);
 
+	// Without a defined property, we cannot suggest a better label
 	const prop = getIndicatorProperty(propertyId);
 	if (!prop) return defaultName;
 
@@ -291,13 +289,19 @@ function getIndicatorLabel(
 		indicatorId >= Indicator["LCD backlight"]
 		&& indicatorId <= Indicator["Button 12 indication"]
 		&& (propertyId === 0x01 /* Multilevel */
-			|| propertyId === 0x02 /* Binary */)
+			|| propertyId === 0x02 /* Binary */
+			|| overridePropertyLabel) // custom property label
 	) {
-		return (Indicator as any)[indicatorId];
+		let ret: string = (Indicator as any)[indicatorId];
+		// Append the overridden property label if it exists
+		if (overridePropertyLabel) {
+			ret += ` - ${overridePropertyLabel}`;
+		}
+		return ret;
 	}
 
 	// Default to the current behavior of <indicator name> - <property label>
-	return `${defaultName} - ${prop.label}`;
+	return `${defaultName} - ${overridePropertyLabel || prop.label}`;
 }
 
 export function shouldExposeIndicatorValue(
@@ -342,6 +346,13 @@ export class IndicatorCCAPI extends CCAPI {
 			{ property, propertyKey },
 			value,
 		) {
+			const valueId: ValueID = {
+				commandClass: this.ccId,
+				endpoint: this.endpoint.index,
+				property,
+				propertyKey,
+			};
+
 			if (property === "value") {
 				// V1 value
 				if (typeof value !== "number") {
@@ -353,12 +364,9 @@ export class IndicatorCCAPI extends CCAPI {
 					);
 				}
 				return this.set(value);
-			} else if (
-				typeof property === "number"
-				&& typeof propertyKey === "number"
-			) {
-				const indicatorId = property;
-				const propertyId = propertyKey;
+			} else if (IndicatorCCValues.valueV2.is(valueId)) {
+				const indicatorId = property as number;
+				const propertyId = propertyKey as number;
 				const expectedType = getIndicatorMetadata(
 					indicatorId,
 					propertyId,
@@ -375,12 +383,23 @@ export class IndicatorCCAPI extends CCAPI {
 				}
 				return this.set([
 					{
-						indicatorId: property,
-						propertyId: propertyKey,
+						indicatorId,
+						propertyId,
 						value: value as any,
 					},
 				]);
-			} else if (property === "identify") {
+			} else if (IndicatorCCValues.timeout.is(valueId)) {
+				const indicatorId = property as number;
+				if (typeof value !== "string") {
+					throwWrongValueType(
+						this.ccId,
+						property,
+						"string",
+						typeof value,
+					);
+				}
+				return this.setTimeout(indicatorId, value);
+			} else if (IndicatorCCValues.identify.is(valueId)) {
 				if (typeof value !== "boolean") {
 					throwWrongValueType(
 						this.ccId,
@@ -786,9 +805,11 @@ export class IndicatorCC extends CommandClass {
 					return;
 				}
 
-				supportedIndicatorIds.push(
-					supportedResponse.indicatorId ?? curId,
-				);
+				if (supportedResponse.supportedProperties.length > 0) {
+					supportedIndicatorIds.push(
+						supportedResponse.indicatorId ?? curId,
+					);
+				}
 				curId = supportedResponse.nextIndicatorId;
 			} while (curId !== 0x00);
 
@@ -927,6 +948,22 @@ export class IndicatorCC extends CommandClass {
 					IndicatorCCValues.supportedPropertyIDs(indicatorId),
 				)?.length,
 		);
+	}
+
+	protected getManufacturerDefinedIndicatorLabel(
+		ctx: GetValueDB,
+		indicatorId: number,
+	): string | undefined {
+		if (
+			isManufacturerDefinedIndicator(
+				indicatorId,
+			)
+		) {
+			return this.getValue(
+				ctx,
+				IndicatorCCValues.indicatorDescription(indicatorId),
+			);
+		}
 	}
 
 	public static getSupportedPropertyIDsCached(
@@ -1179,6 +1216,9 @@ export class IndicatorCCReport extends IndicatorCC {
 			// Then group values into the convenience properties
 			const groupedValues = groupByIndicatorId(this.values);
 			for (const [indicatorId, values] of groupedValues) {
+				const overrideIndicatorLabel = this
+					.getManufacturerDefinedIndicatorLabel(ctx, indicatorId);
+
 				// ... timeout
 				const timeout = indicatorObjectsToTimeout(values);
 				if (timeout) {
@@ -1191,11 +1231,20 @@ export class IndicatorCCReport extends IndicatorCC {
 						timeoutString += `${timeout.seconds}s`;
 					}
 
-					this.setValue(
-						ctx,
-						IndicatorCCValues.timeout(indicatorId),
-						timeoutString,
-					);
+					const timeoutValue = IndicatorCCValues.timeout(indicatorId);
+
+					const metadata: ValueMetadata = {
+						...timeoutValue.meta,
+						label: getIndicatorLabel(
+							indicatorId,
+							0x06, // This is actually ignored, but pass a valid ID for clarity
+							overrideIndicatorLabel,
+							"Timeout",
+						),
+					};
+
+					this.setMetadata(ctx, timeoutValue, metadata);
+					this.setValue(ctx, timeoutValue, timeoutString);
 				}
 			}
 		}
@@ -1215,14 +1264,8 @@ export class IndicatorCCReport extends IndicatorCC {
 		if (!prop?.exposeAsValue) return;
 
 		// Manufacturer-defined indicators may need a custom label
-		const overrideIndicatorLabel = isManufacturerDefinedIndicator(
-				value.indicatorId,
-			)
-			? this.getValue<string>(
-				ctx,
-				IndicatorCCValues.indicatorDescription(value.indicatorId),
-			)
-			: undefined;
+		const overrideIndicatorLabel = this
+			.getManufacturerDefinedIndicatorLabel(ctx, value.indicatorId);
 
 		const metadata = getIndicatorMetadata(
 			value.indicatorId,

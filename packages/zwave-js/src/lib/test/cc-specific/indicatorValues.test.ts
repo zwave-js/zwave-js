@@ -1,3 +1,4 @@
+import { IndicatorCCValues } from "@zwave-js/cc";
 import { CommandClasses, Indicator } from "@zwave-js/core";
 import { pick } from "@zwave-js/shared";
 import { integrationTest } from "../integrationTestSuite.js";
@@ -88,6 +89,15 @@ integrationTest(
 					propertyKeyName: "Timeout",
 				},
 			]);
+
+			// The value metadata for the timeout values should exist
+			const timeoutMeta = node.getValueMetadata(
+				IndicatorCCValues.timeout(Indicator["Button 2 indication"]).id,
+			);
+			t.expect(timeoutMeta).toMatchObject({
+				type: "string",
+				label: "Button 2 indication - Timeout",
+			});
 		},
 	},
 );
