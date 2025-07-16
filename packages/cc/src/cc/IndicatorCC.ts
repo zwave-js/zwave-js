@@ -1216,11 +1216,23 @@ export class IndicatorCCReport extends IndicatorCC {
 			// Then group values into the convenience properties
 			const groupedValues = groupByIndicatorId(this.values);
 			for (const [indicatorId, values] of groupedValues) {
+				// Some devices report all properties it supports in every report,
+				// even if it does not support all properties for the given indicator ID.
+				// To avoid confusion, we need to filter out the unsupported properties
+
+				const supportedPropertyIDs = this.getValue<number[]>(
+					ctx,
+					IndicatorCCValues.supportedPropertyIDs(indicatorId),
+				) ?? [];
+				const filteredValues = values.filter(
+					(v) => supportedPropertyIDs.includes(v.propertyId),
+				);
+
 				const overrideIndicatorLabel = this
 					.getManufacturerDefinedIndicatorLabel(ctx, indicatorId);
 
 				// ... timeout
-				const timeout = indicatorObjectsToTimeout(values);
+				const timeout = indicatorObjectsToTimeout(filteredValues);
 				if (timeout) {
 					let timeoutString = "";
 					if (timeout?.hours) timeoutString += `${timeout.hours}h`;
@@ -1260,8 +1272,18 @@ export class IndicatorCCReport extends IndicatorCC {
 		value: IndicatorObject,
 	): void {
 		// Only expose the value if it should be user-facing
+		if (value.indicatorId === Indicator["Node Identify"]) {
+			return;
+		}
 		const prop = getIndicatorProperty(value.propertyId);
 		if (!prop?.exposeAsValue) return;
+
+		// And only if it is actually supported and not just reported by accident
+		const supportedPropertyIDs = this.getValue<number[]>(
+			ctx,
+			IndicatorCCValues.supportedPropertyIDs(value.indicatorId),
+		) ?? [];
+		if (!supportedPropertyIDs.includes(value.propertyId)) return;
 
 		// Manufacturer-defined indicators may need a custom label
 		const overrideIndicatorLabel = this
