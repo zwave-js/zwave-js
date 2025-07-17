@@ -1,0 +1,316 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZEN35",
+	"description": "Dimmer & Scene Controller",
+	"devices": [
+		{
+			"productType": "0x7000",
+			"productId": "0xa018",
+			"zwaveAllianceId": 5182
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Main Button - Pressed (Basic Set)",
+			"maxNodes": 10
+		},
+		"3": {
+			"label": "Main Button - Held (MultiLevel)",
+			"maxNodes": 10
+		},
+		"4": {
+			"label": "Main Button - Start / Stop (MultiLevel)",
+			"maxNodes": 10
+		},
+		"5": {
+			"label": "Button 1 - Pressed (Basic Set)",
+			"maxNodes": 10
+		},
+		"6": {
+			"label": "Button 1 - Held (MultiLevel)",
+			"maxNodes": 10
+		},
+		"7": {
+			"label": "Button 2 - Pressed (Basic Set)",
+			"maxNodes": 10
+		},
+		"8": {
+			"label": "Button 2 - Held (MultiLevel)",
+			"maxNodes": 10
+		},
+		"9": {
+			"label": "Button 3 - Pressed (Basic Set)",
+			"maxNodes": 10
+		},
+		"10": {
+			"label": "Button 3 - Held (MultiLevel)",
+			"maxNodes": 10
+		},
+		"11": {
+			"label": "Button 4 - Pressed (Basic Set)",
+			"maxNodes": 10
+		},
+		"12": {
+			"label": "Button 4 - Held (MultiLevel)",
+			"maxNodes": 10
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#led_indicator_four_options",
+			"label": "LED Indicator (Relay)"
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#led_indicator_four_options",
+			"label": "LED Indicator (Button 1)"
+		},
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options",
+			"label": "LED Indicator (Button 2)"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#led_indicator_four_options",
+			"label": "LED Indicator (Button 3)"
+		},
+		{
+			"#": "5",
+			"$import": "~/templates/master_template.json#led_indicator_four_options",
+			"label": "LED Indicator (Button 4)"
+		},
+		{
+			"#": "6",
+			"$import": "templates/zooz_template.json#led_indicator_color_extended",
+			"label": "LED Indicator Color (Relay)",
+			"defaultValue": 0
+		},
+		{
+			"#": "7",
+			"$import": "templates/zooz_template.json#led_indicator_color_extended",
+			"label": "LED Indicator Color (Button 1)",
+			"defaultValue": 0
+		},
+		{
+			"#": "8",
+			"$if": "firmwareVersion >= 10.40 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_color_extended",
+			"label": "LED Indicator Color (Button 2)",
+			"defaultValue": 0
+		},
+		{
+			"#": "9",
+			"$import": "templates/zooz_template.json#led_indicator_color_extended",
+			"label": "LED Indicator Color (Button 3)",
+			"defaultValue": 0
+		},
+		{
+			"#": "10",
+			"$import": "templates/zooz_template.json#led_indicator_color_extended",
+			"label": "LED Indicator Color (Button 4)",
+			"defaultValue": 0
+		},
+		{
+			"#": "11",
+			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"label": "LED Indicator Brightness (Relay)"
+		},
+		{
+			"#": "12",
+			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"label": "LED Indicator Brightness (Button 1)"
+		},
+		{
+			"#": "13",
+			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"label": "LED Indicator Brightness (Button 2)"
+		},
+		{
+			"#": "14",
+			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"label": "LED Indicator Brightness (Button 3)"
+		},
+		{
+			"#": "15",
+			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"label": "LED Indicator Brightness (Button 4)"
+		},
+		{
+			"#": "16",
+			"$import": "templates/zooz_template.json#auto_off_timer_0x_1x_3x_7x",
+			"label": "Auto-Off Timer (Relay)"
+		},
+		{
+			"#": "17",
+			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x",
+			"label": "Auto-On Timer (Relay)"
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "19",
+			"$import": "~/templates/master_template.json#smart_switch_mode_0-2",
+			"label": "Relay Control"
+		},
+		{
+			"#": "20",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Send Report and Toggle LED on Button Press If Relay Disabled",
+			"defaultValue": 0
+		},
+		{
+			"#": "21",
+			"$import": "templates/zooz_template.json#dimmer_on_ramp_rate"
+		},
+		{
+			"#": "22",
+			"$import": "templates/zooz_template.json#dimmer_off_ramp_rate",
+			"defaultValue": 2
+		},
+		{
+			"#": "23",
+			"$import": "templates/zooz_template.json#local_dimming_speed"
+		},
+		{
+			"#": "24",
+			"$import": "templates/zooz_template.json#zwave_on_dimmer_ramp_rate_match_manual_255"
+		},
+		{
+			"#": "25",
+			"$import": "templates/zooz_template.json#zwave_off_dimmer_ramp_rate_match_manual_255"
+		},
+		{
+			"#": "26",
+			"$import": "templates/zooz_template.json#local_dimming_speed_group_3_and_4"
+		},
+		{
+			"#": "27",
+			"$import": "templates/zooz_template.json#min_brightness"
+		},
+		{
+			"#": "28",
+			"$import": "templates/zooz_template.json#max_brightness"
+		},
+		{
+			"#": "29",
+			"label": "Dimmer Button Double Tap",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Full brightness",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (Parameter 31)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness",
+					"value": 2
+				},
+				{
+					"label": "Double tap disabled",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "30",
+			"$import": "#paramInformation/29",
+			"label": "Dimmer Button Single Tap"
+		},
+		{
+			"#": "31",
+			"$import": "templates/zooz_template.json#custom_brightness",
+			"label": "Custom Brightness Level (Manual Control)"
+		},
+		{
+			"#": "32",
+			"$import": "templates/zooz_template.json#3way_switch_type_dimmer"
+		},
+		{
+			"#": "33",
+			"$import": "templates/zooz_template.json#smart_switch_mode_dimming_reporting_3_options"
+		},
+		{
+			"#": "34",
+			"$import": "templates/zooz_template.json#local_programming"
+		},
+		{
+			"#": "35[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: Local Control",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
+		},
+		{
+			"#": "35[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: 3-Way",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
+		},
+		{
+			"#": "35[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: Z-Wave",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
+		},
+		{
+			"#": "35[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Status Change Report: Timer",
+			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
+			"defaultValue": 1
+		},
+		{
+			"#": "36",
+			"$import": "templates/zooz_template.json#enable_scene_control",
+			"defaultValue": 1
+		},
+		{
+			"#": "37",
+			"$import": "templates/zooz_template.json#enable_scene_control_3way"
+		},
+		{
+			"#": "38",
+			"$import": "templates/zooz_template.json#led_confirm_config_change"
+		},
+		{
+			"#": "39",
+			"$import": "templates/zooz_template.json#led_button_press"
+		},
+		{
+			"#": "40",
+			"$import": "templates/zooz_template.json#on_off_switch_mode"
+		},
+		{
+			"#": "41",
+			"$import": "templates/zooz_template.json#custom_brightness",
+			"label": "Custom Brightness Level (Z-Wave Control)"
+		}
+	],
+	"metadata": {
+		"inclusion": "Tap the switch button 3 times quickly. The LED indicator will blink green to signal communication and turn green for 3 seconds if inclusion is successful or turn red for 3 seconds if inclusion fails.",
+		"exclusion": "1. Tap the switch button 3 times quickly.\n2. The LED indicator will start blinking green, then turn green for 3 seconds if exclusion is successful or turn red for 3 seconds if exclusion fails.",
+		"reset": "Press and hold the switch button for 20 seconds until the LED indicator turns solid red. Release the button, and immediately after, tap button 1 once to complete the reset. The LED indicators on all buttons will flash red and cycle through colors to confirm a successful reset.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/1457/zooz-zen35-800LR-manual.pdf"
+	}
+}

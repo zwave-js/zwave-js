@@ -72,14 +72,6 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 	),
 
 	...V.staticProperty(
-		"isLow",
-		{
-			...ValueMetadata.ReadOnlyBoolean,
-			label: "Low battery level",
-		} as const,
-	),
-
-	...V.staticProperty(
 		"maximumCapacity",
 		{
 			...ValueMetadata.ReadOnlyUInt8,
@@ -215,7 +207,6 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 		return async function(this: BatteryCCAPI, { property }) {
 			switch (property) {
 				case "level":
-				case "isLow":
 				case "chargingStatus":
 				case "rechargeable":
 				case "backup":
@@ -251,7 +242,6 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 		if (response) {
 			return pick(response, [
 				"level",
-				"isLow",
 				"chargingStatus",
 				"rechargeable",
 				"backup",
@@ -328,8 +318,10 @@ export class BatteryCC extends CommandClass {
 		const batteryStatus = await api.get();
 		if (batteryStatus) {
 			let logMessage = `received response for battery information:
-level:                           ${batteryStatus.level}${
-				batteryStatus.isLow ? " (low)" : ""
+level:                           ${
+				batteryStatus.level === 0xff
+					? "low"
+					: (batteryStatus.level + " %")
 			}`;
 			if (api.version >= 2) {
 				logMessage += `
@@ -403,16 +395,9 @@ temperature:   ${batteryHealth.temperature} °C`;
 
 // @publicAPI
 export type BatteryCCReportOptions =
-	& (
-		| {
-			isLow?: false;
-			level: number;
-		}
-		| {
-			isLow: true;
-			level?: undefined;
-		}
-	)
+	& {
+		level: number | "low";
+	}
 	& AllOrNone<{
 		// V2+
 		chargingStatus: BatteryChargingStatus;
@@ -430,7 +415,6 @@ export type BatteryCCReportOptions =
 
 @CCCommand(BatteryCommand.Report)
 @ccValueProperty("level", BatteryCCValues.level)
-@ccValueProperty("isLow", BatteryCCValues.isLow)
 @ccValueProperty("chargingStatus", BatteryCCValues.chargingStatus)
 @ccValueProperty("rechargeable", BatteryCCValues.rechargeable)
 @ccValueProperty("backup", BatteryCCValues.backup)
@@ -445,8 +429,7 @@ export class BatteryCCReport extends BatteryCC {
 	) {
 		super(options);
 
-		this.level = options.isLow ? 0 : options.level;
-		this.isLow = !!options.isLow;
+		this.level = typeof options.level === "number" ? options.level : 0xff;
 		this.chargingStatus = options.chargingStatus;
 		this.rechargeable = options.rechargeable;
 		this.backup = options.backup;
@@ -463,16 +446,9 @@ export class BatteryCCReport extends BatteryCC {
 		validatePayload(raw.payload.length >= 1);
 		const level = raw.payload[0];
 
-		if (level === 0xff) {
-			ccOptions = {
-				isLow: true,
-			};
-		} else {
-			ccOptions = {
-				isLow: false,
-				level,
-			};
-		}
+		ccOptions = {
+			level,
+		};
 
 		if (raw.payload.length >= 3) {
 			// Starting with V2
@@ -510,7 +486,19 @@ export class BatteryCCReport extends BatteryCC {
 	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
+		// This is a bit hacky, but we need to avoid persisting 0xff as the battery level
+		// because the report is meant as a notification in that case.
+		if (this.level === 0xff) {
+			// @ts-expect-error
+			this.level = undefined;
+		}
+
 		if (!super.persistValues(ctx)) return false;
+
+		if (this.level === undefined) {
+			// @ts-expect-error
+			this.level = 0xff;
+		}
 
 		// Naïve heuristic for a full battery
 		if (this.level >= 90) {
@@ -549,8 +537,6 @@ export class BatteryCCReport extends BatteryCC {
 
 	public readonly level: number;
 
-	public readonly isLow: boolean;
-
 	public readonly chargingStatus: BatteryChargingStatus | undefined;
 
 	public readonly rechargeable: boolean | undefined;
@@ -568,7 +554,7 @@ export class BatteryCCReport extends BatteryCC {
 	public readonly lowTemperatureStatus: boolean | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([this.isLow ? 0xff : this.level]);
+		this.payload = Bytes.from([this.level]);
 		if (this.chargingStatus != undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
@@ -593,10 +579,10 @@ export class BatteryCCReport extends BatteryCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			level: this.level,
-			"is low": this.isLow,
-		};
+		const message: MessageRecord = this.level === 0xff
+			? { "is low": true }
+			: { level: this.level };
+
 		if (this.chargingStatus != undefined) {
 			message["charging status"] = getEnumMemberName(
 				BatteryChargingStatus,

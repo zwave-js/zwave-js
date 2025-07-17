@@ -2258,8 +2258,6 @@ export class BatteryCCReport extends BatteryCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): BatteryCCReport;
     // (undocumented)
-    readonly isLow: boolean;
-    // (undocumented)
     readonly level: number;
     // (undocumented)
     readonly lowFluid: boolean | undefined;
@@ -2282,13 +2280,9 @@ export class BatteryCCReport extends BatteryCC {
 // Warning: (ae-missing-release-tag) "BatteryCCReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type BatteryCCReportOptions = ({
-    isLow?: false;
-    level: number;
-} | {
-    isLow: true;
-    level?: undefined;
-}) & AllOrNone<{
+export type BatteryCCReportOptions = {
+    level: number | "low";
+} & AllOrNone<{
     chargingStatus: BatteryChargingStatus;
     rechargeable: boolean;
     backup: boolean;
@@ -2322,32 +2316,6 @@ export const BatteryCCValues: Readonly<{
             readonly writeable: false;
             readonly min: 0;
             readonly type: "number";
-            readonly readable: true;
-        };
-        options: {
-            readonly internal: false;
-            readonly minVersion: 1;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
-    isLow: {
-        id: {
-            readonly commandClass: CommandClasses.Battery;
-            readonly property: "isLow";
-        };
-        endpoint: (endpoint?: number) => {
-            readonly commandClass: CommandClasses.Battery;
-            readonly endpoint: number;
-            readonly property: "isLow";
-        };
-        is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Low battery level";
-            readonly writeable: false;
-            readonly type: "boolean";
             readonly readable: true;
         };
         options: {
@@ -9094,6 +9062,8 @@ export class IndicatorCC extends CommandClass {
     // (undocumented)
     ccCommand: IndicatorCommand;
     // (undocumented)
+    protected getManufacturerDefinedIndicatorLabel(ctx: GetValueDB, indicatorId: number): string | undefined;
+    // (undocumented)
     static getSupportedPropertyIDsCached(ctx: GetValueDB, endpoint: EndpointId, indicatorId: number): MaybeNotKnown<number[]>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
@@ -9381,32 +9351,6 @@ export const IndicatorCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    timeout: {
-        id: {
-            readonly commandClass: CommandClasses.Indicator;
-            readonly property: "timeout";
-        };
-        endpoint: (endpoint?: number) => {
-            readonly commandClass: CommandClasses.Indicator;
-            readonly endpoint: number;
-            readonly property: "timeout";
-        };
-        is: (valueId: ValueID) => boolean;
-        readonly meta: {
-            readonly label: "Timeout";
-            readonly type: "string";
-            readonly readable: true;
-            readonly writeable: true;
-        };
-        options: {
-            readonly internal: false;
-            readonly minVersion: 3;
-            readonly secret: false;
-            readonly stateful: true;
-            readonly supportsEndpoints: true;
-            readonly autoCreate: true;
-        };
-    };
     supportedPropertyIDs: ((indicatorId: number) => {
         id: {
             readonly commandClass: CommandClasses.Indicator;
@@ -9461,6 +9405,38 @@ export const IndicatorCCValues: Readonly<{
         options: {
             readonly internal: false;
             readonly minVersion: 2;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    timeout: ((indicatorId: number) => {
+        id: {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly property: number;
+            readonly propertyKey: "timeout";
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: CommandClasses.Indicator;
+            readonly endpoint: number;
+            readonly property: number;
+            readonly propertyKey: "timeout";
+        };
+        readonly meta: {
+            readonly label: "Timeout";
+            readonly ccSpecific: {
+                readonly indicatorId: number;
+            };
+            readonly type: "string";
+            readonly readable: true;
+            readonly writeable: true;
+        };
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: false;
+            readonly minVersion: 3;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
@@ -17685,7 +17661,7 @@ export type SetValueImplementationHooks = AllOrNone<{
 }> & {
     optimisticallyUpdateRelatedValues?: (supervisedAndSuccessful: boolean) => void;
     forceVerifyChanges?: () => boolean;
-    verifyChanges?: () => void | Promise<void>;
+    verifyChanges?: (result?: SupervisionResult) => void | Promise<void>;
 };
 
 // Warning: (ae-missing-release-tag) "SetValueImplementationHooksFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

@@ -10,6 +10,7 @@ import {
 	type MessageRecord,
 	NOT_KNOWN,
 	type SupervisionResult,
+	SupervisionStatus,
 	ValueMetadata,
 	type WithAddress,
 	maybeUnknownToString,
@@ -460,19 +461,32 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 					// If we don't know the actual value, we need to verify the change, regardless of the supervision result
 					return value === 255;
 				},
-				verifyChanges: () => {
+				verifyChanges: async (result) => {
 					if (
-						this.isSinglecast()
 						// We generally don't want to poll for multicasts because of how much traffic it can cause
 						// However, when setting the value 255 (ON), we don't know the actual state
-						|| (this.isMulticast() && value === 255)
+						!(this.isSinglecast()
+							|| (this.isMulticast() && value === 255))
 					) {
-						// We query currentValue instead of targetValue to make sure that unsolicited updates cancel the scheduled poll
-						(this as this).schedulePoll(
-							currentValueValueId,
-							value === 255 ? undefined : value,
-							{ duration },
-						);
+						return;
+					}
+
+					switch (result?.status) {
+						case SupervisionStatus.Success:
+						case SupervisionStatus.Fail:
+							await this.pollValue!(currentValueValueId);
+							break;
+						case SupervisionStatus.Working:
+						default: // (not supervised)
+							(this as this).schedulePoll(
+								currentValueValueId,
+								value === 255 ? undefined : value,
+								{
+									duration: result?.remainingDuration
+										?? duration,
+								},
+							);
+							break;
 					}
 				},
 			};

@@ -4,6 +4,31 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.9.0 (2025-07-10)
+### Features
+* Apply auto powerlevels on every actual region change (#7862)
+* If auto-powerlevels are enabled, Z-Wave JS now detects when a controller is incorrectly set to the SDK default powerlevels of +20/+20 dBm applies the correct powerlevels for the current RF region if possible (#7965)
+* Reworked how changes to config files are detected, and auto-apply config parameter labels and descriptions automatically on startup. This should avoid having to re-interview devices after label-only changes, at least for future changes. (#7959)
+
+### Bugfixes
+* Omit LR nodes from rebuild routes progress (#7936)
+* Fixed an issue where joining another network with S2 would not display the DSK (#7935)
+
+### Config file changes
+* Rename Antenna to Adapter for ZWA-2 (#7957)
+* Add First Alert Smart Smoke & CO Alarm (#7912)
+* Fix unmatched quoting in config files (#7934)
+* Add Inovelli VZW32-SN mmWave Switch (#7920)
+* Update and correct Leviton device metadata (#7928)
+* Add params for Enbrighten (Jasco) 59337 and 59338 (#7814)
+* Add fingerprint `0x8101:0x4a36` to McoHome MH4936 (#7869)
+* Improve accuracy of N4002/N4012 rate parameter labels (#7894)
+
+### Changes under the hood
+* The config import script now imports the brand name and correct param descriptions from the Z-Wave Alliance DB (#7951)
+* Fine tune instructions for LED feedback in inclusion/exclusion/reset instructions (#7924)
+* Teach Copilot to author and review device config files (#7921, #7922, #7923)
+
 ## 15.8.0 (2025-06-26)
 In this release, we reworked the inclusion, exclusion, remove failed and replace failed node processes. Under the hood, they are now driven by the task scheduler that was introduced in v13.5.0. This gives us more control over their execution and prevents individual processes from interfering with each other, especially the removal of nodes that failed to include via SmartStart. Previously this could lead to some odd issues.
 

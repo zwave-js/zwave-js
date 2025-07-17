@@ -1481,6 +1481,31 @@ where
 
 The CCs that use this event bring specialized versions of the callback and arguments.
 
+#### `Battery CC`
+
+uses the following signature
+
+<!-- #import ZWaveNotificationCallbackParams_BatteryCC from "zwave-js" -->
+
+```ts
+type ZWaveNotificationCallbackParams_BatteryCC = [
+	endpoint: Endpoint,
+	ccId: (typeof CommandClasses.Battery),
+	args: ZWaveNotificationCallbackArgs_BatteryCC,
+];
+```
+
+where the argument object has the type
+
+<!-- #import ZWaveNotificationCallbackArgs_BatteryCC from "zwave-js" -->
+
+```ts
+type ZWaveNotificationCallbackArgs_BatteryCC = {
+	eventType: "battery low";
+	urgency: BatteryReplacementStatus.Soon | BatteryReplacementStatus.Now;
+};
+```
+
 #### `Entry Control CC`
 
 uses the following signature

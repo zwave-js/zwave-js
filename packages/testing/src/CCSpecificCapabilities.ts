@@ -47,6 +47,17 @@ export interface ColorSwitchCCCapabilities {
 	colorComponents: Partial<Record<ColorComponent, number | undefined>>;
 }
 
+export interface IndicatorCCCapabilities {
+	indicators: Record<number, {
+		properties: number[];
+		manufacturerSpecificDescription?: string;
+	}>;
+	getValue?: (
+		indicatorId: number,
+		propertyId: number,
+	) => number | undefined;
+}
+
 export interface NotificationCCCapabilities {
 	supportsV1Alarm: boolean;
 	notificationTypesAndEvents: Record<number, number[]>;
@@ -176,6 +187,7 @@ export type CCSpecificCapabilities = {
 	[99 /* User Code */]: UserCodeCCCapabilities;
 	[78 /* Schedule Entry Lock */]: ScheduleEntryLockCCCapabilities;
 	[CommandClasses.Meter]: MeterCCCapabilities;
+	[CommandClasses.Indicator]: IndicatorCCCapabilities;
 };
 
 export type CCIdToCapabilities<T extends CommandClasses = CommandClasses> =

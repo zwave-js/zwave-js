@@ -1,4 +1,5 @@
 import {
+	BatteryCCReport,
 	type CCAPI,
 	ClockCommand,
 	CommandClass,
@@ -171,6 +172,7 @@ import {
 	handleAssociationSupportedGroupingsGet,
 } from "./CCHandlers/AssociationGroupInformationCC.js";
 import { handleBasicCommand } from "./CCHandlers/BasicCC.js";
+import { handleBatteryReport } from "./CCHandlers/BatteryCC.js";
 import { handleBinarySwitchCommand } from "./CCHandlers/BinarySwitchCC.js";
 import {
 	getDefaultCentralSceneHandlerStore,
@@ -657,7 +659,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				) {
 					// Let the CC API implementation handle the verification.
 					// It may still decide not to do it.
-					await hooks.verifyChanges?.();
+					await hooks.verifyChanges?.(result);
 				}
 			}
 
@@ -2329,6 +2331,8 @@ protocol version:      ${this.protocolVersion}`;
 				command,
 				this.notificationHandlerStore,
 			);
+		} else if (command instanceof BatteryCCReport) {
+			return handleBatteryReport(this.driver, this, command);
 		} else if (command instanceof ClockCCReport) {
 			return handleClockReport(
 				this.driver,

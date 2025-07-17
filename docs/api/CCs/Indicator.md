@@ -124,13 +124,14 @@ async getDescription(
 - **secret:** false
 - **value type:** `"boolean"`
 
-### `timeout`
+### `timeout(indicatorId: number)`
 
 ```ts
 {
 	commandClass: CommandClasses.Indicator,
 	endpoint: number,
-	property: "timeout",
+	property: number,
+	propertyKey: "timeout",
 }
 ```
 
