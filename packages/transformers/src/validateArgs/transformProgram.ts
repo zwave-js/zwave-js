@@ -85,7 +85,6 @@ export default function transformProgram(
 	// Create a "shadow" program for ts-morph. This needs the @@dev condition so it can find types
 	// without @zwave-js/core and /shared being built
 	const project = new Project({
-		// @ts-expect-error Some mismatch between ts-morph and ts types
 		compilerOptions: {
 			...compilerOptions,
 			customConditions: [
