@@ -7,7 +7,7 @@
 		{
 			"productType": "0x0004",
 			"productId": "0x0076"
-		},
+		}
 	],
 	"firmwareVersion": {
 		"min": "0.0",
