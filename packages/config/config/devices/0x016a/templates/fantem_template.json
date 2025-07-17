@@ -1,0 +1,53 @@
+{
+	"partner_id_other": {
+		"label": "Partner ID",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Aeotec",
+				"value": 0
+			},
+			{
+				"label": "Other",
+				"value": 1
+			}
+		]
+	},
+	"lock_configuration": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Lock Configuration"
+	},
+	"device_tag": {
+		"label": "Device Tag",
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 65535,
+		"defaultValue": 0,
+		"unsigned": true
+	},
+	"factory_reset_exclude": {
+		"label": "Reset to Factory Default Setting",
+		"valueSize": 4,
+		"defaultValue": 0,
+		"unsigned": true,
+		"writeOnly": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Normal Operation",
+				"value": 0
+			},
+			{
+				"label": "Reset all configuration parameters to default setting",
+				"value": 1
+			},
+			{
+				"label": "Reset to factory default setting and exclude from Z-Wave network",
+				"value": 1431655765
+			}
+		]
+	}
+}
