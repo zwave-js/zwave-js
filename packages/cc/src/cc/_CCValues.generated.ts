@@ -962,36 +962,6 @@ export const BatteryCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	isLow: {
-		id: {
-			commandClass: CommandClasses.Battery,
-			property: "isLow",
-		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "isLow",
-		} as const),
-		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
-				&& valueId.property === "isLow"
-				&& valueId.propertyKey == undefined;
-		},
-		get meta() {
-			return {
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Low battery level",
-			} as const;
-		},
-		options: {
-			internal: false,
-			minVersion: 1,
-			secret: false,
-			stateful: true,
-			supportsEndpoints: true,
-			autoCreate: true,
-		} as const satisfies CCValueOptions,
-	},
 	maximumCapacity: {
 		id: {
 			commandClass: CommandClasses.Battery,

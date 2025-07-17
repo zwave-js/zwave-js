@@ -21,7 +21,7 @@ integrationTest("CC values are created using the known CC version", {
 	testBody: async (t, driver, node, mockController, mockNode) => {
 		const batteryReport = new BatteryCCReport({
 			nodeId: mockController.ownNodeId,
-			isLow: true,
+			level: 0,
 		});
 		await mockNode.sendToController(
 			createMockZWaveRequestFrame(batteryReport),
@@ -35,13 +35,11 @@ integrationTest("CC values are created using the known CC version", {
 		await wait(100);
 
 		const levelValue = BatteryCCValues.level;
-		const isLowValue = BatteryCCValues.isLow;
 
 		// The level value should be defined because it is included in the report
 		// The overheating value shouldn't, since the interview is not complete
 		t.expect(updatedMetadata).to.have.members([
 			levelValue.id.property,
-			isLowValue.id.property,
 		]);
 
 		// Also the correct metadata should be returned dynamically
@@ -51,7 +49,6 @@ integrationTest("CC values are created using the known CC version", {
 			.map((id) => id.property);
 		t.expect(definedProperties).to.have.members([
 			levelValue.id.property,
-			isLowValue.id.property,
 		]);
 
 		t.expect(node.getValue(levelValue.id)).toBe(0);

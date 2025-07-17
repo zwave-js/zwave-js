@@ -1,4 +1,5 @@
 import type {
+	BatteryReplacementStatus,
 	EntryControlDataTypes,
 	EntryControlEventTypes,
 	FirmwareUpdateProgress,
@@ -195,12 +196,27 @@ export interface ZWaveNotificationCapability_EntryControlCC {
 	supportedEventTypes: Record<EntryControlEventTypes, string>;
 }
 
+export type ZWaveNotificationCallbackArgs_BatteryCC = {
+	eventType: "battery low";
+	urgency: BatteryReplacementStatus.Soon | BatteryReplacementStatus.Now;
+};
+
+/**
+ * Parameter types for the Battery CC specific version of ZWaveNotificationCallback
+ */
+export type ZWaveNotificationCallbackParams_BatteryCC = [
+	endpoint: Endpoint,
+	ccId: (typeof CommandClasses.Battery),
+	args: ZWaveNotificationCallbackArgs_BatteryCC,
+];
+
 export type ZWaveNotificationCallback = (
 	...args:
 		| ZWaveNotificationCallbackParams_NotificationCC
 		| ZWaveNotificationCallbackParams_EntryControlCC
 		| ZWaveNotificationCallbackParams_PowerlevelCC
 		| ZWaveNotificationCallbackParams_MultilevelSwitchCC
+		| ZWaveNotificationCallbackParams_BatteryCC
 ) => void;
 
 export type ZWaveNotificationCapability =
