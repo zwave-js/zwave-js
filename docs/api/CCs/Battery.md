@@ -7,7 +7,7 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<BatteryCCReport, "level" | "isLow" | "chargingStatus" | "rechargeable" | "backup" | "overheating" | "lowFluid" | "rechargeOrReplace" | "lowTemperatureStatus" | "disconnected"> | undefined>;
+async get(): Promise<Pick<BatteryCCReport, "level" | "chargingStatus" | "rechargeable" | "backup" | "overheating" | "lowFluid" | "rechargeOrReplace" | "lowTemperatureStatus" | "disconnected"> | undefined>;
 ```
 
 ### `getHealth`
@@ -68,24 +68,6 @@ async getHealth(): Promise<Pick<BatteryCCHealthReport, "maximumCapacity" | "temp
 
 - **label:** Battery is disconnected
 - **min. CC version:** 2
-- **readable:** true
-- **writeable:** false
-- **stateful:** true
-- **secret:** false
-- **value type:** `"boolean"`
-
-### `isLow`
-
-```ts
-{
-	commandClass: CommandClasses.Battery,
-	endpoint: number,
-	property: "isLow",
-}
-```
-
-- **label:** Low battery level
-- **min. CC version:** 1
 - **readable:** true
 - **writeable:** false
 - **stateful:** true
