@@ -160,7 +160,7 @@ integrationTest(
 	},
 );
 
-integrationTest.only(
+integrationTest(
 	"Receiving a BatteryReport with the level marked low should cause a notification to be emitted",
 	{
 		// debug: true,
