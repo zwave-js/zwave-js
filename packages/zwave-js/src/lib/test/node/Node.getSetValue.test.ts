@@ -4,7 +4,7 @@ import { CommandClasses, type ValueID, ValueMetadata } from "@zwave-js/core";
 import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import sinon from "sinon";
-import { type TaskContext, test as baseTest } from "vitest";
+import { type TestContext, test as baseTest } from "vitest";
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -135,7 +135,7 @@ test.sequential(
 	function prepareTest({
 		onTestFinished,
 		context,
-	}: Pick<TaskContext, "onTestFinished"> & LocalTestContext): ZWaveNode {
+	}: Pick<TestContext, "onTestFinished"> & LocalTestContext): ZWaveNode {
 		const { driver } = context;
 		const node = new ZWaveNode(1, driver);
 		(driver.controller.nodes as ThrowingMap<number, ZWaveNode>).set(
