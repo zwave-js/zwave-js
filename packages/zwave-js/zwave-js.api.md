@@ -10,6 +10,7 @@ import { AssociationAddress } from '@zwave-js/cc';
 import { AssociationCheckResult } from '@zwave-js/cc';
 import { AssociationGroup } from '@zwave-js/cc';
 import { BasicDeviceClass } from '@zwave-js/core';
+import type { BatteryReplacementStatus } from '@zwave-js/cc';
 import { BeamingInfo } from '@zwave-js/core';
 import { BootloaderChunk } from '@zwave-js/serial';
 import { buffer2hex } from '@zwave-js/shared';
@@ -1861,6 +1862,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     get nodeType(): MaybeNotKnown<NodeType>;
     get nvm(): NVMAdapter;
     get ownNodeId(): MaybeNotKnown<number>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "setPowerlevel"
+    get powerlevelCalibration(): MaybeNotKnown<number>;
     // (undocumented)
     get productId(): MaybeNotKnown<number>;
     // (undocumented)
@@ -1940,6 +1943,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     toggleRF(enabled: boolean): Promise<boolean>;
     // (undocumented)
     trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "setPowerlevel"
+    get txPower(): MaybeNotKnown<number>;
     // (undocumented)
     get type(): MaybeNotKnown<ZWaveLibraryTypes>;
     unprovisionSmartStartNode(dskOrNodeId: string | number): void;
@@ -2299,7 +2304,15 @@ export type ZWaveNodeValueUpdatedCallback = (node: ZWaveNode, args: ZWaveNodeVal
 // Warning: (ae-missing-release-tag) "ZWaveNotificationCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ZWaveNotificationCallback = (...args: ZWaveNotificationCallbackParams_NotificationCC | ZWaveNotificationCallbackParams_EntryControlCC | ZWaveNotificationCallbackParams_PowerlevelCC | ZWaveNotificationCallbackParams_MultilevelSwitchCC) => void;
+export type ZWaveNotificationCallback = (...args: ZWaveNotificationCallbackParams_NotificationCC | ZWaveNotificationCallbackParams_EntryControlCC | ZWaveNotificationCallbackParams_PowerlevelCC | ZWaveNotificationCallbackParams_MultilevelSwitchCC | ZWaveNotificationCallbackParams_BatteryCC) => void;
+
+// Warning: (ae-missing-release-tag) "ZWaveNotificationCallbackArgs_BatteryCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ZWaveNotificationCallbackArgs_BatteryCC = {
+    eventType: "battery low";
+    urgency: BatteryReplacementStatus.Soon | BatteryReplacementStatus.Now;
+};
 
 // Warning: (ae-missing-release-tag) "ZWaveNotificationCallbackArgs_EntryControlCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2346,6 +2359,15 @@ export interface ZWaveNotificationCallbackArgs_PowerlevelCC {
     // (undocumented)
     testNodeId: number;
 }
+
+// Warning: (ae-missing-release-tag) "ZWaveNotificationCallbackParams_BatteryCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export type ZWaveNotificationCallbackParams_BatteryCC = [
+endpoint: Endpoint,
+ccId: (typeof CommandClasses.Battery),
+args: ZWaveNotificationCallbackArgs_BatteryCC
+];
 
 // Warning: (ae-missing-release-tag) "ZWaveNotificationCallbackParams_EntryControlCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2522,7 +2544,9 @@ export * from "@zwave-js/cc";
 
 // Warnings were encountered during analysis:
 //
-// src/lib/controller/Controller.ts:905:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:100:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
+// src/lib/controller/Controller.ts:917:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
 // src/lib/driver/Driver.ts:1007:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/driver/Driver.ts:5168:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/Driver.ts:6765:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
@@ -2534,7 +2558,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:8393:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/Driver.ts:8396:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
 // src/lib/driver/ZWaveOptions.ts:337:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2141:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2143:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:721:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:722:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
