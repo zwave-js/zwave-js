@@ -23,7 +23,10 @@
 	"paramInformation": [
 		{
 			"#": "82",
-			"$import": "~/templates/master_template.json#led_indicator_two_options",
+			"label": "LED Indicator",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "On for 2 seconds",
@@ -53,8 +56,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Press the Z-Wave Button on Range Extender",
-		"exclusion": "Press the Z-Wave Button on Range Extender",
+		"inclusion": "Press the Z-Wave Button",
+		"exclusion": "Press the Z-Wave Button",
 		"reset": "Press and hold the Z-Wave Button for 20 seconds and then release it",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2520/Range%20Extender%206%20manual.pdf"
 	}

@@ -41,12 +41,12 @@
 				"value": 0
 			},
 			{
-				"label": "Reset the product to factory default setting and exclude from Z-Wave network",
-				"value": 1431655765
+				"label": "Reset all configuration parameters to default setting",
+				"value": 1
 			},
 			{
-				"label": "Resets all configuration parameters to default setting",
-				"value": 1
+				"label": "Reset to factory default setting and exclude from Z-Wave network",
+				"value": 1431655765
 			}
 		]
 	}
