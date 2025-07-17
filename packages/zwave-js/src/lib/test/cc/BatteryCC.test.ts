@@ -11,7 +11,10 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import { createMockZWaveRequestFrame } from "@zwave-js/testing";
+import {
+	type MockNodeBehavior,
+	createMockZWaveRequestFrame,
+} from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import sinon from "sinon";
 import { expect, test } from "vitest";
@@ -164,10 +167,26 @@ integrationTest(
 	"Receiving a BatteryReport with the level marked low should cause a notification to be emitted",
 	{
 		// debug: true,
+
 		nodeCapabilities: {
 			commandClasses: [
 				CommandClasses.Battery,
 			],
+		},
+
+		async customSetup(driver, mockController, mockNode) {
+			const respondToBattteryGet: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof BatteryCCGet) {
+						const cc = new BatteryCCReport({
+							nodeId: controller.ownNodeId,
+							level: 20,
+						});
+						return { action: "sendCC", cc };
+					}
+				},
+			};
+			mockNode.defineBehavior(respondToBattteryGet);
 		},
 
 		async testBody(t, driver, node, mockController, mockNode) {
@@ -221,6 +240,11 @@ integrationTest(
 			expect(args[1]).toBe(CommandClasses.Battery);
 			t.expect(args[2].eventType).toBe("battery low");
 			t.expect(args[2].urgency).toBe(BatteryReplacementStatus.Now);
+
+			// None of the reports should have changed the battery level
+			t.expect(
+				node.getValue(BatteryCCValues.level.id),
+			).toBe(20);
 		},
 	},
 );

@@ -486,7 +486,19 @@ export class BatteryCCReport extends BatteryCC {
 	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
+		// This is a bit hacky, but we need to avoid persisting 0xff as the battery level
+		// because the report is meant as a notification in that case.
+		if (this.level === 0xff) {
+			// @ts-expect-error
+			this.level = undefined;
+		}
+
 		if (!super.persistValues(ctx)) return false;
+
+		if (this.level === undefined) {
+			// @ts-expect-error
+			this.level = 0xff;
+		}
 
 		// Naïve heuristic for a full battery
 		if (this.level >= 90) {
