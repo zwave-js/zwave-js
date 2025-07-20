@@ -680,6 +680,44 @@ metadata is not an object`,
 				definition.metadata,
 			);
 		}
+
+		if (definition.sceneLabels != undefined) {
+			if (!isObject(definition.sceneLabels)) {
+				throwInvalidConfig(
+					`device`,
+					`packages/config/config/devices/${filename}:
+sceneLabels is not an object`,
+				);
+			}
+			// Validate that all keys are numeric and all values are strings
+			const sceneLabels = new Map<number, string>();
+			for (const [key, value] of Object.entries(definition.sceneLabels)) {
+				if (!/^\d+$/.test(key)) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+found non-numeric scene number "${key}" in sceneLabels`,
+					);
+				}
+				if (typeof value !== "string") {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+scene label for scene ${key} must be a string`,
+					);
+				}
+				const sceneNumber = parseInt(key, 10);
+				if (sceneNumber < 1 || sceneNumber > 255) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+scene number ${sceneNumber} must be between 1 and 255`,
+					);
+				}
+				sceneLabels.set(sceneNumber, value as string);
+			}
+			this.sceneLabels = sceneLabels;
+		}
 	}
 
 	public readonly filename: string;
@@ -712,6 +750,8 @@ metadata is not an object`,
 		| ConditionalCompatConfig[];
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: ConditionalDeviceMetadata;
+	/** Contains custom labels for Central Scene scenes */
+	public readonly sceneLabels?: ReadonlyMap<number, string>;
 
 	/** Whether this is an embedded configuration or not */
 	public readonly isEmbedded: boolean;
@@ -733,6 +773,7 @@ metadata is not an object`,
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
 			evaluateDeep(this.metadata, deviceId),
+			this.sceneLabels,
 		);
 	}
 }
@@ -777,6 +818,7 @@ export class DeviceConfig {
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
 		metadata?: DeviceMetadata,
+		sceneLabels?: ReadonlyMap<number, string>,
 	) {
 		this.filename = filename;
 		this.isEmbedded = isEmbedded;
@@ -793,6 +835,7 @@ export class DeviceConfig {
 		this.proprietary = proprietary;
 		this.compat = compat;
 		this.metadata = metadata;
+		this.sceneLabels = sceneLabels;
 	}
 
 	public readonly filename: string;
@@ -821,6 +864,8 @@ export class DeviceConfig {
 	public readonly compat?: CompatConfig;
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: DeviceMetadata;
+	/** Contains custom labels for Central Scene scenes */
+	public readonly sceneLabels?: ReadonlyMap<number, string>;
 
 	/** Returns the association config for a given endpoint */
 	public getAssociationConfigForEndpoint(
