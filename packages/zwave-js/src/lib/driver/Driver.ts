@@ -3994,9 +3994,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					},
 				);
 
-				// Whether successful or not, a message from a node should update last seen
+				// Whether successful or not, a message from a node should update last seen and rate
 				const node = this.tryGetNode(msg);
-				if (node) node.lastSeen = new Date();
+				if (node) {
+					node.lastSeen = new Date();
+					node.updateRate();
+				}
 
 				// Ensure there are no errors
 				assertValidCCs(msg as ContainsCC);
@@ -6351,6 +6354,7 @@ ${handlers.length} left`,
 					node.updateRTT(msg);
 					// Update last seen state
 					node.lastSeen = new Date();
+					node.updateRate();
 				}
 
 				// Notify listeners about the status report if one was received

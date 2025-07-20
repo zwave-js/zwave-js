@@ -97,6 +97,7 @@ export const cacheKeys = {
 			defaultVolume: `${nodeBaseKey}defaultVolume`,
 			lastSeen: `${nodeBaseKey}lastSeen`,
 			deviceConfigHash: `${nodeBaseKey}deviceConfigHash`,
+			rate: `${nodeBaseKey}rate`,
 		};
 	},
 } as const;
