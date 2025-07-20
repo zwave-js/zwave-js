@@ -204,3 +204,135 @@ test("deserializing an unsupported command should return an unspecified version 
 // 		max: 99,
 // 	});
 // });
+
+test("CentralSceneCCSupportedReport should use custom scene labels from device config when available", async (t) => {
+	// Mock device config with custom scene labels
+	const sceneLabels = new Map([
+		[1, "Single Press"],
+		[2, "Double Press"],
+		[3, "Hold"],
+	]);
+	
+	const mockDeviceConfig = { sceneLabels };
+	
+	// Mock context for persistValues
+	const mockContext = {
+		nodeId: 123,
+		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
+		setMetadata: t.fn(),
+	};
+
+	// Create a CentralSceneCCSupportedReport
+	const cc = new CentralSceneCCSupportedReport({
+		nodeId: 123,
+		sceneCount: 3,
+		supportsSlowRefresh: false,
+		supportedKeyAttributes: {
+			1: [CentralSceneKeys.KeyPressed],
+			2: [CentralSceneKeys.KeyPressed, CentralSceneKeys.KeyPressed2x],
+			3: [CentralSceneKeys.KeyHeldDown],
+		},
+	});
+
+	// Call persistValues
+	cc.persistValues(mockContext as any);
+
+	// Verify that setMetadata was called with custom labels
+	t.expect(mockContext.setMetadata).toHaveBeenCalledTimes(3);
+	
+	// Check the calls to setMetadata for custom labels
+	const calls = mockContext.setMetadata.mock.calls;
+	
+	// Find the call for scene 1 and verify it has the custom label
+	const scene1Call = calls.find(call => 
+		call[1]?.label === "Single Press"
+	);
+	t.expect(scene1Call).toBeDefined();
+	
+	// Find the call for scene 2 and verify it has the custom label
+	const scene2Call = calls.find(call => 
+		call[1]?.label === "Double Press"
+	);
+	t.expect(scene2Call).toBeDefined();
+	
+	// Find the call for scene 3 and verify it has the custom label
+	const scene3Call = calls.find(call => 
+		call[1]?.label === "Hold"
+	);
+	t.expect(scene3Call).toBeDefined();
+});
+
+test("CentralSceneCCSupportedReport should fallback to default labels when no device config", async (t) => {
+	// Mock context without device config
+	const mockContext = {
+		nodeId: 123,
+		getDeviceConfig: (nodeId: number) => undefined,
+		setMetadata: t.fn(),
+	};
+
+	// Create a CentralSceneCCSupportedReport
+	const cc = new CentralSceneCCSupportedReport({
+		nodeId: 123,
+		sceneCount: 2,
+		supportsSlowRefresh: false,
+		supportedKeyAttributes: {
+			1: [CentralSceneKeys.KeyPressed],
+			2: [CentralSceneKeys.KeyPressed2x],
+		},
+	});
+
+	// Call persistValues
+	cc.persistValues(mockContext as any);
+
+	// Verify that setMetadata was called with default labels
+	t.expect(mockContext.setMetadata).toHaveBeenCalledTimes(2);
+	
+	// Check the calls to setMetadata for default labels
+	const calls = mockContext.setMetadata.mock.calls;
+	
+	// Find the call for scene 1 and verify it has the default label
+	const scene1Call = calls.find(call => 
+		call[1]?.label === "Scene 001"
+	);
+	t.expect(scene1Call).toBeDefined();
+	
+	// Find the call for scene 2 and verify it has the default label
+	const scene2Call = calls.find(call => 
+		call[1]?.label === "Scene 002"
+	);
+	t.expect(scene2Call).toBeDefined();
+});
+
+test("CentralSceneCCNotification should use custom scene labels from device config when available", async (t) => {
+	// Mock device config with custom scene labels
+	const sceneLabels = new Map([
+		[5, "Release"],
+	]);
+	
+	const mockDeviceConfig = { sceneLabels };
+	
+	// Mock context for persistValues
+	const mockContext = {
+		nodeId: 123,
+		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
+		ensureMetadata: t.fn(),
+	};
+
+	// Create a CentralSceneCCNotification
+	const cc = new CentralSceneCCNotification({
+		nodeId: 123,
+		sequenceNumber: 1,
+		keyAttribute: CentralSceneKeys.KeyReleased,
+		sceneNumber: 5,
+	});
+
+	// Call persistValues
+	cc.persistValues(mockContext as any);
+
+	// Verify that ensureMetadata was called with custom label
+	t.expect(mockContext.ensureMetadata).toHaveBeenCalledTimes(1);
+	
+	// Check the call to ensureMetadata
+	const call = mockContext.ensureMetadata.mock.calls[0];
+	t.expect(call[1]?.label).toBe("Release");
+});
