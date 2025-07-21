@@ -402,9 +402,9 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		}));
 	}
 
-	/** Average rate of incoming messages per second, in the last minute.. */
+	/** Average rate of incoming messages per second, in the last minute. */
 	public get rate(): number {
-		return this.driver.cacheGet(cacheKeys.node(this.id).rate) || 0;
+		return this.rateTracker?.rate || 0;
 	}
 
 	/**
@@ -3670,14 +3670,12 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 	 */
 	public updateRate(): void {
 		if (!this.rateTracker) {
-			// Callback for when the rate is updated, also update cache and statistics
-			const onUpdateStatistics = (rate: number) => {
-				this.driver.cacheSet(cacheKeys.node(this.id).rate, rate);
+			// Callback for when the rate is updated, update statistics
+			const onUpdateStatistics = (rate: number) =>
 				this.updateStatistics((cur) => ({
 					...cur,
 					rate,
 				}));
-			};
 			this.rateTracker = new RateTracker(onUpdateStatistics);
 		}
 
