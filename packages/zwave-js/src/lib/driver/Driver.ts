@@ -2358,8 +2358,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				controllerNode.markAsAlive();
 
 				// Query the protocol information from the controller
+				// but skip nodes that have already been completely interviewed and restored from cache
 				for (const node of this._controller.nodes.values()) {
 					if (node.isControllerNode) continue;
+					// Don't overwrite cached interview stages for completed nodes
+					if (node.interviewStage === InterviewStage.Complete) continue;
 					await node["queryProtocolInfo"]();
 				}
 
