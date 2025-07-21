@@ -8849,7 +8849,7 @@ export class ZWaveController
 					productType,
 					productId,
 					firmwareVersion,
-					rfRegion: this.rfRegion ?? options?.rfRegion,
+					rfRegion: this.rfRegion ?? options?.rfRegion ?? this.driver.options.rf?.region,
 				},
 				{
 					userAgent: this.driver.getUserAgentStringWithComponents(
