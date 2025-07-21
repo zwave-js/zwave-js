@@ -6354,7 +6354,6 @@ ${handlers.length} left`,
 					node.updateRTT(msg);
 					// Update last seen state
 					node.lastSeen = new Date();
-					node.updateRate();
 				}
 
 				// Notify listeners about the status report if one was received
