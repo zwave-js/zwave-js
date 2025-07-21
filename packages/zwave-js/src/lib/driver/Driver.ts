@@ -2363,15 +2363,26 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					await node["queryProtocolInfo"]();
 				}
 
-				// Then ping (frequently) listening nodes to determine their status
+				// Then ping listening nodes and completely interviewed nodes to determine their status
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
-					.filter((n) => n.isListening || n.isFrequentListening)
+					.filter((n) => 
+						// Ping listening/frequently listening nodes
+						n.isListening || n.isFrequentListening
+						// Also ping nodes that were completely interviewed (restored from cache)
+						|| n.interviewStage === InterviewStage.Complete
+					)
 					.sort((a, b) =>
-						// Always listening -> FLiRS
-						(
-							(b.isListening ? 1 : 0)
-							- (a.isListening ? 1 : 0)
+						// Fully-interviewed devices first (need the least amount of communication now)
+						(b.interviewStage - a.interviewStage)
+						// Always listening -> FLiRS -> sleeping
+						|| (
+							(b.isListening ? 2 : b.isFrequentListening ? 1 : 0)
+							- (a.isListening
+								? 2
+								: a.isFrequentListening
+								? 1
+								: 0)
 						)
 						// Then by last seen, more recently first
 						|| (
