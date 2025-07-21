@@ -8849,6 +8849,7 @@ export class ZWaveController
 					productType,
 					productId,
 					firmwareVersion,
+					// Fall back to the configured region on 500 series controllers as a last resort.
 					rfRegion: this.rfRegion ?? options?.rfRegion ?? this.driver.options.rf?.region,
 				},
 				{
