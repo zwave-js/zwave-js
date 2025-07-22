@@ -2358,34 +2358,23 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				controllerNode.markAsAlive();
 
 				// Query the protocol information from the controller
-				// but skip nodes that have already been completely interviewed and restored from cache
 				for (const node of this._controller.nodes.values()) {
 					if (node.isControllerNode) continue;
-					// Don't overwrite cached interview stages for completed nodes
-					if (node.interviewStage === InterviewStage.Complete) continue;
+					if (node.interviewStage === InterviewStage.Complete) {
+						continue;
+					}
 					await node["queryProtocolInfo"]();
 				}
 
-				// Then ping listening nodes and completely interviewed nodes to determine their status
+				// Then ping (frequently) listening nodes to determine their status
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
-					.filter((n) => 
-						// Ping listening/frequently listening nodes
-						n.isListening || n.isFrequentListening
-						// Also ping nodes that were completely interviewed (restored from cache)
-						|| n.interviewStage === InterviewStage.Complete
-					)
+					.filter((n) => n.isListening || n.isFrequentListening)
 					.sort((a, b) =>
-						// Fully-interviewed devices first (need the least amount of communication now)
-						(b.interviewStage - a.interviewStage)
-						// Always listening -> FLiRS -> sleeping
-						|| (
-							(b.isListening ? 2 : b.isFrequentListening ? 1 : 0)
-							- (a.isListening
-								? 2
-								: a.isFrequentListening
-								? 1
-								: 0)
+						// Always listening -> FLiRS
+						(
+							(b.isListening ? 1 : 0)
+							- (a.isListening ? 1 : 0)
 						)
 						// Then by last seen, more recently first
 						|| (
