@@ -1,4 +1,5 @@
 import {
+	BinarySwitchCCValues,
 	ColorComponent,
 	ColorSwitchCCValues,
 	ConfigurationCCValues,
@@ -32,6 +33,8 @@ export enum NabuCasaCommand {
 	SetSystemIndication = 0x04,
 	GetConfig = 0x05,
 	SetConfig = 0x06,
+	GetLEDBinary = 0x07,
+	SetLEDBinary = 0x08,
 }
 
 export interface RGB {
@@ -56,53 +59,66 @@ export enum NabuCasaConfigKey {
 	EnableTiltIndicator = 0,
 }
 
-const colorSwitchCurrentColorRed =
-	ColorSwitchCCValues.currentColorChannel(ColorComponent.Red).id;
-const colorSwitchCurrentColorRedTranslated = {
-	...colorSwitchCurrentColorRed,
-	commandClassName: getCCName(colorSwitchCurrentColorRed.commandClass),
-	propertyName: colorSwitchCurrentColorRed.property,
-	propertyKeyName: "Red",
+const binarySwitchCurrentValue = BinarySwitchCCValues.currentValue.id;
+const binarySwitchCurrentValueTranslated = {
+	...binarySwitchCurrentValue,
+	commandClassName: getCCName(binarySwitchCurrentValue.commandClass),
+	propertyName: "Current value",
+};
+const binarySwitchTargetValue = BinarySwitchCCValues.targetValue.id;
+const binarySwitchTargetValueTranslated = {
+	...binarySwitchTargetValue,
+	commandClassName: getCCName(binarySwitchTargetValue.commandClass),
+	propertyName: "Target value",
 };
 
-const colorSwitchCurrentColorGreen =
-	ColorSwitchCCValues.currentColorChannel(ColorComponent.Green).id;
-const colorSwitchCurrentColorGreenTranslated = {
-	...colorSwitchCurrentColorGreen,
-	commandClassName: getCCName(colorSwitchCurrentColorGreen.commandClass),
-	propertyName: colorSwitchCurrentColorGreen.property,
-	propertyKeyName: "Green",
-};
+// const colorSwitchCurrentColorRed =
+// 	ColorSwitchCCValues.currentColorChannel(ColorComponent.Red).id;
+// const colorSwitchCurrentColorRedTranslated = {
+// 	...colorSwitchCurrentColorRed,
+// 	commandClassName: getCCName(colorSwitchCurrentColorRed.commandClass),
+// 	propertyName: colorSwitchCurrentColorRed.property,
+// 	propertyKeyName: "Red",
+// };
 
-const colorSwitchCurrentColorBlue =
-	ColorSwitchCCValues.currentColorChannel(ColorComponent.Blue).id;
-const colorSwitchCurrentColorBlueTranslated = {
-	...colorSwitchCurrentColorBlue,
-	commandClassName: getCCName(colorSwitchCurrentColorBlue.commandClass),
-	propertyName: colorSwitchCurrentColorBlue.property,
-	propertyKeyName: "Blue",
-};
+// const colorSwitchCurrentColorGreen =
+// 	ColorSwitchCCValues.currentColorChannel(ColorComponent.Green).id;
+// const colorSwitchCurrentColorGreenTranslated = {
+// 	...colorSwitchCurrentColorGreen,
+// 	commandClassName: getCCName(colorSwitchCurrentColorGreen.commandClass),
+// 	propertyName: colorSwitchCurrentColorGreen.property,
+// 	propertyKeyName: "Green",
+// };
 
-const colorSwitchCurrentColor = ColorSwitchCCValues.currentColor.id;
-const colorSwitchCurrentColorTranslated = {
-	...colorSwitchCurrentColor,
-	commandClassName: getCCName(colorSwitchCurrentColor.commandClass),
-	propertyName: colorSwitchCurrentColor.property,
-};
+// const colorSwitchCurrentColorBlue =
+// 	ColorSwitchCCValues.currentColorChannel(ColorComponent.Blue).id;
+// const colorSwitchCurrentColorBlueTranslated = {
+// 	...colorSwitchCurrentColorBlue,
+// 	commandClassName: getCCName(colorSwitchCurrentColorBlue.commandClass),
+// 	propertyName: colorSwitchCurrentColorBlue.property,
+// 	propertyKeyName: "Blue",
+// };
 
-const colorSwitchTargetColor = ColorSwitchCCValues.targetColor.id;
-const colorSwitchTargetColorTranslated = {
-	...colorSwitchTargetColor,
-	commandClassName: getCCName(colorSwitchTargetColor.commandClass),
-	propertyName: colorSwitchTargetColor.property,
-};
+// const colorSwitchCurrentColor = ColorSwitchCCValues.currentColor.id;
+// const colorSwitchCurrentColorTranslated = {
+// 	...colorSwitchCurrentColor,
+// 	commandClassName: getCCName(colorSwitchCurrentColor.commandClass),
+// 	propertyName: colorSwitchCurrentColor.property,
+// };
 
-const colorSwitchHexColor = ColorSwitchCCValues.hexColor.id;
-const colorSwitchHexColorTranslated = {
-	...colorSwitchHexColor,
-	commandClassName: getCCName(colorSwitchHexColor.commandClass),
-	propertyName: colorSwitchHexColor.property,
-};
+// const colorSwitchTargetColor = ColorSwitchCCValues.targetColor.id;
+// const colorSwitchTargetColorTranslated = {
+// 	...colorSwitchTargetColor,
+// 	commandClassName: getCCName(colorSwitchTargetColor.commandClass),
+// 	propertyName: colorSwitchTargetColor.property,
+// };
+
+// const colorSwitchHexColor = ColorSwitchCCValues.hexColor.id;
+// const colorSwitchHexColorTranslated = {
+// 	...colorSwitchHexColor,
+// 	commandClassName: getCCName(colorSwitchHexColor.commandClass),
+// 	propertyName: colorSwitchHexColor.property,
+// };
 
 // const multilevelSensorX =
 // 	MultilevelSensorCCValues.value("Acceleration X-axis").id;
@@ -162,8 +178,8 @@ function parseGyro(msg: Message): Vector {
 	return { x, y, z };
 }
 
-const hexColorRegex =
-	/^#?(?<red>[0-9a-f]{2})(?<green>[0-9a-f]{2})(?<blue>[0-9a-f]{2})$/i;
+// const hexColorRegex =
+// 	/^#?(?<red>[0-9a-f]{2})(?<green>[0-9a-f]{2})(?<blue>[0-9a-f]{2})$/i;
 
 export class ControllerProprietary_NabuCasa
 	implements ControllerProprietaryCommon
@@ -178,45 +194,104 @@ export class ControllerProprietary_NabuCasa
 
 	private driver: Driver;
 	private controller: ZWaveController;
+	private supportedCommands?: NabuCasaCommand[];
 
 	public async interview(): Promise<void> {
 		const valueDB = this.controller.valueDB;
 
 		const supported = await this.getSupportedCommands();
+		this.supportedCommands = supported;
 
 		if (supported.includes(NabuCasaCommand.GetLED)) {
 			const rgb = await this.getLED();
 
+			// Fake a binary switch for the LED
+			valueDB.setMetadata(
+				BinarySwitchCCValues.currentValue.id,
+				BinarySwitchCCValues.currentValue.meta,
+			);
+			valueDB.setMetadata(
+				BinarySwitchCCValues.targetValue.id,
+				BinarySwitchCCValues.targetValue.meta,
+			);
+
+			// Clean up RGB values if they exist
 			valueDB.setMetadata(
 				ColorSwitchCCValues.currentColor.id,
-				ColorSwitchCCValues.currentColor.meta,
+				undefined,
 			);
+			valueDB.removeValue(ColorSwitchCCValues.currentColor.id);
+
 			valueDB.setMetadata(
 				ColorSwitchCCValues.targetColor.id,
-				ColorSwitchCCValues.targetColor.meta,
+				undefined,
 			);
+			valueDB.removeValue(ColorSwitchCCValues.targetColor.id);
+
+			valueDB.setMetadata(
+				ColorSwitchCCValues.hexColor.id,
+				undefined,
+			);
+			valueDB.removeValue(ColorSwitchCCValues.hexColor.id);
+
 			valueDB.setMetadata(
 				ColorSwitchCCValues
 					.currentColorChannel(ColorComponent.Red).id,
+				undefined,
+			);
+			valueDB.removeValue(
 				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Red).meta,
+					.currentColorChannel(ColorComponent.Red).id,
 			);
 			valueDB.setMetadata(
 				ColorSwitchCCValues
 					.currentColorChannel(ColorComponent.Green).id,
+				undefined,
+			);
+			valueDB.removeValue(
 				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Green).meta,
+					.currentColorChannel(ColorComponent.Green).id,
 			);
 			valueDB.setMetadata(
 				ColorSwitchCCValues
 					.currentColorChannel(ColorComponent.Blue).id,
+				undefined,
+			);
+			valueDB.removeValue(
 				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Blue).meta,
+					.currentColorChannel(ColorComponent.Blue).id,
 			);
-			valueDB.setMetadata(
-				ColorSwitchCCValues.hexColor.id,
-				ColorSwitchCCValues.hexColor.meta,
-			);
+
+			// valueDB.setMetadata(
+			// 	ColorSwitchCCValues.currentColor.id,
+			// 	ColorSwitchCCValues.currentColor.meta,
+			// );
+			// valueDB.setMetadata(
+			// 	ColorSwitchCCValues.targetColor.id,
+			// 	ColorSwitchCCValues.targetColor.meta,
+			// );
+			// valueDB.setMetadata(
+			// 	ColorSwitchCCValues
+			// 		.currentColorChannel(ColorComponent.Red).id,
+			// 	ColorSwitchCCValues
+			// 		.currentColorChannel(ColorComponent.Red).meta,
+			// );
+			// valueDB.setMetadata(
+			// 	ColorSwitchCCValues
+			// 		.currentColorChannel(ColorComponent.Green).id,
+			// 	ColorSwitchCCValues
+			// 		.currentColorChannel(ColorComponent.Green).meta,
+			// );
+			// valueDB.setMetadata(
+			// 	ColorSwitchCCValues
+			// 		.currentColorChannel(ColorComponent.Blue).id,
+			// 	ColorSwitchCCValues
+			// 		.currentColorChannel(ColorComponent.Blue).meta,
+			// );
+			// valueDB.setMetadata(
+			// 	ColorSwitchCCValues.hexColor.id,
+			// 	ColorSwitchCCValues.hexColor.meta,
+			// );
 
 			this.persistRGBValue(valueDB, rgb);
 		}
@@ -270,19 +345,23 @@ export class ControllerProprietary_NabuCasa
 		valueDB: ValueDB,
 		rgb: RGB,
 	) {
-		valueDB.setValue(colorSwitchCurrentColorRed, rgb.r);
-		valueDB.setValue(colorSwitchCurrentColorBlue, rgb.b);
-		valueDB.setValue(colorSwitchCurrentColorGreen, rgb.g);
-		valueDB.setValue(colorSwitchCurrentColor, {
-			red: rgb.r,
-			green: rgb.g,
-			blue: rgb.b,
-		});
-		const hexValue = (rgb.r << 16) | (rgb.g << 8) | rgb.b;
+		// Treat any other color than black as "on"
 		valueDB.setValue(
-			colorSwitchHexColor,
-			hexValue.toString(16).padStart(6, "0"),
+			BinarySwitchCCValues.currentValue.id,
+			rgb.r > 0 || rgb.g > 0 || rgb.b > 0,
 		);
+		valueDB.setValue(
+			BinarySwitchCCValues.targetValue.id,
+			rgb.r > 0 || rgb.g > 0 || rgb.b > 0,
+		);
+	}
+
+	private persistLEDState(
+		valueDB: ValueDB,
+		state: boolean,
+	) {
+		valueDB.setValue(BinarySwitchCCValues.currentValue.id, state);
+		valueDB.setValue(BinarySwitchCCValues.targetValue.id, state);
 	}
 
 	// private persistGyroValues(
@@ -374,6 +453,62 @@ export class ControllerProprietary_NabuCasa
 					msg.functionType === FUNC_ID_NABUCASA
 					&& msg.type === MessageType.Response
 					&& msg.payload[0] === NabuCasaCommand.SetLED
+				);
+			},
+		});
+		const result = await this.driver.sendMessage(setLEDStateCmd, {
+			priority: MessagePriority.Controller,
+			supportCheck: false,
+		});
+		const success = !!result.payload[1];
+
+		return success;
+	}
+
+	public async getLEDBinary(): Promise<boolean> {
+		// HOST->ZW: NABU_CASA_LED_GET_BINARY
+		// ZW->HOST: NABU_CASA_LED_GET | state
+
+		const getLEDStateCmd = new Message({
+			type: MessageType.Request,
+			functionType: FUNC_ID_NABUCASA,
+			payload: Bytes.from([NabuCasaCommand.GetLEDBinary]),
+			expectedResponse: (self, msg) => {
+				return (
+					msg.functionType === FUNC_ID_NABUCASA
+					&& msg.type === MessageType.Response
+					&& msg.payload[0] === NabuCasaCommand.GetLEDBinary
+				);
+			},
+		});
+
+		const resultPromise = this.driver.sendMessage(getLEDStateCmd, {
+			priority: MessagePriority.Controller,
+			supportCheck: false,
+		});
+		const { payload: result } = await resultPromise;
+
+		return !!result[1]; // 0 = off, 1 = on
+	}
+
+	public async setLEDBinary(state: boolean): Promise<boolean> {
+		// HOST->ZW: NABU_CASA_LED_SET | state
+		// ZW->HOST: NABU_CASA_LED_SET | success
+
+		const payload = Bytes.from([
+			NabuCasaCommand.SetLEDBinary,
+			state ? 0x01 : 0x00,
+		]);
+
+		const setLEDStateCmd = new Message({
+			type: MessageType.Request,
+			functionType: FUNC_ID_NABUCASA,
+			payload,
+			expectedResponse: (self, msg) => {
+				return (
+					msg.functionType === FUNC_ID_NABUCASA
+					&& msg.type === MessageType.Response
+					&& msg.payload[0] === NabuCasaCommand.SetLEDBinary
 				);
 			},
 		});
@@ -540,13 +675,16 @@ export class ControllerProprietary_NabuCasa
 		// TODO: Make dynamic
 
 		return [
-			// RGB light: Color Switch
-			colorSwitchCurrentColorRedTranslated,
-			colorSwitchCurrentColorGreenTranslated,
-			colorSwitchCurrentColorBlueTranslated,
-			colorSwitchCurrentColorTranslated,
-			colorSwitchTargetColorTranslated,
-			colorSwitchHexColorTranslated,
+			// LED: Binary Switch
+			binarySwitchCurrentValueTranslated,
+			binarySwitchTargetValueTranslated,
+			// // RGB light: Color Switch
+			// colorSwitchCurrentColorRedTranslated,
+			// colorSwitchCurrentColorGreenTranslated,
+			// colorSwitchCurrentColorBlueTranslated,
+			// colorSwitchCurrentColorTranslated,
+			// colorSwitchTargetColorTranslated,
+			// colorSwitchHexColorTranslated,
 			// // Gyro: Multilevel Sensor (X, Y, Z accel)
 			// multilevelSensorXTranslated,
 			// multilevelSensorYTranslated,
@@ -558,31 +696,49 @@ export class ControllerProprietary_NabuCasa
 
 	public async pollValue(valueId: ValueID): Promise<unknown> {
 		if (
-			ColorSwitchCCValues.targetColor.is(valueId)
-			|| ColorSwitchCCValues.currentColor.is(valueId)
-			|| ColorSwitchCCValues.hexColor.is(valueId)
+			BinarySwitchCCValues.targetValue.is(valueId)
+			|| BinarySwitchCCValues.currentValue.is(valueId)
 		) {
-			const rgb = await this.getLED();
-			this.persistRGBValue(this.controller.valueDB, rgb);
-			return rgb;
+			if (
+				this.supportedCommands?.includes(NabuCasaCommand.GetLEDBinary)
+			) {
+				const state = await this.getLEDBinary();
+				this.persistLEDState(this.controller.valueDB, state);
+				return state;
+			} else {
+				// The binary LED command is not supported, fall back to the RGB variant
+				const rgb = await this.getLED();
+				this.persistRGBValue(this.controller.valueDB, rgb);
+				return rgb;
+			}
 		}
 
-		if (
-			ColorSwitchCCValues.currentColorChannel.is(valueId)
-			|| ColorSwitchCCValues.targetColorChannel.is(valueId)
-		) {
-			const rgb = await this.getLED();
-			this.persistRGBValue(this.controller.valueDB, rgb);
-			switch (valueId.propertyKey as ColorComponent) {
-				case ColorComponent.Red:
-					return rgb.r;
-				case ColorComponent.Green:
-					return rgb.g;
-				case ColorComponent.Blue:
-					return rgb.b;
-			}
-			return undefined;
-		}
+		// if (
+		// 	ColorSwitchCCValues.targetColor.is(valueId)
+		// 	|| ColorSwitchCCValues.currentColor.is(valueId)
+		// 	|| ColorSwitchCCValues.hexColor.is(valueId)
+		// ) {
+		// 	const rgb = await this.getLED();
+		// 	this.persistRGBValue(this.controller.valueDB, rgb);
+		// 	return rgb;
+		// }
+
+		// if (
+		// 	ColorSwitchCCValues.currentColorChannel.is(valueId)
+		// 	|| ColorSwitchCCValues.targetColorChannel.is(valueId)
+		// ) {
+		// 	const rgb = await this.getLED();
+		// 	this.persistRGBValue(this.controller.valueDB, rgb);
+		// 	switch (valueId.propertyKey as ColorComponent) {
+		// 		case ColorComponent.Red:
+		// 			return rgb.r;
+		// 		case ColorComponent.Green:
+		// 			return rgb.g;
+		// 		case ColorComponent.Blue:
+		// 			return rgb.b;
+		// 	}
+		// 	return undefined;
+		// }
 
 		// if (MultilevelSensorCCValues.value.is(valueId)) {
 		// 	switch (valueId.property) {
@@ -633,53 +789,73 @@ export class ControllerProprietary_NabuCasa
 		value: unknown,
 	): Promise<SetValueResult> {
 		if (
-			ColorSwitchCCValues.targetColor.is(valueId)
-			&& typeof value === "object"
-			&& value !== null
+			BinarySwitchCCValues.targetValue.is(valueId)
+			&& typeof value === "boolean"
 		) {
-			if (typeof value !== "object" || value === null) {
-				return {
-					status: SetValueStatus.InvalidValue,
-					message: "The value must be an object",
-				};
+			if (
+				this.supportedCommands?.includes(NabuCasaCommand.SetLEDBinary)
+			) {
+				await this.setLEDBinary(value);
+				this.persistLEDState(this.controller.valueDB, value);
+				return { status: SetValueStatus.Success };
+			} else {
+				// The binary LED command is not supported, fall back to the RGB variant
+				const rgb: RGB = value
+					? { r: 255, g: 255, b: 255 }
+					: { r: 0, g: 0, b: 0 };
+				await this.setLED(rgb);
+				this.persistRGBValue(this.controller.valueDB, rgb);
+				return { status: SetValueStatus.Success };
 			}
-			const rgb: RGB = {
-				r: (value as any).red ?? 0,
-				g: (value as any).green ?? 0,
-				b: (value as any).blue ?? 0,
-			};
-			await this.setLED(rgb);
-			this.persistRGBValue(this.controller.valueDB, rgb);
-
-			return { status: SetValueStatus.Success };
 		}
+		// if (
+		// 	ColorSwitchCCValues.targetColor.is(valueId)
+		// 	&& typeof value === "object"
+		// 	&& value !== null
+		// ) {
+		// 	if (typeof value !== "object" || value === null) {
+		// 		return {
+		// 			status: SetValueStatus.InvalidValue,
+		// 			message: "The value must be an object",
+		// 		};
+		// 	}
+		// 	const rgb: RGB = {
+		// 		r: (value as any).red ?? 0,
+		// 		g: (value as any).green ?? 0,
+		// 		b: (value as any).blue ?? 0,
+		// 	};
+		// 	await this.setLED(rgb);
+		// 	this.persistRGBValue(this.controller.valueDB, rgb);
 
-		if (ColorSwitchCCValues.hexColor.is(valueId)) {
-			if (typeof value !== "string") {
-				return {
-					status: SetValueStatus.InvalidValue,
-					message: `The value must be a string`,
-				};
-			}
+		// 	return { status: SetValueStatus.Success };
+		// }
 
-			const match = hexColorRegex.exec(value);
-			if (!match) {
-				return {
-					status: SetValueStatus.InvalidValue,
-					message: `${value} is not a valid HEX color string`,
-				};
-			}
-			const rgb: RGB = {
-				r: parseInt(match.groups!.red, 16),
-				g: parseInt(match.groups!.green, 16),
-				b: parseInt(match.groups!.blue, 16),
-			};
+		// if (ColorSwitchCCValues.hexColor.is(valueId)) {
+		// 	if (typeof value !== "string") {
+		// 		return {
+		// 			status: SetValueStatus.InvalidValue,
+		// 			message: `The value must be a string`,
+		// 		};
+		// 	}
 
-			await this.setLED(rgb);
-			this.persistRGBValue(this.controller.valueDB, rgb);
+		// 	const match = hexColorRegex.exec(value);
+		// 	if (!match) {
+		// 		return {
+		// 			status: SetValueStatus.InvalidValue,
+		// 			message: `${value} is not a valid HEX color string`,
+		// 		};
+		// 	}
+		// 	const rgb: RGB = {
+		// 		r: parseInt(match.groups!.red, 16),
+		// 		g: parseInt(match.groups!.green, 16),
+		// 		b: parseInt(match.groups!.blue, 16),
+		// 	};
 
-			return { status: SetValueStatus.Success };
-		}
+		// 	await this.setLED(rgb);
+		// 	this.persistRGBValue(this.controller.valueDB, rgb);
+
+		// 	return { status: SetValueStatus.Success };
+		// }
 
 		if (
 			ConfigurationCCValues.paramInformation.is(valueId)
