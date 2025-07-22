@@ -1,4 +1,4 @@
-name: "Copilot Setup Steps"
+name: 'Copilot Setup Steps'
 
 # Automatically run the setup steps when they are changed to allow for easy validation, and
 # allow manual testing through the repository's "Actions" tab
@@ -25,21 +25,21 @@ jobs:
     # You can define any steps you want, and they will run before the agent starts.
     # If you do not check out your code, Copilot will do this for you.
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Enable Corepack
-      shell: bash
-      run: corepack enable
+      - name: Enable Corepack
+        shell: bash
+        run: corepack enable
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22 # This should be LTS
-        cache: 'yarn'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22 # This should be LTS
+          cache: 'yarn'
 
-    - name: Install dependencies
-      shell: bash
-      run: |
-        yarn install --immutable
-        yarn bootstrap
+      - name: Install dependencies
+        shell: bash
+        run: |
+          yarn install --immutable
+          yarn bootstrap
