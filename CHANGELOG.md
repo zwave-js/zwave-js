@@ -4,6 +4,27 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Convert Battery CC `isLow` value to notification event (#7984)
+* Clean up Indicator CC values and fix their implementation (#7980)
+
+### Bugfixes
+* Use configured RF region as fallback for firmware update checks on controllers without support for querying the region (#7992)
+* After a successful supervised `Multilevel Switch Set` with value 255, the actual value is now queried immediately (#7963)
+
+### Config file changes
+* Remove proprietary RGB functionality for ZWA-2 (#8000)
+* Add fingerprint to FireAngel ZHT-630, add FireAngel ZST-630 (#7117)
+* Remove unlock mapping for Schlage lock FE599 (#7870)
+* Add Fantem FT117 range extender (#7962)
+* Add Zooz ZEN35 (#7757)
+* Update label and description for ZWA-2 (#7968)
+* Add missing parameter 117 (Reboot) on Shelly Wave Plug S EU (QNPL-0A112) (#7969)
+
+### Changes under the hood
+* Setup environment for Copilot Agent (#7995)
+
 ## 15.9.0 (2025-07-10)
 ### Features
 * Apply auto powerlevels on every actual region change (#7862)
