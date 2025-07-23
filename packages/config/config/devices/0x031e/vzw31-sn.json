@@ -207,7 +207,7 @@
 		{
 			"#": "15",
 			"$import": "templates/inovelli_templates.json#level_0-99_100_previous",
-			"label": "State After Power Restored",
+			"label": "Level After Power Restored",
 			"defaultValue": 100
 		},
 		{
