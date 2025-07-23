@@ -97,6 +97,9 @@ const configEnableTiltIndicatorMeta: ConfigurationMetadata = {
 	valueSize: 1,
 };
 
+const WHITE: RGB = { r: 255, g: 255, b: 255 };
+const BLACK: RGB = { r: 0, g: 2, b: 0 };
+
 function parseGyro(msg: Message): Vector {
 	// According to datasheet: 8g range => 977 µg/LSB
 	const x = roundTo(msg.payload.readInt16BE(1) / 1024 * 9.77, 2);
@@ -220,11 +223,11 @@ export class ControllerProprietary_NabuCasa
 		// Treat any other color than black as "on"
 		valueDB.setValue(
 			BinarySwitchCCValues.currentValue.id,
-			rgb.r > 0 || rgb.g > 0 || rgb.b > 0,
+			rgb.r > BLACK.r || rgb.g > BLACK.g || rgb.b > BLACK.b,
 		);
 		valueDB.setValue(
 			BinarySwitchCCValues.targetValue.id,
-			rgb.r > 0 || rgb.g > 0 || rgb.b > 0,
+			rgb.r > BLACK.r || rgb.g > BLACK.g || rgb.b > BLACK.b,
 		);
 	}
 
@@ -601,9 +604,7 @@ export class ControllerProprietary_NabuCasa
 				return { status: SetValueStatus.Success };
 			} else {
 				// The binary LED command is not supported, fall back to the RGB variant
-				const rgb: RGB = value
-					? { r: 255, g: 255, b: 255 }
-					: { r: 0, g: 0, b: 0 };
+				const rgb: RGB = value ? WHITE : BLACK;
 				await this.setLED(rgb);
 				this.persistRGBValue(this.controller.valueDB, rgb);
 				return { status: SetValueStatus.Success };
