@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.10.0 (2025-07-23)
 ### Features
 * Convert Battery CC `isLow` value to notification event (#7984)
 * Clean up Indicator CC values and fix their implementation (#7980)
