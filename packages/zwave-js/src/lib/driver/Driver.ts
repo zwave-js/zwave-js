@@ -2361,18 +2361,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				for (const node of this._controller.nodes.values()) {
 					if (node.isControllerNode) continue;
 					if (node.interviewStage === InterviewStage.Complete) {
+						// A node that can sleep should be assumed to be sleeping after resuming from cache
+						if (node.canSleep) node.markAsAsleep();
 						continue;
 					}
 					await node["queryProtocolInfo"]();
-				}
-
-				// Mark sleeping nodes that were restored from cache as asleep, like the primary controller does
-				for (const node of this._controller.nodes.values()) {
-					if (node.isControllerNode) continue;
-					if (node.interviewStage === InterviewStage.Complete && node.canSleep) {
-						// A node that can sleep should be assumed to be sleeping after resuming from cache
-						node.markAsAsleep();
-					}
 				}
 
 				// Then ping (frequently) listening nodes to determine their status
