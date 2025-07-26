@@ -289,6 +289,8 @@ export class ControllerProprietary_NabuCasa implements ControllerProprietaryComm
     // (undocumented)
     getLED(): Promise<RGB>;
     // (undocumented)
+    getLEDBinary(): Promise<boolean>;
+    // (undocumented)
     getSupportedCommands(): Promise<NabuCasaCommand[]>;
     // (undocumented)
     handleUnsolicited(_msg: Message): Promise<boolean>;
@@ -302,6 +304,8 @@ export class ControllerProprietary_NabuCasa implements ControllerProprietaryComm
     setConfig(key: NabuCasaConfigKey, value: number): Promise<boolean>;
     // (undocumented)
     setLED(rgb: RGB): Promise<boolean>;
+    // (undocumented)
+    setLEDBinary(state: boolean): Promise<boolean>;
     // (undocumented)
     setSystemIndication(severity: NabuCasaIndicationSeverity): Promise<boolean>;
     // (undocumented)
@@ -1171,6 +1175,8 @@ export enum NabuCasaCommand {
     // (undocumented)
     GetLED = 1,
     // (undocumented)
+    GetLEDBinary = 7,
+    // (undocumented)
     GetSupportedCommands = 0,
     // (undocumented)
     ReadGyro = 3,
@@ -1178,6 +1184,8 @@ export enum NabuCasaCommand {
     SetConfig = 6,
     // (undocumented)
     SetLED = 2,
+    // (undocumented)
+    SetLEDBinary = 8,
     // (undocumented)
     SetSystemIndication = 4
 }
