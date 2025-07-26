@@ -1,5 +1,5 @@
 {
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:0-18",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:20",
 	"containerEnv": {
 		// Avoids cross-link issues due to different filesystems between /home and /workspaces
 		"YARN_GLOBAL_FOLDER": "/workspaces/zwave-js/.yarn/global",
