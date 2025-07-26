@@ -5,6 +5,10 @@
 	"description": "ECO-DIM Z-Wave LED Dimmer",
 	"devices": [
 		{
+			"productType": "0x0021",
+			"productId": "0x0216"
+		},
+		{
 			"productType": "0x0202",
 			"productId": "0x0001"
 		},
