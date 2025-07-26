@@ -98,6 +98,30 @@
 			]
 		},
 		{
+			"#": "5",
+			"$if": "firmwareVersion >= 2.8.4",
+			"label": "Motion Report Type",
+			"description": "Sends Notification or Binary Sensor Report back on motion back to the controller",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 2,
+			"defaultValue": 2,
+			"options": [
+				{
+					"label": "Send Notification Report",
+					"value": 0
+				},
+				{
+					"label": "Send Binary Sensor Report",
+					"value": 1
+				},
+				{
+					"label": "Send notification and Binary Sensor Report",
+					"value": 2
+				}
+			]
+		},
+		{
 			"#": "7",
 			"label": "Motion Group: Basic Set Value",
 			"valueSize": 1,
@@ -391,6 +415,86 @@
 			"maxValue": 65535,
 			"defaultValue": 3600,
 			"unsigned": true
+		},
+		{
+			"#": "26",
+			"$if": "firmwareVersion >= 2.8.4",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Activity",
+			"description": "Allow user to enable/disable LED activity of specific reports sent by sensor. Button press indicator is not affected by this"
+		},
+		{
+			"#": "27",
+			"$if": "firmwareVersion >= 2.8.4",
+			"label": "Motion Sensor Report Indicator",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 9,
+			"defaultValue": 3,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Red",
+					"value": 1
+				},
+				{
+					"label": "Blue",
+					"value": 2
+				},
+				{
+					"label": "Green",
+					"value": 3
+				},
+				{
+					"label": "Pink",
+					"value": 4
+				},
+				{
+					"label": "Cyan",
+					"value": 5
+				},
+				{
+					"label": "Purple",
+					"value": 6
+				},
+				{
+					"label": "Orange",
+					"value": 7
+				},
+				{
+					"label": "Yellow",
+					"value": 8
+				},
+				{
+					"label": "White",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": "28",
+			"$if": "firmwareVersion >= 2.8.4",
+			"label": "Temperature Offset Value",
+			"description": "Can add or minus this setting value to calibrate temperature when checked. Scale is defined by Param24. e.g. Value 15 means 1.5C or 1.5F",
+			"valueSize": 2,
+			"minValue": -200,
+			"maxValue": 200,
+			"defaultValue": 0,
+			"unsigned": false
+		},
+		{
+			"#": "29",
+			"$if": "firmwareVersion >= 2.8.4",
+			"label": "Lux Offset Value",
+			"description": "Can add or minus this setting value to calibrate Lux when checked",
+			"valueSize": 2,
+			"minValue": -10000,
+			"maxValue": 10000,
+			"defaultValue": 0,
+			"unsigned": false
 		}
 	],
 	"metadata": {
