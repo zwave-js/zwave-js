@@ -8494,22 +8494,36 @@ export class ZWaveController
 		// 2. the given NVM data is converted to match the current format
 		// 3. the converted data is written to the NVM
 
+		this.driver.controllerLog.print(
+			"Converting NVM to target format...",
+		);
+		let targetNVM: Uint8Array;
+		let convertedNVM: Uint8Array;
 		try {
-			this.driver.controllerLog.print(
-				"Converting NVM to target format...",
-			);
-			let targetNVM: Uint8Array;
 			if (this.sdkVersionGte("7.0")) {
 				targetNVM = await this.backupNVMRaw700(convertProgress);
 			} else {
 				targetNVM = await this.backupNVMRaw500(convertProgress);
 			}
-			const convertedNVM = await migrateNVM(
+
+			convertedNVM = await migrateNVM(
 				nvmData,
 				targetNVM,
 				migrateOptions,
 			);
+		} catch (e) {
+			// If the process fails, at least turn the Z-Wave radio back on
+			await this.toggleRF(true);
 
+			// And re-throw the error with a more descriptive message
+			const message = "Failed to convert NVM to target format: "
+				+ (e as Error).message;
+			this.driver.controllerLog.print(message, "error");
+			(e as Error).message = message;
+			throw e;
+		}
+
+		try {
 			this.driver.controllerLog.print("Restoring NVM backup...");
 			if (this.sdkVersionGte("7.0")) {
 				await this.restoreNVMRaw700(convertedNVM, restoreProgress);
@@ -8519,9 +8533,16 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				"NVM backup restored. Restarting to activate the restored backup...",
 			);
-		} catch {
+		} catch (e) {
 			// If the process fails, at least turn the Z-Wave radio back on
 			await this.toggleRF(true);
+
+			// And re-throw the error with a more descriptive message
+			const message = "Failed to restore NVM backup: "
+				+ (e as Error).message;
+			this.driver.controllerLog.print(message, "error");
+			(e as Error).message = message;
+			throw e;
 		}
 
 		// After restoring an NVM backup, the controller's capabilities may have changed.
