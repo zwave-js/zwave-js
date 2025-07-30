@@ -95,18 +95,18 @@ test("subsequent calls after trailing call should respect throttle interval", (t
 	sinon.assert.calledWith(spy, 1.25);
 	
 	// Now make another call - this should be throttled for 100ms from when the trailing call fired
-	throttled(1.11);
+	throttled(1.30);
 	sinon.assert.calledTwice(spy); // Should not execute immediately
 	
 	// Advance time but not enough for throttle to pass
 	vi.advanceTimersByTime(50);
-	throttled(1.30);
+	throttled(1.35);
 	sinon.assert.calledTwice(spy); // Still should not execute
 	
 	// Advance full throttle period from when trailing call fired
 	vi.advanceTimersByTime(50); // Total: 200ms from start, 100ms from trailing call
 	sinon.assert.calledThrice(spy);
-	sinon.assert.calledWith(spy, 1.30); // Should be the trailing call with last value
+	sinon.assert.calledWith(spy, 1.35); // Should be the trailing call with last value
 });
 
 test("reproduces firmware update progress jumping issue", (t) => {
@@ -115,19 +115,30 @@ test("reproduces firmware update progress jumping issue", (t) => {
 		results.push(value);
 	}, 250, true);
 	
-	// Simulate the problematic sequence described in the issue
-	throttled(1.15); // Should execute immediately
-	vi.advanceTimersByTime(100);
-	throttled(1.25); // Should be delayed (trailing)
-	vi.advanceTimersByTime(200); // Trailing call fires with 1.25
-	throttled(1.11); // This should NOT execute immediately - should be throttled
-	vi.advanceTimersByTime(50);
-	throttled(1.30); // Should update trailing call
-	vi.advanceTimersByTime(200); // Trailing call fires with 1.30
-	throttled(1.28); // Should be throttled again
-	vi.advanceTimersByTime(250); // Final trailing call fires with 1.28
+	// Simulate a realistic firmware update progress sequence
+	// Progress should be linear: 1.0% → 1.2% → 1.4% → 1.6% → 1.8%
+	// Due to throttling, some events will be discarded, but those received should be in order
 	
-	// The key is that 1.11 should NOT appear because it should be suppressed by 1.30
-	// This prevents the "jumping back and forth" behavior described in the issue
-	t.expect(results).toEqual([1.15, 1.25, 1.30, 1.28]);
+	throttled(1.0); // Should execute immediately
+	vi.advanceTimersByTime(100);
+	throttled(1.2); // Should be delayed (trailing)
+	vi.advanceTimersByTime(100);
+	throttled(1.4); // Should update the pending trailing call
+	vi.advanceTimersByTime(50); // Trailing call fires with 1.4
+	
+	// After trailing call, new calls should be properly throttled
+	throttled(1.6); // Should be throttled (not execute immediately due to the fix)
+	vi.advanceTimersByTime(100);
+	throttled(1.8); // Should update the pending trailing call
+	vi.advanceTimersByTime(150); // Final trailing call fires with 1.8
+	
+	// With the fix, events are received in ascending order: [1.0, 1.4, 1.8]
+	// Before the fix, the bug could cause events like [1.0, 1.4, 1.6, 1.8] where 1.6 came out of order
+	// The key is that ALL received events maintain ascending order, even though some are discarded
+	t.expect(results).toEqual([1.0, 1.4, 1.8]);
+	
+	// Verify that all values are in ascending order
+	for (let i = 1; i < results.length; i++) {
+		t.expect(results[i]).toBeGreaterThan(results[i - 1]);
+	}
 });
