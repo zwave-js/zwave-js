@@ -101,11 +101,9 @@
 			"#": "5",
 			"$if": "firmwareVersion >= 2.8.4",
 			"label": "Motion Report Type",
-			"description": "Sends Notification or Binary Sensor Report back on motion back to the controller",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
 			"defaultValue": 2,
+			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Send Notification Report",
@@ -421,65 +419,21 @@
 			"$if": "firmwareVersion >= 2.8.4",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "LED Activity",
-			"description": "Allow user to enable/disable LED activity of specific reports sent by sensor. Button press indicator is not affected by this"
+			"description": "Enable/Disable LED activity when specific reports are sent."
 		},
 		{
 			"#": "27",
 			"$if": "firmwareVersion >= 2.8.4",
+			"$import": "~/templates/0x0086/templates/aeotec_template.json#base_color_options_9",
 			"label": "Motion Sensor Report Indicator",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 9,
-			"defaultValue": 3,
-			"options": [
-				{
-					"label": "Disabled",
-					"value": 0
-				},
-				{
-					"label": "Red",
-					"value": 1
-				},
-				{
-					"label": "Blue",
-					"value": 2
-				},
-				{
-					"label": "Green",
-					"value": 3
-				},
-				{
-					"label": "Pink",
-					"value": 4
-				},
-				{
-					"label": "Cyan",
-					"value": 5
-				},
-				{
-					"label": "Purple",
-					"value": 6
-				},
-				{
-					"label": "Orange",
-					"value": 7
-				},
-				{
-					"label": "Yellow",
-					"value": 8
-				},
-				{
-					"label": "White",
-					"value": 9
-				}
-			]
+			"defaultValue": 3
 		},
 		{
 			"#": "28",
 			"$if": "firmwareVersion >= 2.8.4",
-			"label": "Temperature Offset Value",
-			"description": "Can add or minus this setting value to calibrate temperature when checked. Scale is defined by Param24. e.g. Value 15 means 1.5C or 1.5F",
+			"label": "Temperature Calibration",
 			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
 			"minValue": -200,
 			"maxValue": 200,
 			"defaultValue": 0,
@@ -488,9 +442,9 @@
 		{
 			"#": "29",
 			"$if": "firmwareVersion >= 2.8.4",
-			"label": "Lux Offset Value",
-			"description": "Can add or minus this setting value to calibrate Lux when checked",
+			"label": "Brightness Calibration",
 			"valueSize": 2,
+			"unit": "lux",
 			"minValue": -10000,
 			"maxValue": 10000,
 			"defaultValue": 0,
