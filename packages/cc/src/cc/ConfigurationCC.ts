@@ -15,6 +15,7 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type NodeId,
+	type ProvisioningConfigParameter,
 	type SupervisionResult,
 	SupervisionStatus,
 	type SupportsCC,
@@ -1096,6 +1097,80 @@ export class ConfigurationCCAPI extends CCAPI {
 export class ConfigurationCC extends CommandClass {
 	declare ccCommand: ConfigurationCommand;
 
+	/** Applies configuration parameters from the node's provisioning entry, if any */
+	private async applyProvisioningConfigParameters(
+		ctx: InterviewContext | RefreshValuesContext,
+	): Promise<void> {
+		// Only apply provisioning config parameters during the initial interview
+		if (!("getInterviewOptions" in ctx)) {
+			return;
+		}
+
+		const node = this.getNode(ctx)!;;;
+		
+		// Check if this node has a provisioning entry with configuration parameters
+		const provisioningEntry = (node as any).driver?.controller?.getProvisioningEntry?.(node.id);
+		if (!provisioningEntry?.configParameters?.length) {
+			return;
+		}
+
+		const endpoint = this.getEndpoint(ctx)!;
+		const api = CCAPI.create(
+			CommandClasses.Configuration,
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+		});
+
+		ctx.logNode(node.id, {
+			endpoint: this.endpointIndex,
+			message: `Applying ${provisioningEntry.configParameters.length} configuration parameters from provisioning entry`,
+			direction: "none",
+		});
+
+		// Apply each configuration parameter
+		for (const configParam of provisioningEntry.configParameters) {
+			try {
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message: `Setting parameter #${configParam.parameter}${configParam.bitMask ? `[${configParam.bitMask.toString(16).padStart(2, "0")}]` : ""} = ${configParam.value}`,
+					direction: "outbound",
+				});
+
+				if (configParam.bitMask) {
+					// For partial parameters, use setBulk
+					await api.setBulk([{
+						parameter: configParam.parameter,
+						bitMask: configParam.bitMask,
+						value: configParam.value,
+					}]);
+				} else {
+					// For regular parameters, use set
+					await api.set({
+						parameter: configParam.parameter,
+						value: configParam.value,
+					});
+				}
+
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message: `Successfully set parameter #${configParam.parameter}${configParam.bitMask ? `[${configParam.bitMask.toString(16).padStart(2, "0")}]` : ""}`,
+					direction: "inbound",
+				});
+			} catch (error) {
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message: `Failed to set parameter #${configParam.parameter}${configParam.bitMask ? `[${configParam.bitMask.toString(16).padStart(2, "0")}]` : ""}: ${
+						(error as Error).message
+					}`,
+					direction: "inbound",
+					level: "warn",
+				});
+			}
+		}
+	}
+
 	public async interview(
 		ctx: InterviewContext,
 	): Promise<void> {
@@ -1348,6 +1423,9 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				}
 			}
 		}
+
+		// Apply configuration parameters from SmartStart provisioning entry if available
+		await this.applyProvisioningConfigParameters(ctx);
 	}
 
 	/**

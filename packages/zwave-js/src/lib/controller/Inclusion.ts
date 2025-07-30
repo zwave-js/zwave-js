@@ -1,4 +1,4 @@
-import type { CommandClasses, Protocols, SecurityClass } from "@zwave-js/core";
+import type { CommandClasses, ConfigValue, ProvisioningConfigParameter, Protocols, SecurityClass } from "@zwave-js/core";
 import type { DeviceClass } from "../node/DeviceClass.js";
 
 /** Additional information about the outcome of a node inclusion */
@@ -234,6 +234,12 @@ export interface PlannedProvisioningEntry {
 	 * When this is not set, applications should default to {@link securityClasses} instead.
 	 */
 	requestedSecurityClasses?: readonly SecurityClass[];
+
+	/**
+	 * Configuration parameters to be set automatically during initial interview.
+	 * This allows bulk provisioning with pre-configured parameter values.
+	 */
+	configParameters?: readonly ProvisioningConfigParameter[];
 
 	/**
 	 * Additional properties to be stored in this provisioning entry, e.g. the device ID from a scanned QR code
