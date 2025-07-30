@@ -216,9 +216,9 @@ import { PACKAGE_NAME, PACKAGE_VERSION } from "../_version.js";
 import { ZWaveController } from "../controller/Controller.js";
 import { downloadFirmwareUpdate } from "../controller/FirmwareUpdateService.js";
 import {
-    type FoundNode, type InclusionResult,
-    InclusionState, InclusionStrategy,
-    RemoveNodeReason,
+	type FoundNode, type InclusionResult,
+	InclusionState, InclusionStrategy,
+	RemoveNodeReason,
 } from "../controller/Inclusion.js";
 import { determineNIF } from "../controller/NodeInformationFrame.js";
 import {
@@ -2896,9 +2896,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (this._options.interview?.disableOnNodeAdded) return;
 		if (this._options.testingHooks?.skipNodeInterview) return;
 
-        // Skip the interview if S2 failed
-        if (inclusionResult.lowSecurity
-            && inclusionResult.inclusionStrategy == InclusionStrategy.Security_S2) return;
+		// Skip the interview if S2 failed
+		if (inclusionResult.lowSecurity
+			&& inclusionResult.inclusionStrategy == InclusionStrategy.Security_S2) return;
 
 		// Interview the node
 		// don't await the interview, because it may take a very long time
