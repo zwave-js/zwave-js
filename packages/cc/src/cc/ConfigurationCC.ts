@@ -474,6 +474,7 @@ export class ConfigurationCCAPI extends CCAPI {
 					propertyKey,
 					value,
 				);
+
 				// Partial parameters are internally converted to unsigned values - update the valueFormat accordingly
 				valueFormat = ConfigValueFormat.UnsignedInteger;
 			} else {
