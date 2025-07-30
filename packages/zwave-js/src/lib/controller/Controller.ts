@@ -2747,6 +2747,7 @@ export class ZWaveController
 			? {
 				lowSecurity: true,
 				lowSecurityReason: bootstrapFailure,
+                inclusionStrategy: opts.strategy
 			}
 			: { lowSecurity: false };
 
@@ -3483,6 +3484,7 @@ export class ZWaveController
 					? {
 						lowSecurity: true,
 						lowSecurityReason: bootstrapFailure,
+                        inclusionStrategy: InclusionStrategy.Default
 					}
 					: { lowSecurity: false };
 
@@ -3864,6 +3866,7 @@ export class ZWaveController
 				? {
 					lowSecurity: true,
 					lowSecurityReason: bootstrapFailure,
+                    inclusionStrategy: InclusionStrategy.Default
 				}
 				: { lowSecurity: false };
 
@@ -7005,6 +7008,7 @@ export class ZWaveController
 			? {
 				lowSecurity: true,
 				lowSecurityReason: bootstrapFailure,
+                inclusionStrategy: options.strategy
 			}
 			: { lowSecurity: false };
 
