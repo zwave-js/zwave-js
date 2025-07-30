@@ -73,3 +73,39 @@ test("when called during the wait time for the trailing call, the most recent ar
 	sinon.assert.neverCalledWith(spy, 2);
 	sinon.assert.calledWith(spy, 4);
 });
+
+test("subsequent calls after trailing call should respect throttle interval", (t) => {
+	const spy = sinon.stub();
+
+	const throttled = throttle(spy, 100, true);
+	
+	// First call - should execute immediately
+	throttled(1.15);
+	sinon.assert.calledOnce(spy);
+	sinon.assert.calledWith(spy, 1.15);
+	
+	// Second call during throttle period - should be delayed
+	vi.advanceTimersByTime(50);
+	throttled(1.25);
+	sinon.assert.calledOnce(spy); // Still only one call
+	
+	// Third call after the initial throttle period but before trailing call fires
+	vi.advanceTimersByTime(60); // Total: 110ms from start
+	throttled(1.11);
+	
+	// This call should NOT execute immediately because the trailing call hasn't fired yet
+	// and we're still within the throttle window
+	sinon.assert.calledOnce(spy); // Should still be only one call
+	
+	// Advance to when the trailing call should fire (100ms from first call)
+	vi.advanceTimersByTime(40); // Total: 150ms from start, trailing call fires
+	sinon.assert.calledTwice(spy);
+	
+	// The next call should now wait for the full throttle interval from when the trailing call fired
+	throttled(1.28);
+	sinon.assert.calledTwice(spy); // Should not execute immediately
+	
+	vi.advanceTimersByTime(100); // Wait full throttle interval
+	sinon.assert.calledThrice(spy);
+	sinon.assert.calledWith(spy, 1.28);
+});
