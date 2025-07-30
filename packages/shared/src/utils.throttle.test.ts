@@ -79,7 +79,7 @@ test("subsequent calls after trailing call should respect throttle interval", (t
 
 	const throttled = throttle(spy, 100, true);
 	
-	// First call - should execute immediately
+	// First call - should execute immediately  
 	throttled(1.15);
 	sinon.assert.calledOnce(spy);
 	sinon.assert.calledWith(spy, 1.15);
@@ -89,23 +89,45 @@ test("subsequent calls after trailing call should respect throttle interval", (t
 	throttled(1.25);
 	sinon.assert.calledOnce(spy); // Still only one call
 	
-	// Third call after the initial throttle period but before trailing call fires
-	vi.advanceTimersByTime(60); // Total: 110ms from start
-	throttled(1.11);
-	
-	// This call should NOT execute immediately because the trailing call hasn't fired yet
-	// and we're still within the throttle window
-	sinon.assert.calledOnce(spy); // Should still be only one call
-	
-	// Advance to when the trailing call should fire (100ms from first call)
-	vi.advanceTimersByTime(40); // Total: 150ms from start, trailing call fires
+	// Let the trailing call fire
+	vi.advanceTimersByTime(50); // Total: 100ms from start, trailing call should fire
 	sinon.assert.calledTwice(spy);
+	sinon.assert.calledWith(spy, 1.25);
 	
-	// The next call should now wait for the full throttle interval from when the trailing call fired
-	throttled(1.28);
+	// Now make another call - this should be throttled for 100ms from when the trailing call fired
+	throttled(1.11);
 	sinon.assert.calledTwice(spy); // Should not execute immediately
 	
-	vi.advanceTimersByTime(100); // Wait full throttle interval
+	// Advance time but not enough for throttle to pass
+	vi.advanceTimersByTime(50);
+	throttled(1.30);
+	sinon.assert.calledTwice(spy); // Still should not execute
+	
+	// Advance full throttle period from when trailing call fired
+	vi.advanceTimersByTime(50); // Total: 200ms from start, 100ms from trailing call
 	sinon.assert.calledThrice(spy);
-	sinon.assert.calledWith(spy, 1.28);
+	sinon.assert.calledWith(spy, 1.30); // Should be the trailing call with last value
+});
+
+test("reproduces firmware update progress jumping issue", (t) => {
+	const results: number[] = [];
+	const throttled = throttle((value: number) => {
+		results.push(value);
+	}, 250, true);
+	
+	// Simulate the problematic sequence described in the issue
+	throttled(1.15); // Should execute immediately
+	vi.advanceTimersByTime(100);
+	throttled(1.25); // Should be delayed (trailing)
+	vi.advanceTimersByTime(200); // Trailing call fires with 1.25
+	throttled(1.11); // This should NOT execute immediately - should be throttled
+	vi.advanceTimersByTime(50);
+	throttled(1.30); // Should update trailing call
+	vi.advanceTimersByTime(200); // Trailing call fires with 1.30
+	throttled(1.28); // Should be throttled again
+	vi.advanceTimersByTime(250); // Final trailing call fires with 1.28
+	
+	// The key is that 1.11 should NOT appear because it should be suppressed by 1.30
+	// This prevents the "jumping back and forth" behavior described in the issue
+	t.expect(results).toEqual([1.15, 1.25, 1.30, 1.28]);
 });
