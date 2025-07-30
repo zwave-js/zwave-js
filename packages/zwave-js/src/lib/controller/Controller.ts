@@ -920,6 +920,18 @@ export class ZWaveController
 		this.driver.cacheSet(cacheKeys.controller.provisioningList, value);
 	}
 
+	/** @internal Tracks the number of failed SmartStart inclusion attempts per DSK */
+	private _smartStartFailedAttempts = new Map<string, number>();
+
+	/**
+	 * Resets the SmartStart inclusion failure counter for the given DSK.
+	 * This allows a disabled provisioning entry to be attempted again.
+	 * @internal
+	 */
+	public resetSmartStartFailureCount(dsk: string): void {
+		this._smartStartFailedAttempts.delete(dsk);
+	}
+
 	/** Adds the given entry (DSK and security classes) to the controller's SmartStart provisioning list or replaces an existing entry */
 	public provisionSmartStartNode(entry: PlannedProvisioningEntry): void {
 		// Make sure the controller supports SmartStart
@@ -2702,6 +2714,43 @@ export class ZWaveController
 		// After an unsuccessful SmartStart inclusion, the node MUST leave the network and return to SmartStart learn mode
 		// The controller should consider the node to be failed.
 		if (smartStartFailed) {
+			// Track the failed attempt for this DSK and disable provisioning entry after 5 failures
+			if (opts.strategy === InclusionStrategy.SmartStart && opts.provisioning?.dsk) {
+				const dsk = opts.provisioning.dsk;
+				const currentAttempts = this._smartStartFailedAttempts.get(dsk) || 0;
+				const newAttempts = currentAttempts + 1;
+				this._smartStartFailedAttempts.set(dsk, newAttempts);
+
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message: `SmartStart inclusion failed (attempt ${newAttempts}/5 for DSK ${dsk}).`,
+						level: "warn",
+					},
+				);
+
+				// Disable the provisioning entry after 5 failed attempts
+				if (newAttempts >= 5) {
+					const provisioningList = [...this.provisioningList];
+					const entryIndex = provisioningList.findIndex((e) => e.dsk === dsk);
+					if (entryIndex >= 0) {
+						provisioningList[entryIndex] = {
+							...provisioningList[entryIndex],
+							status: ProvisioningEntryStatus.Inactive,
+						};
+						this.provisioningList = provisioningList;
+
+						this.driver.controllerLog.logNode(
+							newNode.id,
+							{
+								message: `Provisioning entry for DSK ${dsk} has been disabled after 5 failed inclusion attempts.`,
+								level: "warn",
+							},
+						);
+					}
+				}
+			}
+
 			try {
 				this.driver.controllerLog.logNode(
 					newNode.id,
@@ -2749,6 +2798,21 @@ export class ZWaveController
 				lowSecurityReason: bootstrapFailure,
 			}
 			: { lowSecurity: false };
+
+		// Clear the failed attempts counter for successful SmartStart inclusions
+		if (opts.strategy === InclusionStrategy.SmartStart && opts.provisioning?.dsk) {
+			const dsk = opts.provisioning.dsk;
+			if (this._smartStartFailedAttempts.has(dsk)) {
+				this._smartStartFailedAttempts.delete(dsk);
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message: `SmartStart inclusion succeeded for DSK ${dsk}. Cleared failed attempts counter.`,
+						level: "debug",
+					},
+				);
+			}
+		}
 
 		this.emit("node added", newNode, result);
 	}
