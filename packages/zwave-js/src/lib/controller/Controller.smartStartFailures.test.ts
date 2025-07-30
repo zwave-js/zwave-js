@@ -4,6 +4,7 @@ import { test as baseTest } from "vitest";
 import { createDefaultMockControllerBehaviors } from "../../Testing.js";
 import type { Driver } from "../driver/Driver.js";
 import { createAndStartTestingDriver } from "../driver/DriverMock.js";
+import { ZWaveController } from "./Controller.js";
 import { ProvisioningEntryStatus } from "./Inclusion.js";
 
 interface LocalTestContext {
@@ -45,9 +46,10 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("should track SmartStart inclusion failures and disable provisioning entry after 5 attempts", ({ context, expect }) => {
+test("should track SmartStart inclusion failures and disable provisioning entry after max attempts", ({ context, expect }) => {
 	const { driver } = context;
 	const testDSK = "11111-22222-12345-54321-65535-00001-11111-22222";
+	const maxAttempts = ZWaveController.MAX_SMARTSTART_INCLUSION_ATTEMPTS;
 
 	// Add a provisioning entry
 	driver.controller.provisionSmartStartNode({
@@ -66,12 +68,12 @@ test("should track SmartStart inclusion failures and disable provisioning entry 
 	// Test tracking failed attempts
 	expect(failedAttemptsMap.get(testDSK)).toBeUndefined();
 
-	// Simulate 4 failed attempts - should not disable the entry yet
-	failedAttemptsMap.set(testDSK, 4);
-	const entryAfter4Attempts = driver.controller.getProvisioningEntry(testDSK);
-	expect(entryAfter4Attempts?.status).toBe(ProvisioningEntryStatus.Active);
+	// Simulate (maxAttempts - 1) failed attempts - should not disable the entry yet
+	failedAttemptsMap.set(testDSK, maxAttempts - 1);
+	const entryAfterAttempts = driver.controller.getProvisioningEntry(testDSK);
+	expect(entryAfterAttempts?.status).toBe(ProvisioningEntryStatus.Active);
 
-	// Simulate the 5th failed attempt by directly updating the provisioning list
+	// Simulate the final failed attempt by directly updating the provisioning list
 	// (This simulates what happens in the actual SmartStart failure handling)
 	const provisioningList = [...driver.controller.getProvisioningEntries()];
 	const entryIndex = provisioningList.findIndex((e) => e.dsk === testDSK);
@@ -84,14 +86,14 @@ test("should track SmartStart inclusion failures and disable provisioning entry 
 	
 	// Update the controller's provisioning list
 	(driver.controller as any).provisioningList = provisioningList;
-	failedAttemptsMap.set(testDSK, 5);
+	failedAttemptsMap.set(testDSK, maxAttempts);
 
 	// Verify the entry is now inactive
-	const entryAfter5Attempts = driver.controller.getProvisioningEntry(testDSK);
-	expect(entryAfter5Attempts?.status).toBe(ProvisioningEntryStatus.Inactive);
+	const entryAfterMaxAttempts = driver.controller.getProvisioningEntry(testDSK);
+	expect(entryAfterMaxAttempts?.status).toBe(ProvisioningEntryStatus.Inactive);
 
 	// Verify failed attempts counter is tracking correctly
-	expect(failedAttemptsMap.get(testDSK)).toBe(5);
+	expect(failedAttemptsMap.get(testDSK)).toBe(maxAttempts);
 });
 
 test("should track failed attempts for different DSKs independently", ({ context, expect }) => {
@@ -155,9 +157,16 @@ test("should clear failed attempts counter on successful SmartStart inclusion", 
 	expect(failedAttemptsMap.get(testDSK)).toBeUndefined();
 });
 
-test("should allow manual reset of SmartStart failure counter", ({ context, expect }) => {
+test("should reset failure counter when provisioning entry is modified", ({ context, expect }) => {
 	const { driver } = context;
 	const testDSK = "11111-22222-12345-54321-65535-00001-11111-22222";
+
+	// Add a provisioning entry
+	driver.controller.provisionSmartStartNode({
+		dsk: testDSK,
+		securityClasses: [SecurityClass.S2_Unauthenticated],
+		status: ProvisioningEntryStatus.Active,
+	});
 
 	// Access the private property to simulate failed attempts
 	const failedAttemptsMap = (driver.controller as any)._smartStartFailedAttempts;
@@ -166,8 +175,37 @@ test("should allow manual reset of SmartStart failure counter", ({ context, expe
 	// Verify failed attempts are tracked
 	expect(failedAttemptsMap.get(testDSK)).toBe(4);
 
-	// Use the public method to reset the counter
-	driver.controller.resetSmartStartFailureCount(testDSK);
+	// Modify the provisioning entry (this should reset the counter)
+	driver.controller.provisionSmartStartNode({
+		dsk: testDSK,
+		securityClasses: [SecurityClass.S2_Authenticated],
+		status: ProvisioningEntryStatus.Active,
+	});
+
+	// Verify counter is cleared
+	expect(failedAttemptsMap.get(testDSK)).toBeUndefined();
+});
+
+test("should reset failure counter when provisioning entry is removed", ({ context, expect }) => {
+	const { driver } = context;
+	const testDSK = "11111-22222-12345-54321-65535-00001-11111-22222";
+
+	// Add a provisioning entry
+	driver.controller.provisionSmartStartNode({
+		dsk: testDSK,
+		securityClasses: [SecurityClass.S2_Unauthenticated],
+		status: ProvisioningEntryStatus.Active,
+	});
+
+	// Access the private property to simulate failed attempts
+	const failedAttemptsMap = (driver.controller as any)._smartStartFailedAttempts;
+	failedAttemptsMap.set(testDSK, 3);
+
+	// Verify failed attempts are tracked
+	expect(failedAttemptsMap.get(testDSK)).toBe(3);
+
+	// Remove the provisioning entry (this should reset the counter)
+	driver.controller.unprovisionSmartStartNode(testDSK);
 
 	// Verify counter is cleared
 	expect(failedAttemptsMap.get(testDSK)).toBeUndefined();
