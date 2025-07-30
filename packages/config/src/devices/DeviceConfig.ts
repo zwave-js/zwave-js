@@ -36,6 +36,10 @@ import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,
 } from "./AssociationConfig.js";
+import {
+	type SceneConfig,
+	ConditionalSceneConfig,
+} from "./SceneConfig.js";
 import { type CompatConfig, ConditionalCompatConfig } from "./CompatConfig.js";
 import { evaluateDeep, validateCondition } from "./ConditionalItem.js";
 import {
@@ -681,42 +685,50 @@ metadata is not an object`,
 			);
 		}
 
-		if (definition.sceneLabels != undefined) {
-			if (!isObject(definition.sceneLabels)) {
+		if (definition.scenes != undefined) {
+			const scenes = new Map<
+				number,
+				ConditionalSceneConfig
+			>();
+			if (!isObject(definition.scenes)) {
 				throwInvalidConfig(
 					`device`,
 					`packages/config/config/devices/${filename}:
-sceneLabels is not an object`,
+scenes is not an object`,
 				);
 			}
-			// Validate that all keys are numeric and all values are strings
-			const sceneLabels = new Map<number, string>();
-			for (const [key, value] of Object.entries(definition.sceneLabels)) {
+			for (
+				const [key, sceneDefinition] of Object.entries(
+					definition.scenes,
+				)
+			) {
 				if (!/^\d+$/.test(key)) {
 					throwInvalidConfig(
 						`device`,
 						`packages/config/config/devices/${filename}:
-found non-numeric scene number "${key}" in sceneLabels`,
+found non-numeric scene id "${key}" in scenes`,
 					);
 				}
-				if (typeof value !== "string") {
+
+				const keyNum = parseInt(key, 10);
+				if (keyNum < 1 || keyNum > 255) {
 					throwInvalidConfig(
 						`device`,
 						`packages/config/config/devices/${filename}:
-scene label for scene ${key} must be a string`,
+scene number ${keyNum} must be between 1 and 255`,
 					);
 				}
-				const sceneNumber = parseInt(key, 10);
-				if (sceneNumber < 1 || sceneNumber > 255) {
-					throwInvalidConfig(
-						`device`,
-						`packages/config/config/devices/${filename}:
-scene number ${sceneNumber} must be between 1 and 255`,
-					);
-				}
-				sceneLabels.set(sceneNumber, value as string);
+
+				scenes.set(
+					keyNum,
+					new ConditionalSceneConfig(
+						filename,
+						keyNum,
+						sceneDefinition as any,
+					),
+				);
 			}
-			this.sceneLabels = sceneLabels;
+			this.scenes = scenes;
 		}
 	}
 
@@ -750,8 +762,8 @@ scene number ${sceneNumber} must be between 1 and 255`,
 		| ConditionalCompatConfig[];
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: ConditionalDeviceMetadata;
-	/** Contains custom labels for Central Scene scenes */
-	public readonly sceneLabels?: ReadonlyMap<number, string>;
+	/** Contains custom configuration for Central Scene scenes */
+	public readonly scenes?: ReadonlyMap<number, ConditionalSceneConfig>;
 
 	/** Whether this is an embedded configuration or not */
 	public readonly isEmbedded: boolean;
@@ -773,7 +785,7 @@ scene number ${sceneNumber} must be between 1 and 255`,
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
 			evaluateDeep(this.metadata, deviceId),
-			this.sceneLabels,
+			evaluateDeep(this.scenes, deviceId),
 		);
 	}
 }
@@ -818,7 +830,7 @@ export class DeviceConfig {
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
 		metadata?: DeviceMetadata,
-		sceneLabels?: ReadonlyMap<number, string>,
+		scenes?: ReadonlyMap<number, SceneConfig>,
 	) {
 		this.filename = filename;
 		this.isEmbedded = isEmbedded;
@@ -835,7 +847,7 @@ export class DeviceConfig {
 		this.proprietary = proprietary;
 		this.compat = compat;
 		this.metadata = metadata;
-		this.sceneLabels = sceneLabels;
+		this.scenes = scenes;
 	}
 
 	public readonly filename: string;
@@ -864,8 +876,8 @@ export class DeviceConfig {
 	public readonly compat?: CompatConfig;
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: DeviceMetadata;
-	/** Contains custom labels for Central Scene scenes */
-	public readonly sceneLabels?: ReadonlyMap<number, string>;
+	/** Contains custom configuration for Central Scene scenes */
+	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 
 	/** Returns the association config for a given endpoint */
 	public getAssociationConfigForEndpoint(

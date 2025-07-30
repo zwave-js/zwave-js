@@ -346,13 +346,14 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 		
 		// Get device configuration to check for custom scene labels
 		const deviceConfig = ctx.getDeviceConfig?.(ctx.nodeId);
-		const customLabel = deviceConfig?.sceneLabels?.get(this.sceneNumber);
+		const sceneConfig = deviceConfig?.scenes?.get(this.sceneNumber);
 		
-		if (customLabel) {
-			// Ensure metadata with custom label
+		if (sceneConfig) {
+			// Ensure metadata with custom label and description
 			this.ensureMetadata(ctx, sceneValue, {
 				...sceneValue.meta,
-				label: customLabel,
+				label: sceneConfig.label,
+				description: sceneConfig.description,
 			});
 		} else {
 			// Use default metadata
@@ -480,13 +481,14 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 		for (let i = 1; i <= this.sceneCount; i++) {
 			const sceneValue = CentralSceneCCValues.scene(i);
 			
-			// Check if there's a custom label for this scene
-			const customLabel = deviceConfig?.sceneLabels?.get(i);
-			const label = customLabel ?? `Scene ${i.toString().padStart(3, "0")}`;
+			// Check if there's a custom configuration for this scene
+			const sceneConfig = deviceConfig?.scenes?.get(i);
+			const label = sceneConfig?.label ?? `Scene ${i.toString().padStart(3, "0")}`;
 			
 			this.setMetadata(ctx, sceneValue, {
 				...sceneValue.meta,
 				label,
+				description: sceneConfig?.description,
 				states: enumValuesToMetadataStates(
 					CentralSceneKeys,
 					this._supportedKeyAttributes.get(i),

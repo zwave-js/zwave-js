@@ -206,14 +206,14 @@ test("deserializing an unsupported command should return an unspecified version 
 // });
 
 test("CentralSceneCCSupportedReport should use custom scene labels from device config when available", async (t) => {
-	// Mock device config with custom scene labels
-	const sceneLabels = new Map([
-		[1, "Single Press"],
-		[2, "Double Press"],
-		[3, "Hold"],
+	// Mock device config with custom scenes
+	const scenes = new Map([
+		[1, { sceneId: 1, label: "Single Press", description: "Single button press" }],
+		[2, { sceneId: 2, label: "Double Press", description: "Double button press" }],
+		[3, { sceneId: 3, label: "Hold" }],
 	]);
 	
-	const mockDeviceConfig = { sceneLabels };
+	const mockDeviceConfig = { scenes };
 	
 	// Mock context for persistValues
 	const mockContext = {
@@ -304,12 +304,12 @@ test("CentralSceneCCSupportedReport should fallback to default labels when no de
 });
 
 test("CentralSceneCCNotification should use custom scene labels from device config when available", async (t) => {
-	// Mock device config with custom scene labels
-	const sceneLabels = new Map([
-		[5, "Release"],
+	// Mock device config with custom scenes
+	const scenes = new Map([
+		[5, { sceneId: 5, label: "Release", description: "Button release action" }],
 	]);
 	
-	const mockDeviceConfig = { sceneLabels };
+	const mockDeviceConfig = { scenes };
 	
 	// Mock context for persistValues
 	const mockContext = {
