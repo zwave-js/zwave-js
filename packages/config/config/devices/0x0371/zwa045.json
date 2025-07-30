@@ -424,7 +424,7 @@
 		{
 			"#": "27",
 			"$if": "firmwareVersion >= 2.8.4",
-			"$import": "~/templates/0x0086/templates/aeotec_template.json#base_color_options_9",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9",
 			"label": "Motion Sensor Report Indicator",
 			"defaultValue": 3
 		},
