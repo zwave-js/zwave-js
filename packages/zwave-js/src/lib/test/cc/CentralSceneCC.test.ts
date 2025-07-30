@@ -12,7 +12,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import { test } from "vitest";
+import { test, vi } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -216,10 +216,17 @@ test("CentralSceneCCSupportedReport should use custom scene labels from device c
 	const mockDeviceConfig = { scenes };
 	
 	// Mock context for persistValues
+	const mockValueDB = {
+		setMetadata: vi.fn(),
+		hasMetadata: vi.fn().mockReturnValue(false),
+		setValue: vi.fn(),
+	};
+	
 	const mockContext = {
 		nodeId: 123,
 		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
-		setMetadata: t.fn(),
+		getValueDB: () => mockValueDB,
+		getSupportedCCVersion: vi.fn().mockReturnValue(1),
 	};
 
 	// Create a CentralSceneCCSupportedReport
@@ -238,10 +245,10 @@ test("CentralSceneCCSupportedReport should use custom scene labels from device c
 	cc.persistValues(mockContext as any);
 
 	// Verify that setMetadata was called with custom labels
-	t.expect(mockContext.setMetadata).toHaveBeenCalledTimes(3);
+	t.expect(mockValueDB.setMetadata).toHaveBeenCalledTimes(3);
 	
 	// Check the calls to setMetadata for custom labels
-	const calls = mockContext.setMetadata.mock.calls;
+	const calls = mockValueDB.setMetadata.mock.calls;
 	
 	// Find the call for scene 1 and verify it has the custom label
 	const scene1Call = calls.find(call => 
@@ -264,10 +271,17 @@ test("CentralSceneCCSupportedReport should use custom scene labels from device c
 
 test("CentralSceneCCSupportedReport should fallback to default labels when no device config", async (t) => {
 	// Mock context without device config
+	const mockValueDB2 = {
+		setMetadata: vi.fn(),
+		hasMetadata: vi.fn().mockReturnValue(false),
+		setValue: vi.fn(),
+	};
+	
 	const mockContext = {
 		nodeId: 123,
 		getDeviceConfig: (nodeId: number) => undefined,
-		setMetadata: t.fn(),
+		getValueDB: () => mockValueDB2,
+		getSupportedCCVersion: vi.fn().mockReturnValue(1),
 	};
 
 	// Create a CentralSceneCCSupportedReport
@@ -285,10 +299,10 @@ test("CentralSceneCCSupportedReport should fallback to default labels when no de
 	cc.persistValues(mockContext as any);
 
 	// Verify that setMetadata was called with default labels
-	t.expect(mockContext.setMetadata).toHaveBeenCalledTimes(2);
+	t.expect(mockValueDB2.setMetadata).toHaveBeenCalledTimes(2);
 	
 	// Check the calls to setMetadata for default labels
-	const calls = mockContext.setMetadata.mock.calls;
+	const calls = mockValueDB2.setMetadata.mock.calls;
 	
 	// Find the call for scene 1 and verify it has the default label
 	const scene1Call = calls.find(call => 
@@ -312,10 +326,17 @@ test("CentralSceneCCNotification should use custom scene labels from device conf
 	const mockDeviceConfig = { scenes };
 	
 	// Mock context for persistValues
+	const mockValueDB3 = {
+		setMetadata: vi.fn(),
+		hasMetadata: vi.fn().mockReturnValue(false),
+		setValue: vi.fn(),
+	};
+	
 	const mockContext = {
 		nodeId: 123,
 		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
-		ensureMetadata: t.fn(),
+		getValueDB: () => mockValueDB3,
+		getSupportedCCVersion: vi.fn().mockReturnValue(1),
 	};
 
 	// Create a CentralSceneCCNotification
@@ -330,9 +351,9 @@ test("CentralSceneCCNotification should use custom scene labels from device conf
 	cc.persistValues(mockContext as any);
 
 	// Verify that ensureMetadata was called with custom label
-	t.expect(mockContext.ensureMetadata).toHaveBeenCalledTimes(1);
+	t.expect(mockValueDB3.setMetadata).toHaveBeenCalledTimes(1);
 	
 	// Check the call to ensureMetadata
-	const call = mockContext.ensureMetadata.mock.calls[0];
+	const call = mockValueDB3.setMetadata.mock.calls[0];
 	t.expect(call[1]?.label).toBe("Release");
 });

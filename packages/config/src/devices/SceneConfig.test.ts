@@ -173,7 +173,7 @@ test("throws for invalid scenes - scene number 0", (t) => {
 	};
 
 	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow("scene number 0 must be between 1 and 255");
+		.toThrow('found non-numeric scene id "0" in scenes');
 });
 
 test("throws for invalid scenes - scene number > 255", (t) => {

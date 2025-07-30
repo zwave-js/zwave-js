@@ -702,7 +702,7 @@ scenes is not an object`,
 					definition.scenes,
 				)
 			) {
-				if (!/^\d+$/.test(key)) {
+				if (!/^[1-9][0-9]*$/.test(key)) {
 					throwInvalidConfig(
 						`device`,
 						`packages/config/config/devices/${filename}:
