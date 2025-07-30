@@ -82,7 +82,7 @@ export function handleWakeUpNotification(
 	}
 }
 
-async function compatDoWakeupQueries(
+export async function compatDoWakeupQueries(
 	ctx: LogNode,
 	node: ZWaveNode,
 ): Promise<void> {
@@ -175,6 +175,8 @@ async function compatDoWakeupQueries(
 				&& e.code === ZWaveErrorCodes.Controller_MessageExpired
 			) {
 				// A compat query expired - no point in trying the others too
+				// Mark the node as asleep since it likely went back to sleep
+				node.markAsAsleep();
 				return;
 			}
 		}
