@@ -586,6 +586,14 @@ export class ZWaveController
 		return this._status;
 	}
 
+	/** Internal storage for unrounded RSSI averages to maintain precision across calculations */
+	private _internalRSSIAverages: {
+		channel0?: number;
+		channel1?: number;
+		channel2?: number;
+		channel3?: number;
+	} = {};
+
 	/**
 	 * @internal
 	 */
@@ -8777,43 +8785,49 @@ export class ZWaveController
 				updated.backgroundRSSI = {} as any;
 			}
 
+			// Calculate averages using unrounded internal values, then round for storage
+			this._internalRSSIAverages.channel0 = averageRSSI(
+				this._internalRSSIAverages.channel0,
+				rssi.rssiChannel0,
+				0.9,
+			);
+			this._internalRSSIAverages.channel1 = averageRSSI(
+				this._internalRSSIAverages.channel1,
+				rssi.rssiChannel1,
+				0.9,
+			);
+
 			// Average all channels, defaulting to the current measurement
 			updated.backgroundRSSI.channel0 = {
 				current: rssi.rssiChannel0,
-				average: averageRSSI(
-					current.backgroundRSSI?.channel0?.average,
-					rssi.rssiChannel0,
-					0.9,
-				),
+				average: Math.round(this._internalRSSIAverages.channel0),
 			};
 			updated.backgroundRSSI.channel1 = {
 				current: rssi.rssiChannel1,
-				average: averageRSSI(
-					current.backgroundRSSI?.channel1?.average,
-					rssi.rssiChannel1,
-					0.9,
-				),
+				average: Math.round(this._internalRSSIAverages.channel1),
 			};
 
 			if (rssi.rssiChannel2 != undefined) {
+				this._internalRSSIAverages.channel2 = averageRSSI(
+					this._internalRSSIAverages.channel2,
+					rssi.rssiChannel2,
+					0.9,
+				);
 				updated.backgroundRSSI.channel2 = {
 					current: rssi.rssiChannel2,
-					average: averageRSSI(
-						current.backgroundRSSI?.channel2?.average,
-						rssi.rssiChannel2,
-						0.9,
-					),
+					average: Math.round(this._internalRSSIAverages.channel2),
 				};
 			}
 
 			if (rssi.rssiChannel3 != undefined) {
+				this._internalRSSIAverages.channel3 = averageRSSI(
+					this._internalRSSIAverages.channel3,
+					rssi.rssiChannel3,
+					0.9,
+				);
 				updated.backgroundRSSI.channel3 = {
 					current: rssi.rssiChannel3,
-					average: averageRSSI(
-						current.backgroundRSSI?.channel3?.average,
-						rssi.rssiChannel3,
-						0.9,
-					),
+					average: Math.round(this._internalRSSIAverages.channel3),
 				};
 			}
 
