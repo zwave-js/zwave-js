@@ -8771,28 +8771,32 @@ export class ZWaveController
 
 		this.updateStatistics((current) => {
 			const updated = { ...current };
-			updated.backgroundRSSI = {} as any;
+			
+			// Initialize backgroundRSSI if it doesn't exist, otherwise preserve existing channels
+			if (!updated.backgroundRSSI) {
+				updated.backgroundRSSI = {} as any;
+			}
 
 			// Average all channels, defaulting to the current measurement
-			updated.backgroundRSSI!.channel0 = {
+			updated.backgroundRSSI.channel0 = {
 				current: rssi.rssiChannel0,
 				average: averageRSSI(
-					current.backgroundRSSI?.channel0.average,
+					current.backgroundRSSI?.channel0?.average,
 					rssi.rssiChannel0,
 					0.9,
 				),
 			};
-			updated.backgroundRSSI!.channel1 = {
+			updated.backgroundRSSI.channel1 = {
 				current: rssi.rssiChannel1,
 				average: averageRSSI(
-					current.backgroundRSSI?.channel1.average,
+					current.backgroundRSSI?.channel1?.average,
 					rssi.rssiChannel1,
 					0.9,
 				),
 			};
 
 			if (rssi.rssiChannel2 != undefined) {
-				updated.backgroundRSSI!.channel2 = {
+				updated.backgroundRSSI.channel2 = {
 					current: rssi.rssiChannel2,
 					average: averageRSSI(
 						current.backgroundRSSI?.channel2?.average,
@@ -8803,7 +8807,7 @@ export class ZWaveController
 			}
 
 			if (rssi.rssiChannel3 != undefined) {
-				updated.backgroundRSSI!.channel3 = {
+				updated.backgroundRSSI.channel3 = {
 					current: rssi.rssiChannel3,
 					average: averageRSSI(
 						current.backgroundRSSI?.channel3?.average,
@@ -8813,7 +8817,7 @@ export class ZWaveController
 				};
 			}
 
-			updated.backgroundRSSI!.timestamp = Date.now();
+			updated.backgroundRSSI.timestamp = Date.now();
 
 			return updated;
 		});
