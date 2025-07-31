@@ -1,5 +1,8 @@
 import { type TypedEventTarget, throttle } from "@zwave-js/shared";
 
+/** Function that transforms statistics data before emitting events */
+export type StatisticsTransformer<T> = (statistics: T) => T;
+
 /** Mixin to provide statistics functionality. Requires the base class to extend EventEmitter. */
 export abstract class StatisticsHost<T> {
 	protected abstract createEmpty(): T;
@@ -19,6 +22,11 @@ export abstract class StatisticsHost<T> {
 		return [];
 	}
 
+	/** Can be overridden in derived classes to apply transformations when emitting statistics events */
+	protected transformStatisticsForEvent(statistics: T): T {
+		return statistics;
+	}
+
 	private _emitUpdate: ((stat: T) => void) | undefined;
 	public updateStatistics(updater: (current: Readonly<T>) => T): void {
 		this._statistics = updater(this._statistics ?? this.createEmpty());
@@ -33,7 +41,7 @@ export abstract class StatisticsHost<T> {
 				true,
 			);
 		}
-		this._emitUpdate(this._statistics);
+		this._emitUpdate(this.transformStatisticsForEvent(this._statistics));
 	}
 
 	public incrementStatistics(property: keyof T): void {

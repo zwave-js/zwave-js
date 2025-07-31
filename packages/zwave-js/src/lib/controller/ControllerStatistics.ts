@@ -16,6 +16,45 @@ export class ControllerStatisticsHost
 			messagesDroppedTX: 0,
 		};
 	}
+
+	protected transformStatisticsForEvent(
+		statistics: ControllerStatistics,
+	): ControllerStatistics {
+		// Apply rounding to background RSSI averages when emitting events
+		if (statistics.backgroundRSSI) {
+			const backgroundRSSI = { ...statistics.backgroundRSSI };
+			
+			backgroundRSSI.channel0 = {
+				...backgroundRSSI.channel0,
+				average: Math.round(backgroundRSSI.channel0.average),
+			};
+			backgroundRSSI.channel1 = {
+				...backgroundRSSI.channel1,
+				average: Math.round(backgroundRSSI.channel1.average),
+			};
+			
+			if (backgroundRSSI.channel2) {
+				backgroundRSSI.channel2 = {
+					...backgroundRSSI.channel2,
+					average: Math.round(backgroundRSSI.channel2.average),
+				};
+			}
+			
+			if (backgroundRSSI.channel3) {
+				backgroundRSSI.channel3 = {
+					...backgroundRSSI.channel3,
+					average: Math.round(backgroundRSSI.channel3.average),
+				};
+			}
+
+			return {
+				...statistics,
+				backgroundRSSI,
+			};
+		}
+		
+		return statistics;
+	}
 }
 
 /** Statistics about the communication with the controller stick since the last reset or driver startup */

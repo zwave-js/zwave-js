@@ -586,14 +586,6 @@ export class ZWaveController
 		return this._status;
 	}
 
-	/** Internal storage for unrounded RSSI averages to maintain precision across calculations */
-	private _internalRSSIAverages: {
-		channel0?: number;
-		channel1?: number;
-		channel2?: number;
-		channel3?: number;
-	} = {};
-
 	/**
 	 * @internal
 	 */
@@ -8785,53 +8777,53 @@ export class ZWaveController
 				updated.backgroundRSSI = {} as any;
 			}
 
-			// Calculate averages using unrounded internal values, then round for storage
-			this._internalRSSIAverages.channel0 = averageRSSI(
-				this._internalRSSIAverages.channel0,
-				rssi.rssiChannel0,
-				0.9,
-			);
-			this._internalRSSIAverages.channel1 = averageRSSI(
-				this._internalRSSIAverages.channel1,
-				rssi.rssiChannel1,
-				0.9,
-			);
+			// Calculate and store floating-point averages directly in statistics
+			// The transformer will round these values when emitting events
+			const currentChannel0Average = updated.backgroundRSSI?.channel0?.average;
+			const currentChannel1Average = updated.backgroundRSSI?.channel1?.average;
+			const currentChannel2Average = updated.backgroundRSSI?.channel2?.average;
+			const currentChannel3Average = updated.backgroundRSSI?.channel3?.average;
 
-			// Average all channels, defaulting to the current measurement
-			updated.backgroundRSSI.channel0 = {
+			updated.backgroundRSSI!.channel0 = {
 				current: rssi.rssiChannel0,
-				average: Math.round(this._internalRSSIAverages.channel0),
+				average: averageRSSI(
+					currentChannel0Average,
+					rssi.rssiChannel0,
+					0.9,
+				),
 			};
-			updated.backgroundRSSI.channel1 = {
+			updated.backgroundRSSI!.channel1 = {
 				current: rssi.rssiChannel1,
-				average: Math.round(this._internalRSSIAverages.channel1),
+				average: averageRSSI(
+					currentChannel1Average,
+					rssi.rssiChannel1,
+					0.9,
+				),
 			};
 
 			if (rssi.rssiChannel2 != undefined) {
-				this._internalRSSIAverages.channel2 = averageRSSI(
-					this._internalRSSIAverages.channel2,
-					rssi.rssiChannel2,
-					0.9,
-				);
-				updated.backgroundRSSI.channel2 = {
+				updated.backgroundRSSI!.channel2 = {
 					current: rssi.rssiChannel2,
-					average: Math.round(this._internalRSSIAverages.channel2),
+					average: averageRSSI(
+						currentChannel2Average,
+						rssi.rssiChannel2,
+						0.9,
+					),
 				};
 			}
 
 			if (rssi.rssiChannel3 != undefined) {
-				this._internalRSSIAverages.channel3 = averageRSSI(
-					this._internalRSSIAverages.channel3,
-					rssi.rssiChannel3,
-					0.9,
-				);
-				updated.backgroundRSSI.channel3 = {
+				updated.backgroundRSSI!.channel3 = {
 					current: rssi.rssiChannel3,
-					average: Math.round(this._internalRSSIAverages.channel3),
+					average: averageRSSI(
+						currentChannel3Average,
+						rssi.rssiChannel3,
+						0.9,
+					),
 				};
 			}
 
-			updated.backgroundRSSI.timestamp = Date.now();
+			updated.backgroundRSSI!.timestamp = Date.now();
 
 			return updated;
 		});
