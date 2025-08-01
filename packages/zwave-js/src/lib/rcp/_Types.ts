@@ -30,15 +30,25 @@ export interface MACTransmitOptions {
 	ackRequested?: boolean;
 }
 
-export interface MACTransmitAckOptions {
-	// TODO: Make home id and node id optional
-	homeId: number;
-	sourceNodeId: number;
-	destinationNodeId: number;
-	protocol: Protocols;
-	channel: number;
-	sequenceNumber: number;
-}
+export type MACTransmitAckOptions =
+	& {
+		// TODO: Make home id and node id optional
+		homeId: number;
+		sourceNodeId: number;
+		destinationNodeId: number;
+		channel: number;
+		sequenceNumber: number;
+	}
+	& (
+		| {
+			protocol: Protocols.ZWave;
+		}
+		| {
+			protocol: Protocols.ZWaveLongRange;
+			senderTXPower: number;
+			senderNoiseFloor: number;
+		}
+	);
 
 export enum MACTransmitKind {
 	Singlecast,
