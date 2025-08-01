@@ -2360,6 +2360,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// Query the protocol information from the controller
 				for (const node of this._controller.nodes.values()) {
 					if (node.isControllerNode) continue;
+					if (node.interviewStage === InterviewStage.Complete) {
+						// A node that can sleep should be assumed to be sleeping after resuming from cache
+						if (node.canSleep) node.markAsAsleep();
+						continue;
+					}
 					await node["queryProtocolInfo"]();
 				}
 
