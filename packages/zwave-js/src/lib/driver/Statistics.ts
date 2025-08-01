@@ -19,6 +19,12 @@ export abstract class StatisticsHost<T> {
 		return [];
 	}
 
+	/** Can be overridden in derived classes to specify how to transform the internal statistics before emitting them to applications. */
+	protected transformBeforeEmit(statistics: Readonly<T>): T {
+		// No transformation by default
+		return statistics;
+	}
+
 	private _emitUpdate: ((stat: T) => void) | undefined;
 	public updateStatistics(updater: (current: Readonly<T>) => T): void {
 		this._statistics = updater(this._statistics ?? this.createEmpty());
@@ -33,7 +39,7 @@ export abstract class StatisticsHost<T> {
 				true,
 			);
 		}
-		this._emitUpdate(this._statistics);
+		this._emitUpdate(this.transformBeforeEmit(this._statistics));
 	}
 
 	public incrementStatistics(property: keyof T): void {
