@@ -481,16 +481,20 @@ export class ProtocolController
 				sequenceNumber: options.sequenceNumber,
 			});
 		} else {
+			// FIXME: Measure these:
+			const incomingRSSI = -80;
+			const noiseFloor = -110;
+
 			mpdu = new AckLongRangeMPDU({
 				homeId: options.homeId,
 				sourceNodeId: options.sourceNodeId,
 				destinationNodeId: options.destinationNodeId,
 				sequenceNumber: options.sequenceNumber,
 
-				// FIXME: Measure these:
-				txPower: -6,
-				incomingRSSI: -80,
-				noiseFloor: -110,
+				// FIXME: Dynamically decide on the TX power and actually use it in firmware
+				txPower: options.senderTXPower,
+				incomingRSSI,
+				noiseFloor,
 			});
 		}
 
@@ -585,9 +589,15 @@ export class ProtocolController
 						sourceNodeId: this.ownNodeId,
 						channel: info.channel,
 						sequenceNumber: mpdu.sequenceNumber,
-						protocol: mpdu instanceof LongRangeMPDU
-							? Protocols.ZWaveLongRange
-							: Protocols.ZWave,
+						...(mpdu instanceof LongRangeMPDU
+							? {
+								protocol: Protocols.ZWaveLongRange,
+								senderTXPower: mpdu.txPower,
+								senderNoiseFloor: mpdu.noiseFloor,
+							}
+							: {
+								protocol: Protocols.ZWave,
+							}),
 					});
 				} else {
 					mustHandle = true;
