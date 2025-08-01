@@ -920,6 +920,17 @@ export class ZWaveController
 		this.driver.cacheSet(cacheKeys.controller.provisioningList, value);
 	}
 
+	/** Maximum number of failed SmartStart inclusion attempts before disabling a provisioning entry */
+	public static readonly MAX_SMARTSTART_INCLUSION_ATTEMPTS = 5;
+
+	/** @internal Tracks the number of failed SmartStart inclusion attempts per DSK */
+	private _smartStartFailedAttempts = new Map<string, number>();
+
+	/** @internal Resets the SmartStart inclusion failure counter for the given DSK */
+	private resetSmartStartFailureCount(dsk: string): void {
+		this._smartStartFailedAttempts.delete(dsk);
+	}
+
 	/** Adds the given entry (DSK and security classes) to the controller's SmartStart provisioning list or replaces an existing entry */
 	public provisionSmartStartNode(entry: PlannedProvisioningEntry): void {
 		// Make sure the controller supports SmartStart
@@ -936,6 +947,9 @@ export class ZWaveController
 			provisioningList[index] = entry;
 		}
 		this.provisioningList = provisioningList;
+
+		// Reset the failure counter when a provisioning entry is modified
+		this.resetSmartStartFailureCount(entry.dsk);
 
 		this.autoProvisionSmartStart();
 	}
@@ -955,6 +969,9 @@ export class ZWaveController
 		if (index >= 0) {
 			provisioningList.splice(index, 1);
 			this.provisioningList = provisioningList;
+
+			// Reset the failure counter when a provisioning entry is removed
+			this.resetSmartStartFailureCount(entry.dsk);
 
 			this.autoProvisionSmartStart();
 		}
@@ -2702,6 +2719,46 @@ export class ZWaveController
 		// After an unsuccessful SmartStart inclusion, the node MUST leave the network and return to SmartStart learn mode
 		// The controller should consider the node to be failed.
 		if (smartStartFailed) {
+			// Track the failed attempt for this DSK and disable provisioning entry after max failures
+			if (opts.strategy === InclusionStrategy.SmartStart && opts.provisioning?.dsk) {
+				const dsk = opts.provisioning.dsk;
+				const currentAttempts = this._smartStartFailedAttempts.get(dsk) || 0;
+				const newAttempts = currentAttempts + 1;
+				this._smartStartFailedAttempts.set(dsk, newAttempts);
+
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message: `SmartStart inclusion failed (attempt ${newAttempts}/${ZWaveController.MAX_SMARTSTART_INCLUSION_ATTEMPTS} for DSK ${dsk}).`,
+						level: "warn",
+					},
+				);
+
+				// Disable the provisioning entry after max failed attempts
+				if (newAttempts >= ZWaveController.MAX_SMARTSTART_INCLUSION_ATTEMPTS) {
+					const provisioningList = [...this.provisioningList];
+					const entryIndex = provisioningList.findIndex((e) => e.dsk === dsk);
+					if (entryIndex >= 0) {
+						provisioningList[entryIndex] = {
+							...provisioningList[entryIndex],
+							status: ProvisioningEntryStatus.Inactive,
+						};
+						this.provisioningList = provisioningList;
+
+						// Reset the failure counter when automatically disabling the entry
+						this.resetSmartStartFailureCount(dsk);
+
+						this.driver.controllerLog.logNode(
+							newNode.id,
+							{
+								message: `Provisioning entry for DSK ${dsk} has been disabled after ${ZWaveController.MAX_SMARTSTART_INCLUSION_ATTEMPTS} failed inclusion attempts.`,
+								level: "warn",
+							},
+						);
+					}
+				}
+			}
+
 			try {
 				this.driver.controllerLog.logNode(
 					newNode.id,
@@ -2749,6 +2806,21 @@ export class ZWaveController
 				lowSecurityReason: bootstrapFailure,
 			}
 			: { lowSecurity: false };
+
+		// Clear the failed attempts counter for successful SmartStart inclusions
+		if (opts.strategy === InclusionStrategy.SmartStart && opts.provisioning?.dsk) {
+			const dsk = opts.provisioning.dsk;
+			if (this._smartStartFailedAttempts.has(dsk)) {
+				this._smartStartFailedAttempts.delete(dsk);
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message: `SmartStart inclusion succeeded for DSK ${dsk}. Cleared failed attempts counter.`,
+						level: "debug",
+					},
+				);
+			}
+		}
 
 		this.emit("node added", newNode, result);
 	}
