@@ -31,21 +31,17 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
-import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
+import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ProtocolLogger } from "../log/Protocol.js";
-import { type MACLayer } from "./MACLayer.js";
-import {
-	type MpduRxInfo,
-	type PHYLayer,
-	type PHYLayerFactory,
-} from "./PHYLayer.js";
+import type { MACLayer } from "./MACLayer.js";
+import type { MpduRxInfo, PHYLayer, PHYLayerFactory } from "./PHYLayer.js";
 import {
 	type MACTransmitAckOptions,
 	MACTransmitKind,
 	type MACTransmitOptions,
 	MACTransmitResult,
 } from "./_Types.js";
-import { type AwaitedThing } from "./util.js";
+import type { AwaitedThing } from "./util.js";
 
 type AwaitedMPDUEntry = AwaitedThing<MPDU>;
 

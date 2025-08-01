@@ -1,4 +1,4 @@
-import { type Timer } from "@zwave-js/shared";
+import type { Timer } from "@zwave-js/shared";
 
 export interface AwaitedThing<T> {
 	handler: (thing: T) => void;

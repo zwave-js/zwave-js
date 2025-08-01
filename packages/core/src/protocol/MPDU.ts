@@ -7,10 +7,10 @@ import {
 	protocolDataRateToString,
 	rfRegionToRadioProtocolMode,
 } from "../definitions/Protocol.js";
-import { type RFRegion } from "../definitions/RFRegion.js";
+import type { RFRegion } from "../definitions/RFRegion.js";
 import { type RSSI, parseRSSI, rssiToString } from "../definitions/RSSI.js";
-import { ZWaveError, ZWaveErrorCodes } from "../index_browser.js";
-import { type MessageOrCCLogEntry, type MessageRecord } from "../log/shared.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
+import type { MessageOrCCLogEntry, MessageRecord } from "../log/shared.js";
 import { validatePayload } from "../util/misc.js";
 import { encodeNodeBitMask, parseBitMask } from "../values/Primitive.js";
 import { ExplorerFrameCommand } from "./_Types.js";
