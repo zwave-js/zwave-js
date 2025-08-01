@@ -289,6 +289,8 @@ export class ControllerProprietary_NabuCasa implements ControllerProprietaryComm
     // (undocumented)
     getLED(): Promise<RGB>;
     // (undocumented)
+    getLEDBinary(): Promise<boolean>;
+    // (undocumented)
     getSupportedCommands(): Promise<NabuCasaCommand[]>;
     // (undocumented)
     handleUnsolicited(_msg: Message): Promise<boolean>;
@@ -302,6 +304,8 @@ export class ControllerProprietary_NabuCasa implements ControllerProprietaryComm
     setConfig(key: NabuCasaConfigKey, value: number): Promise<boolean>;
     // (undocumented)
     setLED(rgb: RGB): Promise<boolean>;
+    // (undocumented)
+    setLEDBinary(state: boolean): Promise<boolean>;
     // (undocumented)
     setSystemIndication(severity: NabuCasaIndicationSeverity): Promise<boolean>;
     // (undocumented)
@@ -1171,6 +1175,8 @@ export enum NabuCasaCommand {
     // (undocumented)
     GetLED = 1,
     // (undocumented)
+    GetLEDBinary = 7,
+    // (undocumented)
     GetSupportedCommands = 0,
     // (undocumented)
     ReadGyro = 3,
@@ -1178,6 +1184,8 @@ export enum NabuCasaCommand {
     SetConfig = 6,
     // (undocumented)
     SetLED = 2,
+    // (undocumented)
+    SetLEDBinary = 8,
     // (undocumented)
     SetSystemIndication = 4
 }
@@ -2548,15 +2556,15 @@ export * from "@zwave-js/cc";
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // src/lib/controller/Controller.ts:917:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
 // src/lib/driver/Driver.ts:1007:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:5168:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6765:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
-// src/lib/driver/Driver.ts:7239:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7240:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7282:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7283:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7429:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:8393:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:8396:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
+// src/lib/driver/Driver.ts:5173:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6770:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
+// src/lib/driver/Driver.ts:7244:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7245:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7287:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7288:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7434:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8398:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8401:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
 // src/lib/driver/ZWaveOptions.ts:337:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2143:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:721:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
