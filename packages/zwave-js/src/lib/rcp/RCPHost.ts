@@ -70,13 +70,9 @@ import {
 	createSerialAPICommandMachine,
 } from "../driver/SerialAPICommandMachine.js";
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
-import { type ZWaveOptions } from "../driver/ZWaveOptions.js";
+import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
-import {
-	type MpduRxInfo,
-	type PHYLayer,
-	type RegionConfig,
-} from "./PHYLayer.js";
+import type { MpduRxInfo, PHYLayer, RegionConfig } from "./PHYLayer.js";
 import { RCPTransaction } from "./RCPTransaction.js";
 
 const logo: string = `

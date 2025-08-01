@@ -1,5 +1,5 @@
-import { type Bytes } from "@zwave-js/shared";
-import { type MessageHeaders } from "../message/MessageHeaders.js";
+import type { Bytes } from "@zwave-js/shared";
+import type { MessageHeaders } from "../message/MessageHeaders.js";
 
 export enum RCPSerialFrameType {
 	RCP = 0,

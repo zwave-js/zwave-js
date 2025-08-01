@@ -7,8 +7,8 @@ import {
 	messageRecordToLines,
 	tagify,
 } from "@zwave-js/core";
-import { type RCPMessage } from "@zwave-js/serial";
-import { type RCPHost } from "../rcp/RCPHost.js";
+import type { RCPMessage } from "@zwave-js/serial";
+import type { RCPHost } from "../rcp/RCPHost.js";
 
 export const RCP_LABEL = "DRIVER";
 const MSG_LOGLEVEL = "info";

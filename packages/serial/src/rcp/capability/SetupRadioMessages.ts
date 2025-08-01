@@ -20,7 +20,7 @@ import {
 	expectedRcpResponse,
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
-import { type SuccessIndicator } from "../../message/SuccessIndicator.js";
+import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
 
 export enum SetupRadioCommand {
 	SetRegion = 1,

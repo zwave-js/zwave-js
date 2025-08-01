@@ -1,4 +1,4 @@
-import { type MessageOrCCLogEntry, type RSSI } from "@zwave-js/core";
+import type { MessageOrCCLogEntry, RSSI } from "@zwave-js/core";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
