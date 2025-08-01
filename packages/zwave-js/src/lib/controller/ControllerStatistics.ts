@@ -1,3 +1,4 @@
+import { cloneDeep } from "@zwave-js/shared";
 import { StatisticsHost } from "../driver/Statistics.js";
 
 export class ControllerStatisticsHost
@@ -17,43 +18,32 @@ export class ControllerStatisticsHost
 		};
 	}
 
-	protected transformStatisticsForEvent(
-		statistics: ControllerStatistics,
+	protected override transformBeforeEmit(
+		statistics: Readonly<ControllerStatistics>,
 	): ControllerStatistics {
-		// Apply rounding to background RSSI averages when emitting events
-		if (statistics.backgroundRSSI) {
-			const backgroundRSSI = { ...statistics.backgroundRSSI };
-			
-			backgroundRSSI.channel0 = {
-				...backgroundRSSI.channel0,
-				average: Math.round(backgroundRSSI.channel0.average),
-			};
-			backgroundRSSI.channel1 = {
-				...backgroundRSSI.channel1,
-				average: Math.round(backgroundRSSI.channel1.average),
-			};
-			
-			if (backgroundRSSI.channel2) {
-				backgroundRSSI.channel2 = {
-					...backgroundRSSI.channel2,
-					average: Math.round(backgroundRSSI.channel2.average),
-				};
-			}
-			
-			if (backgroundRSSI.channel3) {
-				backgroundRSSI.channel3 = {
-					...backgroundRSSI.channel3,
-					average: Math.round(backgroundRSSI.channel3.average),
-				};
-			}
+		const ret = cloneDeep(statistics);
 
-			return {
-				...statistics,
-				backgroundRSSI,
-			};
+		// Apply rounding to background RSSI averages when emitting events
+		if (ret.backgroundRSSI) {
+			ret.backgroundRSSI.channel0.average = Math.round(
+				ret.backgroundRSSI.channel0.average,
+			);
+			ret.backgroundRSSI.channel1.average = Math.round(
+				ret.backgroundRSSI.channel1.average,
+			);
+			if (ret.backgroundRSSI.channel2) {
+				ret.backgroundRSSI.channel2.average = Math.round(
+					ret.backgroundRSSI.channel2.average,
+				);
+			}
+			if (ret.backgroundRSSI.channel3) {
+				ret.backgroundRSSI.channel3.average = Math.round(
+					ret.backgroundRSSI.channel3.average,
+				);
+			}
 		}
-		
-		return statistics;
+
+		return ret;
 	}
 }
 

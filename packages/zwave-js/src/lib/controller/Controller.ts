@@ -8771,23 +8771,13 @@ export class ZWaveController
 
 		this.updateStatistics((current) => {
 			const updated = { ...current };
-			
-			// Initialize backgroundRSSI if it doesn't exist, otherwise preserve existing channels
-			if (!updated.backgroundRSSI) {
-				updated.backgroundRSSI = {} as any;
-			}
+			updated.backgroundRSSI = {} as any;
 
-			// Calculate and store floating-point averages directly in statistics
-			// The transformer will round these values when emitting events
-			const currentChannel0Average = updated.backgroundRSSI?.channel0?.average;
-			const currentChannel1Average = updated.backgroundRSSI?.channel1?.average;
-			const currentChannel2Average = updated.backgroundRSSI?.channel2?.average;
-			const currentChannel3Average = updated.backgroundRSSI?.channel3?.average;
-
+			// Average all channels, defaulting to the current measurement
 			updated.backgroundRSSI!.channel0 = {
 				current: rssi.rssiChannel0,
 				average: averageRSSI(
-					currentChannel0Average,
+					current.backgroundRSSI?.channel0.average,
 					rssi.rssiChannel0,
 					0.9,
 				),
@@ -8795,7 +8785,7 @@ export class ZWaveController
 			updated.backgroundRSSI!.channel1 = {
 				current: rssi.rssiChannel1,
 				average: averageRSSI(
-					currentChannel1Average,
+					current.backgroundRSSI?.channel1.average,
 					rssi.rssiChannel1,
 					0.9,
 				),
@@ -8805,7 +8795,7 @@ export class ZWaveController
 				updated.backgroundRSSI!.channel2 = {
 					current: rssi.rssiChannel2,
 					average: averageRSSI(
-						currentChannel2Average,
+						current.backgroundRSSI?.channel2?.average,
 						rssi.rssiChannel2,
 						0.9,
 					),
@@ -8816,7 +8806,7 @@ export class ZWaveController
 				updated.backgroundRSSI!.channel3 = {
 					current: rssi.rssiChannel3,
 					average: averageRSSI(
-						currentChannel3Average,
+						current.backgroundRSSI?.channel3?.average,
 						rssi.rssiChannel3,
 						0.9,
 					),
