@@ -80,6 +80,7 @@
 		},
 		"endpoints": { "$ref": "#/definitions/endpoints" },
 		"associations": { "$ref": "#/definitions/associations" },
+		"scenes": { "$ref": "#/definitions/scenes" },
 		"paramInformation": { "$ref": "#/definitions/paramInformation" },
 		"proprietary": {
 			"type": "object",
@@ -234,6 +235,9 @@
 						"associations": {
 							"$ref": "#/definitions/associations"
 						},
+						"scenes": {
+							"$ref": "#/definitions/scenes"
+						},
 						"paramInformation": {
 							"$ref": "#/definitions/paramInformation"
 						}
@@ -280,6 +284,40 @@
 					"anyOf": [
 						{
 							"required": ["label", "maxNodes"]
+						},
+						{
+							"required": ["$import"]
+						}
+					],
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"scenes": {
+			"type": "object",
+			"description": "Define custom labels and descriptions for Central Scene scenes.",
+			"properties": {
+				"$import": { "$ref": "#/definitions/import" }
+			},
+			"patternProperties": {
+				"^\\d+$": {
+					"type": "object",
+					"properties": {
+						"$import": { "$ref": "#/definitions/import" },
+						"$if": { "$ref": "#/definitions/condition" },
+						"label": {
+							"type": "string",
+							"description": "Custom label for this scene"
+						},
+						"description": {
+							"type": "string",
+							"description": "Optional description for this scene"
+						}
+					},
+					"anyOf": [
+						{
+							"required": ["label"]
 						},
 						{
 							"required": ["$import"]

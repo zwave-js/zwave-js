@@ -36,6 +36,10 @@ import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,
 } from "./AssociationConfig.js";
+import {
+	type SceneConfig,
+	ConditionalSceneConfig,
+} from "./SceneConfig.js";
 import { type CompatConfig, ConditionalCompatConfig } from "./CompatConfig.js";
 import { evaluateDeep, validateCondition } from "./ConditionalItem.js";
 import {
@@ -680,6 +684,52 @@ metadata is not an object`,
 				definition.metadata,
 			);
 		}
+
+		if (definition.scenes != undefined) {
+			const scenes = new Map<
+				number,
+				ConditionalSceneConfig
+			>();
+			if (!isObject(definition.scenes)) {
+				throwInvalidConfig(
+					`device`,
+					`packages/config/config/devices/${filename}:
+scenes is not an object`,
+				);
+			}
+			for (
+				const [key, sceneDefinition] of Object.entries(
+					definition.scenes,
+				)
+			) {
+				if (!/^[1-9][0-9]*$/.test(key)) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+found non-numeric scene id "${key}" in scenes`,
+					);
+				}
+
+				const keyNum = parseInt(key, 10);
+				if (keyNum < 1 || keyNum > 255) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+scene number ${keyNum} must be between 1 and 255`,
+					);
+				}
+
+				scenes.set(
+					keyNum,
+					new ConditionalSceneConfig(
+						filename,
+						keyNum,
+						sceneDefinition as any,
+					),
+				);
+			}
+			this.scenes = scenes;
+		}
 	}
 
 	public readonly filename: string;
@@ -712,6 +762,8 @@ metadata is not an object`,
 		| ConditionalCompatConfig[];
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: ConditionalDeviceMetadata;
+	/** Contains custom configuration for Central Scene scenes */
+	public readonly scenes?: ReadonlyMap<number, ConditionalSceneConfig>;
 
 	/** Whether this is an embedded configuration or not */
 	public readonly isEmbedded: boolean;
@@ -733,6 +785,7 @@ metadata is not an object`,
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
 			evaluateDeep(this.metadata, deviceId),
+			evaluateDeep(this.scenes, deviceId),
 		);
 	}
 }
@@ -777,6 +830,7 @@ export class DeviceConfig {
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
 		metadata?: DeviceMetadata,
+		scenes?: ReadonlyMap<number, SceneConfig>,
 	) {
 		this.filename = filename;
 		this.isEmbedded = isEmbedded;
@@ -793,6 +847,7 @@ export class DeviceConfig {
 		this.proprietary = proprietary;
 		this.compat = compat;
 		this.metadata = metadata;
+		this.scenes = scenes;
 	}
 
 	public readonly filename: string;
@@ -821,6 +876,8 @@ export class DeviceConfig {
 	public readonly compat?: CompatConfig;
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: DeviceMetadata;
+	/** Contains custom configuration for Central Scene scenes */
+	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 
 	/** Returns the association config for a given endpoint */
 	public getAssociationConfigForEndpoint(

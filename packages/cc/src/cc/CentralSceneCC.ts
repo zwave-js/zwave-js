@@ -343,7 +343,22 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 
 		// In case the interview is not yet completed, we still create some basic metadata
 		const sceneValue = CentralSceneCCValues.scene(this.sceneNumber);
-		this.ensureMetadata(ctx, sceneValue);
+		
+		// Get device configuration to check for custom scene labels
+		const deviceConfig = ctx.getDeviceConfig?.(ctx.nodeId);
+		const sceneConfig = deviceConfig?.scenes?.get(this.sceneNumber);
+		
+		if (sceneConfig) {
+			// Ensure metadata with custom label and description
+			this.ensureMetadata(ctx, sceneValue, {
+				...sceneValue.meta,
+				label: sceneConfig.label,
+				description: sceneConfig.description,
+			});
+		} else {
+			// Use default metadata
+			this.ensureMetadata(ctx, sceneValue);
+		}
 
 		// The spec behavior is pretty complicated, so we cannot just store
 		// the value and call it a day. Handling of these notifications will
@@ -459,11 +474,21 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
+		// Get device configuration to check for custom scene labels
+		const deviceConfig = ctx.getDeviceConfig?.(ctx.nodeId);
+
 		// Create/extend metadata for all scenes
 		for (let i = 1; i <= this.sceneCount; i++) {
 			const sceneValue = CentralSceneCCValues.scene(i);
+			
+			// Check if there's a custom configuration for this scene
+			const sceneConfig = deviceConfig?.scenes?.get(i);
+			const label = sceneConfig?.label ?? `Scene ${i.toString().padStart(3, "0")}`;
+			
 			this.setMetadata(ctx, sceneValue, {
 				...sceneValue.meta,
+				label,
+				description: sceneConfig?.description,
 				states: enumValuesToMetadataStates(
 					CentralSceneKeys,
 					this._supportedKeyAttributes.get(i),
