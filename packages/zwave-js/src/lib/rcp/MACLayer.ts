@@ -1,4 +1,4 @@
-import { type EventListener, type TypedEventTarget } from "@zwave-js/shared";
+import type { EventListener, TypedEventTarget } from "@zwave-js/shared";
 
 export interface MACLayerEventCallbacks {
 	[others: string]: EventListener;

@@ -1,4 +1,4 @@
-import { type Protocols } from "@zwave-js/core";
+import type { Protocols } from "@zwave-js/core";
 
 export enum MACTransmitResult {
 	/** The frame was successfully sent. If an ACK was requested, it was received. */

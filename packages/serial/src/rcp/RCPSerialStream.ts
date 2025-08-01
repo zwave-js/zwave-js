@@ -9,7 +9,7 @@
 // 0 -->               -->     Parsers     --> read
 // 1 └─────────────────┘ └─────────────────┘ └──
 
-import { type LogContainer } from "@zwave-js/core";
+import type { LogContainer } from "@zwave-js/core";
 import { noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
@@ -19,8 +19,8 @@ import type {
 import { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
 import { RCPParser } from "../parsers/RCPParser.js";
-import { type RCPSerialFrame } from "../parsers/RCPSerialFrame.js";
-import { type ZWaveSerialBindingFactory } from "../serialport/ZWaveSerialStream.js";
+import type { RCPSerialFrame } from "../parsers/RCPSerialFrame.js";
+import type { ZWaveSerialBindingFactory } from "../serialport/ZWaveSerialStream.js";
 
 /** Re-usable stream factory to create new serial streams */
 export class RCPSerialStreamFactory {

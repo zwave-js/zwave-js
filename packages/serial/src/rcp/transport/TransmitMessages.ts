@@ -1,4 +1,4 @@
-import { type MessageOrCCLogEntry } from "@zwave-js/core";
+import type { MessageOrCCLogEntry } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
@@ -11,7 +11,7 @@ import {
 	expectedRcpResponse,
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
-import { type SuccessIndicator } from "../../message/SuccessIndicator.js";
+import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
 
 export enum TransmitResponseStatus {
 	// The frame was successfully queued for transmission
