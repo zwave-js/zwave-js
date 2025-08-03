@@ -1,0 +1,176 @@
+{
+	"manufacturer": "Kwikset",
+	"manufacturerId": "0x0090",
+	"label": "HomeConnect 918",
+	"description": "Door Lock",
+	"devices": [
+		{
+			"productType": "0x0811",
+			"productId": "0x03b8",
+			"zwaveAllianceId": 5075
+		},
+		{
+			"productType": "0x0811",
+			"productId": "0x00b9"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0.0",
+		"max": "255.255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Status LED Control",
+			"description": "Cp1 is r/w parameter with 1byte.set on status LED show the status of the latch every 6sec.set off status not be shown",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "2",
+			"label": "Sound Control",
+			"description": "Cp2 is r/w parameter with 1byte.set on buzzer is enabled,will sound in normal events.set off buzzer is disabled,sound won't occur",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "3",
+			"label": "User Program Button Control",
+			"description": "Cp3 is r/w parameter with 1byte.set on program button is available for user code maintenance.set off program button isn't available",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "4",
+			"label": "Secure Screen Control",
+			"description": "Cp4 is r/w parameter with 1byte.control the secure screen functionality on touch locks only.parameter isn't used on non-touch locks",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "10",
+			"label": "Handing Control",
+			"description": "Cp10 is r/w parameter with a 1byte.when read return handing of lock.when written run handing operation.report 0=!success-0=fail",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "40",
+			"label": "Factory Default Control",
+			"description": "Cp40 is write parameter with 1byte.used to request the lock to perform a factory reset back to its default state",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 2,
+			"defaultValue": 0,
+			"writeOnly": true
+		},
+		{
+			"#": "46",
+			"label": "Motor Load Value",
+			"description": "Cp46 is read parameter with 4byte.used to retrieve the calculated sideload value from the last motor run it was performed",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 16777215,
+			"defaultValue": 0
+		}
+	],
+	"compat": {
+		"alarmMapping": [
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_idle"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_manual_lock"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_manual_unlock"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_rf_lock"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_rf_unlock"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_keypad_lock"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_keypad_unlocked"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_rf_lock_jammed"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_auto_lock"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_auto_lock_jammed"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_lock_jammed"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_all_codes_deleted"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_code_deleted"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_new_user_code_added"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_new_user_code_not_added"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_keypad_disabled"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_new_program_code_entered"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_manual_code_exceeds_limit"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_messaging_user_code_entered"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_cover_status_tampering"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_tampering_invalid_code"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_power_has_been_applied"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_low_battery"
+			},
+			{
+				"$import": "templates/kwikset_template.json#alarm_map_critical_battery"
+			}
+		]
+	},
+	"metadata": {
+		"inclusion": "Initiate the process to add the lock to your system at your smart home controller. Refer to your smart home system instructions for more information. If prompted by your smart home system to add the lock, press \"button A\" on the lock interior one time. The red LED will illuminate when the lock enters Add Mode.At this time, you may be prompted by your smart home system to enter the 5-digit PIN found on the label of the interior assembly. If not, proceed to step D. If successful, re-name the lock in your system (if applicable). If unsuccessful, follow your system's instructions to remove the lock from the controller and any other network, then press \"button A\" on the lock one time",
+		"exclusion": "Removing the lock from the network\nFollow your smart home system's instructions to remove the lock from the network. When prompted by the system, press button A” on the lock interior once",
+		"reset": "Please use this procedure only when the network's primary controller is missing or otherwise inoperable.\n1. Remove Battery Pack.\n2 Press and HOLD the \"Program\" button while reinserting the battery pack. Keep holding the button for 30 seconds until the lock beeps and the status LED flashes red.\n3. Press the \"Program\" button once more. The status LED will flash green and red several times.\n4. After a few seconds, the lock will initiate the door handing process, and the latch bolt will extend and retract to learn the orientation of the door",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/1189/marketcert/SB700BehaviorGuide_v2_01.pdf"
+	}
+}

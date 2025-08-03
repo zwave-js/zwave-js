@@ -388,6 +388,115 @@
 			}
 		}
 	},
+	"alarm_map_new_user_code_added": {
+		"from": {
+			"alarmType": 34 // New User Code Added
+		},
+		"to": {
+			"notificationType": 6, // Access Control
+			"notificationEvent": 14, // New user code added
+			"eventParameters": {
+				"userId": "alarmLevel"
+			}
+		}
+	},
+	"alarm_map_new_user_code_not_added": {
+		"from": {
+			"alarmType": 35 // New User Code Not Added
+		},
+		"to": {
+			"notificationType": 6, // Access Control
+			"notificationEvent": 15, // New user code not added due to duplicate code
+			"eventParameters": {
+				"userId": "alarmLevel"
+			}
+		}
+	},
+	"alarm_map_keypad_disabled": {
+		"from": {
+			"alarmType": 36 // Keypad temporary disabled
+		},
+		"to": {
+			"notificationType": 6, // Access Control
+			"notificationEvent": 16, // Keypad temporary disabled
+			"eventParameters": {
+				"userId": "alarmLevel"
+			}
+		}
+	},
+	"alarm_map_new_program_code_entered": {
+		"from": {
+			"alarmType": 37 // New program code entered
+		},
+		"to": {
+			"notificationType": 6, // Access Control
+			"notificationEvent": 18, // New program code entered
+			"eventParameters": {
+				"userId": "alarmLevel"
+			}
+		}
+	},
+	"alarm_map_manual_code_exceeds_limit": {
+		"from": {
+			"alarmType": 38 // Manually enter user access code exceeds code limit
+		},
+		"to": {
+			"notificationType": 6, // Access Control
+			"notificationEvent": 19, // Manually enter user access code exceeds code limit
+			"eventParameters": {
+				"userId": "alarmLevel"
+			}
+		}
+	},
+	"alarm_map_messaging_user_code_entered": {
+		"from": {
+			"alarmType": 39 // Messaging User Code entered via keypad
+		},
+		"to": {
+			"notificationType": 6, // Access Control
+			"notificationEvent": 32, // Messaging User Code entered via keypad
+			"eventParameters": {
+				"userId": "alarmLevel"
+			}
+		}
+	},
+	"alarm_map_cover_status_tampering": {
+		"from": {
+			"alarmType": 100 // Cover status: Tampering, product cover removed
+		},
+		"to": {
+			"notificationType": 7, // Sensor
+			"notificationEvent": 3, // Tampering, product cover removed
+			"eventParameters": {
+				"sensorValue": "alarmLevel"
+			}
+		}
+	},
+	"alarm_map_tampering_invalid_code": {
+		"from": {
+			"alarmType": 101 // Tampering, invalid code
+		},
+		"to": {
+			"notificationType": 7, // Sensor
+			"notificationEvent": 4, // Tampering, invalid code
+			"eventParameters": {
+				"sensorValue": "alarmLevel"
+			}
+		}
+	},
+
+	"alarm_map_power_has_been_applied": {
+		"from": {
+			"alarmType": 153 // Power has been applied
+		},
+		"to": {
+			"notificationType": 8, // Power Management
+			"notificationEvent": 1, // Power has been applied
+			"eventParameters": {
+				"batteryLevel": "alarmLevel"
+			}
+		}
+	},
 	"alarm_map_low_battery": {
 		"from": {
 			// Low battery <= 4.8 V
