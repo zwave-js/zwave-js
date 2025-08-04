@@ -185,7 +185,28 @@
 		{
 			"#": "17",
 			"$if": "firmwareVersion >= 3.20",
-			"$import": "templates/zooz_template.json#zen7x_double_tap_up_behavior"
+			"label": "Double-Tap Upper Paddle Behavior",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Full brightness",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (Parameter 23)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness (Parameter 15)",
+					"value": 2
+				},
+				{
+					"label": "Double tap disabled",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "17",
@@ -209,7 +230,28 @@
 		{
 			"#": "18",
 			"$if": "firmwareVersion >= 3.20",
-			"$import": "templates/zooz_template.json#single_tap_up_behavior"
+			"label": "Single-Tap Upper Paddle Behavior",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Previous brightness",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (Parameter 23)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness (Parameter 15)",
+					"value": 2
+				},
+				{
+					"label": "Full brightness",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "18",
