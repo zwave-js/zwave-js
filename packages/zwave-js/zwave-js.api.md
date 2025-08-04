@@ -1298,6 +1298,7 @@ export interface NodeStatistics {
     lastSeen?: Date;
     lwr?: RouteStatistics;
     nlwr?: RouteStatistics;
+    rate: number;
     rssi?: RSSI;
     rtt?: number;
     timeoutResponse: number;
@@ -2166,6 +2167,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     ping(tryReallyHard?: boolean): Promise<boolean>;
     pollValue<T = unknown>(valueId: ValueID, sendCommandOptions?: SendCommandOptions): Promise<MaybeNotKnown<T>>;
     protected queryProtocolInfo(): Promise<void>;
+    get rate(): number;
     refreshCCValues(cc: CommandClasses): Promise<void>;
     refreshInfo(options?: RefreshInfoOptions): Promise<void>;
     refreshValues(): Promise<void>;
@@ -2548,17 +2550,17 @@ export * from "@zwave-js/cc";
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // src/lib/controller/Controller.ts:917:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
 // src/lib/driver/Driver.ts:1007:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:5168:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6765:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
-// src/lib/driver/Driver.ts:7239:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7240:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7282:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7283:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7429:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:8393:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:8396:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
+// src/lib/driver/Driver.ts:5171:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:6769:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
+// src/lib/driver/Driver.ts:7243:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7244:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7286:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7287:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7433:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8397:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8400:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
 // src/lib/driver/ZWaveOptions.ts:337:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2143:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2152:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:721:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:722:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 

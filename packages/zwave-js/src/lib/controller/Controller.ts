@@ -3628,6 +3628,8 @@ export class ZWaveController
 				// This came from the node
 				node.lastSeen = new Date();
 
+				node.updateRate();
+
 				// Resolve active pings that would fail otherwise
 				this.driver.resolvePendingPings(node.id);
 
