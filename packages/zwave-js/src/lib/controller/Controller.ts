@@ -2733,7 +2733,7 @@ export class ZWaveController
 					newNode.id,
 					{
 						message:
-							`SmartStart inclusion failed (attempt ${newAttempts}/${maxAttempts} for DSK ${dsk}).`,
+							`SmartStart inclusion failed for DSK ${dsk} (attempt ${newAttempts}/${maxAttempts}).`,
 						level: "warn",
 					},
 				);
@@ -2822,14 +2822,6 @@ export class ZWaveController
 			const dsk = opts.provisioning.dsk;
 			if (this._smartStartFailedAttempts.has(dsk)) {
 				this._smartStartFailedAttempts.delete(dsk);
-				this.driver.controllerLog.logNode(
-					newNode.id,
-					{
-						message:
-							`SmartStart inclusion succeeded for DSK ${dsk}. Cleared failed attempts counter.`,
-						level: "debug",
-					},
-				);
 			}
 		}
 
