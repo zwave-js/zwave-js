@@ -343,7 +343,22 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 
 		// In case the interview is not yet completed, we still create some basic metadata
 		const sceneValue = CentralSceneCCValues.scene(this.sceneNumber);
-		this.ensureMetadata(ctx, sceneValue);
+
+		// Get device configuration to check for custom scene labels
+		const sceneConfig = ctx.getDeviceConfig?.(this.nodeId as number)
+			?.scenes?.get(this.sceneNumber);
+
+		if (sceneConfig) {
+			// Ensure metadata with custom label and description
+			this.ensureMetadata(ctx, sceneValue, {
+				...sceneValue.meta,
+				label: sceneConfig.label,
+				description: sceneConfig.description,
+			});
+		} else {
+			// Use default metadata
+			this.ensureMetadata(ctx, sceneValue);
+		}
 
 		// The spec behavior is pretty complicated, so we cannot just store
 		// the value and call it a day. Handling of these notifications will
@@ -459,11 +474,27 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
+		// Get device configuration to check for custom scene labels
+		const deviceConfig = ctx.getDeviceConfig?.(this.nodeId as number);
+
 		// Create/extend metadata for all scenes
 		for (let i = 1; i <= this.sceneCount; i++) {
 			const sceneValue = CentralSceneCCValues.scene(i);
+			const sceneMetadata = { ...sceneValue.meta };
+
+			// Check if there's a custom configuration for this scene
+			const sceneConfig = deviceConfig?.scenes?.get(i);
+			if (sceneConfig) {
+				// @ts-expect-error The label type is a literal
+				sceneMetadata.label = sceneConfig.label;
+			}
+			if (sceneConfig?.description) {
+				// @ts-expect-error The predefined metadata has no description
+				sceneMetadata.description = sceneConfig.description;
+			}
+
 			this.setMetadata(ctx, sceneValue, {
-				...sceneValue.meta,
+				...sceneMetadata,
 				states: enumValuesToMetadataStates(
 					CentralSceneKeys,
 					this._supportedKeyAttributes.get(i),

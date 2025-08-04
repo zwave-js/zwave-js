@@ -284,6 +284,7 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 					undefined,
 					undefined,
 					undefined,
+					undefined,
 					// ...down here:
 					{
 						disableStrictEntryControlDataValidation: true,
