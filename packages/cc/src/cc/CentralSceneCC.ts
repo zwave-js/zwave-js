@@ -343,11 +343,11 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 
 		// In case the interview is not yet completed, we still create some basic metadata
 		const sceneValue = CentralSceneCCValues.scene(this.sceneNumber);
-		
+
 		// Get device configuration to check for custom scene labels
-		const deviceConfig = ctx.getDeviceConfig?.(ctx.nodeId);
-		const sceneConfig = deviceConfig?.scenes?.get(this.sceneNumber);
-		
+		const sceneConfig = ctx.getDeviceConfig?.(this.nodeId as number)
+			?.scenes?.get(this.sceneNumber);
+
 		if (sceneConfig) {
 			// Ensure metadata with custom label and description
 			this.ensureMetadata(ctx, sceneValue, {
@@ -475,20 +475,26 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 		if (!super.persistValues(ctx)) return false;
 
 		// Get device configuration to check for custom scene labels
-		const deviceConfig = ctx.getDeviceConfig?.(ctx.nodeId);
+		const deviceConfig = ctx.getDeviceConfig?.(this.nodeId as number);
 
 		// Create/extend metadata for all scenes
 		for (let i = 1; i <= this.sceneCount; i++) {
 			const sceneValue = CentralSceneCCValues.scene(i);
-			
+			const sceneMetadata = { ...sceneValue.meta };
+
 			// Check if there's a custom configuration for this scene
 			const sceneConfig = deviceConfig?.scenes?.get(i);
-			const label = sceneConfig?.label ?? `Scene ${i.toString().padStart(3, "0")}`;
-			
+			if (sceneConfig) {
+				// @ts-expect-error The label type is a literal
+				sceneMetadata.label = sceneConfig.label;
+			}
+			if (sceneConfig?.description) {
+				// @ts-expect-error The predefined metadata has no description
+				sceneMetadata.description = sceneConfig.description;
+			}
+
 			this.setMetadata(ctx, sceneValue, {
-				...sceneValue.meta,
-				label,
-				description: sceneConfig?.description,
+				...sceneMetadata,
 				states: enumValuesToMetadataStates(
 					CentralSceneKeys,
 					this._supportedKeyAttributes.get(i),

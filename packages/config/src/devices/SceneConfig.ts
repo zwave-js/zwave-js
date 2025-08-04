@@ -7,9 +7,7 @@ import {
 } from "./ConditionalItem.js";
 import type { DeviceID } from "./shared.js";
 
-export class ConditionalSceneConfig
-	implements ConditionalItem<SceneConfig>
-{
+export class ConditionalSceneConfig implements ConditionalItem<SceneConfig> {
 	public constructor(
 		filename: string,
 		sceneId: number,

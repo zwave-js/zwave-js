@@ -23,7 +23,7 @@ Device configuration files must follow this property order for consistency:
 8. `endpoints` - Endpoint-specific configuration (only if needed)
 9. `associations` - Association groups (only if needed)
 10. `paramInformation` - Configuration parameters array
-11. `sceneLabels` - Custom labels for Central Scene scenes (only if needed)
+11. `scenes` - Custom labels and description for Central Scenes (only if needed)
 12. `proprietary` - Proprietary CC settings (only if needed)
 13. `compat` - Compatibility flags for non-compliant devices (only if needed)
 14. `metadata` - User-facing metadata (inclusion instructions, etc.)

@@ -36,10 +36,6 @@ import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,
 } from "./AssociationConfig.js";
-import {
-	type SceneConfig,
-	ConditionalSceneConfig,
-} from "./SceneConfig.js";
 import { type CompatConfig, ConditionalCompatConfig } from "./CompatConfig.js";
 import { evaluateDeep, validateCondition } from "./ConditionalItem.js";
 import {
@@ -60,6 +56,7 @@ import {
 	type ParamInformation,
 	parseConditionalParamInformationMap,
 } from "./ParamInformation.js";
+import { ConditionalSceneConfig, type SceneConfig } from "./SceneConfig.js";
 import type { DeviceID, FirmwareVersionRange } from "./shared.js";
 
 export interface DeviceConfigIndexEntry {
@@ -706,7 +703,7 @@ scenes is not an object`,
 					throwInvalidConfig(
 						`device`,
 						`packages/config/config/devices/${filename}:
-found non-numeric scene id "${key}" in scenes`,
+invalid scene id "${key}" in scenes - must be a positive integer (1-255)`,
 					);
 				}
 
@@ -750,6 +747,7 @@ scene number ${keyNum} must be between 1 and 255`,
 		number,
 		ConditionalAssociationConfig
 	>;
+	public readonly scenes?: ReadonlyMap<number, ConditionalSceneConfig>;
 	public readonly paramInformation?: ConditionalParamInfoMap;
 	/**
 	 * Contains manufacturer-specific support information for the
@@ -762,8 +760,6 @@ scene number ${keyNum} must be between 1 and 255`,
 		| ConditionalCompatConfig[];
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: ConditionalDeviceMetadata;
-	/** Contains custom configuration for Central Scene scenes */
-	public readonly scenes?: ReadonlyMap<number, ConditionalSceneConfig>;
 
 	/** Whether this is an embedded configuration or not */
 	public readonly isEmbedded: boolean;
@@ -781,11 +777,11 @@ scene number ${keyNum} must be between 1 and 255`,
 			this.preferred,
 			evaluateDeep(this.endpoints, deviceId),
 			evaluateDeep(this.associations, deviceId),
+			evaluateDeep(this.scenes, deviceId),
 			evaluateDeep(this.paramInformation, deviceId),
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
 			evaluateDeep(this.metadata, deviceId),
-			evaluateDeep(this.scenes, deviceId),
 		);
 	}
 }
@@ -826,11 +822,11 @@ export class DeviceConfig {
 		preferred: boolean,
 		endpoints?: ReadonlyMap<number, EndpointConfig>,
 		associations?: ReadonlyMap<number, AssociationConfig>,
+		scenes?: ReadonlyMap<number, SceneConfig>,
 		paramInformation?: ParamInfoMap,
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
 		metadata?: DeviceMetadata,
-		scenes?: ReadonlyMap<number, SceneConfig>,
 	) {
 		this.filename = filename;
 		this.isEmbedded = isEmbedded;
@@ -843,11 +839,11 @@ export class DeviceConfig {
 		this.preferred = preferred;
 		this.endpoints = endpoints;
 		this.associations = associations;
+		this.scenes = scenes;
 		this.paramInformation = paramInformation;
 		this.proprietary = proprietary;
 		this.compat = compat;
 		this.metadata = metadata;
-		this.scenes = scenes;
 	}
 
 	public readonly filename: string;
@@ -866,6 +862,7 @@ export class DeviceConfig {
 	public readonly preferred: boolean;
 	public readonly endpoints?: ReadonlyMap<number, EndpointConfig>;
 	public readonly associations?: ReadonlyMap<number, AssociationConfig>;
+	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 	public readonly paramInformation?: ParamInfoMap;
 	/**
 	 * Contains manufacturer-specific support information for the
@@ -876,8 +873,6 @@ export class DeviceConfig {
 	public readonly compat?: CompatConfig;
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: DeviceMetadata;
-	/** Contains custom configuration for Central Scene scenes */
-	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 
 	/** Returns the association config for a given endpoint */
 	public getAssociationConfigForEndpoint(

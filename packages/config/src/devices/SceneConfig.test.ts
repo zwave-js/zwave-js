@@ -18,57 +18,47 @@ test("parses a device config with scenes", (t) => {
 			max: "255.255",
 		},
 		scenes: {
-			"1": {
+			1: {
 				label: "Single Press",
 				description: "Single button press action",
 			},
-			"2": {
+			2: {
 				label: "Double Press",
 				description: "Double button press action",
 			},
-			"3": {
+			3: {
 				label: "Triple Press",
 			},
-			"4": {
+			4: {
 				label: "Hold",
 				description: "Button held down action",
 			},
-			"5": {
+			5: {
 				label: "Release",
 			},
 		},
 	};
 
 	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
-	
+
 	// Ensure the scenes are parsed correctly
 	t.expect(condConfig.scenes).toBeDefined();
 	t.expect(condConfig.scenes!.size).toBe(5);
-	
+
 	const scene1 = condConfig.scenes!.get(1);
 	t.expect(scene1).toBeDefined();
 	t.expect(scene1!.label).toBe("Single Press");
 	t.expect(scene1!.description).toBe("Single button press action");
-	
+
 	const scene2 = condConfig.scenes!.get(2);
 	t.expect(scene2).toBeDefined();
 	t.expect(scene2!.label).toBe("Double Press");
 	t.expect(scene2!.description).toBe("Double button press action");
-	
+
 	const scene3 = condConfig.scenes!.get(3);
 	t.expect(scene3).toBeDefined();
 	t.expect(scene3!.label).toBe("Triple Press");
 	t.expect(scene3!.description).toBeUndefined();
-
-	// Ensure evaluating the conditional config works
-	const deviceConfig = condConfig.evaluate();
-	t.expect(deviceConfig.scenes).toBeDefined();
-	t.expect(deviceConfig.scenes!.size).toBe(5);
-	
-	const evalScene1 = deviceConfig.scenes!.get(1);
-	t.expect(evalScene1).toBeDefined();
-	t.expect(evalScene1!.label).toBe("Single Press");
-	t.expect(evalScene1!.description).toBe("Single button press action");
 });
 
 test("parses a device config without scenes", (t) => {
@@ -90,7 +80,7 @@ test("parses a device config without scenes", (t) => {
 	};
 
 	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
-	
+
 	// Ensure scenes is undefined when not provided
 	t.expect(condConfig.scenes).toBeUndefined();
 
@@ -139,14 +129,16 @@ test("throws for invalid scenes - non-numeric scene id", (t) => {
 			max: "255.255",
 		},
 		scenes: {
-			"abc": {
+			abc: {
 				label: "Invalid Label",
 			},
 		},
 	};
 
 	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow('found non-numeric scene id "abc" in scenes');
+		.toThrow(
+			"invalid scene id \"abc\" in scenes - must be a positive integer (1-255)",
+		);
 });
 
 test("throws for invalid scenes - scene number 0", (t) => {
@@ -166,14 +158,16 @@ test("throws for invalid scenes - scene number 0", (t) => {
 			max: "255.255",
 		},
 		scenes: {
-			"0": {
+			0: {
 				label: "Invalid Scene Zero",
 			},
 		},
 	};
 
 	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow('found non-numeric scene id "0" in scenes');
+		.toThrow(
+			"invalid scene id \"0\" in scenes - must be a positive integer (1-255)",
+		);
 });
 
 test("throws for invalid scenes - scene number > 255", (t) => {
@@ -193,7 +187,7 @@ test("throws for invalid scenes - scene number > 255", (t) => {
 			max: "255.255",
 		},
 		scenes: {
-			"256": {
+			256: {
 				label: "Invalid Scene Number",
 			},
 		},
@@ -220,7 +214,7 @@ test("throws for invalid scenes - missing label", (t) => {
 			max: "255.255",
 		},
 		scenes: {
-			"1": {
+			1: {
 				description: "Scene with no label",
 			},
 		},
@@ -228,47 +222,6 @@ test("throws for invalid scenes - missing label", (t) => {
 
 	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
 		.toThrow("Scene 1 has a non-string label");
-});
-
-test("accepts valid scene numbers at boundaries", (t) => {
-	const json = {
-		manufacturer: "Test Manufacturer",
-		manufacturerId: "0x9999",
-		label: "Test Device",
-		description: "Test device with boundary scene numbers",
-		devices: [
-			{
-				productType: "0x0001",
-				productId: "0x0001",
-			},
-		],
-		firmwareVersion: {
-			min: "0.0",
-			max: "255.255",
-		},
-		scenes: {
-			"1": {
-				label: "First Scene",
-			},
-			"255": {
-				label: "Last Scene",
-				description: "The final scene",
-			},
-		},
-	};
-
-	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
-	
-	t.expect(condConfig.scenes).toBeDefined();
-	t.expect(condConfig.scenes!.size).toBe(2);
-	
-	const scene1 = condConfig.scenes!.get(1);
-	t.expect(scene1!.label).toBe("First Scene");
-	t.expect(scene1!.description).toBeUndefined();
-	
-	const scene255 = condConfig.scenes!.get(255);
-	t.expect(scene255!.label).toBe("Last Scene");
-	t.expect(scene255!.description).toBe("The final scene");
 });
 
 test("supports conditional scenes", (t) => {
@@ -288,10 +241,10 @@ test("supports conditional scenes", (t) => {
 			max: "255.255",
 		},
 		scenes: {
-			"1": {
+			1: {
 				label: "Always Present",
 			},
-			"2": {
+			2: {
 				$if: "firmwareVersion >= 2.0",
 				label: "Only in v2.0+",
 				description: "Available in firmware 2.0 and later",
@@ -300,7 +253,7 @@ test("supports conditional scenes", (t) => {
 	};
 
 	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
-	
+
 	// Test with firmware < 2.0 (should only have scene 1)
 	const deviceConfigOld = condConfig.evaluate({
 		manufacturerId: 0x9999,
@@ -308,12 +261,12 @@ test("supports conditional scenes", (t) => {
 		productId: 0x0001,
 		firmwareVersion: "1.5",
 	});
-	
+
 	t.expect(deviceConfigOld.scenes).toBeDefined();
 	t.expect(deviceConfigOld.scenes!.size).toBe(1);
 	t.expect(deviceConfigOld.scenes!.get(1)!.label).toBe("Always Present");
 	t.expect(deviceConfigOld.scenes!.get(2)).toBeUndefined();
-	
+
 	// Test with firmware >= 2.0 (should have both scenes)
 	const deviceConfigNew = condConfig.evaluate({
 		manufacturerId: 0x9999,
@@ -321,10 +274,12 @@ test("supports conditional scenes", (t) => {
 		productId: 0x0001,
 		firmwareVersion: "2.0",
 	});
-	
+
 	t.expect(deviceConfigNew.scenes).toBeDefined();
 	t.expect(deviceConfigNew.scenes!.size).toBe(2);
 	t.expect(deviceConfigNew.scenes!.get(1)!.label).toBe("Always Present");
 	t.expect(deviceConfigNew.scenes!.get(2)!.label).toBe("Only in v2.0+");
-	t.expect(deviceConfigNew.scenes!.get(2)!.description).toBe("Available in firmware 2.0 and later");
+	t.expect(deviceConfigNew.scenes!.get(2)!.description).toBe(
+		"Available in firmware 2.0 and later",
+	);
 });

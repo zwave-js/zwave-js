@@ -208,20 +208,28 @@ test("deserializing an unsupported command should return an unspecified version 
 test("CentralSceneCCSupportedReport should use custom scene labels from device config when available", async (t) => {
 	// Mock device config with custom scenes
 	const scenes = new Map([
-		[1, { sceneId: 1, label: "Single Press", description: "Single button press" }],
-		[2, { sceneId: 2, label: "Double Press", description: "Double button press" }],
+		[1, {
+			sceneId: 1,
+			label: "Single Press",
+			description: "Single button press",
+		}],
+		[2, {
+			sceneId: 2,
+			label: "Double Press",
+			description: "Double button press",
+		}],
 		[3, { sceneId: 3, label: "Hold" }],
 	]);
-	
+
 	const mockDeviceConfig = { scenes };
-	
+
 	// Mock context for persistValues
 	const mockValueDB = {
 		setMetadata: vi.fn(),
 		hasMetadata: vi.fn().mockReturnValue(false),
 		setValue: vi.fn(),
 	};
-	
+
 	const mockContext = {
 		nodeId: 123,
 		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
@@ -246,26 +254,20 @@ test("CentralSceneCCSupportedReport should use custom scene labels from device c
 
 	// Verify that setMetadata was called with custom labels
 	t.expect(mockValueDB.setMetadata).toHaveBeenCalledTimes(3);
-	
+
 	// Check the calls to setMetadata for custom labels
 	const calls = mockValueDB.setMetadata.mock.calls;
-	
+
 	// Find the call for scene 1 and verify it has the custom label
-	const scene1Call = calls.find(call => 
-		call[1]?.label === "Single Press"
-	);
+	const scene1Call = calls.find((call) => call[1]?.label === "Single Press");
 	t.expect(scene1Call).toBeDefined();
-	
+
 	// Find the call for scene 2 and verify it has the custom label
-	const scene2Call = calls.find(call => 
-		call[1]?.label === "Double Press"
-	);
+	const scene2Call = calls.find((call) => call[1]?.label === "Double Press");
 	t.expect(scene2Call).toBeDefined();
-	
+
 	// Find the call for scene 3 and verify it has the custom label
-	const scene3Call = calls.find(call => 
-		call[1]?.label === "Hold"
-	);
+	const scene3Call = calls.find((call) => call[1]?.label === "Hold");
 	t.expect(scene3Call).toBeDefined();
 });
 
@@ -276,7 +278,7 @@ test("CentralSceneCCSupportedReport should fallback to default labels when no de
 		hasMetadata: vi.fn().mockReturnValue(false),
 		setValue: vi.fn(),
 	};
-	
+
 	const mockContext = {
 		nodeId: 123,
 		getDeviceConfig: (nodeId: number) => undefined,
@@ -300,38 +302,38 @@ test("CentralSceneCCSupportedReport should fallback to default labels when no de
 
 	// Verify that setMetadata was called with default labels
 	t.expect(mockValueDB2.setMetadata).toHaveBeenCalledTimes(2);
-	
+
 	// Check the calls to setMetadata for default labels
 	const calls = mockValueDB2.setMetadata.mock.calls;
-	
+
 	// Find the call for scene 1 and verify it has the default label
-	const scene1Call = calls.find(call => 
-		call[1]?.label === "Scene 001"
-	);
+	const scene1Call = calls.find((call) => call[1]?.label === "Scene 001");
 	t.expect(scene1Call).toBeDefined();
-	
+
 	// Find the call for scene 2 and verify it has the default label
-	const scene2Call = calls.find(call => 
-		call[1]?.label === "Scene 002"
-	);
+	const scene2Call = calls.find((call) => call[1]?.label === "Scene 002");
 	t.expect(scene2Call).toBeDefined();
 });
 
 test("CentralSceneCCNotification should use custom scene labels from device config when available", async (t) => {
 	// Mock device config with custom scenes
 	const scenes = new Map([
-		[5, { sceneId: 5, label: "Release", description: "Button release action" }],
+		[5, {
+			sceneId: 5,
+			label: "Release",
+			description: "Button release action",
+		}],
 	]);
-	
+
 	const mockDeviceConfig = { scenes };
-	
+
 	// Mock context for persistValues
 	const mockValueDB3 = {
 		setMetadata: vi.fn(),
 		hasMetadata: vi.fn().mockReturnValue(false),
 		setValue: vi.fn(),
 	};
-	
+
 	const mockContext = {
 		nodeId: 123,
 		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
@@ -352,7 +354,7 @@ test("CentralSceneCCNotification should use custom scene labels from device conf
 
 	// Verify that ensureMetadata was called with custom label
 	t.expect(mockValueDB3.setMetadata).toHaveBeenCalledTimes(1);
-	
+
 	// Check the call to ensureMetadata
 	const call = mockValueDB3.setMetadata.mock.calls[0];
 	t.expect(call[1]?.label).toBe("Release");

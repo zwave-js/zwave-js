@@ -296,7 +296,7 @@
 		},
 		"scenes": {
 			"type": "object",
-			"description": "Define custom labels and descriptions for Central Scene scenes.",
+			"description": "Define custom labels and descriptions for Central Scenes.",
 			"properties": {
 				"$import": { "$ref": "#/definitions/import" }
 			},
