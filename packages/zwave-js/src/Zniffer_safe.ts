@@ -1,7 +1,7 @@
-export { BeamingInfo, MPDUHeaderType } from "@zwave-js/core";
-export type { ZnifferOptions } from "./lib/zniffer/Zniffer.js";
 export {
+	BeamingInfo,
 	ExplorerFrameCommand,
-	LongRangeFrameType,
-	ZWaveFrameType,
-} from "./lib/zniffer/_Types.js";
+	MPDUHeaderType,
+} from "@zwave-js/core";
+export type { ZnifferOptions } from "./lib/zniffer/Zniffer.js";
+export { LongRangeFrameType, ZWaveFrameType } from "./lib/zniffer/_Types.js";

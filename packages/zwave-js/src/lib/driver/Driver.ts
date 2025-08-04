@@ -6800,7 +6800,7 @@ ${handlers.length} left`,
 		this.abortSerialAPICommand = createDeferredPromise();
 		const abortController = new AbortController();
 
-		let nextInput: SerialAPICommandMachineInput | undefined = {
+		let nextInput: SerialAPICommandMachineInput<Message> | undefined = {
 			value: "start",
 		};
 
