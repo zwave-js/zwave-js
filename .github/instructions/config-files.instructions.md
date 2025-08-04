@@ -208,18 +208,23 @@ Becomes four partial parameters:
 
 ## Central Scene Labels
 
-The optional `sceneLabels` property allows defining custom names for Central Scene scenes instead of the default "Scene 001", "Scene 002" format.
+The `scenes` property allows defining custom labels and descriptions for Central Scenes instead of the default "Scene 001", "Scene 002" format.
 
 ### Structure
 
 ```json
 {
-	"sceneLabels": {
-		"1": "Single Press",
-		"2": "Double Press",
-		"3": "Triple Press",
-		"4": "Hold",
-		"5": "Release"
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		},
+		"3": {
+			"label": "External Switch",
+			"description": "Only available on some devices"
+		}
 	}
 }
 ```
@@ -227,10 +232,13 @@ The optional `sceneLabels` property allows defining custom names for Central Sce
 ### Requirements
 
 - Scene numbers must be numeric strings between "1" and "255"
-- Scene labels must be strings
+- Each scene object must have a `label` property (string)
+- Each scene object may have an optional `description` property (string)
 - Use descriptive, user-friendly names that clearly indicate the scene's function
 - Follow Title Case formatting for scene labels
-- Only define labels for scenes that the device actually supports
+- Follow Sentence case formatting for scene descriptions
+- Only define scenes that the device actually supports
+- Only add a description if it adds significant value beyond the label
 
 ### Guidelines
 
