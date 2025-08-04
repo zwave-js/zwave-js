@@ -327,6 +327,7 @@ const defaultOptions: ZWaveOptions = {
 		sendData: 3,
 		sendDataJammed: 5,
 		nodeInterview: 5,
+		smartStartInclusion: 5,
 	},
 	disableOptimisticValueUpdate: false,
 	features: {
@@ -481,6 +482,15 @@ function checkOptions(options: ZWaveOptions): void {
 	) {
 		throw new ZWaveError(
 			`The Node interview attempts must be between 1 and 10!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.attempts.smartStartInclusion < 1
+		|| options.attempts.smartStartInclusion > 25
+	) {
+		throw new ZWaveError(
+			`The SmartStart inclusion attempts must be between 1 and 25!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
@@ -1418,6 +1428,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// This code is called from user code, so we need to make sure no options were passed
 		// which we are not able to update on the fly
 		const safeOptions = pick(options, [
+			"attempts",
 			"disableOptimisticValueUpdate",
 			"emitValueUpdateAfterSetValue",
 			"inclusionUserCallbacks",

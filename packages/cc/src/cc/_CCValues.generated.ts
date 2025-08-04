@@ -1,6 +1,5 @@
 /// This file is auto-generated. All manual changes will be lost!
 
-import { type GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -20,7 +19,7 @@ import {
 	windowCoveringParameterToLevelChangeLabel,
 	windowCoveringParameterToMetadataStates,
 } from "../lib/CCValueUtils.js";
-import { type CCValueOptions } from "../lib/Values.js";
+import type { CCValueOptions } from "../lib/Values.js";
 import {
 	AlarmSensorType,
 	BarrierState,
@@ -39,7 +38,7 @@ import {
 	LocalProtectionState,
 	RFProtectionState,
 	RateType,
-	ScheduleEntryLockScheduleKind,
+	type ScheduleEntryLockScheduleKind,
 	ScheduleOverrideType,
 	SubsystemState,
 	SubsystemType,
