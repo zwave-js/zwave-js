@@ -2811,6 +2811,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@zwave-js/log-analyzer@workspace:packages/log-analyzer":
+  version: 0.0.0-use.local
+  resolution: "@zwave-js/log-analyzer@workspace:packages/log-analyzer"
+  dependencies:
+    "@types/node": "npm:^20.19.9"
+    "@types/yargs": "npm:^17.0.33"
+    "@zwave-js/core": "workspace:*"
+    del-cli: "npm:^6.0.0"
+    pathe: "npm:^2.0.3"
+    typescript: "npm:5.8.3"
+    yargs: "npm:^18.0.0"
+  bin:
+    log-analyzer: bin/flash.mjs
+  languageName: unknown
+  linkType: soft
+
 "@zwave-js/maintenance@workspace:*, @zwave-js/maintenance@workspace:packages/maintenance":
   version: 0.0.0-use.local
   resolution: "@zwave-js/maintenance@workspace:packages/maintenance"
