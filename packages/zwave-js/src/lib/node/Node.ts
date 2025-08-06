@@ -400,7 +400,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 	
 	/** The status of the security S2 attempt in the inclusion process */
-	public get failedS2(): MaybeNotKnown<boolean> {
+	public get failedS2(): boolean {
 		return this.driver.cacheGet(cacheKeys.node(this.id).failedS2);
 	}
 	/** @internal */
