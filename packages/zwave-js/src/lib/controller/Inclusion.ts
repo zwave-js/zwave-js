@@ -11,7 +11,6 @@ export type InclusionResult =
 		/** This flag warns that a node was included with a lower than intended security, meaning unencrypted when it should have been included with Security S0/S2 */
 		lowSecurity: true;
 		lowSecurityReason: SecurityBootstrapFailure;
-		inclusionStrategy: InclusionStrategy
 	};
 
 export enum SecurityBootstrapFailure {

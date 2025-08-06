@@ -2747,9 +2747,10 @@ export class ZWaveController
 			? {
 				lowSecurity: true,
 				lowSecurityReason: bootstrapFailure,
-				inclusionStrategy: opts.strategy
 			}
 			: { lowSecurity: false };
+
+		newNode.failedS2 = result.lowSecurity;
 
 		this.emit("node added", newNode, result);
 	}
@@ -3484,9 +3485,10 @@ export class ZWaveController
 					? {
 						lowSecurity: true,
 						lowSecurityReason: bootstrapFailure,
-						inclusionStrategy: InclusionStrategy.Default
 					}
 					: { lowSecurity: false };
+				
+				newNode.failedS2 = result.lowSecurity;
 
 				this.setInclusionState(InclusionState.Idle);
 				this.emit("node added", newNode, result);
@@ -3866,9 +3868,10 @@ export class ZWaveController
 				? {
 					lowSecurity: true,
 					lowSecurityReason: bootstrapFailure,
-					inclusionStrategy: InclusionStrategy.Default
 				}
 				: { lowSecurity: false };
+
+			newNode.failedS2 = result.lowSecurity;
 
 			this.setInclusionState(InclusionState.Idle);
 			this.emit("node added", newNode, result);
@@ -7008,9 +7011,10 @@ export class ZWaveController
 			? {
 				lowSecurity: true,
 				lowSecurityReason: bootstrapFailure,
-				inclusionStrategy: options.strategy
 			}
 			: { lowSecurity: false };
+
+		newNode.failedS2 = inclusionResult.lowSecurity;
 
 		this.setInclusionState(InclusionState.Idle);
 		this.emit("node added", newNode, inclusionResult);

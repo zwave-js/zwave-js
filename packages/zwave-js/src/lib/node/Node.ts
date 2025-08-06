@@ -398,6 +398,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		}));
 	}
 
+	
+	/** The status of the security S2 attempt in the inclusion process */
+	public get failedS2(): MaybeNotKnown<boolean> {
+		return this.driver.cacheGet(cacheKeys.node(this.id).failedS2);
+	}
+	/** @internal */
+	public set failedS2(value: boolean) {
+		this.driver.cacheSet(cacheKeys.node(this.id).failedS2, value);
+	}
+
 	/**
 	 * The default volume level to be used for activating a Sound Switch.
 	 * Can be overridden by command-specific options.
@@ -4007,6 +4017,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				InterviewStage,
 				this.interviewStage,
 			),
+			failedS2: this.failedS2,
 			ready: this.ready,
 
 			dsk: this.dsk ? dskToString(this.dsk) : undefined,
