@@ -159,22 +159,23 @@
 		{
 			"#": "13",
 			"$import": "templates/inovelli_templates.json#level_1-99_0_previous",
-			"label": "Turn On Level (Local)"
+			"label": "Default Level (Local)"
 		},
 		{
 			"#": "14",
 			"$import": "templates/inovelli_templates.json#level_1-99_0_previous",
-			"label": "Turn On Level (Remote)"
+			"label": "Default Level (Remote)"
 		},
 		{
 			"#": "15",
 			"$import": "templates/inovelli_templates.json#level_0-99_100_previous",
-			"label": "State After Power Restored",
+			"label": "Level After Power Restored",
 			"defaultValue": 100
 		},
 		{
 			"#": "17",
 			"label": "Load Level Indicator Timeout",
+			"description": "Allowable range: 0-11",
 			"valueSize": 1,
 			"unit": "seconds",
 			"minValue": 0,
@@ -209,7 +210,7 @@
 		{
 			"#": "19",
 			"label": "Power & Energy Report Interval",
-			"description": "Allowable range: 30-32767",
+			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
@@ -259,7 +260,7 @@
 			"#": "22",
 			"label": "Switch Type",
 			"valueSize": 1,
-			"defaultValue": 0,
+			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -275,7 +276,7 @@
 		{
 			"#": "23",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on",
+			"description": "Duration of initial increased power output when light turns on. Allowable range: 0-60.",
 			"valueSize": 1,
 			"unit": "1/60 seconds",
 			"minValue": 0,
@@ -581,27 +582,27 @@
 		{
 			"#": "95",
 			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
-			"label": "Normal LED Strip Color When On",
+			"label": "Default All LED Strip Color When On",
 			"valueSize": 1,
 			"defaultValue": 170
 		},
 		{
 			"#": "96",
 			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
-			"label": "Normal LED Strip Color When Off",
+			"label": "Default All LED Strip Color When Off",
 			"valueSize": 1,
 			"defaultValue": 170
 		},
 		{
 			"#": "97",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
-			"label": "Normal LED Strip Brightness When On",
+			"label": "Default All LED Strip Brightness When On",
 			"defaultValue": 33
 		},
 		{
 			"#": "98",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
-			"label": "Normal LED Strip Brightness When Off"
+			"label": "Default All LED Strip Brightness When Off"
 		},
 		{
 			"#": "99[0xff]",
@@ -647,7 +648,7 @@
 			"unit": "cm",
 			"minValue": -600,
 			"maxValue": 599,
-			"defaultValue": -600
+			"defaultValue": -300
 		},
 		{
 			"#": "102",
@@ -656,7 +657,7 @@
 			"unit": "cm",
 			"minValue": -599,
 			"maxValue": 600,
-			"defaultValue": 600
+			"defaultValue": 300
 		},
 		{
 			"#": "103",
@@ -695,6 +696,23 @@
 			"defaultValue": 600
 		},
 		{
+			"#": "107",
+			"label": "mmWave Target Info Report",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
 			"#": "108",
 			"label": "mmWave Stay Life",
 			"description": "1 = 50 ms, 20 = 1 second, 300 = 15 seconds",
@@ -706,40 +724,40 @@
 			"unsigned": true
 		},
 		{
-			"#": "109[0xff000000]",
+			"#": "109[0xff]",
 			"label": "After Hours Time Range Start Hour",
 			"description": "The UTC hour where After Hours mode should start",
 			"valueSize": 4,
-			"minValue": 0,
+			"minValue": -1,
 			"maxValue": 23,
-			"defaultValue": 0
-		},
-		{
-			"#": "109[0xff0000]",
-			"label": "After Hours Time Range Start Minute",
-			"description": "The minute where After Hours mode should start",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 59,
-			"defaultValue": 0
+			"defaultValue": -1
 		},
 		{
 			"#": "109[0xff00]",
+			"label": "After Hours Time Range Start Minute",
+			"description": "The minute where After Hours mode should start",
+			"valueSize": 4,
+			"minValue": -1,
+			"maxValue": 59,
+			"defaultValue": -1
+		},
+		{
+			"#": "109[0xff0000]",
 			"label": "After Hours Time Range End Hour",
 			"description": "The UTC hour where After Hours mode should end",
 			"valueSize": 4,
-			"minValue": 0,
+			"minValue": -1,
 			"maxValue": 23,
-			"defaultValue": 0
+			"defaultValue": -1
 		},
 		{
-			"#": "109[0xff]",
+			"#": "109[0xff000000]",
 			"label": "After Hours Time Range End Minute",
 			"description": "The minute where After Hours mode should end",
 			"valueSize": 4,
-			"minValue": 0,
+			"minValue": -1,
 			"maxValue": 59,
-			"defaultValue": 0
+			"defaultValue": -1
 		},
 		{
 			"#": "110",
@@ -782,7 +800,7 @@
 			"#": "111",
 			"label": "mmWave Module Commands (See Documentation)",
 			"valueSize": 1,
-			"defaultValue": 0,
+			"defaultValue": 2,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -856,7 +874,9 @@
 		{
 			"#": "114",
 			"label": "mmWave Detection Timeout",
+			"description": "Amount of time in seconds after presence detection that a no-presence report is sent.",
 			"valueSize": 4,
+			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 4294967295,
 			"defaultValue": 30,
@@ -871,6 +891,65 @@
 			"defaultValue": 0,
 			"unsigned": true,
 			"readOnly": true
+		},
+		{
+			"#": "116[0xff]",
+			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
+			"label": "mmWave Person in the Reporting Area 1 (Read Only)"
+		},
+		{
+			"#": "116[0xff00]",
+			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
+			"label": "mmWave Person in the Reporting Area 2 (Read Only)"
+		},
+		{
+			"#": "116[0xff0000]",
+			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
+			"label": "mmWave Person in the Reporting Area 3 (Read Only)"
+		},
+		{
+			"#": "116[0xff000000]",
+			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
+			"label": "mmWave Person in the Reporting Area 4 (Read Only)"
+		},
+		{
+			"#": "117",
+			"label": "Room Size",
+			"description": "Sets the x, y, and z dimensions of the room for mmWave detection. Changing this parameter will update parameters 101-106 to reflect the preset.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Custom (User-Defined)",
+					"value": 0
+				},
+				{
+					// eslint-disable-next-line @zwave-js/consistent-config-string-case
+					"label": "X-Small (X: −100 to 100, Y: 0 to 200, Z: −100 to 100)",
+					"value": 1
+				},
+				{
+					// eslint-disable-next-line @zwave-js/consistent-config-string-case
+					"label": "Small (X: −160 to 160, Y: 0 to 280, Z: −100 to 100)",
+					"value": 2
+				},
+				{
+					// eslint-disable-next-line @zwave-js/consistent-config-string-case
+					"label": "Medium (X: −210 to 210, Y: 0 to 360, Z: −100 to 100)",
+					"value": 3
+				},
+				{
+					// eslint-disable-next-line @zwave-js/consistent-config-string-case
+					"label": "Large (X: −260 to 260, Y: 0 to 400, Z: −100 to 100)",
+					"value": 4
+				},
+				{
+					// eslint-disable-next-line @zwave-js/consistent-config-string-case
+					"label": "X-Large (X: −310 to 310, Y: 0 to 460, Z: −100 to 100)",
+					"value": 5
+				}
+			]
 		},
 		{
 			"#": "118",
@@ -923,28 +1002,28 @@
 		},
 		{
 			"#": "131",
-			"label": "Group 7: Low Level",
+			"label": "Group 7: Level 1",
 			"description": "Low level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 1,
-			"maxValue": 97,
+			"maxValue": 99,
 			"defaultValue": 25
 		},
 		{
 			"#": "132",
-			"label": "Group 7: Medium Level",
+			"label": "Group 7: Level 2",
 			"description": "Medium level to use when group 7 cycles levels",
 			"valueSize": 1,
-			"minValue": 2,
-			"maxValue": 98,
+			"minValue": 1,
+			"maxValue": 99,
 			"defaultValue": 50
 		},
 		{
 			"#": "133",
-			"label": "Group 7: High Level",
+			"label": "Group 7: Level 3",
 			"description": "High level to use when group 7 cycles levels",
 			"valueSize": 1,
-			"minValue": 3,
+			"minValue": 1,
 			"maxValue": 99,
 			"defaultValue": 99
 		},
@@ -960,7 +1039,7 @@
 			"#": "158",
 			"label": "Dimmer Mode",
 			"valueSize": 1,
-			"defaultValue": 1,
+			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
