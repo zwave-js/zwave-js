@@ -3,8 +3,10 @@ import type { UnderlyingSource } from "node:stream/web";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+	ClassifyLogEntry,
 	CompleteLogEntries,
 	FilterLogEntries,
+	ParseNestedStructures,
 	UnformatLogEntry,
 } from "./lib/unfmt.js";
 
@@ -41,12 +43,18 @@ const readable = new ReadableStream<string>(source);
 const parser = new CompleteLogEntries();
 const unfmt = new UnformatLogEntry();
 const filter = new FilterLogEntries();
+const parseNested = new ParseNestedStructures();
+const classify = new ClassifyLogEntry();
+
 const iter = readable
 	.pipeThrough(parser)
 	.pipeThrough(unfmt)
+	.pipeThrough(parseNested)
 	.pipeThrough(filter)
+	.pipeThrough(classify)
+	// TODO: Group related entries somehow
 	.values();
 
 for await (const chunk of iter) {
-	console.log(chunk);
+	console.dir(chunk, { depth: Infinity });
 }
