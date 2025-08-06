@@ -216,8 +216,7 @@ import { PACKAGE_NAME, PACKAGE_VERSION } from "../_version.js";
 import { ZWaveController } from "../controller/Controller.js";
 import { downloadFirmwareUpdate } from "../controller/FirmwareUpdateService.js";
 import {
-	type FoundNode, type InclusionResult,
-	InclusionState,	RemoveNodeReason,
+	type FoundNode, InclusionState,	RemoveNodeReason,
 } from "../controller/Inclusion.js";
 import { determineNIF } from "../controller/NodeInformationFrame.js";
 import {
