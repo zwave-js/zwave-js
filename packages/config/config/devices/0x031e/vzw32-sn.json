@@ -175,7 +175,6 @@
 		{
 			"#": "17",
 			"label": "Load Level Indicator Timeout",
-			"description": "Allowable range: 0-11",
 			"valueSize": 1,
 			"unit": "seconds",
 			"minValue": 0,
