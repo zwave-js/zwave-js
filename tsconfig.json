@@ -18,6 +18,9 @@
 			"path": "./packages/flash"
 		},
 		{
+			"path": "./packages/log-analyzer"
+		},
+		{
 			"path": "./packages/zwave-js"
 		}
 	]
