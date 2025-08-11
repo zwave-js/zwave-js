@@ -4,6 +4,29 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Add support for defining Scene labels in config files (#7989)
+* Disable SmartStart provisioning entries after 5 failed inclusion attempts (#8017)
+
+### Bugfixes
+* Fixed an issue where Aeotec Z-Stick 5 would become unresponsive during NVM backup (#8047)
+* Fixed firmware update progress jumping back and forth (#8019)
+* Correctly restore cached information on a secondary controller (#7994)
+* Fixed incorrect long-term averaging of RSSI values (#8024)
+* Ensure failures during NVM migration are surfaced to the application (#8014)
+
+### Config file changes
+* Prepare Inovelli VZW31-SN for future firmware upgrade (#8005)
+* Add productID `0x0111` to Fakro AMZ Solar awning (#7998)
+* Add ECO-DIM.07 800 series version (#8011)
+* Update Aeotec Trisensor 8 to firmware 2.8.4 (#8013)
+* Remove non-existent parameter 107 for Shelly Wave Plus S (#8010)
+* Typo in Shelly dimmer output label (#8006)
+
+### Changes under the hood
+* Update devcontainer image (#8015)
+
 ## 15.10.0 (2025-07-23)
 ### Features
 * Convert Battery CC `isLow` value to notification event (#7984)
