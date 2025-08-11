@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.11.0 (2025-08-11)
 ### Features
 * Add support for defining Scene labels in config files (#7989)
 * Disable SmartStart provisioning entries after 5 failed inclusion attempts (#8017)
