@@ -6580,11 +6580,18 @@ ${handlers.length} left`,
 							}
 						}
 
+						// A command could be sent, so the controller is no longer jammed
 						if (
 							this.controller.status === ControllerStatus.Jammed
 						) {
-							// A command could be sent, so the controller is no longer jammed
 							this.controller.setStatus(ControllerStatus.Ready);
+						}
+						// and a possible recovery phase is over
+						if (
+							this._recoveryPhase
+								=== ControllerRecoveryPhase.JammedAfterReset
+						) {
+							this._recoveryPhase = ControllerRecoveryPhase.None;
 						}
 
 						if (!prevResult.isOK()) {
