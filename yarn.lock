@@ -2309,13 +2309,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/tmp@npm:^0":
-  version: 0.2.6
-  resolution: "@types/tmp@npm:0.2.6"
-  checksum: 10/e14a094c10569d3b56805552b21417860ef21060d969000d5d5b53604a78c2bdac216f064b03797d4b07a081e0141dd3ab22bc36923e75300eb1c023f7252cc7
-  languageName: node
-  linkType: hard
-
 "@types/triple-beam@npm:^1.3.2":
   version: 1.3.2
   resolution: "@types/triple-beam@npm:1.3.2"
@@ -2897,7 +2890,6 @@ __metadata:
     "@types/node": "npm:^20.19.9"
     "@types/semver": "npm:^7.7.0"
     "@types/source-map-support": "npm:^0.5.10"
-    "@types/tmp": "npm:^0"
     "@types/xml2js": "npm:^0.4.14"
     "@zwave-js/bindings-browser": "workspace:*"
     "@zwave-js/cc": "workspace:*"
@@ -2932,7 +2924,6 @@ __metadata:
     reflect-metadata: "npm:^0.2.2"
     semver: "npm:^7.6.3"
     source-map-support: "npm:^0.5.21"
-    tmp: "npm:^0.2.5"
     ts-morph: "npm:^26.0.0"
     ts-patch: "npm:3.3.0"
     tsx: "npm:^4.20.3"
@@ -9454,13 +9445,6 @@ __metadata:
   dependencies:
     os-tmpdir: "npm:~1.0.2"
   checksum: 10/09c0abfd165cff29b32be42bc35e80b8c64727d97dedde6550022e88fa9fd39a084660415ed8e3ebaa2aca1ee142f86df8b31d4196d4f81c774a3a20fd4b6abf
-  languageName: node
-  linkType: hard
-
-"tmp@npm:^0.2.5":
-  version: 0.2.5
-  resolution: "tmp@npm:0.2.5"
-  checksum: 10/dd4b78b32385eab4899d3ae296007b34482b035b6d73e1201c4a9aede40860e90997a1452c65a2d21aee73d53e93cd167d741c3db4015d90e63b6d568a93d7ec
   languageName: node
   linkType: hard
 
