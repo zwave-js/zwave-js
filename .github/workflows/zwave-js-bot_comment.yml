@@ -753,7 +753,7 @@ jobs:
 
     - name: Install logfile analyzer
       if: steps.check-permissions.outputs.result == 'true'
-      run: npm i @zwave-js/log-analyzer
+      run: yarn add --dev @zwave-js/log-analyzer
 
     - name: Analyze logfile
       if: steps.check-permissions.outputs.result == 'true'
