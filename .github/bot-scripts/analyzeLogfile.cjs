@@ -3,8 +3,7 @@
 /// <reference path="types.d.ts" />
 
 const fs = require("fs");
-const path = require("path");
-const os = require("os");
+const tmp = require("tmp");
 
 /**
  * @param {{github: Github, context: Context, core: any}} param
@@ -31,12 +30,9 @@ async function main(param) {
 		}
 
 		// Write to temporary file
-		const tempFilePath = path.join(
-			os.tmpdir(),
-			`zwave-log-${Date.now()}.txt`,
-		);
-		fs.writeFileSync(tempFilePath, logContent);
-		console.log(`Logfile written to temporary file: ${tempFilePath}`);
+		const tempFile = tmp.fileSync();
+		fs.writeFileSync(tempFile.name, logContent);
+		console.log(`Logfile written to temporary file: ${tempFile.name}`);
 
 		// Check if API key is available
 		const apiKey = process.env.GEMINI_API_KEY;
@@ -61,7 +57,7 @@ async function main(param) {
 			|| "Analyze this Z-Wave JS log file and provide insights about any issues, errors, or notable events.";
 
 		for await (
-			const chunk of analyzer.analyzeLogFile(tempFilePath, analysisQuery)
+			const chunk of analyzer.analyzeLogFile(tempFile.name, analysisQuery)
 		) {
 			analysisResult += chunk;
 		}
