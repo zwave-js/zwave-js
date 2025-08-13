@@ -704,3 +704,66 @@ jobs:
         script: |
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.addFingerprintCreatePR({github, context});
+
+
+  # #########################################################################
+  # Analyze a logfile when an authorized person posts
+  # @zwave-js-bot analyze logfile <url>
+  # <Query to run against the logfile>
+  analyze-logfile:
+    if: |
+      contains(github.event.comment.body, '@zwave-js-bot analyze logfile') &&
+      (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
+
+    runs-on: [ubuntu-latest]
+    strategy:
+      matrix:
+        node-version: [22] # This should be LTS
+
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v4
+
+    - name: Check user's permissions to do this
+      id: check-permissions
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        result-encoding: string
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.checkAuthorized({github, context});
+
+    # These steps only run if the check was successful
+    - name: Parse command
+      if: steps.check-permissions.outputs.result == 'true'
+      id: parse-command
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.analyzeLogfileParseCommand({github, context, core});
+
+    - name: Setup Node.js
+      if: steps.check-permissions.outputs.result == 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install logfile analyzer
+      if: steps.check-permissions.outputs.result == 'true'
+      run: npm i @zwave-js/log-analyzer
+
+    - name: Analyze logfile
+      if: steps.check-permissions.outputs.result == 'true'
+      uses: actions/github-script@v7
+      env:
+        LOGFILE_URL: ${{ fromJSON(steps.parse-command.outputs.result).url }}
+        QUERY: ${{ fromJSON(steps.parse-command.outputs.result).query }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.analyzeLogfile({github, context, core});
