@@ -735,6 +735,17 @@ jobs:
           return bot.checkAuthorized({github, context});
 
     # These steps only run if the check was successful
+    - name: Prepare environment
+      if: steps.check-permissions.outputs.result == 'true'
+      uses: ./.github/actions/prepare-env
+      with:
+        node-version: ${{ matrix.node-version }}
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install logfile analyzer
+      if: steps.check-permissions.outputs.result == 'true'
+      run: yarn add --dev @zwave-js/log-analyzer
+
     - name: Parse command
       if: steps.check-permissions.outputs.result == 'true'
       id: parse-command
@@ -744,16 +755,6 @@ jobs:
         script: |
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.analyzeLogfileParseCommand({github, context, core});
-
-    - name: Setup Node.js
-      if: steps.check-permissions.outputs.result == 'true'
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-
-    - name: Install logfile analyzer
-      if: steps.check-permissions.outputs.result == 'true'
-      run: yarn add --dev @zwave-js/log-analyzer
 
     - name: Analyze logfile
       if: steps.check-permissions.outputs.result == 'true'
