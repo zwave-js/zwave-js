@@ -62,17 +62,26 @@ async function main(param) {
 			analysisResult += chunk;
 		}
 
-		// Post the results
+		// Post the results to discussion comment
 		let body = `${analysisResult}\n\n`;
 		body += `---\n`;
 		body += `_AI can make mistakes. Always check important info._`;
 
-		await github.rest.issues.createComment({
-			owner: context.repo.owner,
-			repo: context.repo.repo,
-			issue_number: context.issue.number,
-			body: body,
-		});
+		await github.graphql(
+			`
+			mutation addDiscussionComment($discussionId: ID!, $body: String!) {
+				addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+					comment {
+						id
+					}
+				}
+			}
+			`,
+			{
+				discussionId: context.payload.discussion.node_id,
+				body: body,
+			},
+		);
 	} catch (error) {
 		console.error("Analysis error:", error);
 		core.setFailed(`Logfile analysis failed: ${error.message}`);

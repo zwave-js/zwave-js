@@ -3,11 +3,14 @@ name: 'Z-Wave Bot: React to comments'
 on:
   issue_comment:
     types: [created] # edited, deleted
+  discussion_comment:
+    types: [created] # edited, deleted
 
 jobs:
   # Publish a PR build when an authorized person comments "@zwave-js-bot pack this"
   publish-pr:
     if: |
+      github.event_name == 'issue_comment' &&
       contains(github.event.issue.html_url, '/pull/') &&
       contains(github.event.comment.body, '@zwave-js-bot pack this') &&
       (github.event.comment.user.login == 'AlCalzone')
@@ -80,6 +83,7 @@ jobs:
   # Fix lint errors when an authorized person posts "@zwave-js-bot fix lint"
   fix-lint:
     if: |
+      github.event_name == 'issue_comment' &&
       contains(github.event.issue.html_url, '/pull/') &&
       contains(github.event.comment.body, '@zwave-js-bot fix lint') &&
       (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
@@ -186,6 +190,7 @@ jobs:
   # Rebase PR onto its target branch when an authorized person posts "@zwave-js-bot rebase"
   rebase:
     if: |
+      github.event_name == 'issue_comment' &&
       contains(github.event.issue.html_url, '/pull/') &&
       contains(github.event.comment.body, '@zwave-js-bot rebase') &&
       (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
@@ -373,6 +378,7 @@ jobs:
   # Imports a config file when an authorized person posts "@zwave-js-bot import config <device-id> from <source>"
   import-config:
     if: |
+      github.event_name == 'issue_comment' &&
       contains(github.event.issue.html_url, '/issues/') &&
       contains(github.event.comment.body, '@zwave-js-bot import config') &&
       (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
@@ -477,6 +483,7 @@ jobs:
   # ```
   add-compat-flag:
     if: |
+      github.event_name == 'issue_comment' &&
       contains(github.event.issue.html_url, '/issues/') &&
       contains(github.event.comment.body, '@zwave-js-bot add compat flag') &&
       (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
@@ -593,6 +600,7 @@ jobs:
   # @zwave-js-bot add fingerprint <newId> to <existingDeviceId>
   add-fingerprint:
     if: |
+      github.event_name == 'issue_comment' &&
       contains(github.event.issue.html_url, '/issues/') &&
       contains(github.event.comment.body, '@zwave-js-bot add fingerprint') &&
       (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
@@ -712,6 +720,7 @@ jobs:
   # <Query to run against the logfile>
   analyze-logfile:
     if: |
+      github.event_name == 'issue_comment' &&
       contains(github.event.comment.body, '@zwave-js-bot analyze logfile') &&
       (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
 
@@ -768,3 +777,68 @@ jobs:
         script: |
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.analyzeLogfile({github, context, core});
+
+
+  # #########################################################################
+  # Analyze a logfile when an authorized person posts this in a disussion comment:
+  # @zwave-js-bot analyze logfile <url>
+  # <Query to run against the logfile>
+  analyze-logfile-in-discussion:
+    if: |
+      github.event_name == 'discussion_comment' &&
+      contains(github.event.comment.body, '@zwave-js-bot analyze logfile') &&
+      (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
+
+    runs-on: [ubuntu-latest]
+    strategy:
+      matrix:
+        node-version: [22] # This should be LTS
+
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v4
+
+    - name: Check user's permissions to do this
+      id: check-permissions
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        result-encoding: string
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.checkAuthorized({github, context});
+
+    # These steps only run if the check was successful
+    - name: Prepare environment
+      if: steps.check-permissions.outputs.result == 'true'
+      uses: ./.github/actions/prepare-env
+      with:
+        node-version: ${{ matrix.node-version }}
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install logfile analyzer
+      if: steps.check-permissions.outputs.result == 'true'
+      run: yarn add --dev @zwave-js/log-analyzer
+
+    - name: Parse command
+      if: steps.check-permissions.outputs.result == 'true'
+      id: parse-command
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.analyzeLogfileParseCommand({github, context, core});
+
+    - name: Analyze logfile
+      if: steps.check-permissions.outputs.result == 'true'
+      uses: actions/github-script@v7
+      env:
+        LOGFILE_URL: ${{ fromJSON(steps.parse-command.outputs.result).url }}
+        QUERY: ${{ fromJSON(steps.parse-command.outputs.result).query }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.analyzeLogfileInDiscussion({github, context, core});
