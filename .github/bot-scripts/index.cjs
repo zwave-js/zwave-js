@@ -32,4 +32,6 @@ module.exports = {
 	analyzeLogfileParseCommand: (...args) =>
 		require("./analyzeLogfileParseCommand.cjs")(...args),
 	analyzeLogfile: (...args) => require("./analyzeLogfile.cjs")(...args),
+	analyzeLogfileInDiscussion: (...args) =>
+		require("./analyzeLogfileInDiscussion.cjs")(...args),
 };
