@@ -91,6 +91,9 @@ export function handleCentralSceneNotification(
 	const slowRefreshValueId = CentralSceneCCValues.slowRefresh.endpoint(
 		command.endpointIndex,
 	);
+	const supportsSlowRefreshValueId = CentralSceneCCValues.supportsSlowRefresh.endpoint(
+		command.endpointIndex,
+	);
 	if (command.keyAttribute === CentralSceneKeys.KeyHeldDown) {
 		// Set or refresh timer to force a release of the key
 		store.forcedKeyUp = false;
@@ -116,6 +119,11 @@ export function handleCentralSceneNotification(
 			// If we timed out and the controller subsequently receives a Key Released Notification,
 			// we SHOULD consider the sending node to be operating with the Slow Refresh capability enabled.
 			node.valueDB.setValue(slowRefreshValueId, true);
+			node.valueDB.setValue(supportsSlowRefreshValueId, true);
+			ctx.logNode(node.id, {
+				message: `Node uses adaptive timeout for Central Scene - enabling slow refresh capability`,
+				direction: "inbound",
+			});
 			// Do not raise the duplicate event
 			return;
 		}
