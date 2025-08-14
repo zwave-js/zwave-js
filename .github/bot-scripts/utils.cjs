@@ -1,6 +1,4 @@
 const path = require("path");
-const { formatWithDprint: format } = require("@zwave-js/fmt");
-
 const repoRoot = path.join(__dirname, "../..");
 
 /**
@@ -8,6 +6,7 @@ const repoRoot = path.join(__dirname, "../..");
  * @param {string} sourceText
  */
 function formatWithDprint(filename, sourceText) {
+	const { formatWithDprint: format } = require("@zwave-js/fmt");
 	return format(repoRoot, filename, sourceText);
 }
 
