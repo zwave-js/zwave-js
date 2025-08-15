@@ -196,19 +196,16 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v4
 
-    - name: Save body to file
-      env:
-        BODY: ${{ github.event.discussion.body }}
-      run: |
-        printf '%s' "${BODY}" > "${{ runner.temp }}/discussion_body.txt"
-
     - name: Extract query from discussion using AI
       uses: actions/ai-inference@v2.0.0
       id: extract_query
+      env:
+        DISCUSSION_BODY: ${{ github.event.discussion.body }}
       with:
         prompt-file: .github/prompts/extract-log-analyzer-query.prompt.yml
-        file_input: |
-          input: "${{ runner.temp }}/discussion_body.txt"
+        input: |
+          input: |-
+            ${{ env.DISCUSSION_BODY }}
         max-tokens: 400
 
     - name: Log extracted query
