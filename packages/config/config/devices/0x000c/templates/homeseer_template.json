@@ -321,5 +321,64 @@
 				"value": 1
 			}
 		]
+	},
+	"paddle_behavior": {
+		"label": "Paddle Behavior",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Top paddle turns on; Bottom paddle turns off",
+				"value": 0
+			},
+			{
+				"label": "Both paddles toggle",
+				"value": 1
+			}
+		]
+	},
+	"load_control": {
+		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+		"label": "Control Load with Paddle",
+		"defaultValue": 0
+	},
+	"power_fail_behavior": {
+		"label": "Power Fail Behavior",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "On",
+				"value": 1
+			},
+			{
+				"label": "Last",
+				"value": 2
+			}
+		]
+	},
+	"load_state": {
+		"label": "Load State",
+		"description": "Last state of the switch load",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"readonly": true,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "On",
+				"value": 1
+			}
+		]
 	}
 }
