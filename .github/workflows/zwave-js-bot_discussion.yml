@@ -9,7 +9,7 @@ jobs:
   ensure-discussion-logfile:
     runs-on: [ubuntu-latest]
     outputs:
-      result: ${{ steps.feedback.outputs.feedback }}
+      result: ${{ steps.feedback.outputs.result }}
 
     steps:
     - name: Checkout master branch
@@ -177,17 +177,16 @@ jobs:
               break;
           }
 
-          // Set output for the job
-          core.setOutput("feedback", feedback);
-
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
-          return bot.ensureLogfileFeedbackInDiscussion({github, context}, feedback);
+          await bot.ensureLogfileFeedbackInDiscussion({github, context}, feedback);
+
+          return feedback;
 
   # Auto-analyze logfile if a valid one is found
   auto-analyze-logfile:
     runs-on: [ubuntu-latest]
     needs: ensure-discussion-logfile
-    if: needs.ensure-discussion-logfile.outputs.feedback == 'OK'
+    if: needs.ensure-discussion-logfile.outputs.result == 'OK'
 
     strategy:
       matrix:
