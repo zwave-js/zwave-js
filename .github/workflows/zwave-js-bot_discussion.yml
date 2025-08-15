@@ -196,29 +196,6 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v4
 
-    - name: Prepare AI input
-      id: prepare_input
-      uses: actions/github-script@v7
-      with:
-        result-encoding: string
-        script: |
-          const discussionBody = context.payload.discussion.body;
-          const prefix = "            ";
-          return `input: |-\n${discussionBody.split('\n').map(line => `${prefix}${line}`).join('\n')}`;
-
-    - name: Extract query from discussion using AI
-      uses: actions/ai-inference@v2.0.0
-      id: extract_query
-      with:
-        prompt-file: .github/prompts/extract-log-analyzer-query.prompt.yml
-        input: |
-          ${{ steps.prepare_input.outputs.result }}
-        max-tokens: 400
-
-    - name: Log extracted query
-      run: |
-        echo "Extracted query: ${{ steps.extract_query.outputs.response }}"
-
     - name: Prepare environment
       uses: ./.github/actions/prepare-env
       with:
@@ -235,6 +212,13 @@ jobs:
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.extractLogfileUrlFromDiscussion({github, context});
 
+    - name: Extract query for log analyzer
+      uses: ./.github/actions/extract-log-analyzer-query
+      id: extract_query
+      with:
+        discussion-body: ${{ github.event.discussion.body }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Install logfile analyzer
       run: yarn add --dev @zwave-js/log-analyzer
 
@@ -242,7 +226,7 @@ jobs:
       uses: actions/github-script@v7
       env:
         LOGFILE_URL: ${{ steps.get_logfile_url.outputs.result }}
-        QUERY: ${{ steps.extract_query.outputs.response }}
+        QUERY: ${{ steps.extract_query.outputs.result }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         IS_AUTO_ANALYSIS: 'true'
       with:
