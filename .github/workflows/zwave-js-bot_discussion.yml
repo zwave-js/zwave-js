@@ -201,7 +201,9 @@ jobs:
       id: extract_query
       with:
         prompt-file: .github/prompts/extract-log-analyzer-query.prompt.yml
-        input: ${{ github.event.discussion.body }}
+        input: |
+          input: |
+            ${{ github.event.discussion.body }}
         max-tokens: 400
 
     - name: Log extracted query
