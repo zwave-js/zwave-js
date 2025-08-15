@@ -15,8 +15,13 @@ async function main(param) {
 	const { github, context, core } = param;
 
 	const logfileUrl = new URL(process.env.LOGFILE_URL);
-	const query = process.env.QUERY;
+	let query = process.env.QUERY;
 	const isAutoAnalysis = process.env.IS_AUTO_ANALYSIS === "true";
+
+	if (!query) {
+		core.setFailed("No query provided for log analysis");
+		return;
+	}
 
 	// For automatic analysis, check for existing auto-analysis comments
 	if (isAutoAnalysis) {
@@ -69,11 +74,17 @@ async function main(param) {
 		// Run the analysis
 		console.log("Analyzing logfile...");
 		let analysisResult = "";
-		const analysisQuery = query
-			|| "Analyze this Z-Wave JS log file and provide insights about any issues, errors, or notable events.";
+
+		// To make the response more natural in the middle of Botty's comment, tell the AI
+		// not to respond with "here's the answer to your question" or similar.
+
+		query += `
+
+Do not refer to the user's question with phrases like "here's the answer to your question" or similar.
+Just answer the question directly.`;
 
 		for await (
-			const chunk of analyzer.analyzeLogFile(tempFile.name, analysisQuery)
+			const chunk of analyzer.analyzeLogFile(tempFile.name, query)
 		) {
 			analysisResult += chunk;
 		}
@@ -84,8 +95,7 @@ async function main(param) {
 			body = `
 **Beep, boop! 🤖**
 
-I've already taken a first look at your logfile. Maybe this anwers your question?
-If you have further questions or think I made a mistake, please wait for a human to show up.
+_I've already taken a first look at your logfile. If you have further questions or think I made a mistake, please wait for a human to show up._
 
 ${analysisResult}
 
