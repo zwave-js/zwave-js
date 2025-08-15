@@ -1,6 +1,6 @@
 import { Bytes } from "@zwave-js/shared";
 import {
-	MAX_NODES_LR,
+	MAX_NODES,
 	NUM_LR_NODES_PER_SEGMENT,
 	NUM_NODEMASK_BYTES,
 } from "../definitions/consts.js";
@@ -289,7 +289,7 @@ export function parseLongRangeNodeBitMask(
 }
 
 export function encodeNodeBitMask(nodeIDs: readonly number[]): Bytes {
-	return encodeBitMask(nodeIDs, MAX_NODES_LR);
+	return encodeBitMask(nodeIDs, MAX_NODES);
 }
 
 export function encodeLongRangeNodeBitMask(
