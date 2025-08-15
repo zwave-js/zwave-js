@@ -1,8 +1,8 @@
-const core = require("@actions/core");
-const yaml = require("js-yaml");
-const fs = require("fs");
-const path = require("path");
-const OpenAI = require("openai").default;
+import core from "@actions/core";
+import fs from "fs";
+import yaml from "js-yaml";
+import OpenAI from "openai";
+import path from "path";
 
 async function run() {
 	try {
