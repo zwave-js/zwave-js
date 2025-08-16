@@ -1080,6 +1080,16 @@
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "Double-Tap Config to Clear Notification",
 			"defaultValue": 0
+		},
+		{
+			"#": "240",
+			"label": "Factory Reset",
+			"description": "Set to 120935937 to perform a factory reset",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 4294967295,
+			"defaultValue": 0,
+			"unsigned": true
 		}
 	],
 	"metadata": {
