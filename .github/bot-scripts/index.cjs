@@ -36,4 +36,5 @@ module.exports = {
 		require("./analyzeLogfileInDiscussion.cjs")(...args),
 	extractLogfileUrlFromDiscussion: (...args) =>
 		require("./extractLogfileUrlFromDiscussion.cjs")(...args),
+	escalate: (...args) => require("./escalate.cjs")(...args),
 };

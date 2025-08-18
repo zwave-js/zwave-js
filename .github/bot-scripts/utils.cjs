@@ -15,6 +15,11 @@ const urls = {
 		"https://zwave-js.github.io/zwave-js/#/config-files/style-guide",
 };
 
+// Comment tags for bot analysis comments
+const AUTO_ANALYSIS_COMMENT_TAG = "<!-- AUTO_ANALYSIS_COMMENT_TAG -->";
+const AUTO_ANALYSIS_START_TAG = "<!-- AUTO_ANALYSIS_START_TAG -->";
+const AUTO_ANALYSIS_END_TAG = "<!-- AUTO_ANALYSIS_END_TAG -->";
+
 const markdownLinkRegex = /\[.*\]\((http.*?)\)/;
 const codeBlockRegex = /`{3,4}(.*?)`{3,4}/s;
 
@@ -101,4 +106,7 @@ module.exports = {
 	extractLogfileSection,
 	extractLogfileUrl,
 	extractLogfileContent,
+	AUTO_ANALYSIS_COMMENT_TAG,
+	AUTO_ANALYSIS_START_TAG,
+	AUTO_ANALYSIS_END_TAG,
 };
