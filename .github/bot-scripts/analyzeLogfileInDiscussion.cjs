@@ -4,9 +4,11 @@
 
 const fs = require("fs");
 const tmp = require("tmp");
-
-// Add at the top of the file
-const AUTO_ANALYSIS_COMMENT_TAG = "<!-- AUTO_ANALYSIS_COMMENT_TAG -->";
+const {
+	AUTO_ANALYSIS_COMMENT_TAG,
+	AUTO_ANALYSIS_START_TAG,
+	AUTO_ANALYSIS_END_TAG,
+} = require("./utils.cjs");
 
 /**
  * @param {{github: Github, context: Context, core: any}} param
@@ -97,7 +99,9 @@ Just answer the question directly.`;
 
 _I've already taken a first look at your logfile. If you have further questions or think I made a mistake, please wait for a human to show up._
 
+${AUTO_ANALYSIS_START_TAG}
 ${analysisResult}
+${AUTO_ANALYSIS_END_TAG}
 
 ---
 

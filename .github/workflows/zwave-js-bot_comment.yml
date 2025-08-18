@@ -842,3 +842,42 @@ jobs:
         script: |
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.analyzeLogfileInDiscussion({github, context, core});
+
+
+  # #########################################################################
+  # Escalate a discussion to an issue when an authorized person posts
+  # @zwave-js-bot escalate or @zwave-js-bot escalate and fix
+  escalate:
+    if: |
+      github.event_name == 'discussion_comment' &&
+      contains(github.event.comment.body, '@zwave-js-bot escalate') &&
+      (github.event.comment.user.login != 'zwave-js-bot' && github.event.comment.user.login != 'zwave-js-assistant[bot]')
+
+    runs-on: [ubuntu-latest]
+    strategy:
+      matrix:
+        node-version: [22] # This should be LTS
+
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v4
+
+    - name: Check user's permissions to do this
+      id: check-permissions
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        result-encoding: string
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.checkAuthorized({github, context});
+
+    # These steps only run if the check was successful
+    - name: Escalate discussion to issue
+      if: steps.check-permissions.outputs.result == 'true'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.BOT_TOKEN}}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.escalate({github, context, core});
