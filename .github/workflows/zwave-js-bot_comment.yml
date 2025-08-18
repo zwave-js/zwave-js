@@ -846,7 +846,7 @@ jobs:
 
   # #########################################################################
   # Escalate a discussion to an issue when an authorized person posts
-  # @zwave-js-bot escalate or @zwave-js-bot escalate and fix
+  # @zwave-js-bot escalate
   escalate:
     if: |
       github.event_name == 'discussion_comment' &&

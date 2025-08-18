@@ -14,11 +14,6 @@ const {
 async function main(param) {
 	const { github, context, core } = param;
 
-	const commentBody = context.payload.comment?.body || "";
-	const shouldAssignToCopilot = commentBody.includes(
-		"@zwave-js-bot escalate and fix",
-	);
-
 	// Check if the discussion is still open before escalating
 	// Need to fetch discussion details since webhook payload doesn't include open/closed status
 	const discussionResponse = await github.graphql(
@@ -89,18 +84,6 @@ ${context.payload.discussion.body}
 ${analysisContent}`,
 			});
 			core.info("Added analysis comment to the new issue");
-		}
-
-		// Assign to Copilot if requested
-		if (shouldAssignToCopilot) {
-			try {
-				await assignIssueToCopilot(github, context, newIssue.number);
-				core.info("Assigned issue to Copilot");
-			} catch (error) {
-				core.warning(
-					`Failed to assign issue to Copilot: ${error.message}`,
-				);
-			}
 		}
 
 		// Comment in the original discussion with escalation info
@@ -231,97 +214,6 @@ async function findBotAnalysisComment(github, context) {
 		console.error("Error finding bot analysis comment:", error);
 		return null;
 	}
-}
-
-/**
- * Assign an issue to Copilot using the GitHub GraphQL API
- * @param {Github} github
- * @param {Context} context
- * @param {number} issueNumber
- */
-async function assignIssueToCopilot(github, context, issueNumber) {
-	// First, get the Copilot bot ID
-	const copilotQuery = /* GraphQL */ `
-		query Repository($owner: String!, $repo: String!) {
-			repository(owner: $owner, name: $repo) {
-				suggestedActors(capabilities: [CAN_BE_ASSIGNED], first: 100) {
-					nodes {
-						login
-						__typename
-						... on Bot {
-							id
-						}
-						... on User {
-							id
-						}
-					}
-				}
-			}
-		}
-	`;
-
-	const copilotQueryResult = await github.graphql(copilotQuery, {
-		owner: context.repo.owner,
-		repo: context.repo.repo,
-	});
-
-	const copilotActor = copilotQueryResult.repository.suggestedActors.nodes
-		.find(
-			(actor) => actor.login === "copilot-swe-agent",
-		);
-
-	if (!copilotActor) {
-		throw new Error(
-			"Copilot coding agent is not available in this repository",
-		);
-	}
-
-	// Get the issue node ID
-	const issueQuery = /* GraphQL */ `
-		query Repository($owner: String!, $repo: String!, $number: Int!) {
-			repository(owner: $owner, name: $repo) {
-				issue(number: $number) {
-					id
-				}
-			}
-		}
-	`;
-
-	const issueQueryResult = await github.graphql(issueQuery, {
-		owner: context.repo.owner,
-		repo: context.repo.repo,
-		number: issueNumber,
-	});
-
-	if (!issueQueryResult.repository.issue) {
-		throw new Error("Issue not found");
-	}
-
-	const issueNodeId = issueQueryResult.repository.issue.id;
-
-	// Assign the issue to Copilot
-	const assignMutation = /* GraphQL */ `
-		mutation ReplaceActorsForAssignable($assignableId: ID!, $actorIds: [ID!]!) {
-			replaceActorsForAssignable(input: {assignableId: $assignableId, actorIds: $actorIds}) {
-				assignable {
-					... on Issue {
-						id
-						title
-						assignees(first: 10) {
-							nodes {
-								login
-							}
-						}
-					}
-				}
-			}
-		}
-	`;
-
-	await github.graphql(assignMutation, {
-		assignableId: issueNodeId,
-		actorIds: [copilotActor.id],
-	});
 }
 
 module.exports = main;
