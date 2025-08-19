@@ -2881,10 +2881,10 @@ export class ZWaveController
 	 */
 	public async stopInclusion(): Promise<boolean> {
 		const result = await this.stopInclusionInternal();
-		// If this stopped an inclusion process, we need to drop the task
+		// If this stopped an inclusion process, we need to drop all inclusion-related tasks
 		if (result) {
 			await this.driver.scheduler.removeTasks((t) =>
-				t.tag?.id === "inclusion"
+				t.tag?.id === "inclusion" || t.tag?.id === "replace-failed-node"
 			);
 		}
 		return result;
