@@ -4,6 +4,18 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Firmware updates that fail due to an XMODEM communication error are now retried automatically, reducing the risk to get stuck in bootloader until a new firmware is flashed (#8086)
+
+### Bugfixes
+* Fixes an issue where the controller would indefinitely be considered as recovering from a jammed state, preventing commands from being re-transmitted (#8052)
+* Fixed an issue where the key up event would be force-emitted too early on legacy devices that incorrectly report not to support the "slow refresh" capability (#8087)
+* Canceling a "replace failed node" operation no longer prevents other inclusion/exclusion operations from being started (#8084)
+
+### Config file changes
+* Add HomeSeer WS300 (#8074)
+
 ## 15.11.0 (2025-08-11)
 ### Features
 * Add support for defining Scene labels in config files (#7989)
