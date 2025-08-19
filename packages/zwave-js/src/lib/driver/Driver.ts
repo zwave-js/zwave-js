@@ -8344,7 +8344,6 @@ ${handlers.length} left`,
 	// region OTW Firmware Updates
 
 	private _otwFirmwareUpdateInProgress: boolean = false;
-	private _lastBootloaderErrorCode: number | undefined;
 
 	/**
 	 * Returns whether a firmware update is in progress for the Z-Wave module.
@@ -8389,11 +8388,11 @@ ${handlers.length} left`,
 
 		// When in bootloader mode, we can use the 700 series update method
 		if (this.mode === DriverMode.Bootloader) {
-			return this.firmwareUpdateOTW700WithRetry(data);
+			return this.firmwareUpdateOTW700(data);
 		} else if (this.mode === DriverMode.SerialAPI) {
 			if (this.controller.sdkVersionGte("7.0")) {
 				// This is at least a 700 series controller, so we can use the 700 series update method
-				return this.firmwareUpdateOTW700WithRetry(data);
+				return this.firmwareUpdateOTW700(data);
 			} else if (
 				this.controller.sdkVersionGte("6.50.0")
 				&& this.controller.supportedFunctionTypes
@@ -8413,7 +8412,7 @@ ${handlers.length} left`,
 		} else if (this.mode === DriverMode.CLI) {
 			// If the CLI has an option to enter bootloader, we can use the 700 series update method,
 			// since it tries to execute that.
-			return this.firmwareUpdateOTW700WithRetry(data);
+			return this.firmwareUpdateOTW700(data);
 		}
 
 		throw new ZWaveError(
@@ -8599,9 +8598,9 @@ integrity: ${update.integrity}`;
 	}
 
 	/**
-	 * Wrapper for firmwareUpdateOTW700 that implements retry logic for XMODEM communication errors
+	 * Performs an OTW firmware update with retry logic for XMODEM communication errors
 	 */
-	private async firmwareUpdateOTW700WithRetry(
+	private async firmwareUpdateOTW700(
 		data: Uint8Array,
 	): Promise<OTWFirmwareUpdateResult> {
 		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
@@ -8611,7 +8610,7 @@ integrity: ${update.integrity}`;
 				`Starting OTW firmware update attempt ${attempt}/${maxAttempts}`,
 			);
 			
-			const result = await this.firmwareUpdateOTW700(data);
+			const result = await this.firmwareUpdateOTW700Internal(data);
 			
 			// If successful, return immediately
 			if (result.success) {
@@ -8620,13 +8619,10 @@ integrity: ${update.integrity}`;
 			
 			// If this was an aborted update, check if it's an XMODEM communication error
 			if (result.status === OTWFirmwareUpdateStatus.Error_Aborted) {
-				// Try to get the error code from the last bootloader error message
-				const errorCode = this.parseLastBootloaderErrorCode();
-				
 				// Check if this is an XMODEM communication error (high nibble = 2)
-				if (errorCode !== null && (errorCode >> 4) === 2) {
+				if (result.errorCode !== undefined && (result.errorCode >> 4) === 2) {
 					this.controllerLog.print(
-						`XMODEM communication error detected (0x${errorCode.toString(16).padStart(2, "0")}), attempt ${attempt}/${maxAttempts}`,
+						`XMODEM communication error detected (0x${result.errorCode.toString(16).padStart(2, "0")}), attempt ${attempt}/${maxAttempts}`,
 						"warn",
 					);
 					
@@ -8642,7 +8638,7 @@ integrity: ${update.integrity}`;
 				} else {
 					// Not an XMODEM communication error, don't retry
 					this.controllerLog.print(
-						`Update aborted with non-XMODEM error${errorCode !== null ? ` (0x${errorCode.toString(16).padStart(2, "0")})` : ""}, not retrying`,
+						`Update aborted with non-XMODEM error${result.errorCode !== undefined ? ` (0x${result.errorCode.toString(16).padStart(2, "0")})` : ""}, not retrying`,
 						"error",
 					);
 					return result;
@@ -8664,19 +8660,10 @@ integrity: ${update.integrity}`;
 		};
 	}
 
-	/**
-	 * Parse the error code from the last bootloader error message
-	 */
-	private parseLastBootloaderErrorCode(): number | null {
-		// This will be set during the firmwareUpdateOTW700 method when processing error messages
-		return this._lastBootloaderErrorCode || null;
-	}
-
-	private async firmwareUpdateOTW700(
+	private async firmwareUpdateOTW700Internal(
 		data: Uint8Array,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
-		this._lastBootloaderErrorCode = undefined; // Reset error code at start
 
 		try {
 			await this.enterBootloader();
@@ -8819,14 +8806,14 @@ integrity: ${update.integrity}`;
 					.catch(() => undefined);
 
 				let message = `OTW update was aborted by the bootloader.`;
-				this._lastBootloaderErrorCode = undefined; // Reset error code
+				let errorCode: number | undefined;
 				if (error) {
 					message += ` ${error.message}`;
 					// Parse error code from the message
 					const errorMatch = error.message.match(/error 0x([0-9a-fA-F]+)/);
 					if (errorMatch) {
 						const errorCodeStr = errorMatch[1];
-						this._lastBootloaderErrorCode = parseInt(errorCodeStr, 16);
+						errorCode = parseInt(errorCodeStr, 16);
 						this.controllerLog.print(
 							`Bootloader error code: 0x${errorCodeStr}`,
 							"verbose",
@@ -8838,6 +8825,7 @@ integrity: ${update.integrity}`;
 				const result: OTWFirmwareUpdateResult = {
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Aborted,
+					errorCode,
 				};
 				this.emit("firmware update finished", result);
 				return result;
