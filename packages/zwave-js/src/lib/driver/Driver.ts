@@ -1944,6 +1944,17 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					}
 					this._valueDB.delete(key);
 				}
+
+				// Clean up stale Battery CC "isLow" values that were removed in v15.10.0
+				// They were converted to notification events but may still exist in cached data
+				for (const key of this._valueDB.keys()) {
+					if (
+						-1 !== key.indexOf(`,"commandClass":128,`) && // Battery CC (0x80 = 128)
+						-1 !== key.indexOf(`,"property":"isLow"`)
+					) {
+						this._valueDB.delete(key);
+					}
+				}
 			} catch (e) {
 				const message =
 					`Migrating the legacy cache file to jsonl failed: ${
