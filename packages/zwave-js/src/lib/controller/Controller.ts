@@ -2896,7 +2896,7 @@ export class ZWaveController
 	 * handle task removal
 	 */
 	private async stopInclusionInternal(): Promise<boolean> {
-		if (this._inclusionState !== InclusionState.Including && this._inclusionState !== InclusionState.Busy) {
+		if (this._inclusionState !== InclusionState.Including) {
 			return false;
 		}
 
