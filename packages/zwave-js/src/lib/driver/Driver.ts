@@ -8597,67 +8597,46 @@ integrity: ${update.integrity}`;
 		}
 	}
 
-	/**
-	 * Performs an OTW firmware update with retry logic for XMODEM communication errors
-	 */
 	private async firmwareUpdateOTW700(
 		data: Uint8Array,
 	): Promise<OTWFirmwareUpdateResult> {
 		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
-		
+		let result!: OTWFirmwareUpdateResult;
+
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-			this.controllerLog.print(
-				`Starting OTW firmware update attempt ${attempt}/${maxAttempts}`,
-			);
-			
-			const result = await this.firmwareUpdateOTW700Internal(data);
-			
-			// If successful, return immediately
-			if (result.success) {
-				return result;
-			}
-			
+			result = await this.firmwareUpdateOTW700Internal(data);
+			if (result.success) break;
+
 			// If this was an aborted update, check if it's an XMODEM communication error
-			if (result.status === OTWFirmwareUpdateStatus.Error_Aborted) {
-				// Check if this is an XMODEM communication error (high nibble = 2)
-				if (result.errorCode !== undefined && (result.errorCode >> 4) === 2) {
+			if (
+				result.status === OTWFirmwareUpdateStatus.Error_Aborted
+				&& result.errorCode != undefined
+				&& (result.errorCode & 0xf0) === 0x20
+			) {
+				if (attempt < maxAttempts) {
 					this.controllerLog.print(
-						`XMODEM communication error detected (0x${result.errorCode.toString(16).padStart(2, "0")}), attempt ${attempt}/${maxAttempts}`,
+						`Retrying firmware update after XMODEM communication error ${
+							num2hex(result.errorCode)
+						}, attempt ${attempt}/${maxAttempts}...`,
 						"warn",
 					);
-					
-					// If we still have attempts left, continue the loop
-					if (attempt < maxAttempts) {
-						continue;
-					} else {
-						this.controllerLog.print(
-							"Maximum retry attempts reached for XMODEM communication errors",
-							"error",
-						);
-					}
-				} else {
-					// Not an XMODEM communication error, don't retry
-					this.controllerLog.print(
-						`Update aborted with non-XMODEM error${result.errorCode !== undefined ? ` (0x${result.errorCode.toString(16).padStart(2, "0")})` : ""}, not retrying`,
-						"error",
-					);
-					return result;
+					await wait(250);
+					continue;
 				}
-			} else {
-				// Other types of errors (timeout, retry limit reached, not supported), don't retry
+
 				this.controllerLog.print(
-					`Update failed with status ${result.status}, not retrying`,
+					"Maximum firmware update attempts reached, giving up.",
 					"error",
 				);
-				return result;
 			}
+
+			// For any other error type or when we've exhausted retries, break and return
+			break;
 		}
-		
-		// If we get here, all attempts failed
-		return {
-			success: false,
-			status: OTWFirmwareUpdateStatus.Error_RetryLimitReached,
-		};
+
+		// If we get here, all attempts failed - use the last result or create a default one
+		this.emit("firmware update finished", result);
+		return result;
 	}
 
 	private async firmwareUpdateOTW700Internal(
@@ -8695,7 +8674,6 @@ integrity: ${update.integrity}`;
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Timeout,
 				};
-				this.emit("firmware update finished", result);
 				return result;
 			}
 
@@ -8746,7 +8724,6 @@ integrity: ${update.integrity}`;
 							success: false,
 							status: OTWFirmwareUpdateStatus.Error_Timeout,
 						};
-						this.emit("firmware update finished", result);
 						return result;
 					}
 
@@ -8782,7 +8759,6 @@ integrity: ${update.integrity}`;
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_RetryLimitReached,
 				};
-				this.emit("firmware update finished", result);
 				return result;
 			}
 
@@ -8810,14 +8786,12 @@ integrity: ${update.integrity}`;
 				if (error) {
 					message += ` ${error.message}`;
 					// Parse error code from the message
-					const errorMatch = error.message.match(/error 0x([0-9a-fA-F]+)/);
+					const errorMatch = error.message.match(
+						/error 0x([0-9a-fA-F]+)/,
+					);
 					if (errorMatch) {
 						const errorCodeStr = errorMatch[1];
 						errorCode = parseInt(errorCodeStr, 16);
-						this.controllerLog.print(
-							`Bootloader error code: 0x${errorCodeStr}`,
-							"verbose",
-						);
 					}
 				}
 				this.controllerLog.print(message, "error");
@@ -8827,7 +8801,6 @@ integrity: ${update.integrity}`;
 					status: OTWFirmwareUpdateStatus.Error_Aborted,
 					errorCode,
 				};
-				this.emit("firmware update finished", result);
 				return result;
 			} else {
 				// We're done, send EOT and wait for the menu screen
@@ -8859,7 +8832,6 @@ integrity: ${update.integrity}`;
 						success: false,
 						status: OTWFirmwareUpdateStatus.Error_Timeout,
 					};
-					this.emit("firmware update finished", result);
 					return result;
 				}
 			}
@@ -8870,7 +8842,6 @@ integrity: ${update.integrity}`;
 				success: true,
 				status: OTWFirmwareUpdateStatus.OK,
 			};
-			this.emit("firmware update finished", result);
 			return result;
 		} finally {
 			await this.leaveBootloader();
