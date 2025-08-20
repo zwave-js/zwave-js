@@ -929,6 +929,14 @@ readonly lastSeen: MaybeNotKnown<Date>
 
 This property tracks when the node was last seen, meaning a command was either received from the node or successfully sent to it.
 
+### `rate`
+
+```ts
+readonly rate: number
+```
+
+Average rate of incoming messages per second, in the last minute.
+
 ### `isControllerNode`
 
 ```ts
@@ -1685,6 +1693,9 @@ interface NodeStatistics {
 
 	/** The last time a command was received from or successfully sent to the node. */
 	lastSeen?: Date;
+
+	/** Average rate of incoming messages per second, in the last minute. */
+	rate: number;
 }
 ```
 
