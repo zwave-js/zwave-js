@@ -8,17 +8,35 @@ import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
 
 /** An implementation of the Serial bindings for Node.js */
 export const serial: Serial = {
-	createFactoryByPath(path) {
+	async createFactoryByPath(path) {
 		if (path.startsWith("tcp://")) {
 			const url = new URL(path);
-			return Promise.resolve(createNodeSocketFactory({
+			return createNodeSocketFactory({
 				host: url.hostname,
 				port: parseInt(url.port),
-			}));
+			});
+		} else if (path.startsWith("esphome://")) {
+			const url = new URL(path);
+			try {
+				// Use string import to avoid TypeScript module resolution issues at build time
+				const { createESPHomeFactory } = await import(
+					"@zwave-js/bindings-esphome"
+				);
+				return createESPHomeFactory({
+					host: url.hostname,
+					port: url.port ? parseInt(url.port) : undefined,
+				});
+			} catch (error) {
+				throw new Error(
+					`ESPHome bindings are not available. Please install @zwave-js/bindings-esphome to use esphome:// URLs. ${
+						String(error)
+					}`,
+				);
+			}
 		} else {
-			return Promise.resolve(createNodeSerialPortFactory(
+			return createNodeSerialPortFactory(
 				path,
-			));
+			);
 		}
 	},
 
