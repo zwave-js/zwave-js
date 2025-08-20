@@ -1955,6 +1955,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this.driverLog.print(message, "error");
 			}
 		}
+
+		// Clean up stale Battery CC "isLow" values that were removed in v15.10.0
+		// They were converted to notification events but may still exist in cached data
+		if (this._networkCache.get("cacheFormat") === 1) {
+			for (const key of this._valueDB.keys()) {
+				if (
+					-1 !== key.indexOf(`,"commandClass":128,`) // Battery CC (0x80 = 128)
+					&& -1 !== key.indexOf(`,"property":"isLow"`)
+				) {
+					this._valueDB.delete(key);
+					this._metadataDB?.delete(key);
+				}
+			}
+			// Update the cache format to 2 to indicate that the migration is done
+			this._networkCache.set("cacheFormat", 2);
+		}
 	}
 
 	/**
