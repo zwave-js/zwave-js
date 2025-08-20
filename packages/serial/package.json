@@ -86,14 +86,6 @@
     "serialport": "^13.0.0",
     "winston": "^3.17.0"
   },
-  "peerDependencies": {
-    "@zwave-js/bindings-esphome": "workspace:*"
-  },
-  "peerDependenciesMeta": {
-    "@zwave-js/bindings-esphome": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
     "@microsoft/api-extractor": "^7.52.8",
@@ -101,7 +93,6 @@
     "@serialport/bindings-interface": "patch:@serialport/bindings-interface@npm%3A1.2.2#~/.yarn/patches/@serialport-bindings-interface-npm-1.2.2-e597dbc676.patch",
     "@types/node": "^20.19.9",
     "@types/sinon": "^17.0.4",
-    "@zwave-js/bindings-esphome": "workspace:*",
     "ansi-colors": "^4.1.3",
     "del-cli": "^6.0.0",
     "sinon": "^21.0.0",

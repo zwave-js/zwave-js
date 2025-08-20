@@ -21,5 +21,7 @@ export * from "./zniffer/ZnifferSerialStream.js";
 
 // ESPHome protocol support
 export * from "./esphome/index.js";
+export { createESPHomeFactory } from "./serialport/ESPHomeSocket.js";
+export type { ESPHomeSocketOptions } from "./serialport/ESPHomeSocket.js";
 
 export * from "./index_serialapi.js";

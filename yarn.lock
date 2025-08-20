@@ -2667,18 +2667,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@zwave-js/bindings-esphome@workspace:*, @zwave-js/bindings-esphome@workspace:packages/bindings-esphome":
-  version: 0.0.0-use.local
-  resolution: "@zwave-js/bindings-esphome@workspace:packages/bindings-esphome"
-  dependencies:
-    "@zwave-js/core": "workspace:*"
-    "@zwave-js/serial": "workspace:*"
-    "@zwave-js/shared": "workspace:*"
-    del-cli: "npm:^6.0.0"
-    typescript: "npm:5.8.3"
-  languageName: unknown
-  linkType: soft
-
 "@zwave-js/cc@workspace:*, @zwave-js/cc@workspace:packages/cc":
   version: 0.0.0-use.local
   resolution: "@zwave-js/cc@workspace:packages/cc"
@@ -2978,7 +2966,6 @@ __metadata:
     "@serialport/stream": "npm:^13.0.0"
     "@types/node": "npm:^20.19.9"
     "@types/sinon": "npm:^17.0.4"
-    "@zwave-js/bindings-esphome": "workspace:*"
     "@zwave-js/cc": "workspace:*"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/host": "workspace:*"
@@ -2992,11 +2979,6 @@ __metadata:
     typescript: "npm:5.8.3"
     vitest: "npm:^2.1.9"
     winston: "npm:^3.17.0"
-  peerDependencies:
-    "@zwave-js/bindings-esphome": "workspace:*"
-  peerDependenciesMeta:
-    "@zwave-js/bindings-esphome":
-      optional: true
   languageName: unknown
   linkType: soft
 

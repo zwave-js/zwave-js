@@ -3,11 +3,13 @@ import os from "node:os";
 import path from "node:path";
 import { SerialPort } from "serialport";
 import type { EnumeratedPort, Serial } from "../serialport/Bindings.js";
+import { createESPHomeFactory } from "../serialport/ESPHomeSocket.js";
 import { createNodeSerialPortFactory } from "../serialport/NodeSerialPort.js";
 import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
 
 /** An implementation of the Serial bindings for Node.js */
 export const serial: Serial = {
+	// eslint-disable-next-line @typescript-eslint/require-await
 	async createFactoryByPath(path) {
 		if (path.startsWith("tcp://")) {
 			const url = new URL(path);
@@ -17,22 +19,10 @@ export const serial: Serial = {
 			});
 		} else if (path.startsWith("esphome://")) {
 			const url = new URL(path);
-			try {
-				// Use string import to avoid TypeScript module resolution issues at build time
-				const { createESPHomeFactory } = await import(
-					"@zwave-js/bindings-esphome"
-				);
-				return createESPHomeFactory({
-					host: url.hostname,
-					port: url.port ? parseInt(url.port) : undefined,
-				});
-			} catch (error) {
-				throw new Error(
-					`ESPHome bindings are not available. Please install @zwave-js/bindings-esphome to use esphome:// URLs. ${
-						String(error)
-					}`,
-				);
-			}
+			return createESPHomeFactory({
+				host: url.hostname,
+				port: url.port ? parseInt(url.port) : undefined,
+			});
 		} else {
 			return createNodeSerialPortFactory(
 				path,

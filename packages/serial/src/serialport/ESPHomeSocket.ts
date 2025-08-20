@@ -1,21 +1,19 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import type { ZWaveSerialBindingFactory } from "@zwave-js/serial";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import {
-	ESPHomeMessageType,
-	type ExecuteServiceRequest,
-	type HelloRequest,
+	DisconnectRequest,
+	ESPHomeMessage,
+	ESPHomeMessageRaw,
+	ExecuteServiceRequest,
+	HelloRequest,
+	HelloResponse,
+	ListEntitiesDoneResponse,
+	ListEntitiesRequest,
+	ListEntitiesServicesResponse,
 	ServiceArgType,
-	decodeHelloResponse,
-	decodeListEntitiesDoneResponse,
-	decodeListEntitiesServicesResponse,
-	encodeDisconnectRequest,
-	encodeExecuteServiceRequest,
-	encodeHelloRequest,
-	encodeListEntitiesRequest,
-} from "./ESPHomeMessages.js";
-import { decodeESPHomeFrame, encodeESPHomeFrame } from "./ESPHomeProtocol.js";
+} from "../esphome/index.js";
+import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export interface ESPHomeSocketOptions {
 	/** The hostname or IP address of the ESPHome device */
@@ -67,10 +65,13 @@ export function createESPHomeFactory(
 		}
 
 		function sendMessage(
-			messageType: ESPHomeMessageType,
-			payload: Uint8Array,
+			message:
+				| HelloRequest
+				| ListEntitiesRequest
+				| DisconnectRequest
+				| ExecuteServiceRequest,
 		): Promise<void> {
-			const frame = encodeESPHomeFrame(messageType, payload);
+			const frame = message.serialize();
 			return new Promise((resolve, reject) => {
 				socket.write(frame, (err) => {
 					if (err) reject(err);
@@ -82,24 +83,20 @@ export function createESPHomeFactory(
 		async function performHandshake(): Promise<void> {
 			// Send HelloRequest
 			connectionState = ConnectionState.HelloSent;
-			const helloRequest: HelloRequest = {
+			const helloRequest = new HelloRequest({
 				clientInfo: "zwave-js",
 				apiVersionMajor: 1,
 				apiVersionMinor: 0,
-			};
-			const helloPayload = encodeHelloRequest(helloRequest);
-			await sendMessage(ESPHomeMessageType.HelloRequest, helloPayload);
+			});
+			await sendMessage(helloRequest);
 
 			// Wait for HelloResponse (handled in data event)
 			await waitForState(ConnectionState.HelloReceived, timeout);
 
 			// Send ListEntitiesRequest to discover services
 			connectionState = ConnectionState.DiscoveringSevices;
-			const listEntitiesPayload = encodeListEntitiesRequest();
-			await sendMessage(
-				ESPHomeMessageType.ListEntitiesRequest,
-				listEntitiesPayload,
-			);
+			const listEntitiesRequest = new ListEntitiesRequest();
+			await sendMessage(listEntitiesRequest);
 
 			// Wait for service discovery to complete
 			await waitForState(ConnectionState.Ready, timeout);
@@ -153,20 +150,23 @@ export function createESPHomeFactory(
 				// Try to extract complete frames
 				while (frameBuffer.length > 0) {
 					try {
-						// Try to decode a frame from the buffer
-						const decoded = decodeESPHomeFrame(frameBuffer);
+						// Check if we have enough data for the basic header
+						if (frameBuffer.length < 3) {
+							break; // Need more data
+						}
 
-						// Process the message
-						processIncomingMessage(
-							decoded.messageType,
-							decoded.payload,
-						);
+						// Parse the raw message from buffer
+						const rawMessage = ESPHomeMessageRaw.parse(frameBuffer);
 
-						// Calculate frame length for proper buffer management
+						// Calculate frame length
 						const frameLength = 1 // indicator
-							+ getVarIntLength(decoded.payload.length) // payload size
-							+ getVarIntLength(decoded.messageType) // message type
-							+ decoded.payload.length; // payload
+							+ getVarIntLength(rawMessage.payload.length) // payload size
+							+ getVarIntLength(rawMessage.messageType) // message type
+							+ rawMessage.payload.length; // payload
+
+						// Parse into specific message types and process
+						const message = ESPHomeMessage.parse(frameBuffer);
+						processIncomingMessage(message);
 
 						// Remove the processed frame from the buffer
 						frameBuffer = frameBuffer.slice(frameLength);
@@ -202,107 +202,64 @@ export function createESPHomeFactory(
 		}
 
 		function processIncomingMessage(
-			messageType: number,
-			payload: Uint8Array,
+			message: ESPHomeMessage,
 		): void {
-			switch (messageType) {
-				case ESPHomeMessageType.HelloResponse:
-					if (connectionState === ConnectionState.HelloSent) {
-						try {
-							const helloResponse = decodeHelloResponse(payload);
-							console.log(
-								`Connected to ESPHome device: ${helloResponse.name} (${helloResponse.serverInfo})`,
-							);
-							console.log(
-								`API version: ${helloResponse.apiVersionMajor}.${helloResponse.apiVersionMinor}`,
-							);
-							connectionState = ConnectionState.HelloReceived;
-						} catch (error) {
-							console.error(
-								"Failed to decode HelloResponse:",
-								error,
-							);
-						}
-					}
-					break;
-
-				case ESPHomeMessageType.ListEntitiesServicesResponse:
-					if (
-						connectionState === ConnectionState.DiscoveringSevices
-					) {
-						try {
-							const serviceResponse =
-								decodeListEntitiesServicesResponse(payload);
-							console.log(
-								`Found service: ${serviceResponse.name} (key: ${serviceResponse.key})`,
-							);
-
-							// Store all services in our map
-							const hasIntArrayArg = serviceResponse.args
-								.some(
-									(arg) =>
-										arg.type === ServiceArgType.INT_ARRAY,
-								);
-							const serviceInfo: ServiceInfo = {
-								name: serviceResponse.name,
-								key: serviceResponse.key,
-								hasIntArrayArg,
-							};
-							allServices.set(serviceResponse.name, serviceInfo);
-
-							// Check if this is the send_frame service we need
-							if (
-								serviceResponse.name === "send_frame"
-								&& hasIntArrayArg
-							) {
-								sendFrameService = serviceInfo;
-								console.log(
-									`Found send_frame service with key: ${serviceResponse.key}`,
-								);
-							}
-						} catch (error) {
-							console.error(
-								"Failed to decode ListEntitiesServicesResponse:",
-								error,
-							);
-						}
-					}
-					break;
-
-				case ESPHomeMessageType.ListEntitiesDoneResponse:
-					if (
-						connectionState === ConnectionState.DiscoveringSevices
-					) {
-						try {
-							decodeListEntitiesDoneResponse();
-							console.log(
-								`Service discovery completed. Found ${allServices.size} services.`,
-							);
-
-							// Transition to ready state now that service discovery is complete
-							if (sendFrameService) {
-								connectionState = ConnectionState.Ready;
-								console.log("ESPHome connection ready.");
-							} else {
-								throw new ZWaveError(
-									"send_frame service not found on ESPHome device",
-									ZWaveErrorCodes.Driver_SerialPortClosed,
-								);
-							}
-						} catch (error) {
-							console.error(
-								"Failed to process ListEntitiesDoneResponse:",
-								error,
-							);
-						}
-					}
-					break;
-
-				default:
-					// Log unknown message types for debugging
+			if (message instanceof HelloResponse) {
+				if (connectionState === ConnectionState.HelloSent) {
 					console.log(
-						`Received unknown message type: ${messageType}, payload length: ${payload.length}`,
+						`Connected to ESPHome device: ${message.name} (${message.serverInfo})`,
 					);
+					console.log(
+						`API version: ${message.apiVersionMajor}.${message.apiVersionMinor}`,
+					);
+					connectionState = ConnectionState.HelloReceived;
+				}
+			} else if (message instanceof ListEntitiesServicesResponse) {
+				if (connectionState === ConnectionState.DiscoveringSevices) {
+					console.log(
+						`Found service: ${message.name} (key: ${message.key})`,
+					);
+
+					// Store all services in our map
+					const hasIntArrayArg = message.args
+						.some(
+							(arg) => arg.type === ServiceArgType.INT_ARRAY,
+						);
+					const serviceInfo: ServiceInfo = {
+						name: message.name,
+						key: message.key,
+						hasIntArrayArg,
+					};
+					allServices.set(message.name, serviceInfo);
+
+					// Check if this is the send_frame service we need
+					if (
+						message.name === "send_frame"
+						&& hasIntArrayArg
+					) {
+						sendFrameService = serviceInfo;
+						console.log(
+							`Found send_frame service with key: ${message.key}`,
+						);
+					}
+				}
+			} else if (message instanceof ListEntitiesDoneResponse) {
+				if (connectionState === ConnectionState.DiscoveringSevices) {
+					console.log(
+						`Service discovery completed. Found ${allServices.size} services.`,
+					);
+
+					// Transition to ready state now that service discovery is complete
+					if (sendFrameService) {
+						connectionState = ConnectionState.Ready;
+						console.log("ESPHome connection ready.");
+					} else {
+						throw new ZWaveError(
+							"send_frame service not found on ESPHome device",
+							ZWaveErrorCodes.Driver_SerialPortClosed,
+						);
+					}
+				}
 			}
 		}
 
@@ -366,11 +323,8 @@ export function createESPHomeFactory(
 			try {
 				// Send disconnect request if connected
 				if (connectionState !== ConnectionState.Disconnected) {
-					const disconnectPayload = encodeDisconnectRequest();
-					await sendMessage(
-						ESPHomeMessageType.DisconnectRequest,
-						disconnectPayload,
-					);
+					const disconnectRequest = new DisconnectRequest();
+					await sendMessage(disconnectRequest);
 				}
 			} catch {
 				// Ignore errors during disconnect
@@ -411,21 +365,15 @@ export function createESPHomeFactory(
 					const frameArray = Array.from(data);
 
 					// Create service execution request
-					const executeRequest: ExecuteServiceRequest = {
+					const executeRequest = new ExecuteServiceRequest({
 						key: sendFrameService.key,
 						args: [{
 							intArray: frameArray,
 						}],
-					};
+					});
 
-					// Encode and send the service execution request
-					const executePayload = encodeExecuteServiceRequest(
-						executeRequest,
-					);
-					await sendMessage(
-						ESPHomeMessageType.ExecuteServiceRequest,
-						executePayload,
-					);
+					// Send the service execution request
+					await sendMessage(executeRequest);
 				} catch (error) {
 					controller.error(error);
 				}
