@@ -70,7 +70,7 @@
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:zwave": "lint:config:custom && lint:config:eslint",
+    "lint:zwave": "yarn lint:config:custom && yarn lint:config:eslint",
     "lint:config:custom": "yarn ts maintenance/lintConfigFiles.ts",
     "lint:config:eslint": "eslint --cache --cache-location .eslintcache/config -c config/eslint.config.mjs",
     "lint:ts": "eslint --cache --cache-location .eslintcache/ts \"src/**/*.ts\"",
