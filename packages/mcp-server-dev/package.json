@@ -48,7 +48,6 @@
 	"scripts": {
 		"build": "tsc -b",
 		"clean": "del-cli build/ *.tsbuildinfo",
-		"extract-api": "api-extractor run",
 		"lint:ts": "eslint --cache --cache-location .eslintcache/ -c ../../eslint.config.mjs src/**/*.ts",
 		"lint:ts:fix": "yarn run lint:ts --fix"
 	},
