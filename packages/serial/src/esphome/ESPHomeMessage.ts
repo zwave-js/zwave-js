@@ -13,12 +13,12 @@ export enum ESPHomeMessageType {
 	DisconnectResponse = 6,
 	PingRequest = 7,
 	PingResponse = 8,
+	DeviceInfoRequest = 9,
+	DeviceInfoResponse = 10,
 
-	// Service discovery
-	ListEntitiesRequest = 11,
-	ListEntitiesDoneResponse = 19,
-	ListEntitiesServicesResponse = 41,
-	ExecuteServiceRequest = 42,
+	// Z-Wave proxy
+	ZWaveProxyWriteRequest = 130,
+	ZWaveProxyWriteResponse = 131,
 }
 
 /**

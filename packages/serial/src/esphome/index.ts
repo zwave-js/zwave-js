@@ -13,7 +13,7 @@ export * from "./ProtobufHelpers.js";
 
 // Export message implementations
 export * from "./ConnectionMessages.js";
-export * from "./ExecuteServiceMessages.js";
+export * from "./DeviceInfoMessages.js";
 export * from "./HelloMessages.js";
-export * from "./ListEntitiesMessages.js";
 export * from "./PingMessages.js";
+export * from "./ZWaveProxyMessages.js";

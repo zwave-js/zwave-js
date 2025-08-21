@@ -1,17 +1,17 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import {
+	DeviceInfoRequest,
+	DeviceInfoResponse,
 	DisconnectRequest,
 	ESPHomeMessage,
 	ESPHomeMessageRaw,
-	ExecuteServiceRequest,
 	HelloRequest,
 	HelloResponse,
-	ListEntitiesDoneResponse,
-	ListEntitiesRequest,
-	ListEntitiesServicesResponse,
-	ServiceArgType,
+	ZWaveProxyWriteRequest,
+	ZWaveProxyWriteResponse,
 } from "../esphome/index.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
@@ -27,14 +27,9 @@ enum ConnectionState {
 	Connecting = "connecting",
 	HelloSent = "hello_sent",
 	HelloReceived = "hello_received",
-	DiscoveringSevices = "discovering_services",
+	DeviceInfoSent = "device_info_sent",
+	DeviceInfoReceived = "device_info_received",
 	Ready = "ready",
-}
-
-interface ServiceInfo {
-	name: string;
-	key: number;
-	hasIntArrayArg: boolean;
 }
 
 export function createESPHomeFactory(
@@ -47,8 +42,7 @@ export function createESPHomeFactory(
 		const timeout = 5000;
 
 		let connectionState = ConnectionState.Disconnected;
-		const allServices = new Map<string, ServiceInfo>();
-		let sendFrameService: ServiceInfo | undefined;
+		let deviceInfo: DeviceInfoResponse | undefined;
 		let sourceController:
 			| ReadableStreamDefaultController<Uint8Array>
 			| undefined;
@@ -67,9 +61,9 @@ export function createESPHomeFactory(
 		function sendMessage(
 			message:
 				| HelloRequest
-				| ListEntitiesRequest
+				| DeviceInfoRequest
 				| DisconnectRequest
-				| ExecuteServiceRequest,
+				| ZWaveProxyWriteRequest,
 		): Promise<void> {
 			const frame = message.serialize();
 			return new Promise((resolve, reject) => {
@@ -93,20 +87,31 @@ export function createESPHomeFactory(
 			// Wait for HelloResponse (handled in data event)
 			await waitForState(ConnectionState.HelloReceived, timeout);
 
-			// Send ListEntitiesRequest to discover services
-			connectionState = ConnectionState.DiscoveringSevices;
-			const listEntitiesRequest = new ListEntitiesRequest();
-			await sendMessage(listEntitiesRequest);
+			// Send DeviceInfoRequest to check Z-Wave support
+			connectionState = ConnectionState.DeviceInfoSent;
+			const deviceInfoRequest = new DeviceInfoRequest();
+			await sendMessage(deviceInfoRequest);
 
-			// Wait for service discovery to complete
-			await waitForState(ConnectionState.Ready, timeout);
+			// Wait for DeviceInfoResponse
+			await waitForState(ConnectionState.DeviceInfoReceived, timeout);
 
-			if (!sendFrameService) {
+			// Check if device supports Z-Wave proxy
+			if (!deviceInfo?.hasZWaveProxySupport) {
 				throw new ZWaveError(
-					"send_frame service not found on ESPHome device",
+					"ESPHome device does not support Z-Wave proxy functionality",
 					ZWaveErrorCodes.Driver_SerialPortClosed,
 				);
 			}
+
+			console.log(
+				`Z-Wave proxy support detected with feature flags: 0x${
+					deviceInfo.zwaveProxyFeatureFlags.toString(16)
+				}`,
+			);
+
+			// Connection is ready - no service discovery needed
+			connectionState = ConnectionState.Ready;
+			console.log("ESPHome connection ready.");
 		}
 
 		function waitForState(
@@ -214,52 +219,26 @@ export function createESPHomeFactory(
 					);
 					connectionState = ConnectionState.HelloReceived;
 				}
-			} else if (message instanceof ListEntitiesServicesResponse) {
-				if (connectionState === ConnectionState.DiscoveringSevices) {
+			} else if (message instanceof DeviceInfoResponse) {
+				if (connectionState === ConnectionState.DeviceInfoSent) {
 					console.log(
-						`Found service: ${message.name} (key: ${message.key})`,
+						`Device info received: ${message.name} (${message.esphomeVersion})`,
 					);
-
-					// Store all services in our map
-					const hasIntArrayArg = message.args
-						.some(
-							(arg) => arg.type === ServiceArgType.INT_ARRAY,
-						);
-					const serviceInfo: ServiceInfo = {
-						name: message.name,
-						key: message.key,
-						hasIntArrayArg,
-					};
-					allServices.set(message.name, serviceInfo);
-
-					// Check if this is the send_frame service we need
-					if (
-						message.name === "send_frame"
-						&& hasIntArrayArg
-					) {
-						sendFrameService = serviceInfo;
+					console.log(`Model: ${message.model}`);
+					console.log(`MAC: ${message.macAddress}`);
+					if (message.hasZWaveProxySupport) {
 						console.log(
-							`Found send_frame service with key: ${message.key}`,
+							`Z-Wave proxy feature flags: 0x${
+								message.zwaveProxyFeatureFlags.toString(16)
+							}`,
 						);
 					}
+					deviceInfo = message;
+					connectionState = ConnectionState.DeviceInfoReceived;
 				}
-			} else if (message instanceof ListEntitiesDoneResponse) {
-				if (connectionState === ConnectionState.DiscoveringSevices) {
-					console.log(
-						`Service discovery completed. Found ${allServices.size} services.`,
-					);
-
-					// Transition to ready state now that service discovery is complete
-					if (sendFrameService) {
-						connectionState = ConnectionState.Ready;
-						console.log("ESPHome connection ready.");
-					} else {
-						throw new ZWaveError(
-							"send_frame service not found on ESPHome device",
-							ZWaveErrorCodes.Driver_SerialPortClosed,
-						);
-					}
-				}
+			} else if (message instanceof ZWaveProxyWriteResponse) {
+				// Handle Z-Wave proxy write response (acknowledgment)
+				// For now, we don't need to do anything special with this
 			}
 		}
 
@@ -353,27 +332,21 @@ export function createESPHomeFactory(
 					return;
 				}
 
-				if (!sendFrameService) {
+				if (!deviceInfo?.hasZWaveProxySupport) {
 					controller.error(
-						new Error("send_frame service not available!"),
+						new Error("Z-Wave proxy support not available!"),
 					);
 					return;
 				}
 
 				try {
-					// Convert Z-Wave frame data to signed integer array
-					const frameArray = Array.from(data);
-
-					// Create service execution request
-					const executeRequest = new ExecuteServiceRequest({
-						key: sendFrameService.key,
-						args: [{
-							intArray: frameArray,
-						}],
+					// Create Z-Wave proxy write request with Bytes data
+					const writeRequest = new ZWaveProxyWriteRequest({
+						data: new Bytes(data),
 					});
 
-					// Send the service execution request
-					await sendMessage(executeRequest);
+					// Send the Z-Wave proxy write request
+					await sendMessage(writeRequest);
 				} catch (error) {
 					controller.error(error);
 				}

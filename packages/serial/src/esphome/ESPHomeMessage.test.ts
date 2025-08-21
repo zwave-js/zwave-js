@@ -1,15 +1,16 @@
 import { Bytes } from "@zwave-js/shared";
 import { expect, test } from "vitest";
 import {
+	DeviceInfoRequest,
+	DeviceInfoResponse,
 	ESPHomeMessage,
 	ESPHomeMessageType,
-	ExecuteServiceRequest,
 	HelloRequest,
 	HelloResponse,
-	ListEntitiesDoneResponse,
-	ListEntitiesRequest,
 	PingRequest,
 	PingResponse,
+	ZWaveProxyWriteRequest,
+	ZWaveProxyWriteResponse,
 } from "./index.js";
 
 test("HelloRequest serialization and parsing", () => {
@@ -58,37 +59,6 @@ test("Empty messages serialization and parsing", () => {
 	const pingResponseSerialized = pingResponse.serialize();
 	const pingResponseParsed = ESPHomeMessage.parse(pingResponseSerialized);
 	expect(pingResponseParsed).toBeInstanceOf(PingResponse);
-
-	// Test ListEntitiesRequest
-	const listRequest = new ListEntitiesRequest();
-	const listRequestSerialized = listRequest.serialize();
-	const listRequestParsed = ESPHomeMessage.parse(listRequestSerialized);
-	expect(listRequestParsed).toBeInstanceOf(ListEntitiesRequest);
-
-	// Test ListEntitiesDoneResponse
-	const listDone = new ListEntitiesDoneResponse();
-	const listDoneSerialized = listDone.serialize();
-	const listDoneParsed = ESPHomeMessage.parse(listDoneSerialized);
-	expect(listDoneParsed).toBeInstanceOf(ListEntitiesDoneResponse);
-});
-
-test("ExecuteServiceRequest serialization and parsing", () => {
-	const original = new ExecuteServiceRequest({
-		key: 0x12345678,
-		args: [
-			{ intArray: [1, 2, 3] },
-			{ intArray: [-1, -2, -3] },
-		],
-	});
-
-	const serialized = original.serialize();
-	const parsed = ESPHomeMessage.parse(serialized) as ExecuteServiceRequest;
-
-	expect(parsed).toBeInstanceOf(ExecuteServiceRequest);
-	expect(parsed.key).toBe(0x12345678);
-	expect(parsed.args).toHaveLength(2);
-	expect(parsed.args[0].intArray).toEqual([1, 2, 3]);
-	expect(parsed.args[1].intArray).toEqual([-1, -2, -3]);
 });
 
 test("Message type detection", () => {
@@ -126,4 +96,110 @@ test("Unknown message type parsing", () => {
 
 	// Should have the correct payload
 	expect(parsed.payload).toEqual(Bytes.from(payload));
+});
+
+test("DeviceInfoRequest serialization and parsing", () => {
+	const original = new DeviceInfoRequest();
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(serialized) as DeviceInfoRequest;
+
+	expect(parsed).toBeInstanceOf(DeviceInfoRequest);
+	expect(parsed.messageType).toBe(ESPHomeMessageType.DeviceInfoRequest);
+});
+
+test("DeviceInfoResponse serialization and parsing", () => {
+	const original = new DeviceInfoResponse({
+		name: "zwave-gateway",
+		esphomeVersion: "2024.12.0",
+		model: "ESP32",
+		macAddress: "AA:BB:CC:DD:EE:FF",
+		zwaveProxyFeatureFlags: 0x01,
+		manufacturer: "Espressif",
+		friendlyName: "Z-Wave Gateway",
+	});
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(serialized) as DeviceInfoResponse;
+
+	expect(parsed).toBeInstanceOf(DeviceInfoResponse);
+	expect(parsed.messageType).toBe(ESPHomeMessageType.DeviceInfoResponse);
+	expect(parsed.name).toBe("zwave-gateway");
+	expect(parsed.esphomeVersion).toBe("2024.12.0");
+	expect(parsed.model).toBe("ESP32");
+	expect(parsed.macAddress).toBe("AA:BB:CC:DD:EE:FF");
+	expect(parsed.zwaveProxyFeatureFlags).toBe(0x01);
+	expect(parsed.manufacturer).toBe("Espressif");
+	expect(parsed.friendlyName).toBe("Z-Wave Gateway");
+	expect(parsed.hasZWaveProxySupport).toBe(true);
+});
+
+test("DeviceInfoResponse without Z-Wave support", () => {
+	const original = new DeviceInfoResponse({
+		name: "regular-device",
+		esphomeVersion: "2024.12.0",
+		model: "ESP32",
+		zwaveProxyFeatureFlags: 0, // No Z-Wave support
+	});
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(serialized) as DeviceInfoResponse;
+
+	expect(parsed.hasZWaveProxySupport).toBe(false);
+	expect(parsed.zwaveProxyFeatureFlags).toBe(0);
+});
+
+test("ZWaveProxyWriteRequest serialization and parsing", () => {
+	const testData = new Bytes(new TextEncoder().encode("Hello World"));
+	const original = new ZWaveProxyWriteRequest({
+		data: testData,
+	});
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(serialized) as ZWaveProxyWriteRequest;
+
+	expect(parsed).toBeInstanceOf(ZWaveProxyWriteRequest);
+	expect(parsed.messageType).toBe(ESPHomeMessageType.ZWaveProxyWriteRequest);
+	expect(parsed.data).toEqual(testData);
+});
+
+test("ZWaveProxyWriteResponse serialization and parsing", () => {
+	const original = new ZWaveProxyWriteResponse();
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(serialized) as ZWaveProxyWriteResponse;
+
+	expect(parsed).toBeInstanceOf(ZWaveProxyWriteResponse);
+	expect(parsed.messageType).toBe(ESPHomeMessageType.ZWaveProxyWriteResponse);
+});
+
+test("DeviceInfoResponse with minimal fields", () => {
+	const original = new DeviceInfoResponse({});
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(serialized) as DeviceInfoResponse;
+
+	expect(parsed).toBeInstanceOf(DeviceInfoResponse);
+	expect(parsed.name).toBe("");
+	expect(parsed.esphomeVersion).toBe("");
+	expect(parsed.zwaveProxyFeatureFlags).toBe(0);
+	expect(parsed.hasZWaveProxySupport).toBe(false);
+	expect(parsed.usesPassword).toBe(false);
+	expect(parsed.hasDeepSleep).toBe(false);
+	expect(parsed.apiEncryptionSupported).toBe(false);
+});
+
+test("DeviceInfoResponse with all boolean flags", () => {
+	const original = new DeviceInfoResponse({
+		usesPassword: true,
+		hasDeepSleep: true,
+		apiEncryptionSupported: true,
+		zwaveProxyFeatureFlags: 0x0F,
+	});
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(serialized) as DeviceInfoResponse;
+
+	expect(parsed.usesPassword).toBe(true);
+	expect(parsed.hasDeepSleep).toBe(true);
+	expect(parsed.apiEncryptionSupported).toBe(true);
+	expect(parsed.hasZWaveProxySupport).toBe(true);
 });

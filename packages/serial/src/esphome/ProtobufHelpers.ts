@@ -95,9 +95,11 @@ export function decodeVarInt(
  */
 export function encodeStringField(
 	fieldNumber: number,
-	value: string,
+	value: string | Uint8Array,
 ): Uint8Array {
-	const stringBytes = new TextEncoder().encode(value);
+	const stringBytes = typeof value === "string"
+		? new TextEncoder().encode(value)
+		: value;
 	const tag = encodeTag(fieldNumber, WireType.LengthDelimited);
 	const length = encodeVarInt(stringBytes.length);
 	return concatenateUint8Arrays([tag, length, stringBytes]);
