@@ -319,6 +319,11 @@
 				"Alarm Sensor": {
 					"endpoints": "*"
 				}
+			},
+			"add": {
+				"Scene Activation": {
+					"isControlled": true
+				}
 			}
 		}
 	}
