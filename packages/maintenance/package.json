@@ -60,7 +60,7 @@
     "piscina": "^5.0.0",
     "reflect-metadata": "^0.2.2",
     "ts-morph": "^26.0.0",
-    "tsx": "^4.20.3",
+    "tsx": "^4.20.5",
     "typescript": "5.8.3",
     "yargs": "^18.0.0"
   }
