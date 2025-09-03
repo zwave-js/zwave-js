@@ -2219,6 +2219,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/js-yaml@npm:^4":
+  version: 4.0.9
+  resolution: "@types/js-yaml@npm:4.0.9"
+  checksum: 10/a0ce595db8a987904badd21fc50f9f444cb73069f4b95a76cc222e0a17b3ff180669059c763ec314bc4c3ce284379177a9da80e83c5f650c6c1310cafbfaa8e6
+  languageName: node
+  linkType: hard
+
 "@types/json-logic-js@npm:^2.0.8":
   version: 2.0.8
   resolution: "@types/json-logic-js@npm:2.0.8"
@@ -2306,6 +2313,13 @@ __metadata:
   dependencies:
     source-map: "npm:^0.6.0"
   checksum: 10/72486b93c3340ed89537bc4f75cfcaa7ed8d4384c916b5fea919a1e39592696ab868ff73aae9e4a7d0099921aa1c35941be1ec02cd5fc7e045110a9f4707d4c8
+  languageName: node
+  linkType: hard
+
+"@types/tmp@npm:^0":
+  version: 0.2.6
+  resolution: "@types/tmp@npm:0.2.6"
+  checksum: 10/e14a094c10569d3b56805552b21417860ef21060d969000d5d5b53604a78c2bdac216f064b03797d4b07a081e0141dd3ab22bc36923e75300eb1c023f7252cc7
   languageName: node
   linkType: hard
 
@@ -2887,9 +2901,11 @@ __metadata:
     "@microsoft/api-extractor": "npm:^7.52.8"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
     "@tsconfig/node20": "npm:^20.1.6"
+    "@types/js-yaml": "npm:^4"
     "@types/node": "npm:^20.19.9"
     "@types/semver": "npm:^7.7.0"
     "@types/source-map-support": "npm:^0.5.10"
+    "@types/tmp": "npm:^0"
     "@types/xml2js": "npm:^0.4.14"
     "@zwave-js/bindings-browser": "workspace:*"
     "@zwave-js/cc": "workspace:*"
@@ -2917,13 +2933,16 @@ __metadata:
     eslint-plugin-unused-imports: "patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch"
     execa: "npm:^9.6.0"
     husky: "npm:^9.1.7"
+    js-yaml: "npm:^4.1.0"
     json5: "npm:^2.2.3"
     jsonc-eslint-parser: "npm:^2.4.0"
     lint-staged: "npm:^15.5.1"
+    openai: "npm:^5.12.2"
     p-queue: "npm:^8.1.0"
     reflect-metadata: "npm:^0.2.2"
     semver: "npm:^7.6.3"
     source-map-support: "npm:^0.5.21"
+    tmp: "npm:^0.2.5"
     ts-morph: "npm:^26.0.0"
     ts-patch: "npm:3.3.0"
     tsx: "npm:^4.20.3"
@@ -7753,6 +7772,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openai@npm:^5.12.2":
+  version: 5.12.2
+  resolution: "openai@npm:5.12.2"
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: 10/9e2eea1a888ff99ebf61a7715d6130ae21c3b3e5d56508fd5080adbe30bb1891ae44e668abf2d1a714b7a148485be2bbaa0019fe66fc91bdf44e7b5ef7aedcad
+  languageName: node
+  linkType: hard
+
 "optionator@npm:^0.9.3":
   version: 0.9.3
   resolution: "optionator@npm:0.9.3"
@@ -9445,6 +9481,13 @@ __metadata:
   dependencies:
     os-tmpdir: "npm:~1.0.2"
   checksum: 10/09c0abfd165cff29b32be42bc35e80b8c64727d97dedde6550022e88fa9fd39a084660415ed8e3ebaa2aca1ee142f86df8b31d4196d4f81c774a3a20fd4b6abf
+  languageName: node
+  linkType: hard
+
+"tmp@npm:^0.2.5":
+  version: 0.2.5
+  resolution: "tmp@npm:0.2.5"
+  checksum: 10/dd4b78b32385eab4899d3ae296007b34482b035b6d73e1201c4a9aede40860e90997a1452c65a2d21aee73d53e93cd167d741c3db4015d90e63b6d568a93d7ec
   languageName: node
   linkType: hard
 

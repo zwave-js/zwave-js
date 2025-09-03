@@ -8446,7 +8446,15 @@ export class ZWaveController
 		let offset = 0;
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
-		let chunkSize: number = Math.min(0xffff, ret.length);
+		//
+		// However, the Aeotec Z-Stick 5 (at least some revisions) go haywire when doing so,
+		// so we start with a smaller chunk size for that device
+		const initialChunkSize = this._manufacturerId === 0x86
+				&& this._productType === 0x01
+				&& this._productId === 0x5a
+			? 48
+			: 0xffff;
+		let chunkSize: number = Math.min(initialChunkSize, ret.length);
 		while (offset < ret.length) {
 			const chunk = await this.externalNVMReadBuffer(
 				offset,
