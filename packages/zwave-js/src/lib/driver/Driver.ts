@@ -8955,6 +8955,10 @@ integrity: ${update.integrity}`;
 		} else if (this.mode === DriverMode.CLI) {
 			await this.ensureCLIReady();
 			return;
+		} else if (this._bootloader) {
+			// We're still in bootloader mode - this likely means that the
+			// application failed to start
+			return;
 		}
 
 		// FIXME: Do we need the pause thing still?
