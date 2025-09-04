@@ -50,6 +50,7 @@
     "@types/node": "^20.19.9",
     "@types/yargs": "^17.0.33",
     "del-cli": "^6.0.0",
+    "eslint": "^9.34.0",
     "typescript": "5.8.3"
   }
 }

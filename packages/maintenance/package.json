@@ -53,6 +53,7 @@
     "cli-highlight": "^2.1.11",
     "del-cli": "^6.0.0",
     "dprint": "^0.50.1",
+    "eslint": "^9.34.0",
     "es-main": "^1.4.0",
     "execa": "^9.6.0",
     "globrex": "^0.1.2",

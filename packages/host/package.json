@@ -58,6 +58,7 @@
     "@microsoft/api-extractor": "^7.52.11",
     "@types/node": "^20.19.9",
     "del-cli": "^6.0.0",
+    "eslint": "^9.34.0",
     "typescript": "5.8.3"
   }
 }

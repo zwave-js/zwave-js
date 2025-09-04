@@ -142,6 +142,7 @@
     "@types/sinon": "^17.0.4",
     "@types/triple-beam": "^1.3.5",
     "del-cli": "^6.0.0",
+    "eslint": "^9.34.0",
     "sinon": "^21.0.0",
     "tsx": "^4.20.5",
     "typescript": "5.8.3",

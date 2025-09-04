@@ -48,6 +48,7 @@
   "devDependencies": {
     "cpy-cli": "^6.0.0",
     "del-cli": "^6.0.0",
+    "eslint": "^9.34.0",
     "execa": "^9.6.0",
     "ts-morph": "^26.0.0",
     "tsutils": "^3.21.0",
