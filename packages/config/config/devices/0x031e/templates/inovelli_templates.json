@@ -390,5 +390,23 @@
 				"value": 255
 			}
 		]
+	},
+	"mmwave_person_in_zone": {
+		"valueSize": 4,
+		"minValue": 0,
+		"maxValue": 1,
+		"defaultValue": 0,
+		"unsigned": true,
+		"readOnly": true,
+		"options": [
+			{
+				"label": "Empty",
+				"value": 0
+			},
+			{
+				"label": "Occupied",
+				"value": 1
+			}
+		]
 	}
 }
