@@ -33,13 +33,13 @@ export class ApplicationCCsFile extends NVMFile {
 			this.includedInsecurely = [
 				...this.payload.subarray(offset + 1, offset + 1 + numCCs),
 			];
-			offset += MAX_CCs;
+			offset += 1 + MAX_CCs;
 
 			numCCs = this.payload[offset];
 			this.includedSecurelyInsecureCCs = [
 				...this.payload.subarray(offset + 1, offset + 1 + numCCs),
 			];
-			offset += MAX_CCs;
+			offset += 1 + MAX_CCs;
 			numCCs = this.payload[offset];
 			this.includedSecurelySecureCCs = [
 				...this.payload.subarray(offset + 1, offset + 1 + numCCs),
