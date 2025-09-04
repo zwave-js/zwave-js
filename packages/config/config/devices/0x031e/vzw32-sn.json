@@ -1088,12 +1088,20 @@
 		{
 			"#": "239",
 			"label": "SPI Flash Status",
-			"description": "0 = SPI flash fail; 1 = SPI flash success",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
-			"defaultValue": 0,
-			"readOnly": true
+			"readOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Fail",
+					"value": 0
+				},
+				{
+                                        // eslint-disable-next-line @zwave-js/consistent-config-string-case
+					"label": "Success",
+					"value": 1
+				}
+			]
 		},
 		{
 			"#": "240",
