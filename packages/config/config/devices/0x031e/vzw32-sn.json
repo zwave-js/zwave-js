@@ -1097,7 +1097,6 @@
 					"value": 0
 				},
 				{
-                                        // eslint-disable-next-line @zwave-js/consistent-config-string-case
 					"label": "Success",
 					"value": 1
 				}
