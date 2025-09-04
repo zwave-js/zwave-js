@@ -72,7 +72,7 @@
     "extract-api": "yarn api-extractor run",
     "lint:zwave": "yarn lint:config:custom && yarn lint:config:eslint",
     "lint:config:custom": "yarn ts maintenance/lintConfigFiles.ts",
-    "lint:config:eslint": "eslint --cache --cache-location .eslintcache/config -c config/eslint.config.mjs",
+    "lint:config:eslint": "eslint --cache --cache-location .eslintcache/config --concurrency auto -c config/eslint.config.mjs",
     "lint:ts": "eslint --cache --cache-location .eslintcache/ts \"src/**/*.ts\"",
     "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
@@ -116,3 +116,4 @@
     "yargs": "^18.0.0"
   }
 }
+
