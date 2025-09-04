@@ -122,7 +122,7 @@
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:ts": "eslint --cache --concurrency auto \"src/**/*.ts\"",
+    "lint:ts": "eslint --cache \"src/**/*.ts\"",
     "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
