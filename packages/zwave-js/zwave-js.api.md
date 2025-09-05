@@ -1624,7 +1624,7 @@ export class VirtualNode extends VirtualEndpoint {
     // (undocumented)
     getEndpointOrThrow(index: number): VirtualEndpoint;
     // (undocumented)
-    get hasMixedSecurityClasses(): boolean;
+    get hasMoreThanOneGroup(): boolean;
     // (undocumented)
     readonly id: number | undefined;
     // (undocumented)

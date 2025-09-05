@@ -18,6 +18,7 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	securityClassIsS2,
+	Protocols,
 } from "@zwave-js/core";
 import { staticExtends } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
@@ -114,23 +115,32 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 				return CCAPI.create(ccId, this.driver, endpoint);
 			}
 		};
-		// For mixed security classes, we need to create a wrapper
+		// For mixed security classes and/or mixed protocols (LR and non-LR), we need to create a wrapper
 		// that handles calling multiple API instances
-		if (this.node.hasMixedSecurityClasses) {
-			const apiInstances = [
-				...this.node.nodesBySecurityClass.entries(),
-			].map(([secClass, nodes]) => {
-				// We need a separate virtual endpoint for each security class, so the API instances
-				// access the correct nodes.
-				const node = new VirtualNode(this.node.id, this.driver, nodes);
-				const endpoint = node.getEndpoint(this.index) ?? node;
-				return createCCAPI(endpoint, secClass);
-			});
+
+		if (this.node.hasMoreThanOneGroup) {
+			const apiInstances = [...this.node.groupedNodes.entries()].flatMap(
+				([_, nodesByProtocol]) =>
+					[...nodesByProtocol.entries()].map(([secClass, nodes]) => {
+						const virtualNode = new VirtualNode(this.node.id, this.driver, nodes);
+						const endpoint = virtualNode.getEndpoint(this.index) ?? virtualNode;
+						return createCCAPI(endpoint, secClass);
+					})
+			);
 			return createMultiCCAPIWrapper(apiInstances);
 		} else {
-			// The node has a single security class, just reuse it
-			const securityClass = [...this.node.nodesBySecurityClass.keys()][0];
-			return createCCAPI(this, securityClass);
+			const protocolMap =
+				this.node.groupedNodes.get(Protocols.ZWave)
+				|| this.node.groupedNodes.get(Protocols.ZWaveLongRange);
+
+			if (!protocolMap) {
+				throw new ZWaveError(
+					`hasMoreThanOneGroup is true, but no protocol found in groupedNodes!`,
+					ZWaveErrorCodes.CC_Invalid,
+				);
+			}
+			const secClass = [...protocolMap.keys()][0];
+			return createCCAPI(this, secClass);
 		}
 	}
 
