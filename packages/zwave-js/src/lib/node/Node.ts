@@ -1349,6 +1349,11 @@ protocol version:      ${this.protocolVersion}`;
 		if (this.supportsCC(CommandClasses["Security 2"])) {
 			// Security S2 is always supported *securely*
 			this.addCC(CommandClasses["Security 2"], { secure: true });
+			
+			// If Version CC is not supported, ensure Security 2 CC has the highest implemented version
+			if (!this.supportsCC(CommandClasses.Version)) {
+				this.addCC(CommandClasses["Security 2"], { version: getImplementedVersion(CommandClasses["Security 2"]) });
+			}
 
 			// Query supported CCs unless we know for sure that the node wasn't assigned a S2 security class
 			const securityClass = this.getHighestSecurityClass();
@@ -1413,6 +1418,11 @@ protocol version:      ${this.protocolVersion}`;
 		if (this.supportsCC(CommandClasses.Security)) {
 			// Security S0 is always supported *securely*
 			this.addCC(CommandClasses.Security, { secure: true });
+			
+			// If Version CC is not supported, ensure Security CC has the highest implemented version
+			if (!this.supportsCC(CommandClasses.Version)) {
+				this.addCC(CommandClasses.Security, { version: getImplementedVersion(CommandClasses.Security) });
+			}
 
 			// Query supported CCs unless we know for sure that the node wasn't assigned the S0 security class
 			if (this.hasSecurityClass(SecurityClass.S0_Legacy) !== false) {
