@@ -11,6 +11,7 @@ interface DeviceClassProperties {
 	readonly zwavePlusDeviceType?: string;
 	readonly requiresSecurity?: boolean;
 	readonly maySupportBasicCC?: boolean;
+	readonly supportsOptimisticValueUpdate?: boolean;
 }
 
 interface GenericDeviceClassDefinition extends DeviceClassProperties {
@@ -28,6 +29,7 @@ export interface GenericDeviceClass {
 	readonly zwavePlusDeviceType?: string;
 	readonly requiresSecurity: boolean;
 	readonly maySupportBasicCC: boolean;
+	readonly supportsOptimisticValueUpdate: boolean;
 }
 
 export interface GenericDeviceClassWithSpecific extends GenericDeviceClass {
@@ -183,6 +185,7 @@ const deviceClasses: Record<number, GenericDeviceClassDefinition> = Object
 			},
 			[0x09]: {
 				label: "Window Covering",
+				supportsOptimisticValueUpdate: false,
 				specific: {
 					[0x01]: {
 						label: "Simple Window Covering Control",
@@ -249,6 +252,7 @@ const deviceClasses: Record<number, GenericDeviceClassDefinition> = Object
 					},
 					[0x03]: {
 						label: "Multiposition Motor",
+						supportsOptimisticValueUpdate: false,
 					},
 					[0x04]: {
 						label: "Multilevel Scene Switch",
@@ -257,15 +261,18 @@ const deviceClasses: Record<number, GenericDeviceClassDefinition> = Object
 						label: "Motor Control Class A",
 						zwavePlusDeviceType:
 							"Window Covering - No Position/Endpoint",
+						supportsOptimisticValueUpdate: false,
 					},
 					[0x06]: {
 						label: "Motor Control Class B",
 						zwavePlusDeviceType: "Window Covering - Endpoint Aware",
+						supportsOptimisticValueUpdate: false,
 					},
 					[0x07]: {
 						label: "Motor Control Class C",
 						zwavePlusDeviceType:
 							"Window Covering - Position/Endpoint Aware",
+						supportsOptimisticValueUpdate: false,
 					},
 					[0x08]: {
 						label: "Fan Switch",
@@ -491,6 +498,8 @@ export function getGenericDeviceClass(generic: number): GenericDeviceClass {
 		zwavePlusDeviceType: genericClass.zwavePlusDeviceType,
 		requiresSecurity: genericClass.requiresSecurity ?? false,
 		maySupportBasicCC: genericClass.maySupportBasicCC ?? true,
+		supportsOptimisticValueUpdate:
+			genericClass.supportsOptimisticValueUpdate ?? true,
 	};
 }
 
@@ -526,6 +535,7 @@ function getUnknownGenericDeviceClass(key: number): GenericDeviceClass {
 		label: `UNKNOWN (${num2hex(key)})`,
 		requiresSecurity: false,
 		maySupportBasicCC: true,
+		supportsOptimisticValueUpdate: true,
 	};
 }
 
@@ -563,6 +573,10 @@ export function getSpecificDeviceClass(
 		maySupportBasicCC: specificClass.maySupportBasicCC
 			?? genericClass.maySupportBasicCC
 			?? true,
+		supportsOptimisticValueUpdate:
+			specificClass.supportsOptimisticValueUpdate
+				?? genericClass.supportsOptimisticValueUpdate
+				?? true,
 	};
 }
 
@@ -577,6 +591,8 @@ function getUnknownSpecificDeviceClass(
 			zwavePlusDeviceType: genericClass.zwavePlusDeviceType,
 			requiresSecurity: genericClass.requiresSecurity ?? false,
 			maySupportBasicCC: genericClass.maySupportBasicCC ?? true,
+			supportsOptimisticValueUpdate:
+				genericClass.supportsOptimisticValueUpdate ?? true,
 		};
 	} else {
 		return {
@@ -585,6 +601,8 @@ function getUnknownSpecificDeviceClass(
 			zwavePlusDeviceType: genericClass.zwavePlusDeviceType,
 			requiresSecurity: genericClass.requiresSecurity ?? false,
 			maySupportBasicCC: genericClass.maySupportBasicCC ?? true,
+			supportsOptimisticValueUpdate:
+				genericClass.supportsOptimisticValueUpdate ?? true,
 		};
 	}
 }
