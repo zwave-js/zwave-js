@@ -41,18 +41,38 @@ const execOptions = {
 async function main() {
 	// Always build the maintenance project, so codegen tasks work
 	console.log("Building maintenance project...");
-	await spawn(
-		"yarn",
-		[
-			"workspace",
-			"@zwave-js/maintenance",
-			"run",
-			buildCommand,
-			...(useTSGO ? [] : ["--verbose"]),
-			...buildArgs,
-		],
-		execOptions,
-	);
+	if (useTSGO) {
+		await spawn(
+			"yarn",
+			[
+				"workspaces",
+				"foreach",
+				"--topological",
+				"--topological-dev",
+				"--parallel",
+				"--recursive",
+				"--from",
+				"@zwave-js/maintenance",
+				"run",
+				buildCommand,
+				...buildArgs,
+			],
+			execOptions,
+		);
+	} else {
+		await spawn(
+			"yarn",
+			[
+				"workspace",
+				"@zwave-js/maintenance",
+				"run",
+				buildCommand,
+				"--verbose",
+				...buildArgs,
+			],
+			execOptions,
+		);
+	}
 
 	if (needsNoCodegen.includes(project)) {
 		// We built the project or more than needed, so we're done
@@ -110,7 +130,7 @@ async function main() {
 	if (useTSGO) {
 		// TSGO does not support project references yet, but it is 10x faster
 		// so we just build everything
-		await execa(
+		await spawn(
 			"yarn",
 			[
 				"workspaces",
