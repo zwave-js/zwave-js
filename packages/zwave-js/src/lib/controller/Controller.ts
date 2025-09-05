@@ -896,14 +896,6 @@ export class ZWaveController
 			);
 		}
 
-		const firstNodeIsLR = isLongRangeNodeId(nodeIDs[0]);
-		if (nodeIDs.some((id) => isLongRangeNodeId(id) !== firstNodeIsLR)) {
-			throw new ZWaveError(
-				"Cannot create a multicast group with mixed Z-Wave Classic and Z-Wave Long Range nodes",
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
 		const nodes = nodeIDs.map((id) => this._nodes.getOrThrow(id));
 		return new VirtualNode(undefined, this.driver, nodes);
 	}
