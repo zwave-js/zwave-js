@@ -81,18 +81,18 @@ Sometimes this is also necessary to pick up changed device config files or repai
 
 Now that we got this out of the way, here's a collection of **common** issues and how to solve them.
 
-🐛 [Connectivity issues](troubleshooting/connectivity-issues.md) (unreliable communication, slow network, no responses from devices, etc.)
+🐛 [Connectivity issues](troubleshooting/first-steps.md) (unreliable communication, slow network, no responses from devices, etc.)
 
-🐛 [Problems with 700 series sticks](troubleshooting/otw-upgrade.md)
+🐛 [Problems with 700 series sticks](troubleshooting/common-issues.md#_700800-series-controller-is-quotjammedquot-or-becomes-unresponsive)
 
 🐛 [Nonsensical values appear randomly](troubleshooting/nonsensical-values.md), like water flow sensors on an electrical outlet, or CO<sub>2</sub> readings on a motion sensor.
 
 🐛 [Missing updates from a device](troubleshooting/no-updates.md), e.g. when toggling it physically
 
-🐛 [Configuration parameters are missing or wrong](troubleshooting/missing-config-params.md)
+🐛 [Configuration parameters are missing or wrong](troubleshooting/common-issues.md#configuration-parameters-are-missing-or-wrong)
 
-🐛 [A device is not identified (unknown product)](troubleshooting/unidentified-device.md)
+🐛 [A device is not identified (unknown product)](troubleshooting/common-issues.md#a-device-is-not-identified)
 
-🐛 [A lock (or any secure device) cannot be controlled](troubleshooting/lock-uncontrollable.md)
+🐛 [A lock (or any secure device) cannot be controlled](troubleshooting/common-issues.md#a-lock-or-any-secure-device-cannot-be-controlled)
 
-🐛 [Some values are missing](troubleshooting/missing-values.md)
+🐛 [Some values are missing](troubleshooting/common-issues.md#some-values-are-missing)
