@@ -68,7 +68,7 @@
     "@microsoft/api-extractor": "^7.55.1",
     "@types/node": "^20.19.23",
     "@types/sinon": "^17.0.4",
-    "@typescript/native-preview": "^7.0.0-dev.20250701.1",
+    "@typescript/native-preview": "7.0.0-dev.20250904.1",
     "del-cli": "^6.0.0",
     "sinon": "^21.0.0",
     "tsx": "^4.20.5",

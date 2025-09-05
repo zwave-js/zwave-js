@@ -39,13 +39,13 @@
     "build": "tsc -b tsconfig.build.json --pretty",
     "build:native": "tsgo -p tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "bootstrap": "yarn build",
+    "bootstrap": "yarn build:native",
     "pretest": "del-cli \"test/fixtures/*.{mjs,map}\" && tsc -p tsconfig.test.json && cpy \"test/build/test/fixtures/*.mjs\" test/fixtures && del-cli test/build",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "@typescript/native-preview": "^7.0.0-dev.20250701.1",
+    "@typescript/native-preview": "7.0.0-dev.20250904.1",
     "cpy-cli": "^6.0.0",
     "del-cli": "^6.0.0",
     "nano-spawn": "^2.0.0",
