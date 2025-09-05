@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Extract log file from discussion body
       uses: actions/github-script@v7
@@ -194,7 +194,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare environment
       uses: ./.github/actions/prepare-env
