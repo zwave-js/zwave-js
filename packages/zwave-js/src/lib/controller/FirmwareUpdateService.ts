@@ -9,6 +9,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	ObjectKeyMap,
 	type Timer,
 	formatId,
 	getenv,
@@ -17,10 +18,10 @@ import {
 import type { Options as KyOptions } from "ky";
 import type PQueue from "p-queue";
 import type {
+	FirmwareUpdateBulkInfo,
 	FirmwareUpdateDeviceID,
 	FirmwareUpdateFileInfo,
 	FirmwareUpdateInfo,
-	FirmwareUpdateServiceResponse,
 } from "./_Types.js";
 
 function serviceURL(): string {
@@ -32,9 +33,13 @@ const DOWNLOAD_TIMEOUT = 60000;
 const MAX_CACHE_SECONDS = 60 * 60 * 24; // Cache for a day at max
 const CLEAN_CACHE_INTERVAL_MS = 60 * 60 * 1000; // Remove stale entries from the cache every hour
 
-const requestCache = new Map<string, CachedRequest<unknown>>();
-interface CachedRequest<T> {
-	response: T;
+// Cache for individual device firmware updates
+const deviceFirmwareCache = new ObjectKeyMap<
+	FirmwareUpdateDeviceID,
+	CachedDeviceResponse
+>();
+interface CachedDeviceResponse {
+	updates: FirmwareUpdateInfo[];
 	staleDate: number;
 }
 
@@ -47,13 +52,13 @@ function cleanCache() {
 	cleanCacheTimeout = undefined;
 
 	const now = Date.now();
-	for (const [key, cached] of requestCache) {
+	for (const [deviceKey, cached] of deviceFirmwareCache) {
 		if (cached.staleDate < now) {
-			requestCache.delete(key);
+			deviceFirmwareCache.delete(deviceKey);
 		}
 	}
 
-	if (requestCache.size > 0) {
+	if (deviceFirmwareCache.size > 0) {
 		cleanCacheTimeout = setTimer(
 			cleanCache,
 			CLEAN_CACHE_INTERVAL_MS,
@@ -61,27 +66,8 @@ function cleanCache() {
 	}
 }
 
-async function cachedRequest<T>(url: string, config: KyOptions): Promise<T> {
-	const hash = Bytes.view(
-		await digest(
-			"sha-256",
-			Bytes.from(JSON.stringify(config.json)),
-		),
-	).toString("hex");
-	const cacheKey = `${config.method}:${url}:${hash}`;
-
-	// Return cached requests if they are not stale yet
-	if (requestCache.has(cacheKey)) {
-		const cached = requestCache.get(cacheKey)!;
-		if (cached.staleDate > Date.now()) {
-			return cached.response as T;
-		}
-	}
-
-	const { default: ky } = await import("ky");
-	const response = await ky(url, config);
-	const responseJson = await response.json<T>();
-
+/** Calculates cache expiry time based on response headers */
+function calculateCacheExpiry(response: Response): number {
 	// Check if we can cache the response
 	if (response.status === 200 && response.headers.has("cache-control")) {
 		const cacheControl = response.headers.get("cache-control")!;
@@ -99,33 +85,32 @@ async function cachedRequest<T>(url: string, config: KyOptions): Promise<T> {
 			if (age) {
 				currentAge = parseInt(age, 10);
 			} else if (date) {
-				currentAge = (Date.now() - Date.parse(date))
-					/ 1000;
+				currentAge = (Date.now() - Date.parse(date)) / 1000;
 			} else {
 				currentAge = 0;
 			}
 			currentAge = Math.max(0, currentAge);
 
 			if (maxAge > currentAge) {
-				requestCache.set(cacheKey, {
-					response: responseJson,
-					staleDate: Date.now()
-						+ Math.min(MAX_CACHE_SECONDS, maxAge - currentAge)
-							* 1000,
-				});
+				return Date.now()
+					+ Math.min(MAX_CACHE_SECONDS, maxAge - currentAge) * 1000;
 			}
 		}
 	}
 
-	// Regularly clean the cache
-	if (!cleanCacheTimeout) {
-		cleanCacheTimeout = setTimer(
-			cleanCache,
-			CLEAN_CACHE_INTERVAL_MS,
-		).unref();
-	}
+	// Default fallback cache duration
+	return Date.now() + (MAX_CACHE_SECONDS * 1000);
+}
 
-	return responseJson;
+async function makeRequest<T>(
+	url: string,
+	config: KyOptions,
+): Promise<{ data: T; expiry: number }> {
+	const { default: ky } = await import("ky");
+	const response = await ky(url, config);
+	const responseJson = await response.json<T>();
+
+	return { data: responseJson, expiry: calculateCacheExpiry(response) };
 }
 
 function hasExtension(pathname: string): boolean {
@@ -135,7 +120,12 @@ function hasExtension(pathname: string): boolean {
 export interface GetAvailableFirmwareUpdateOptions {
 	userAgent: string;
 	apiKey?: string;
-	includePrereleases?: boolean;
+}
+
+export interface GetAvailableFirmwareUpdateBulkOptions
+	extends GetAvailableFirmwareUpdateOptions
+{
+	rfRegion?: RFRegion;
 }
 
 /** Converts the RF region to a format the update service understands */
@@ -169,6 +159,138 @@ function rfRegionToUpdateServiceRegion(
 }
 
 /**
+ * Retrieves the available firmware updates for multiple devices in a single request.
+ * Returns a map of device keys to their respective firmware update information.
+ */
+export async function getAvailableFirmwareUpdatesBulk(
+	deviceIds: FirmwareUpdateDeviceID[],
+	options: GetAvailableFirmwareUpdateBulkOptions,
+): Promise<ObjectKeyMap<FirmwareUpdateDeviceID, FirmwareUpdateInfo[]>> {
+	// Remove duplicates based on device fingerprint
+	const uniqueDeviceIds = deviceIds.filter(
+		(device, index) =>
+			index
+				=== deviceIds.findIndex((d) =>
+					d.manufacturerId === device.manufacturerId
+					&& d.productType === device.productType
+					&& d.productId === device.productId
+					&& d.firmwareVersion === device.firmwareVersion
+				),
+	);
+
+	console.log("Checking for firmware updates for devices:", uniqueDeviceIds);
+
+	const now = Date.now();
+	const freshDevices: FirmwareUpdateDeviceID[] = [];
+	const staleDevices: FirmwareUpdateDeviceID[] = [];
+
+	// Split devices into those with fresh cache and those needing updates
+	for (const device of uniqueDeviceIds) {
+		const cached = deviceFirmwareCache.get(device);
+		if (cached && cached.staleDate > now) {
+			freshDevices.push(device);
+		} else {
+			staleDevices.push(device);
+		}
+	}
+
+	console.log("Cached devices:", freshDevices);
+	console.log("Stale devices:", staleDevices);
+
+	// If we have devices with stale cache, make a request for them
+	if (staleDevices.length > 0) {
+		const headers = new Headers({
+			"User-Agent": options.userAgent,
+			"Content-Type": "application/json",
+		});
+		if (options.apiKey) {
+			headers.set("X-API-Key", options.apiKey);
+		}
+
+		const body: Record<string, any> = {
+			devices: staleDevices.map((device) => ({
+				manufacturerId: formatId(device.manufacturerId),
+				productType: formatId(device.productType),
+				productId: formatId(device.productId),
+				firmwareVersion: device.firmwareVersion,
+			})),
+		};
+
+		const rfRegion = rfRegionToUpdateServiceRegion(options.rfRegion);
+		if (rfRegion) {
+			body.region = rfRegion;
+		}
+
+		const url = `${serviceURL()}/api/v4/updates`;
+		const config: KyOptions = {
+			method: "POST",
+			json: body,
+			headers,
+		};
+
+		if (!requestQueue) {
+			// I just love ESM
+			const PQueue = (await import("p-queue")).default;
+			requestQueue = new PQueue({ concurrency: 2 });
+		}
+
+		const requestResult = await requestQueue.add(() =>
+			makeRequest<FirmwareUpdateBulkInfo[]>(url, config)
+		);
+		const { data: result, expiry } = requestResult!;
+
+		for (const deviceResponse of result) {
+			// Find the original device info to get the RF region
+			const originalDevice = staleDevices.find(
+				(device) =>
+					formatId(device.manufacturerId)
+						=== deviceResponse.manufacturerId
+					&& formatId(device.productType)
+						=== deviceResponse.productType
+					&& formatId(device.productId) === deviceResponse.productId
+					&& device.firmwareVersion
+						=== deviceResponse.firmwareVersion,
+			);
+
+			if (originalDevice) {
+				const updates: FirmwareUpdateInfo[] = deviceResponse.updates
+					.map(
+						(update) => ({
+							device: originalDevice,
+							...update,
+							channel: update.channel ?? "stable",
+						}),
+					);
+
+				deviceFirmwareCache.set(originalDevice, {
+					updates,
+					staleDate: expiry,
+				});
+			}
+		}
+	}
+
+	// Build the final result map with all requested devices
+	const ret = new ObjectKeyMap<FirmwareUpdateDeviceID, FirmwareUpdateInfo[]>(
+		uniqueDeviceIds.map((d) => [
+			d,
+			deviceFirmwareCache.get(d)?.updates ?? [],
+		]),
+	);
+
+	// Regularly clean the cache
+	if (!cleanCacheTimeout) {
+		cleanCacheTimeout = setTimer(
+			cleanCache,
+			CLEAN_CACHE_INTERVAL_MS,
+		).unref();
+	}
+
+	console.log("Returning firmware update info:", [...ret.values()]);
+	return ret;
+}
+
+/**
  * Retrieves the available firmware updates for the node with the given fingerprint.
  * Returns the service response or `undefined` in case of an error.
  */
@@ -176,59 +298,12 @@ export async function getAvailableFirmwareUpdates(
 	deviceId: FirmwareUpdateDeviceID,
 	options: GetAvailableFirmwareUpdateOptions,
 ): Promise<FirmwareUpdateInfo[]> {
-	const headers = new Headers({
-		"User-Agent": options.userAgent,
-		"Content-Type": "application/json",
-	});
-	if (options.apiKey) {
-		headers.set("X-API-Key", options.apiKey);
-	}
-
-	const body: Record<string, string> = {
-		manufacturerId: formatId(deviceId.manufacturerId),
-		productType: formatId(deviceId.productType),
-		productId: formatId(deviceId.productId),
-		firmwareVersion: deviceId.firmwareVersion,
-	};
-	const rfRegion = rfRegionToUpdateServiceRegion(deviceId.rfRegion);
-	if (rfRegion) {
-		body.region = rfRegion;
-	}
-
-	// Prereleases and/or RF region-specific updates are only available in v3
-	const apiVersion = options.includePrereleases || !!rfRegion ? "v3" : "v1";
-
-	const url = `${serviceURL()}/api/${apiVersion}/updates`;
-	const config: KyOptions = {
-		method: "POST",
-		json: body,
-		// Consider re-enabling this instead of using cachedGot()
-		// At the moment, the built-in caching has some issues though, so we stick
-		// with our own implementation
-		// cache: requestCache,
-		// cacheOptions: {
-		// 	shared: false,
-		// },
-		headers,
-	};
-
-	if (!requestQueue) {
-		// I just love ESM
-		const PQueue = (await import("p-queue")).default;
-		requestQueue = new PQueue({ concurrency: 2 });
-	}
-	// Weird types...
-	const result = (
-		await requestQueue.add(() => cachedRequest(url, config))
-	) as FirmwareUpdateServiceResponse[];
-
-	// Remember the device ID in the response, so we can use it later
-	// to ensure the update is for the correct device
-	return result.map((update) => ({
-		device: deviceId,
-		...update,
-		channel: update.channel ?? "stable",
-	}));
+	// Use the bulk function for a single device
+	const bulkResult = await getAvailableFirmwareUpdatesBulk(
+		[deviceId],
+		options,
+	);
+	return bulkResult.get(deviceId) || [];
 }
 
 export async function downloadFirmwareUpdate(
