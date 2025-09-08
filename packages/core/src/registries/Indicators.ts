@@ -122,6 +122,8 @@ export interface IndicatorPropertyDefinition {
 	readonly max?: number;
 	readonly readonly?: boolean;
 	readonly type?: ValueType;
+	/** Whether this property should be exposed as a CC value. Default: false */
+	readonly exposeAsValue?: boolean;
 }
 
 export interface IndicatorProperty extends IndicatorPropertyDefinition {
@@ -132,10 +134,12 @@ const indicatorProperties = Object.freeze(
 	{
 		[0x01]: {
 			label: "Multilevel",
+			exposeAsValue: true,
 		},
 		[0x02]: {
 			label: "Binary",
 			type: "boolean",
+			exposeAsValue: true,
 		},
 		[0x03]: {
 			label: "On/Off Period: Duration",
@@ -177,6 +181,7 @@ const indicatorProperties = Object.freeze(
 			description:
 				"This property is used to set the volume of a indicator. 0 means off/mute.",
 			max: 100,
+			exposeAsValue: true,
 		},
 		[0x10]: {
 			label: "Low power",

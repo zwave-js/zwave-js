@@ -1,8 +1,14 @@
 import { configDir } from "#config_dir";
-import { ZWaveError, ZWaveErrorCodes, digest } from "@zwave-js/core";
+import {
+	ZWaveError,
+	ZWaveErrorCodes,
+	deflateSync,
+	digest,
+} from "@zwave-js/core";
 import {
 	Bytes,
 	type JSONObject,
+	cloneDeep,
 	enumFilesRecursive,
 	formatId,
 	getenv,
@@ -50,6 +56,7 @@ import {
 	type ParamInformation,
 	parseConditionalParamInformationMap,
 } from "./ParamInformation.js";
+import { ConditionalSceneConfig, type SceneConfig } from "./SceneConfig.js";
 import type { DeviceID, FirmwareVersionRange } from "./shared.js";
 
 export interface DeviceConfigIndexEntry {
@@ -401,6 +408,42 @@ function isFirmwareVersion(val: any): val is string {
 	);
 }
 
+const deflateDict = Bytes.from(
+	// Substrings appearing in the device config files in descending order of frequency
+	// except for very short ones like 0, 1, ...
+	// WARNING: THIS MUST NOT BE CHANGED! Doing so breaks decompressing stored hashes.
+	[
+		`"parameterNumber":`,
+		`255`,
+		`"value":`,
+		`"defaultValue":`,
+		`"valueSize":`,
+		`"maxValue":`,
+		`"minValue":`,
+		`"options":`,
+		`true`,
+		`false`,
+		`"allowManualEntry":`,
+		`"maxNodes":`,
+		`100`,
+		`"unsigned":`,
+		`"paramInformation":`,
+		`"isLifeline":`,
+		`"seconds"`,
+		`99`,
+		`127`,
+		`"%"`,
+		`65535`,
+		`32767`,
+		`"minutes"`,
+		`"endpoints":`,
+		`"hours"`,
+		`"multiChannel":`,
+	]
+		.join(""),
+	"utf8",
+);
+
 /** This class represents a device config entry whose conditional settings have not been evaluated yet */
 export class ConditionalDeviceConfig {
 	public static async from(
@@ -638,6 +681,52 @@ metadata is not an object`,
 				definition.metadata,
 			);
 		}
+
+		if (definition.scenes != undefined) {
+			const scenes = new Map<
+				number,
+				ConditionalSceneConfig
+			>();
+			if (!isObject(definition.scenes)) {
+				throwInvalidConfig(
+					`device`,
+					`packages/config/config/devices/${filename}:
+scenes is not an object`,
+				);
+			}
+			for (
+				const [key, sceneDefinition] of Object.entries(
+					definition.scenes,
+				)
+			) {
+				if (!/^[1-9][0-9]*$/.test(key)) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+invalid scene id "${key}" in scenes - must be a positive integer (1-255)`,
+					);
+				}
+
+				const keyNum = parseInt(key, 10);
+				if (keyNum < 1 || keyNum > 255) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+scene number ${keyNum} must be between 1 and 255`,
+					);
+				}
+
+				scenes.set(
+					keyNum,
+					new ConditionalSceneConfig(
+						filename,
+						keyNum,
+						sceneDefinition as any,
+					),
+				);
+			}
+			this.scenes = scenes;
+		}
 	}
 
 	public readonly filename: string;
@@ -658,6 +747,7 @@ metadata is not an object`,
 		number,
 		ConditionalAssociationConfig
 	>;
+	public readonly scenes?: ReadonlyMap<number, ConditionalSceneConfig>;
 	public readonly paramInformation?: ConditionalParamInfoMap;
 	/**
 	 * Contains manufacturer-specific support information for the
@@ -687,6 +777,7 @@ metadata is not an object`,
 			this.preferred,
 			evaluateDeep(this.endpoints, deviceId),
 			evaluateDeep(this.associations, deviceId),
+			evaluateDeep(this.scenes, deviceId),
 			evaluateDeep(this.paramInformation, deviceId),
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
@@ -731,6 +822,7 @@ export class DeviceConfig {
 		preferred: boolean,
 		endpoints?: ReadonlyMap<number, EndpointConfig>,
 		associations?: ReadonlyMap<number, AssociationConfig>,
+		scenes?: ReadonlyMap<number, SceneConfig>,
 		paramInformation?: ParamInfoMap,
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
@@ -747,6 +839,7 @@ export class DeviceConfig {
 		this.preferred = preferred;
 		this.endpoints = endpoints;
 		this.associations = associations;
+		this.scenes = scenes;
 		this.paramInformation = paramInformation;
 		this.proprietary = proprietary;
 		this.compat = compat;
@@ -769,6 +862,7 @@ export class DeviceConfig {
 	public readonly preferred: boolean;
 	public readonly endpoints?: ReadonlyMap<number, EndpointConfig>;
 	public readonly associations?: ReadonlyMap<number, AssociationConfig>;
+	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 	public readonly paramInformation?: ParamInfoMap;
 	/**
 	 * Contains manufacturer-specific support information for the
@@ -797,7 +891,7 @@ export class DeviceConfig {
 		}
 	}
 
-	private getHashable(): Uint8Array {
+	private getHashable(version: 0 | 1 | 2): Record<string, any> {
 		// We only need to compare the information that is persisted elsewhere:
 		// - config parameters
 		// - functional association settings
@@ -846,9 +940,9 @@ export class DeviceConfig {
 				`${param.parameterNumber}${
 					param.valueBitMask ? `[${num2hex(param.valueBitMask)}]` : ""
 				}`;
-			target.paramInformation = [...map.values()].sort((a, b) =>
-				getParamKey(a).localeCompare(getParamKey(b))
-			);
+			target.paramInformation = [...map.values()]
+				.sort((a, b) => getParamKey(a).localeCompare(getParamKey(b)))
+				.map((p) => cloneDeep(p));
 		};
 
 		// Clone associations and param information on the root (ep 0) and endpoints
@@ -933,21 +1027,125 @@ export class DeviceConfig {
 			}
 		}
 
-		hashable = sortObject(hashable);
+		if (version > 1) {
+			// From version 2 and on, we ignore labels and descriptions, and load them dynamically
+			for (
+				const ep of Object.values<Record<string, any>>(
+					hashable.endpoints ?? {},
+				)
+			) {
+				for (const param of ep.paramInformation ?? []) {
+					delete param.label;
+					delete param.description;
+					for (const opt of param.options ?? []) {
+						delete opt.label;
+					}
+				}
+			}
+		}
 
-		return Bytes.from(JSON.stringify(hashable), "utf8");
+		hashable = sortObject(hashable);
+		return hashable;
 	}
 
 	/**
 	 * Returns a hash code that can be used to check whether a device config has changed enough to require a re-interview.
 	 */
-	public getHash(
-		algorithm: "md5" | "sha-256" = "sha-256",
+	public async getHash(
+		version: 0 | 1 | 2 = DeviceConfig.maxHashVersion,
 	): Promise<Uint8Array> {
 		// Figure out what to hash
-		const buffer = this.getHashable();
+		const hashable = this.getHashable(version);
 
-		// And create a hash from it. This does not need to be cryptographically secure, just good enough to detect changes.
-		return digest(algorithm, buffer);
+		// And create a "hash" from it. Older versions used a non-cryptographic hash,
+		// newer versions compress a subset of the config file.
+		let hash: Uint8Array;
+		if (version === 0) {
+			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
+			return await digest("md5", buffer);
+		} else if (version === 1) {
+			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
+			return await digest("sha-256", buffer);
+		} else {
+			hash = deflateSync(
+				Bytes.from(JSON.stringify(hashable), "utf8"),
+				// Try to make the hash as small as possible
+				{ level: 9, dictionary: deflateDict },
+			);
+		}
+
+		// Version the hash from v2 onwards, so we can change the format in the future
+		const prefixBytes = Bytes.from(`$v${version}$`, "utf8");
+		return Bytes.concat([prefixBytes, hash]);
+	}
+
+	public static get maxHashVersion(): 2 {
+		return 2;
+	}
+
+	public static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean {
+		const parsedHash = parseHash(hash);
+		const parsedOther = parseHash(other);
+		// If one of the hashes could not be parsed, they are not equal
+		if (!parsedHash || !parsedOther) return false;
+
+		// For legacy hashes, we only compare the hash data. We already make sure during
+		// parsing of the cache files that we only need to compare hashes of the same version,
+		// so simply comparing the contents is sufficient.
+		if (parsedHash.version < 2 && parsedOther.version < 2) {
+			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		}
+		// We take care during loading to downlevel the current config hash to legacy versions if needed.
+		// If we end up with just one legacy hash here, something went wrong. Just bail in that case.
+		if (parsedHash.version < 2 || parsedOther.version < 2) {
+			return false;
+		}
+
+		// This is a versioned hash. If both versions are equal, it's simple - just compare the hash data
+		if (parsedHash.version === parsedOther.version) {
+			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		}
+
+		// For different versions, we have to do some case by case checks. For example, a newer hash version
+		// might remove or add data into the hashable, so we cannot simply convert between versions easily.
+		// Implement when that is actually needed.
+		return false;
+	}
+}
+
+function parseHash(hash: Uint8Array): {
+	version: number;
+	hashData: Uint8Array;
+} | undefined {
+	const hashString = Bytes.view(hash).toString("utf8");
+	const versionMatch = hashString.match(/^\$v(\d+)\$/);
+	if (versionMatch) {
+		// This is a versioned hash
+		const version = parseInt(versionMatch[1], 10);
+		const hashData = hash.subarray(
+			// The prefix is ASCII, so this is safe to do even in the context of UTF-8
+			versionMatch[0].length,
+		);
+		return {
+			version,
+			hashData,
+		};
+	}
+
+	// This is probably an unversioned legacy hash
+	switch (hash.length) {
+		case 16: // MD5
+			return {
+				version: 0,
+				hashData: hash,
+			};
+		case 32: // SHA-256
+			return {
+				version: 1,
+				hashData: hash,
+			};
+		default:
+			// This is not a valid hash
+			return undefined;
 	}
 }

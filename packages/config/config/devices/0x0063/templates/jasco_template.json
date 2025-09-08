@@ -472,5 +472,9 @@
 				"value": 0
 			}
 		]
+	},
+	"smart_bulb_mode": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Smart Bulb Mode"
 	}
 }

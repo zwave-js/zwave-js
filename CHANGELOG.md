@@ -4,6 +4,87 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.12.0 (2025-08-19)
+### Features
+* Firmware updates that fail due to an XMODEM communication error are now retried automatically, reducing the risk to get stuck in bootloader until a new firmware is flashed (#8086)
+
+### Bugfixes
+* Fixes an issue where the controller would indefinitely be considered as recovering from a jammed state, preventing commands from being re-transmitted (#8052)
+* Fixed an issue where the key up event would be force-emitted too early on legacy devices that incorrectly report not to support the "slow refresh" capability (#8087)
+* Canceling a "replace failed node" operation no longer prevents other inclusion/exclusion operations from being started (#8084)
+
+### Config file changes
+* Add HomeSeer WS300 (#8074)
+
+## 15.11.0 (2025-08-11)
+### Features
+* Add support for defining Scene labels in config files (#7989)
+* Disable SmartStart provisioning entries after 5 failed inclusion attempts (#8017)
+
+### Bugfixes
+* Fixed an issue where Aeotec Z-Stick 5 would become unresponsive during NVM backup (#8047)
+* Fixed firmware update progress jumping back and forth (#8019)
+* Correctly restore cached information on a secondary controller (#7994)
+* Fixed incorrect long-term averaging of RSSI values (#8024)
+* Ensure failures during NVM migration are surfaced to the application (#8014)
+
+### Config file changes
+* Prepare Inovelli VZW31-SN for future firmware upgrade (#8005)
+* Add productID `0x0111` to Fakro AMZ Solar awning (#7998)
+* Add ECO-DIM.07 800 series version (#8011)
+* Update Aeotec Trisensor 8 to firmware 2.8.4 (#8013)
+* Remove non-existent parameter 107 for Shelly Wave Plus S (#8010)
+* Typo in Shelly dimmer output label (#8006)
+
+### Changes under the hood
+* Update devcontainer image (#8015)
+
+## 15.10.0 (2025-07-23)
+### Features
+* Convert Battery CC `isLow` value to notification event (#7984)
+* Clean up Indicator CC values and fix their implementation (#7980)
+
+### Bugfixes
+* Use configured RF region as fallback for firmware update checks on controllers without support for querying the region (#7992)
+* After a successful supervised `Multilevel Switch Set` with value 255, the actual value is now queried immediately (#7963)
+
+### Config file changes
+* Remove proprietary RGB functionality for ZWA-2 (#8000)
+* Add fingerprint to FireAngel ZHT-630, add FireAngel ZST-630 (#7117)
+* Remove unlock mapping for Schlage lock FE599 (#7870)
+* Add Fantem FT117 range extender (#7962)
+* Add Zooz ZEN35 (#7757)
+* Update label and description for ZWA-2 (#7968)
+* Add missing parameter 117 (Reboot) on Shelly Wave Plug S EU (QNPL-0A112) (#7969)
+
+### Changes under the hood
+* Setup environment for Copilot Agent (#7995)
+
+## 15.9.0 (2025-07-10)
+### Features
+* Apply auto powerlevels on every actual region change (#7862)
+* If auto-powerlevels are enabled, Z-Wave JS now detects when a controller is incorrectly set to the SDK default powerlevels of +20/+20 dBm applies the correct powerlevels for the current RF region if possible (#7965)
+* Reworked how changes to config files are detected, and auto-apply config parameter labels and descriptions automatically on startup. This should avoid having to re-interview devices after label-only changes, at least for future changes. (#7959)
+
+### Bugfixes
+* Omit LR nodes from rebuild routes progress (#7936)
+* Fixed an issue where joining another network with S2 would not display the DSK (#7935)
+
+### Config file changes
+* Rename Antenna to Adapter for ZWA-2 (#7957)
+* Add First Alert Smart Smoke & CO Alarm (#7912)
+* Fix unmatched quoting in config files (#7934)
+* Add Inovelli VZW32-SN mmWave Switch (#7920)
+* Update and correct Leviton device metadata (#7928)
+* Add params for Enbrighten (Jasco) 59337 and 59338 (#7814)
+* Add fingerprint `0x8101:0x4a36` to McoHome MH4936 (#7869)
+* Improve accuracy of N4002/N4012 rate parameter labels (#7894)
+
+### Changes under the hood
+* The config import script now imports the brand name and correct param descriptions from the Z-Wave Alliance DB (#7951)
+* Fine tune instructions for LED feedback in inclusion/exclusion/reset instructions (#7924)
+* Teach Copilot to author and review device config files (#7921, #7922, #7923)
+
 ## 15.8.0 (2025-06-26)
 In this release, we reworked the inclusion, exclusion, remove failed and replace failed node processes. Under the hood, they are now driven by the task scheduler that was introduced in v13.5.0. This gives us more control over their execution and prevents individual processes from interfering with each other, especially the removal of nodes that failed to include via SmartStart. Previously this could lead to some odd issues.
 

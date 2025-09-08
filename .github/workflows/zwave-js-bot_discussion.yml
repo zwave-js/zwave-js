@@ -8,6 +8,8 @@ jobs:
   # Notify author when they post the wrong log
   ensure-discussion-logfile:
     runs-on: [ubuntu-latest]
+    outputs:
+      result: ${{ steps.feedback.outputs.result }}
 
     steps:
     - name: Checkout master branch
@@ -41,7 +43,7 @@ jobs:
     - name: Classify logfile using AI
       id: ai_detection
       if: steps.extract.outputs.shouldContinue == 'true'
-      uses: actions/ai-inference@v1.1.0
+      uses: actions/ai-inference@v1.2.3
       with:
         model: openai/gpt-4o-mini
         system-prompt: |
@@ -176,4 +178,59 @@ jobs:
           }
 
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
-          return bot.ensureLogfileFeedbackInDiscussion({github, context}, feedback);
+          await bot.ensureLogfileFeedbackInDiscussion({github, context}, feedback);
+
+          return feedback;
+
+  # Auto-analyze logfile if a valid one is found
+  auto-analyze-logfile:
+    runs-on: [ubuntu-latest]
+    needs: ensure-discussion-logfile
+    if: needs.ensure-discussion-logfile.outputs.result == 'OK'
+
+    strategy:
+      matrix:
+        node-version: [22] # This should be LTS
+
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v4
+
+    - name: Prepare environment
+      uses: ./.github/actions/prepare-env
+      with:
+        node-version: ${{ matrix.node-version }}
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get logfile URL from discussion
+      id: get_logfile_url
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.BOT_TOKEN }}
+        result-encoding: string
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.extractLogfileUrlFromDiscussion({github, context});
+
+    - name: Extract query for log analyzer
+      uses: ./.github/actions/extract-log-analyzer-query
+      id: extract_query
+      with:
+        discussion-body: ${{ github.event.discussion.body }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install logfile analyzer
+      run: yarn add --dev @zwave-js/log-analyzer
+
+    - name: Analyze logfile
+      uses: actions/github-script@v7
+      env:
+        LOGFILE_URL: ${{ steps.get_logfile_url.outputs.result }}
+        QUERY: ${{ steps.extract_query.outputs.result }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        IS_AUTO_ANALYSIS: 'true'
+      with:
+        github-token: ${{ secrets.BOT_TOKEN }}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.analyzeLogfileInDiscussion({github, context, core});

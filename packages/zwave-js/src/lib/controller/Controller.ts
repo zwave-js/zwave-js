@@ -704,6 +704,18 @@ export class ZWaveController
 		return this._rfRegion;
 	}
 
+	private _txPower: MaybeNotKnown<number>;
+	/** The transmit power used for Z-Wave mesh, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setPowerlevel}. */
+	public get txPower(): MaybeNotKnown<number> {
+		return this._txPower;
+	}
+
+	private _powerlevelCalibration: MaybeNotKnown<number>;
+	/** The calibration value for the transmit power, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setPowerlevel}. */
+	public get powerlevelCalibration(): MaybeNotKnown<number> {
+		return this._powerlevelCalibration;
+	}
+
 	private _supportsLongRange: MaybeNotKnown<boolean>;
 	/** Whether the controller supports the Z-Wave Long Range protocol */
 	public get supportsLongRange(): MaybeNotKnown<boolean> {
@@ -908,6 +920,14 @@ export class ZWaveController
 		this.driver.cacheSet(cacheKeys.controller.provisioningList, value);
 	}
 
+	/** @internal Tracks the number of failed SmartStart inclusion attempts per DSK */
+	private _smartStartFailedAttempts = new Map<string, number>();
+
+	/** @internal Resets the SmartStart inclusion failure counter for the given DSK */
+	private resetSmartStartFailureCount(dsk: string): void {
+		this._smartStartFailedAttempts.delete(dsk);
+	}
+
 	/** Adds the given entry (DSK and security classes) to the controller's SmartStart provisioning list or replaces an existing entry */
 	public provisionSmartStartNode(entry: PlannedProvisioningEntry): void {
 		// Make sure the controller supports SmartStart
@@ -924,6 +944,9 @@ export class ZWaveController
 			provisioningList[index] = entry;
 		}
 		this.provisioningList = provisioningList;
+
+		// Reset the failure counter when a provisioning entry is modified
+		this.resetSmartStartFailureCount(entry.dsk);
 
 		this.autoProvisionSmartStart();
 	}
@@ -943,6 +966,9 @@ export class ZWaveController
 		if (index >= 0) {
 			provisioningList.splice(index, 1);
 			this.provisioningList = provisioningList;
+
+			// Reset the failure counter when a provisioning entry is removed
+			this.resetSmartStartFailureCount(entry.dsk);
 
 			this.autoProvisionSmartStart();
 		}
@@ -1327,7 +1353,7 @@ export class ZWaveController
 			);
 		}
 
-		// Check and possibly update the RF region to the desired value
+		// Check the current RF settings
 		if (
 			this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.GetRFRegion,
@@ -1352,9 +1378,53 @@ export class ZWaveController
 			}
 		}
 
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.GetPowerlevel,
+			)
+		) {
+			this.driver.controllerLog.print(
+				`Querying configured powerlevel...`,
+			);
+			const resp = await this.getPowerlevel().catch(() => undefined);
+			if (resp != undefined) {
+				this.driver.controllerLog.print(
+					`The powerlevel is ${resp.powerlevel} dBm (${resp.measured0dBm} dBm calibration)`,
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Querying the powerlevel failed!`,
+					"warn",
+				);
+			}
+		}
+
+		if (
+			this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.GetLongRangeMaximumTxPower,
+			)
+		) {
+			this.driver.controllerLog.print(
+				`Querying configured max. Long Range powerlevel...`,
+			);
+			const resp = await this.getMaxLongRangePowerlevel().catch(() =>
+				undefined
+			);
+			if (resp != undefined) {
+				this.driver.controllerLog.print(
+					`The max. LR powerlevel is ${resp.toFixed(1)} dBm`,
+				);
+			} else {
+				this.driver.controllerLog.print(
+					`Querying the max. Long Range powerlevel failed!`,
+					"warn",
+				);
+			}
+		}
+
+		// Now make any changes that are necessary
+
 		let desiredRFRegion: RFRegion | undefined;
-		let desiredTXPowerlevelMesh: number | undefined;
-		let desiredTXPowerlevelLR: number | undefined;
 
 		// If the user has set a region in the options, use that
 		if (this.driver.options.rf?.region != undefined) {
@@ -1400,41 +1470,14 @@ export class ZWaveController
 				false,
 			).catch((e) => (e as Error).message);
 			if (resp === true) {
-				let message = `Changed RF region to ${
-					getEnumMemberName(
-						RFRegion,
-						desiredRFRegion,
-					)
-				}.`;
-
-				// Apply the legal powerlevel limits if desired
-				const applyLimitsForProtocol: string[] = [];
-				if (
-					isRegionActuallyDifferent
-					&& this.driver.options.rf?.txPower?.powerlevel === "auto"
-				) {
-					desiredTXPowerlevelMesh = getLegalPowerlevelMesh(
-						desiredRFRegion,
-					);
-					applyLimitsForProtocol.push("Z-Wave Classic");
-				}
-				if (
-					isRegionActuallyDifferent
-					&& this.driver.options.rf?.maxLongRangePowerlevel === "auto"
-				) {
-					desiredTXPowerlevelLR = getLegalPowerlevelLR(
-						desiredRFRegion,
-					);
-					applyLimitsForProtocol.push("Long Range");
-				}
-
-				if (applyLimitsForProtocol.length > 0) {
-					message += ` The legal powerlevel limits for ${
-						applyLimitsForProtocol.join(" and ")
-					} will be applied.`;
-				}
-
-				this.driver.controllerLog.print(message);
+				this.driver.controllerLog.print(
+					`Changed RF region to ${
+						getEnumMemberName(
+							RFRegion,
+							desiredRFRegion,
+						)
+					}`,
+				);
 			} else {
 				this.driver.controllerLog.print(
 					`Changing the RF region failed!${
@@ -1443,7 +1486,21 @@ export class ZWaveController
 					"warn",
 				);
 			}
+
+			// Automatically configure powerlevels if desired
+			// and the region did actually change.
+			if (resp === true && isRegionActuallyDifferent) {
+				await this.applyLegalPowerlevelLimits(
+					desiredRFRegion,
+					this.driver.options.rf?.txPower?.powerlevel === "auto",
+					this.driver.options.rf?.maxLongRangePowerlevel === "auto",
+				);
+			}
 		}
+
+		// When NOT in auto-powerlevel mode, set the desired powerlevels
+		let desiredTXPowerlevelMesh: number | undefined;
+		let desiredTXPowerlevelLR: number | undefined;
 
 		if (typeof this.driver.options.rf?.txPower?.powerlevel === "number") {
 			desiredTXPowerlevelMesh = this.driver.options.rf.txPower.powerlevel;
@@ -1455,110 +1512,42 @@ export class ZWaveController
 				this.driver.options.rf.maxLongRangePowerlevel;
 		}
 
-		// Check and possibly update the powerlevel settings
-		if (
-			this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.GetPowerlevel,
-			)
-			&& this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.SetPowerlevel,
-			)
-			&& desiredTXPowerlevelMesh != undefined
-		) {
-			const desired = {
-				powerlevel: desiredTXPowerlevelMesh,
-				measured0dBm: this.driver.options.rf?.txPower?.measured0dBm,
-			};
-			this.driver.controllerLog.print(
-				`Querying configured powerlevel...`,
-			);
-			const current = await this.getPowerlevel().catch(() => undefined);
-			if (current != undefined) {
-				if (
-					current.powerlevel !== desired.powerlevel
-					|| (desired.measured0dBm != undefined
-						&& current.measured0dBm !== desired.measured0dBm)
-				) {
-					this.driver.controllerLog.print(
-						`Current powerlevel ${current.powerlevel} dBm (${current.measured0dBm} dBm) differs from desired powerlevel ${desired.powerlevel} dBm (${
-							desired.measured0dBm ?? current.measured0dBm
-						} dBm), configuring it...`,
-					);
-
-					const resp = await this.setPowerlevel(
-						desired.powerlevel,
-						desired.measured0dBm ?? current.measured0dBm,
-					).catch((e) => (e as Error).message);
-					if (resp === true) {
-						this.driver.controllerLog.print(`Powerlevel updated`);
-					} else {
-						this.driver.controllerLog.print(
-							`Changing the powerlevel failed!${
-								resp ? ` Reason: ${resp}` : ""
-							}`,
-							"warn",
-						);
-					}
-				}
-			} else {
-				this.driver.controllerLog.print(
-					`Querying the powerlevel failed!`,
-					"warn",
-				);
-			}
+		if (desiredTXPowerlevelMesh != undefined) {
+			await this.applyDesiredPowerlevelMesh(desiredTXPowerlevelMesh);
+		}
+		if (desiredTXPowerlevelLR != undefined) {
+			await this.applyDesiredPowerlevelLR(desiredTXPowerlevelLR);
 		}
 
-		// Check and possibly update the Long Range powerlevel settings
+		// In auto-powerlevel, we check for a possible misconfiguration of the powerlevels, e.g. because of wrong defaults in the firmware.
+		// The values being known implies that setting the powerlevel is supported.
 		if (
-			this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.GetLongRangeMaximumTxPower,
-			)
+			this.driver.options.rf?.txPower?.powerlevel === "auto"
+			&& this._rfRegion != undefined
+			&& this._txPower === 20
+			&& this._maxLongRangePowerlevel === 20
 		) {
-			this.driver.controllerLog.print(
-				`Querying configured max. Long Range powerlevel...`,
-			);
-			const resp = await this.getMaxLongRangePowerlevel().catch(() =>
-				undefined
-			);
-			if (resp != undefined) {
+			// This is the default for 7.23.x firmwares, but it is not legal in the EU or the US
+
+			const legalPowerlevelMesh = getLegalPowerlevelMesh(this._rfRegion);
+			const legalPowerlevelLR = getLegalPowerlevelLR(this._rfRegion);
+			if (
+				legalPowerlevelMesh != undefined
+				|| legalPowerlevelLR != undefined
+			) {
 				this.driver.controllerLog.print(
-					`The max. LR powerlevel is ${resp.toFixed(1)} dBm`,
-				);
-			} else {
-				this.driver.controllerLog.print(
-					`Querying the max. Long Range powerlevel failed!`,
-					"warn",
+					`The controller is set to incorrect powerlevel defaults, correcting them...`,
 				);
 			}
-		}
-		if (
-			this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.SetLongRangeMaximumTxPower,
-			)
-			&& desiredTXPowerlevelLR != undefined
-			&& this.maxLongRangePowerlevel !== desiredTXPowerlevelLR
-		) {
-			this.driver.controllerLog.print(
-				`Current max. Long Range powerlevel ${
-					this.maxLongRangePowerlevel?.toFixed(1)
-				} dBm differs from desired powerlevel ${desiredTXPowerlevelLR} dBm, configuring it...`,
-			);
-
-			const resp = await this.setMaxLongRangePowerlevel(
-				desiredTXPowerlevelLR,
-			)
-				.catch((e) => (e as Error).message);
-			if (resp === true) {
-				this.driver.controllerLog.print(
-					`max. Long Range powerlevel updated`,
-				);
-			} else {
-				this.driver.controllerLog.print(
-					`Changing the max. Long Range powerlevel failed!${
-						resp ? ` Reason: ${resp}` : ""
-					}`,
-					"warn",
-				);
+			if (legalPowerlevelMesh != undefined) {
+				await this.setPowerlevel(
+					legalPowerlevelMesh,
+					this._powerlevelCalibration ?? 0,
+				).catch(noop);
+			}
+			if (legalPowerlevelLR != undefined) {
+				await this.setMaxLongRangePowerlevel(legalPowerlevelLR)
+					.catch(noop);
 			}
 		}
 
@@ -2727,6 +2716,56 @@ export class ZWaveController
 		// After an unsuccessful SmartStart inclusion, the node MUST leave the network and return to SmartStart learn mode
 		// The controller should consider the node to be failed.
 		if (smartStartFailed) {
+			// Track the failed attempt for this DSK and disable provisioning entry after max failures
+			if (
+				opts.strategy === InclusionStrategy.SmartStart
+				&& opts.provisioning?.dsk
+			) {
+				const dsk = opts.provisioning.dsk;
+				const maxAttempts =
+					this.driver.options.attempts.smartStartInclusion;
+				const currentAttempts = this._smartStartFailedAttempts.get(dsk)
+					|| 0;
+				const newAttempts = currentAttempts + 1;
+				this._smartStartFailedAttempts.set(dsk, newAttempts);
+
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message:
+							`SmartStart inclusion failed for DSK ${dsk} (attempt ${newAttempts}/${maxAttempts}).`,
+						level: "warn",
+					},
+				);
+
+				// Disable the provisioning entry after max failed attempts
+				if (newAttempts >= maxAttempts) {
+					const provisioningList = [...this.provisioningList];
+					const entryIndex = provisioningList.findIndex((e) =>
+						e.dsk === dsk
+					);
+					if (entryIndex >= 0) {
+						provisioningList[entryIndex] = {
+							...provisioningList[entryIndex],
+							status: ProvisioningEntryStatus.Inactive,
+						};
+						this.provisioningList = provisioningList;
+
+						// Reset the failure counter when automatically disabling the entry
+						this.resetSmartStartFailureCount(dsk);
+
+						this.driver.controllerLog.logNode(
+							newNode.id,
+							{
+								message:
+									`Provisioning entry for DSK ${dsk} has been disabled after ${maxAttempts} failed inclusion attempts.`,
+								level: "warn",
+							},
+						);
+					}
+				}
+			}
+
 			try {
 				this.driver.controllerLog.logNode(
 					newNode.id,
@@ -2774,6 +2813,17 @@ export class ZWaveController
 				lowSecurityReason: bootstrapFailure,
 			}
 			: { lowSecurity: false };
+
+		// Clear the failed attempts counter for successful SmartStart inclusions
+		if (
+			opts.strategy === InclusionStrategy.SmartStart
+			&& opts.provisioning?.dsk
+		) {
+			const dsk = opts.provisioning.dsk;
+			if (this._smartStartFailedAttempts.has(dsk)) {
+				this._smartStartFailedAttempts.delete(dsk);
+			}
+		}
 
 		this.emit("node added", newNode, result);
 	}
@@ -2831,10 +2881,10 @@ export class ZWaveController
 	 */
 	public async stopInclusion(): Promise<boolean> {
 		const result = await this.stopInclusionInternal();
-		// If this stopped an inclusion process, we need to drop the task
+		// If this stopped an inclusion process, we need to drop all inclusion-related tasks
 		if (result) {
 			await this.driver.scheduler.removeTasks((t) =>
-				t.tag?.id === "inclusion"
+				t.tag?.id === "inclusion" || t.tag?.id === "replace-failed-node"
 			);
 		}
 		return result;
@@ -4814,7 +4864,11 @@ export class ZWaveController
 		// Reset the progress for all nodes
 		this._rebuildRoutesProgress.clear();
 		for (const [id, node] of this._nodes) {
+			// Ignore the controller node
 			if (id === this._ownNodeId) continue;
+			// Ignore LR nodes, they do not route
+			if (isLongRangeNodeId(id)) continue;
+
 			if (
 				// The node is known to be dead
 				node.status === NodeStatus.Dead
@@ -7043,7 +7097,21 @@ export class ZWaveController
 		if (this.driver.options.rf?.preferLRRegion !== false) {
 			region = this.tryGetLRCapableRegion(region);
 		}
-		return this.setRFRegionInternal(region, true);
+		const prevRegion = this.rfRegion ?? RFRegion.Unknown;
+		const result = await this.setRFRegionInternal(region, true);
+
+		// If automatic powerlevel adjustments are configured, do them now.
+		const isRegionActuallyDifferent = this.tryGetLRCapableRegion(prevRegion)
+			!== this.tryGetLRCapableRegion(region);
+		if (result && isRegionActuallyDifferent) {
+			await this.applyLegalPowerlevelLimits(
+				region,
+				this.driver.options.rf?.txPower?.powerlevel === "auto",
+				this.driver.options.rf?.maxLongRangePowerlevel === "auto",
+			);
+		}
+
+		return result;
 	}
 
 	/** Configure the RF region at the Z-Wave API Module */
@@ -7197,6 +7265,34 @@ export class ZWaveController
 		return [...ret].sort((a, b) => a - b);
 	}
 
+	private async applyLegalPowerlevelLimits(
+		region: RFRegion,
+		mesh: boolean,
+		longRange: boolean,
+	): Promise<void> {
+		if (!mesh && !longRange) {
+			return;
+		}
+
+		const desiredTXPowerlevelMesh = getLegalPowerlevelMesh(region);
+		if (mesh && desiredTXPowerlevelMesh !== undefined) {
+			this.driver.controllerLog.print(
+				"Applying legal TX powerlevel for Z-Wave Classic",
+			);
+
+			await this.applyDesiredPowerlevelMesh(
+				desiredTXPowerlevelMesh,
+			);
+		}
+		const desiredTXPowerlevelLR = getLegalPowerlevelLR(region);
+		if (longRange && desiredTXPowerlevelLR !== undefined) {
+			this.driver.controllerLog.print(
+				"Applying legal TX powerlevel for Z-Wave Long Range",
+			);
+			await this.applyDesiredPowerlevelLR(desiredTXPowerlevelLR);
+		}
+	}
+
 	/** Configure the Powerlevel setting of the Z-Wave API */
 	public async setPowerlevel(
 		powerlevel: number,
@@ -7231,6 +7327,12 @@ export class ZWaveController
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
+
+		if (result.success) {
+			this._txPower = powerlevel;
+			this._powerlevelCalibration = measured0dBm;
+		}
+
 		return result.success;
 	}
 
@@ -7263,6 +7365,10 @@ export class ZWaveController
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
+
+		this._txPower = result.powerlevel;
+		this._powerlevelCalibration = result.measured0dBm;
+
 		return pick(result, ["powerlevel", "measured0dBm"]);
 	}
 
@@ -7309,6 +7415,101 @@ export class ZWaveController
 
 		this._maxLongRangePowerlevel = result.limit;
 		return result.limit;
+	}
+
+	private async applyDesiredPowerlevelMesh(
+		powerlevel: number,
+	): Promise<void> {
+		if (
+			!this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.SetPowerlevel,
+			)
+			// The values being defined implies that we were able to query the current powerlevel
+			|| this._txPower == undefined
+			|| this._powerlevelCalibration == undefined
+		) {
+			return;
+		}
+
+		const desired = {
+			powerlevel,
+			measured0dBm: this.driver.options.rf?.txPower?.measured0dBm,
+		};
+
+		// Use the cached current powerlevel values if available
+		const current = {
+			powerlevel: this._txPower,
+			measured0dBm: this._powerlevelCalibration,
+		};
+
+		// Only change the powerlevel if needed to avoid unnecessary writes to the NVM
+		if (
+			current.powerlevel !== desired.powerlevel
+			|| (desired.measured0dBm != undefined
+				&& current.measured0dBm !== desired.measured0dBm)
+		) {
+			this.driver.controllerLog.print(
+				`Current powerlevel ${current.powerlevel} dBm (${current.measured0dBm} dBm) differs from desired powerlevel ${desired.powerlevel} dBm (${
+					desired.measured0dBm ?? current.measured0dBm
+				} dBm), configuring it...`,
+			);
+
+			const resp = await this.setPowerlevel(
+				desired.powerlevel,
+				desired.measured0dBm ?? current.measured0dBm,
+			).catch((e) => (e as Error).message);
+
+			if (resp === true) {
+				this.driver.controllerLog.print(`Powerlevel updated`);
+			} else {
+				this.driver.controllerLog.print(
+					`Changing the powerlevel failed!${
+						resp ? ` Reason: ${resp}` : ""
+					}`,
+					"warn",
+				);
+			}
+		}
+	}
+
+	private async applyDesiredPowerlevelLR(
+		powerlevel: number,
+	): Promise<void> {
+		if (
+			!this.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.SetLongRangeMaximumTxPower,
+			)
+		) {
+			return;
+		}
+
+		// Only change the powerlevel if needed to avoid unneccesary writes to the NVM
+		if (this.maxLongRangePowerlevel === powerlevel) {
+			return;
+		}
+
+		this.driver.controllerLog.print(
+			`Current max. Long Range powerlevel ${
+				this.maxLongRangePowerlevel?.toFixed(1)
+			} dBm differs from desired powerlevel ${powerlevel} dBm, configuring it...`,
+		);
+
+		const resp = await this.setMaxLongRangePowerlevel(
+			powerlevel,
+		)
+			.catch((e) => (e as Error).message);
+		if (resp === true) {
+			this.driver.controllerLog.print(
+				`max. Long Range powerlevel updated`,
+			);
+		} else {
+			this.driver.controllerLog.print(
+				`Changing the max. Long Range powerlevel failed!${
+					resp ? ` Reason: ${resp}` : ""
+				}`,
+				"warn",
+			);
+		}
 	}
 
 	/**
@@ -8245,7 +8446,15 @@ export class ZWaveController
 		let offset = 0;
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
-		let chunkSize: number = Math.min(0xffff, ret.length);
+		//
+		// However, the Aeotec Z-Stick 5 (at least some revisions) go haywire when doing so,
+		// so we start with a smaller chunk size for that device
+		const initialChunkSize = this._manufacturerId === 0x86
+				&& this._productType === 0x01
+				&& this._productId === 0x5a
+			? 48
+			: 0xffff;
+		let chunkSize: number = Math.min(initialChunkSize, ret.length);
 		while (offset < ret.length) {
 			const chunk = await this.externalNVMReadBuffer(
 				offset,
@@ -8368,22 +8577,36 @@ export class ZWaveController
 		// 2. the given NVM data is converted to match the current format
 		// 3. the converted data is written to the NVM
 
+		this.driver.controllerLog.print(
+			"Converting NVM to target format...",
+		);
+		let targetNVM: Uint8Array;
+		let convertedNVM: Uint8Array;
 		try {
-			this.driver.controllerLog.print(
-				"Converting NVM to target format...",
-			);
-			let targetNVM: Uint8Array;
 			if (this.sdkVersionGte("7.0")) {
 				targetNVM = await this.backupNVMRaw700(convertProgress);
 			} else {
 				targetNVM = await this.backupNVMRaw500(convertProgress);
 			}
-			const convertedNVM = await migrateNVM(
+
+			convertedNVM = await migrateNVM(
 				nvmData,
 				targetNVM,
 				migrateOptions,
 			);
+		} catch (e) {
+			// If the process fails, at least turn the Z-Wave radio back on
+			await this.toggleRF(true);
 
+			// And re-throw the error with a more descriptive message
+			const message = "Failed to convert NVM to target format: "
+				+ (e as Error).message;
+			this.driver.controllerLog.print(message, "error");
+			(e as Error).message = message;
+			throw e;
+		}
+
+		try {
 			this.driver.controllerLog.print("Restoring NVM backup...");
 			if (this.sdkVersionGte("7.0")) {
 				await this.restoreNVMRaw700(convertedNVM, restoreProgress);
@@ -8393,9 +8616,16 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				"NVM backup restored. Restarting to activate the restored backup...",
 			);
-		} catch {
+		} catch (e) {
 			// If the process fails, at least turn the Z-Wave radio back on
 			await this.toggleRF(true);
+
+			// And re-throw the error with a more descriptive message
+			const message = "Failed to restore NVM backup: "
+				+ (e as Error).message;
+			this.driver.controllerLog.print(message, "error");
+			(e as Error).message = message;
+			throw e;
 		}
 
 		// After restoring an NVM backup, the controller's capabilities may have changed.
@@ -8723,7 +8953,12 @@ export class ZWaveController
 					productType,
 					productId,
 					firmwareVersion,
-					rfRegion: this.rfRegion ?? options?.rfRegion,
+					// Prefer the actual region...
+					rfRegion: this.rfRegion
+						// ...over the specified one,
+						?? options?.rfRegion
+						// ... and fall back to the configured region on 500 series controllers as a last resort.
+						?? this.driver.options.rf?.region,
 				},
 				{
 					userAgent: this.driver.getUserAgentStringWithComponents(
@@ -9978,6 +10213,7 @@ export class ZWaveController
 						.expectSecurityBootstrapS2(
 							bootstrappingNode,
 							grant,
+							this._joinNetworkOptions?.userCallbacks,
 						);
 					if (bootstrapResult !== undefined) {
 						// If there was a failure, mark S2 as not supported

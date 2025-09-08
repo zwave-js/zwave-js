@@ -6,6 +6,7 @@
 
 import { Bytes } from '@zwave-js/shared';
 import type { Database } from '@zwave-js/shared/bindings';
+import { DeflateOptions } from 'fflate';
 import type { ExpectStatic } from 'vitest';
 import { JSONObject } from '@zwave-js/shared';
 import { KeyPair } from '@zwave-js/shared/bindings';
@@ -796,7 +797,7 @@ export const decryptAES256CBC: (ciphertext: Uint8Array, key: Uint8Array, iv: Uin
 // Warning: (ae-missing-release-tag) "deflateSync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function deflateSync(data: Uint8Array): Uint8Array;
+export function deflateSync(data: Uint8Array, opts?: DeflateOptions): Uint8Array;
 
 // Warning: (ae-missing-release-tag) "deriveMEI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1311,6 +1312,16 @@ export function getIntegerLimits(size: 1 | 2 | 3 | 4, signed: boolean): {
     min: number;
     max: number;
 };
+
+// Warning: (ae-missing-release-tag) "getLegalPowerlevelLR" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getLegalPowerlevelLR(region: RFRegion): number | undefined;
+
+// Warning: (ae-missing-release-tag) "getLegalPowerlevelMesh" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getLegalPowerlevelMesh(region: RFRegion): number | undefined;
 
 // Warning: (ae-missing-release-tag) "getLegalRangeForBitMask" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4618,6 +4629,7 @@ export enum ZWaveErrorCodes {
     Driver_NotSupported = 105,
     // (undocumented)
     Driver_Reset = 101,
+    Driver_SerialPortClosed = 112,
     Driver_TaskRemoved = 111,
     FirmwareUpdateCC_Busy = 1500,
     FirmwareUpdateCC_FailedToAbort = 1504,
@@ -4745,6 +4757,7 @@ export interface ZWaveLogInfo<TContext extends LogContext = LogContext> extends 
 // src/qr/definitions.ts:63:3 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
 // src/security/Manager2.ts:64:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/security/Manager2.ts:64:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/util/misc.ts:21:4 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
 

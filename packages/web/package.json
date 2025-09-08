@@ -1,7 +1,7 @@
 {
   "name": "@zwave-js/web",
   "private": true,
-  "version": "15.8.0",
+  "version": "15.12.0",
   "description": "zwave-js: web stuff",
   "keywords": [],
   "type": "module",
@@ -34,8 +34,8 @@
     "@zwave-js/bindings-browser": "workspace:^",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/shared": "workspace:*",
-    "esbuild": "^0.25.0",
-    "esbuild-plugins-node-modules-polyfill": "^1.7.0",
+    "esbuild": "^0.25.9",
+    "esbuild-plugins-node-modules-polyfill": "^1.7.1",
     "zwave-js": "workspace:*"
   }
 }

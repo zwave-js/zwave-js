@@ -98,7 +98,8 @@ export function handleCentralSceneNotification(
 		// If the node does not advertise support for the slow refresh capability, we might still be dealing with a
 		// slow refresh node. We use the stored value for fallback behavior
 		const slowRefresh = command.slowRefresh
-			?? node.valueDB.getValue<boolean>(slowRefreshValueId);
+			// Prefer the stored value, even if the command claims slowRefresh == false
+			|| node.valueDB.getValue<boolean>(slowRefreshValueId);
 		store.keyHeldDownContext = {
 			sceneNumber: command.sceneNumber,
 			// Unref'ing long running timers allows the process to exit mid-timeout

@@ -270,6 +270,8 @@ export class ConditionalDeviceConfig {
     readonly paramInformation?: ConditionalParamInfoMap;
     readonly preferred: boolean;
     readonly proprietary?: Record<string, unknown>;
+    // (undocumented)
+    readonly scenes?: ReadonlyMap<number, ConditionalSceneConfig>;
 }
 
 // Warning: (ae-missing-release-tag) "ConditionalDeviceMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -353,6 +355,23 @@ export class ConditionalParamInformation implements ConditionalItem<ParamInforma
     readonly valueSize: number;
     // (undocumented)
     readonly writeOnly?: true;
+}
+
+// Warning: (ae-missing-release-tag) "ConditionalSceneConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ConditionalSceneConfig implements ConditionalItem<SceneConfig> {
+    constructor(filename: string, sceneId: number, definition: JSONObject);
+    // (undocumented)
+    readonly condition?: string;
+    // (undocumented)
+    readonly description?: string;
+    // (undocumented)
+    evaluateCondition(deviceId?: DeviceID): SceneConfig | undefined;
+    // (undocumented)
+    readonly label: string;
+    // (undocumented)
+    readonly sceneId: number;
 }
 
 // Warning: (ae-missing-release-tag) "CONFIG_LABEL" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -455,7 +474,9 @@ export class DeviceConfig {
     constructor(filename: string, isEmbedded: boolean, manufacturer: string, manufacturerId: number, label: string, description: string, devices: readonly {
         productType: number;
         productId: number;
-    }[], firmwareVersion: FirmwareVersionRange, preferred: boolean, endpoints?: ReadonlyMap<number, EndpointConfig>, associations?: ReadonlyMap<number, AssociationConfig>, paramInformation?: ParamInfoMap, proprietary?: Record<string, unknown>, compat?: CompatConfig, metadata?: DeviceMetadata);
+    }[], firmwareVersion: FirmwareVersionRange, preferred: boolean, endpoints?: ReadonlyMap<number, EndpointConfig>, associations?: ReadonlyMap<number, AssociationConfig>, scenes?: ReadonlyMap<number, SceneConfig>, paramInformation?: ParamInfoMap, proprietary?: Record<string, unknown>, compat?: CompatConfig, metadata?: DeviceMetadata);
+    // (undocumented)
+    static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean;
     // (undocumented)
     readonly associations?: ReadonlyMap<number, AssociationConfig>;
     readonly compat?: CompatConfig;
@@ -480,7 +501,7 @@ export class DeviceConfig {
         deviceId?: DeviceID;
     }): Promise<DeviceConfig>;
     getAssociationConfigForEndpoint(endpointIndex: number, group: number): AssociationConfig | undefined;
-    getHash(algorithm?: "md5" | "sha-256"): Promise<Uint8Array>;
+    getHash(version?: 0 | 1 | 2): Promise<Uint8Array>;
     readonly isEmbedded: boolean;
     // (undocumented)
     readonly label: string;
@@ -488,11 +509,15 @@ export class DeviceConfig {
     readonly manufacturer: string;
     // (undocumented)
     readonly manufacturerId: number;
+    // (undocumented)
+    static get maxHashVersion(): 2;
     readonly metadata?: DeviceMetadata;
     // (undocumented)
     readonly paramInformation?: ParamInfoMap;
     readonly preferred: boolean;
     readonly proprietary?: Record<string, unknown>;
+    // (undocumented)
+    readonly scenes?: ReadonlyMap<number, SceneConfig>;
 }
 
 // Warning: (ae-missing-release-tag) "DeviceConfigIndex" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -637,7 +662,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.3.2";
+export const PACKAGE_VERSION = "15.12.0";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -665,6 +690,11 @@ export function parseConditionalParamInformationMap(definition: JSONObject, pare
 //
 // @public
 export function saveManufacturersInternal(fs: WriteFile, manufacturers: ManufacturersMap): Promise<void>;
+
+// Warning: (ae-missing-release-tag) "SceneConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type SceneConfig = Omit<ConditionalSceneConfig, "condition" | "evaluateCondition">;
 
 // (No @packageDocumentation comment for this package)
 

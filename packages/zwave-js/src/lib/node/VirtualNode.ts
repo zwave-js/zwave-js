@@ -218,7 +218,7 @@ export class VirtualNode extends VirtualEndpoint {
 				) {
 					// Let the CC API implementation handle the verification.
 					// It may still decide not to do it.
-					await hooks.verifyChanges?.();
+					await hooks.verifyChanges?.(result);
 				}
 			}
 

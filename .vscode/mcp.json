@@ -1,0 +1,10 @@
+{
+	"servers": {
+		"zwave-dev": {
+			"type": "stdio",
+			"command": "node",
+			"args": ["packages/mcp-server-dev/build/index.js"],
+			"env": {}
+		}
+	}
+}

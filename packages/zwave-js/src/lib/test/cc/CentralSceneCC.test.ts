@@ -12,7 +12,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import { test } from "vitest";
+import { test, vi } from "vitest";
 
 function buildCCBuffer(payload: Uint8Array): Uint8Array {
 	return Bytes.concat([
@@ -204,3 +204,158 @@ test("deserializing an unsupported command should return an unspecified version 
 // 		max: 99,
 // 	});
 // });
+
+test("CentralSceneCCSupportedReport should use custom scene labels from device config when available", async (t) => {
+	// Mock device config with custom scenes
+	const scenes = new Map([
+		[1, {
+			sceneId: 1,
+			label: "Single Press",
+			description: "Single button press",
+		}],
+		[2, {
+			sceneId: 2,
+			label: "Double Press",
+			description: "Double button press",
+		}],
+		[3, { sceneId: 3, label: "Hold" }],
+	]);
+
+	const mockDeviceConfig = { scenes };
+
+	// Mock context for persistValues
+	const mockValueDB = {
+		setMetadata: vi.fn(),
+		hasMetadata: vi.fn().mockReturnValue(false),
+		setValue: vi.fn(),
+	};
+
+	const mockContext = {
+		nodeId: 123,
+		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
+		getValueDB: () => mockValueDB,
+		getSupportedCCVersion: vi.fn().mockReturnValue(1),
+	};
+
+	// Create a CentralSceneCCSupportedReport
+	const cc = new CentralSceneCCSupportedReport({
+		nodeId: 123,
+		sceneCount: 3,
+		supportsSlowRefresh: false,
+		supportedKeyAttributes: {
+			1: [CentralSceneKeys.KeyPressed],
+			2: [CentralSceneKeys.KeyPressed, CentralSceneKeys.KeyPressed2x],
+			3: [CentralSceneKeys.KeyHeldDown],
+		},
+	});
+
+	// Call persistValues
+	cc.persistValues(mockContext as any);
+
+	// Verify that setMetadata was called with custom labels
+	t.expect(mockValueDB.setMetadata).toHaveBeenCalledTimes(3);
+
+	// Check the calls to setMetadata for custom labels
+	const calls = mockValueDB.setMetadata.mock.calls;
+
+	// Find the call for scene 1 and verify it has the custom label
+	const scene1Call = calls.find((call) => call[1]?.label === "Single Press");
+	t.expect(scene1Call).toBeDefined();
+
+	// Find the call for scene 2 and verify it has the custom label
+	const scene2Call = calls.find((call) => call[1]?.label === "Double Press");
+	t.expect(scene2Call).toBeDefined();
+
+	// Find the call for scene 3 and verify it has the custom label
+	const scene3Call = calls.find((call) => call[1]?.label === "Hold");
+	t.expect(scene3Call).toBeDefined();
+});
+
+test("CentralSceneCCSupportedReport should fallback to default labels when no device config", async (t) => {
+	// Mock context without device config
+	const mockValueDB2 = {
+		setMetadata: vi.fn(),
+		hasMetadata: vi.fn().mockReturnValue(false),
+		setValue: vi.fn(),
+	};
+
+	const mockContext = {
+		nodeId: 123,
+		getDeviceConfig: (nodeId: number) => undefined,
+		getValueDB: () => mockValueDB2,
+		getSupportedCCVersion: vi.fn().mockReturnValue(1),
+	};
+
+	// Create a CentralSceneCCSupportedReport
+	const cc = new CentralSceneCCSupportedReport({
+		nodeId: 123,
+		sceneCount: 2,
+		supportsSlowRefresh: false,
+		supportedKeyAttributes: {
+			1: [CentralSceneKeys.KeyPressed],
+			2: [CentralSceneKeys.KeyPressed2x],
+		},
+	});
+
+	// Call persistValues
+	cc.persistValues(mockContext as any);
+
+	// Verify that setMetadata was called with default labels
+	t.expect(mockValueDB2.setMetadata).toHaveBeenCalledTimes(2);
+
+	// Check the calls to setMetadata for default labels
+	const calls = mockValueDB2.setMetadata.mock.calls;
+
+	// Find the call for scene 1 and verify it has the default label
+	const scene1Call = calls.find((call) => call[1]?.label === "Scene 001");
+	t.expect(scene1Call).toBeDefined();
+
+	// Find the call for scene 2 and verify it has the default label
+	const scene2Call = calls.find((call) => call[1]?.label === "Scene 002");
+	t.expect(scene2Call).toBeDefined();
+});
+
+test("CentralSceneCCNotification should use custom scene labels from device config when available", async (t) => {
+	// Mock device config with custom scenes
+	const scenes = new Map([
+		[5, {
+			sceneId: 5,
+			label: "Release",
+			description: "Button release action",
+		}],
+	]);
+
+	const mockDeviceConfig = { scenes };
+
+	// Mock context for persistValues
+	const mockValueDB3 = {
+		setMetadata: vi.fn(),
+		hasMetadata: vi.fn().mockReturnValue(false),
+		setValue: vi.fn(),
+	};
+
+	const mockContext = {
+		nodeId: 123,
+		getDeviceConfig: (nodeId: number) => mockDeviceConfig,
+		getValueDB: () => mockValueDB3,
+		getSupportedCCVersion: vi.fn().mockReturnValue(1),
+	};
+
+	// Create a CentralSceneCCNotification
+	const cc = new CentralSceneCCNotification({
+		nodeId: 123,
+		sequenceNumber: 1,
+		keyAttribute: CentralSceneKeys.KeyReleased,
+		sceneNumber: 5,
+	});
+
+	// Call persistValues
+	cc.persistValues(mockContext as any);
+
+	// Verify that ensureMetadata was called with custom label
+	t.expect(mockValueDB3.setMetadata).toHaveBeenCalledTimes(1);
+
+	// Check the call to ensureMetadata
+	const call = mockValueDB3.setMetadata.mock.calls[0];
+	t.expect(call[1]?.label).toBe("Release");
+});

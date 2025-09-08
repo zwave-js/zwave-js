@@ -207,7 +207,7 @@
 		{
 			"#": "15",
 			"$import": "templates/inovelli_templates.json#level_0-99_100_previous",
-			"label": "State After Power Restored",
+			"label": "Level After Power Restored",
 			"defaultValue": 100
 		},
 		{
@@ -247,7 +247,7 @@
 		{
 			"#": "19",
 			"label": "Power & Energy Report Interval",
-			"description": "Allowable range: 30-32767",
+			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
@@ -295,6 +295,7 @@
 		},
 		{
 			"#": "22",
+			"$if": "firmwareVersion <= 1.4",
 			"label": "Switch Type",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -319,10 +320,35 @@
 			]
 		},
 		{
+			"#": "22",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single pole",
+					"value": 0
+				},
+				{
+					"label": "Multi-Way with dumb/toggle switch",
+					"value": 1
+				},
+				{
+					"label": "Multi-Way with aux switch",
+					"value": 2
+				},
+				{
+					"label": "Single pole full sine wave (On/Off mode only)",
+					"value": 3
+				}
+			]
+		},
+		{
 			"#": "23",
 			"$if": "firmwareVersion >= 1.4",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on",
+			"description": "Duration of initial increased power output when light turns on. Allowable range: 0-60.",
 			"valueSize": 1,
 			"unit": "1/60 seconds",
 			"minValue": 0,
@@ -744,30 +770,30 @@
 		{
 			"#": "131",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7: Low Level",
+			"label": "Group 7: Level 1",
 			"description": "Low level to use when group 7 cycles levels",
 			"valueSize": 1,
 			"minValue": 1,
-			"maxValue": 97,
+			"maxValue": 99,
 			"defaultValue": 25
 		},
 		{
 			"#": "132",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7: Medium Level",
+			"label": "Group 7: Level 2",
 			"description": "Medium level to use when group 7 cycles levels",
 			"valueSize": 1,
-			"minValue": 2,
-			"maxValue": 98,
+			"minValue": 1,
+			"maxValue": 99,
 			"defaultValue": 50
 		},
 		{
 			"#": "133",
 			"$if": "firmwareVersion >= 1.4",
-			"label": "Group 7: High Level",
+			"label": "Group 7: Level 3",
 			"description": "High level to use when group 7 cycles levels",
 			"valueSize": 1,
-			"minValue": 3,
+			"minValue": 1,
 			"maxValue": 99,
 			"defaultValue": 99
 		},
@@ -782,9 +808,27 @@
 		},
 		{
 			"#": "158",
+			"$if": "firmwareVersion <= 1.4",
 			"label": "Dimmer Mode",
 			"valueSize": 1,
 			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Dimmer mode",
+					"value": 0
+				},
+				{
+					"label": "On/Off mode",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "158",
+			"label": "Dimmer Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{

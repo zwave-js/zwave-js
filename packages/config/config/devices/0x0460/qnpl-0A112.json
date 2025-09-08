@@ -55,9 +55,8 @@
 			"label": "Signal LED Intensity"
 		},
 		{
-			"#": "107",
-			"$import": "templates/wave_template.json#out_relay_type",
-			"label": "O4: Relay Type"
+			"#": "117",
+			"$import": "templates/wave_template.json#remote_reboot"
 		},
 		{
 			"#": "120",

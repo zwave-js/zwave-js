@@ -1,4 +1,5 @@
-import type { DeviceConfig } from "@zwave-js/config";
+import { refreshMetadataStringsFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
+import { DeviceConfig } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, formatId } from "@zwave-js/shared";
 import { cacheKeys } from "../../driver/NetworkCache.js";
@@ -104,9 +105,11 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 			return this.deviceConfig == undefined ? false : NOT_KNOWN;
 		}
 
-		// If it was, a change in hash means the config has changed
+		// If it was, a change in hash means the config has changed.
+		// We handle the different hash versions when loading the config already.
 		if (this._currentDeviceConfigHash) {
-			return !Bytes.view(this._currentDeviceConfigHash).equals(
+			return !DeviceConfig.areHashesEqual(
+				this._currentDeviceConfigHash,
 				this.cachedDeviceConfigHash,
 			);
 		}
@@ -143,42 +146,109 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 	protected async loadDeviceConfig(): Promise<void> {
 		// But the configuration definitions might change
 		if (
-			this.manufacturerId != undefined
-			&& this.productType != undefined
-			&& this.productId != undefined
+			this.manufacturerId == undefined
+			|| this.productType == undefined
+			|| this.productId == undefined
 		) {
-			// Try to load the config file
-			this.deviceConfig = await this.driver.configManager.lookupDevice(
-				this.manufacturerId,
-				this.productType,
-				this.productId,
-				this.firmwareVersion,
+			return;
+		}
+
+		// Try to load the config file
+		this.deviceConfig = await this.driver.configManager.lookupDevice(
+			this.manufacturerId,
+			this.productType,
+			this.productId,
+			this.firmwareVersion,
+		);
+
+		if (!this.deviceConfig) {
+			this.driver.controllerLog.logNode(
+				this.id,
+				"No device config found",
+				"warn",
 			);
-			if (this.deviceConfig) {
-				// Also remember the current hash of the device config
-				if (this.cachedDeviceConfigHash?.length === 16) {
-					// legacy hash using MD5
-					this._currentDeviceConfigHash = await this.deviceConfig
-						.getHash("md5");
-				} else {
-					this._currentDeviceConfigHash = await this.deviceConfig
-						.getHash();
+			return;
+		}
+
+		// We need to remember the hash of the device config here, because we're in an async context
+		// and later comparisons are sync.
+
+		// There are two legacy versions of the device config hash:
+		// - 16 byte MD5 hash
+		// - 32 byte SHA-256 hash
+		// Both only support checking for exact equality of the config hashable.
+		// To be able to compare those stored hashes with the current config,
+		// we need to figure out the stored version now and hash the config using
+		// the same version.
+		// New "hashes" are variable length, contain a condensed version of the device config and are prefixed with a version number.
+
+		const versionPrefix = Bytes.from("$v", "utf8");
+		const hasVersionPrefix = !!this.cachedDeviceConfigHash
+			&& Bytes
+				.view(this.cachedDeviceConfigHash.subarray(0, 2))
+				.equals(versionPrefix);
+		let cachedHashVersion: number | undefined;
+
+		if (
+			this.cachedDeviceConfigHash?.length === 16
+			&& !hasVersionPrefix
+		) {
+			// MD5 = version 0
+			cachedHashVersion = 0;
+			this._currentDeviceConfigHash = await this.deviceConfig
+				.getHash(0);
+		} else if (
+			this.cachedDeviceConfigHash?.length === 32
+			&& !hasVersionPrefix
+		) {
+			// SHA-256 = version 1
+			cachedHashVersion = 1;
+			this._currentDeviceConfigHash = await this.deviceConfig
+				.getHash(1);
+		} else {
+			// Variable length prefixed hash - simply use the latest version
+			this._currentDeviceConfigHash = await this.deviceConfig
+				.getHash();
+			if (this.cachedDeviceConfigHash) {
+				const versionString = Bytes.view(
+					this.cachedDeviceConfigHash,
+				).toString("utf8").match(/^\$v(\d+)\$/)?.[1];
+				if (versionString) {
+					cachedHashVersion = parseInt(versionString, 10);
 				}
-				this.driver.controllerLog.logNode(
+			}
+			// default to requiring an upgrade if the version cannot be parsed
+			cachedHashVersion ??= 0;
+		}
+
+		// Update the cached device config hash upon restoring, if the node was previously interviewed
+		// and the device config has not changed since then.
+		if (this.interviewStage === InterviewStage.Complete) {
+			if (
+				cachedHashVersion < DeviceConfig.maxHashVersion
+				&& this.hasDeviceConfigChanged() === false
+			) {
+				this.cachedDeviceConfigHash = await this.deviceConfig
+					.getHash();
+			}
+
+			// Starting from version 2, we apply labels and descriptions from the device config dynamically
+			for (const ep of this.getAllEndpoints()) {
+				refreshMetadataStringsFromConfigFile(
+					this.driver,
 					this.id,
-					`${
-						this.deviceConfig.isEmbedded
-							? "Embedded"
-							: "User-provided"
-					} device config loaded`,
-				);
-			} else {
-				this.driver.controllerLog.logNode(
-					this.id,
-					"No device config found",
-					"warn",
+					ep.index,
 				);
 			}
 		}
+
+		this.driver.controllerLog.logNode(
+			this.id,
+			`${
+				this.deviceConfig.isEmbedded
+					? "Embedded"
+					: "User-provided"
+			} device config loaded`,
+		);
 	}
 }

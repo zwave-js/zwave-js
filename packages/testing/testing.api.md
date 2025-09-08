@@ -77,6 +77,7 @@ export type CCSpecificCapabilities = {
     [99]: UserCodeCCCapabilities;
     [78]: ScheduleEntryLockCCCapabilities;
     [CommandClasses.Meter]: MeterCCCapabilities;
+    [CommandClasses.Indicator]: IndicatorCCCapabilities;
 };
 
 // Warning: (ae-missing-release-tag) "ColorSwitchCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -165,6 +166,19 @@ export function getDefaultMockNodeCapabilities(): MockNodeCapabilities;
 //
 // @public (undocumented)
 export function getDefaultSupportedFunctionTypes(): FunctionType[];
+
+// Warning: (ae-missing-release-tag) "IndicatorCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface IndicatorCCCapabilities {
+    // (undocumented)
+    getValue?: (indicatorId: number, propertyId: number) => number | undefined;
+    // (undocumented)
+    indicators: Record<number, {
+        properties: number[];
+        manufacturerSpecificDescription?: string;
+    }>;
+}
 
 // Warning: (ae-missing-release-tag) "LazyMockZWaveFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/transformers",
-  "version": "15.4.0",
+  "version": "15.10.0",
   "description": "zwave-js: compile-time transformers",
   "private": true,
   "keywords": [],
@@ -46,10 +46,10 @@
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "cpy-cli": "^5.0.0",
+    "cpy-cli": "^6.0.0",
     "del-cli": "^6.0.0",
-    "execa": "^9.5.2",
-    "ts-morph": "^25.0.1",
+    "execa": "^9.6.0",
+    "ts-morph": "^26.0.0",
     "tsutils": "^3.21.0",
     "typescript": "5.8.3",
     "vitest": "^2.1.9"

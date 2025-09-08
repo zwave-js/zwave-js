@@ -860,6 +860,7 @@ export enum RFRegion {
 	"Russia" = 0x07,
 	"China" = 0x08,
 	"USA (Long Range)" = 0x09,
+	"Europe (Long Range)" = 0x0b,
 	"Japan" = 0x20,
 	"Korea" = 0x21,
 	"Unknown" = 0xfe,

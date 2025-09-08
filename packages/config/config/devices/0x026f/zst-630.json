@@ -1,5 +1,5 @@
 {
-	"manufacturer": "Sprue Safety Products Ltd.",
+	"manufacturer": "FireAngel",
 	"manufacturerId": "0x026f",
 	"label": "ZST-630",
 	"description": "Thermoptek Smoke Alarm/Smoke Detector",
@@ -27,5 +27,11 @@
 			"label": "Notification Report",
 			"maxNodes": 5
 		}
+	},
+	"metadata": {
+		"inclusion": "1. Triple-press the add button. The LED will blink once per second during inclusion.\n2. The LED flashes 3 times on success or stops blinking if it fails.\n3. Place the alarm on its base and wait 30 seconds.\n4. Press the test button to verify.",
+		"exclusion": "1. Triple-press the button. The LED will double-blink once per second during removal.\n2. The LED flashes 5 times on success or stops blinking if it fails.\n3. Remove the battery.",
+		"reset": "1. Press and hold the button for 10 seconds until the LED goes off.\n2. Release the button. The LED will flash once.\n3. Remove the battery.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2631/50253%20combined%20manuals.pdf"
 	}
 }

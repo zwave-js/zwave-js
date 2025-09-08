@@ -85,7 +85,7 @@ export type SetValueImplementationHooks =
 		// Check if a verification of the set value is required, even if the API response suggests otherwise
 		forceVerifyChanges?: () => boolean;
 		// Verify the changes
-		verifyChanges?: () => void | Promise<void>;
+		verifyChanges?: (result?: SupervisionResult) => void | Promise<void>;
 	};
 
 export type SetValueImplementationHooksFactory = (
