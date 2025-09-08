@@ -690,9 +690,6 @@ export interface MultilevelSwitchCCReportOptions {
 }
 
 @CCCommand(MultilevelSwitchCommand.Report)
-@ccValueProperty("targetValue", MultilevelSwitchCCValues.targetValue)
-@ccValueProperty("duration", MultilevelSwitchCCValues.duration)
-@ccValueProperty("currentValue", MultilevelSwitchCCValues.currentValue)
 export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public constructor(
 		options: WithAddress<MultilevelSwitchCCReportOptions>,
@@ -735,6 +732,22 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public duration: Duration | undefined;
 
 	public currentValue: MaybeUnknown<number> | undefined;
+
+	/**
+	 * Manually persists the MultilevelSwitch values to the value database.
+	 * This should be called when Window Covering CC is not supported.
+	 */
+	public persistMultilevelSwitchValues(ctx: PersistValuesContext): void {
+		if (this.currentValue !== undefined) {
+			this.setValue(ctx, MultilevelSwitchCCValues.currentValue, this.currentValue);
+		}
+		if (this.targetValue !== undefined) {
+			this.setValue(ctx, MultilevelSwitchCCValues.targetValue, this.targetValue);
+		}
+		if (this.duration !== undefined) {
+			this.setValue(ctx, MultilevelSwitchCCValues.duration, this.duration);
+		}
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([

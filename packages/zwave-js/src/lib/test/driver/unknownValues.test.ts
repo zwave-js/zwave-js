@@ -89,7 +89,7 @@ integrationTest(`Basic Reports with the UNKNOWN state are correctly handled`, {
 integrationTest(
 	`Multilevel Switch Reports with the UNKNOWN state are correctly handled`,
 	{
-		// debug: true,
+		debug: true,
 		// provisioningDirectory: path.join(
 		// 	__dirname,
 		// 	"__fixtures/supervision_binary_switch",
