@@ -253,8 +253,6 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 	): SendDataRequestTransmitReport {
 		const callbackId = raw.payload[0];
 		const transmitStatus: TransmitStatus = raw.payload[1];
-
-		// TODO: Consider NOT parsing this for transmit status other than OK or NoACK
 		const txReport = parseTXReport(
 			transmitStatus !== TransmitStatus.NoAck,
 			raw.payload.subarray(2),
@@ -298,9 +296,11 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 				"transmit status":
 					getEnumMemberName(TransmitStatus, this.transmitStatus)
 					+ (this.txReport
+							&& this.transmitStatus === TransmitStatus.OK
 						? `, took ${this.txReport.txTicks * 10} ms`
 						: ""),
-				...(this.txReport
+				// Only show TX report fields when transmission was successful
+				...(this.txReport && this.transmitStatus === TransmitStatus.OK
 					? txReportToMessageRecord(this.txReport)
 					: {}),
 			},
@@ -583,6 +583,10 @@ export class SendDataMulticastRequestTransmitReport
 					TransmitStatus,
 					this.transmitStatus,
 				),
+				// Only show TX report fields when transmission was successful
+				...(this.txReport && this.transmitStatus === TransmitStatus.OK
+					? txReportToMessageRecord(this.txReport)
+					: {}),
 			},
 		};
 	}
