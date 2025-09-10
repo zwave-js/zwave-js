@@ -15,20 +15,20 @@ import {
 	skipField,
 } from "./ProtobufHelpers.js";
 
-export interface ZWaveProxyWriteRequestOptions
+export interface ZWaveProxyFrameToDeviceOptions
 	extends ESPHomeMessageBaseOptions
 {
 	data: Bytes;
 }
 
-@messageType(ESPHomeMessageType.ZWaveProxyWriteRequest)
-export class ZWaveProxyWriteRequest extends ESPHomeMessage {
-	public constructor(options: ZWaveProxyWriteRequestOptions) {
+@messageType(ESPHomeMessageType.ZWaveProxyFrameToDevice)
+export class ZWaveProxyFrameToDevice extends ESPHomeMessage {
+	public constructor(options: ZWaveProxyFrameToDeviceOptions) {
 		super(options);
 		this.data = options.data;
 	}
 
-	public static from(raw: ESPHomeMessageRaw): ZWaveProxyWriteRequest {
+	public static from(raw: ESPHomeMessageRaw): ZWaveProxyFrameToDevice {
 		let data = new Bytes();
 
 		parseProtobufMessage(
@@ -73,5 +73,8 @@ export class ZWaveProxyWriteRequest extends ESPHomeMessage {
 	}
 }
 
-@messageType(ESPHomeMessageType.ZWaveProxyWriteResponse)
-export class ZWaveProxyWriteResponse extends ESPHomeMessage {}
+@messageType(ESPHomeMessageType.ZWaveProxyFrameFromDevice)
+export class ZWaveProxyFrameFromDevice extends ESPHomeMessage {}
+
+@messageType(ESPHomeMessageType.ZWaveProxySubscribeRequest)
+export class ZWaveProxySubscribeRequest extends ESPHomeMessage {}

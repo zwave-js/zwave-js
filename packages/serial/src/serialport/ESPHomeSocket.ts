@@ -10,8 +10,9 @@ import {
 	ESPHomeMessageRaw,
 	HelloRequest,
 	HelloResponse,
-	ZWaveProxyWriteRequest,
-	ZWaveProxyWriteResponse,
+	ZWaveProxyFrameToDevice,
+	ZWaveProxyFrameFromDevice,
+	ZWaveProxySubscribeRequest,
 } from "../esphome/index.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
@@ -63,7 +64,7 @@ export function createESPHomeFactory(
 				| HelloRequest
 				| DeviceInfoRequest
 				| DisconnectRequest
-				| ZWaveProxyWriteRequest,
+				| ZWaveProxyFrameToDevice,
 		): Promise<void> {
 			const frame = message.serialize();
 			return new Promise((resolve, reject) => {
@@ -112,6 +113,11 @@ export function createESPHomeFactory(
 			// Connection is ready - no service discovery needed
 			connectionState = ConnectionState.Ready;
 			console.log("ESPHome connection ready.");
+		}
+
+		async function subscribeZWaveProxy(): Promise<void> {
+			const subscribeRequest = new ZWaveProxySubscribeRequest();
+			await sendMessage(subscribeRequest);
 		}
 
 		function waitForState(
@@ -236,9 +242,14 @@ export function createESPHomeFactory(
 					deviceInfo = message;
 					connectionState = ConnectionState.DeviceInfoReceived;
 				}
-			} else if (message instanceof ZWaveProxyWriteResponse) {
-				// Handle Z-Wave proxy write response (acknowledgment)
-				// For now, we don't need to do anything special with this
+			} else if (message instanceof ZWaveProxyFrameFromDevice) {
+				// Handle Z-Wave proxy frames returned from the device
+				// This message may include full payloads or simple ACK/NAK/CAN responses
+				console.log(
+					`ZWaveProxyFrameFromDevice: 0x${
+						message.payload.toString("hex")
+					}`,
+				);
 			}
 		}
 
@@ -278,6 +289,7 @@ export function createESPHomeFactory(
 
 					try {
 						await performHandshake();
+						await subscribeZWaveProxy();
 						resolve();
 					} catch (error) {
 						reject(
@@ -341,7 +353,7 @@ export function createESPHomeFactory(
 
 				try {
 					// Create Z-Wave proxy write request with Bytes data
-					const writeRequest = new ZWaveProxyWriteRequest({
+					const writeRequest = new ZWaveProxyFrameToDevice({
 						data: new Bytes(data),
 					});
 
