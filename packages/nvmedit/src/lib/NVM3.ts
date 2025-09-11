@@ -298,11 +298,14 @@ export class NVM3 implements NVM<number, Uint8Array> {
 		);
 	}
 
-	public async get(fileId: number): Promise<Uint8Array | undefined> {
+	public async get(
+		fileId: number,
+		section?: NVM3SectionInfo,
+	): Promise<Uint8Array | undefined> {
 		this._info ??= await this.init();
 
-		// Determine which ring buffer to read in
-		const section = this.getNVMSectionForFile(fileId);
+		// Determine which ring buffer to read in, unless we were told to use a specific one
+		section ??= this.getNVMSectionForFile(fileId);
 
 		const pages = section.pages;
 

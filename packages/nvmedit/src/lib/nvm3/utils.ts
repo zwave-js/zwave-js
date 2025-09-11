@@ -164,7 +164,7 @@ export async function dumpNVM(nvm: NVM3): Promise<void> {
 			const page = section.pages[pageIndex];
 			const objectHeader = page.objects.findLast((o) => o.key === fileId);
 			if (!objectHeader) continue;
-			const objectData = await nvm.get(fileId);
+			const objectData = await nvm.get(fileId, section);
 
 			dumpObject({
 				offset: objectHeader.offset,
