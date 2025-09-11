@@ -1,5 +1,6 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, buffer2hex } from "@zwave-js/shared";
+import dayjs from "dayjs";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import {
@@ -10,8 +11,11 @@ import {
 	ESPHomeMessageRaw,
 	HelloRequest,
 	HelloResponse,
-	ZWaveProxyWriteRequest,
-	ZWaveProxyWriteResponse,
+	ZWaveProxyFromDeviceRequest,
+	ZWaveProxySubscribeRequest,
+	ZWaveProxyToDeviceRequest,
+	ZWaveProxyToDeviceResponse,
+	ZWaveProxyUnsubscribeRequest,
 } from "../esphome/index.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
@@ -63,9 +67,17 @@ export function createESPHomeFactory(
 				| HelloRequest
 				| DeviceInfoRequest
 				| DisconnectRequest
-				| ZWaveProxyWriteRequest,
+				| ZWaveProxySubscribeRequest
+				| ZWaveProxyUnsubscribeRequest
+				| ZWaveProxyToDeviceRequest,
 		): Promise<void> {
 			const frame = message.serialize();
+			console.error(
+				dayjs(new Date()).format("HH:mm:ss.SSS"),
+				"OUTGOING:",
+				buffer2hex(frame),
+			);
+
 			return new Promise((resolve, reject) => {
 				socket.write(frame, (err) => {
 					if (err) reject(err);
@@ -109,6 +121,12 @@ export function createESPHomeFactory(
 				}`,
 			);
 
+			// Subscribe to Z-Wave traffic
+			const subscribeRequest = new ZWaveProxySubscribeRequest({
+				flags: 0, // Use default flags for now
+			});
+			await sendMessage(subscribeRequest);
+
 			// Connection is ready - no service discovery needed
 			connectionState = ConnectionState.Ready;
 			console.log("ESPHome connection ready.");
@@ -144,6 +162,11 @@ export function createESPHomeFactory(
 
 		function processIncomingData(data: Buffer): void {
 			try {
+				console.error(
+					dayjs(new Date()).format("HH:mm:ss.SSS"),
+					"INCOMING:",
+					buffer2hex(data),
+				);
 				// Append new data to buffer
 				const newBuffer = new Uint8Array(
 					frameBuffer.length + data.length,
@@ -236,9 +259,22 @@ export function createESPHomeFactory(
 					deviceInfo = message;
 					connectionState = ConnectionState.DeviceInfoReceived;
 				}
-			} else if (message instanceof ZWaveProxyWriteResponse) {
-				// Handle Z-Wave proxy write response (acknowledgment)
-				// For now, we don't need to do anything special with this
+			} else if (message instanceof ZWaveProxyToDeviceResponse) {
+				// Handle Z-Wave proxy write response (ACK)
+				// if (
+				// 	sourceController
+				// 	&& connectionState === ConnectionState.Ready
+				// ) {
+				// 	sourceController.enqueue(new Uint8Array([MessageHeaders.ACK]));
+				// }
+			} else if (message instanceof ZWaveProxyFromDeviceRequest) {
+				// Forward data from Z-Wave device through the stream controller
+				if (
+					sourceController
+					&& connectionState === ConnectionState.Ready
+				) {
+					sourceController.enqueue(message.data);
+				}
 			}
 		}
 
@@ -300,6 +336,16 @@ export function createESPHomeFactory(
 
 		async function close(): Promise<void> {
 			try {
+				// Send unsubscribe request if connected
+				if (
+					connectionState === ConnectionState.Ready
+					&& deviceInfo?.hasZWaveProxySupport
+				) {
+					const unsubscribeRequest =
+						new ZWaveProxyUnsubscribeRequest();
+					await sendMessage(unsubscribeRequest);
+				}
+
 				// Send disconnect request if connected
 				if (connectionState !== ConnectionState.Disconnected) {
 					const disconnectRequest = new DisconnectRequest();
@@ -341,7 +387,7 @@ export function createESPHomeFactory(
 
 				try {
 					// Create Z-Wave proxy write request with Bytes data
-					const writeRequest = new ZWaveProxyWriteRequest({
+					const writeRequest = new ZWaveProxyToDeviceRequest({
 						data: new Bytes(data),
 					});
 

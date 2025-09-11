@@ -9,8 +9,11 @@ import {
 	HelloResponse,
 	PingRequest,
 	PingResponse,
-	ZWaveProxyWriteRequest,
-	ZWaveProxyWriteResponse,
+	ZWaveProxyFromDeviceRequest,
+	ZWaveProxySubscribeRequest,
+	ZWaveProxyToDeviceRequest,
+	ZWaveProxyToDeviceResponse,
+	ZWaveProxyUnsubscribeRequest,
 } from "./index.js";
 
 test("HelloRequest serialization and parsing", () => {
@@ -148,27 +151,100 @@ test("DeviceInfoResponse without Z-Wave support", () => {
 	expect(parsed.zwaveProxyFeatureFlags).toBe(0);
 });
 
-test("ZWaveProxyWriteRequest serialization and parsing", () => {
+test("ZWaveProxyToDeviceRequest serialization and parsing", () => {
 	const testData = new Bytes(new TextEncoder().encode("Hello World"));
-	const original = new ZWaveProxyWriteRequest({
+
+	const original = new ZWaveProxyToDeviceRequest({
 		data: testData,
 	});
 
 	const serialized = original.serialize();
-	const parsed = ESPHomeMessage.parse(serialized) as ZWaveProxyWriteRequest;
 
-	expect(parsed).toBeInstanceOf(ZWaveProxyWriteRequest);
-	expect(parsed.messageType).toBe(ESPHomeMessageType.ZWaveProxyWriteRequest);
+	const parsed = ESPHomeMessage.parse(
+		serialized,
+	) as ZWaveProxyToDeviceRequest;
+
+	expect(parsed).toBeInstanceOf(ZWaveProxyToDeviceRequest);
+	expect(parsed.messageType).toBe(
+		ESPHomeMessageType.ZWaveProxyToDeviceRequest,
+	);
 	expect(parsed.data).toEqual(testData);
 });
 
-test("ZWaveProxyWriteResponse serialization and parsing", () => {
-	const original = new ZWaveProxyWriteResponse();
+test("ZWaveProxyToDeviceResponse serialization and parsing", () => {
+	const original = new ZWaveProxyToDeviceResponse();
 	const serialized = original.serialize();
-	const parsed = ESPHomeMessage.parse(serialized) as ZWaveProxyWriteResponse;
+	const parsed = ESPHomeMessage.parse(
+		serialized,
+	) as ZWaveProxyToDeviceResponse;
 
-	expect(parsed).toBeInstanceOf(ZWaveProxyWriteResponse);
-	expect(parsed.messageType).toBe(ESPHomeMessageType.ZWaveProxyWriteResponse);
+	expect(parsed).toBeInstanceOf(ZWaveProxyToDeviceResponse);
+	expect(parsed.messageType).toBe(
+		ESPHomeMessageType.ZWaveProxyToDeviceResponse,
+	);
+});
+
+test("ZWaveProxyFromDeviceRequest serialization and parsing", () => {
+	const testData = new Bytes(new TextEncoder().encode("Device Data"));
+	const original = new ZWaveProxyFromDeviceRequest({
+		data: testData,
+	});
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(
+		serialized,
+	) as ZWaveProxyFromDeviceRequest;
+
+	expect(parsed).toBeInstanceOf(ZWaveProxyFromDeviceRequest);
+	expect(parsed.messageType).toBe(
+		ESPHomeMessageType.ZWaveProxyFromDeviceRequest,
+	);
+	expect(parsed.data).toEqual(testData);
+});
+
+test("ZWaveProxySubscribeRequest serialization and parsing", () => {
+	const original = new ZWaveProxySubscribeRequest({
+		flags: 42,
+	});
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(
+		serialized,
+	) as ZWaveProxySubscribeRequest;
+
+	expect(parsed).toBeInstanceOf(ZWaveProxySubscribeRequest);
+	expect(parsed.messageType).toBe(
+		ESPHomeMessageType.ZWaveProxySubscribeRequest,
+	);
+	expect(parsed.flags).toBe(42);
+});
+
+test("ZWaveProxySubscribeRequest with default flags", () => {
+	const original = new ZWaveProxySubscribeRequest();
+
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(
+		serialized,
+	) as ZWaveProxySubscribeRequest;
+
+	expect(parsed).toBeInstanceOf(ZWaveProxySubscribeRequest);
+	expect(parsed.messageType).toBe(
+		ESPHomeMessageType.ZWaveProxySubscribeRequest,
+	);
+	expect(parsed.flags).toBe(0);
+});
+
+test("ZWaveProxyUnsubscribeRequest serialization and parsing", () => {
+	const original = new ZWaveProxyUnsubscribeRequest();
+	const serialized = original.serialize();
+	const parsed = ESPHomeMessage.parse(
+		serialized,
+	) as ZWaveProxyUnsubscribeRequest;
+
+	expect(parsed).toBeInstanceOf(ZWaveProxyUnsubscribeRequest);
+	expect(parsed.messageType).toBe(
+		ESPHomeMessageType.ZWaveProxyUnsubscribeRequest,
+	);
 });
 
 test("DeviceInfoResponse with minimal fields", () => {

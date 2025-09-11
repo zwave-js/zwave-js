@@ -25,7 +25,7 @@ process.on("unhandledRejection", (_r) => {
 // 	? "COM5"
 // 	: "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_D83BDA7524E4-if00";
 // const port = "tcp://127.0.0.1:5555";
-const port = "esphome://127.0.0.1";
+const port = "esphome://esp32-s3-z-wave-proxy.local";
 
 const driver = new Driver(port, {
 	// logConfig: {
