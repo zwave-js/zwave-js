@@ -188,8 +188,10 @@ export function createESPHomeFactory(
 							sourceController
 							&& connectionState === ConnectionState.Ready
 						) {
+							// TODO: why is this offset adjustment necessary for large frames???
+							const startByte = message.payload.length < 128 ? 2 : 3;
+							const dataFrame = message.payload.subarray(startByte);
 							// Enqueue frame to handle Z-Wave data as needed
-							const dataFrame = message.payload.subarray(2);
 							sourceController.enqueue(dataFrame);
 						}
 					} catch (error) {
