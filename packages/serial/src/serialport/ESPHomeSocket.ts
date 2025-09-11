@@ -298,6 +298,16 @@ export function createESPHomeFactory(
 					removeListeners();
 					connectionState = ConnectionState.Connecting;
 
+					// During testing, values below 1000 caused the keep alive functionality to silently fail
+					socket.setKeepAlive(true, 1000);
+					// Prevent communication delays
+					socket.setNoDelay();
+
+					// FIXME: We should set the SO_RCVBUF to 2 MB or so
+					// like aioesphome does, but Node.js does not expose
+					// a way to do that natively.
+					// https://github.com/derhuerst/node-sockopt might help.
+
 					// Set up data listener before performing handshake
 					socket.on("data", processIncomingData);
 
