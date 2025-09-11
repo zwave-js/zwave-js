@@ -23,6 +23,7 @@ import {
 	normalizeValueID,
 	supervisedCommandSucceeded,
 	valueIdToString,
+	Protocols,
 } from "@zwave-js/core";
 import { distinct } from "alcalzone-shared/arrays";
 import type { Driver } from "../driver/Driver.js";
@@ -36,10 +37,10 @@ export interface VirtualValueID extends TranslatedValueID {
 	ccVersion: number;
 }
 
-function groupNodesBySecurityClass(
+function groupNodes(
 	nodes: Iterable<ZWaveNode>,
-): Map<SecurityClass, ZWaveNode[]> {
-	const ret = new Map<SecurityClass, ZWaveNode[]>();
+): Map<Protocols, Map<SecurityClass, ZWaveNode[]>> {
+	const ret = new Map<Protocols, Map<SecurityClass, ZWaveNode[]>>();
 
 	for (const node of nodes) {
 		const secClass = node.getHighestSecurityClass();
@@ -47,10 +48,14 @@ function groupNodesBySecurityClass(
 			continue;
 		}
 
-		if (!ret.has(secClass)) {
-			ret.set(secClass, []);
+		if (!ret.has(node.protocol)) {
+			ret.set(node.protocol, new Map<SecurityClass, ZWaveNode[]>());
 		}
-		ret.get(secClass)!.push(node);
+		if (!ret.get(node.protocol)!.has(secClass)) {
+			ret.get(node.protocol)!.set(secClass, []);
+		}
+
+		ret.get(node.protocol)!.get(secClass)!.push(node);
 	}
 
 	return ret;
@@ -74,22 +79,27 @@ export class VirtualNode extends VirtualEndpoint {
 				// And omit nodes using Security S0 which does not support broadcast / multicast
 				&& n.getHighestSecurityClass() !== SecurityClass.S0_Legacy,
 		);
-		this.nodesBySecurityClass = groupNodesBySecurityClass(
-			this.physicalNodes,
-		);
+		this.groupedNodes = groupNodes(this.physicalNodes);
 
-		// If broadcasting is attempted with mixed security classes, automatically fall back to multicast
-		if (this.hasMixedSecurityClasses) this.id = undefined;
+		// If broadcasting is attempted with mixed security classes or protocols, automatically fall back to multicast
+		if (this.hasMoreThanOneGroup) this.id = undefined;
 	}
 
 	public readonly physicalNodes: readonly ZWaveNode[];
-	public readonly nodesBySecurityClass: ReadonlyMap<
-		SecurityClass,
-		readonly ZWaveNode[]
+	public readonly groupedNodes: ReadonlyMap<
+		Protocols,
+		Map<SecurityClass, readonly ZWaveNode[]>
 	>;
 
-	public get hasMixedSecurityClasses(): boolean {
-		return this.nodesBySecurityClass.size > 1;
+	public get hasMoreThanOneGroup(): boolean {
+		// more than one protocol with nodes
+		if (this.groupedNodes.size > 1) return true;
+
+		// check if a single protocol has nodes using different security classes
+		const protocolMap =
+			this.groupedNodes.get(Protocols.ZWave) || this.groupedNodes.get(Protocols.ZWaveLongRange);
+
+		return !!protocolMap && protocolMap.size > 1;
 	}
 
 	/**
@@ -197,7 +207,7 @@ export class VirtualNode extends VirtualEndpoint {
 					api.isSetValueOptimistic(valueId)
 					// For successful supervised commands, we know that an optimistic update is ok
 					&& (supervisedAndSuccessful
-						// For unsupervised commands that did not fail, we let the applciation decide whether
+						// For unsupervised commands that did not fail, we let the application decide whether
 						// to update related value optimistically
 						|| (!this.driver.options.disableOptimisticValueUpdate
 							&& result == undefined));
@@ -211,7 +221,7 @@ export class VirtualNode extends VirtualEndpoint {
 
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
-				// ...and the CC API decides not to verify anyways
+				// ...and the CC API decides not to verify anyway
 				if (
 					!supervisedCommandSucceeded(result)
 					|| hooks.forceVerifyChanges?.()
