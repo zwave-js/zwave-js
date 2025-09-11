@@ -201,8 +201,8 @@ export function createESPHomeFactory(
 						// If we can't decode a complete frame yet, wait for more data
 						if (
 							error instanceof ZWaveError
-							&& error.code === ZWaveErrorCodes.Argument_Invalid
-							&& error.message.includes("too short")
+							&& error.code
+								=== ZWaveErrorCodes.PacketFormat_Truncated
 						) {
 							break;
 						}
