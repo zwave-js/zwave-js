@@ -13,6 +13,7 @@ import {
 	type Timer,
 	formatId,
 	getenv,
+	padVersion,
 	setTimer,
 } from "@zwave-js/shared";
 import type { Options as KyOptions } from "ky";
@@ -28,6 +29,7 @@ function serviceURL(): string {
 	return getenv("ZWAVEJS_FW_SERVICE_URL") || "https://firmware.zwave-js.io";
 }
 const DOWNLOAD_TIMEOUT = 60000;
+const CHECK_TIMEOUT = 30000; // The initial check after releasing new updates can be pretty slow. Give it some time.
 // const MAX_FIRMWARE_SIZE = 10 * 1024 * 1024; // 10MB should be enough for any conceivable Z-Wave chip
 
 const MAX_CACHE_SECONDS = 60 * 60 * 24; // Cache for a day at max
@@ -161,6 +163,7 @@ function rfRegionToUpdateServiceRegion(
 /**
  * Retrieves the available firmware updates for multiple devices in a single request.
  * Returns a map of device keys to their respective firmware update information.
+ * Devices missing from the returned map are not known to the firmware update service.
  */
 export async function getAvailableFirmwareUpdatesBulk(
 	deviceIds: FirmwareUpdateDeviceID[],
@@ -178,8 +181,6 @@ export async function getAvailableFirmwareUpdatesBulk(
 				),
 	);
 
-	console.log("Checking for firmware updates for devices:", uniqueDeviceIds);
-
 	const now = Date.now();
 	const freshDevices: FirmwareUpdateDeviceID[] = [];
 	const staleDevices: FirmwareUpdateDeviceID[] = [];
@@ -193,9 +194,6 @@ export async function getAvailableFirmwareUpdatesBulk(
 			staleDevices.push(device);
 		}
 	}
-
-	console.log("Cached devices:", freshDevices);
-	console.log("Stale devices:", staleDevices);
 
 	// If we have devices with stale cache, make a request for them
 	if (staleDevices.length > 0) {
@@ -226,6 +224,7 @@ export async function getAvailableFirmwareUpdatesBulk(
 			method: "POST",
 			json: body,
 			headers,
+			timeout: CHECK_TIMEOUT,
 		};
 
 		if (!requestQueue) {
@@ -248,8 +247,8 @@ export async function getAvailableFirmwareUpdatesBulk(
 					&& formatId(device.productType)
 						=== deviceResponse.productType
 					&& formatId(device.productId) === deviceResponse.productId
-					&& device.firmwareVersion
-						=== deviceResponse.firmwareVersion,
+					&& padVersion(device.firmwareVersion)
+						=== padVersion(deviceResponse.firmwareVersion),
 			);
 
 			if (originalDevice) {
@@ -270,13 +269,17 @@ export async function getAvailableFirmwareUpdatesBulk(
 		}
 	}
 
-	// Build the final result map with all requested devices
-	const ret = new ObjectKeyMap<FirmwareUpdateDeviceID, FirmwareUpdateInfo[]>(
-		uniqueDeviceIds.map((d) => [
-			d,
-			deviceFirmwareCache.get(d)?.updates ?? [],
-		]),
-	);
+	// Build the final result map with all requested devices that have updates
+	const ret = new ObjectKeyMap<
+		FirmwareUpdateDeviceID,
+		FirmwareUpdateInfo[]
+	>();
+	for (const deviceId of uniqueDeviceIds) {
+		const updates = deviceFirmwareCache.get(deviceId)?.updates;
+		if (updates) {
+			ret.set(deviceId, updates);
+		}
+	}
 
 	// Regularly clean the cache
 	if (!cleanCacheTimeout) {
@@ -286,13 +289,12 @@ export async function getAvailableFirmwareUpdatesBulk(
 		).unref();
 	}
 
-	console.log("Returning firmware update info:", [...ret.values()]);
 	return ret;
 }
 
 /**
  * Retrieves the available firmware updates for the node with the given fingerprint.
- * Returns the service response or `undefined` in case of an error.
+ * Return an empty array if no updates are available or the device is not known to the firmware update service.
  */
 export async function getAvailableFirmwareUpdates(
 	deviceId: FirmwareUpdateDeviceID,

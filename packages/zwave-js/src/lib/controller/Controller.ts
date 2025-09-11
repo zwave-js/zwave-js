@@ -8979,7 +8979,7 @@ export class ZWaveController
 	 *
 	 * **Note:** This requires an API key to be set in the driver options, or passed using the `options` parameter.
 	 *
-	 * @returns A map where the keys are node IDs and the values are available firmware updates
+	 * @returns A map where the keys are node IDs and the values are available firmware updates. Devices missing from the map are unknown to the firmware update service.
 	 */
 	public async getAllAvailableFirmwareUpdates(
 		options?: GetFirmwareUpdatesOptions,
