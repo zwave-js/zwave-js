@@ -17,12 +17,10 @@ export enum ESPHomeMessageType {
 	DeviceInfoResponse = 10,
 
 	// Z-Wave proxy
-	ZWaveProxyFromDeviceRequest = 128,
-	ZWaveProxyFromDeviceResponse = 129,
-	ZWaveProxyToDeviceRequest = 130,
-	ZWaveProxyToDeviceResponse = 131,
-	ZWaveProxySubscribeRequest = 132,
-	ZWaveProxyUnsubscribeRequest = 133,
+	ZWaveProxyFrameFromDevice = 128,
+	ZWaveProxyFrameToDevice = 129,
+	ZWaveProxySubscribeRequest = 130,
+	ZWaveProxyUnsubscribeRequest = 131,
 }
 
 /**

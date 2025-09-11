@@ -11,11 +11,9 @@ import {
 	ESPHomeMessageRaw,
 	HelloRequest,
 	HelloResponse,
-	ZWaveProxyFromDeviceRequest,
+	ZWaveProxyFrameFromDevice,
+	ZWaveProxyFrameToDevice,
 	ZWaveProxySubscribeRequest,
-	ZWaveProxyToDeviceRequest,
-	ZWaveProxyToDeviceResponse,
-	ZWaveProxyUnsubscribeRequest,
 } from "../esphome/index.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
@@ -67,9 +65,7 @@ export function createESPHomeFactory(
 				| HelloRequest
 				| DeviceInfoRequest
 				| DisconnectRequest
-				| ZWaveProxySubscribeRequest
-				| ZWaveProxyUnsubscribeRequest
-				| ZWaveProxyToDeviceRequest,
+				| ZWaveProxyFrameToDevice,
 		): Promise<void> {
 			const frame = message.serialize();
 			console.error(
@@ -122,14 +118,17 @@ export function createESPHomeFactory(
 			);
 
 			// Subscribe to Z-Wave traffic
-			const subscribeRequest = new ZWaveProxySubscribeRequest({
-				flags: 0, // Use default flags for now
-			});
+			const subscribeRequest = new ZWaveProxySubscribeRequest();
 			await sendMessage(subscribeRequest);
 
 			// Connection is ready - no service discovery needed
 			connectionState = ConnectionState.Ready;
 			console.log("ESPHome connection ready.");
+		}
+
+		async function subscribeZWaveProxy(): Promise<void> {
+			const subscribeRequest = new ZWaveProxySubscribeRequest();
+			await sendMessage(subscribeRequest);
 		}
 
 		function waitForState(
@@ -198,16 +197,6 @@ export function createESPHomeFactory(
 
 						// Remove the processed frame from the buffer
 						frameBuffer = frameBuffer.slice(frameLength);
-
-						// If we have a source controller, enqueue any remaining data for Z-Wave processing
-						// (This would be for any data that's not ESPHome protocol messages)
-						if (
-							sourceController
-							&& connectionState === ConnectionState.Ready
-						) {
-							// For now, we don't enqueue anything since all data should be ESPHome protocol
-							// But this is where we would handle Z-Wave data if needed
-						}
 					} catch (error) {
 						// If we can't decode a complete frame yet, wait for more data
 						if (
@@ -259,21 +248,21 @@ export function createESPHomeFactory(
 					deviceInfo = message;
 					connectionState = ConnectionState.DeviceInfoReceived;
 				}
-			} else if (message instanceof ZWaveProxyToDeviceResponse) {
-				// Handle Z-Wave proxy write response (ACK)
-				// if (
-				// 	sourceController
-				// 	&& connectionState === ConnectionState.Ready
-				// ) {
-				// 	sourceController.enqueue(new Uint8Array([MessageHeaders.ACK]));
-				// }
-			} else if (message instanceof ZWaveProxyFromDeviceRequest) {
-				// Forward data from Z-Wave device through the stream controller
+			} else if (message instanceof ZWaveProxyFrameFromDevice) {
+				// Handle Z-Wave proxy frames returned from the device
+				// This message may include full payloads or simple ACK/NAK/CAN responses
+
+				// If we have a source controller, enqueue any remaining data for Z-Wave processing
+				// (This would be for any data that's not ESPHome protocol messages)
 				if (
 					sourceController
 					&& connectionState === ConnectionState.Ready
 				) {
-					sourceController.enqueue(message.data);
+					// TODO: why is this offset adjustment necessary for large frames???
+					const startByte = message.payload.length < 128 ? 2 : 3;
+					const dataFrame = message.payload.subarray(startByte);
+					// Enqueue frame to handle Z-Wave data as needed
+					sourceController.enqueue(dataFrame);
 				}
 			}
 		}
@@ -314,6 +303,7 @@ export function createESPHomeFactory(
 
 					try {
 						await performHandshake();
+						await subscribeZWaveProxy();
 						resolve();
 					} catch (error) {
 						reject(
@@ -336,16 +326,6 @@ export function createESPHomeFactory(
 
 		async function close(): Promise<void> {
 			try {
-				// Send unsubscribe request if connected
-				if (
-					connectionState === ConnectionState.Ready
-					&& deviceInfo?.hasZWaveProxySupport
-				) {
-					const unsubscribeRequest =
-						new ZWaveProxyUnsubscribeRequest();
-					await sendMessage(unsubscribeRequest);
-				}
-
 				// Send disconnect request if connected
 				if (connectionState !== ConnectionState.Disconnected) {
 					const disconnectRequest = new DisconnectRequest();
@@ -387,7 +367,7 @@ export function createESPHomeFactory(
 
 				try {
 					// Create Z-Wave proxy write request with Bytes data
-					const writeRequest = new ZWaveProxyToDeviceRequest({
+					const writeRequest = new ZWaveProxyFrameToDevice({
 						data: new Bytes(data),
 					});
 
