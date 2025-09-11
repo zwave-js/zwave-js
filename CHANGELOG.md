@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.13.0 (2025-09-11)
 ### Features
 * Support checking for all firmware updates at once, and support detecting devices unknown to the firmware update service (#8157)
 
