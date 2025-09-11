@@ -2815,6 +2815,8 @@ export class ZWaveController
 			}
 			: { lowSecurity: false };
 
+		newNode.failedS2 = !!bootstrapFailure;
+
 		// Clear the failed attempts counter for successful SmartStart inclusions
 		if (
 			opts.strategy === InclusionStrategy.SmartStart
@@ -3561,6 +3563,8 @@ export class ZWaveController
 						lowSecurityReason: bootstrapFailure,
 					}
 					: { lowSecurity: false };
+				
+				newNode.failedS2 = !!bootstrapFailure;
 
 				this.setInclusionState(InclusionState.Idle);
 				this.emit("node added", newNode, result);
@@ -3942,6 +3946,8 @@ export class ZWaveController
 					lowSecurityReason: bootstrapFailure,
 				}
 				: { lowSecurity: false };
+
+			newNode.failedS2 = !!bootstrapFailure;
 
 			this.setInclusionState(InclusionState.Idle);
 			this.emit("node added", newNode, result);
@@ -7083,6 +7089,8 @@ export class ZWaveController
 				lowSecurityReason: bootstrapFailure,
 			}
 			: { lowSecurity: false };
+
+		newNode.failedS2 = !!bootstrapFailure;
 
 		this.setInclusionState(InclusionState.Idle);
 		this.emit("node added", newNode, inclusionResult);
