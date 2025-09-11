@@ -281,6 +281,7 @@ import {
 import {
 	Bytes,
 	Mixin,
+	ObjectKeyMap,
 	type ReadonlyObjectKeyMap,
 	type ReadonlyThrowingMap,
 	type ThrowingMap,
@@ -321,7 +322,7 @@ import {
 import { ZWaveFeature, minFeatureVersions } from "./Features.js";
 import {
 	downloadFirmwareUpdate,
-	getAvailableFirmwareUpdates,
+	getAvailableFirmwareUpdatesBulk,
 } from "./FirmwareUpdateService.js";
 import {
 	type ExclusionOptions,
@@ -8919,10 +8920,7 @@ export class ZWaveController
 	/**
 	 * Retrieves the available firmware updates for the given node from the Z-Wave JS firmware update service.
 	 *
-	 * **Note:** Sleeping nodes need to be woken up for this to work. This method will throw when called for a sleeping node
-	 * which did not wake up within a minute.
-	 *
-	 * **Note:** This requires an API key to be set in the driver options, or passed .
+	 * **Note:** This requires an API key to be set in the driver options, or passed using the `options` parameter.
 	 */
 	public async getAvailableFirmwareUpdates(
 		nodeId: number,
@@ -8945,33 +8943,122 @@ export class ZWaveController
 			);
 		}
 
-		// Now invoke the service
+		// Use the bulk method and extract the result for this specific node
 		try {
-			return await getAvailableFirmwareUpdates(
-				{
-					manufacturerId,
-					productType,
-					productId,
-					firmwareVersion,
-					// Prefer the actual region...
-					rfRegion: this.rfRegion
-						// ...over the specified one,
-						?? options?.rfRegion
-						// ... and fall back to the configured region on 500 series controllers as a last resort.
-						?? this.driver.options.rf?.region,
-				},
+			const allUpdates = await this.getAllAvailableFirmwareUpdates(
+				options,
+			);
+			return allUpdates.get(nodeId) || [];
+		} catch (e: any) {
+			let message =
+				`Cannot check for firmware updates for node ${nodeId}: `;
+			if (e.response) {
+				if (isObject(e.response.data)) {
+					if (typeof e.response.data.error === "string") {
+						message += `${e.response.data.error} `;
+					} else if (typeof e.response.data.message === "string") {
+						message += `${e.response.data.message} `;
+					}
+				}
+				message += `[${e.response.status} ${e.response.statusText}]`;
+			} else if (typeof e.message === "string") {
+				message += e.message;
+			} else {
+				message += `Failed to download update information!`;
+			}
+
+			throw new ZWaveError(
+				message,
+				ZWaveErrorCodes.FWUpdateService_RequestError,
+			);
+		}
+	}
+
+	/**
+	 * Retrieves the available firmware updates for all ready nodes from the Z-Wave JS firmware update service.
+	 *
+	 * **Note:** This requires an API key to be set in the driver options, or passed using the `options` parameter.
+	 *
+	 * @returns A map where the keys are node IDs and the values are available firmware updates. Devices missing from the map are unknown to the firmware update service.
+	 */
+	public async getAllAvailableFirmwareUpdates(
+		options?: GetFirmwareUpdatesOptions,
+	): Promise<Map<number, FirmwareUpdateInfo[]>> {
+		// Collect device fingerprints for all ready nodes
+		const deviceIds: FirmwareUpdateDeviceID[] = [];
+		const nodeIdMap = new ObjectKeyMap<FirmwareUpdateDeviceID, number[]>();
+
+		for (const node of this.nodes.values()) {
+			const { manufacturerId, productType, productId, firmwareVersion } =
+				node;
+
+			// Skip nodes without complete fingerprint information
+			if (
+				typeof manufacturerId !== "number"
+				|| typeof productType !== "number"
+				|| typeof productId !== "number"
+				|| typeof firmwareVersion !== "string"
+			) {
+				continue;
+			}
+
+			const deviceId: FirmwareUpdateDeviceID = {
+				manufacturerId,
+				productType,
+				productId,
+				firmwareVersion,
+			};
+
+			deviceIds.push(deviceId);
+
+			// Create a cache key to map back to node ID
+			if (!nodeIdMap.has(deviceId)) {
+				nodeIdMap.set(deviceId, []);
+			}
+			nodeIdMap.get(deviceId)!.push(node.id);
+		}
+
+		if (deviceIds.length === 0) {
+			return new Map();
+		}
+
+		const rfRegion = // Prefer the actual region...
+			this.rfRegion
+				// ...over the specified one,
+				?? options?.rfRegion
+				// ... and fall back to the configured region on 500 series controllers as a last resort.
+				?? this.driver.options.rf?.region;
+
+		// Perform bulk request
+		try {
+			const bulkResult = await getAvailableFirmwareUpdatesBulk(
+				deviceIds,
 				{
 					userAgent: this.driver.getUserAgentStringWithComponents(
 						options?.additionalUserAgentComponents,
 					),
 					apiKey: options?.apiKey
 						?? this.driver.options.apiKeys?.firmwareUpdateService,
-					includePrereleases: options?.includePrereleases,
+					rfRegion,
 				},
 			);
+
+			// Map results back to node IDs
+			const result = new Map<number, FirmwareUpdateInfo[]>();
+			for (const [deviceKey, updates] of bulkResult) {
+				const nodeIds = nodeIdMap.get(deviceKey) ?? [];
+				// Filter out prerelease updates if desired
+				const filteredUpdates = options?.includePrereleases
+					? updates
+					: updates.filter((u) => u.channel === "stable");
+				// Apply the updates to all nodes that match this fingerprint
+				for (const nodeId of nodeIds) {
+					result.set(nodeId, filteredUpdates);
+				}
+			}
+			return result;
 		} catch (e: any) {
-			let message =
-				`Cannot check for firmware updates for node ${nodeId}: `;
+			let message = `Cannot check for firmware updates: `;
 			if (e.response) {
 				if (isObject(e.response.data)) {
 					if (typeof e.response.data.error === "string") {
