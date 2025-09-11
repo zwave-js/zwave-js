@@ -4,6 +4,23 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Support checking for all firmware updates at once, and support detecting devices unknown to the firmware update service (#8157)
+
+### Bugfixes
+* Fixed an issue with migrating NVMs that contain a full list of supported CCs (#8140)
+* After failing to leave bootloader, Z-Wave JS no longer keeps checking if the Serial API has started (#8133)
+* Fixed an issue where the underlying serial stream (e.g. in the browser) could not be reused when destroying and recreating the driver instance (#8132)
+* Stale Battery CC `isLow` values are now cleaned up on startup (#8092)
+
+### Config file changes
+* Add Zooz ZEN75 (#7807)
+* Bring Inovelli VZW32-SN up to date with latest firmware changes and restore parity with VZW31-SN (#8042)
+
+### Changes under the hood
+* Add MCP powered prompt to scrape config files from manufacturer websites (#8099)
+
 ## 15.12.0 (2025-08-19)
 ### Features
 * Firmware updates that fail due to an XMODEM communication error are now retried automatically, reducing the risk to get stuck in bootloader until a new firmware is flashed (#8086)
