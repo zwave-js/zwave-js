@@ -5,6 +5,9 @@ export * from "./definitions/index.js";
 export * from "./dsk/index.js";
 export * from "./error/ZWaveError.js";
 export * from "./log/shared.js";
+export * from "./protocol/MPDU.js";
+export * from "./protocol/_Types.js";
+export * from "./protocol/utils.js";
 // eslint-disable-next-line @zwave-js/no-forbidden-imports -- FIXME: We know this import is safe, but the lint rule doesn't
 export * from "./qr/index.js";
 export * from "./registries/DeviceClasses.js";

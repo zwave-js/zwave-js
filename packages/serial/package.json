@@ -23,6 +23,11 @@
       "import": "./build/esm/index_serialapi.js",
       "require": "./build/cjs/index_serialapi.js"
     },
+    "./rcp": {
+      "@@dev": "./src/index_rcp.ts",
+      "import": "./build/esm/index_rcp.js",
+      "require": "./build/cjs/index_rcp.js"
+    },
     "./mock": {
       "@@dev": "./src/index_mock.ts",
       "import": "./build/esm/index_mock.js",

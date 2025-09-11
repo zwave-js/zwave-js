@@ -14,6 +14,7 @@ import {
 	isLongRangeNodeId,
 	parseNodeBitMask,
 	parseNodeID,
+	tryParseRSSI,
 } from "@zwave-js/core";
 import {
 	FunctionType,
@@ -27,7 +28,6 @@ import {
 	priority,
 } from "@zwave-js/serial";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
-import { tryParseRSSI } from "../transport/SendDataShared.js";
 import type { MessageWithCC } from "../utils.js";
 import { ApplicationCommandStatusFlags } from "./ApplicationCommandRequest.js";
 

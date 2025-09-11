@@ -1,15 +1,16 @@
 import {
 	type MessageRecord,
 	ProtocolDataRate,
-	type RSSI,
 	RssiError,
 	type SerializableTXReport,
 	type TXReport,
 	TransmitStatus,
+	parseRSSI,
 	protocolDataRateToString,
 	routingSchemeToString,
 	rssiToString,
 	stripUndefined,
+	tryParseRSSI,
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { AssignPriorityReturnRouteRequestTransmitReport } from "../network-mgmt/AssignPriorityReturnRouteMessages.js";
@@ -64,27 +65,6 @@ export type TransmitReport =
 	| DeleteSUCReturnRouteRequestTransmitReport;
 
 // const RSSI_RESERVED_START = 11;
-
-export function parseRSSI(payload: Uint8Array, offset: number = 0): RSSI {
-	const ret = Bytes.view(payload).readInt8(offset);
-	// Filter out reserved values
-	// TODO: Figure out for which controllers this is relevant
-	// if (
-	// 	ret >= RSSI_RESERVED_START &&
-	// 	ret < RssiError.NoSignalDetected
-	// ) {
-	// 	ret = RssiError.NotAvailable;
-	// }
-	return ret;
-}
-
-export function tryParseRSSI(
-	payload: Uint8Array,
-	offset: number = 0,
-): RSSI | undefined {
-	if (payload.length <= offset) return;
-	return parseRSSI(payload, offset);
-}
 
 function parseTXPower(
 	payload: Uint8Array,
