@@ -188,8 +188,9 @@ export function createESPHomeFactory(
 							sourceController
 							&& connectionState === ConnectionState.Ready
 						) {
-							// For now, we don't enqueue anything since all data should be ESPHome protocol
-							// But this is where we would handle Z-Wave data if needed
+							// Enqueue frame to handle Z-Wave data as needed
+							const dataFrame = message.payload.subarray(2);
+							sourceController.enqueue(dataFrame);
 						}
 					} catch (error) {
 						// If we can't decode a complete frame yet, wait for more data
@@ -245,11 +246,6 @@ export function createESPHomeFactory(
 			} else if (message instanceof ZWaveProxyFrameFromDevice) {
 				// Handle Z-Wave proxy frames returned from the device
 				// This message may include full payloads or simple ACK/NAK/CAN responses
-				console.log(
-					`ZWaveProxyFrameFromDevice: 0x${
-						message.payload.toString("hex")
-					}`,
-				);
 			}
 		}
 
