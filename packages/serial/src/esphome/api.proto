@@ -70,10 +70,9 @@ service APIConnection {
 
   rpc alarm_control_panel_command (AlarmControlPanelCommandRequest) returns (void) {}
 
+  rpc zwave_proxy_frame(ZWaveProxyFrame) returns (void) {}
   rpc zwave_proxy_subscribe(ZWaveProxySubscribeRequest) returns (void) {}
   rpc zwave_proxy_unsubscribe(ZWaveProxyUnsubscribeRequest) returns (void) {}
-  rpc zwave_proxy_from_device(ZWaveProxyFromDeviceRequest) returns (void) {}
-  rpc zwave_proxy_to_device(ZWaveProxyToDeviceRequest) returns (void) {}
 }
 
 
@@ -826,6 +825,7 @@ message GetTimeResponse {
   option (no_delay) = true;
 
   fixed32 epoch_seconds = 1;
+  string timezone = 2;
 }
 
 // ==================== USER-DEFINES SERVICES ====================
@@ -1720,6 +1720,7 @@ message BluetoothScannerStateResponse {
 
   BluetoothScannerState state = 1;
   BluetoothScannerMode mode = 2;
+  BluetoothScannerMode configured_mode = 3;
 }
 
 message BluetoothScannerSetModeRequest {
@@ -2286,40 +2287,17 @@ message UpdateCommandRequest {
 
 // ==================== Z-WAVE ====================
 
-message ZWaveProxyFromDeviceRequest {
+message ZWaveProxyFrame {
   option (id) = 128;
-  option (source) = SOURCE_CLIENT;
+  option (source) = SOURCE_BOTH;
   option (ifdef) = "USE_ZWAVE_PROXY";
   option (no_delay) = true;
 
-  string data = 1;
-}
-
-message ZWaveProxyFromDeviceResponse {
-  option (id) = 129;
-  option (source) = SOURCE_SERVER;
-  option (ifdef) = "USE_ZWAVE_PROXY";
-  option (no_delay) = true;
-}
-
-message ZWaveProxyToDeviceRequest {
-  option (id) = 130;
-  option (source) = SOURCE_CLIENT;
-  option (ifdef) = "USE_ZWAVE_PROXY";
-  option (no_delay) = true;
-
-  string data = 1;
-}
-
-message ZWaveProxyToDeviceResponse {
-  option (id) = 131;
-  option (source) = SOURCE_SERVER;
-  option (ifdef) = "USE_ZWAVE_PROXY";
-  option (no_delay) = true;
+  bytes data = 1 [(fixed_array_size) = 257];
 }
 
 message ZWaveProxySubscribeRequest {
-  option (id) = 132;
+  option (id) = 129;
   option (source) = SOURCE_CLIENT;
   option (ifdef) = "USE_ZWAVE_PROXY";
 
@@ -2327,7 +2305,7 @@ message ZWaveProxySubscribeRequest {
 }
 
 message ZWaveProxyUnsubscribeRequest {
-  option (id) = 133;
+  option (id) = 130;
   option (source) = SOURCE_CLIENT;
   option (ifdef) = "USE_ZWAVE_PROXY";
 }
