@@ -35,6 +35,9 @@ export function createNodeSocketFactory(
 				const onConnect = () => {
 					// During testing, values below 1000 caused the keep alive functionality to silently fail
 					socket.setKeepAlive(true, 1000);
+					// Prevent communication delays
+					socket.setNoDelay();
+
 					removeListeners();
 					resolve();
 				};

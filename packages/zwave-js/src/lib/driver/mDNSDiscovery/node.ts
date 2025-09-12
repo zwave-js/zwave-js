@@ -60,7 +60,10 @@ export async function discoverRemoteSerialPorts(
 						}
 					}
 					const addr = srv!.data as { target: string; port: number };
-					const port = `tcp://${addr.target}:${addr.port}`;
+					const protocol = info.protocol?.toLowerCase() === "esphome"
+						? "esphome"
+						: "tcp";
+					const port = `${protocol}://${addr.target}:${addr.port}`;
 
 					return {
 						port,
