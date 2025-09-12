@@ -11,8 +11,7 @@ import {
 	ESPHomeMessageRaw,
 	HelloRequest,
 	HelloResponse,
-	ZWaveProxyFrameFromDevice,
-	ZWaveProxyFrameToDevice,
+	ZWaveProxyFrame,
 	ZWaveProxySubscribeRequest,
 } from "../esphome/index.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
@@ -65,7 +64,7 @@ export function createESPHomeFactory(
 				| HelloRequest
 				| DeviceInfoRequest
 				| DisconnectRequest
-				| ZWaveProxyFrameToDevice,
+				| ZWaveProxyFrame,
 		): Promise<void> {
 			const frame = message.serialize();
 			console.error(
@@ -124,11 +123,6 @@ export function createESPHomeFactory(
 			// Connection is ready - no service discovery needed
 			connectionState = ConnectionState.Ready;
 			console.log("ESPHome connection ready.");
-		}
-
-		async function subscribeZWaveProxy(): Promise<void> {
-			const subscribeRequest = new ZWaveProxySubscribeRequest();
-			await sendMessage(subscribeRequest);
 		}
 
 		function waitForState(
@@ -248,7 +242,7 @@ export function createESPHomeFactory(
 					deviceInfo = message;
 					connectionState = ConnectionState.DeviceInfoReceived;
 				}
-			} else if (message instanceof ZWaveProxyFrameFromDevice) {
+			} else if (message instanceof ZWaveProxyFrame) {
 				// Handle Z-Wave proxy frames returned from the device
 				// This message may include full payloads or simple ACK/NAK/CAN responses
 
@@ -258,11 +252,8 @@ export function createESPHomeFactory(
 					sourceController
 					&& connectionState === ConnectionState.Ready
 				) {
-					// TODO: why is this offset adjustment necessary for large frames???
-					const startByte = message.payload.length < 128 ? 2 : 3;
-					const dataFrame = message.payload.subarray(startByte);
 					// Enqueue frame to handle Z-Wave data as needed
-					sourceController.enqueue(dataFrame);
+					sourceController.enqueue(message.data);
 				}
 			}
 		}
@@ -313,7 +304,6 @@ export function createESPHomeFactory(
 
 					try {
 						await performHandshake();
-						await subscribeZWaveProxy();
 						resolve();
 					} catch (error) {
 						reject(
@@ -377,7 +367,7 @@ export function createESPHomeFactory(
 
 				try {
 					// Create Z-Wave proxy write request with Bytes data
-					const writeRequest = new ZWaveProxyFrameToDevice({
+					const writeRequest = new ZWaveProxyFrame({
 						data: new Bytes(data),
 					});
 
