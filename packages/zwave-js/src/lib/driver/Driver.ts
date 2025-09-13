@@ -217,7 +217,6 @@ import { ZWaveController } from "../controller/Controller.js";
 import { downloadFirmwareUpdate } from "../controller/FirmwareUpdateService.js";
 import {
 	type FoundNode,
-	type InclusionResult,
 	InclusionState,
 	RemoveNodeReason,
 } from "../controller/Inclusion.js";
@@ -2933,7 +2932,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	/** This is called when a new node has been added to the network */
-	private onNodeAdded(node: ZWaveNode, result: InclusionResult): void {
+	private onNodeAdded(node: ZWaveNode): void {
 		this.addNodeEventHandlers(node);
 
 		if (this._options.interview?.disableOnNodeAdded) return;
