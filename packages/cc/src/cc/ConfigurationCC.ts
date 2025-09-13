@@ -1591,6 +1591,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				label: info.label,
 				description: info.description,
 				isFromConfig: true,
+				hidden: info.hidden,
 			});
 			this.extendParamInformation(
 				ctx,

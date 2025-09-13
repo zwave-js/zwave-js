@@ -46,6 +46,7 @@
 
   - [Overview](config-files/overview.md)
   - [File format](config-files/file-format.md)
+  - [Hidden parameters](config-files/hidden-parameters.md)
   - [Contributing device files](config-files/contributing-files.md)
   - [Importing files from other sources](config-files/importing-from-others.md)
   <!-- - [Using telemetry data](config-files/using-telemetry-data.md) -->
