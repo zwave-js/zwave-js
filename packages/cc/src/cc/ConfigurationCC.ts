@@ -1680,6 +1680,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				description: info.description,
 				isFromConfig: true,
 				destructive: info.destructive,
+				hidden: info.hidden,
 			});
 			this.extendParamInformation(
 				ctx,

@@ -1,6 +1,6 @@
 // Test runner that automatically chooses which workspace to run tests in
 
-import execa from "execa";
+import { execa } from "execa";
 import path from "node:path";
 import { readJSON } from "../packages/shared/src/fs";
 
