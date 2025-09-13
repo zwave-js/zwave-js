@@ -2939,22 +2939,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (this._options.interview?.disableOnNodeAdded) return;
 		if (this._options.testingHooks?.skipNodeInterview) return;
 
-		// Skip node's interview when S2 fails
-		// See https://github.com/zwave-js/zwave-js/issues/7011
-		if (
-			node.supportsCC(CommandClasses["Security 2"])
-			&& result.lowSecurity
-		) {
-			this.controllerLog.logNode(
-				node.id,
-				`Skip interview because S2 failed: ${
-					getErrorMessage(result.lowSecurityReason)
-				}`,
-				"warn",
-			);
-			return;
-		}
-
 		// Interview the node
 		// don't await the interview, because it may take a very long time
 		// if a node is asleep
