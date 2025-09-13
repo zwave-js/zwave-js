@@ -217,6 +217,7 @@ import { ZWaveController } from "../controller/Controller.js";
 import { downloadFirmwareUpdate } from "../controller/FirmwareUpdateService.js";
 import {
 	type FoundNode,
+	type InclusionResult,
 	InclusionState,
 	RemoveNodeReason,
 } from "../controller/Inclusion.js";
@@ -2932,11 +2933,27 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	/** This is called when a new node has been added to the network */
-	private onNodeAdded(node: ZWaveNode): void {
+	private onNodeAdded(node: ZWaveNode, result: InclusionResult): void {
 		this.addNodeEventHandlers(node);
 
 		if (this._options.interview?.disableOnNodeAdded) return;
 		if (this._options.testingHooks?.skipNodeInterview) return;
+
+		// Skip node's interview when S2 fails
+		// See https://github.com/zwave-js/zwave-js/issues/7011
+		if (
+			node.supportsCC(CommandClasses["Security 2"])
+			&& result.lowSecurity
+		) {
+			this.controllerLog.logNode(
+				node.id,
+				`Skip interview because S2 failed: ${
+					getErrorMessage(result.lowSecurityReason)
+				}`,
+				"warn",
+			);
+			return;
+		}
 
 		// Interview the node
 		// don't await the interview, because it may take a very long time
