@@ -2625,11 +2625,10 @@ export class ZWaveController
 				) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
-			} else if (
-				opts.strategy
-					=== InclusionStrategy.SmartStart
-			) {
-				smartStartFailed = true;
+			} else {
+				smartStartFailed =
+					opts.strategy === InclusionStrategy.SmartStart;
+				newNode.skipInterview = true;
 			}
 
 			if (

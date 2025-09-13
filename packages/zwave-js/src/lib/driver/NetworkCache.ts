@@ -97,6 +97,7 @@ export const cacheKeys = {
 			defaultVolume: `${nodeBaseKey}defaultVolume`,
 			lastSeen: `${nodeBaseKey}lastSeen`,
 			deviceConfigHash: `${nodeBaseKey}deviceConfigHash`,
+			skipInterview: `${nodeBaseKey}skipInterview`,
 		};
 	},
 } as const;
@@ -497,6 +498,10 @@ export function deserializeNetworkCacheValue(
 
 			if (value) return value;
 			fail();
+		}
+
+		case "skipInterview": {
+			return ensureType(value, "boolean");
 		}
 	}
 

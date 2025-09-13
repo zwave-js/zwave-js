@@ -76,4 +76,6 @@ export interface NodeDump {
 
 	configFileName?: string;
 	compatFlags?: JSONObject;
+
+	skipInterview?: boolean;
 }

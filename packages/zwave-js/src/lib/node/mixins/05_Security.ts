@@ -77,4 +77,15 @@ export abstract class NodeSecurityMixin extends NetworkRoleMixin
 		// If we don't have the info for every security class, we don't know the highest one yet
 		return missingSome ? NOT_KNOWN : SecurityClass.None;
 	}
+
+	/**
+	 * Should be `true` when an S2-capable node fails to be included when S2 is expected.
+	 */
+	public get skipInterview(): boolean {
+		return this.driver.cacheGet(cacheKeys.node(this.id).skipInterview)
+			?? false;
+	}
+	public set skipInterview(value: boolean) {
+		this.driver.cacheSet(cacheKeys.node(this.id).skipInterview, value);
+	}
 }
