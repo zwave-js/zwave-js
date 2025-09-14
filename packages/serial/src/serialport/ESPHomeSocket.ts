@@ -9,10 +9,11 @@ import {
 	DisconnectRequest,
 	ESPHomeMessage,
 	ESPHomeMessageRaw,
+	ESPHomeZWaveProxyRequestType,
 	HelloRequest,
 	HelloResponse,
 	ZWaveProxyFrame,
-	ZWaveProxySubscribeRequest,
+	ZWaveProxyRequest,
 } from "../esphome/index.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
@@ -117,7 +118,9 @@ export function createESPHomeFactory(
 			);
 
 			// Subscribe to Z-Wave traffic
-			const subscribeRequest = new ZWaveProxySubscribeRequest();
+			const subscribeRequest = new ZWaveProxyRequest({
+				type: ESPHomeZWaveProxyRequestType.Subscribe,
+			});
 			await sendMessage(subscribeRequest);
 
 			// Connection is ready - no service discovery needed

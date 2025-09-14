@@ -11,14 +11,29 @@ import {
 	WireType,
 	decodeLengthDelimitedField,
 	encodeStringField,
+	encodeVarintField,
 	parseProtobufMessage,
 	skipField,
 } from "./ProtobufHelpers.js";
+
+/**
+ * ESPHome Z-Wave proxy request types enum
+ */
+export enum ESPHomeZWaveProxyRequestType {
+	Subscribe = 0,
+	Unsubscribe = 1,
+}
 
 export interface ZWaveProxyFrameOptions
 	extends ESPHomeMessageBaseOptions
 {
 	data: Bytes;
+}
+
+export interface ZWaveProxyRequestOptions
+	extends ESPHomeMessageBaseOptions
+{
+	type: ESPHomeZWaveProxyRequestType;
 }
 
 @messageType(ESPHomeMessageType.ZWaveProxyFrame)
@@ -73,5 +88,23 @@ export class ZWaveProxyFrame extends ESPHomeMessage {
 	}
 }
 
-@messageType(ESPHomeMessageType.ZWaveProxySubscribeRequest)
-export class ZWaveProxySubscribeRequest extends ESPHomeMessage {}
+@messageType(ESPHomeMessageType.ZWaveProxyRequest)
+export class ZWaveProxyRequest extends ESPHomeMessage {
+	public constructor(options: ZWaveProxyRequestOptions) {
+		super(options);
+		this.type = options.type;
+	}
+
+	public type: ESPHomeZWaveProxyRequestType;
+
+	public serialize(): Bytes {
+		const parts: (Uint8Array | number[])[] = [];
+
+		// Field 1: request type (varint encoded on wire)
+		parts.push(encodeVarintField(1, this.type));
+
+		this.payload = Bytes.concat(parts);
+		console.log(`payload: ${this.payload.toString()}`);
+		return super.serialize();
+	}
+}

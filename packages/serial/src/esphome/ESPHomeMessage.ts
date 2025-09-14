@@ -18,8 +18,7 @@ export enum ESPHomeMessageType {
 
 	// Z-Wave proxy messages
 	ZWaveProxyFrame = 128,
-	ZWaveProxySubscribeRequest = 129,
-	ZWaveProxyUnsubscribeRequest = 130,
+	ZWaveProxyRequest = 129,
 }
 
 /**
