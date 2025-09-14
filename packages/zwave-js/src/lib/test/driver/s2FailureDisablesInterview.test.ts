@@ -1,4 +1,3 @@
-import { CommandClasses } from "@zwave-js/core";
 import { MockController } from "@zwave-js/testing";
 import { test as baseTest } from "vitest";
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
