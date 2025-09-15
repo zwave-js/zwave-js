@@ -254,6 +254,19 @@ export interface ZWaveOptions {
 	 */
 	emitValueUpdateAfterSetValue?: boolean;
 
+	/**
+	 * Automatically apply recommended parameter values from device configuration files during node interview.
+	 *
+	 * When enabled, Z-Wave JS will check if any parameters have recommended values defined in the device config
+	 * and automatically set them only if the current value equals the default value AND the current value differs
+	 * from the recommended value. This ensures that user-modified parameters are not overwritten.
+	 *
+	 * This feature is opt-in to avoid unexpected parameter changes.
+	 *
+	 * Default: `false`
+	 */
+	applyConfigurationRecommendedValues?: boolean;
+
 	features: {
 		/**
 		 * Soft Reset is required after some commands like changing the RF region or restoring an NVM backup.
@@ -497,6 +510,7 @@ export type EditableZWaveOptions = Expand<
 		| "attempts"
 		| "disableOptimisticValueUpdate"
 		| "emitValueUpdateAfterSetValue"
+		| "applyConfigurationRecommendedValues"
 		| "inclusionUserCallbacks"
 		| "joinNetworkUserCallbacks"
 		| "interview"

@@ -137,6 +137,7 @@ When authoring and reviewing configuration files, consistency is key for maintai
 - Use `unsigned: true` for parameters interpreted as unsigned values
 - Mark parameters as `readOnly` or `writeOnly` when applicable
 - Set appropriate `defaultValue` (required unless `readOnly`)
+- Use `recommendedValue` sparingly, only when there's a compelling reason to suggest a value different from the factory default that would provide better device performance or behavior and benefit most users. Note that recommended values are only automatically applied when the `applyConfigurationRecommendedValues` driver option is enabled (disabled by default).
 
 ### Units
 
