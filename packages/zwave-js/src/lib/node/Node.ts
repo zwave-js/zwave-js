@@ -942,8 +942,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * for a specific node, use `node.refreshInfo()` instead
 	 */
 	public async interviewInternal(): Promise<boolean> {
-		// The initial interview of the controller node is always done
-
 		if (this.interviewStage === InterviewStage.Complete) {
 			this.driver.controllerLog.logNode(
 				this.id,
