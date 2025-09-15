@@ -9,7 +9,7 @@ test("parse complete command frame", async (t) => {
 	const rawMsg = Bytes.from("1f95cd4d13addd888103000000230500fe", "hex");
 	const parsed = parseZLFEntry(rawMsg, 0);
 	t.expect(parsed.complete).toBe(true);
-	const rawData = [...parsed.entry?.rawData ?? []];
+	const rawData = [...parsed.entries[0]?.capture?.rawData ?? []];
 	t.expect(rawData).toEqual([0x23, 0x5, 0x00]);
 });
 
@@ -24,7 +24,7 @@ test("parse incomplete command frame", async (t) => {
 	rawMsg = Bytes.from("3b0ace4d13addd8801020000000500fe", "hex");
 	parsed = parseZLFEntry(rawMsg, 0, parsed.accumulator);
 	t.expect(parsed.complete).toBe(true);
-	const rawData = [...parsed.entry?.rawData ?? []];
+	const rawData = [...parsed.entries[0]?.capture?.rawData ?? []];
 	t.expect(rawData).toEqual([0x23, 0x5, 0x00]);
 });
 
@@ -35,7 +35,7 @@ test("parse complete data frame", async (t) => {
 	);
 	const parsed = parseZLFEntry(rawMsg, 0);
 	t.expect(parsed.complete).toBe(true);
-	t.expect(parsed.msg).toBeInstanceOf(ZnifferDataMessage);
+	t.expect(parsed.entries[0].msg).toBeInstanceOf(ZnifferDataMessage);
 });
 
 test("parse incomplete data frame", async (t) => {
@@ -52,12 +52,12 @@ test("parse incomplete data frame", async (t) => {
 	);
 	parsed = parseZLFEntry(rawMsg, 0, parsed.accumulator);
 	t.expect(parsed.complete).toBe(true);
-	const rawData = [...parsed.entry?.rawData ?? []];
+	const rawData = [...parsed.entries[0]?.capture?.rawData ?? []];
 	t.expect(rawData.at(-1)).toBe(0x54);
 
 	const mockZniffer = new Zniffer("/dev/mock");
 	const frame = await mockZniffer["parseFrame"](
-		parsed.msg as ZnifferDataMessage,
+		parsed.entries[0].msg as ZnifferDataMessage,
 	);
 	t.expect(frame.cc).toBeInstanceOf(ZWaveProtocolCCSetNWIMode);
 });

@@ -73,6 +73,7 @@ type ParsedZLFEntry =
 	| {
 		kind: ZLFEntryKind.Attachment;
 		attachment: ZLFAttachment;
+		capture?: undefined;
 	};
 
 type ParseZLFEntryResult =
