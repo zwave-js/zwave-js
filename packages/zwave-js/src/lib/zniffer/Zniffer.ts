@@ -1135,7 +1135,6 @@ supported frequencies: ${
 		let accumulator: CapturedData | undefined;
 
 		while (offset < buffer.length) {
-			if (offset === 0xe8100) debugger;
 			const {
 				bytesRead,
 				complete,
@@ -1146,24 +1145,19 @@ supported frequencies: ${
 				offset,
 				accumulator,
 			);
-			console.log(
-				`parsing offset ${num2hex(offset)}, len ${bytesRead} (${
-					num2hex(bytesRead)
-				}) - timestamp: ${
-					(entries[0] as any)?.capture?.timestamp.toISOString()
-				}`,
-			);
+			// console.log(
+			// 	`parsing offset ${num2hex(offset)}, len ${bytesRead} (${
+			// 		num2hex(bytesRead)
+			// 	}) - timestamp: ${
+			// 		(entries[0] as any)?.capture?.timestamp.toISOString()
+			// 	}`,
+			// );
 
 			// Avoid infinite loops
 			if (bytesRead <= 0) break;
 			offset += bytesRead;
 
-			if (complete) {
-				accumulator = undefined;
-			} else {
-				accumulator = newAccumulator;
-				continue;
-			}
+			accumulator = complete ? undefined : newAccumulator;
 
 			let index = 0;
 			for (const entry of entries) {
