@@ -155,7 +155,7 @@ export function parseZLFEntry(
 
 				const capture: CapturedData = {
 					timestamp,
-					rawData,
+					rawData: rawData.subarray(0, bytesRead),
 					frameData: msg.payload,
 				};
 

@@ -86,12 +86,28 @@ function escapeCSVValue(value: any): string {
 }
 
 function convertFrameToCSVRow(
-	frame: Frame | CorruptedFrame,
-	_frameData: Uint8Array,
+	capturedFrame: {
+		timestamp: Date;
+		parsedFrame: Frame | CorruptedFrame;
+		frameData: Uint8Array;
+	},
 ): string {
 	const row: string[] = [];
 
-	// Column 1: Channel (all frames have this)
+	// Extract date and time from timestamp
+	const isoString = capturedFrame.timestamp.toISOString();
+	const datePart = isoString.split("T")[0]; // YYYY-MM-DD
+	const timePart = isoString.split("T")[1].slice(0, -1); // HH:MM:SS.sss (remove trailing 'Z')
+
+	// Column 1: Date
+	row.push(escapeCSVValue(datePart));
+
+	// Column 2: Time
+	row.push(escapeCSVValue(timePart));
+
+	const frame = capturedFrame.parsedFrame;
+
+	// Column 3: Channel (all frames have this)
 	row.push(escapeCSVValue(frame.channel ?? ""));
 
 	// Check if this is a corrupted frame
@@ -346,6 +362,8 @@ function convertFrameToCSVRow(
 
 function getCSVHeader(): string {
 	const headers = [
+		"Date",
+		"Time",
 		"Channel",
 		"Region",
 		"RSSI Raw",
@@ -425,10 +443,7 @@ async function convertZnifferToCSV(
 		const csvLines = [getCSVHeader()];
 
 		for (const capturedFrame of frames) {
-			const csvRow = convertFrameToCSVRow(
-				capturedFrame.parsedFrame,
-				capturedFrame.frameData,
-			);
+			const csvRow = convertFrameToCSVRow(capturedFrame);
 			csvLines.push(csvRow);
 		}
 
