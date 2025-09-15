@@ -2,7 +2,8 @@ import { ZWaveProtocolCCSetNWIMode } from "@zwave-js/cc";
 import { ZnifferDataMessage } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
-import { Zniffer, parseZLFEntry } from "../../zniffer/Zniffer.js";
+import { parseZLFEntry } from "../../zniffer/ZLFEntry.js";
+import { Zniffer } from "../../zniffer/Zniffer.js";
 
 test("parse complete command frame", async (t) => {
 	const rawMsg = Bytes.from("1f95cd4d13addd888103000000230500fe", "hex");
