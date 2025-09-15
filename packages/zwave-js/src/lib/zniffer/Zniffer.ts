@@ -39,7 +39,7 @@ import {
 import {
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
-	ZnifferDataMessage,
+	type ZnifferDataMessage,
 	ZnifferFrameType,
 	ZnifferGetFrequenciesRequest,
 	ZnifferGetFrequenciesResponse,
@@ -75,6 +75,7 @@ import {
 	Bytes,
 	TypedEventTarget,
 	getEnumMemberName,
+	getErrorMessage,
 	isAbortError,
 	isEnumMember,
 	noop,
@@ -101,6 +102,12 @@ import {
 	parseMPDU,
 	znifferDataMessageToCorruptedFrame,
 } from "./MPDU.js";
+import {
+	ZLFEntryKind,
+	captureToZLFEntry,
+	parseZLFEntry,
+	parseZLFHeader,
+} from "./ZLFEntry.js";
 
 // Force-load all Command Classes:
 registerCCs();
@@ -202,7 +209,7 @@ function tryConvertRSSI(
 	}
 }
 
-interface CapturedData {
+export interface CapturedData {
 	timestamp: Date;
 	rawData: Uint8Array;
 	frameData: Uint8Array;
@@ -631,11 +638,20 @@ supported frequencies: ${
 		data: Uint8Array,
 	): Promise<void> {
 		let msg: ZnifferMessage | undefined;
+		let bytesRead: number;
 		try {
-			msg = ZnifferMessage.parse(data);
+			({ msg, bytesRead } = ZnifferMessage.parse(data));
 		} catch (e: any) {
 			console.error(e);
 			return;
+		}
+
+		if (bytesRead < data.length) {
+			// This should not actually happen
+			this.znifferLog.print(
+				`Possible data loss: read only ${bytesRead} of ${data.length} bytes!`,
+				"warn",
+			);
 		}
 
 		if (msg.type === ZnifferMessageType.Command) {
@@ -1119,18 +1135,25 @@ supported frequencies: ${
 		let accumulator: CapturedData | undefined;
 
 		while (offset < buffer.length) {
+			if (offset === 0xe8100) debugger;
 			const {
 				bytesRead,
 				complete,
-				type,
-				entry,
-				msg,
 				accumulator: newAccumulator,
+				entries,
 			} = parseZLFEntry(
 				buffer,
 				offset,
 				accumulator,
 			);
+			console.log(
+				`parsing offset ${num2hex(offset)}, len ${bytesRead} (${
+					num2hex(bytesRead)
+				}) - timestamp: ${
+					(entries[0] as any)?.capture?.timestamp.toISOString()
+				}`,
+			);
+
 			// Avoid infinite loops
 			if (bytesRead <= 0) break;
 			offset += bytesRead;
@@ -1142,12 +1165,29 @@ supported frequencies: ${
 				continue;
 			}
 
-			if (type === ZnifferMessageType.Data) {
-				entry.parsedFrame =
-					// FIXME: Figure out which values the Zniffer application actually stores
-					// as RSSI. Both the attempted conversion and the raw values seem wrong.
-					(await this.parseFrame(msg, false)).external;
-				this._capturedFrames.push(entry);
+			let index = 0;
+			for (const entry of entries) {
+				// Skip other entry types for now
+				// We may want to make use of the network key entries in the future
+				if (entry.kind !== ZLFEntryKind.Zniffer) continue;
+
+				try {
+					if (entry.type === ZnifferMessageType.Data) {
+						entry.capture.parsedFrame =
+							// FIXME: Figure out which values the Zniffer application actually stores
+							// as RSSI. Both the attempted conversion and the raw values seem wrong.
+							(await this.parseFrame(entry.msg, false)).external;
+						this._capturedFrames.push(entry.capture);
+					}
+				} catch (e) {
+					console.warn(
+						`Failed to parse entry #${index} at offset ${
+							num2hex(offset - bytesRead)
+						}:`,
+						getErrorMessage(e),
+					);
+				}
+				index++;
 			}
 		}
 	}
@@ -1340,190 +1380,5 @@ supported frequencies: ${
 			cc,
 			external: mpduToFrame(mpdu, cc),
 		};
-	}
-}
-
-function captureToZLFEntry(
-	capture: CapturedData,
-): Uint8Array {
-	const buffer = new Bytes(14 + capture.rawData.length).fill(0);
-	// Convert the date to a .NET datetime
-	let ticks = BigInt(capture.timestamp.getTime()) * 10000n
-		+ 621355968000000000n;
-	// https://github.com/dotnet/runtime/blob/179473d3c8a1012b036ad732d02804b062923e8d/src/libraries/System.Private.CoreLib/src/System/DateTime.cs#L161
-	ticks = ticks | (2n << 62n); // DateTimeKind.Local << KindShift
-
-	buffer.writeBigUInt64LE(ticks, 0);
-	const direction = 0b0000_0000; // inbound, outbound would be 0b1000_0000
-
-	buffer[8] = direction | 0x01; // dir + session ID
-	buffer[9] = capture.rawData.length;
-	// bytes 10-12 are empty
-	buffer.set(capture.rawData, 13);
-	buffer[buffer.length - 1] = 0xfe; // end of frame
-	return buffer;
-}
-
-function parseZLFHeader(buffer: Uint8Array): {
-	znifferVersion: number;
-	checksum: number;
-	bytesRead: number;
-} {
-	if (buffer.length < 2048) {
-		throw new ZWaveError(
-			"Invalid ZLF file: header too small",
-			ZWaveErrorCodes.Argument_Invalid,
-		);
-	}
-
-	const bytes = Bytes.view(buffer);
-
-	const znifferVersion = bytes[0];
-	const checksum = bytes.readUInt16BE(2046);
-
-	return {
-		znifferVersion,
-		checksum,
-		bytesRead: 2048,
-	};
-}
-
-type ParseZLFEntryResult =
-	| (
-		& {
-			complete: true;
-			bytesRead: number;
-			accumulator?: undefined;
-		}
-		& (
-			| {
-				type: ZnifferMessageType.Data;
-				msg: ZnifferDataMessage;
-				entry: CapturedData;
-			}
-			| {
-				type: ZnifferMessageType.Command;
-				msg: ZnifferMessage;
-				entry: CapturedData;
-			}
-			| {
-				type?: undefined;
-				msg?: undefined;
-				entry?: undefined;
-			}
-		)
-	)
-	| ({
-		complete: false;
-		bytesRead: number;
-		accumulator: CapturedData;
-		type?: undefined;
-		msg?: undefined;
-		entry?: undefined;
-	});
-
-/** @internal */
-export function parseZLFEntry(
-	buffer: Uint8Array,
-	offset: number,
-	accumulator?: CapturedData,
-): ParseZLFEntryResult {
-	const bytes = Bytes.view(buffer.subarray(offset));
-
-	// Each ZLF entry has a 14-byte overhead, so the buffer must have at least that size
-	if (bytes.length < 14) {
-		throw new ZWaveError(
-			"Invalid ZLF file: entry truncated",
-			ZWaveErrorCodes.PacketFormat_Truncated,
-		);
-	}
-
-	// Parse .NET DateTime ticks (8 bytes, little-endian)
-	const ticks = bytes.readBigUInt64LE(0);
-	// Kind: 1 = UTC, 2 = Local
-	// const dateTimeKind = Number((ticks >> 62n) & 0b11n);
-	const timeStampMask = (1n << 62n) - 1n;
-	const jsTimestamp = Number(
-		((ticks & timeStampMask) - 621355968000000000n) / 10000n,
-	);
-	// FIXME: dateTimeKind should always be local. Properly support UTC
-	const timestamp = new Date(jsTimestamp);
-
-	// Ignore the direction and session ID byte
-	const rawDataLength = bytes[9];
-	const totalLength = 14 + rawDataLength;
-	if (bytes.length < totalLength) {
-		throw new ZWaveError(
-			"Invalid ZLF file: entry truncated",
-			ZWaveErrorCodes.PacketFormat_Truncated,
-		);
-	}
-	const eod = bytes[totalLength - 1];
-	// 0xfe designates a Zniffer entry
-	if (eod !== 0xfe) {
-		// Skip unsupported entries
-		return {
-			complete: true,
-			bytesRead: totalLength,
-		};
-	}
-	// bytes 10-12 are empty
-
-	let rawData = bytes.subarray(13, totalLength - 1);
-	if (accumulator) {
-		rawData = Bytes.concat([
-			accumulator.rawData,
-			rawData,
-		]);
-	}
-
-	try {
-		const msg = ZnifferMessage.parse(rawData);
-
-		const entry: CapturedData = {
-			timestamp,
-			rawData,
-			frameData: msg.payload,
-		};
-
-		// Help TypeScript out a bit
-		if (msg instanceof ZnifferDataMessage) {
-			return {
-				complete: true,
-				bytesRead: totalLength,
-				type: ZnifferMessageType.Data,
-				msg,
-				entry,
-			};
-		} else {
-			// We are dealing with a command frame
-			return {
-				complete: true,
-				bytesRead: totalLength,
-				type: ZnifferMessageType.Command,
-				msg,
-				entry,
-			};
-		}
-	} catch (e) {
-		if (
-			isZWaveError(e) && e.code === ZWaveErrorCodes.PacketFormat_Truncated
-		) {
-			// We are dealing with an incomplete frame, so we need to accumulate the data for the next iteration
-			accumulator ??= {
-				timestamp,
-				rawData: new Bytes(),
-				frameData: new Bytes(), // Cannot be determined yet
-			};
-			accumulator.rawData = rawData; // rawData is already concatenated
-
-			return {
-				complete: false,
-				bytesRead: totalLength,
-				accumulator,
-			};
-		}
-
-		throw e;
 	}
 }

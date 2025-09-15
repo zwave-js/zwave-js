@@ -41,7 +41,10 @@ export class ZnifferMessageRaw {
 		public readonly payload: Bytes,
 	) {}
 
-	public static parse(data: Uint8Array): ZnifferMessageRaw {
+	public static parse(data: Uint8Array): {
+		raw: ZnifferMessageRaw;
+		bytesRead: number;
+	} {
 		if (data.length < 3) {
 			throw new ZWaveError(
 				"Incomplete Zniffer message",
@@ -55,12 +58,59 @@ export class ZnifferMessageRaw {
 			const length = data[2];
 			const payload = Bytes.view(data.subarray(3, 3 + length));
 
-			return new ZnifferMessageRaw(type, functionType, payload);
+			return {
+				raw: new ZnifferMessageRaw(type, functionType, payload),
+				bytesRead: 3 + length,
+			};
 		} else if (type === ZnifferMessageType.Data) {
-			// The ZnifferParser takes care of segmenting frames, so here we
-			// only cut off the type byte from the payload
-			const payload = Bytes.view(data.subarray(1));
-			return new ZnifferMessageRaw(type, undefined, payload);
+			// For frames received from the Zniffer hardware itself,
+			// the ZnifferParser ensures we always get complete frames.
+
+			// However, when reading from a ZLF file, especially the ones
+			// written by the Zniffer application, data frames
+			// don't necessarily align with ZLF frame boundaries.
+
+			// We do some light inspection to figure out how many bytes we
+			// need to read for a complete frame.
+
+			let totalLength: number;
+
+			// Byte 1 contains the frame type
+			if (data.length < 2) {
+				throw new ZWaveError(
+					"Incomplete Zniffer message",
+					ZWaveErrorCodes.PacketFormat_Truncated,
+				);
+			}
+			const frameType: ZnifferFrameType = data[1];
+			if (frameType === ZnifferFrameType.BeamStop) {
+				// BeamStop frames always seem to be 7 bytes long, including the type byte
+				totalLength = 7;
+			} else {
+				// The remaining length is stored at byte 9
+				if (data.length < 10) {
+					throw new ZWaveError(
+						"Incomplete Zniffer message",
+						ZWaveErrorCodes.PacketFormat_Truncated,
+					);
+				}
+				totalLength = data[9] + 10;
+			}
+
+			if (data.length < totalLength) {
+				throw new ZWaveError(
+					"Incomplete Zniffer message",
+					ZWaveErrorCodes.PacketFormat_Truncated,
+				);
+			}
+
+			// Cut off the type byte from the payload
+			const payload = Bytes.view(data.subarray(1, totalLength));
+
+			return {
+				raw: new ZnifferMessageRaw(type, undefined, payload),
+				bytesRead: totalLength,
+			};
 		} else {
 			throw new ZWaveError(
 				`Invalid Zniffer message type ${type as any}`,
@@ -129,10 +179,16 @@ export class ZnifferMessage {
 
 	public static parse(
 		data: Uint8Array,
-	): ZnifferMessage {
-		const raw = ZnifferMessageRaw.parse(data);
+	): {
+		msg: ZnifferMessage;
+		bytesRead: number;
+	} {
+		const { raw, bytesRead } = ZnifferMessageRaw.parse(data);
 		const Constructor = getZnifferMessageConstructor(raw);
-		return Constructor.from(raw);
+		return {
+			msg: Constructor.from(raw),
+			bytesRead,
+		};
 	}
 
 	/** Creates an instance of the message that is serialized in the given buffer */
@@ -165,11 +221,6 @@ export class ZnifferMessage {
 				this.payload,
 			]);
 			ret[9] = this.payload.length - 10;
-			// FIXME: Is this correct? It used to be
-			// const ret = new Bytes(this.payload.length + 1);
-			// ret[0] = this.type;
-			// this.payload.copy(ret, 1);
-			// this.payload[9] = this.payload.length - 10;
 			return ret;
 		} else {
 			throw new ZWaveError(
