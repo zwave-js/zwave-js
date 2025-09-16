@@ -435,6 +435,10 @@
 					"const": false,
 					"description": "Whether this parameter accepts any value between minValue and maxValue. If false, minValue and maxValue are optional, but options must be used to specify the allowed values."
 				},
+				"destructive": {
+					"type": "boolean",
+					"description": "Whether this parameter is destructive and requires confirmation before setting"
+				},
 				"options": {
 					"type": "array",
 					"minItems": 1,
