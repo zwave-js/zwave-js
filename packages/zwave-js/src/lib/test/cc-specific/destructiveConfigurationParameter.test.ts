@@ -20,7 +20,8 @@ function setupDestructiveDeviceConfig(driver: any, node: any) {
 				defaultValue: 0,
 				options: [],
 				label: "Non-destructive Parameter",
-				description: "A normal parameter that doesn't require confirmation"
+				description:
+					"A normal parameter that doesn't require confirmation",
 			},
 			{
 				"#": 2,
@@ -31,17 +32,20 @@ function setupDestructiveDeviceConfig(driver: any, node: any) {
 				defaultValue: 0,
 				options: [],
 				label: "Destructive Parameter",
-				description: "A destructive parameter that requires confirmation",
-				destructive: true
-			}
-		]
+				description:
+					"A destructive parameter that requires confirmation",
+				destructive: true,
+			},
+		],
 	};
 
 	node._deviceConfig = testDeviceConfig;
-	
+
 	// Process device config manually
-	const configCCInstance = node.getEndpoint(0)?.createCCInstanceUnsafe(CommandClasses.Configuration);
-	if ((configCCInstance)?.deserializeParamInformationFromConfig) {
+	const configCCInstance = node.getEndpoint(0)?.createCCInstanceUnsafe(
+		CommandClasses.Configuration,
+	);
+	if (configCCInstance?.deserializeParamInformationFromConfig) {
 		const paramInfoMap = new Map();
 		for (const param of testDeviceConfig.paramInformation) {
 			paramInfoMap.set(
@@ -56,10 +60,13 @@ function setupDestructiveDeviceConfig(driver: any, node: any) {
 					label: param.label,
 					description: param.description,
 					destructive: param.destructive,
-				}
+				},
 			);
 		}
-		(configCCInstance).deserializeParamInformationFromConfig(driver, paramInfoMap);
+		configCCInstance.deserializeParamInformationFromConfig(
+			driver,
+			paramInfoMap,
+		);
 	}
 }
 
@@ -82,9 +89,12 @@ integrationTest(
 		...testOptions,
 		testBody: async (t, driver, node, _mockController, _mockNode) => {
 			setupDestructiveDeviceConfig(driver, node);
-			
+
 			// Non-destructive parameter should work without confirm
-			await node.commandClasses.Configuration.setValue!({ property: 1 }, 5);
+			await node.commandClasses.Configuration.setValue!(
+				{ property: 1 },
+				5,
+			);
 		},
 	},
 );
@@ -95,10 +105,12 @@ integrationTest(
 		...testOptions,
 		testBody: async (t, driver, node, _mockController, _mockNode) => {
 			setupDestructiveDeviceConfig(driver, node);
-			
+
 			await t.expect(
-				node.commandClasses.Configuration.setValue!({ property: 2 }, 5)
-			).rejects.toThrow("Setting parameter #2 requires confirmation because it is marked as destructive");
+				node.commandClasses.Configuration.setValue!({ property: 2 }, 5),
+			).rejects.toThrow(
+				"Setting parameter #2 requires confirmation because it is marked as destructive",
+			);
 		},
 	},
 );
@@ -109,9 +121,13 @@ integrationTest(
 		...testOptions,
 		testBody: async (t, driver, node, _mockController, _mockNode) => {
 			setupDestructiveDeviceConfig(driver, node);
-			
+
 			// Destructive parameter should work with confirm
-			await node.commandClasses.Configuration.setValue!({ property: 2 }, 5, { confirm: true });
+			await node.commandClasses.Configuration.setValue!(
+				{ property: 2 },
+				5,
+				{ confirm: true },
+			);
 		},
 	},
 );
@@ -122,15 +138,17 @@ integrationTest(
 		...testOptions,
 		testBody: async (t, driver, node, _mockController, _mockNode) => {
 			setupDestructiveDeviceConfig(driver, node);
-			
+
 			await t.expect(
 				node.commandClasses.Configuration.set({
 					parameter: 2,
 					value: 10,
 					valueSize: 1,
 					valueFormat: 0,
-				})
-			).rejects.toThrow("Setting parameter #2 requires confirmation because it is marked as destructive");
+				}),
+			).rejects.toThrow(
+				"Setting parameter #2 requires confirmation because it is marked as destructive",
+			);
 		},
 	},
 );
@@ -141,7 +159,7 @@ integrationTest(
 		...testOptions,
 		testBody: async (t, driver, node, _mockController, _mockNode) => {
 			setupDestructiveDeviceConfig(driver, node);
-			
+
 			// Destructive parameter should work with confirm
 			await node.commandClasses.Configuration.set({
 				parameter: 2,
@@ -153,4 +171,3 @@ integrationTest(
 		},
 	},
 );
-
