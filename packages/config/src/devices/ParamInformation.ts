@@ -164,7 +164,8 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 		this.allowManualEntry = definition.allowManualEntry
 			?? (this.readOnly ? false : true);
 
-		if (definition.destructive != undefined
+		if (
+			definition.destructive != undefined
 			&& typeof definition.destructive !== "boolean"
 		) {
 			throwInvalidConfig(
