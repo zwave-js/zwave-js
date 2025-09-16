@@ -1,3 +1,4 @@
+// 800 series version
 {
 	"manufacturer": "Minoston",
 	"manufacturerId": "0x0312",
@@ -10,8 +11,8 @@
 		}
 	],
 	"firmwareVersion": {
-		"min": "0.0",
-		"max": "7.255"
+		"min": "8.0",
+		"max": "255.255"
 	},
 	"associations": {
 		"1": {
@@ -34,28 +35,60 @@
 			"$import": "templates/minoston_template.json#auto_off_timer"
 		},
 		{
-			"#": "3",
+			"#": "4",
 			"$import": "templates/minoston_template.json#auto_on_timer"
 		},
 		{
-			"#": "4",
-			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off_on"
-		},
-		{
-			"#": "5",
-			"$import": "templates/minoston_template.json#power_reporting_threshold"
-		},
-		{
 			"#": "6",
-			"$import": "templates/minoston_template.json#power_reporting_interval"
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		},
 		{
 			"#": "7",
-			"$import": "templates/minoston_template.json#current_reporting_threshold"
+			"$import": "templates/minoston_template.json#led_indicator_brightness",
+			"defaultValue": 2
 		},
 		{
 			"#": "8",
+			"$import": "templates/minoston_template.json#enable_local_control"
+		},
+		{
+			"#": "9",
+			"$import": "templates/minoston_template.json#power_reporting_threshold"
+		},
+		{
+			"#": "10",
+			"$import": "templates/minoston_template.json#power_reporting_interval"
+		},
+		{
+			"#": "11",
+			"$import": "templates/minoston_template.json#current_reporting_threshold"
+		},
+		{
+			"#": "12",
 			"$import": "templates/minoston_template.json#energy_reporting_threshold"
+		},
+		{
+			"#": "13",
+			"$import": "templates/minoston_template.json#power_reporting"
+		},
+		{
+			"#": "14",
+			"$import": "templates/minoston_template.json#current_reporting"
+		},
+		{
+			"#": "15",
+			"$import": "templates/minoston_template.json#current_reporting_interval",
+			"minValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "16",
+			"$import": "templates/minoston_template.json#voltage_reporting_interval"
 		}
 	],
 	"metadata": {
