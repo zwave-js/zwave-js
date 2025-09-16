@@ -92,9 +92,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified controller to add a device to the Z-Wave network.\n2. Once the controller is ready to add your device, press the Manual/Program button on the smart plug 3 time quickly. The blue LED will blink quickly.",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller to remove a device to the Z-Wave network.\n2. Once the controller is ready to remove your device, press the manual/program button on the smart plug 3 times quickly.",
-		"reset": "Click the button twice quickly then hold for at least 10 seconds.",
-		"manual": "https://minoston.com/wp-content/uploads/2022/05/MP22ZP-ZW96SP-manual-2021.12.30.pdf"
+		"inclusion": "Press the Manual/Program button 3 times quickly. The blue LED will blink quickly.",
+		"exclusion": "Press the Manual/Program button 3 times quickly.",
+		"reset": "Press the button twice quickly, then hold for at least 10 seconds. The light flashes once when reset is successful."
 	}
 }
