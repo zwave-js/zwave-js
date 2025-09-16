@@ -383,6 +383,7 @@ export class ConfigurationCCAPI extends CCAPI {
 			this: ConfigurationCCAPI,
 			{ property, propertyKey },
 			value,
+			options,
 		) {
 			// Config parameters are addressed with numeric properties/keys
 			if (typeof property !== "number") {
@@ -515,6 +516,7 @@ export class ConfigurationCCAPI extends CCAPI {
 				value: targetValue,
 				valueSize: valueSize as any,
 				valueFormat,
+				confirm: options?.confirm,
 			});
 
 			if (

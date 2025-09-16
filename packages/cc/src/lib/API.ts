@@ -101,7 +101,11 @@ export type SetValueImplementationHooksFactory = (
  */
 export type SetValueAPIOptions =
 	& Partial<ValueChangeOptions>
-	& Pick<SendCommandOptions, "onProgress">;
+	& Pick<SendCommandOptions, "onProgress">
+	& {
+		/** Confirmation flag for destructive operations */
+		confirm?: boolean;
+	};
 
 /** Used to identify the method on the CC API class that handles polling values from nodes */
 export const POLL_VALUE: unique symbol = Symbol.for("CCAPI_POLL_VALUE");
