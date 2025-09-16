@@ -1289,9 +1289,22 @@ export class ZWaveController
 			}
 		}
 
-		// US_LR is the first supported LR region, so if the controller supports LR, US_LR is supported
-		if (region === RFRegion.USA && this.isLongRangeCapable()) {
-			return RFRegion["USA (Long Range)"];
+		// Fallback logic for common LR regions when _supportedRegions is not available
+		if (this.isLongRangeCapable()) {
+			// US_LR is the first supported LR region, so if the controller supports LR, US_LR is supported
+			if (region === RFRegion.USA) {
+				return RFRegion["USA (Long Range)"];
+			}
+
+			// EU_LR was added in SDK 7.22 for 800 series chips
+			if (
+				region === RFRegion.Europe
+				&& typeof this._zwaveChipType === "string"
+				&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
+				&& this.sdkVersionGte("7.22")
+			) {
+				return RFRegion["Europe (Long Range)"];
+			}
 		}
 
 		return region;
@@ -1352,6 +1365,66 @@ export class ZWaveController
 						.join("")
 				}`,
 			);
+		} else {
+			// Fallback: Use getSupportedRFRegions and construct region info manually
+			const supportedRegions = this.getSupportedRFRegions(false);
+			if (supportedRegions !== NOT_KNOWN) {
+				this.driver.controllerLog.print(
+					`GetSupportedRegions not available, using fallback logic for region detection...`,
+				);
+				this._supportedRegions = new Map();
+
+				for (const region of supportedRegions) {
+					const info: RFRegionInfo = {
+						region,
+						supportsZWave: true,
+						supportsLongRange: false,
+					};
+
+					// Set Long Range support based on region
+					if (
+						region === RFRegion["USA (Long Range)"]
+						|| region === RFRegion["Europe (Long Range)"]
+					) {
+						info.supportsLongRange = true;
+						// LR regions include their non-LR counterparts
+						if (region === RFRegion["USA (Long Range)"]) {
+							info.includesRegion = RFRegion.USA;
+						} else if (region === RFRegion["Europe (Long Range)"]) {
+							info.includesRegion = RFRegion.Europe;
+						}
+					}
+
+					this._supportedRegions.set(region, info);
+				}
+
+				this.driver.controllerLog.print(
+					`supported regions (fallback):${
+						[...this._supportedRegions.values()]
+							.map((info) => {
+								let ret = `\n· ${
+									getEnumMemberName(RFRegion, info.region)
+								}`;
+								if (info.includesRegion != undefined) {
+									ret += ` · superset of ${
+										getEnumMemberName(
+											RFRegion,
+											info.includesRegion,
+										)
+									}`;
+								}
+								if (info.supportsLongRange) {
+									ret += " · ZWLR";
+									if (!info.supportsZWave) {
+										ret += " only";
+									}
+								}
+								return ret;
+							})
+							.join("")
+					}`,
+				);
+			}
 		}
 
 		// Check the current RF settings
