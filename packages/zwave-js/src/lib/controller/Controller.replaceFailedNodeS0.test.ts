@@ -27,7 +27,7 @@ const test = baseTest.extend<LocalTestContext>({
 			// Set up security manager (this is what was missing!)
 			(fakeDriver as any).securityManager = new SecurityManager({
 				ownNodeId: 1,
-				networkKey: Buffer.alloc(16, 0x01),
+				networkKey: new Uint8Array(16).fill(0x01),
 				nonceTimeout: 100000,
 			});
 
