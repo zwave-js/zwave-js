@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.14.0 (2025-09-17)
 ### Features
 * Support proxying Z-Wave traffic over the ESPHome protocol (#8093)
 
