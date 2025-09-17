@@ -1,0 +1,260 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZSE50",
+	"description": "Siren & Chime",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0369"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On-Off Control",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Set siren playback mode.",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"options": [
+				{
+					"label": "Play Once",
+					"value": 0
+				},
+				{
+					"label": "Play in a loop for set duration (set in parameter 2)",
+					"value": 1
+				},
+				{
+					"label": "Play in a loop for set number (set in parameter 3)",
+					"value": 2
+				},
+				{
+					"label": "Play in a loop until cancelled by user",
+					"value": 3
+				},
+				{
+					"label": "No sound, LED indicator only",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Set playback duration for the siren.",
+			"unit": "seconds",
+			"valueSize": 2,
+			"minValue": 1,
+			"maxValue": 900,
+			"defaultValue": 180
+		},
+		{
+			"#": "3",
+			"label": "Set the number of playback loops",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 1
+		},
+		{
+			"#": "4",
+			"label": "Set the default file number tone for the siren playback.",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 50,
+			"defaultValue": 1
+		},
+		{
+			"#": "5",
+			"label": "Set the volume for siren playback.",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 100
+		},
+		{
+			"#": "6",
+			"label": "LED Indicator Mode",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "LED Always Off",
+					"value": 0
+				},
+				{
+					"label": "LED strobe single color (set in param 7)",
+					"value": 1
+				},
+				{
+					"label": "LED strobe red and blue",
+					"value": 2
+				},
+				{
+					"label": "LED pulse single color (set in param 7)",
+					"value": 3
+				},
+				{
+					"label": "LED solid on single color (set in param 7)",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "7",
+			"label": "LED Indicator Color",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"options": [
+			{
+				"label": "Red",
+				"value": 0
+			},
+			{
+				"label": "Yellow",
+				"value": 42
+			},
+			{
+				"label": "Green",
+				"value": 85
+			},
+			{
+				"label": "Indigo",
+				"value": 127
+			},
+			{
+				"label": "Blue",
+				"value": 170
+			},
+			{
+				"label": "Purple",
+				"value": 212
+			},
+			{
+				"label": "White",
+				"value": 255
+			}
+		]
+		},
+		{
+			"#": "8",
+			"$import": "templates/zooz_template.json#low_battery_alarm_threshold"
+		},
+		{
+			"#": "9",
+			"label": "LED action in Back-Up Battery Mode",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "LED off (save battery)",
+					"value": 0
+				},
+				{
+					"label": "Regular LED mode (set in param 6)",
+					"value": 1
+				},
+				{
+					"label": "LED pulse white for full battery and red for low battery",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "10",
+			"$import": "templates/zooz_template.json#local_control",
+			"description": "Disable tone selection from physical buttons on the siren."
+		},
+		{
+			"#": "11",
+			"$import": "templates/zooz_template.json#local_control",
+			"description": "Disable volume adjustment from physical buttons on the siren"
+		},
+		{
+			"#": "12",
+			"label": "Basic set command to group 2",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "No Basic set commands sent",
+					"value": 0
+				},
+				{
+					"label": "Basic Set ON sent when playback starts, Off when playback stops",
+					"value": 1
+				},
+				{
+					"label": "Basic Set OFF sent when playback starts, On when playback stops",
+					"value": 2
+				},
+				{
+					"label": "Basic Set ON sent when playback starts only",
+					"value": 3
+				},
+				{
+					"label": "Basic Set OFF when playback stops only",
+					"value": 4
+				},
+				{
+					"label": "Basic Set OFF sent when playback starts only",
+					"value": 5
+				},
+				{
+					"label": "Basic Set ON when playback stops only",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "13",
+			"label": "System Message Volume",
+			"description": "Set the volume for siren system messages",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 50
+		},
+		{
+			"#": "14",
+			"label": "LED Indicator Brightness",
+			"description": "Choose the LED indicator's brightness level.",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 5
+		},
+		{
+			"#": "15",
+			"label": "Reporting interval for the battery",
+			"unit": "hours",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 84,
+			"defaultValue": 12
+		},
+		{
+			"#": "16",
+			"$import": "templates/zooz_template.json#battery_report_threshold",
+			"minValue": 0,
+			"maxValue": 20,
+			"defaultValue": 0
+		}
+	]
+}
