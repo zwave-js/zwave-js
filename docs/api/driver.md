@@ -322,6 +322,8 @@ Performs an over-the-wire (OTW) firmware update for the Z-Wave module (controlle
 
 To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` driver events](api/driver#quotfirmware-update-progressquot).
 
+> [!NOTE] In case of a communication issue (checksum, dropped frames, etc.), Z-Wave JS will retry the upgrade up to the configured number of times. In this case, the progress can jump back to 0.
+
 The return value indicates whether the update was successful and includes an error code that can be used to determine the reason for a failure. This is the same information that is emitted using the `"firmware update finished"` event:
 
 <!-- #import OTWFirmwareUpdateResult from "zwave-js" -->
@@ -330,6 +332,8 @@ The return value indicates whether the update was successful and includes an err
 interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
+	/** The bootloader error code, if available when the update fails */
+	errorCode?: number;
 }
 ```
 
@@ -470,6 +474,8 @@ The firmware update process is finished. The `result` argument looks like this i
 interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
+	/** The bootloader error code, if available when the update fails */
+	errorCode?: number;
 }
 ```
 
@@ -865,6 +871,16 @@ interface ZWaveOptions {
 		 * How many attempts should be made for each node interview before giving up
 		 */
 		nodeInterview: number; // [1...10], default: 5
+
+		/**
+		 * How many attempts should be made to include a SmartStart node before giving up
+		 */
+		smartStartInclusion: number; // [1...25], default: 5
+
+		/**
+		 * How many attempts should be made for OTW firmware updates before giving up
+		 */
+		firmwareUpdateOTW: number; // [1...5], default: 3
 	};
 
 	/**
