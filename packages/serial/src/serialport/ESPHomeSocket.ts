@@ -52,7 +52,7 @@ export function createESPHomeFactory(
 			| undefined;
 
 		// Buffer for incoming frame reassembly
-		let frameBuffer = new Uint8Array(0);
+		let frameBuffer = new Bytes();
 
 		function removeListeners() {
 			socket.removeAllListeners("close");
@@ -147,13 +147,7 @@ export function createESPHomeFactory(
 
 		function processIncomingData(data: Buffer): void {
 			try {
-				// Append new data to buffer
-				const newBuffer = new Uint8Array(
-					frameBuffer.length + data.length,
-				);
-				newBuffer.set(frameBuffer);
-				newBuffer.set(data, frameBuffer.length);
-				frameBuffer = newBuffer;
+				frameBuffer = Bytes.concat([frameBuffer, data]);
 
 				// Try to extract complete frames
 				while (frameBuffer.length > 0) {
@@ -177,7 +171,7 @@ export function createESPHomeFactory(
 						processIncomingMessage(message);
 
 						// Remove the processed frame from the buffer
-						frameBuffer = frameBuffer.slice(frameLength);
+						frameBuffer = frameBuffer.subarray(frameLength);
 					} catch (error) {
 						// If we can't decode a complete frame yet, wait for more data
 						if (
@@ -188,13 +182,13 @@ export function createESPHomeFactory(
 							break;
 						}
 						// For other errors, reset the buffer and continue
-						frameBuffer = new Uint8Array(0);
+						frameBuffer = new Bytes();
 						break;
 					}
 				}
 			} catch {
 				// Reset buffer on any parsing error
-				frameBuffer = new Uint8Array(0);
+				frameBuffer = new Bytes();
 			}
 		}
 
