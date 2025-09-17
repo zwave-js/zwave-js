@@ -333,6 +333,10 @@ export function refreshMetadataStringsFromConfigFile(
 			existing.description = info.description;
 			didChange = true;
 		}
+		if (info.recommendedValue !== existing.recommended) {
+			existing.recommended = info.recommendedValue;
+			didChange = true;
+		}
 		if (existing.states) {
 			for (const option of info.options) {
 				if (
@@ -1573,6 +1577,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				min: info.minValue,
 				max: info.maxValue,
 				default: info.defaultValue,
+				recommended: info.recommendedValue,
 				unit: info.unit,
 				format: info.unsigned
 					? ConfigValueFormat.UnsignedInteger
