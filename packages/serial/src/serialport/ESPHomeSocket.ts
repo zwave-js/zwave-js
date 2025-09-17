@@ -1,20 +1,22 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes, buffer2hex } from "@zwave-js/shared";
-import dayjs from "dayjs";
+import { Bytes } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+import { DisconnectRequest } from "../esphome/ConnectionMessages.js";
 import {
 	DeviceInfoRequest,
 	DeviceInfoResponse,
-	DisconnectRequest,
+} from "../esphome/DeviceInfoMessages.js";
+import {
 	ESPHomeMessage,
 	ESPHomeMessageRaw,
+} from "../esphome/ESPHomeMessage.js";
+import { HelloRequest, HelloResponse } from "../esphome/HelloMessages.js";
+import {
 	ESPHomeZWaveProxyRequestType,
-	HelloRequest,
-	HelloResponse,
 	ZWaveProxyFrame,
 	ZWaveProxyRequest,
-} from "../esphome/index.js";
+} from "../esphome/ZWaveProxyMessages.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export interface ESPHomeSocketOptions {
@@ -68,12 +70,6 @@ export function createESPHomeFactory(
 				| ZWaveProxyFrame,
 		): Promise<void> {
 			const frame = message.serialize();
-			console.error(
-				dayjs(new Date()).format("HH:mm:ss.SSS"),
-				"OUTGOING:",
-				buffer2hex(frame),
-			);
-
 			return new Promise((resolve, reject) => {
 				socket.write(frame, (err) => {
 					if (err) reject(err);
@@ -111,12 +107,6 @@ export function createESPHomeFactory(
 				);
 			}
 
-			console.log(
-				`Z-Wave proxy support detected with feature flags: 0x${
-					deviceInfo.zwaveProxyFeatureFlags.toString(16)
-				}`,
-			);
-
 			// Subscribe to Z-Wave traffic
 			const subscribeRequest = new ZWaveProxyRequest({
 				type: ESPHomeZWaveProxyRequestType.Subscribe,
@@ -125,7 +115,6 @@ export function createESPHomeFactory(
 
 			// Connection is ready - no service discovery needed
 			connectionState = ConnectionState.Ready;
-			console.log("ESPHome connection ready.");
 		}
 
 		function waitForState(
@@ -158,11 +147,6 @@ export function createESPHomeFactory(
 
 		function processIncomingData(data: Buffer): void {
 			try {
-				console.error(
-					dayjs(new Date()).format("HH:mm:ss.SSS"),
-					"INCOMING:",
-					buffer2hex(data),
-				);
 				// Append new data to buffer
 				const newBuffer = new Uint8Array(
 					frameBuffer.length + data.length,
@@ -204,7 +188,6 @@ export function createESPHomeFactory(
 							break;
 						}
 						// For other errors, reset the buffer and continue
-						console.error("Frame parsing error:", error);
 						frameBuffer = new Uint8Array(0);
 						break;
 					}
@@ -220,28 +203,10 @@ export function createESPHomeFactory(
 		): void {
 			if (message instanceof HelloResponse) {
 				if (connectionState === ConnectionState.HelloSent) {
-					console.log(
-						`Connected to ESPHome device: ${message.name} (${message.serverInfo})`,
-					);
-					console.log(
-						`API version: ${message.apiVersionMajor}.${message.apiVersionMinor}`,
-					);
 					connectionState = ConnectionState.HelloReceived;
 				}
 			} else if (message instanceof DeviceInfoResponse) {
 				if (connectionState === ConnectionState.DeviceInfoSent) {
-					console.log(
-						`Device info received: ${message.name} (${message.esphomeVersion})`,
-					);
-					console.log(`Model: ${message.model}`);
-					console.log(`MAC: ${message.macAddress}`);
-					if (message.hasZWaveProxySupport) {
-						console.log(
-							`Z-Wave proxy feature flags: 0x${
-								message.zwaveProxyFeatureFlags.toString(16)
-							}`,
-						);
-					}
 					deviceInfo = message;
 					connectionState = ConnectionState.DeviceInfoReceived;
 				}

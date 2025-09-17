@@ -24,15 +24,11 @@ export enum ESPHomeZWaveProxyRequestType {
 	Unsubscribe = 1,
 }
 
-export interface ZWaveProxyFrameOptions
-	extends ESPHomeMessageBaseOptions
-{
+export interface ZWaveProxyFrameOptions extends ESPHomeMessageBaseOptions {
 	data: Bytes;
 }
 
-export interface ZWaveProxyRequestOptions
-	extends ESPHomeMessageBaseOptions
-{
+export interface ZWaveProxyRequestOptions extends ESPHomeMessageBaseOptions {
 	type: ESPHomeZWaveProxyRequestType;
 }
 
@@ -104,7 +100,6 @@ export class ZWaveProxyRequest extends ESPHomeMessage {
 		parts.push(encodeVarintField(1, this.type));
 
 		this.payload = Bytes.concat(parts);
-		console.log(`payload: ${this.payload.toString()}`);
 		return super.serialize();
 	}
 }

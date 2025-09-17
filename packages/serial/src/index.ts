@@ -12,16 +12,12 @@ export * from "./parsers/ZWaveSerialFrame.js";
 export * from "./parsers/ZnifferSerialFrame.js";
 export * from "./plumbing/Faucet.js";
 export type * from "./serialport/Bindings.js";
+export * from "./serialport/ESPHomeSocket.js";
 export * from "./serialport/LegacyBindingWrapper.js";
 export * from "./serialport/ZWaveSerialPortImplementation.js";
 export * from "./serialport/ZWaveSerialStream.js";
 export * from "./serialport/ZWaveSocketOptions.js";
 export * from "./serialport/definitions.js";
 export * from "./zniffer/ZnifferSerialStream.js";
-
-// ESPHome protocol support
-export * from "./esphome/index.js";
-export { createESPHomeFactory } from "./serialport/ESPHomeSocket.js";
-export type { ESPHomeSocketOptions } from "./serialport/ESPHomeSocket.js";
 
 export * from "./index_serialapi.js";
