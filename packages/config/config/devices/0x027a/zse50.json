@@ -38,11 +38,11 @@
 					"value": 0
 				},
 				{
-					"label": "Play in a loop for the duration specified in parameter 2.",
+					"label": "Play in a loop for the duration per parameter 2.",
 					"value": 1
 				},
 				{
-					"label": "Play in a loop for set number specified in parameter 3.",
+					"label": "Play the loop per the number set in parameter 3.",
 					"value": 2
 				},
 				{
@@ -57,7 +57,7 @@
 		},
 		{
 			"#": "2",
-			"label": "Set Playback Duration for the Siren.",
+			"label": "Set Playback Duration for the Siren",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 1,
@@ -66,7 +66,7 @@
 		},
 		{
 			"#": "3",
-			"label": "Set The Number Of Playback Loops",
+			"label": "Set the Number of Playback Loops",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 99,
@@ -74,7 +74,7 @@
 		},
 		{
 			"#": "4",
-			"label": "Set the Default File Number Tone for the Siren Playback.",
+			"label": "Default File Number Tone for the Siren Playback",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 50,
@@ -82,7 +82,7 @@
 		},
 		{
 			"#": "5",
-			"label": "Set the Volume for Siren Playback.",
+			"label": "Set the Volume for Siren Playback",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 100,
@@ -202,31 +202,31 @@
 			"defaultValue": 1,
 			"options": [
 				{
-					"label": "No basic set commands sent.",
+					"label": "No basic set commands are sent.",
 					"value": 0
 				},
 				{
-					"label": "Basic set on sent when playback starts, off when playback stops.",
+					"label": "On sent when playback starts, off when stopped.",
 					"value": 1
 				},
 				{
-					"label": "Basic set off sent when playback starts, on when playback stops.",
+					"label": "Off sent when playback starts, on when stopped.",
 					"value": 2
 				},
 				{
-					"label": "Basic set on sent when playback starts only.",
+					"label": "On sent when playback starts only.",
 					"value": 3
 				},
 				{
-					"label": "Basic set OFF when playback stops only.",
+					"label": "Off sent when playback stops only.",
 					"value": 4
 				},
 				{
-					"label": "Basic set off sent when playback starts only.",
+					"label": "Off sent when playback starts only.",
 					"value": 5
 				},
 				{
-					"label": "Basic set on when playback stops only.",
+					"label": "On sent when playback stops only.",
 					"value": 6
 				}
 			]
