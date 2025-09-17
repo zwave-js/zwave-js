@@ -27,7 +27,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Set Siren Playback Mode.",
+			"label": "Set Siren Playback Mode",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 4,
@@ -38,11 +38,11 @@
 					"value": 0
 				},
 				{
-					"label": "Play in a loop for set duration as set in parameter 2.",
+					"label": "Play in a loop for the duration specified in parameter 2.",
 					"value": 1
 				},
 				{
-					"label": "Play in a loop for set number as set in parameter 3",
+					"label": "Play in a loop for set number specified in parameter 3.",
 					"value": 2
 				},
 				{
@@ -57,7 +57,7 @@
 		},
 		{
 			"#": "2",
-			"label": "Set Playback Duration For The Siren.",
+			"label": "Set Playback Duration for the Siren.",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 1,
@@ -74,7 +74,7 @@
 		},
 		{
 			"#": "4",
-			"label": "Set The Default File Number Tone For The Siren Playback.",
+			"label": "Set the Default File Number Tone for the Siren Playback.",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 50,
@@ -82,7 +82,7 @@
 		},
 		{
 			"#": "5",
-			"label": "Set The Volume For Siren Playback.",
+			"label": "Set the Volume for Siren Playback.",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 100,
@@ -163,7 +163,7 @@
 		},
 		{
 			"#": "9",
-			"label": "LED Action In Back-Up Battery Mode",
+			"label": "LED Action in Back-Up Battery Mode",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 2,
@@ -195,38 +195,38 @@
 		},
 		{
 			"#": "12",
-			"label": "Basic Set Command To Group 2",
+			"label": "Basic Set Command to Group 2",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 6,
 			"defaultValue": 1,
 			"options": [
 				{
-					"label": "No basic set commands sent",
+					"label": "No basic set commands sent.",
 					"value": 0
 				},
 				{
-					"label": "Basic set on sent when playback starts, off when playback stops",
+					"label": "Basic set on sent when playback starts, off when playback stops.",
 					"value": 1
 				},
 				{
-					"label": "Basic set off sent when playback starts, On when playback stops",
+					"label": "Basic set off sent when playback starts, on when playback stops.",
 					"value": 2
 				},
 				{
-					"label": "Basic set on sent when playback starts only",
+					"label": "Basic set on sent when playback starts only.",
 					"value": 3
 				},
 				{
-					"label": "Basic set OFF when playback stops only",
+					"label": "Basic set OFF when playback stops only.",
 					"value": 4
 				},
 				{
-					"label": "Basic set off sent when playback starts only",
+					"label": "Basic set off sent when playback starts only.",
 					"value": 5
 				},
 				{
-					"label": "Basic set on when playback stops only",
+					"label": "Basic set on when playback stops only.",
 					"value": 6
 				}
 			]
@@ -234,7 +234,7 @@
 		{
 			"#": "13",
 			"label": "System Message Volume",
-			"description": "Set the volume for siren system messages",
+			"description": "Set the volume for siren system messages.",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 100,
@@ -251,7 +251,7 @@
 		},
 		{
 			"#": "15",
-			"label": "Reporting Interval For The Battery",
+			"label": "Reporting Interval for the Battery",
 			"valueSize": 1,
 			"unit": "hours",
 			"minValue": 1,
