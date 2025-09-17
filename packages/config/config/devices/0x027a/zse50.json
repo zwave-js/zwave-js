@@ -122,35 +122,35 @@
 			"maxValue": 255,
 			"defaultValue": 0,
 			"options": [
-			{
-				"label": "Red",
-				"value": 0
-			},
-			{
-				"label": "Yellow",
-				"value": 42
-			},
-			{
-				"label": "Green",
-				"value": 85
-			},
-			{
-				"label": "Indigo",
-				"value": 127
-			},
-			{
-				"label": "Blue",
-				"value": 170
-			},
-			{
-				"label": "Purple",
-				"value": 212
-			},
-			{
-				"label": "White",
-				"value": 255
-			}
-		]
+				{
+					"label": "Red",
+					"value": 0
+				},
+				{
+					"label": "Yellow",
+					"value": 42
+				},
+				{
+					"label": "Green",
+					"value": 85
+				},
+				{
+					"label": "Indigo",
+					"value": 127
+				},
+				{
+					"label": "Blue",
+					"value": 170
+				},
+				{
+					"label": "Purple",
+					"value": 212
+				},
+				{
+					"label": "White",
+					"value": 255
+				}
+			]
 		},
 		{
 			"#": "8",
