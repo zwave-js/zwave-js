@@ -4,6 +4,20 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Support proxying Z-Wave traffic over the ESPHome protocol (#8093)
+
+### Bugfixes
+* Fixed an issue where converting NVMs with unknown objects would fail due to unknown NVM section (#8095)
+* Zniffer: improve support for parsing ZLF files created by the official Zniffer application (#8165)
+
+### Config file changes
+* Add 800 series variant of Minoston MP22ZP (#8171)
+
+### Changes under the hood
+* Implement utility to convert Zniffer traces to CSV (#8166)
+
 ## 15.13.0 (2025-09-11)
 ### Features
 * Support checking for all firmware updates at once, and support detecting devices unknown to the firmware update service (#8157)
