@@ -1,16 +1,10 @@
 import { Bytes } from "@zwave-js/shared";
 import { expect, test } from "vitest";
-import {
-	DeviceInfoRequest,
-	DeviceInfoResponse,
-	ESPHomeMessage,
-	ESPHomeMessageType,
-	HelloRequest,
-	HelloResponse,
-	PingRequest,
-	PingResponse,
-	ZWaveProxyFrame,
-} from "./index.js";
+import { DeviceInfoRequest, DeviceInfoResponse } from "./DeviceInfoMessages.js";
+import { ESPHomeMessage, ESPHomeMessageType } from "./ESPHomeMessage.js";
+import { HelloRequest, HelloResponse } from "./HelloMessages.js";
+import { PingRequest, PingResponse } from "./PingMessages.js";
+import { ZWaveProxyFrame } from "./ZWaveProxyMessages.js";
 
 test("HelloRequest serialization and parsing", () => {
 	const original = new HelloRequest({
