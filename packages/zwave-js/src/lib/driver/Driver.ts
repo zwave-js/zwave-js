@@ -331,7 +331,6 @@ const defaultOptions: ZWaveOptions = {
 		firmwareUpdateOTW: 3,
 	},
 	disableOptimisticValueUpdate: false,
-	applyConfigurationRecommendedValues: false,
 	features: {
 		// By default enable soft reset unless the env variable is set
 		softReset: !getenv("ZWAVEJS_DISABLE_SOFT_RESET"),
@@ -348,6 +347,7 @@ const defaultOptions: ZWaveOptions = {
 	bootloaderMode: "recover",
 	interview: {
 		queryAllUserCodes: false,
+		applyConfigurationRecommendedValues: false,
 	},
 	storage: {
 		cacheDir: typeof process !== "undefined"
@@ -1442,7 +1442,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			"attempts",
 			"disableOptimisticValueUpdate",
 			"emitValueUpdateAfterSetValue",
-			"applyConfigurationRecommendedValues",
 			"inclusionUserCallbacks",
 			"joinNetworkUserCallbacks",
 			"interview",

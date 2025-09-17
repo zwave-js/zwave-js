@@ -1027,14 +1027,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			await this.overwriteConfig();
 		}
 
-		// Apply recommended values from device config
-		if (
-			!this.isControllerNode
-			&& this.driver.options.applyConfigurationRecommendedValues === true
-		) {
-			await this.applyRecommendedValues();
-		}
-
 		// Remember the state of the device config that is used for this node
 		this.cachedDeviceConfigHash = await this.deviceConfig?.getHash();
 
@@ -1056,100 +1048,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			getEnumMemberName(InterviewStage, completedStage),
 		);
 		this.driver.controllerLog.interviewStage(this);
-	}
-
-	/**
-	 * Applies all recommended values from the device config to this node
-	 * Applies only if the current value is still the default value and
-	 * the recommended value is different
-	 * This is called at the end of the interview
-	 */
-	private async applyRecommendedValues(): Promise<void> {
-		if (this.deviceConfig === NOT_KNOWN) return;
-
-		this.driver.controllerLog.logNode(
-			this.id,
-			`Start applying recommended parameter values during interview...`,
-			"debug",
-		);
-
-		// Get all parameter information
-		const paramInfo = this.deviceConfig.paramInformation;
-		if (!paramInfo) return;
-
-		const parametersNeededUpdate: Array<{
-			key: { parameter: number; valueBitMask?: number };
-			currentValue: unknown;
-			recommendedValue: unknown;
-		}> = [];
-
-		// Find parameters for which current value doesn't match the recommended value
-		for (const [paramKey, param] of paramInfo) {
-			if (
-				param.recommendedValue === undefined
-				|| param.defaultValue === param.recommendedValue
-			) continue;
-
-			// Get the current value of this parameter from the device
-			const valueId = {
-				commandClass: CommandClasses.Configuration,
-				property: paramKey.parameter,
-				propertyKey: paramKey.valueBitMask,
-			};
-
-			const currentValue = this.getValue(valueId);
-
-			// If the current value is the default value (i.e. it was never changed by the user)
-			// and the recommended value is different, we should update it
-			if (
-				currentValue === param.defaultValue
-				&& currentValue !== param.recommendedValue
-			) {
-				parametersNeededUpdate.push({
-					key: paramKey,
-					currentValue,
-					recommendedValue: param.recommendedValue,
-				});
-			}
-		}
-
-		if (parametersNeededUpdate.length === 0) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				`No configuration parameters need to be updated`,
-				"debug",
-			);
-			return;
-		}
-
-		// set the parameters to the recommended values
-		for (const param of parametersNeededUpdate) {
-			const formatterBitMask = param.key.valueBitMask
-				? `[0x${
-					param.key.valueBitMask.toString(16).toUpperCase().padStart(
-						2,
-						"0",
-					)
-				}]`
-				: "";
-			const fullParamKey = `${param.key.parameter}${formatterBitMask}`;
-
-			this.driver.controllerLog.logNode(
-				this.id,
-				`Setting parameter ${fullParamKey} to recommended value: ${
-					String(param.recommendedValue)
-				} (current value: ${String(param.currentValue)})`,
-			);
-
-			await this.setValue(
-				{
-					commandClass: CommandClasses.Configuration,
-					property: param.key.parameter,
-					propertyKey: param.key.valueBitMask,
-				},
-				param.recommendedValue,
-			);
-		}
 	}
 
 	/** Step #1 of the node interview */

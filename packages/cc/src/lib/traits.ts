@@ -89,6 +89,12 @@ export interface InterviewOptions {
 	 * Note that enabling this can cause a lot of traffic during the interview.
 	 */
 	queryAllUserCodes?: boolean;
+
+	/**
+	 * Whether configuration parameters should be set to their recommended values during the interview.
+	 * Parameters are updated only if their current value equals the default value.
+	 */
+	applyConfigurationRecommendedValues?: boolean;
 }
 
 /** Allows reading options to use for interviewing devices */

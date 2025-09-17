@@ -91,7 +91,9 @@ integrationTest("Auto apply recommended values during interview", {
 	// Provide the directory containing our custom device config
 	additionalDriverOptions: {
 		// Enable applying recommended configuration values
-		applyConfigurationRecommendedValues: true,
+		interview: {
+			applyConfigurationRecommendedValues: true,
+		},
 		storage: {
 			deviceConfigPriorityDir: deviceConfigPriorityDir,
 		},
@@ -122,8 +124,9 @@ integrationTest(
 
 		// Provide the directory containing our custom device config
 		additionalDriverOptions: {
-			// Enable applying recommended configuration values
-			applyConfigurationRecommendedValues: false,
+			interview: {
+				applyConfigurationRecommendedValues: false,
+			},
 			storage: {
 				deviceConfigPriorityDir: deviceConfigPriorityDir,
 			},

@@ -1256,8 +1256,109 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 
 		await this.refreshValues(ctx);
 
+		// Apply recommended values from device config
+		if (
+			paramInfo !== undefined
+			&& ctx.getInterviewOptions().applyConfigurationRecommendedValues
+				=== true
+		) {
+			await this.applyRecommendedValues(ctx, node, paramInfo, api);
+		}
+
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	/**
+	 * Applies all recommended values from the device config to this node
+	 * Applies only if the current value is still the default value and
+	 * the recommended value is different
+	 */
+	private async applyRecommendedValues(
+		ctx: InterviewContext,
+		node: NodeId,
+		paramInfo: ParamInfoMap,
+		api: ConfigurationCCAPI,
+	): Promise<void> {
+		ctx.logNode(node.id, {
+			endpoint: this.endpointIndex,
+			message:
+				`Start applying recommended parameter values during interview...`,
+			direction: "none",
+			level: "debug",
+		});
+
+		const parametersNeededUpdate: ConfigurationCCAPISetOptions[] = [];
+
+		// Find parameters for which current value doesn't match the recommended value
+		for (const [paramKey, param] of paramInfo) {
+			if (
+				param.recommendedValue === undefined
+				|| param.defaultValue === param.recommendedValue
+			) continue;
+
+			// Get the current value of this parameter from the device
+			const currentValue = this.getValue(
+				ctx,
+				ConfigurationCCValues.paramInformation(
+					paramKey.parameter,
+					paramKey.valueBitMask,
+				),
+			);
+
+			// If the current value is the default value (i.e. it was never changed by the user)
+			// and the recommended value is different, we should update it
+			if (
+				currentValue === param.defaultValue
+				&& currentValue !== param.recommendedValue
+			) {
+				const baseParam = {
+					parameter: paramKey.parameter,
+					value: param.recommendedValue,
+				};
+
+				parametersNeededUpdate.push(
+					param.valueBitMask !== undefined
+						? { ...baseParam, bitMask: param.valueBitMask }
+						: baseParam,
+				);
+			}
+		}
+
+		if (parametersNeededUpdate.length === 0) {
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: `No configuration parameters need to be updated`,
+				direction: "none",
+				level: "debug",
+			});
+			return;
+		}
+
+		// Log what we're about to do
+		for (const param of parametersNeededUpdate) {
+			const formatterBitMask = param.bitMask
+				? `[0x${
+					param.bitMask.toString(16).toUpperCase().padStart(
+						2,
+						"0",
+					)
+				}]`
+				: "";
+			const fullParamKey = `${param.parameter}${formatterBitMask}`;
+
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message:
+					`Setting parameter ${fullParamKey} to recommended value: ${
+						String(param.value)
+					}`,
+				direction: "outbound",
+			});
+		}
+
+		await api.setBulk(parametersNeededUpdate);
+		await this.refreshValues(ctx);
 	}
 
 	public async refreshValues(

@@ -135,6 +135,19 @@ export interface ZWaveOptions {
 		 * Default: `false` (automatic interviews enabled)
 		 */
 		disableOnNodeAdded?: boolean;
+
+		/**
+		 * Automatically apply recommended parameter values from device configuration files during node interview.
+		 *
+		 * When enabled, Z-Wave JS will check if any parameters have recommended values defined in the device config
+		 * and automatically set them only if the current value equals the default value AND the current value differs
+		 * from the recommended value. This ensures that user-modified parameters are not overwritten.
+		 *
+		 * This feature is opt-in to avoid unexpected parameter changes.
+		 *
+		 * Default: `false`
+		 */
+		applyConfigurationRecommendedValues?: boolean;
 	};
 
 	/** Host abstractions allowing Z-Wave JS to run on different platforms */
@@ -253,19 +266,6 @@ export interface ZWaveOptions {
 	 * Default: `false`
 	 */
 	emitValueUpdateAfterSetValue?: boolean;
-
-	/**
-	 * Automatically apply recommended parameter values from device configuration files during node interview.
-	 *
-	 * When enabled, Z-Wave JS will check if any parameters have recommended values defined in the device config
-	 * and automatically set them only if the current value equals the default value AND the current value differs
-	 * from the recommended value. This ensures that user-modified parameters are not overwritten.
-	 *
-	 * This feature is opt-in to avoid unexpected parameter changes.
-	 *
-	 * Default: `false`
-	 */
-	applyConfigurationRecommendedValues?: boolean;
 
 	features: {
 		/**
@@ -510,7 +510,6 @@ export type EditableZWaveOptions = Expand<
 		| "attempts"
 		| "disableOptimisticValueUpdate"
 		| "emitValueUpdateAfterSetValue"
-		| "applyConfigurationRecommendedValues"
 		| "inclusionUserCallbacks"
 		| "joinNetworkUserCallbacks"
 		| "interview"
