@@ -1788,6 +1788,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     get firmwareVersion(): MaybeNotKnown<string>;
     getAllAssociationGroups(nodeId: number): ReadonlyMap<number, ReadonlyMap<number, AssociationGroup>>;
     getAllAssociations(nodeId: number): ReadonlyObjectKeyMap<AssociationAddress, ReadonlyMap<number, readonly AssociationAddress[]>>;
+    getAllAvailableFirmwareUpdates(options?: GetFirmwareUpdatesOptions): Promise<Map<number, FirmwareUpdateInfo[]>>;
     getAssociationGroups(source: AssociationAddress): ReadonlyMap<number, AssociationGroup>;
     getAssociations(source: AssociationAddress): ReadonlyMap<number, readonly AssociationAddress[]>;
     getAvailableFirmwareUpdates(nodeId: number, options?: GetFirmwareUpdatesOptions): Promise<FirmwareUpdateInfo[]>;
@@ -2557,7 +2558,7 @@ export * from "@zwave-js/cc";
 //
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:100:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
-// src/lib/controller/Controller.ts:917:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// src/lib/controller/Controller.ts:918:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
 // src/lib/driver/Driver.ts:1027:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/driver/Driver.ts:5210:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/Driver.ts:6814:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
@@ -2570,8 +2571,8 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:8445:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
 // src/lib/driver/ZWaveOptions.ts:347:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2143:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:722:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:723:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:738:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:739:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
 
