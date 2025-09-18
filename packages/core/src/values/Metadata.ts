@@ -190,7 +190,6 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
 	allowManualEntry?: boolean;
 	isFromConfig?: boolean;
 	destructive?: boolean;
-	hidden?: boolean;
 }
 
 export type ValueMetadata =

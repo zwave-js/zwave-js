@@ -1651,6 +1651,11 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		);
 
 		for (const [param, info] of config.entries()) {
+			// Skip hidden parameters entirely - don't create metadata or persist values
+			if (info.hidden) {
+				continue;
+			}
+
 			// We need to make the config information compatible with the
 			// format that ConfigurationCC reports
 			const paramInfo: Partial<ConfigurationMetadata> = stripUndefined({
@@ -1680,7 +1685,6 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				description: info.description,
 				isFromConfig: true,
 				destructive: info.destructive,
-				hidden: info.hidden,
 			});
 			this.extendParamInformation(
 				ctx,
