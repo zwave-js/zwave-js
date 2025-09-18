@@ -1265,6 +1265,26 @@ export class ZWaveController
 		);
 	}
 
+	/**
+	 * Helper function to determine whether the controller is capable of EU Long Range,
+	 * possibly without advertising it
+	 */
+	private isEULongRangeCapable(): MaybeNotKnown<boolean> {
+		// EU Long Range was added in SDK 7.22 for 800 series chips
+		// 7.22.1 adds support for querying the supported regions, so the following
+		// is really only necessary for 7.22.0.
+		//
+		// However, there seem to be cases where the new command is missing from
+		// later SDK versions too:
+		// https://github.com/zwave-js/zwave-js/issues/8174
+		return (
+			this.isLongRangeCapable()
+			&& typeof this._zwaveChipType === "string"
+			&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
+			&& this.sdkVersionGte("7.22")
+		);
+	}
+
 	/** Tries to determine the LR capable replacement of the given region. If none is found, the given region is returned. */
 	private tryGetLRCapableRegion(region: RFRegion): RFRegion {
 		if (this._supportedRegions) {
@@ -1284,6 +1304,10 @@ export class ZWaveController
 		// US_LR is the first supported LR region, so if the controller supports LR, US_LR is supported
 		if (region === RFRegion.USA && this.isLongRangeCapable()) {
 			return RFRegion["USA (Long Range)"];
+		}
+
+		if (region === RFRegion.Europe && this.isEULongRangeCapable()) {
+			return RFRegion["Europe (Long Range)"];
 		}
 
 		return region;
@@ -7247,18 +7271,11 @@ export class ZWaveController
 			// All LR capable controllers support USA Long Range
 			ret.add(RFRegion["USA (Long Range)"]);
 			if (filterSubsets) ret.delete(RFRegion.USA);
+		}
 
-			// EU Long Range was added in SDK 7.22 for 800 series chips
-			// 7.22.1 adds support for querying the supported regions, so the following
-			// is really only necessary for 7.22.0.
-			if (
-				typeof this._zwaveChipType === "string"
-				&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
-				&& this.sdkVersionGte("7.22")
-			) {
-				ret.add(RFRegion["Europe (Long Range)"]);
-				if (filterSubsets) ret.delete(RFRegion.Europe);
-			}
+		if (this.isEULongRangeCapable()) {
+			ret.add(RFRegion["Europe (Long Range)"]);
+			if (filterSubsets) ret.delete(RFRegion.Europe);
 		}
 
 		return [...ret].sort((a, b) => a - b);
