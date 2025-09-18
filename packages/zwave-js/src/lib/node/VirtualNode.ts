@@ -8,6 +8,7 @@ import {
 	supervisionResultToSetValueResult,
 } from "@zwave-js/cc";
 import {
+	type Protocols,
 	SecurityClass,
 	SupervisionStatus,
 	type TranslatedValueID,
@@ -23,7 +24,6 @@ import {
 	normalizeValueID,
 	supervisedCommandSucceeded,
 	valueIdToString,
-	Protocols,
 } from "@zwave-js/core";
 import { distinct } from "alcalzone-shared/arrays";
 import type { Driver } from "../driver/Driver.js";
@@ -37,10 +37,33 @@ export interface VirtualValueID extends TranslatedValueID {
 	ccVersion: number;
 }
 
-function groupNodes(
+export enum CommunicationProfile {
+	Mesh_S2_Unauthenticated = 0x00,
+	Mesh_S2_Authenticated = 0x01,
+	Mesh_S2_AccessControl = 0x02,
+	Mesh_S0_Legacy = 0x07,
+	LR_S2_Authenticated = 0x11,
+	LR_S2_AccessControl = 0x12,
+}
+
+export function getCommunicationProfile(
+	protocol: Protocols,
+	securityClass: SecurityClass,
+): CommunicationProfile {
+	// We assume that only valid combinations are passed
+	return (protocol << 4) | (securityClass & 0x0f);
+}
+
+export function getSecurityClassFromCommunicationProfile(
+	profile: CommunicationProfile,
+): SecurityClass {
+	return profile & 0x0f;
+}
+
+function groupNodesByCommunicationProfile(
 	nodes: Iterable<ZWaveNode>,
-): Map<Protocols, Map<SecurityClass, ZWaveNode[]>> {
-	const ret = new Map<Protocols, Map<SecurityClass, ZWaveNode[]>>();
+): Map<CommunicationProfile, ZWaveNode[]> {
+	const ret = new Map<CommunicationProfile, ZWaveNode[]>();
 
 	for (const node of nodes) {
 		const secClass = node.getHighestSecurityClass();
@@ -48,14 +71,11 @@ function groupNodes(
 			continue;
 		}
 
-		if (!ret.has(node.protocol)) {
-			ret.set(node.protocol, new Map<SecurityClass, ZWaveNode[]>());
+		const profile = getCommunicationProfile(node.protocol, secClass);
+		if (!ret.has(profile)) {
+			ret.set(profile, []);
 		}
-		if (!ret.get(node.protocol)!.has(secClass)) {
-			ret.get(node.protocol)!.set(secClass, []);
-		}
-
-		ret.get(node.protocol)!.get(secClass)!.push(node);
+		ret.get(profile)!.push(node);
 	}
 
 	return ret;
@@ -79,27 +99,22 @@ export class VirtualNode extends VirtualEndpoint {
 				// And omit nodes using Security S0 which does not support broadcast / multicast
 				&& n.getHighestSecurityClass() !== SecurityClass.S0_Legacy,
 		);
-		this.groupedNodes = groupNodes(this.physicalNodes);
+		this.nodesByCommunicationProfile = groupNodesByCommunicationProfile(
+			this.physicalNodes,
+		);
 
 		// If broadcasting is attempted with mixed security classes or protocols, automatically fall back to multicast
-		if (this.hasMoreThanOneGroup) this.id = undefined;
+		if (this.hasMixedCommunicationProfiles) this.id = undefined;
 	}
 
 	public readonly physicalNodes: readonly ZWaveNode[];
-	public readonly groupedNodes: ReadonlyMap<
-		Protocols,
-		Map<SecurityClass, readonly ZWaveNode[]>
+	public readonly nodesByCommunicationProfile: ReadonlyMap<
+		CommunicationProfile,
+		ZWaveNode[]
 	>;
 
-	public get hasMoreThanOneGroup(): boolean {
-		// more than one protocol with nodes
-		if (this.groupedNodes.size > 1) return true;
-
-		// check if a single protocol has nodes using different security classes
-		const protocolMap =
-			this.groupedNodes.get(Protocols.ZWave) || this.groupedNodes.get(Protocols.ZWaveLongRange);
-
-		return !!protocolMap && protocolMap.size > 1;
+	public get hasMixedCommunicationProfiles(): boolean {
+		return this.nodesByCommunicationProfile.size > 1;
 	}
 
 	/**

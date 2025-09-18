@@ -18,13 +18,15 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	securityClassIsS2,
-	Protocols,
 } from "@zwave-js/core";
 import { staticExtends } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
 import type { Driver } from "../driver/Driver.js";
 import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper.js";
-import { VirtualNode } from "./VirtualNode.js";
+import {
+	VirtualNode,
+	getSecurityClassFromCommunicationProfile,
+} from "./VirtualNode.js";
 
 /**
  * Represents an endpoint of a virtual (broadcast, multicast) Z-Wave node.
@@ -118,29 +120,30 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 		// For mixed security classes and/or mixed protocols (LR and non-LR), we need to create a wrapper
 		// that handles calling multiple API instances
 
-		if (this.node.hasMoreThanOneGroup) {
-			const apiInstances = [...this.node.groupedNodes.entries()].flatMap(
-				([_, nodesByProtocol]) =>
-					[...nodesByProtocol.entries()].map(([secClass, nodes]) => {
-						const virtualNode = new VirtualNode(this.node.id, this.driver, nodes);
-						const endpoint = virtualNode.getEndpoint(this.index) ?? virtualNode;
-						return createCCAPI(endpoint, secClass);
-					})
-			);
+		if (this.node.hasMixedCommunicationProfiles) {
+			const apiInstances = [
+				...this.node.nodesByCommunicationProfile.entries(),
+			].map(([profile, nodes]) => {
+				const virtualNode = new VirtualNode(
+					this.node.id,
+					this.driver,
+					nodes,
+				);
+				const endpoint = virtualNode.getEndpoint(this.index)
+					?? virtualNode;
+				const secClass = getSecurityClassFromCommunicationProfile(
+					profile,
+				);
+				return createCCAPI(endpoint, secClass);
+			});
 			return createMultiCCAPIWrapper(apiInstances);
 		} else {
-			const protocolMap =
-				this.node.groupedNodes.get(Protocols.ZWave)
-				|| this.node.groupedNodes.get(Protocols.ZWaveLongRange);
-
-			if (!protocolMap) {
-				throw new ZWaveError(
-					`hasMoreThanOneGroup is true, but no protocol found in groupedNodes!`,
-					ZWaveErrorCodes.CC_Invalid,
-				);
-			}
-			const secClass = [...protocolMap.keys()][0];
-			return createCCAPI(this, secClass);
+			const profile =
+				[...this.node.nodesByCommunicationProfile.keys()][0];
+			const securityClass = getSecurityClassFromCommunicationProfile(
+				profile,
+			);
+			return createCCAPI(this, securityClass);
 		}
 	}
 
