@@ -124,13 +124,10 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 			const apiInstances = [
 				...this.node.nodesByCommunicationProfile.entries(),
 			].map(([profile, nodes]) => {
-				const virtualNode = new VirtualNode(
-					this.node.id,
-					this.driver,
-					nodes,
-				);
-				const endpoint = virtualNode.getEndpoint(this.index)
-					?? virtualNode;
+				// We need a separate virtual endpoint for each security class and protocol,
+				// so the API instances access the correct nodes.
+				const node = new VirtualNode(this.node.id, this.driver, nodes);
+				const endpoint = node.getEndpoint(this.index) ?? node;
 				const secClass = getSecurityClassFromCommunicationProfile(
 					profile,
 				);
