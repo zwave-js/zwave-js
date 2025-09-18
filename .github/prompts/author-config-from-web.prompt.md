@@ -1,7 +1,7 @@
 ---
 mode: 'agent'
 model: Claude Sonnet 4
-tools: ['codebase', 'editFiles', 'fetch', 'problems', 'runCommands', 'search', 'usages', 'zwave-dev']
+tools: ['createFile', 'createDirectory', 'editFiles', 'search', 'runTasks', 'usages', 'think', 'problems', 'changes', 'fetch', 'todos', 'zwave-dev']
 description: 'Author Z-Wave JS configuration files based on scraped manufacturer website information'
 ---
 

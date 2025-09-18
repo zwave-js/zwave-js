@@ -36,6 +36,16 @@ export interface FirmwareUpdateServiceResponse {
 	files: FirmwareUpdateFileInfo[];
 	downgrade: boolean;
 	normalizedVersion: string;
+	region?: string;
+}
+
+/** Response from API v4 bulk request */
+export interface FirmwareUpdateBulkInfo {
+	manufacturerId: string;
+	productType: string;
+	productId: string;
+	firmwareVersion: string;
+	updates: FirmwareUpdateServiceResponse[];
 }
 
 export type FirmwareUpdateInfo = Expand<

@@ -1110,16 +1110,16 @@ Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true
 > [!NOTE]
 > This section describes updating the firmware of a node using the **Z-Wave JS firmware update service**. If you want to update the firmware of a node using a file, see [`ZWaveNode.updateFirmware`](api/node.md#updatefirmware).
 
-#### `getAvailableFirmwareUpdates`
-
 ```ts
 getAvailableFirmwareUpdates(nodeId: number, options?: GetFirmwareUpdatesOptions): Promise<FirmwareUpdateInfo[]>
+getAllAvailableFirmwareUpdates(options?: GetFirmwareUpdatesOptions): Promise<Map<number, FirmwareUpdateInfo[]>>
 ```
 
-Retrieves the available firmware updates for the given node from the [Z-Wave JS firmware update service](https://github.com/zwave-js/firmware-updates/). The following options are available to control the behavior:
+Retrieves the available firmware updates for the given node or all nodes at once from the [Z-Wave JS firmware update service](https://github.com/zwave-js/firmware-updates/).
 
-<!-- TODO: Figure out why this cannot be imported automatically:
-#import GetFirmwareUpdatesOptions from "zwave-js" -->
+The following options are available to control the behavior:
+
+<!-- #import GetFirmwareUpdatesOptions from "zwave-js" -->
 
 ```ts
 interface GetFirmwareUpdatesOptions {
@@ -1129,10 +1129,30 @@ interface GetFirmwareUpdatesOptions {
 	additionalUserAgentComponents?: Record<string, string>;
 	/** Whether the returned firmware upgrades should include prereleases from the `"beta"` channel. Default: `false`. */
 	includePrereleases?: boolean;
+	/**
+	 * Can be used to specify the RF region if the Z-Wave controller
+	 * does not support querying this information.
+	 *
+	 * **WARNING:** Specifying the wrong region may result in bricking the device!
+	 *
+	 * For this reason, the specified value is only used as a fallback
+	 * if the RF region of the controller is not already known.
+	 */
+	rfRegion?: RFRegion;
 }
 ```
 
-This method returns an array with all available firmware updates for the given node. The entries of the array have the following form:
+`getAvailableFirmwareUpdates` returns an array of available updates for the given node ID, or an empty array if no updates are available.
+
+`getAllAvailableFirmwareUpdates` returns a `Map` where the keys are the node IDs and the values are arrays of available updates for the respective node. Devices that are not known to the firmware update service are omitted from the map.
+
+> [!ATTENTION] For backwards compatibility reasons, you cannot distinguish between devices that have no updates and devices that are not known to the firmware update service when using `getAvailableFirmwareUpdates`.
+>
+> It is strongly recommended to use `getAllAvailableFirmwareUpdates` instead, which omits unknown devices from the result.
+>
+> Under the hood, both methods perform a bulk request to the firmware update service including the information for all nodes that have been identified so far. Results are cached, so repeated calls to either method will not result in additional HTTP requests.
+
+The entries of the array have the following form:
 
 ```ts
 type FirmwareUpdateInfo = {
@@ -1178,8 +1198,6 @@ In addition, the `channel` property indicates which release channel an upgrade i
 - `"beta"`: Beta or pre-release firmwares. This channel is supposed to contain firmwares that are stable enough for a wide audience to test, but may still contain bugs.
 
 Many Z-Wave devices only have a single upgradeable firmware target (chip), so the `files` array will usually contain a single entry. If there are more, the entries must be applied in the order they are defined.
-
-> [!WARNING] This method **does not** rely on cached data to identify a node, so sleeping nodes need to be woken up for this to work. If a sleeping node is not woken up within a minute after calling this, the method will throw. You can schedule the check when a node wakes up using the [`waitForWakeup`](api/node#waitForWakeup) method.
 
 > [!NOTE] Calling this will result in an HTTP request to the firmware update service at https://firmware.zwave-js.io
 

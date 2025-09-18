@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Extract log file from issue body
       uses: actions/github-script@v7
@@ -42,7 +42,7 @@ jobs:
     - name: Classify logfile using AI
       id: ai_detection
       if: steps.extract.outputs.shouldContinue == 'true'
-      uses: actions/ai-inference@v1.2.3
+      uses: actions/ai-inference@v2.0.1
       with:
         model: openai/gpt-4o-mini
         system-prompt: |

@@ -982,6 +982,11 @@ export interface ContainsSerializedCC {
 // @public (undocumented)
 export function containsSerializedCC<T extends object>(container: T | undefined): container is T & ContainsSerializedCC;
 
+// Warning: (ae-missing-release-tag) "createESPHomeFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function createESPHomeFactory(options: ESPHomeSocketOptions): ZWaveSerialBindingFactory;
+
 // Warning: (ae-missing-release-tag) "DeleteReturnRouteRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1179,6 +1184,14 @@ export type EnumeratedPort = {
     type: "custom";
     factory: ZWaveSerialBindingFactory;
 };
+
+// Warning: (ae-missing-release-tag) "ESPHomeSocketOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ESPHomeSocketOptions {
+    host: string;
+    port?: number;
+}
 
 // Warning: (ae-missing-release-tag) "expectedCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5874,7 +5887,10 @@ export class ZnifferMessage {
     // (undocumented)
     functionType?: ZnifferFunctionType;
     // (undocumented)
-    static parse(data: Uint8Array): ZnifferMessage;
+    static parse(data: Uint8Array): {
+        msg: ZnifferMessage;
+        bytesRead: number;
+    };
     // (undocumented)
     payload: Bytes;
     serialize(): Bytes;
@@ -5925,7 +5941,10 @@ export class ZnifferMessageRaw {
     // (undocumented)
     readonly functionType: ZnifferFunctionType | undefined;
     // (undocumented)
-    static parse(data: Uint8Array): ZnifferMessageRaw;
+    static parse(data: Uint8Array): {
+        raw: ZnifferMessageRaw;
+        bytesRead: number;
+    };
     // (undocumented)
     readonly payload: Bytes;
     // (undocumented)

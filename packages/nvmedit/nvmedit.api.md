@@ -611,8 +611,10 @@ export class NVM3 implements NVM<number, Uint8Array> {
     delete(property: number): Promise<void>;
     // (undocumented)
     erase(options?: NVM3EraseOptions): Promise<void>;
+    // Warning: (ae-forgotten-export) The symbol "NVM3SectionInfo" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    get(fileId: number): Promise<Uint8Array | undefined>;
+    get(fileId: number, section?: NVM3SectionInfo): Promise<Uint8Array | undefined>;
     // (undocumented)
     has(fileId: number): Promise<boolean>;
     // Warning: (ae-forgotten-export) The symbol "NVM3FileSystemInfo" needs to be exported by the entry point index.d.ts

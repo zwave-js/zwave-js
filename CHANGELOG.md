@@ -4,6 +4,37 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.14.0 (2025-09-17)
+### Features
+* Support proxying Z-Wave traffic over the ESPHome protocol (#8093)
+
+### Bugfixes
+* Fixed an issue where converting NVMs with unknown objects would fail due to unknown NVM section (#8095)
+* Zniffer: improve support for parsing ZLF files created by the official Zniffer application (#8165)
+
+### Config file changes
+* Add 800 series variant of Minoston MP22ZP (#8171)
+
+### Changes under the hood
+* Implement utility to convert Zniffer traces to CSV (#8166)
+
+## 15.13.0 (2025-09-11)
+### Features
+* Support checking for all firmware updates at once, and support detecting devices unknown to the firmware update service (#8157)
+
+### Bugfixes
+* Fixed an issue with migrating NVMs that contain a full list of supported CCs (#8140)
+* After failing to leave bootloader, Z-Wave JS no longer keeps checking if the Serial API has started (#8133)
+* Fixed an issue where the underlying serial stream (e.g. in the browser) could not be reused when destroying and recreating the driver instance (#8132)
+* Stale Battery CC `isLow` values are now cleaned up on startup (#8092)
+
+### Config file changes
+* Add Zooz ZEN75 (#7807)
+* Bring Inovelli VZW32-SN up to date with latest firmware changes and restore parity with VZW31-SN (#8042)
+
+### Changes under the hood
+* Add MCP powered prompt to scrape config files from manufacturer websites (#8099)
+
 ## 15.12.0 (2025-08-19)
 ### Features
 * Firmware updates that fail due to an XMODEM communication error are now retried automatically, reducing the risk to get stuck in bootloader until a new firmware is flashed (#8086)
