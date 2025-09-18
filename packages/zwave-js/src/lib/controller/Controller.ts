@@ -7058,9 +7058,10 @@ export class ZWaveController
 			bootstrapFailure = await this.secureBootstrapS0(
 				newNode,
 				true,
-				true, // assumeSupported = true for node replacement
-				// Fix for https://github.com/zwave-js/zwave-js/issues/8037
-				// When replacing a node, we don't receive NIF, so we must assume Security CC is supported
+				// When replacing a node, we don't receive NIF, so we
+				// must assume Security CC is supported, just like we do
+				// for Security S2 above
+				true,
 			);
 			if (bootstrapFailure == undefined) {
 				const actualSecurityClass = newNode
