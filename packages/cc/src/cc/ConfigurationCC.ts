@@ -1358,7 +1358,10 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		}
 
 		await api.setBulk(parametersNeededUpdate);
-		await this.refreshValues(ctx);
+		await api.getBulk(parametersNeededUpdate.map((param) => ({
+			parameter: param.parameter,
+			bitMask: param.bitMask,
+		})));
 	}
 
 	public async refreshValues(
