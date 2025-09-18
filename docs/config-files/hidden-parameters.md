@@ -85,9 +85,11 @@ Here's an example showing both visible and hidden parameters:
 
 When a parameter is marked as hidden:
 
-- The parameter will still be stored in the configuration metadata
-- The Z-Wave JS driver can still read and write the parameter value
-- The parameter will be excluded from:
+- The parameter will be completely filtered out during configuration loading
+- No metadata will be created for the parameter
+- No values will be persisted for the parameter
+- The parameter will be invisible to:
   - User interface parameter lists
-  - API responses that list available parameters (unless specifically requested)
-  - Configuration exports intended for end users
+  - API responses that list available parameters
+  - Configuration exports
+  - All Z-Wave JS applications and integrations
