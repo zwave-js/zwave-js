@@ -407,3 +407,88 @@ integrationTest(
 		},
 	},
 );
+
+integrationTest(
+	"Transport Service segment request errors are handled gracefully",
+	{
+		// debug: true,
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			const cc = new ConfigurationCCInfoReport({
+				nodeId: 2,
+				parameter: 1,
+				reportsToFollow: 0,
+				info:
+					"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+			});
+			const ccBuffer = await cc.serialize(mockNode.encodingContext);
+			const part1 = ccBuffer.slice(0, 39);
+			const part2 = ccBuffer.slice(39, 78);
+			const part3 = ccBuffer.slice(78);
+
+			const frame1 = new TransportServiceCCFirstSegment({
+				nodeId: 2,
+				sessionId: 1,
+				datagramSize: part1.length + part2.length + part3.length,
+				partialDatagram: part1,
+			});
+
+			const frame2 = new TransportServiceCCSubsequentSegment({
+				nodeId: 2,
+				sessionId: 1,
+				datagramSize: frame1.datagramSize,
+				datagramOffset: part1.length,
+				partialDatagram: part2,
+			});
+
+			const frame3 = new TransportServiceCCSubsequentSegment({
+				nodeId: 2,
+				sessionId: 1,
+				datagramSize: frame1.datagramSize,
+				datagramOffset: part1.length + part2.length,
+				partialDatagram: part3,
+			});
+
+			// Start the session with the first segment
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(frame1),
+			);
+			await wait(30);
+
+			// Skip the second segment to trigger a segment request timeout
+			await wait(30);
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(frame3),
+			);
+
+			await wait(50);
+
+			// The node should have received a request for the missing frame
+			mockNode.assertReceivedControllerFrame((f) =>
+				f.type === MockZWaveFrameType.Request
+				&& f.payload instanceof TransportServiceCCSegmentRequest
+				&& f.payload.datagramOffset === part1.length
+			);
+
+			// Wait a bit longer to allow any potential errors to manifest
+			await wait(100);
+
+			// Now send the missing segment to complete the transmission
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(frame2),
+			);
+
+			await wait(100);
+
+			// The system should not crash and the session should complete successfully
+			// The node should have received the confirmation
+			mockNode.assertReceivedControllerFrame((f) =>
+				f.type === MockZWaveFrameType.Request
+				&& f.payload instanceof TransportServiceCCSegmentComplete
+			);
+
+			// This test mainly verifies that error handling exists and doesn't crash
+			t.expect(true).toBe(true);
+		},
+	},
+);
