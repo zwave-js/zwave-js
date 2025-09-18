@@ -1,5 +1,5 @@
 REGEX Replace:
 
-^2024-\d+-\d+ \d+:\d+:\d+\.\d+ .+(\n(?!2024).*)*\n
+^2025-\d+-\d+ \d+:\d+:\d+\.\d+ (?!DRIVER|CNTRLR|SERIAL|ZNIFFR|CONFIG).+(\n(?!2025).*)*\n
 
 with empty string

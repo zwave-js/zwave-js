@@ -327,6 +327,8 @@ const defaultOptions: ZWaveOptions = {
 		sendData: 3,
 		sendDataJammed: 5,
 		nodeInterview: 5,
+		smartStartInclusion: 5,
+		firmwareUpdateOTW: 3,
 	},
 	disableOptimisticValueUpdate: false,
 	features: {
@@ -481,6 +483,24 @@ function checkOptions(options: ZWaveOptions): void {
 	) {
 		throw new ZWaveError(
 			`The Node interview attempts must be between 1 and 10!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.attempts.smartStartInclusion < 1
+		|| options.attempts.smartStartInclusion > 25
+	) {
+		throw new ZWaveError(
+			`The SmartStart inclusion attempts must be between 1 and 25!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.attempts.firmwareUpdateOTW < 1
+		|| options.attempts.firmwareUpdateOTW > 5
+	) {
+		throw new ZWaveError(
+			`The OTW firmware update attempts must be between 1 and 5!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
@@ -1418,6 +1438,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// This code is called from user code, so we need to make sure no options were passed
 		// which we are not able to update on the fly
 		const safeOptions = pick(options, [
+			"attempts",
 			"disableOptimisticValueUpdate",
 			"emitValueUpdateAfterSetValue",
 			"inclusionUserCallbacks",
@@ -1934,6 +1955,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this.driverLog.print(message, "error");
 			}
 		}
+
+		// Clean up stale Battery CC "isLow" values that were removed in v15.10.0
+		// They were converted to notification events but may still exist in cached data
+		if (this._networkCache.get("cacheFormat") === 1) {
+			for (const key of this._valueDB.keys()) {
+				if (
+					-1 !== key.indexOf(`,"commandClass":128,`) // Battery CC (0x80 = 128)
+					&& -1 !== key.indexOf(`,"property":"isLow"`)
+				) {
+					this._valueDB.delete(key);
+					this._metadataDB?.delete(key);
+				}
+			}
+			// Update the cache format to 2 to indicate that the migration is done
+			this._networkCache.set("cacheFormat", 2);
+		}
 	}
 
 	/**
@@ -2360,6 +2397,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// Query the protocol information from the controller
 				for (const node of this._controller.nodes.values()) {
 					if (node.isControllerNode) continue;
+					if (node.interviewStage === InterviewStage.Complete) {
+						// A node that can sleep should be assumed to be sleeping after resuming from cache
+						if (node.canSleep) node.markAsAsleep();
+						continue;
+					}
 					await node["queryProtocolInfo"]();
 				}
 
@@ -6564,11 +6606,18 @@ ${handlers.length} left`,
 							}
 						}
 
+						// A command could be sent, so the controller is no longer jammed
 						if (
 							this.controller.status === ControllerStatus.Jammed
 						) {
-							// A command could be sent, so the controller is no longer jammed
 							this.controller.setStatus(ControllerStatus.Ready);
+						}
+						// and a possible recovery phase is over
+						if (
+							this._recoveryPhase
+								=== ControllerRecoveryPhase.JammedAfterReset
+						) {
+							this._recoveryPhase = ControllerRecoveryPhase.None;
 						}
 
 						if (!prevResult.isOK()) {
@@ -8567,6 +8616,48 @@ integrity: ${update.integrity}`;
 	private async firmwareUpdateOTW700(
 		data: Uint8Array,
 	): Promise<OTWFirmwareUpdateResult> {
+		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
+		let result!: OTWFirmwareUpdateResult;
+
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			result = await this.firmwareUpdateOTW700Internal(data);
+			if (result.success) break;
+
+			// If this was an aborted update, check if it's an XMODEM communication error
+			if (
+				result.status === OTWFirmwareUpdateStatus.Error_Aborted
+				&& result.errorCode != undefined
+				&& (result.errorCode & 0xf0) === 0x20
+			) {
+				if (attempt < maxAttempts) {
+					this.controllerLog.print(
+						`Retrying firmware update after XMODEM communication error ${
+							num2hex(result.errorCode)
+						}, attempt ${attempt}/${maxAttempts}...`,
+						"warn",
+					);
+					await wait(250);
+					continue;
+				}
+
+				this.controllerLog.print(
+					"Maximum firmware update attempts reached, giving up.",
+					"error",
+				);
+			}
+
+			// For any other error type or when we've exhausted retries, break and return
+			break;
+		}
+
+		// If we get here, all attempts failed - use the last result or create a default one
+		this.emit("firmware update finished", result);
+		return result;
+	}
+
+	private async firmwareUpdateOTW700Internal(
+		data: Uint8Array,
+	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
 
 		try {
@@ -8599,7 +8690,6 @@ integrity: ${update.integrity}`;
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Timeout,
 				};
-				this.emit("firmware update finished", result);
 				return result;
 			}
 
@@ -8650,7 +8740,6 @@ integrity: ${update.integrity}`;
 							success: false,
 							status: OTWFirmwareUpdateStatus.Error_Timeout,
 						};
-						this.emit("firmware update finished", result);
 						return result;
 					}
 
@@ -8686,7 +8775,6 @@ integrity: ${update.integrity}`;
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_RetryLimitReached,
 				};
-				this.emit("firmware update finished", result);
 				return result;
 			}
 
@@ -8710,17 +8798,25 @@ integrity: ${update.integrity}`;
 					.catch(() => undefined);
 
 				let message = `OTW update was aborted by the bootloader.`;
+				let errorCode: number | undefined;
 				if (error) {
 					message += ` ${error.message}`;
-					// TODO: parse error code
+					// Parse error code from the message
+					const errorMatch = error.message.match(
+						/error 0x([0-9a-fA-F]+)/,
+					);
+					if (errorMatch) {
+						const errorCodeStr = errorMatch[1];
+						errorCode = parseInt(errorCodeStr, 16);
+					}
 				}
 				this.controllerLog.print(message, "error");
 
 				const result: OTWFirmwareUpdateResult = {
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Aborted,
+					errorCode,
 				};
-				this.emit("firmware update finished", result);
 				return result;
 			} else {
 				// We're done, send EOT and wait for the menu screen
@@ -8752,7 +8848,6 @@ integrity: ${update.integrity}`;
 						success: false,
 						status: OTWFirmwareUpdateStatus.Error_Timeout,
 					};
-					this.emit("firmware update finished", result);
 					return result;
 				}
 			}
@@ -8763,7 +8858,6 @@ integrity: ${update.integrity}`;
 				success: true,
 				status: OTWFirmwareUpdateStatus.OK,
 			};
-			this.emit("firmware update finished", result);
 			return result;
 		} finally {
 			await this.leaveBootloader();
@@ -8860,6 +8954,10 @@ integrity: ${update.integrity}`;
 			return;
 		} else if (this.mode === DriverMode.CLI) {
 			await this.ensureCLIReady();
+			return;
+		} else if (this._bootloader) {
+			// We're still in bootloader mode - this likely means that the
+			// application failed to start
 			return;
 		}
 

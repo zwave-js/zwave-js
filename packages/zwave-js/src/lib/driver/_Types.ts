@@ -23,4 +23,6 @@ export enum OTWFirmwareUpdateStatus {
 export interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
+	/** The bootloader error code, if available when the update fails */
+	errorCode?: number;
 }

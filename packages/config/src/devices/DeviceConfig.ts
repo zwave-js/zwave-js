@@ -56,6 +56,7 @@ import {
 	type ParamInformation,
 	parseConditionalParamInformationMap,
 } from "./ParamInformation.js";
+import { ConditionalSceneConfig, type SceneConfig } from "./SceneConfig.js";
 import type { DeviceID, FirmwareVersionRange } from "./shared.js";
 
 export interface DeviceConfigIndexEntry {
@@ -680,6 +681,52 @@ metadata is not an object`,
 				definition.metadata,
 			);
 		}
+
+		if (definition.scenes != undefined) {
+			const scenes = new Map<
+				number,
+				ConditionalSceneConfig
+			>();
+			if (!isObject(definition.scenes)) {
+				throwInvalidConfig(
+					`device`,
+					`packages/config/config/devices/${filename}:
+scenes is not an object`,
+				);
+			}
+			for (
+				const [key, sceneDefinition] of Object.entries(
+					definition.scenes,
+				)
+			) {
+				if (!/^[1-9][0-9]*$/.test(key)) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+invalid scene id "${key}" in scenes - must be a positive integer (1-255)`,
+					);
+				}
+
+				const keyNum = parseInt(key, 10);
+				if (keyNum < 1 || keyNum > 255) {
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+scene number ${keyNum} must be between 1 and 255`,
+					);
+				}
+
+				scenes.set(
+					keyNum,
+					new ConditionalSceneConfig(
+						filename,
+						keyNum,
+						sceneDefinition as any,
+					),
+				);
+			}
+			this.scenes = scenes;
+		}
 	}
 
 	public readonly filename: string;
@@ -700,6 +747,7 @@ metadata is not an object`,
 		number,
 		ConditionalAssociationConfig
 	>;
+	public readonly scenes?: ReadonlyMap<number, ConditionalSceneConfig>;
 	public readonly paramInformation?: ConditionalParamInfoMap;
 	/**
 	 * Contains manufacturer-specific support information for the
@@ -729,6 +777,7 @@ metadata is not an object`,
 			this.preferred,
 			evaluateDeep(this.endpoints, deviceId),
 			evaluateDeep(this.associations, deviceId),
+			evaluateDeep(this.scenes, deviceId),
 			evaluateDeep(this.paramInformation, deviceId),
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
@@ -773,6 +822,7 @@ export class DeviceConfig {
 		preferred: boolean,
 		endpoints?: ReadonlyMap<number, EndpointConfig>,
 		associations?: ReadonlyMap<number, AssociationConfig>,
+		scenes?: ReadonlyMap<number, SceneConfig>,
 		paramInformation?: ParamInfoMap,
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
@@ -789,6 +839,7 @@ export class DeviceConfig {
 		this.preferred = preferred;
 		this.endpoints = endpoints;
 		this.associations = associations;
+		this.scenes = scenes;
 		this.paramInformation = paramInformation;
 		this.proprietary = proprietary;
 		this.compat = compat;
@@ -811,6 +862,7 @@ export class DeviceConfig {
 	public readonly preferred: boolean;
 	public readonly endpoints?: ReadonlyMap<number, EndpointConfig>;
 	public readonly associations?: ReadonlyMap<number, AssociationConfig>;
+	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 	public readonly paramInformation?: ParamInfoMap;
 	/**
 	 * Contains manufacturer-specific support information for the

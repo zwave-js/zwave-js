@@ -98,6 +98,28 @@
 			]
 		},
 		{
+			"#": "5",
+			"$if": "firmwareVersion >= 2.8.4",
+			"label": "Motion Report Type",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Send Notification Report",
+					"value": 0
+				},
+				{
+					"label": "Send Binary Sensor Report",
+					"value": 1
+				},
+				{
+					"label": "Send notification and Binary Sensor Report",
+					"value": 2
+				}
+			]
+		},
+		{
 			"#": "7",
 			"label": "Motion Group: Basic Set Value",
 			"valueSize": 1,
@@ -391,6 +413,42 @@
 			"maxValue": 65535,
 			"defaultValue": 3600,
 			"unsigned": true
+		},
+		{
+			"#": "26",
+			"$if": "firmwareVersion >= 2.8.4",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Activity",
+			"description": "Enable/Disable LED activity when specific reports are sent."
+		},
+		{
+			"#": "27",
+			"$if": "firmwareVersion >= 2.8.4",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9",
+			"label": "Motion Sensor Report Indicator",
+			"defaultValue": 3
+		},
+		{
+			"#": "28",
+			"$if": "firmwareVersion >= 2.8.4",
+			"label": "Temperature Calibration",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -200,
+			"maxValue": 200,
+			"defaultValue": 0,
+			"unsigned": false
+		},
+		{
+			"#": "29",
+			"$if": "firmwareVersion >= 2.8.4",
+			"label": "Brightness Calibration",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": -10000,
+			"maxValue": 10000,
+			"defaultValue": 0,
+			"unsigned": false
 		}
 	],
 	"metadata": {

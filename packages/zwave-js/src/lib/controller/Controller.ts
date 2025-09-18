@@ -281,6 +281,7 @@ import {
 import {
 	Bytes,
 	Mixin,
+	ObjectKeyMap,
 	type ReadonlyObjectKeyMap,
 	type ReadonlyThrowingMap,
 	type ThrowingMap,
@@ -321,7 +322,7 @@ import {
 import { ZWaveFeature, minFeatureVersions } from "./Features.js";
 import {
 	downloadFirmwareUpdate,
-	getAvailableFirmwareUpdates,
+	getAvailableFirmwareUpdatesBulk,
 } from "./FirmwareUpdateService.js";
 import {
 	type ExclusionOptions,
@@ -920,6 +921,14 @@ export class ZWaveController
 		this.driver.cacheSet(cacheKeys.controller.provisioningList, value);
 	}
 
+	/** @internal Tracks the number of failed SmartStart inclusion attempts per DSK */
+	private _smartStartFailedAttempts = new Map<string, number>();
+
+	/** @internal Resets the SmartStart inclusion failure counter for the given DSK */
+	private resetSmartStartFailureCount(dsk: string): void {
+		this._smartStartFailedAttempts.delete(dsk);
+	}
+
 	/** Adds the given entry (DSK and security classes) to the controller's SmartStart provisioning list or replaces an existing entry */
 	public provisionSmartStartNode(entry: PlannedProvisioningEntry): void {
 		// Make sure the controller supports SmartStart
@@ -936,6 +945,9 @@ export class ZWaveController
 			provisioningList[index] = entry;
 		}
 		this.provisioningList = provisioningList;
+
+		// Reset the failure counter when a provisioning entry is modified
+		this.resetSmartStartFailureCount(entry.dsk);
 
 		this.autoProvisionSmartStart();
 	}
@@ -955,6 +967,9 @@ export class ZWaveController
 		if (index >= 0) {
 			provisioningList.splice(index, 1);
 			this.provisioningList = provisioningList;
+
+			// Reset the failure counter when a provisioning entry is removed
+			this.resetSmartStartFailureCount(entry.dsk);
 
 			this.autoProvisionSmartStart();
 		}
@@ -2702,6 +2717,56 @@ export class ZWaveController
 		// After an unsuccessful SmartStart inclusion, the node MUST leave the network and return to SmartStart learn mode
 		// The controller should consider the node to be failed.
 		if (smartStartFailed) {
+			// Track the failed attempt for this DSK and disable provisioning entry after max failures
+			if (
+				opts.strategy === InclusionStrategy.SmartStart
+				&& opts.provisioning?.dsk
+			) {
+				const dsk = opts.provisioning.dsk;
+				const maxAttempts =
+					this.driver.options.attempts.smartStartInclusion;
+				const currentAttempts = this._smartStartFailedAttempts.get(dsk)
+					|| 0;
+				const newAttempts = currentAttempts + 1;
+				this._smartStartFailedAttempts.set(dsk, newAttempts);
+
+				this.driver.controllerLog.logNode(
+					newNode.id,
+					{
+						message:
+							`SmartStart inclusion failed for DSK ${dsk} (attempt ${newAttempts}/${maxAttempts}).`,
+						level: "warn",
+					},
+				);
+
+				// Disable the provisioning entry after max failed attempts
+				if (newAttempts >= maxAttempts) {
+					const provisioningList = [...this.provisioningList];
+					const entryIndex = provisioningList.findIndex((e) =>
+						e.dsk === dsk
+					);
+					if (entryIndex >= 0) {
+						provisioningList[entryIndex] = {
+							...provisioningList[entryIndex],
+							status: ProvisioningEntryStatus.Inactive,
+						};
+						this.provisioningList = provisioningList;
+
+						// Reset the failure counter when automatically disabling the entry
+						this.resetSmartStartFailureCount(dsk);
+
+						this.driver.controllerLog.logNode(
+							newNode.id,
+							{
+								message:
+									`Provisioning entry for DSK ${dsk} has been disabled after ${maxAttempts} failed inclusion attempts.`,
+								level: "warn",
+							},
+						);
+					}
+				}
+			}
+
 			try {
 				this.driver.controllerLog.logNode(
 					newNode.id,
@@ -2749,6 +2814,17 @@ export class ZWaveController
 				lowSecurityReason: bootstrapFailure,
 			}
 			: { lowSecurity: false };
+
+		// Clear the failed attempts counter for successful SmartStart inclusions
+		if (
+			opts.strategy === InclusionStrategy.SmartStart
+			&& opts.provisioning?.dsk
+		) {
+			const dsk = opts.provisioning.dsk;
+			if (this._smartStartFailedAttempts.has(dsk)) {
+				this._smartStartFailedAttempts.delete(dsk);
+			}
+		}
 
 		this.emit("node added", newNode, result);
 	}
@@ -2806,10 +2882,10 @@ export class ZWaveController
 	 */
 	public async stopInclusion(): Promise<boolean> {
 		const result = await this.stopInclusionInternal();
-		// If this stopped an inclusion process, we need to drop the task
+		// If this stopped an inclusion process, we need to drop all inclusion-related tasks
 		if (result) {
 			await this.driver.scheduler.removeTasks((t) =>
-				t.tag?.id === "inclusion"
+				t.tag?.id === "inclusion" || t.tag?.id === "replace-failed-node"
 			);
 		}
 		return result;
@@ -8371,7 +8447,15 @@ export class ZWaveController
 		let offset = 0;
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
-		let chunkSize: number = Math.min(0xffff, ret.length);
+		//
+		// However, the Aeotec Z-Stick 5 (at least some revisions) go haywire when doing so,
+		// so we start with a smaller chunk size for that device
+		const initialChunkSize = this._manufacturerId === 0x86
+				&& this._productType === 0x01
+				&& this._productId === 0x5a
+			? 48
+			: 0xffff;
+		let chunkSize: number = Math.min(initialChunkSize, ret.length);
 		while (offset < ret.length) {
 			const chunk = await this.externalNVMReadBuffer(
 				offset,
@@ -8494,22 +8578,36 @@ export class ZWaveController
 		// 2. the given NVM data is converted to match the current format
 		// 3. the converted data is written to the NVM
 
+		this.driver.controllerLog.print(
+			"Converting NVM to target format...",
+		);
+		let targetNVM: Uint8Array;
+		let convertedNVM: Uint8Array;
 		try {
-			this.driver.controllerLog.print(
-				"Converting NVM to target format...",
-			);
-			let targetNVM: Uint8Array;
 			if (this.sdkVersionGte("7.0")) {
 				targetNVM = await this.backupNVMRaw700(convertProgress);
 			} else {
 				targetNVM = await this.backupNVMRaw500(convertProgress);
 			}
-			const convertedNVM = await migrateNVM(
+
+			convertedNVM = await migrateNVM(
 				nvmData,
 				targetNVM,
 				migrateOptions,
 			);
+		} catch (e) {
+			// If the process fails, at least turn the Z-Wave radio back on
+			await this.toggleRF(true);
 
+			// And re-throw the error with a more descriptive message
+			const message = "Failed to convert NVM to target format: "
+				+ (e as Error).message;
+			this.driver.controllerLog.print(message, "error");
+			(e as Error).message = message;
+			throw e;
+		}
+
+		try {
 			this.driver.controllerLog.print("Restoring NVM backup...");
 			if (this.sdkVersionGte("7.0")) {
 				await this.restoreNVMRaw700(convertedNVM, restoreProgress);
@@ -8519,9 +8617,16 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				"NVM backup restored. Restarting to activate the restored backup...",
 			);
-		} catch {
+		} catch (e) {
 			// If the process fails, at least turn the Z-Wave radio back on
 			await this.toggleRF(true);
+
+			// And re-throw the error with a more descriptive message
+			const message = "Failed to restore NVM backup: "
+				+ (e as Error).message;
+			this.driver.controllerLog.print(message, "error");
+			(e as Error).message = message;
+			throw e;
 		}
 
 		// After restoring an NVM backup, the controller's capabilities may have changed.
@@ -8815,10 +8920,7 @@ export class ZWaveController
 	/**
 	 * Retrieves the available firmware updates for the given node from the Z-Wave JS firmware update service.
 	 *
-	 * **Note:** Sleeping nodes need to be woken up for this to work. This method will throw when called for a sleeping node
-	 * which did not wake up within a minute.
-	 *
-	 * **Note:** This requires an API key to be set in the driver options, or passed .
+	 * **Note:** This requires an API key to be set in the driver options, or passed using the `options` parameter.
 	 */
 	public async getAvailableFirmwareUpdates(
 		nodeId: number,
@@ -8841,33 +8943,122 @@ export class ZWaveController
 			);
 		}
 
-		// Now invoke the service
+		// Use the bulk method and extract the result for this specific node
 		try {
-			return await getAvailableFirmwareUpdates(
-				{
-					manufacturerId,
-					productType,
-					productId,
-					firmwareVersion,
-					// Prefer the actual region...
-					rfRegion: this.rfRegion
-						// ...over the specified one,
-						?? options?.rfRegion
-						// ... and fall back to the configured region on 500 series controllers as a last resort.
-						?? this.driver.options.rf?.region,
-				},
+			const allUpdates = await this.getAllAvailableFirmwareUpdates(
+				options,
+			);
+			return allUpdates.get(nodeId) || [];
+		} catch (e: any) {
+			let message =
+				`Cannot check for firmware updates for node ${nodeId}: `;
+			if (e.response) {
+				if (isObject(e.response.data)) {
+					if (typeof e.response.data.error === "string") {
+						message += `${e.response.data.error} `;
+					} else if (typeof e.response.data.message === "string") {
+						message += `${e.response.data.message} `;
+					}
+				}
+				message += `[${e.response.status} ${e.response.statusText}]`;
+			} else if (typeof e.message === "string") {
+				message += e.message;
+			} else {
+				message += `Failed to download update information!`;
+			}
+
+			throw new ZWaveError(
+				message,
+				ZWaveErrorCodes.FWUpdateService_RequestError,
+			);
+		}
+	}
+
+	/**
+	 * Retrieves the available firmware updates for all ready nodes from the Z-Wave JS firmware update service.
+	 *
+	 * **Note:** This requires an API key to be set in the driver options, or passed using the `options` parameter.
+	 *
+	 * @returns A map where the keys are node IDs and the values are available firmware updates. Devices missing from the map are unknown to the firmware update service.
+	 */
+	public async getAllAvailableFirmwareUpdates(
+		options?: GetFirmwareUpdatesOptions,
+	): Promise<Map<number, FirmwareUpdateInfo[]>> {
+		// Collect device fingerprints for all ready nodes
+		const deviceIds: FirmwareUpdateDeviceID[] = [];
+		const nodeIdMap = new ObjectKeyMap<FirmwareUpdateDeviceID, number[]>();
+
+		for (const node of this.nodes.values()) {
+			const { manufacturerId, productType, productId, firmwareVersion } =
+				node;
+
+			// Skip nodes without complete fingerprint information
+			if (
+				typeof manufacturerId !== "number"
+				|| typeof productType !== "number"
+				|| typeof productId !== "number"
+				|| typeof firmwareVersion !== "string"
+			) {
+				continue;
+			}
+
+			const deviceId: FirmwareUpdateDeviceID = {
+				manufacturerId,
+				productType,
+				productId,
+				firmwareVersion,
+			};
+
+			deviceIds.push(deviceId);
+
+			// Create a cache key to map back to node ID
+			if (!nodeIdMap.has(deviceId)) {
+				nodeIdMap.set(deviceId, []);
+			}
+			nodeIdMap.get(deviceId)!.push(node.id);
+		}
+
+		if (deviceIds.length === 0) {
+			return new Map();
+		}
+
+		const rfRegion = // Prefer the actual region...
+			this.rfRegion
+				// ...over the specified one,
+				?? options?.rfRegion
+				// ... and fall back to the configured region on 500 series controllers as a last resort.
+				?? this.driver.options.rf?.region;
+
+		// Perform bulk request
+		try {
+			const bulkResult = await getAvailableFirmwareUpdatesBulk(
+				deviceIds,
 				{
 					userAgent: this.driver.getUserAgentStringWithComponents(
 						options?.additionalUserAgentComponents,
 					),
 					apiKey: options?.apiKey
 						?? this.driver.options.apiKeys?.firmwareUpdateService,
-					includePrereleases: options?.includePrereleases,
+					rfRegion,
 				},
 			);
+
+			// Map results back to node IDs
+			const result = new Map<number, FirmwareUpdateInfo[]>();
+			for (const [deviceKey, updates] of bulkResult) {
+				const nodeIds = nodeIdMap.get(deviceKey) ?? [];
+				// Filter out prerelease updates if desired
+				const filteredUpdates = options?.includePrereleases
+					? updates
+					: updates.filter((u) => u.channel === "stable");
+				// Apply the updates to all nodes that match this fingerprint
+				for (const nodeId of nodeIds) {
+					result.set(nodeId, filteredUpdates);
+				}
+			}
+			return result;
 		} catch (e: any) {
-			let message =
-				`Cannot check for firmware updates for node ${nodeId}: `;
+			let message = `Cannot check for firmware updates: `;
 			if (e.response) {
 				if (isObject(e.response.data)) {
 					if (typeof e.response.data.error === "string") {
