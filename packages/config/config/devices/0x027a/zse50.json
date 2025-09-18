@@ -202,7 +202,7 @@
 			"defaultValue": 1,
 			"options": [
 				{
-					"label": "No basic set commands are sent.",
+					"label": "Basic commands are not sent",
 					"value": 0
 				},
 				{
