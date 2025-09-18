@@ -38,11 +38,11 @@
 					"value": 0
 				},
 				{
-					"label": "Play in a loop for the duration per parameter 2.",
+					"label": "Play in a loop for the duration per parameter two",
 					"value": 1
 				},
 				{
-					"label": "Play the loop per the number set in parameter 3.",
+					"label": "Play the loop per the number set in parameter three",
 					"value": 2
 				},
 				{
@@ -202,31 +202,31 @@
 			"defaultValue": 1,
 			"options": [
 				{
-					"label": "No basic set commands are sent.",
+					"label": "No basic set commands are sent",
 					"value": 0
 				},
 				{
-					"label": "On sent when playback starts, off when stopped.",
+					"label": "On sent when playback starts, off when stopped",
 					"value": 1
 				},
 				{
-					"label": "Off sent when playback starts, on when stopped.",
+					"label": "Off sent when playback starts, on when stopped",
 					"value": 2
 				},
 				{
-					"label": "On sent when playback starts only.",
+					"label": "On sent when playback starts only",
 					"value": 3
 				},
 				{
-					"label": "Off sent when playback stops only.",
+					"label": "Off sent when playback stops only",
 					"value": 4
 				},
 				{
-					"label": "Off sent when playback starts only.",
+					"label": "Off sent when playback starts only",
 					"value": 5
 				},
 				{
-					"label": "On sent when playback stops only.",
+					"label": "On sent when playback stops only",
 					"value": 6
 				}
 			]
