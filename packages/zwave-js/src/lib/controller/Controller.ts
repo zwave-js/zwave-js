@@ -7049,6 +7049,12 @@ export class ZWaveController
 		} else if (strategy === InclusionStrategy.Security_S0) {
 			bootstrapFailure = await this.secureBootstrapS0(
 				newNode,
+				// When replacing a node, we don't receive NIF, so we have to make
+				// some assumptions, just like we do for Security S2 above.
+				// We don't know if the node is a controller, so just assume it is not.
+				false,
+				// Also we must assume that the node supports S0, because we
+				// don't know any better at this point.
 				true,
 			);
 			if (bootstrapFailure == undefined) {
