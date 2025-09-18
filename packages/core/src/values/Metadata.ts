@@ -169,6 +169,7 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
 	min?: ConfigValue;
 	max?: ConfigValue;
 	default?: ConfigValue;
+	recommended?: ConfigValue;
 	unit?: string;
 	valueSize?: number;
 	format?: ConfigValueFormat;

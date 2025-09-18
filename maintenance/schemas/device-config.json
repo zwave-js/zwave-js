@@ -423,6 +423,10 @@
 					"type": "number",
 					"description": "The factory default value of this parameter."
 				},
+				"recommendedValue": {
+					"type": "number",
+					"description": "An optional recommended value for this parameter that may provide better device performance or behavior than the factory default."
+				},
 				"readOnly": {
 					"const": true,
 					"description": "Whether this parameter can only be read"
