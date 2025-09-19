@@ -45,16 +45,14 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("ensure cached skipInterview value", ({ context, expect }) => {
+test("ensure cached failedS2Bootstrapping value", ({ context, expect }) => {
 	const { driver } = context;
 
 	const oldNode = new ZWaveNode(2, driver);
-	expect(oldNode.skipInterview).toBe(false);
-	oldNode.skipInterview = true;
-	expect(oldNode.skipInterview).toBe(true);
+	expect(oldNode.failedS2Bootstrapping).toBe(false);
+	oldNode.failedS2Bootstrapping = true;
+	expect(oldNode.failedS2Bootstrapping).toBe(true);
 
 	const newNode = new ZWaveNode(2, driver);
-	expect(newNode.skipInterview).toBe(true);
+	expect(newNode.failedS2Bootstrapping).toBe(true);
 });
-
-// TODO: Make the node fail S2 and then check if skipInterview is true and also ensure that "interview completed" is NOT emitted
