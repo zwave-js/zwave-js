@@ -79,7 +79,8 @@ export abstract class NodeSecurityMixin extends NetworkRoleMixin
 	}
 
 	/**
-	 * Should be `true` when an S2-capable node fails to be included when S2 is expected.
+	 * Should be `true` when an S2-capable node fails to S2-bootstrap.
+	 * This will skip the interview process (see `Driver.interviewNodeInternal` method).
 	 */
 	public get failedS2Bootstrapping(): boolean {
 		return this.driver.cacheGet(

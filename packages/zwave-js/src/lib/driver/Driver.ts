@@ -2464,6 +2464,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this.retryNodeInterviewTimeouts.delete(node.id);
 		}
 
+		if (node.failedS2Bootstrapping) {
+			this.controllerLog.logNode(
+				node.id,
+				"Node has failed S2 bootstrap and cannot be inteviewed",
+				"warn",
+			);
+			return;
+		}
+
 		// Drop all pending messages that come from a previous interview attempt
 		await this.rejectTransactions(
 			(t) =>
