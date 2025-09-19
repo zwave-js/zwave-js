@@ -950,15 +950,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			return true;
 		}
 
-		if (this.skipInterview) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				"node cannot be inteviewed",
-				"warn",
-			);
-			return true;
-		}
-
 		this.driver.controllerLog.interviewStart(this);
 
 		// Remember that we tried to interview this node
@@ -4038,7 +4029,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				? [...this.supportedDataRates]
 				: "unknown",
 
-			skipInterview: this.skipInterview,
+			failedS2Bootstrapping: this.failedS2Bootstrapping,
 
 			...endpointDump,
 		};

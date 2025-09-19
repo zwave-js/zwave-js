@@ -81,11 +81,16 @@ export abstract class NodeSecurityMixin extends NetworkRoleMixin
 	/**
 	 * Should be `true` when an S2-capable node fails to be included when S2 is expected.
 	 */
-	public get skipInterview(): boolean {
-		return this.driver.cacheGet(cacheKeys.node(this.id).skipInterview)
+	public get failedS2Bootstrapping(): boolean {
+		return this.driver.cacheGet(
+			cacheKeys.node(this.id).failedS2Bootstrapping,
+		)
 			?? false;
 	}
-	public set skipInterview(value: boolean) {
-		this.driver.cacheSet(cacheKeys.node(this.id).skipInterview, value);
+	public set failedS2Bootstrapping(value: boolean) {
+		this.driver.cacheSet(
+			cacheKeys.node(this.id).failedS2Bootstrapping,
+			value,
+		);
 	}
 }
