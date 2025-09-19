@@ -97,6 +97,7 @@ export const cacheKeys = {
 			defaultVolume: `${nodeBaseKey}defaultVolume`,
 			lastSeen: `${nodeBaseKey}lastSeen`,
 			deviceConfigHash: `${nodeBaseKey}deviceConfigHash`,
+			failedS2Bootstrapping: `${nodeBaseKey}failedS2Bootstrapping`,
 		};
 	},
 } as const;
@@ -497,6 +498,10 @@ export function deserializeNetworkCacheValue(
 
 			if (value) return value;
 			fail();
+		}
+
+		case "failedS2Bootstrapping": {
+			return ensureType(value, "boolean");
 		}
 	}
 
