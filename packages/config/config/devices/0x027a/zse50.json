@@ -18,8 +18,6 @@
 			"#": "1",
 			"label": "Siren Playback Mode",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 4,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
@@ -82,8 +80,6 @@
 			"#": "6",
 			"label": "LED Indicator Mode",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 4,
 			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
@@ -113,8 +109,6 @@
 			"#": "7",
 			"label": "LED Indicator Color",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
 			"allowManualEntry": false,
@@ -157,8 +151,6 @@
 			"#": "9",
 			"label": "LED Action in Back-Up Battery Mode",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
 			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
@@ -190,8 +182,6 @@
 			"#": "12",
 			"label": "Basic Set Command to Group 2",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 6,
 			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
