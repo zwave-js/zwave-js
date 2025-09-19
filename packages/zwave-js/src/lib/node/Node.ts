@@ -948,6 +948,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				`skipping interview because it is already completed`,
 			);
 			return true;
+		} else {
+			this.driver.controllerLog.interviewStart(this);
 		}
 
 		// Remember that we tried to interview this node
