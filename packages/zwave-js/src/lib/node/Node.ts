@@ -950,8 +950,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			return true;
 		}
 
-		this.driver.controllerLog.interviewStart(this);
-
 		// Remember that we tried to interview this node
 		this._interviewAttempts++;
 
