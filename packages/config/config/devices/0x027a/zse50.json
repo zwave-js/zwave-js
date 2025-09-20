@@ -247,5 +247,14 @@
 			"maxValue": 20,
 			"defaultValue": 0
 		}
-	]
+	],
+	"compat": {
+		"commandClasses": {
+			"add": {
+				"Basic": {
+					"isSupported": true
+				}
+			}
+		}
+	}
 }
