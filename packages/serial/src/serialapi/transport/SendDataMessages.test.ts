@@ -38,7 +38,7 @@ describe("SendDataRequestTransmitReport", () => {
 		const logEntry = report.toLogEntry();
 		expect(logEntry.message).toStrictEqual({
 			"callback id": 80,
-			"transmit status": "Fail",
+			"transmit status": "Fail, took 0 ms",
 		});
 	});
 
@@ -161,7 +161,7 @@ describe("SendDataRequestTransmitReport", () => {
 		const logEntry = report.toLogEntry();
 		expect(logEntry.message).toStrictEqual({
 			"callback id": 80,
-			"transmit status": "NotIdle",
+			"transmit status": "NotIdle, took 0 ms",
 		});
 	});
 
@@ -200,7 +200,7 @@ describe("SendDataRequestTransmitReport", () => {
 		const logEntry = report.toLogEntry();
 		expect(logEntry.message).toStrictEqual({
 			"callback id": 80,
-			"transmit status": "NoRoute",
+			"transmit status": "NoRoute, took 0 ms",
 		});
 	});
 });

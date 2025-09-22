@@ -298,8 +298,6 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 				"transmit status":
 					getEnumMemberName(TransmitStatus, this.transmitStatus)
 					+ (this.txReport
-							&& (this.transmitStatus === TransmitStatus.OK
-								|| this.transmitStatus === TransmitStatus.NoAck)
 						? `, took ${this.txReport.txTicks * 10} ms`
 						: ""),
 				// Show TX report fields for OK and NoAck (NoAck still provides useful routing info)
