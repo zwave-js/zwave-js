@@ -72,6 +72,7 @@
 			"#": "5",
 			"label": "Siren Playback Volume",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 100
@@ -219,6 +220,7 @@
 			"#": "13",
 			"label": "System Message Volume",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 50
