@@ -1,36 +1,13 @@
-import { TransmitStatus } from "@zwave-js/core";
+import { ProtocolDataRate, TransmitStatus } from "@zwave-js/core";
 import { describe, expect, test } from "vitest";
 import { SendDataBridgeRequestTransmitReport } from "./SendDataBridgeMessages.js";
 
 describe("SendDataBridgeRequestTransmitReport", () => {
 	test("should not show TX report fields when transmitStatus is Fail", () => {
-		const rawMessage = new Uint8Array([
-			80,
-			TransmitStatus.Fail,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-		]);
-		const report = SendDataBridgeRequestTransmitReport.from(
-			{ payload: rawMessage } as any,
-			{} as any,
-		);
+		const report = new SendDataBridgeRequestTransmitReport({
+			callbackId: 80,
+			transmitStatus: TransmitStatus.Fail,
+		});
 
 		expect(report.transmitStatus).toBe(TransmitStatus.Fail);
 		expect(report.callbackId).toBe(80);
@@ -38,38 +15,27 @@ describe("SendDataBridgeRequestTransmitReport", () => {
 		const logEntry = report.toLogEntry();
 		expect(logEntry.message).toStrictEqual({
 			"callback id": 80,
-			"transmit status": "Fail, took 0 ms",
+			"transmit status": "Fail",
 		});
 	});
 
 	test("should show TX report fields when transmitStatus is OK", () => {
-		const rawMessage = new Uint8Array([
-			80,
-			TransmitStatus.OK,
-			10,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-		]);
-		const report = SendDataBridgeRequestTransmitReport.from(
-			{ payload: rawMessage } as any,
-			{} as any,
-		);
+		const report = new SendDataBridgeRequestTransmitReport({
+			callbackId: 80,
+			transmitStatus: TransmitStatus.OK,
+			txReport: {
+				txTicks: 2560,
+				routingAttempts: 0,
+				routeSpeed: ProtocolDataRate.ZWave_9k6,
+				routeSchemeState: 0,
+				ackRSSI: 0,
+				ackChannelNo: 0,
+				txChannelNo: 0,
+				repeaterNodeIds: [0, 0, 0, 0],
+				beam1000ms: false,
+				beam250ms: false,
+			},
+		});
 
 		expect(report.transmitStatus).toBe(TransmitStatus.OK);
 		expect(report.callbackId).toBe(80);
@@ -85,33 +51,22 @@ describe("SendDataBridgeRequestTransmitReport", () => {
 	});
 
 	test("should show TX report fields when transmitStatus is NoAck", () => {
-		const rawMessage = new Uint8Array([
-			80,
-			TransmitStatus.NoAck,
-			10,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-		]);
-		const report = SendDataBridgeRequestTransmitReport.from(
-			{ payload: rawMessage } as any,
-			{} as any,
-		);
+		const report = new SendDataBridgeRequestTransmitReport({
+			callbackId: 80,
+			transmitStatus: TransmitStatus.NoAck,
+			txReport: {
+				txTicks: 2560,
+				routingAttempts: 0,
+				routeSpeed: ProtocolDataRate.ZWave_9k6,
+				routeSchemeState: 0,
+				ackRSSI: 0,
+				ackChannelNo: 0,
+				txChannelNo: 0,
+				repeaterNodeIds: [0, 0, 0, 0],
+				beam1000ms: false,
+				beam250ms: false,
+			},
+		});
 
 		expect(report.transmitStatus).toBe(TransmitStatus.NoAck);
 		expect(report.callbackId).toBe(80);
@@ -127,33 +82,10 @@ describe("SendDataBridgeRequestTransmitReport", () => {
 	});
 
 	test("should not show TX report fields when transmitStatus is NotIdle", () => {
-		const rawMessage = new Uint8Array([
-			80,
-			TransmitStatus.NotIdle,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-		]);
-		const report = SendDataBridgeRequestTransmitReport.from(
-			{ payload: rawMessage } as any,
-			{} as any,
-		);
+		const report = new SendDataBridgeRequestTransmitReport({
+			callbackId: 80,
+			transmitStatus: TransmitStatus.NotIdle,
+		});
 
 		expect(report.transmitStatus).toBe(TransmitStatus.NotIdle);
 		expect(report.callbackId).toBe(80);
@@ -161,38 +93,15 @@ describe("SendDataBridgeRequestTransmitReport", () => {
 		const logEntry = report.toLogEntry();
 		expect(logEntry.message).toStrictEqual({
 			"callback id": 80,
-			"transmit status": "NotIdle, took 0 ms",
+			"transmit status": "NotIdle",
 		});
 	});
 
 	test("should not show TX report fields when transmitStatus is NoRoute", () => {
-		const rawMessage = new Uint8Array([
-			80,
-			TransmitStatus.NoRoute,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-		]);
-		const report = SendDataBridgeRequestTransmitReport.from(
-			{ payload: rawMessage } as any,
-			{} as any,
-		);
+		const report = new SendDataBridgeRequestTransmitReport({
+			callbackId: 80,
+			transmitStatus: TransmitStatus.NoRoute,
+		});
 
 		expect(report.transmitStatus).toBe(TransmitStatus.NoRoute);
 		expect(report.callbackId).toBe(80);
@@ -200,7 +109,7 @@ describe("SendDataBridgeRequestTransmitReport", () => {
 		const logEntry = report.toLogEntry();
 		expect(logEntry.message).toStrictEqual({
 			"callback id": 80,
-			"transmit status": "NoRoute, took 0 ms",
+			"transmit status": "NoRoute",
 		});
 	});
 });
