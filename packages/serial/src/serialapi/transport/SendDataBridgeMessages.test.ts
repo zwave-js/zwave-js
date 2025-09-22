@@ -7,6 +7,18 @@ describe("SendDataBridgeRequestTransmitReport", () => {
 		const report = new SendDataBridgeRequestTransmitReport({
 			callbackId: 80,
 			transmitStatus: TransmitStatus.Fail,
+			txReport: {
+				txTicks: 1,
+				routingAttempts: 0,
+				routeSpeed: ProtocolDataRate.ZWave_9k6,
+				routeSchemeState: 0,
+				ackRSSI: 0,
+				ackChannelNo: 0,
+				txChannelNo: 0,
+				repeaterNodeIds: [0, 0, 0, 0],
+				beam1000ms: false,
+				beam250ms: false,
+			},
 		});
 
 		expect(report.transmitStatus).toBe(TransmitStatus.Fail);
@@ -15,7 +27,7 @@ describe("SendDataBridgeRequestTransmitReport", () => {
 		const logEntry = report.toLogEntry();
 		expect(logEntry.message).toStrictEqual({
 			"callback id": 80,
-			"transmit status": "Fail",
+			"transmit status": "Fail, took 10 ms",
 		});
 	});
 
