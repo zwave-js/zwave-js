@@ -5323,6 +5323,10 @@ export class ZWaveController
 						.filter((id) => id !== self._ownNodeId!)
 						// ...and the node itself
 						.filter((id) => id !== node.id)
+						// Filter out invalid node IDs (must be in range 1-232)
+						.filter((id) => id >= 1 && id <= MAX_NODES)
+						// Filter out non-existing nodes
+						.filter((id) => self.nodes.has(id))
 						.sort();
 				} catch {
 					// ignore
