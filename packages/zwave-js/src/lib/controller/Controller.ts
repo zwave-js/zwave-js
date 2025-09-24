@@ -5362,11 +5362,11 @@ export class ZWaveController
 							if (attempt === maxAttempts) {
 								self.driver.controllerLog.logNode(node.id, {
 									message:
-										`rebuilding routes failed: failed to assign return route after ${maxAttempts} attempts`,
+										`failed to assign return route to node ${destinationNodeId} after ${maxAttempts} attempts, continuing with other targets...`,
 									level: "warn",
 									direction: "none",
 								});
-								return false;
+								// Don't fail the entire process, just continue with the next target
 							}
 						}
 					}
