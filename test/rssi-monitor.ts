@@ -38,7 +38,6 @@ function writeChannelRow(
 	rowOffset: number,
 	channel: { id: number; average?: number; current?: number },
 ) {
-
 	// increment row to leave a space for the header
 	row += rowOffset;
 	// Writing the progress bar
