@@ -8,7 +8,6 @@ const INTERVAL = 3_000; // The interval between RSSI polls when in high-frequenc
 const HF_MODE_TIMEOUT = 300_000; // The amount of time to keep high-frequency mode enabled. in milliseconds
 const PORT = "/dev/ttyACM0"; // Adjust this to your USB stick port (e.g., /dev/tty.usbmodemXYZ or /dev/ttyACM0)
 
-
 /**
  * @param current The current RSSI value
  * @param width The amount of characters the progress bar will use
