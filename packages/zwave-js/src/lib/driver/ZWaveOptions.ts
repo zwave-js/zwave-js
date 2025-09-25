@@ -57,6 +57,16 @@ export interface ZWaveOptions {
 		sendToSleep: number; // [10...5000], default: 250 ms
 
 		/**
+		 *  Minimum value can be specified to avoid polling the background RSSI too frequently.
+		 */
+		pollBackgroundRSSIMin: number; // [3000...290000], default: 5000 ms
+
+		/**
+		 * Maximum value can be specified to avoid polling the background RSSI too infrequently.
+		 */
+		pollBackgroundRSSIMax: number; // [4000...300000], default: 30000 ms
+
+		/**
 		 * **!!! INTERNAL !!!**
 		 *
 		 * Not intended to be used by applications
