@@ -9306,11 +9306,11 @@ integrity: ${update.integrity}`;
 	 * Enables high frequency background RSSI polling.
 	 * This will make the driver poll the background RSSI every `timeoutMs` milliseconds when idle until `timeMs` milliseconds have passed or the mode is disabled manually.
 	 * @param timeoutMs The duration in milliseconds at which the background RSSI will be polled when the send queue is idle.
-	 * @param durationMd The time in milliseconds after which the high frequency background RSSI polling will be disabled automatically.
+	 * @param durationMs The time in milliseconds after which the high frequency background RSSI polling will be disabled automatically.
 	 */
 	public enableBackgroundRSSIHFMode(
 		timeoutMs: number = 2_000,
-		durationMd: number = 2 * 60_000,
+		durationMs: number = 2 * 60_000,
 	): void {
 		// Check the controller supports GetBackgroundRSSI, if not ensure that we don't enable this feature
 		if (
@@ -9335,12 +9335,12 @@ integrity: ${update.integrity}`;
 			);
 		}
 
-		if (durationMd <= timeoutMs) { // If duration is lower than timeout, throw an error
+		if (durationMs <= timeoutMs) { // If duration is lower than timeout, throw an error
 			throw new ZWaveError(
 				`The duration must be greater than the timeout!`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
-		} else if (durationMd > 10 * 60_000) { // If duration is greater than 10 minutes, throw an error
+		} else if (durationMs > 10 * 60_000) { // If duration is greater than 10 minutes, throw an error
 			throw new ZWaveError(
 				`The duration must be at most 10 minutes!`,
 				ZWaveErrorCodes.Argument_Invalid,
@@ -9352,8 +9352,8 @@ integrity: ${update.integrity}`;
 		this.poolBackgroundRSSIIHFTimeoutMs = timeoutMs;
 		this.handleQueueIdleChange(this.queueIdle);
 
-		if (durationMd !== undefined && durationMd > 0) {
-			this.setBackgroundRSSIHFTimer(durationMd);
+		if (durationMs !== undefined && durationMs > 0) {
+			this.setBackgroundRSSIHFTimer(durationMs);
 		}
 	}
 
