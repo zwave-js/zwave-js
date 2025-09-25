@@ -432,7 +432,7 @@ function checkOptions(options: ZWaveOptions): void {
 		|| options.timeouts.pollBackgroundRSSIMax > 300000
 	) {
 		throw new ZWaveError(
-			`The Poll Background RSSI Max timeout must be between 3001 and 300000 milliseconds!`,
+			`The Poll Background RSSI Max timeout must be between 4000 and 300000 milliseconds!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
