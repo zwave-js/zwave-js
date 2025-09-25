@@ -1,7 +1,7 @@
 // demo.ts
 import { Buffer } from "node:buffer";
 import { exit } from "node:process";
-import { Driver } from "zwave-js";
+import { type ControllerStatistics, Driver } from "zwave-js";
 
 const MINIMUN_RSSI = -120;
 const INTERVAL = 3_000; // The interval between RSSI polls when in high-frequency mode. in milliseconds. Must be between pollBackgroundRSSIMin and pollBackgroundRSSIMax
@@ -33,11 +33,104 @@ function generateRandomKey(): Buffer<ArrayBuffer> {
 	return key;
 }
 
+// It draws a row with all the channel information in the terminal
+function writeChannelRow(
+	row: number,
+	rowOffset: number,
+	channel: { id: number; average?: number; current?: number },
+) {
+	// Writing the first column (Channel number)
+	process.stdout.write(
+		`\r\x1b[${row};1HChannel ${channel.id + 1}:`,
+	);
+
+	// increment row to leave a space for the header
+	row += rowOffset;
+	// Writing the progress bar
+	if (!channel?.current) { // If current is undefined or 0
+		process.stdout.write(
+			`
+						
+						\r\x1b[${row};12H ${
+				drawRSSIProgressBar(
+					0,
+					30,
+				)
+			}`,
+		);
+	} else { // If current has a valid value
+		process.stdout.write(
+			`
+					\r\x1b[${row};1HChannel ${channel.id + 1}: 
+					\r\x1b[${row};12H${
+				drawRSSIProgressBar(
+					channel.current
+						|| MINIMUN_RSSI,
+					30,
+				)
+			} 
+					
+					`,
+		);
+	}
+
+	// Writing the current and average columns
+	process.stdout.write(
+		`
+					\x1b[${row};45H${
+			(channel.current || "N/A").toString().padStart(4)
+		} dBm
+					\x1b[${row};56H${
+			(channel.average || "N/A").toString().padStart(4)
+		} dBm
+					`,
+	);
+}
+
+function updateDisplay(stats: ControllerStatistics, hfEnabled: boolean) {
+	// Clear the entire console
+	process.stdout.write("\x1Bc");
+	// Write the header in the first line
+	process.stdout.write(
+		`\r\x1b[1;1HChannel\x1b[1;16H Noise - Less is Better \x1b[1;46HCurrent\x1b[1;56H Average`,
+	);
+
+	// Write lines for channels 0-3 (looped)
+	const channels = [0, 1, 2, 3] as const;
+	channels.forEach((id) => {
+		const channel = stats.backgroundRSSI?.[`channel${id}`];
+		if (channel) {
+			writeChannelRow(
+				id + 1,
+				1,
+				{
+					id: id,
+					average: channel
+						?.average,
+					current: channel
+						?.current,
+				},
+			);
+		}
+	});
+	// Write the footer
+	process.stdout.write(
+		`\r\x1b[6;1HSerial: ${PORT} - HF mode: ${
+			hfEnabled
+				? `enabled (${INTERVAL} ms)`
+				: "disabled"
+		}
+				\r\x1b[7;1H(type "h" to enable HF mode, "x" to exit)`,
+	);
+}
+
 async function main(args: string[] = process.argv.slice(2)) {
 	if (args.includes("--help") || args.includes("-h")) {
 		console.log(`Usage: yarn ts test/rssi-monitor.ts [serial-port]`);
 		exit(0);
 	}
+
+	let storedStats: ControllerStatistics;
 
 	const driver = new Driver(
 		args[0] || PORT, // Read the first param as the port if provided
@@ -96,83 +189,17 @@ async function main(args: string[] = process.argv.slice(2)) {
 				} else {
 					driver.disableBackgroundRSSIHFMode();
 				}
+				// Update stats to show the new HF mode status
+				updateDisplay(storedStats, driver.poolBackgroundRSSIHFModeEnabled);
 			}
 		};
 
 		process.stdin.on("data", handleKey);
 
 		driver.controller.on("statistics updated", (stats) => {
-			// Clear the whole console each update
-
-			function writeChannelRow(
-				row: number,
-				channel: 0 | 1 | 2 | 3,
-			) {
-				// increment row to leave a space for the header
-				row++;
-				// check if channel exists. if not, write N/A
-				if (
-					stats.backgroundRSSI?.[`channel${channel}`]?.current
-						=== undefined
-				) {
-					process.stdout.write(
-						`
-						\r\x1b[${row};1HChannel ${channel + 1}:
-						\r\x1b[${row};12H ${
-							drawRSSIProgressBar(
-								0,
-								30,
-							)
-						}
-						\x1b[${row};45H${"N/A".padStart(4)} dBm
-						\x1b[${row};56H${"N/A".padStart(4)} dBm`,
-					);
-
-					return;
-				}
-				process.stdout.write(
-					`
-					\r\x1b[${row};1HChannel ${channel + 1}: 
-					\r\x1b[${row};12H${
-						drawRSSIProgressBar(
-							stats.backgroundRSSI?.[`channel${channel}`]?.current
-								|| -120,
-							30,
-						)
-					} 
-					\x1b[${row};45H${
-						stats.backgroundRSSI?.[`channel${channel}`]?.current
-							.toString().padStart(4)
-					} dBm
-					\x1b[${row};56H${
-						stats.backgroundRSSI?.[`channel${channel}`]?.average
-							.toString().padStart(4)
-					} dBm
-					`,
-				);
-			}
-
-			// Clear the entire console
-			process.stdout.write("\x1Bc");
-			// Write the header in the first line
-			process.stdout.write(
-				`\r\x1b[1;1HChannel\x1b[1;16H Noise - Less is Better \x1b[1;46HCurrent\x1b[1;56H Average`,
-			);
-
-			// Write lines for channels 0-3 (looped)
-			const channels = [0, 1, 2, 3] as const;
-			channels.forEach((channel) => {
-				writeChannelRow(channel + 1, channel);
-			});
-			// Write the footer
-			process.stdout.write(
-				`\r\x1b[6;1HSerial: ${PORT} - HF mode: ${
-					driver.poolBackgroundRSSIHFModeEnabled
-						? `enabled (${INTERVAL} ms)`
-						: "disabled"
-				}
-				\r\x1b[7;1H(type "h" to enable HF mode, "x" to exit)`,
-			);
+			storedStats = stats;
+			//Update the stats to reflect the new values
+			updateDisplay(storedStats, driver.poolBackgroundRSSIHFModeEnabled);
 		});
 	});
 
