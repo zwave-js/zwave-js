@@ -71,18 +71,6 @@ async function main(args: string[] = process.argv.slice(2)) {
 		// Clear the console
 		process.stdout.write("\x1Bc");
 
-		driver.on("rssi hf status", (enabled, _timeout) => {
-			if (enabled) {
-				console.log(
-					`\r\x1b[8;1HHigh frequency background RSSI polling enabled`,
-				);
-			} else {
-				console.log(
-					"\r\x1b[8;1HHigh frequency background RSSI polling disabled",
-				);
-			}
-		});
-
 		// Raw mode keystroke handling (no need to press Enter)
 		if (process.stdin.isTTY) {
 			process.stdin.setRawMode(true);

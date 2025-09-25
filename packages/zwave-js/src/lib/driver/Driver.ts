@@ -781,8 +781,6 @@ export interface DriverEventCallbacks extends PrefixedNodeEvents {
 	"firmware update finished": (
 		result: OTWFirmwareUpdateResult,
 	) => void;
-	"rssi hf status": (enabled: boolean, timeout?: number) => void;
-
 	error: (err: Error) => void;
 }
 
@@ -9347,8 +9345,6 @@ integrity: ${update.integrity}`;
 			);
 		}
 
-		this.emit("rssi hf status", true, timeoutMs);
-
 		this.poolBackgroundRSSIIHFTimeoutMs = timeoutMs;
 		this.handleQueueIdleChange(this.queueIdle);
 
@@ -9361,8 +9357,6 @@ integrity: ${update.integrity}`;
 	 * This will restore the default behavior of polling the background RSSI only once every 30 seconds.
 	 */
 	public disableBackgroundRSSIHFMode(): void {
-		this.emit("rssi hf status", false);
-
 		this.clearBackgroundRSSIHFTimer();
 		this.poolBackgroundRSSIIHFTimeoutMs = undefined;
 	}
