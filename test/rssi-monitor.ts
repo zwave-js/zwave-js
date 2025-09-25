@@ -44,19 +44,13 @@ function writeChannelRow(
 	if (!channel?.current) { // If current is undefined or 0
 		process.stdout.write(
 			`
-						
-						\r\x1b[${row};12H ${
-				drawRSSIProgressBar(
-					0,
-					30,
-				)
-			}`,
+				\r\x1b[${row};12H ${drawRSSIProgressBar(0, 30)}`,
 		);
 	} else { // If current has a valid value
 		process.stdout.write(
 			`
-					\r\x1b[${row};1HChannel ${channel.id + 1}: 
-					\r\x1b[${row};12H${
+				\r\x1b[${row};1HChannel ${channel.id + 1}: 
+				\r\x1b[${row};12H${
 				drawRSSIProgressBar(
 					channel.current
 						|| MINIMUN_RSSI,
@@ -71,12 +65,8 @@ function writeChannelRow(
 	// Writing the current and average columns
 	process.stdout.write(
 		`
-					\x1b[${row};45H${
-			(channel.current || "N/A").toString().padStart(4)
-		} dBm
-					\x1b[${row};56H${
-			(channel.average || "N/A").toString().padStart(4)
-		} dBm
+		\x1b[${row};45H${(channel.current || "N/A").toString().padStart(4)} dBm
+		\x1b[${row};56H${(channel.average || "N/A").toString().padStart(4)} dBm
 					`,
 	);
 }
@@ -109,12 +99,13 @@ function updateDisplay(stats: ControllerStatistics, hfEnabled: boolean) {
 	});
 	// Write the footer
 	process.stdout.write(
-		`\r\x1b[6;1HSerial: ${PORT} - HF mode: ${
+		`
+			\r\x1b[6;1HSerial: ${PORT} - HF mode: ${
 			hfEnabled
 				? `enabled`
 				: "disabled"
 		}
-				\r\x1b[7;1H(type "h" to enable HF mode, "x" to exit)`,
+			\r\x1b[7;1H(type "h" to enable HF mode, "x" to exit)`,
 	);
 }
 
