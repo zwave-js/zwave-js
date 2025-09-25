@@ -4,7 +4,6 @@ import { exit } from "node:process";
 import { type ControllerStatistics, Driver } from "zwave-js";
 
 const MINIMUN_RSSI = -120;
-const INTERVAL = 3_000; // The interval between RSSI polls when in high-frequency mode. in milliseconds. Must be between pollBackgroundRSSIMin and pollBackgroundRSSIMax
 const HF_MODE_TIMEOUT = 300_000; // The amount of time to keep high-frequency mode enabled. in milliseconds
 const PORT = "/dev/ttyACM0"; // Adjust this to your USB stick port (e.g., /dev/tty.usbmodemXYZ or /dev/ttyACM0)
 
@@ -39,10 +38,6 @@ function writeChannelRow(
 	rowOffset: number,
 	channel: { id: number; average?: number; current?: number },
 ) {
-	// Writing the first column (Channel number)
-	process.stdout.write(
-		`\r\x1b[${row};1HChannel ${channel.id + 1}:`,
-	);
 
 	// increment row to leave a space for the header
 	row += rowOffset;
@@ -117,7 +112,7 @@ function updateDisplay(stats: ControllerStatistics, hfEnabled: boolean) {
 	process.stdout.write(
 		`\r\x1b[6;1HSerial: ${PORT} - HF mode: ${
 			hfEnabled
-				? `enabled (${INTERVAL} ms)`
+				? `enabled`
 				: "disabled"
 		}
 				\r\x1b[7;1H(type "h" to enable HF mode, "x" to exit)`,
@@ -144,10 +139,6 @@ async function main(args: string[] = process.argv.slice(2)) {
 			securityKeysLongRange: {
 				S2_Authenticated: generateRandomKey(),
 				S2_AccessControl: generateRandomKey(),
-			},
-			timeouts: {
-				pollBackgroundRSSIMin: 3_000,
-				pollBackgroundRSSIMax: 15000,
 			},
 			logConfig: {
 				enabled: true,
@@ -183,14 +174,16 @@ async function main(args: string[] = process.argv.slice(2)) {
 			if (key === "h") {
 				if (!driver.poolBackgroundRSSIHFModeEnabled) {
 					driver.enableBackgroundRSSIHFMode(
-						INTERVAL,
 						HF_MODE_TIMEOUT,
 					);
 				} else {
 					driver.disableBackgroundRSSIHFMode();
 				}
 				// Update stats to show the new HF mode status
-				updateDisplay(storedStats, driver.poolBackgroundRSSIHFModeEnabled);
+				updateDisplay(
+					storedStats,
+					driver.poolBackgroundRSSIHFModeEnabled,
+				);
 			}
 		};
 
@@ -198,7 +191,7 @@ async function main(args: string[] = process.argv.slice(2)) {
 
 		driver.controller.on("statistics updated", (stats) => {
 			storedStats = stats;
-			//Update the stats to reflect the new values
+			// Update the stats to reflect the new values
 			updateDisplay(storedStats, driver.poolBackgroundRSSIHFModeEnabled);
 		});
 	});
