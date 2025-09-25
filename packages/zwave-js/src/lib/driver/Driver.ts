@@ -3955,7 +3955,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...this.autoRefreshNodeValueTimers.values(),
 				this.statisticsTimeout,
 				this.pollBackgroundRSSITimer,
-				this.poolBackgroundRSSIIHFTimer,
+				this.poolBackgroundRSSIHFTimer,
 				...this.sendNodeToSleepTimers.values(),
 				...this.awaitedCommands.map((c) => c.timeout),
 				...this.awaitedMessages.map((m) => m.timeout),
@@ -9275,7 +9275,7 @@ integrity: ${update.integrity}`;
 	}
 
 	// Used to store the timeout that disables high frequency background RSSI polling
-	private poolBackgroundRSSIIHFTimer: Timer | undefined;
+	private poolBackgroundRSSIHFTimer: Timer | undefined;
 
 	/**
 	 * Returns true if high frequency background RSSI polling is enabled.
@@ -9289,7 +9289,7 @@ integrity: ${update.integrity}`;
 	 * @param timeoutMs The time in milliseconds after which the high frequency background RSSI polling will be disabled automatically.
 	 */
 	private setBackgroundRSSIHFTimer(timeoutMs: number): void {
-		this.poolBackgroundRSSIIHFTimer = setTimer(() => {
+		this.poolBackgroundRSSIHFTimer = setTimer(() => {
 			this.disableBackgroundRSSIHFMode();
 		}, timeoutMs).unref();
 	}
@@ -9298,8 +9298,8 @@ integrity: ${update.integrity}`;
 	 * Clears the timer for high frequency background RSSI polling.
 	 */
 	private clearBackgroundRSSIHFTimer(): void {
-		this.poolBackgroundRSSIIHFTimer?.clear();
-		this.poolBackgroundRSSIIHFTimer = undefined;
+		this.poolBackgroundRSSIHFTimer?.clear();
+		this.poolBackgroundRSSIHFTimer = undefined;
 	}
 
 	/**
