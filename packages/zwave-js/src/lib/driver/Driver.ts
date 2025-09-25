@@ -5096,14 +5096,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					await this.sendCommand(cc, {
 						maxSendAttempts: 1,
 						priority: MessagePriority.Immediate,
-					}).catch((error) => {
-						this.controllerLog.logNode(command.nodeId, {
-							message:
-								`Transport Service RX session #${command.sessionId}: Failed to request segment with offset ${machine.state.offset} - ${getErrorMessage(error)}`,
-							level: "warn",
-							direction: "outbound",
-						});
-					});
+					}).catch(noop);
 
 					startMissingSegmentTimeout(session);
 				} else if (machine.state.value === "failure") {

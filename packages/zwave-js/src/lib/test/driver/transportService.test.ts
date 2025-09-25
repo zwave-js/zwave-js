@@ -409,7 +409,7 @@ integrationTest(
 );
 
 integrationTest(
-	"Transport Service segment request errors are handled gracefully",
+	"Do not crash on communication errors when requesting missing segments",
 	{
 		// debug: true,
 
@@ -449,46 +449,33 @@ integrationTest(
 				partialDatagram: part3,
 			});
 
-			// Start the session with the first segment
+			// Send the first segment to the controller
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(frame1),
 			);
 			await wait(30);
 
-			// Skip the second segment to trigger a segment request timeout
-			await wait(30);
-			await mockNode.sendToController(
-				createMockZWaveRequestFrame(frame3),
-			);
+			// Immediately stop acknowledging frames, so the controller's request fails with NoACK
+			mockNode.autoAckControllerFrames = false;
+			// We must not send the last frame here, or the issue won't happen
 
-			await wait(50);
+			// The controller should request the missing frame after a while
+			await wait(1100);
 
-			// The node should have received a request for the missing frame
+			// The controller should request the missing frame
 			mockNode.assertReceivedControllerFrame((f) =>
 				f.type === MockZWaveFrameType.Request
 				&& f.payload instanceof TransportServiceCCSegmentRequest
 				&& f.payload.datagramOffset === part1.length
 			);
 
-			// Wait a bit longer to allow any potential errors to manifest
-			await wait(100);
-
-			// Now send the missing segment to complete the transmission
+			// Send it
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(frame2),
 			);
 
-			await wait(100);
-
-			// The system should not crash and the session should complete successfully
-			// The node should have received the confirmation
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentComplete
-			);
-
-			// This test mainly verifies that error handling exists and doesn't crash
-			t.expect(true).toBe(true);
+			// Wait for 2 seconds to ensure there is no uncaught error
+			await wait(2000);
 		},
 	},
 );
