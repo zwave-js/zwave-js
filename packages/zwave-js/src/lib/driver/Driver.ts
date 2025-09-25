@@ -5096,7 +5096,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					await this.sendCommand(cc, {
 						maxSendAttempts: 1,
 						priority: MessagePriority.Immediate,
-					});
+					}).catch(noop);
 
 					startMissingSegmentTimeout(session);
 				} else if (machine.state.value === "failure") {
@@ -5200,7 +5200,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				await this.sendCommand(cc, {
 					maxSendAttempts: 1,
 					priority: MessagePriority.Immediate,
-				});
+				}).catch(noop);
 			}
 		}
 	}
