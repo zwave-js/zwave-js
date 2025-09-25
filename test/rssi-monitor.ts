@@ -8,15 +8,30 @@ const INTERVAL = 3_000; // The interval between RSSI polls when in high-frequenc
 const HF_MODE_TIMEOUT = 300_000; // The amount of time to keep high-frequency mode enabled. in milliseconds
 const PORT = "/dev/ttyACM0"; // Adjust this to your USB stick port (e.g., /dev/tty.usbmodemXYZ or /dev/ttyACM0)
 
-function drawRSSIProgressBar(current: number, width = 40) {
+
+/**
+ * @param current The current RSSI value
+ * @param width The amount of characters the progress bar will use
+ * @returns The progress bar string
+ */
+function drawRSSIProgressBar(current: number, width = 40): string {
 	const ratio = current / MINIMUN_RSSI;
 	const empty = Math.round(ratio * width);
 	const filled = width - empty;
-	//Ensure no negative values in case of very good RSSI
+	// Ensure no negative values in case of very good RSSI
 	if (empty < 0) {
 		return `[${"█".repeat(width)}]`;
 	}
 	return `[${"█".repeat(filled)}${"·".repeat(empty)}]`;
+}
+
+// Generates a random 16-byte key
+function generateRandomKey(): Buffer<ArrayBuffer> {
+	const key = Buffer.alloc(16);
+	for (let i = 0; i < 16; i++) {
+		key[i] = Math.floor(Math.random() * 256);
+	}
+	return key;
 }
 
 async function main(args: string[] = process.argv.slice(2)) {
@@ -29,32 +44,14 @@ async function main(args: string[] = process.argv.slice(2)) {
 		args[0] || PORT, // Read the first param as the port if provided
 		{
 			securityKeys: {
-				S0_Legacy: Buffer.from(
-					"0102030405060708090a0b0c0d0e0f10",
-					"hex",
-				),
-				S2_Unauthenticated: Buffer.from(
-					"11111111111111111111111111111111",
-					"hex",
-				),
-				S2_AccessControl: Buffer.from(
-					"22222222222222222222222222222222",
-					"hex",
-				),
-				S2_Authenticated: Buffer.from(
-					"33333333333333333333333333333333",
-					"hex",
-				),
+				S0_Legacy: generateRandomKey(),
+				S2_Unauthenticated: generateRandomKey(),
+				S2_AccessControl: generateRandomKey(),
+				S2_Authenticated: generateRandomKey(),
 			},
 			securityKeysLongRange: {
-				S2_Authenticated: Buffer.from(
-					"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-					"hex",
-				),
-				S2_AccessControl: Buffer.from(
-					"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-					"hex",
-				),
+				S2_Authenticated: generateRandomKey(),
+				S2_AccessControl: generateRandomKey(),
 			},
 			timeouts: {
 				pollBackgroundRSSIMin: 3_000,
@@ -120,7 +117,7 @@ async function main(args: string[] = process.argv.slice(2)) {
 		driver.controller.on("statistics updated", (stats) => {
 			// Clear the whole console each update
 
-			function writeChannelToConsole(
+			function writeChannelRow(
 				row: number,
 				channel: 0 | 1 | 2 | 3,
 			) {
@@ -168,20 +165,19 @@ async function main(args: string[] = process.argv.slice(2)) {
 				);
 			}
 
+			// Clear the entire console
 			process.stdout.write("\x1Bc");
-			// Header
+			// Write the header in the first line
 			process.stdout.write(
 				`\r\x1b[1;1HChannel\x1b[1;16H Noise - Less is Better \x1b[1;46HCurrent\x1b[1;56H Average`,
 			);
 
-			// Channels 0-3 (looped)
+			// Write lines for channels 0-3 (looped)
 			const channels = [0, 1, 2, 3] as const;
 			channels.forEach((channel) => {
-				writeChannelToConsole(channel + 1, channel);
+				writeChannelRow(channel + 1, channel);
 			});
-			//
-
-			// Write on line 5 the serial name and if hf mode is enabled
+			// Write the footer
 			process.stdout.write(
 				`\r\x1b[6;1HSerial: ${PORT} - HF mode: ${
 					driver.poolBackgroundRSSIHFModeEnabled
