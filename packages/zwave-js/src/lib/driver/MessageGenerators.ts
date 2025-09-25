@@ -165,8 +165,9 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 
 		// Pass this message to the send thread and wait for it to be sent
 		let result: Message;
-		// At this point we can't have received a premature update
+		// At this point we can't have received a premature update or response
 		msg.prematureNodeUpdate = undefined;
+		msg.prematureResponse = undefined;
 
 		try {
 			// The yield can throw and must be handled here

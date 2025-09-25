@@ -404,6 +404,9 @@ export class Message {
 	/** Gets set by the driver to remember an expected node update for this message that arrived before the Serial API command has finished. */
 	public prematureNodeUpdate: Message | undefined;
 
+	/** Gets set by the driver to remember an expected response for this message that arrived before the ACK. */
+	public prematureResponse: Message | undefined;
+
 	/** Finds the ID of the target or source node in a message, if it contains that information */
 	public getNodeId(): number | undefined {
 		if (hasNodeId(this)) return this.nodeId;

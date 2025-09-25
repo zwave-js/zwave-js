@@ -5558,6 +5558,24 @@ ${handlers.length} left`,
 			}
 		}
 
+		// It could be that this is the response for a message that we sent, but where the ACK is delayed
+		const currentMessage = this.queue.currentTransaction
+			?.getCurrentMessage();
+		if (
+			currentMessage
+			&& currentMessage.expectsResponse()
+			&& currentMessage.isExpectedResponse(msg)
+		) {
+			// The message we're currently sending is still in progress but expects this message as response.
+			// Remember the message there.
+			this.driverLog.print(
+				`received expected response prematurely, remembering it...`,
+				"verbose",
+			);
+			currentMessage.prematureResponse = msg;
+			return Promise.resolve();
+		}
+
 		this.driverLog.transactionResponse(msg, undefined, "unexpected");
 		this.driverLog.print("unexpected response, discarding...", "warn");
 
@@ -6883,6 +6901,30 @@ ${handlers.length} left`,
 					}
 
 					case "waitingForACK": {
+						// Check if we've already received the expected response before the ACK
+						if (msg.prematureResponse) {
+							this.driverLog.print(
+								`using premature response, skipping ACK wait...`,
+								"verbose",
+							);
+							
+							if (msg.expectsCallback()) {
+								nextInput = { 
+									value: "response", 
+									response: msg.prematureResponse 
+								};
+							} else {
+								// If this message doesn't expect a callback, we're done
+								nextInput = { 
+									value: "response", 
+									response: msg.prematureResponse 
+								};
+							}
+							// Clear the premature response since we're using it
+							msg.prematureResponse = undefined;
+							break;
+						}
+
 						const controlFlow = await this.waitForMessageHeader(
 							() => true,
 							this.options.timeouts.ack,
@@ -6902,6 +6944,23 @@ ${handlers.length} left`,
 					}
 
 					case "waitingForResponse": {
+						// We might have already received the response prematurely. In that case, use it.
+						if (msg.prematureResponse) {
+							this.driverLog.print(
+								`using premature response...`,
+								"verbose",
+							);
+							const response = msg.prematureResponse;
+							msg.prematureResponse = undefined; // Clear the premature response since we're using it
+							
+							if (isSuccessIndicator(response) && !response.isOK()) {
+								nextInput = { value: "response NOK", response };
+							} else {
+								nextInput = { value: "response", response };
+							}
+							break;
+						}
+
 						const response = await Promise.race([
 							this.abortSerialAPICommand?.catch((e) =>
 								e as Error
