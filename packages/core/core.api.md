@@ -1158,6 +1158,8 @@ export interface GenericDeviceClass {
     // (undocumented)
     readonly requiresSecurity: boolean;
     // (undocumented)
+    readonly supportsOptimisticValueUpdate: boolean;
+    // (undocumented)
     readonly zwavePlusDeviceType?: string;
 }
 
