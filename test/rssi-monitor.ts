@@ -56,9 +56,7 @@ function writeChannelRow(
 						|| MINIMUN_RSSI,
 					30,
 				)
-			} 
-					
-					`,
+			} `,
 		);
 	}
 
@@ -71,7 +69,12 @@ function writeChannelRow(
 	);
 }
 
-function updateDisplay(stats: ControllerStatistics, hfEnabled: boolean) {
+function updateChannelsDisplay(
+	stats: ControllerStatistics,
+	hfEnabled: boolean,
+) {
+	// Disable console cursor
+	process.stdout.write("\x1B[?25l");
 	// Clear the entire console
 	process.stdout.write("\x1Bc");
 	// Write the header in the first line
@@ -107,6 +110,27 @@ function updateDisplay(stats: ControllerStatistics, hfEnabled: boolean) {
 		}
 			\r\x1b[7;1H(type "h" to enable HF mode, "x" to exit)`,
 	);
+
+	showTemporalUpdateHint();
+}
+
+let lastHintTimeout: NodeJS.Timeout;
+
+/* We use this to show a temporal hint that the stats have been updated	*/
+function showTemporalUpdateHint() {
+	// Clear any previous timeout
+	if (lastHintTimeout) clearTimeout(lastHintTimeout);
+	// write on line 6 a red squre
+	process.stdout.write(
+		`\r\x1b[7;63HX`,
+	);
+
+	lastHintTimeout = setTimeout(() => {
+		// clear the red square
+		process.stdout.write(
+			`\r\x1b[7;63H `,
+		);
+	}, 300);
 }
 
 async function main(args: string[] = process.argv.slice(2)) {
@@ -170,7 +194,7 @@ async function main(args: string[] = process.argv.slice(2)) {
 					driver.disableBackgroundRSSIHFMode();
 				}
 				// Update stats to show the new HF mode status
-				updateDisplay(
+				updateChannelsDisplay(
 					storedStats,
 					driver.poolBackgroundRSSIHFModeEnabled,
 				);
@@ -182,7 +206,10 @@ async function main(args: string[] = process.argv.slice(2)) {
 		driver.controller.on("statistics updated", (stats) => {
 			storedStats = stats;
 			// Update the stats to reflect the new values
-			updateDisplay(storedStats, driver.poolBackgroundRSSIHFModeEnabled);
+			updateChannelsDisplay(
+				storedStats,
+				driver.poolBackgroundRSSIHFModeEnabled,
+			);
 		});
 	});
 
