@@ -9179,12 +9179,12 @@ integrity: ${update.integrity}`;
 	// region Background RSSI Polling
 
 	// RSSI Polling related values
-	private readonly pollBackgroundRSSIMinimunIdleTimeout = 2_000;
-	private readonly pollBackgroundRSSIRegularTimeout = 30_000;
-	private readonly pollBackgroundRSSIHFTimeout = 2_000;
+	private readonly pollBackgroundRSSIMinimunIdleTimeout = 5_000;
+	private readonly pollBackgroundRSSIIntervalMs = 30_000;
+	private readonly pollBackgroundRSSIHFIntervalMs = 2_000;
 
 	// If set, enables the HF background RSSI polling when the send queue is idle.
-	private poolBackgroundRSSIHFTimeoutMs: number | undefined = undefined;
+	private poolBackgroundRSSIHFIntervalMs: number | undefined = undefined;
 	// Used to store the timer that polls the background RSSI when the send queue is idle
 	private pollBackgroundRSSITimer: Timer | undefined;
 	// Timestamp of the last background RSSI query
@@ -9196,12 +9196,6 @@ integrity: ${update.integrity}`;
 	 * @param timeoutMs The maximum time to wait before calling getBackgroundRSSI.
 	 */
 	private setBackgroundRSSITimer(timeoutMs: number): void {
-		const actualTimeout = Math.max(
-			// Wait at least 2s in idle state before beginning
-			this.pollBackgroundRSSIMinimunIdleTimeout,
-			// and up to poolBackgroundRSSILastTimestamp if we recently queried the RSSI
-			timeoutMs - (Date.now() - this.poolBackgroundRSSILastTimestamp),
-		);
 		this.pollBackgroundRSSITimer = setTimer(async () => {
 			// Due to the timeout, the driver might have been destroyed in the meantime
 			if (!this.ready) return;
@@ -9212,7 +9206,7 @@ integrity: ${update.integrity}`;
 			} catch {
 				// ignore errors
 			}
-		}, actualTimeout).unref();
+		}, timeoutMs).unref();
 	}
 
 	/**
@@ -9230,13 +9224,22 @@ integrity: ${update.integrity}`;
 		) {
 			// When the queue becomes idle, start polling the background RSSI
 			if (idle) {
-				// By default, use 30 seconds
-				let timeoutMs = this.pollBackgroundRSSIRegularTimeout;
+				let timeoutMs: number;
 
-				// If HF mode is enabled, use HF timeout instead
-				if (this.poolBackgroundRSSIHFTimeoutMs !== undefined) {
-					timeoutMs = this.poolBackgroundRSSIHFTimeoutMs;
+				// If HF mode is enabled, use HF timeout
+				if (this.poolBackgroundRSSIHFIntervalMs !== undefined) {
+					timeoutMs = this.poolBackgroundRSSIHFIntervalMs;
+				} else { // If HF mode is not enabled, ensure we wait at least the minimum idle timeout, then 30s
+					timeoutMs = Math.max(
+						// Wait at least 2s in idle state before beginning
+						this.pollBackgroundRSSIMinimunIdleTimeout,
+						// and up to poolBackgroundRSSILastTimestamp if we recently queried the RSSI
+						this.pollBackgroundRSSIIntervalMs
+							- (Date.now()
+								- this.poolBackgroundRSSILastTimestamp),
+					);
 				}
+
 				this.setBackgroundRSSITimer(timeoutMs);
 			} else {
 				this.clearBackgroundRSSITimer();
@@ -9251,7 +9254,7 @@ integrity: ${update.integrity}`;
 	 * Returns true if high frequency background RSSI polling is enabled.
 	 */
 	public get poolBackgroundRSSIHFModeEnabled(): boolean {
-		return this.poolBackgroundRSSIHFTimeoutMs !== undefined;
+		return this.poolBackgroundRSSIHFIntervalMs !== undefined;
 	}
 
 	/**
@@ -9299,7 +9302,8 @@ integrity: ${update.integrity}`;
 			);
 		}
 
-		this.poolBackgroundRSSIHFTimeoutMs = this.pollBackgroundRSSIHFTimeout; // HF polling timeout is 2 seconds
+		this.poolBackgroundRSSIHFIntervalMs =
+			this.pollBackgroundRSSIHFIntervalMs; // HF polling timeout is 2 seconds
 		this.handleQueueIdleChange(this.queueIdle);
 
 		if (durationMs !== undefined && durationMs > 0) {
@@ -9312,7 +9316,7 @@ integrity: ${update.integrity}`;
 	 */
 	public disableBackgroundRSSIHFMode(): void {
 		this.clearBackgroundRSSIHFTimer();
-		this.poolBackgroundRSSIHFTimeoutMs = undefined;
+		this.poolBackgroundRSSIHFIntervalMs = undefined;
 	}
 
 	private _powerlevelTestNodeContext: {
