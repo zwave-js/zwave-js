@@ -5593,22 +5593,30 @@ ${handlers.length} left`,
 			const nodeId = msg.getNodeId()!;
 
 			// It could also be that this is the node's response for a CC that we sent, but where the ACK is delayed
-			const currentMessage = this.queue.currentTransaction
-				?.getCurrentMessage();
+			const currentTransaction = this.queue.currentTransaction;
+			const currentMessage = currentTransaction?.getCurrentMessage();
 			if (
 				currentMessage
 				&& currentMessage.expectsNodeUpdate()
 				&& currentMessage.isExpectedNodeUpdate(msg)
 			) {
-				// The message we're currently sending is still in progress but expects this message in response.
-				// Remember the message there.
-				this.controllerLog.logNode(msg.getNodeId()!, {
-					message:
-						`received expected response prematurely, remembering it...`,
-					level: "verbose",
-					direction: "inbound",
-				});
-				currentMessage.prematureNodeUpdate = msg;
+				// The message we're currently sending is still in progress but expects this message in response,
+				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
+
+				// Abort the current transaction with the received message as the result.
+				currentTransaction!.abort(msg);
+
+				if (isSendData(currentMessage)) {
+					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
+					this.controllerLog.logNode(msg.getNodeId()!, {
+						message:
+							`received expected response prematurely, aborting transaction...`,
+						level: "verbose",
+						direction: "inbound",
+					});
+
+					void this.abortSendData();
+				}
 				return;
 			}
 
