@@ -1541,7 +1541,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		const spOpenPromise = createDeferredPromise();
 
 		// Log which version is running
-		this.driverLog.print(libNameString, "info");
+		if (this._options.logConfig?.showLogo !== false) {
+			this.driverLog.print(libNameString, "info");
+		}
 		this.driverLog.print(`version ${libVersion}`, "info");
 		this.driverLog.print("", "info");
 
