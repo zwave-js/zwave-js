@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.15.0 (2025-09-30)
 ### Features
 * Support creating mixed LR and non-LR "multicast" groups (#8143)
 * Add driver option to skip log formatting of Z-Wave commands (#8204)
