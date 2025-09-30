@@ -156,6 +156,7 @@ export interface LogConfig {
 	filename: string;
 	forceConsole: boolean;
 	showLogo?: boolean;
+	raw?: boolean;
 }
 
 /** @internal */
