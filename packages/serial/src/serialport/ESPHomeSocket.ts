@@ -224,6 +224,7 @@ export function createESPHomeFactory(
 			return new Promise((resolve, reject) => {
 				const onClose = () => {
 					removeListeners();
+					socket.destroy();
 					reject(
 						new ZWaveError(
 							`ESPHome connection closed unexpectedly!`,
@@ -234,14 +235,16 @@ export function createESPHomeFactory(
 
 				const onError = (err: Error) => {
 					removeListeners();
+					socket.destroy();
 					reject(err);
 				};
 
 				const onTimeout = () => {
 					removeListeners();
+					socket.destroy();
 					reject(
 						new ZWaveError(
-							`ESPHome connection timed out after ${timeout}ms`,
+							`Connection timed out after ${timeout}ms`,
 							ZWaveErrorCodes.Driver_SerialPortClosed,
 						),
 					);
@@ -268,6 +271,8 @@ export function createESPHomeFactory(
 						await performHandshake();
 						resolve();
 					} catch (error) {
+						// Clean up the socket on handshake failure
+						socket.destroy();
 						reject(
 							error instanceof Error
 								? error
