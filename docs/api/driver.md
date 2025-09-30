@@ -537,6 +537,7 @@ interface LogConfig {
 	filename: string;
 	forceConsole: boolean;
 	showLogo?: boolean;
+	raw?: boolean;
 }
 ```
 
@@ -559,6 +560,7 @@ The **console transport** has the following options:
 
 - `forceConsole`: In order to reduce the CPU load, `zwave-js` does not log to the console if it is not connected to a TTY or if logging to file is enabled. By setting this option to `true`, these checks will be skipped and all logs will be printed to the console, Default: `false`.
 - `showLogo`: By default, Z-Wave JS prints an ASCII logo on driver startup. Setting this to `false` will disable the logo. Default: `true`.
+- `raw`: Z-Wave JS logging is optimized for human readability. This implies formatting Z-Wave commands, even when using a transport without custom formatting. When setting `raw` to `true`, Z-Wave commands will instead be rendered as JSON.
 
 Using the `transports` option, providing custom [`winston`](https://github.com/winstonjs/winston) log transports is also possible. See [Custom log transports](usage/log-transports.md) for details. These will be used **in addition** to the internal transports. If that is not desired, disable them by setting `enabled` to `false`.
 
