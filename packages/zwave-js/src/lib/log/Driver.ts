@@ -134,70 +134,77 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 		const isCCContainer = containsCC(message);
 		const logEntry = message.toLogEntry();
 
-		let msg: string | string[];
-
 		if (this.driver.options.logConfig?.raw) {
 			// In raw mode, we just print the JSON representation of the message
-			msg = JSON.stringify(logEntry);
-		} else {
-			// Otherwise, render the entire command tree
-			msg = [tagify(logEntry.tags)];
+			this.logger.log({
+				level: DRIVER_LOGLEVEL,
+				primaryTags: tagify(logEntry.tags),
+				secondaryTags: secondaryTags && secondaryTags.length > 0
+					? tagify(secondaryTags)
+					: undefined,
+				message: JSON.stringify(logEntry),
+				// Since we are programming a controller, responses are always inbound
+				// (not to confuse with the message type, which may be Request or Response)
+				direction: getDirectionPrefix(direction),
+				context: { source: "driver", direction },
+			});
+			return;
+		}
 
-			if (logEntry.message) {
-				msg.push(
-					...messageRecordToLines(logEntry.message).map(
-						(line) => (isCCContainer ? "│ " : "  ") + line,
-					),
-				);
-			}
+		// Otherwise, render the entire command tree
+		let msg = [tagify(logEntry.tags)];
 
-			try {
-				// If possible, include information about the CCs
-				if (isCCContainer) {
-					// Remove the default payload message and draw a bracket
-					msg = msg.filter((line) => !line.startsWith("│ payload:"));
-
-					const logCC = (
-						msg: string[],
-						cc: CommandClass,
-						indent: number = 0,
-					) => {
-						const isEncapCC = isEncapsulatingCommandClass(cc)
-							|| isMultiEncapsulatingCommandClass(cc);
-						const loggedCC = cc.toLogEntry(this.driver);
-						msg.push(
-							" ".repeat(indent * 2)
-								+ "└─"
-								+ tagify(loggedCC.tags),
-						);
-
-						indent++;
-						if (loggedCC.message) {
-							msg.push(
-								...messageRecordToLines(loggedCC.message).map(
-									(line) =>
-										`${" ".repeat(indent * 2)}${
-											isEncapCC ? "│ " : "  "
-										}${line}`,
-								),
-							);
-						}
-						// If this is an encap CC, continue
-						if (isEncapsulatingCommandClass(cc)) {
-							logCC(msg, cc.encapsulated, indent);
-						} else if (isMultiEncapsulatingCommandClass(cc)) {
-							for (const encap of cc.encapsulated) {
-								logCC(msg, encap, indent);
-							}
-						}
-					};
-
-					logCC(msg, message.command);
-				}
-			} catch {}
+		if (logEntry.message) {
+			msg.push(
+				...messageRecordToLines(logEntry.message).map(
+					(line) => (isCCContainer ? "│ " : "  ") + line,
+				),
+			);
 		}
 
 		try {
+			// If possible, include information about the CCs
+			if (isCCContainer) {
+				// Remove the default payload message and draw a bracket
+				msg = msg.filter((line) => !line.startsWith("│ payload:"));
+
+				const logCC = (
+					cc: CommandClass,
+					indent: number = 0,
+				) => {
+					const isEncapCC = isEncapsulatingCommandClass(cc)
+						|| isMultiEncapsulatingCommandClass(cc);
+					const loggedCC = cc.toLogEntry(this.driver);
+					msg.push(
+						" ".repeat(indent * 2)
+							+ "└─"
+							+ tagify(loggedCC.tags),
+					);
+
+					indent++;
+					if (loggedCC.message) {
+						msg.push(
+							...messageRecordToLines(loggedCC.message).map(
+								(line) =>
+									`${" ".repeat(indent * 2)}${
+										isEncapCC ? "│ " : "  "
+									}${line}`,
+							),
+						);
+					}
+					// If this is an encap CC, continue
+					if (isEncapsulatingCommandClass(cc)) {
+						logCC(cc.encapsulated, indent);
+					} else if (isMultiEncapsulatingCommandClass(cc)) {
+						for (const encap of cc.encapsulated) {
+							logCC(encap, indent);
+						}
+					}
+				};
+
+				logCC(message.command);
+			}
+
 			this.logger.log({
 				level: DRIVER_LOGLEVEL,
 				secondaryTags: secondaryTags && secondaryTags.length > 0
