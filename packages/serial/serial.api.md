@@ -2998,7 +2998,6 @@ export class Message {
     static parse(data: Uint8Array, ctx: MessageParsingContext): Message;
     // (undocumented)
     payload: Bytes;
-    prematureNodeUpdate: Message | undefined;
     get rtt(): number | undefined;
     serialize(ctx: MessageEncodingContext): Promise<Bytes>;
     toJSON(): JSONObject;
