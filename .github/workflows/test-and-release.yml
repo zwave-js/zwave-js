@@ -16,6 +16,10 @@ on:
   merge_group:
     types: [checks_requested]
 
+permissions:
+  id-token: write # Required for publishing with OICD
+  contents: read
+
 # Cancel previous PR/branch runs when a new commit is pushed
 concurrency:
   group: 'test-and-release-${{ github.ref }}'
@@ -466,8 +470,6 @@ jobs:
       env:
         TAG: ${{ steps.extract_release.outputs.TAG }}
       run: |
-        yarn config set npmAuthToken "${{ secrets.NPM_TOKEN }}"
-        yarn npm whoami
         yarn workspaces foreach --all -vti --no-private npm publish --tolerate-republish $TAG
 
 
