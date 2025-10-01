@@ -6,8 +6,11 @@ on:
   workflow_dispatch: # Manually on demand
 
 jobs:
-  publish-config:
+  detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.calculate-version.outputs.VERSION }}
+      has-changes: ${{ steps.detect-changes.outputs.HAS_CHANGES }}
 
     strategy:
       matrix:
@@ -30,6 +33,7 @@ jobs:
         cache: 'yarn'
 
     - name: Detect changes (git)
+      id: detect-changes
       run: |
         # ===============================
         # Detect changes using git
@@ -45,6 +49,7 @@ jobs:
         CONFIG_CHANGES=$(echo "$CHANGES" | grep -E "^packages\/config\/config\/(.*\/)?.+\.json" || true)
         if [ -z "$CONFIG_CHANGES" ] ; then
           echo "🔸 No config file changes since latest version, aborting..."
+          echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
           exit 0
         fi
 
@@ -52,45 +57,47 @@ jobs:
         NON_CONFIG_CHANGES=$(echo "$CHANGES" | grep -E -v "^packages\/config\/config\/(.*\/)?.+\.json" | grep -v ".gitignore" || true)
         if [ -n "$NON_CONFIG_CHANGES" ] ; then
           echo "❌ Found non-config changes, aborting..."
+          echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
           exit 0
         else
           echo "✔ Changes are limited to config files"
+          echo "HAS_CHANGES=true" >> $GITHUB_OUTPUT
         fi
 
-        # ===============================
-        # Install dependencies
-        # ===============================
-
+    - name: Install dependencies
+      if: steps.detect-changes.outputs.HAS_CHANGES == 'true'
+      run: |
         yarn install --immutable
         yarn bootstrap
 
-        # ===============================
-        # Double-check changes with yarn
-        # ===============================
-
+    - name: Verify changes with yarn
+      if: steps.detect-changes.outputs.HAS_CHANGES == 'true'
+      run: |
+        LAST_TAG=$(git describe --abbrev=0)
+        
         # Verify that only @zwave-js/config and zwave-js are changed
         CHANGED_PACKAGES=$(SINCE=$LAST_TAG yarn ls-changed)
         if [[ $(echo -e "@zwave-js/config\nzwave-js") != "$CHANGED_PACKAGES" ]]; then
           echo "❌ Yarn detected unexpected package changes, aborting..."
           echo "These packages are changed:"
           echo "$CHANGED_PACKAGES"
-          exit 0
+          exit 1
         fi
 
-        # ===============================
-        # Perform last checks
-        # ===============================
-
+    - name: Build and lint
+      if: steps.detect-changes.outputs.HAS_CHANGES == 'true'
+      run: |
         # Create a clean build
         yarn build
 
         # Lint config files and Z-Wave specifics
         yarn run lint:zwave
 
-        # ===============================
-        # Bump the version and publish
-        # ===============================
-
+    # Calculate the next version
+    - name: Calculate next version
+      id: calculate-version
+      if: steps.detect-changes.outputs.HAS_CHANGES == 'true'
+      run: |
         cd packages/config
 
         # Figure out next version
@@ -115,10 +122,13 @@ jobs:
 
         VERSION=$(node script.js)
         echo "Next version is $VERSION"
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
-        cd ../..
-        yarn config set npmAuthToken "${{ secrets.NPM_TOKEN }}"
-        yarn npm whoami
-        yarn workspace "@zwave-js/config" version "$VERSION" --deferred
-        yarn version apply --all
-        yarn workspace "@zwave-js/config" -vi npm publish --tag nightly
+  # Call the test-and-release workflow to publish the config package
+  publish-config:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-changes == 'true'
+    uses: ./.github/workflows/test-and-release.yml
+    with:
+      action: publish-config
+      version: ${{ needs.detect-changes.outputs.version }}
