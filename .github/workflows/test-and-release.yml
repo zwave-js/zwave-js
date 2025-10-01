@@ -16,6 +16,18 @@ on:
   merge_group:
     types: [checks_requested]
 
+  # Allows other workflows to publish packages with OICD
+  workflow_call:
+    inputs:
+      action:
+        description: 'Action to perform (e.g. publish-config)'
+        required: true
+        type: string
+      version:
+        description: 'Version to publish the packages with'
+        required: true
+        type: string
+
 permissions:
   id-token: write # Required for publishing with OICD
   contents: read
@@ -35,6 +47,7 @@ env:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -60,6 +73,7 @@ jobs:
 
   # Makes sure that the published packages can be require'd without issues in a production environment
   test-packages:
+    if: github.event_name != 'workflow_call'
     needs: [build]
 
     runs-on: ubuntu-latest
@@ -162,6 +176,7 @@ jobs:
   # ===================
 
   lint:
+    if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -213,6 +228,7 @@ jobs:
   # ===================
 
   lint-zwave:
+    if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -235,6 +251,7 @@ jobs:
   # ===================
   # Runs unit tests on all supported node versions and OSes
   unit-tests:
+    if: github.event_name != 'workflow_call'
     name: "Unit tests: ${{ matrix.os }}, Node.js ${{ matrix.node-version }} (part ${{ matrix.shard }})"
     runs-on: ${{ matrix.os }}
     strategy:
@@ -269,6 +286,7 @@ jobs:
   # ===================
   # Test if the transformers are working
   test-transformers:
+    if: github.event_name != 'workflow_call'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -347,6 +365,7 @@ jobs:
     name: Update CC implementation status
     # Only run for master branch and don't run in forks
     if: |
+      github.event_name != 'workflow_call' &&
       github.repository == 'zwave-js/zwave-js' &&
       github.ref == 'refs/heads/master' &&
       github.event_name == 'push'
@@ -382,6 +401,7 @@ jobs:
     name: Update toLogEntry overview
     # Only run for master branch and don't run in forks
     if: |
+      github.event_name != 'workflow_call' &&
       github.repository == 'zwave-js/zwave-js' &&
       github.ref == 'refs/heads/master' &&
       github.event_name == 'push'
@@ -417,6 +437,7 @@ jobs:
   deploy:
     # Trigger this step only when a commit on any branch is tagged with a version number
     if: |
+      github.event_name != 'workflow_call' &&
       github.actor == 'AlCalzone' &&
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v')
@@ -498,3 +519,36 @@ jobs:
     #     sentry-cli releases set-commits $SENTRY_VERSION --auto
     #     sentry-cli releases files $SENTRY_VERSION upload-sourcemaps ./packages/*/build
     #     sentry-cli releases finalize $SENTRY_VERSION
+
+  # ===================
+
+  # Publishes nightly config updates triggered by the nightly-config-publish workflow
+  publish-config:
+    # Only run when called from another workflow with action=publish-config
+    if: github.event_name == 'workflow_call' && inputs.action == 'publish-config'
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22] # This should be LTS
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Prepare testing environment
+      uses: ./.github/actions/prepare-env
+      with:
+        node-version: ${{ matrix.node-version }}
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Run a fresh build
+      run: yarn build
+
+    - name: Apply version to @zwave-js/config
+      run: |
+        yarn workspace "@zwave-js/config" version "${{ inputs.version }}" --deferred
+        yarn version apply --all
+
+    - name: Publish @zwave-js/config to npm
+      run: yarn workspace "@zwave-js/config" -vi npm publish --tag nightly
