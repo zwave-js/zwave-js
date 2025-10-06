@@ -289,6 +289,8 @@ export class ControllerProprietary_NabuCasa implements ControllerProprietaryComm
     // (undocumented)
     getLED(): Promise<RGB>;
     // (undocumented)
+    getLEDBinary(): Promise<boolean>;
+    // (undocumented)
     getSupportedCommands(): Promise<NabuCasaCommand[]>;
     // (undocumented)
     handleUnsolicited(_msg: Message): Promise<boolean>;
@@ -302,6 +304,8 @@ export class ControllerProprietary_NabuCasa implements ControllerProprietaryComm
     setConfig(key: NabuCasaConfigKey, value: number): Promise<boolean>;
     // (undocumented)
     setLED(rgb: RGB): Promise<boolean>;
+    // (undocumented)
+    setLEDBinary(state: boolean): Promise<boolean>;
     // (undocumented)
     setSystemIndication(severity: NabuCasaIndicationSeverity): Promise<boolean>;
     // (undocumented)
@@ -629,7 +633,7 @@ export { DurationUnit }
 // Warning: (ae-missing-release-tag) "EditableZWaveOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type EditableZWaveOptions = Expand<Pick<PartialZWaveOptions, "disableOptimisticValueUpdate" | "emitValueUpdateAfterSetValue" | "inclusionUserCallbacks" | "joinNetworkUserCallbacks" | "interview" | "logConfig" | "preferences" | "vendor"> & {
+export type EditableZWaveOptions = Expand<Pick<PartialZWaveOptions, "attempts" | "disableOptimisticValueUpdate" | "emitValueUpdateAfterSetValue" | "inclusionUserCallbacks" | "joinNetworkUserCallbacks" | "interview" | "logConfig" | "preferences" | "vendor"> & {
     userAgent?: Record<string, string | null | undefined>;
 }>;
 
@@ -1171,6 +1175,8 @@ export enum NabuCasaCommand {
     // (undocumented)
     GetLED = 1,
     // (undocumented)
+    GetLEDBinary = 7,
+    // (undocumented)
     GetSupportedCommands = 0,
     // (undocumented)
     ReadGyro = 3,
@@ -1178,6 +1184,8 @@ export enum NabuCasaCommand {
     SetConfig = 6,
     // (undocumented)
     SetLED = 2,
+    // (undocumented)
+    SetLEDBinary = 8,
     // (undocumented)
     SetSystemIndication = 4
 }
@@ -1323,6 +1331,7 @@ export interface OTWFirmwareUpdateProgress {
 //
 // @public (undocumented)
 export interface OTWFirmwareUpdateResult {
+    errorCode?: number;
     // (undocumented)
     status: OTWFirmwareUpdateStatus;
     // (undocumented)
@@ -1616,7 +1625,7 @@ export class VirtualNode extends VirtualEndpoint {
     // (undocumented)
     getEndpointOrThrow(index: number): VirtualEndpoint;
     // (undocumented)
-    get hasMixedSecurityClasses(): boolean;
+    get hasMoreThanOneGroup(): boolean;
     // (undocumented)
     readonly id: number | undefined;
     // (undocumented)
@@ -1780,6 +1789,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     get firmwareVersion(): MaybeNotKnown<string>;
     getAllAssociationGroups(nodeId: number): ReadonlyMap<number, ReadonlyMap<number, AssociationGroup>>;
     getAllAssociations(nodeId: number): ReadonlyObjectKeyMap<AssociationAddress, ReadonlyMap<number, readonly AssociationAddress[]>>;
+    getAllAvailableFirmwareUpdates(options?: GetFirmwareUpdatesOptions): Promise<Map<number, FirmwareUpdateInfo[]>>;
     getAssociationGroups(source: AssociationAddress): ReadonlyMap<number, AssociationGroup>;
     getAssociations(source: AssociationAddress): ReadonlyMap<number, readonly AssociationAddress[]>;
     getAvailableFirmwareUpdates(nodeId: number, options?: GetFirmwareUpdatesOptions): Promise<FirmwareUpdateInfo[]>;
@@ -2451,6 +2461,8 @@ export interface ZWaveOptions {
         sendData: number;
         sendDataJammed: number;
         nodeInterview: number;
+        smartStartInclusion: number;
+        firmwareUpdateOTW: number;
     };
     bootloaderMode?: "recover" | "allow" | "stay";
     disableOptimisticValueUpdate?: boolean;

@@ -88,7 +88,7 @@ export function throttle<T extends any[]>(
 			if (timeout) clearTimeout(timeout);
 			const delay = lastCall + intervalMs - now;
 			timeout = setTimeout(() => {
-				lastCall = now;
+				lastCall = Date.now();
 				fn(...args);
 			}, delay);
 		}

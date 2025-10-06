@@ -101,6 +101,16 @@ export interface ZWaveOptions {
 		 * How many attempts should be made for each node interview before giving up
 		 */
 		nodeInterview: number; // [1...10], default: 5
+
+		/**
+		 * How many attempts should be made to include a SmartStart node before giving up
+		 */
+		smartStartInclusion: number; // [1...25], default: 5
+
+		/**
+		 * How many attempts should be made for OTW firmware updates before giving up
+		 */
+		firmwareUpdateOTW: number; // [1...5], default: 3
 	};
 
 	/**
@@ -484,6 +494,7 @@ export type PartialZWaveOptions = Expand<
 export type EditableZWaveOptions = Expand<
 	& Pick<
 		PartialZWaveOptions,
+		| "attempts"
 		| "disableOptimisticValueUpdate"
 		| "emitValueUpdateAfterSetValue"
 		| "inclusionUserCallbacks"

@@ -29,4 +29,12 @@ module.exports = {
 		require("./importConfigCreatePR.cjs")(...args),
 	shouldAutomerge: (...args) => require("./shouldAutomerge.cjs")(...args),
 	packPr: (...args) => require("./packPr.cjs")(...args),
+	analyzeLogfileParseCommand: (...args) =>
+		require("./analyzeLogfileParseCommand.cjs")(...args),
+	analyzeLogfile: (...args) => require("./analyzeLogfile.cjs")(...args),
+	analyzeLogfileInDiscussion: (...args) =>
+		require("./analyzeLogfileInDiscussion.cjs")(...args),
+	extractLogfileUrlFromDiscussion: (...args) =>
+		require("./extractLogfileUrlFromDiscussion.cjs")(...args),
+	escalate: (...args) => require("./escalate.cjs")(...args),
 };

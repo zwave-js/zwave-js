@@ -4,6 +4,117 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.15.0 (2025-09-30)
+### Features
+* Support creating mixed LR and non-LR "multicast" groups (#8143)
+* Add driver option to skip log formatting of Z-Wave commands (#8204)
+* Add driver option to skip rendering ASCII logo on startup (#8198)
+
+### Bugfixes
+* IP based connections no longer block the process for several minutes on connection failures/timeouts (#8203)
+* Disable optimistic value updates for slow device classes, like shades and gates (#8004)
+* Fixed an issue where replacing a node with S0 security was not possible (#8181)
+* Fixed an edge case where support for EU Long Range is not inferred correctly (#8176)
+* TX report fields are now hidden from logs when transmitting failed (#8155)
+* Route rebuilding now longer aborts/fails when the route to an association target other than the controller cannot be assigned (#8192)
+* During route rebuilds, invalid and non-existing association targets are now skipped instead of failing the whole process (#8191)
+* Fixed a crash that could happen when requesting missing Transport Service segments over a bad connection (#8154)
+* Ongoing transmissions are now aborted early when the expected response CC is received before the ACK for the SendData command (#8196)
+
+### Config file changes
+* Add fingerprint to Ultrapro 59350 / 59372 / 59373 / ZWA3016 (#8103)
+* Correct parameter size for factory reset of Shelly Wave devices (#8187)
+* Add Zooz ZSE50 Siren & Chime (#8182)
+* Add fingerprint for Kwikset HomeConnect 620 firmware revision 69.35 (#8057)
+* Add fingerprint `0x0811:0x23a9` to "Kwikset HC620" (#8199)
+
+## 15.14.0 (2025-09-17)
+### Features
+* Support proxying Z-Wave traffic over the ESPHome protocol (#8093)
+
+### Bugfixes
+* Fixed an issue where converting NVMs with unknown objects would fail due to unknown NVM section (#8095)
+* Zniffer: improve support for parsing ZLF files created by the official Zniffer application (#8165)
+
+### Config file changes
+* Add 800 series variant of Minoston MP22ZP (#8171)
+
+### Changes under the hood
+* Implement utility to convert Zniffer traces to CSV (#8166)
+
+## 15.13.0 (2025-09-11)
+### Features
+* Support checking for all firmware updates at once, and support detecting devices unknown to the firmware update service (#8157)
+
+### Bugfixes
+* Fixed an issue with migrating NVMs that contain a full list of supported CCs (#8140)
+* After failing to leave bootloader, Z-Wave JS no longer keeps checking if the Serial API has started (#8133)
+* Fixed an issue where the underlying serial stream (e.g. in the browser) could not be reused when destroying and recreating the driver instance (#8132)
+* Stale Battery CC `isLow` values are now cleaned up on startup (#8092)
+
+### Config file changes
+* Add Zooz ZEN75 (#7807)
+* Bring Inovelli VZW32-SN up to date with latest firmware changes and restore parity with VZW31-SN (#8042)
+
+### Changes under the hood
+* Add MCP powered prompt to scrape config files from manufacturer websites (#8099)
+
+## 15.12.0 (2025-08-19)
+### Features
+* Firmware updates that fail due to an XMODEM communication error are now retried automatically, reducing the risk to get stuck in bootloader until a new firmware is flashed (#8086)
+
+### Bugfixes
+* Fixes an issue where the controller would indefinitely be considered as recovering from a jammed state, preventing commands from being re-transmitted (#8052)
+* Fixed an issue where the key up event would be force-emitted too early on legacy devices that incorrectly report not to support the "slow refresh" capability (#8087)
+* Canceling a "replace failed node" operation no longer prevents other inclusion/exclusion operations from being started (#8084)
+
+### Config file changes
+* Add HomeSeer WS300 (#8074)
+
+## 15.11.0 (2025-08-11)
+### Features
+* Add support for defining Scene labels in config files (#7989)
+* Disable SmartStart provisioning entries after 5 failed inclusion attempts (#8017)
+
+### Bugfixes
+* Fixed an issue where Aeotec Z-Stick 5 would become unresponsive during NVM backup (#8047)
+* Fixed firmware update progress jumping back and forth (#8019)
+* Correctly restore cached information on a secondary controller (#7994)
+* Fixed incorrect long-term averaging of RSSI values (#8024)
+* Ensure failures during NVM migration are surfaced to the application (#8014)
+
+### Config file changes
+* Prepare Inovelli VZW31-SN for future firmware upgrade (#8005)
+* Add productID `0x0111` to Fakro AMZ Solar awning (#7998)
+* Add ECO-DIM.07 800 series version (#8011)
+* Update Aeotec Trisensor 8 to firmware 2.8.4 (#8013)
+* Remove non-existent parameter 107 for Shelly Wave Plus S (#8010)
+* Typo in Shelly dimmer output label (#8006)
+
+### Changes under the hood
+* Update devcontainer image (#8015)
+
+## 15.10.0 (2025-07-23)
+### Features
+* Convert Battery CC `isLow` value to notification event (#7984)
+* Clean up Indicator CC values and fix their implementation (#7980)
+
+### Bugfixes
+* Use configured RF region as fallback for firmware update checks on controllers without support for querying the region (#7992)
+* After a successful supervised `Multilevel Switch Set` with value 255, the actual value is now queried immediately (#7963)
+
+### Config file changes
+* Remove proprietary RGB functionality for ZWA-2 (#8000)
+* Add fingerprint to FireAngel ZHT-630, add FireAngel ZST-630 (#7117)
+* Remove unlock mapping for Schlage lock FE599 (#7870)
+* Add Fantem FT117 range extender (#7962)
+* Add Zooz ZEN35 (#7757)
+* Update label and description for ZWA-2 (#7968)
+* Add missing parameter 117 (Reboot) on Shelly Wave Plug S EU (QNPL-0A112) (#7969)
+
+### Changes under the hood
+* Setup environment for Copilot Agent (#7995)
+
 ## 15.9.0 (2025-07-10)
 ### Features
 * Apply auto powerlevels on every actual region change (#7862)

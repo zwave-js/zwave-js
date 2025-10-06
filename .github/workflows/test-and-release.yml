@@ -16,6 +16,22 @@ on:
   merge_group:
     types: [checks_requested]
 
+  # Allows other workflows to publish packages with OICD
+  workflow_call:
+    inputs:
+      action:
+        description: 'Action to perform (e.g. publish-config)'
+        required: true
+        type: string
+      version:
+        description: 'Version to publish the packages with'
+        required: true
+        type: string
+
+permissions:
+  id-token: write # Required for publishing with OICD
+  contents: read
+
 # Cancel previous PR/branch runs when a new commit is pushed
 concurrency:
   group: 'test-and-release-${{ github.ref }}'
@@ -31,6 +47,7 @@ env:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -38,7 +55,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -56,6 +73,7 @@ jobs:
 
   # Makes sure that the published packages can be require'd without issues in a production environment
   test-packages:
+    if: github.event_name != 'workflow_call'
     needs: [build]
 
     runs-on: ubuntu-latest
@@ -65,7 +83,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Restore Turbo Cache from previous jobs
       uses: ./.github/actions/build-cache-download
@@ -158,6 +176,7 @@ jobs:
   # ===================
 
   lint:
+    if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -165,7 +184,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -209,6 +228,7 @@ jobs:
   # ===================
 
   lint-zwave:
+    if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -216,7 +236,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -231,6 +251,7 @@ jobs:
   # ===================
   # Runs unit tests on all supported node versions and OSes
   unit-tests:
+    if: github.event_name != 'workflow_call'
     name: "Unit tests: ${{ matrix.os }}, Node.js ${{ matrix.node-version }} (part ${{ matrix.shard }})"
     runs-on: ${{ matrix.os }}
     strategy:
@@ -241,7 +262,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -265,6 +286,7 @@ jobs:
   # ===================
   # Test if the transformers are working
   test-transformers:
+    if: github.event_name != 'workflow_call'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -273,7 +295,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -307,7 +329,7 @@ jobs:
 
   #   steps:
   #   - name: Checkout code
-  #     uses: actions/checkout@v4
+  #     uses: actions/checkout@v5
 
   #   - name: Restore Turbo Cache from previous jobs
   #     uses: ./.github/actions/build-cache-download
@@ -343,6 +365,7 @@ jobs:
     name: Update CC implementation status
     # Only run for master branch and don't run in forks
     if: |
+      github.event_name != 'workflow_call' &&
       github.repository == 'zwave-js/zwave-js' &&
       github.ref == 'refs/heads/master' &&
       github.event_name == 'push'
@@ -355,7 +378,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -378,6 +401,7 @@ jobs:
     name: Update toLogEntry overview
     # Only run for master branch and don't run in forks
     if: |
+      github.event_name != 'workflow_call' &&
       github.repository == 'zwave-js/zwave-js' &&
       github.ref == 'refs/heads/master' &&
       github.event_name == 'push'
@@ -390,7 +414,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -413,6 +437,7 @@ jobs:
   deploy:
     # Trigger this step only when a commit on any branch is tagged with a version number
     if: |
+      github.event_name != 'workflow_call' &&
       github.actor == 'AlCalzone' &&
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v')
@@ -432,7 +457,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Restore Turbo Cache from previous jobs
       uses: ./.github/actions/build-cache-download
@@ -466,8 +491,6 @@ jobs:
       env:
         TAG: ${{ steps.extract_release.outputs.TAG }}
       run: |
-        yarn config set npmAuthToken "${{ secrets.NPM_TOKEN }}"
-        yarn npm whoami
         yarn workspaces foreach --all -vti --no-private npm publish --tolerate-republish $TAG
 
 
@@ -496,3 +519,36 @@ jobs:
     #     sentry-cli releases set-commits $SENTRY_VERSION --auto
     #     sentry-cli releases files $SENTRY_VERSION upload-sourcemaps ./packages/*/build
     #     sentry-cli releases finalize $SENTRY_VERSION
+
+  # ===================
+
+  # Publishes nightly config updates triggered by the nightly-config-publish workflow
+  publish-config:
+    # Only run when called from another workflow with action=publish-config
+    if: github.event_name == 'workflow_call' && inputs.action == 'publish-config'
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22] # This should be LTS
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Prepare testing environment
+      uses: ./.github/actions/prepare-env
+      with:
+        node-version: ${{ matrix.node-version }}
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Run a fresh build
+      run: yarn build
+
+    - name: Apply version to @zwave-js/config
+      run: |
+        yarn workspace "@zwave-js/config" version "${{ inputs.version }}" --deferred
+        yarn version apply --all
+
+    - name: Publish @zwave-js/config to npm
+      run: yarn workspace "@zwave-js/config" -vi npm publish --tag nightly

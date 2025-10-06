@@ -300,7 +300,9 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 					+ (this.txReport
 						? `, took ${this.txReport.txTicks * 10} ms`
 						: ""),
-				...(this.txReport
+				// Show TX report fields for OK and NoAck (NoAck still provides useful routing info)
+				...(this.txReport && (this.transmitStatus === TransmitStatus.OK
+						|| this.transmitStatus === TransmitStatus.NoAck)
 					? txReportToMessageRecord(this.txReport)
 					: {}),
 			},

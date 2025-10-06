@@ -322,6 +322,8 @@ Performs an over-the-wire (OTW) firmware update for the Z-Wave module (controlle
 
 To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` driver events](api/driver#quotfirmware-update-progressquot).
 
+> [!NOTE] In case of a communication issue (checksum, dropped frames, etc.), Z-Wave JS will retry the upgrade up to the configured number of times. In this case, the progress can jump back to 0.
+
 The return value indicates whether the update was successful and includes an error code that can be used to determine the reason for a failure. This is the same information that is emitted using the `"firmware update finished"` event:
 
 <!-- #import OTWFirmwareUpdateResult from "zwave-js" -->
@@ -330,6 +332,8 @@ The return value indicates whether the update was successful and includes an err
 interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
+	/** The bootloader error code, if available when the update fails */
+	errorCode?: number;
 }
 ```
 
@@ -470,6 +474,8 @@ The firmware update process is finished. The `result` argument looks like this i
 interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
+	/** The bootloader error code, if available when the update fails */
+	errorCode?: number;
 }
 ```
 
@@ -530,6 +536,8 @@ interface LogConfig {
 	nodeFilter?: number[];
 	filename: string;
 	forceConsole: boolean;
+	showLogo?: boolean;
+	raw?: boolean;
 }
 ```
 
@@ -551,6 +559,8 @@ The **file transport** can be configured with the following properties:
 The **console transport** has the following options:
 
 - `forceConsole`: In order to reduce the CPU load, `zwave-js` does not log to the console if it is not connected to a TTY or if logging to file is enabled. By setting this option to `true`, these checks will be skipped and all logs will be printed to the console, Default: `false`.
+- `showLogo`: By default, Z-Wave JS prints an ASCII logo on driver startup. Setting this to `false` will disable the logo. Default: `true`.
+- `raw`: Z-Wave JS logging is optimized for human readability. This implies formatting Z-Wave commands, even when using a transport without custom formatting. When setting `raw` to `true`, Z-Wave commands will instead be rendered as JSON.
 
 Using the `transports` option, providing custom [`winston`](https://github.com/winstonjs/winston) log transports is also possible. See [Custom log transports](usage/log-transports.md) for details. These will be used **in addition** to the internal transports. If that is not desired, disable them by setting `enabled` to `false`.
 
@@ -865,6 +875,16 @@ interface ZWaveOptions {
 		 * How many attempts should be made for each node interview before giving up
 		 */
 		nodeInterview: number; // [1...10], default: 5
+
+		/**
+		 * How many attempts should be made to include a SmartStart node before giving up
+		 */
+		smartStartInclusion: number; // [1...25], default: 5
+
+		/**
+		 * How many attempts should be made for OTW firmware updates before giving up
+		 */
+		firmwareUpdateOTW: number; // [1...5], default: 3
 	};
 
 	/**

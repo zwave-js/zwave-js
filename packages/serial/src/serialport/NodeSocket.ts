@@ -9,16 +9,21 @@ export function createNodeSocketFactory(
 ): ZWaveSerialBindingFactory {
 	return async function() {
 		const socket = new net.Socket();
+		const timeout = 5000;
 
 		function removeListeners() {
 			socket.removeAllListeners("close");
 			socket.removeAllListeners("error");
+			socket.removeAllListeners("timeout");
 			socket.removeAllListeners("open");
 		}
 
 		function open(): Promise<void> {
 			return new Promise((resolve, reject) => {
 				const onClose = () => {
+					removeListeners();
+					// Destroy the socket to prevent further connection attempts
+					socket.destroy();
 					// detect socket disconnection errors
 					reject(
 						new ZWaveError(
@@ -30,17 +35,35 @@ export function createNodeSocketFactory(
 
 				const onError = (err: Error) => {
 					removeListeners();
+					socket.destroy();
 					reject(err);
 				};
+
+				const onTimeout = () => {
+					removeListeners();
+					socket.destroy();
+					reject(
+						new ZWaveError(
+							`Connection timed out after ${timeout}ms`,
+							ZWaveErrorCodes.Driver_SerialPortClosed,
+						),
+					);
+				};
+
 				const onConnect = () => {
 					// During testing, values below 1000 caused the keep alive functionality to silently fail
 					socket.setKeepAlive(true, 1000);
+					// Prevent communication delays
+					socket.setNoDelay();
+
 					removeListeners();
 					resolve();
 				};
 
+				socket.setTimeout(timeout);
 				socket.once("close", onClose);
 				socket.once("error", onError);
+				socket.once("timeout", onTimeout);
 				socket.once("connect", onConnect);
 
 				socket.connect(socketOptions);

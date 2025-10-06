@@ -73,3 +73,37 @@ test("when called during the wait time for the trailing call, the most recent ar
 	sinon.assert.neverCalledWith(spy, 2);
 	sinon.assert.calledWith(spy, 4);
 });
+
+test("throttle with trailing = true does not generate out-of-order events", (t) => {
+	const results: number[] = [];
+	const throttled = throttle(
+		(value: number) => {
+			results.push(value);
+		},
+		250,
+		true,
+	);
+
+	// Simulate a realistic firmware update progress sequence
+	// Progress should be linear: 1.0% → 1.2% → 1.4% → 1.6% → 1.8%
+	// Due to throttling, some events will be discarded, but those received should be in order
+
+	throttled(1.0); // Should execute immediately
+	vi.advanceTimersByTime(100);
+	throttled(1.2); // Should be delayed (trailing)
+	vi.advanceTimersByTime(100);
+	throttled(1.4); // Should update the pending trailing call
+	vi.advanceTimersByTime(50); // Trailing call fires with 1.4
+
+	// After trailing call, new calls should be properly throttled
+	throttled(1.6); // Should be throttled (not execute immediately due to the fix)
+	throttled(1.7);
+	throttled(1.75);
+	vi.advanceTimersByTime(100);
+	throttled(1.8); // Should update the pending trailing call
+	vi.advanceTimersByTime(150); // Final trailing call fires with 1.8
+
+	// Before the fix, the bug could cause events like [1.0, 1.6, 1.4, 1.8]
+	// depending on timing
+	t.expect(results).toEqual([1.0, 1.4, 1.8]);
+});

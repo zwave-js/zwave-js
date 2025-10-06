@@ -1,6 +1,6 @@
 {
   "name": "zwave-js",
-  "version": "15.9.0",
+  "version": "15.15.0",
   "description": "Z-Wave driver written entirely in JavaScript/TypeScript",
   "keywords": [],
   "type": "module",
@@ -130,7 +130,7 @@
   "dependencies": {
     "@alcalzone/jsonl-db": "^3.1.1",
     "@andrewbranch/untar.js": "^1.0.3",
-    "@homebridge/ciao": "^1.3.1",
+    "@homebridge/ciao": "^1.3.4",
     "@zwave-js/cc": "workspace:*",
     "@zwave-js/config": "workspace:*",
     "@zwave-js/core": "workspace:*",
@@ -154,8 +154,8 @@
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.1",
-    "@microsoft/api-extractor": "^7.52.8",
-    "@types/node": "^20.19.2",
+    "@microsoft/api-extractor": "^7.52.11",
+    "@types/node": "^20.19.9",
     "@types/semver": "^7.7.0",
     "@types/sinon": "^17.0.4",
     "@types/source-map-support": "^0.5.10",
@@ -164,7 +164,7 @@
     "del-cli": "^6.0.0",
     "mockdate": "^3.0.5",
     "sinon": "^21.0.0",
-    "tsx": "^4.20.3",
+    "tsx": "^4.20.5",
     "typescript": "5.8.3",
     "vitest": "^2.1.9"
   }

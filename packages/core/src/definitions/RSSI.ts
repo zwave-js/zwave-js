@@ -34,7 +34,7 @@ export function averageRSSI(
 	}
 
 	if (acc == undefined) return rssi;
-	return Math.round(acc * weight + rssi * (1 - weight));
+	return acc * weight + rssi * (1 - weight);
 }
 
 /**
