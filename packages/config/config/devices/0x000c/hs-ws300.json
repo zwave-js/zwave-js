@@ -83,20 +83,20 @@
 		{
 			"#": "41",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
-			"defaultValue": 5,
-			"label": "Custom Color Red Brightness"
+			"label": "Custom Color Red Brightness",
+			"defaultValue": 5
 		},
 		{
 			"#": "42",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
-			"defaultValue": 5,
-			"label": "Custom Color Green Brightness"
+			"label": "Custom Color Green Brightness",
+			"defaultValue": 5
 		},
 		{
 			"#": "43",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
-			"defaultValue": 5,
-			"label": "Custom Color Blue Brightness"
+			"label": "Custom Color Blue Brightness",
+			"defaultValue": 5
 		}
 	],
 	"metadata": {
