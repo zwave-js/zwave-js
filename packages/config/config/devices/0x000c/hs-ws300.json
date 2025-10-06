@@ -44,13 +44,13 @@
 		},
 		{
 			"#": "14",
-			"$import": "templates/homeseer_template.json#led_colors",
+			"$import": "templates/homeseer_template.json#led_colors_ext",
 			"label": "LED Normal Color",
 			"description": "Set the LED color when in normal mode"
 		},
 		{
 			"#": "21",
-			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"$import": "templates/homeseer_template.json#status_mode_choices_ext",
 			"label": "LED Status Color",
 			"description": "Set the LED color when in status mode"
 		},
@@ -65,6 +65,10 @@
 			"$import": "templates/homeseer_template.json#led_blink_status"
 		},
 		{
+			"#": "34",
+			"$import": "templates/homeseer_template.json#led_brightness_level"
+		},
+		{
 			"#": "35",
 			"$import": "templates/homeseer_template.json#paddle_behavior"
 		},
@@ -77,8 +81,22 @@
 			"$import": "templates/homeseer_template.json#power_fail_behavior"
 		},
 		{
-			"#": "39",
-			"$import": "templates/homeseer_template.json#load_state"
+			"#": "41",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"defaultValue": 5,
+			"label": "Custom Color Red Brightness"
+		},
+		{
+			"#": "42",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"defaultValue": 5,
+			"label": "Custom Color Green Brightness"
+		},
+		{
+			"#": "43",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"defaultValue": 5,
+			"label": "Custom Color Blue Brightness"
 		}
 	],
 	"metadata": {
