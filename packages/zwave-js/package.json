@@ -147,7 +147,7 @@
     "p-queue": "^8.1.0",
     "pathe": "^2.0.3",
     "reflect-metadata": "^0.2.2",
-    "semver": "^7.6.3",
+    "semver": "^7.7.2",
     "serialport": "^13.0.0",
     "source-map-support": "^0.5.21",
     "winston": "^3.17.0"
@@ -156,7 +156,7 @@
     "@alcalzone/esm2cjs": "^1.4.1",
     "@microsoft/api-extractor": "^7.52.11",
     "@types/node": "^20.19.9",
-    "@types/semver": "^7.7.0",
+    "@types/semver": "^7.7.1",
     "@types/sinon": "^17.0.4",
     "@types/source-map-support": "^0.5.10",
     "@zwave-js/maintenance": "workspace:*",
