@@ -86,14 +86,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@alcalzone/jsonl-db@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "@alcalzone/jsonl-db@npm:3.1.1"
+"@alcalzone/jsonl-db@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@alcalzone/jsonl-db@npm:4.0.0"
   dependencies:
     "@alcalzone/proper-lockfile": "npm:^4.1.3-0"
-    alcalzone-shared: "npm:^4.0.8"
-    fs-extra: "npm:^10.1.0"
-  checksum: 10/0de638ec30116838be8d631435350ec66f6a9a14aa4db912c3ecbfdd8c3b12dc89ddd07d2082e25e7955717b76d62054381e71940ca32c797167ad8efaf19aac
+    alcalzone-shared: "npm:^5.0.0"
+  checksum: 10/a192ebab1bec09e0ac6bc1d30be7ae737a2fdd6d3ba95dfa170d34698e14f64c416a69e89e5b41eaa491b72ac19ede7a12050116bc52b8f6faeff4afd12dafcb
   languageName: node
   linkType: hard
 
@@ -2948,7 +2947,7 @@ __metadata:
   resolution: "@zwave-js/core@workspace:packages/core"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.1"
-    "@alcalzone/jsonl-db": "npm:^3.1.1"
+    "@alcalzone/jsonl-db": "npm:^4.0.0"
     "@microsoft/api-extractor": "npm:^7.52.11"
     "@types/node": "npm:^20.19.9"
     "@types/semver": "npm:^7.7.0"
@@ -3115,7 +3114,7 @@ __metadata:
     "@actions/exec": "npm:^1.1.1"
     "@actions/github": "npm:^6.0.1"
     "@alcalzone/esm2cjs": "npm:^1.4.1"
-    "@alcalzone/jsonl-db": "npm:^3.1.1"
+    "@alcalzone/jsonl-db": "npm:^4.0.0"
     "@alcalzone/monopack": "npm:^1.4.0"
     "@alcalzone/release-script": "npm:~3.8.0"
     "@commitlint/cli": "npm:^19.8.1"
@@ -3483,15 +3482,6 @@ __metadata:
   dependencies:
     debug: "npm:^4.3.2"
   checksum: 10/595a95f9b62a9cac3ed83b322088ab04639ab3e166d3b748689c24c51d979a0685b29a7795c8cd59e4d2d35302fc3e09a35023eb828c93570e6af4a1a4417e3f
-  languageName: node
-  linkType: hard
-
-"alcalzone-shared@npm:^4.0.8":
-  version: 4.0.8
-  resolution: "alcalzone-shared@npm:4.0.8"
-  dependencies:
-    debug: "npm:^4.3.4"
-  checksum: 10/865743df1de64bf26bfa03c92321a7cdaad7dd79ee06eeb8a01599784628462f58dafcd649ea8e8bd72d24fed6933c2559a0eae0f8b58b6790a6c0352cf35f13
   languageName: node
   linkType: hard
 
@@ -11162,7 +11152,7 @@ __metadata:
   resolution: "zwave-js@workspace:packages/zwave-js"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.1"
-    "@alcalzone/jsonl-db": "npm:^3.1.1"
+    "@alcalzone/jsonl-db": "npm:^4.0.0"
     "@andrewbranch/untar.js": "npm:^1.0.3"
     "@homebridge/ciao": "npm:^1.3.4"
     "@microsoft/api-extractor": "npm:^7.52.11"
