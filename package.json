@@ -33,7 +33,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
     "@alcalzone/esm2cjs": "^1.4.1",
-    "@alcalzone/jsonl-db": "^3.1.1",
+    "@alcalzone/jsonl-db": "^4.0.0",
     "@alcalzone/monopack": "^1.4.0",
     "@alcalzone/release-script": "~3.8.0",
     "@commitlint/cli": "^19.8.1",
