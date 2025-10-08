@@ -19,6 +19,7 @@ export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
 			commandsDroppedRX: 0,
 			commandsDroppedTX: 0,
 			timeoutResponse: 0,
+			rate: 0,
 		};
 
 		// ZWLR nodes always have a direct connection at 100 kbps
@@ -66,6 +67,9 @@ export interface NodeStatistics {
 
 	/** The last time a command was received from or successfully sent to the node. */
 	lastSeen?: Date;
+
+	/** Average rate of incoming messages per second, in the last minute. */
+	rate: number;
 }
 
 export interface RouteStatistics {

@@ -4,10 +4,10 @@ Make sure you have the [project snippets](https://marketplace.visualstudio.com/i
 
 1. Have the CC specification open - you'll need it.
 
-1. Create a file in `packages/zwave-js/src/lib/commandclass/` named `<name-of-the-cc>CC.ts`
+1. Create a file in `packages/cc/src/cc/` named `<name-of-the-cc>CC.ts`
 
 1. Use the `zwcc` snippet to generate the base class and the command enum.\
-   The base class should be named like the CC, without spaces or punctuation and with `CC` appended. For example: `"Multilevel Toggle Switch"` → `MultilevelToggleSwitchCC`. The enum defining how each CC is named can be found in `packages/core/src/capabilities/CommandClasses.ts`.\
+   The base class should be named like the CC, without spaces or punctuation and with `CC` appended. For example: `"Multilevel Toggle Switch"` → `MultilevelToggleSwitchCC`. The enum defining how each CC is named can be found in `packages/core/src/definitions/CommandClasses.ts`.\
    Make sure to define which version of the CC is currently implemented, e.g. `@implementedVersion(2)` for version 2.
 
 1. Define all available commands in the command enum. You'll find them in `SDS13548` in the `specs` directory. The names in the specs might need to be simplified, e.g. `Multilevel Toggle Switch Set` → `Set`.

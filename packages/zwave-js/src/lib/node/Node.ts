@@ -244,6 +244,7 @@ import {
 	type RouteStatistics,
 	routeStatisticsEquals,
 } from "./NodeStatistics.js";
+import { RateTracker } from "./RateTracker.js";
 import {
 	type DateAndTime,
 	InterviewStage,
@@ -297,6 +298,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		// Add optional controlled CCs - endpoints don't have this
 		for (const cc of controlledCCs) this.addCC(cc, { isControlled: true });
 	}
+	private rateTracker: RateTracker | undefined;
 
 	/**
 	 * Cleans up all resources used by this node
@@ -317,6 +319,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// Clear all scheduled polls that would interfere with the interview
 		this.cancelAllScheduledPolls();
+
+		this.rateTracker?.destroy();
 	}
 
 	/**
@@ -396,6 +400,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			...cur,
 			lastSeen: value,
 		}));
+	}
+
+	/** Average rate of incoming messages per second, in the last minute. */
+	public get rate(): number {
+		return this.rateTracker?.rate || 0;
 	}
 
 	/**
@@ -3657,6 +3666,24 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 					: roundTo(rttMs, 1),
 			}));
 		}
+	}
+
+	/**
+	 * Updates the rate of incoming messages for this node
+	 * @internal
+	 */
+	public updateRate(): void {
+		if (!this.rateTracker) {
+			// Callback for when the rate is updated, update statistics
+			const onUpdateStatistics = (rate: number) =>
+				this.updateStatistics((cur) => ({
+					...cur,
+					rate,
+				}));
+			this.rateTracker = new RateTracker(onUpdateStatistics);
+		}
+
+		this.rateTracker.recordIncomingMessage();
 	}
 
 	/**
