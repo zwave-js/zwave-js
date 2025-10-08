@@ -1,4 +1,6 @@
 import {
+	BinarySwitchCCValues,
+	CommandClass,
 	SecurityCC,
 	SecurityCCCommandEncapsulation,
 	SecurityCCCommandsSupportedGet,
@@ -127,52 +129,16 @@ function setupS0NodeBehaviorsForNewlyIncludedNode(
 	// Respond to Network Key Set with Network Key Verify
 	const respondToNetworkKeySet: MockNodeBehavior = {
 		async handleCC(controller, self, receivedCC) {
-			if (
-				receivedCC instanceof SecurityCCCommandEncapsulation
-				&& receivedCC.encapsulated instanceof SecurityCCNetworkKeySet
-			) {
+			if (receivedCC instanceof SecurityCCNetworkKeySet) {
 				// Update the node's security manager to use the received network key
-				const receivedKey = receivedCC.encapsulated.networkKey;
+				const receivedKey = receivedCC.networkKey;
 				self.securityManagers.securityManager!.networkKey = receivedKey;
-
-				const nonceGet = new SecurityCCNonceGet({
-					nodeId: controller.ownNodeId,
-				});
-				await self.sendToController(
-					createMockZWaveRequestFrame(nonceGet, {
-						ackRequested: false,
-					}),
-				);
-
-				const nonceReport = await self.expectControllerFrame(
-					1000,
-					(
-						resp,
-					): resp is MockZWaveFrame & {
-						type: MockZWaveFrameType.Request;
-						payload: SecurityCCNonceReport;
-					} => resp.type === MockZWaveFrameType.Request
-						&& resp.payload instanceof SecurityCCNonceReport,
-				);
-				const receiverNonce = nonceReport.payload.nonce;
 
 				const response = new SecurityCCNetworkKeyVerify({
 					nodeId: controller.ownNodeId,
 				});
-				const cc = SecurityCC.encapsulate(
-					self.id,
-					self.securityManagers.securityManager!,
-					response,
-				);
-				cc.nonce = receiverNonce;
 
-				await self.sendToController(
-					createMockZWaveRequestFrame(cc, {
-						ackRequested: false,
-					}),
-				);
-
-				return { action: "stop" };
+				return { action: "sendCC", cc: response };
 			}
 		},
 	};
@@ -181,32 +147,7 @@ function setupS0NodeBehaviorsForNewlyIncludedNode(
 	// Respond to S0 Commands Supported Get
 	const respondToS0CommandsSupportedGet: MockNodeBehavior = {
 		async handleCC(controller, self, receivedCC) {
-			if (
-				receivedCC instanceof SecurityCCCommandEncapsulation
-				&& receivedCC.encapsulated
-					instanceof SecurityCCCommandsSupportedGet
-			) {
-				const nonceGet = new SecurityCCNonceGet({
-					nodeId: controller.ownNodeId,
-				});
-				await self.sendToController(
-					createMockZWaveRequestFrame(nonceGet, {
-						ackRequested: false,
-					}),
-				);
-
-				const nonceReport = await self.expectControllerFrame(
-					1000,
-					(
-						resp,
-					): resp is MockZWaveFrame & {
-						type: MockZWaveFrameType.Request;
-						payload: SecurityCCNonceReport;
-					} => resp.type === MockZWaveFrameType.Request
-						&& resp.payload instanceof SecurityCCNonceReport,
-				);
-				const receiverNonce = nonceReport.payload.nonce;
-
+			if (receivedCC instanceof SecurityCCCommandsSupportedGet) {
 				// Determine securely supported CCs from the mock node's implementedCCs
 				const supportedCCs = [...mockNode.implementedCCs.entries()]
 					.filter(
@@ -222,28 +163,16 @@ function setupS0NodeBehaviorsForNewlyIncludedNode(
 					controlledCCs: [],
 					reportsToFollow: 0,
 				});
-				const cc = SecurityCC.encapsulate(
-					self.id,
-					self.securityManagers.securityManager!,
-					response,
-				);
-				cc.nonce = receiverNonce;
 
-				await self.sendToController(
-					createMockZWaveRequestFrame(cc, {
-						ackRequested: false,
-					}),
-				);
-
-				return { action: "stop" };
+				return { action: "sendCC", cc: response };
 			}
 		},
 	};
 	mockNode.defineBehavior(respondToS0CommandsSupportedGet);
 
-	// Parse Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
+	// Parse and unwrap Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
 	const parseS0CC: MockNodeBehavior = {
-		async handleCC(controller, self, receivedCC) {
+		async transformIncomingCC(controller, self, receivedCC) {
 			// We don't support sequenced commands here
 			if (receivedCC instanceof SecurityCCCommandEncapsulation) {
 				await receivedCC.mergePartialCCs([], {
@@ -253,18 +182,67 @@ function setupS0NodeBehaviorsForNewlyIncludedNode(
 					...self.encodingContext,
 					...self.securityManagers,
 				});
+				// Return the unwrapped command
+				if (receivedCC.encapsulated) {
+					return receivedCC.encapsulated;
+				}
 			}
-			// This just decodes - we need to call further handlers
-			return undefined;
+			return receivedCC;
+		},
+
+		async transformResponse(controller, self, receivedCC, response) {
+			// Ensure that responses to S0-encapsulated CCs are also S0-encapsulated
+			if (
+				response.action === "sendCC"
+				&& receivedCC instanceof CommandClass
+				&& receivedCC.isEncapsulatedWith(CommandClasses.Security)
+				&& !response.cc.isEncapsulatedWith(CommandClasses.Security)
+			) {
+				// The mock node does not have the magic for automatically
+				// encapsulating commands, so we have to do it ourselves here.
+				// This requires a nonce exchange.
+				const nonceGet = new SecurityCCNonceGet({
+					nodeId: controller.ownNodeId,
+				});
+				await self.sendToController(
+					createMockZWaveRequestFrame(nonceGet, {
+						ackRequested: false,
+					}),
+				);
+
+				const nonceReport = await self.expectControllerFrame(
+					1000,
+					(
+						resp,
+					): resp is MockZWaveFrame & {
+						type: MockZWaveFrameType.Request;
+						payload: SecurityCCNonceReport;
+					} => resp.type === MockZWaveFrameType.Request
+						&& resp.payload instanceof SecurityCCNonceReport,
+				);
+				const receiverNonce = nonceReport.payload.nonce;
+
+				// Encapsulate the response
+				const encapsulated = SecurityCC.encapsulate(
+					self.id,
+					self.securityManagers.securityManager!,
+					response.cc,
+				);
+				encapsulated.nonce = receiverNonce;
+
+				response.cc = encapsulated;
+			}
+
+			return response;
 		},
 	};
 	mockNode.defineBehavior(parseS0CC);
 }
 
-integrationTestMulti.only(
+integrationTestMulti(
 	"Inclusion with S0 should work",
 	{
-		debug: true,
+		// debug: true,
 
 		async customSetup(driver, mockController, mockNodes) {
 			// Create a security manager for the controller with the real network key
@@ -334,9 +312,14 @@ integrationTestMulti.only(
 				true,
 			);
 
-			// And that Binary Switch CC is only supported securely
+			// That Binary Switch CC is only supported securely
 			t.expect(includedNode?.isCCSecure(CommandClasses["Binary Switch"]))
 				.toBe(true);
+
+			// And that we received a response when querying its value during the interview
+			t.expect(
+				includedNode?.getValue(BinarySwitchCCValues.currentValue.id),
+			).toBe(false);
 		},
 	},
 );
