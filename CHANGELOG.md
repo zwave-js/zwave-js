@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## 15.15.1 (2025-10-08)
+## __WORK IN PROGRESS__
 ### Bugfixes
 * Fixed a warning in bundlers about an unexpected `node:net` import (#8343)
 * Fixed an issue where the device class of newly joined devices would not be persisted, causing legacy secure devices not to be automatically included with encryption (#8344)
