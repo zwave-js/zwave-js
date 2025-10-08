@@ -195,7 +195,10 @@ export class MockController {
 
 	/** Node info for the node that is pending inclusion. Set this before starting inclusion to simulate a node joining. */
 	public nodePendingInclusion:
-		| Omit<MockNodeOptions, "controller">
+		| (Omit<MockNodeOptions, "controller"> & {
+			/** Optional callback that is called when the node is created during inclusion */
+			setup?: (node: MockNode) => void;
+		})
 		| undefined;
 
 	/** Controls whether the controller automatically ACKs messages from the host before handling them */
