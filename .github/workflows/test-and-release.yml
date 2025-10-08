@@ -30,7 +30,7 @@ on:
 
 permissions:
   id-token: write # Required for publishing with OICD
-  contents: read
+  contents: write # Required for creating releases
 
 # Cancel previous PR/branch runs when a new commit is pushed
 concurrency:
