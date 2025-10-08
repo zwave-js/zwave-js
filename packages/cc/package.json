@@ -78,7 +78,7 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
+    "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.52.11",
     "@types/node": "^20.19.9",
     "@zwave-js/maintenance": "workspace:*",
