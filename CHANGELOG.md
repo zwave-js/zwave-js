@@ -4,6 +4,20 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixed a warning in bundlers about an unexpected `node:net` import (#8343)
+* Fixed an issue where the device class of newly joined devices would not be persisted, causing legacy secure devices not to be automatically included with encryption (#8344)
+
+### Config file changes
+* Update parameters for HomeSeer WS300 (#8338)
+* Add Zooz ZEN78 High Power Relay (#8337)
+
+### Changes under the hood
+* Update several dependencies
+* Z-Wave JS now uses npm's trusted publishing (#8332, #8334)
+* The mock-server and integration tests can now simulate inclusion of devices, both insecure and with Security S0 (#8344)
+
 ## 15.15.0 (2025-09-30)
 ### Features
 * Support creating mixed LR and non-LR "multicast" groups (#8143)
