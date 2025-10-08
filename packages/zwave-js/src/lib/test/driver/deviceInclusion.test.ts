@@ -13,10 +13,12 @@ import {
 	SecurityCCSchemeReport,
 } from "@zwave-js/cc";
 import {
+	BasicDeviceClass,
 	CommandClasses,
 	SecurityManager,
 	isEncapsulationCC,
 } from "@zwave-js/core";
+
 import {
 	type MockNode,
 	type MockNodeBehavior,
@@ -320,6 +322,75 @@ integrationTestMulti(
 			t.expect(
 				includedNode?.getValue(BinarySwitchCCValues.currentValue.id),
 			).toBe(false);
+		},
+	},
+);
+
+integrationTestMulti(
+	"The default inclusion strategy includes legacy secure devices with S0",
+	{
+		// Repro for #8346
+		// debug: true,
+
+		async customSetup(driver, mockController, mockNodes) {
+			// Create a security manager for the controller with the real network key
+			const sm0Ctrlr = new SecurityManager({
+				ownNodeId: mockController.ownNodeId,
+				networkKey: driver.options.securityKeys!.S0_Legacy!,
+				nonceTimeout: 100000,
+			});
+			mockController.securityManagers.securityManager = sm0Ctrlr;
+		},
+
+		testBody: async (t, driver, nodes, mockController, mockNodes) => {
+			// Set up a promise to wait for the "node added" event
+			let includedNode: ZWaveNode | undefined;
+			const nodeAddedPromise = new Promise<void>((resolve) => {
+				driver.controller.once("node added", (node) => {
+					includedNode = node;
+					resolve();
+				});
+			});
+
+			// Set up the node that will be included
+			mockController.nodePendingInclusion = {
+				id: 3,
+				capabilities: {
+					basicDeviceClass: BasicDeviceClass["Routing End Node"],
+					genericDeviceClass: 0x40, // Entry Control
+					specificDeviceClass: 0x03, // Secure Keypad Door Lock
+					commandClasses: [
+						CommandClasses["Manufacturer Specific"],
+						CommandClasses.Security,
+						CommandClasses.Version,
+					],
+				},
+				setup: setupS0NodeBehaviorsForNewlyIncludedNode,
+			};
+
+			// Start the inclusion process
+			await driver.controller.beginInclusion({
+				strategy: InclusionStrategy.Default,
+			});
+
+			// Wait for the "node added" event
+			await nodeAddedPromise;
+
+			// Wait for the interview to complete
+			const interviewCompletePromise = new Promise<void>((resolve) => {
+				includedNode!.once("interview completed", () => {
+					resolve();
+				});
+			});
+			await interviewCompletePromise;
+
+			// Verify that the node was added to the controller's nodes map
+			t.expect(includedNode).toBeDefined();
+			t.expect(includedNode!.id).toBe(3);
+			t.expect(includedNode!.isSecure).toBe(true);
+			t.expect(includedNode!.supportsCC(CommandClasses.Security)).toBe(
+				true,
+			);
 		},
 	},
 );
