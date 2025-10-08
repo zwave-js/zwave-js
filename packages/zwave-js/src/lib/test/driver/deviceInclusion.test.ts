@@ -20,6 +20,7 @@ import {
 	type MockNodeBehavior,
 	type MockZWaveFrame,
 	MockZWaveFrameType,
+	ccCaps,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { InclusionStrategy } from "../../controller/Inclusion.js";
@@ -260,10 +261,10 @@ function setupS0NodeBehaviorsForNewlyIncludedNode(
 	mockNode.defineBehavior(parseS0CC);
 }
 
-integrationTestMulti(
+integrationTestMulti.only(
 	"Inclusion with S0 should work",
 	{
-		// debug: true,
+		debug: true,
 
 		async customSetup(driver, mockController, mockNodes) {
 			// Create a security manager for the controller with the real network key
@@ -299,6 +300,11 @@ integrationTestMulti(
 						CommandClasses.Security,
 						CommandClasses.Powerlevel,
 						CommandClasses["Firmware Update Meta Data"],
+						ccCaps({
+							ccId: CommandClasses["Binary Switch"],
+							secure: true,
+							defaultValue: false,
+						}),
 					],
 				},
 				setup: setupS0NodeBehaviorsForNewlyIncludedNode,
@@ -312,13 +318,13 @@ integrationTestMulti(
 			// Wait for the "node added" event
 			await nodeAddedPromise;
 
-			// FIXME: Wait for the interview to complete
-			// const interviewCompletePromise = new Promise<void>((resolve) => {
-			// 	includedNode!.once("interview completed", () => {
-			// 		resolve();
-			// 	});
-			// });
-			// await interviewCompletePromise;
+			// Wait for the interview to complete
+			const interviewCompletePromise = new Promise<void>((resolve) => {
+				includedNode!.once("interview completed", () => {
+					resolve();
+				});
+			});
+			await interviewCompletePromise;
 
 			// Verify that the node was added to the controller's nodes map
 			t.expect(includedNode).toBeDefined();
@@ -327,6 +333,10 @@ integrationTestMulti(
 			t.expect(includedNode!.supportsCC(CommandClasses.Security)).toBe(
 				true,
 			);
+
+			// And that Binary Switch CC is only supported securely
+			t.expect(includedNode?.isCCSecure(CommandClasses["Binary Switch"]))
+				.toBe(true);
 		},
 	},
 );

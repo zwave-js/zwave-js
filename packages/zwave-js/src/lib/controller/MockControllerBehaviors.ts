@@ -75,6 +75,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+import { createDefaultMockNodeBehaviors } from "../../Testing.js";
 import {
 	MockControllerCommunicationState,
 	MockControllerInclusionState,
@@ -965,7 +966,9 @@ const handleAddNode: MockControllerBehavior = {
 						controller,
 						...nodeOptions,
 					});
-					// Allow the tests to set up the node before inclusion happens
+					// Apply default behaviors that are required for interacting with the driver correctly
+					node.defineBehavior(...createDefaultMockNodeBehaviors());
+					// Allow the tests to set up additional behavior before inclusion happens
 					setup?.(node);
 
 					const supportedCCs = [...node.implementedCCs]
