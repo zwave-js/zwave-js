@@ -2930,7 +2930,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		}
 
-		this.cachePurge(cacheKeys.node(node.id)._baseKey);
+		this.cachePurge(
+			cacheKeys.node(node.id)._baseKey,
+			// Preserve the device class though - this is set during the initial inclusion
+			// https://github.com/zwave-js/zwave-js/issues/8346
+			(key) => key === cacheKeys.node(node.id).deviceClass,
+		);
 	}
 
 	/** This is called when a new node has been added to the network */
@@ -8051,9 +8056,12 @@ ${handlers.length} left`,
 		return ret;
 	}
 
-	private cachePurge(prefix: string): void {
+	private cachePurge(
+		prefix: string,
+		except?: (key: string) => boolean,
+	): void {
 		for (const key of this.networkCache.keys()) {
-			if (key.startsWith(prefix)) {
+			if (key.startsWith(prefix) && !(except?.(key))) {
 				this.networkCache.delete(key);
 			}
 		}

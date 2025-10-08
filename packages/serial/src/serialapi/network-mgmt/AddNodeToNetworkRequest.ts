@@ -10,6 +10,7 @@ import {
 	NodeType,
 	type NodeUpdatePayload,
 	Protocols,
+	encodeNodeID,
 	encodeNodeUpdatePayload,
 	isLongRangeNodeId,
 	parseNodeID,
@@ -401,6 +402,14 @@ export class AddNodeToNetworkRequestStatusReport
 					this.statusContext as NodeUpdatePayload,
 					ctx.nodeIdType,
 				),
+			]);
+		} else if (
+			this.status === AddNodeStatus.Done
+			&& this.statusContext?.nodeId != undefined
+		) {
+			this.payload = Bytes.concat([
+				this.payload,
+				encodeNodeID(this.statusContext.nodeId, ctx.nodeIdType),
 			]);
 		}
 		return super.serialize(ctx);
