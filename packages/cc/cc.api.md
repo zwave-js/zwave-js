@@ -17538,6 +17538,8 @@ export class SecurityCCNonceReport extends SecurityCC {
 // @public (undocumented)
 export class SecurityCCSchemeGet extends SecurityCC {
     // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeGet;
+    // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
@@ -17547,6 +17549,8 @@ export class SecurityCCSchemeGet extends SecurityCC {
 //
 // @public (undocumented)
 export class SecurityCCSchemeInherit extends SecurityCC {
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeInherit;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
