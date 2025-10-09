@@ -1158,6 +1158,8 @@ export interface GenericDeviceClass {
     // (undocumented)
     readonly requiresSecurity: boolean;
     // (undocumented)
+    readonly supportsOptimisticValueUpdate: boolean;
+    // (undocumented)
     readonly zwavePlusDeviceType?: string;
 }
 
@@ -2005,6 +2007,10 @@ export interface LogConfig {
     maxFiles: number;
     // (undocumented)
     nodeFilter?: number[];
+    // (undocumented)
+    raw?: boolean;
+    // (undocumented)
+    showLogo?: boolean;
     // (undocumented)
     transports: Transport[];
 }

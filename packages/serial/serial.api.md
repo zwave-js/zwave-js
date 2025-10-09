@@ -982,11 +982,6 @@ export interface ContainsSerializedCC {
 // @public (undocumented)
 export function containsSerializedCC<T extends object>(container: T | undefined): container is T & ContainsSerializedCC;
 
-// Warning: (ae-missing-release-tag) "createESPHomeFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export function createESPHomeFactory(options: ESPHomeSocketOptions): ZWaveSerialBindingFactory;
-
 // Warning: (ae-missing-release-tag) "DeleteReturnRouteRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1184,14 +1179,6 @@ export type EnumeratedPort = {
     type: "custom";
     factory: ZWaveSerialBindingFactory;
 };
-
-// Warning: (ae-missing-release-tag) "ESPHomeSocketOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface ESPHomeSocketOptions {
-    host: string;
-    port?: number;
-}
 
 // Warning: (ae-missing-release-tag) "expectedCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2998,7 +2985,6 @@ export class Message {
     static parse(data: Uint8Array, ctx: MessageParsingContext): Message;
     // (undocumented)
     payload: Bytes;
-    prematureNodeUpdate: Message | undefined;
     get rtt(): number | undefined;
     serialize(ctx: MessageEncodingContext): Promise<Bytes>;
     toJSON(): JSONObject;
