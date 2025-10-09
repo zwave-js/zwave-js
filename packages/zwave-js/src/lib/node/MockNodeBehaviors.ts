@@ -55,6 +55,7 @@ const respondToRequestNodeInfo: MockNodeBehavior = {
 					.filter(([ccId]) => ccId !== CommandClasses.Basic)
 					// Only include supported CCs
 					.filter(([, info]) => info.isSupported)
+					// FIXME: Filter out secure CCs if the node isn't secure
 					.map(([ccId]) => ccId),
 			});
 			return { action: "sendCC", cc };

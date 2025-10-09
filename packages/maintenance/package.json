@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/maintenance",
-  "version": "15.13.0",
+  "version": "15.15.1",
   "description": "zwave-js: maintenance scripts",
   "private": true,
   "keywords": [],
@@ -38,7 +38,7 @@
     "lint:ts:fix": "yarn run lint:ts --fix"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
+    "@alcalzone/esm2cjs": "^1.4.2",
     "@dprint/formatter": "^0.4.1",
     "@dprint/json": "^0.20.0",
     "@dprint/markdown": "^0.19.0",

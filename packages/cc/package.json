@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/cc",
-  "version": "15.14.0",
+  "version": "15.15.1",
   "description": "zwave-js: Command Classes",
   "keywords": [],
   "publishConfig": {
@@ -78,14 +78,14 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
+    "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.52.11",
     "@types/node": "^20.19.9",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",
     "del-cli": "^6.0.0",
     "es-main": "^1.4.0",
-    "eslint": "^9.34.0",
+    "eslint": "^9.36.0",
     "tsx": "^4.20.5",
     "typescript": "5.8.3",
     "vitest": "^2.1.9"

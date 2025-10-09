@@ -407,3 +407,75 @@ integrationTest(
 		},
 	},
 );
+
+integrationTest(
+	"Do not crash on communication errors when requesting missing segments",
+	{
+		// debug: true,
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			const cc = new ConfigurationCCInfoReport({
+				nodeId: 2,
+				parameter: 1,
+				reportsToFollow: 0,
+				info:
+					"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+			});
+			const ccBuffer = await cc.serialize(mockNode.encodingContext);
+			const part1 = ccBuffer.slice(0, 39);
+			const part2 = ccBuffer.slice(39, 78);
+			const part3 = ccBuffer.slice(78);
+
+			const frame1 = new TransportServiceCCFirstSegment({
+				nodeId: 2,
+				sessionId: 1,
+				datagramSize: part1.length + part2.length + part3.length,
+				partialDatagram: part1,
+			});
+
+			const frame2 = new TransportServiceCCSubsequentSegment({
+				nodeId: 2,
+				sessionId: 1,
+				datagramSize: frame1.datagramSize,
+				datagramOffset: part1.length,
+				partialDatagram: part2,
+			});
+
+			const frame3 = new TransportServiceCCSubsequentSegment({
+				nodeId: 2,
+				sessionId: 1,
+				datagramSize: frame1.datagramSize,
+				datagramOffset: part1.length + part2.length,
+				partialDatagram: part3,
+			});
+
+			// Send the first segment to the controller
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(frame1),
+			);
+			await wait(30);
+
+			// Immediately stop acknowledging frames, so the controller's request fails with NoACK
+			mockNode.autoAckControllerFrames = false;
+			// We must not send the last frame here, or the issue won't happen
+
+			// The controller should request the missing frame after a while
+			await wait(1100);
+
+			// The controller should request the missing frame
+			mockNode.assertReceivedControllerFrame((f) =>
+				f.type === MockZWaveFrameType.Request
+				&& f.payload instanceof TransportServiceCCSegmentRequest
+				&& f.payload.datagramOffset === part1.length
+			);
+
+			// Send it
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(frame2),
+			);
+
+			// Wait for 2 seconds to ensure there is no uncaught error
+			await wait(2000);
+		},
+	},
+);

@@ -7,6 +7,7 @@ import {
 } from "@zwave-js/cc/ZWaveProtocolCC";
 import {
 	NodeType,
+	type NodeUpdatePayload,
 	TransmitOptions,
 	TransmitStatus,
 	ZWaveDataRate,
@@ -25,6 +26,9 @@ import {
 	AssignSUCReturnRouteRequest,
 	AssignSUCReturnRouteRequestTransmitReport,
 	AssignSUCReturnRouteResponse,
+	DeleteSUCReturnRouteRequest,
+	DeleteSUCReturnRouteRequestTransmitReport,
+	DeleteSUCReturnRouteResponse,
 	GetControllerCapabilitiesRequest,
 	GetControllerCapabilitiesResponse,
 	GetControllerIdRequest,
@@ -66,10 +70,12 @@ import {
 	MOCK_FRAME_ACK_TIMEOUT,
 	type MockController,
 	type MockControllerBehavior,
-	type MockNode,
+	MockNode,
 	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
+import { createDefaultMockNodeBehaviors } from "../../Testing.js";
 import {
 	MockControllerCommunicationState,
 	MockControllerInclusionState,
@@ -719,6 +725,115 @@ const handleRequestNodeInfo: MockControllerBehavior = {
 	},
 };
 
+async function transmitSUCReturnRoute(
+	controller: MockController,
+	node: MockNode,
+	callbackId: number,
+	options: {
+		destinationSpeed: ZWaveDataRate;
+		destinationWakeUp: WakeUpTime;
+		repeaters: number[];
+	},
+): Promise<boolean> {
+	const expectCallback = callbackId !== 0;
+
+	// Send the command to the node
+	const command = new ZWaveProtocolCCAssignSUCReturnRoute({
+		nodeId: node.id,
+		destinationNodeId: controller.ownNodeId,
+		routeIndex: 0, // don't care
+		...options,
+	});
+	const frame = createMockZWaveRequestFrame(command, {
+		ackRequested: expectCallback,
+	});
+	const ackPromise = controller.sendToNode(node, frame);
+
+	let ack = false;
+	if (expectCallback) {
+		// Put the controller into waiting state
+		controller.state.set(
+			MockControllerStateKeys.CommunicationState,
+			MockControllerCommunicationState.WaitingForNode,
+		);
+
+		// Wait for the ACK and notify the host
+		try {
+			const ackResult = await ackPromise;
+			ack = !!ackResult?.ack;
+		} catch {
+			// No response
+		}
+	}
+	controller.state.set(
+		MockControllerStateKeys.CommunicationState,
+		MockControllerCommunicationState.Idle,
+	);
+
+	return ack;
+}
+
+const handleDeleteSUCReturnRoute: MockControllerBehavior = {
+	async onHostMessage(controller, msg) {
+		if (msg instanceof DeleteSUCReturnRouteRequest) {
+			// Check if this command is legal right now
+			const state = controller.state.get(
+				MockControllerStateKeys.CommunicationState,
+			) as MockControllerCommunicationState | undefined;
+			if (
+				state != undefined
+				&& state !== MockControllerCommunicationState.Idle
+			) {
+				throw new Error(
+					"Received DeleteSUCReturnRouteRequest while not idle",
+				);
+			}
+
+			// Put the controller into sending state
+			controller.state.set(
+				MockControllerStateKeys.CommunicationState,
+				MockControllerCommunicationState.Sending,
+			);
+
+			const expectCallback = msg.callbackId !== 0;
+
+			// Send the command to the node
+			const node = controller.nodes.get(msg.getNodeId()!)!;
+
+			// Respond with success
+			const response = new DeleteSUCReturnRouteResponse({
+				wasExecuted: true,
+			});
+			await controller.sendMessageToHost(response);
+
+			const ack = await transmitSUCReturnRoute(
+				controller,
+				node,
+				msg.callbackId ?? 0,
+				// Set the empty route
+				{
+					destinationSpeed: ZWaveDataRate["9k6"],
+					destinationWakeUp: WakeUpTime.None,
+					repeaters: [],
+				},
+			);
+
+			if (expectCallback) {
+				const transmitReport =
+					new DeleteSUCReturnRouteRequestTransmitReport({
+						callbackId: msg.callbackId,
+						transmitStatus: ack
+							? TransmitStatus.OK
+							: TransmitStatus.NoAck,
+					});
+				await controller.sendMessageToHost(transmitReport);
+			}
+
+			return true;
+		}
+	},
+};
+
 const handleAssignSUCReturnRoute: MockControllerBehavior = {
 	async onHostMessage(controller, msg) {
 		if (msg instanceof AssignSUCReturnRouteRequest) {
@@ -745,18 +860,6 @@ const handleAssignSUCReturnRoute: MockControllerBehavior = {
 
 			// Send the command to the node
 			const node = controller.nodes.get(msg.getNodeId()!)!;
-			const command = new ZWaveProtocolCCAssignSUCReturnRoute({
-				nodeId: node.id,
-				destinationNodeId: controller.ownNodeId,
-				repeaters: [], // don't care
-				routeIndex: 0, // don't care
-				destinationSpeed: ZWaveDataRate["100k"],
-				destinationWakeUp: WakeUpTime.None,
-			});
-			const frame = createMockZWaveRequestFrame(command, {
-				ackRequested: expectCallback,
-			});
-			const ackPromise = controller.sendToNode(node, frame);
 
 			// Notify the host that the message was sent
 			const res = new AssignSUCReturnRouteResponse({
@@ -764,25 +867,17 @@ const handleAssignSUCReturnRoute: MockControllerBehavior = {
 			});
 			await controller.sendMessageToHost(res);
 
-			let ack = false;
-			if (expectCallback) {
-				// Put the controller into waiting state
-				controller.state.set(
-					MockControllerStateKeys.CommunicationState,
-					MockControllerCommunicationState.WaitingForNode,
-				);
-
-				// Wait for the ACK and notify the host
-				try {
-					const ackResult = await ackPromise;
-					ack = !!ackResult?.ack;
-				} catch {
-					// No response
-				}
-			}
-			controller.state.set(
-				MockControllerStateKeys.CommunicationState,
-				MockControllerCommunicationState.Idle,
+			// Assign uses 100kbps speed and empty repeaters (supports beaming)
+			const ack = await transmitSUCReturnRoute(
+				controller,
+				node,
+				msg.callbackId ?? 0,
+				// Don't care about the actual settings here
+				{
+					destinationSpeed: ZWaveDataRate["100k"],
+					destinationWakeUp: WakeUpTime.None,
+					repeaters: [],
+				},
 			);
 
 			if (expectCallback) {
@@ -819,10 +914,23 @@ const handleAddNode: MockControllerBehavior = {
 						MockControllerStateKeys.InclusionState,
 						MockControllerInclusionState.Idle,
 					);
-					cb = new AddNodeToNetworkRequestStatusReport({
-						callbackId: msg.callbackId,
-						status: AddNodeStatus.Failed,
-					});
+
+					// If there's a node pending inclusion, send Done status with node ID
+					const pendingNode = controller.nodePendingInclusion;
+					if (pendingNode) {
+						cb = new AddNodeToNetworkRequestStatusReport({
+							callbackId: msg.callbackId,
+							status: AddNodeStatus.Done,
+							nodeId: pendingNode.id,
+						});
+						// Clear the pending node
+						controller.nodePendingInclusion = undefined;
+					} else {
+						cb = new AddNodeToNetworkRequestStatusReport({
+							callbackId: msg.callbackId,
+							status: AddNodeStatus.Failed,
+						});
+					}
 				} else {
 					cb = new AddNodeToNetworkRequestStatusReport({
 						callbackId: msg.callbackId,
@@ -839,7 +947,6 @@ const handleAddNode: MockControllerBehavior = {
 				// Idle
 
 				// Set the controller into "adding node" state
-				// For now we don't actually do anything in that state
 				controller.state.set(
 					MockControllerStateKeys.InclusionState,
 					MockControllerInclusionState.AddingNode,
@@ -849,6 +956,68 @@ const handleAddNode: MockControllerBehavior = {
 					callbackId: msg.callbackId,
 					status: AddNodeStatus.Ready,
 				});
+
+				// If there's a node pending inclusion, simulate the inclusion sequence
+				// after responding to the add request
+				if (controller.nodePendingInclusion) {
+					const { setup, ...nodeOptions } =
+						controller.nodePendingInclusion;
+					const node = new MockNode({
+						controller,
+						...nodeOptions,
+					});
+					// Apply default behaviors that are required for interacting with the driver correctly
+					node.defineBehavior(...createDefaultMockNodeBehaviors());
+					// Allow the tests to set up additional behavior before inclusion happens
+					setup?.(node);
+
+					const supportedCCs = [...node.implementedCCs]
+						.filter(([, info]) =>
+							info.isSupported && info.version > 0
+						)
+						.map(([cc]) => cc);
+
+					const nodeInfo: NodeUpdatePayload = {
+						nodeId: node.id,
+						basicDeviceClass: node.capabilities.basicDeviceClass,
+						genericDeviceClass:
+							node.capabilities.genericDeviceClass,
+						specificDeviceClass:
+							node.capabilities.specificDeviceClass,
+						supportedCCs,
+					};
+
+					void (async () => {
+						// Wait a bit, then send NodeFound
+						await wait(10);
+						const nodeFoundMsg =
+							new AddNodeToNetworkRequestStatusReport({
+								callbackId: msg.callbackId,
+								status: AddNodeStatus.NodeFound,
+							});
+						await controller.sendMessageToHost(nodeFoundMsg);
+
+						// Wait a bit, then send AddingSlave with node info
+						await wait(10);
+						const addingSlaveMsg =
+							new AddNodeToNetworkRequestStatusReport({
+								callbackId: msg.callbackId,
+								status: AddNodeStatus.AddingSlave,
+								nodeInfo,
+							});
+						await controller.sendMessageToHost(addingSlaveMsg);
+
+						// Wait a bit, add the node to the controller's list, then send ProtocolDone
+						await wait(10);
+						controller.addNode(node);
+						const protocolDoneMsg =
+							new AddNodeToNetworkRequestStatusReport({
+								callbackId: msg.callbackId,
+								status: AddNodeStatus.ProtocolDone,
+							});
+						await controller.sendMessageToHost(protocolDoneMsg);
+					})();
+				}
 			}
 
 			if (expectCallback && cb) {
@@ -978,6 +1147,7 @@ export function createDefaultBehaviors(): MockControllerBehavior[] {
 		handleSendDataBridge,
 		handleSendDataMulticastBridge,
 		handleRequestNodeInfo,
+		handleDeleteSUCReturnRoute,
 		handleAssignSUCReturnRoute,
 		handleAddNode,
 		handleRemoveNode,

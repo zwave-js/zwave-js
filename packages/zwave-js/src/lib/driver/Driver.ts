@@ -1541,7 +1541,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		const spOpenPromise = createDeferredPromise();
 
 		// Log which version is running
-		this.driverLog.print(libNameString, "info");
+		if (this._options.logConfig?.showLogo !== false) {
+			this.driverLog.print(libNameString, "info");
+		}
 		this.driverLog.print(`version ${libVersion}`, "info");
 		this.driverLog.print("", "info");
 
@@ -2928,7 +2930,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		}
 
-		this.cachePurge(cacheKeys.node(node.id)._baseKey);
+		this.cachePurge(
+			cacheKeys.node(node.id)._baseKey,
+			// Preserve the device class though - this is set during the initial inclusion
+			// https://github.com/zwave-js/zwave-js/issues/8346
+			(key) => key === cacheKeys.node(node.id).deviceClass,
+		);
 	}
 
 	/** This is called when a new node has been added to the network */
@@ -5096,7 +5103,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					await this.sendCommand(cc, {
 						maxSendAttempts: 1,
 						priority: MessagePriority.Immediate,
-					});
+					}).catch(noop);
 
 					startMissingSegmentTimeout(session);
 				} else if (machine.state.value === "failure") {
@@ -5200,7 +5207,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				await this.sendCommand(cc, {
 					maxSendAttempts: 1,
 					priority: MessagePriority.Immediate,
-				});
+				}).catch(noop);
 			}
 		}
 	}
@@ -5593,22 +5600,30 @@ ${handlers.length} left`,
 			const nodeId = msg.getNodeId()!;
 
 			// It could also be that this is the node's response for a CC that we sent, but where the ACK is delayed
-			const currentMessage = this.queue.currentTransaction
-				?.getCurrentMessage();
+			const currentTransaction = this.queue.currentTransaction;
+			const currentMessage = currentTransaction?.getCurrentMessage();
 			if (
 				currentMessage
 				&& currentMessage.expectsNodeUpdate()
 				&& currentMessage.isExpectedNodeUpdate(msg)
 			) {
-				// The message we're currently sending is still in progress but expects this message in response.
-				// Remember the message there.
-				this.controllerLog.logNode(msg.getNodeId()!, {
-					message:
-						`received expected response prematurely, remembering it...`,
-					level: "verbose",
-					direction: "inbound",
-				});
-				currentMessage.prematureNodeUpdate = msg;
+				// The message we're currently sending is still in progress but expects this message in response,
+				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
+
+				// Abort the current transaction with the received message as the result.
+				currentTransaction!.abort(msg);
+
+				if (isSendData(currentMessage)) {
+					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
+					this.controllerLog.logNode(msg.getNodeId()!, {
+						message:
+							`received expected response prematurely, aborting transaction...`,
+						level: "verbose",
+						direction: "inbound",
+					});
+
+					void this.abortSendData();
+				}
 				return;
 			}
 
@@ -8041,9 +8056,12 @@ ${handlers.length} left`,
 		return ret;
 	}
 
-	private cachePurge(prefix: string): void {
+	private cachePurge(
+		prefix: string,
+		except?: (key: string) => boolean,
+	): void {
 		for (const key of this.networkCache.keys()) {
-			if (key.startsWith(prefix)) {
+			if (key.startsWith(prefix) && !(except?.(key))) {
 				this.networkCache.delete(key);
 			}
 		}

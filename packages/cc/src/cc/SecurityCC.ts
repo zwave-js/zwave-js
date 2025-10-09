@@ -919,6 +919,17 @@ export class SecurityCCSchemeReport extends SecurityCC {
 @CCCommand(SecurityCommand.SchemeGet)
 @expectedCCResponse(SecurityCCSchemeReport)
 export class SecurityCCSchemeGet extends SecurityCC {
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): SecurityCCSchemeGet {
+		validatePayload(raw.payload.length >= 1);
+		// The joining node MUST NOT perform any validation of the Supported Security Schemes byte
+		return new this({
+			nodeId: ctx.sourceNodeId,
+		});
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
 		this.payload = Bytes.from([0]);
@@ -937,6 +948,17 @@ export class SecurityCCSchemeGet extends SecurityCC {
 @CCCommand(SecurityCommand.SchemeInherit)
 @expectedCCResponse(SecurityCCSchemeReport)
 export class SecurityCCSchemeInherit extends SecurityCC {
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): SecurityCCSchemeInherit {
+		validatePayload(raw.payload.length >= 1);
+		// The joining node MUST NOT perform any validation of the Supported Security Schemes byte
+		return new this({
+			nodeId: ctx.sourceNodeId,
+		});
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Since it is unlikely that any more schemes will be added to S0, we hardcode the default scheme here (bit 0 = 0)
 		this.payload = Bytes.from([0]);

@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/host",
-  "version": "15.14.0",
+  "version": "15.15.1",
   "description": "zwave-js: Host abstractions",
   "keywords": [],
   "publishConfig": {
@@ -54,7 +54,7 @@
     "alcalzone-shared": "^5.0.0"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
+    "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.52.11",
     "@types/node": "^20.19.9",
     "del-cli": "^6.0.0",

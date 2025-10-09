@@ -4,6 +4,44 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.15.1 (2025-10-08)
+### Bugfixes
+* Fixed a warning in bundlers about an unexpected `node:net` import (#8343)
+* Fixed an issue where the device class of newly joined devices would not be persisted, causing legacy secure devices not to be automatically included with encryption (#8344)
+
+### Config file changes
+* Update parameters for HomeSeer WS300 (#8338)
+* Add Zooz ZEN78 High Power Relay (#8337)
+
+### Changes under the hood
+* Update several dependencies
+* Z-Wave JS now uses npm's trusted publishing (#8332, #8334)
+* The mock-server and integration tests can now simulate inclusion of devices, both insecure and with Security S0 (#8344)
+
+## 15.15.0 (2025-09-30)
+### Features
+* Support creating mixed LR and non-LR "multicast" groups (#8143)
+* Add driver option to skip log formatting of Z-Wave commands (#8204)
+* Add driver option to skip rendering ASCII logo on startup (#8198)
+
+### Bugfixes
+* IP based connections no longer block the process for several minutes on connection failures/timeouts (#8203)
+* Disable optimistic value updates for slow device classes, like shades and gates (#8004)
+* Fixed an issue where replacing a node with S0 security was not possible (#8181)
+* Fixed an edge case where support for EU Long Range is not inferred correctly (#8176)
+* TX report fields are now hidden from logs when transmitting failed (#8155)
+* Route rebuilding now longer aborts/fails when the route to an association target other than the controller cannot be assigned (#8192)
+* During route rebuilds, invalid and non-existing association targets are now skipped instead of failing the whole process (#8191)
+* Fixed a crash that could happen when requesting missing Transport Service segments over a bad connection (#8154)
+* Ongoing transmissions are now aborted early when the expected response CC is received before the ACK for the SendData command (#8196)
+
+### Config file changes
+* Add fingerprint to Ultrapro 59350 / 59372 / 59373 / ZWA3016 (#8103)
+* Correct parameter size for factory reset of Shelly Wave devices (#8187)
+* Add Zooz ZSE50 Siren & Chime (#8182)
+* Add fingerprint for Kwikset HomeConnect 620 firmware revision 69.35 (#8057)
+* Add fingerprint `0x0811:0x23a9` to "Kwikset HC620" (#8199)
+
 ## 15.14.0 (2025-09-17)
 ### Features
 * Support proxying Z-Wave traffic over the ESPHome protocol (#8093)
