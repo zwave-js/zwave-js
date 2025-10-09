@@ -155,6 +155,8 @@ export interface LogConfig {
 	nodeFilter?: number[];
 	filename: string;
 	forceConsole: boolean;
+	showLogo?: boolean;
+	raw?: boolean;
 }
 
 /** @internal */

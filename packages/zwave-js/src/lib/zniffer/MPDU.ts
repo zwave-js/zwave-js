@@ -828,21 +828,21 @@ export class ZWaveBeamStart {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
-		const channelConfig = getChannelConfiguration(this.frameInfo.region);
-		switch (channelConfig) {
-			case "1/2":
-			case "3":
+		switch (options.frameInfo.channel) {
+			case 0:
+			case 1:
+			case 2:
 				// OK
 				break;
-			case "4": {
+			case 3:
+			case 4: {
 				validatePayload.fail(
-					`Channel configuration 4 (ZWLR) must be parsed as a LongRangeMPDU!`,
+					`Channel ${options.frameInfo.channel} (ZWLR) must be parsed as a LongRangeMPDU!`,
 				);
 			}
 			default: {
 				validatePayload.fail(
-					// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-					`Unsupported channel configuration ${channelConfig}. MPDU payload: ${
+					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
 						buffer2hex(data)
 					}`,
 				);
@@ -885,21 +885,22 @@ export class LongRangeBeamStart {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
-		const channelConfig = getChannelConfiguration(this.frameInfo.region);
-		switch (channelConfig) {
-			case "1/2":
-			case "3":
+		switch (options.frameInfo.channel) {
+			case 0:
+			case 1:
+			case 2:
+				validatePayload.fail(
+					`Channel ${options.frameInfo.channel} (Mesh) must be parsed as a ZWaveMPDU!`,
+				);
+
+			case 3:
+			case 4: {
 				// OK
 				break;
-			case "4": {
-				validatePayload.fail(
-					`Channel configuration 4 (ZWLR) must be parsed as a LongRangeMPDU!`,
-				);
 			}
 			default: {
 				validatePayload.fail(
-					// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-					`Unsupported channel configuration ${channelConfig}. MPDU payload: ${
+					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
 						buffer2hex(data)
 					}`,
 				);

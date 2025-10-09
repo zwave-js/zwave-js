@@ -268,6 +268,9 @@ export class MockController {
     homeId: number;
     // (undocumented)
     readonly mockPort: MockPort;
+    nodePendingInclusion: (Omit<MockNodeOptions, "controller"> & {
+        setup?: (node: MockNode) => void;
+    }) | undefined;
     // (undocumented)
     get nodes(): ReadonlyMap<number, MockNode>;
     onNodeFrame(node: MockNode, frame: MockZWaveFrame): Promise<void>;

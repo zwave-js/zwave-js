@@ -29,7 +29,7 @@ import {
 	type MockControllerCapabilities,
 	getDefaultMockControllerCapabilities,
 } from "./MockControllerCapabilities.js";
-import type { MockNode } from "./MockNode.js";
+import type { MockNode, MockNodeOptions } from "./MockNode.js";
 import {
 	type LazyMockZWaveFrame,
 	MOCK_FRAME_ACK_TIMEOUT,
@@ -192,6 +192,14 @@ export class MockController {
 
 	/** Can be used by behaviors to store controller related state */
 	public readonly state = new Map<string, unknown>();
+
+	/** Node info for the node that is pending inclusion. Set this before starting inclusion to simulate a node joining. */
+	public nodePendingInclusion:
+		| (Omit<MockNodeOptions, "controller"> & {
+			/** Optional callback that is called when the node is created during inclusion */
+			setup?: (node: MockNode) => void;
+		})
+		| undefined;
 
 	/** Controls whether the controller automatically ACKs messages from the host before handling them */
 	public autoAckHostMessages: boolean = true;

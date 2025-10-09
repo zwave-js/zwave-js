@@ -68,7 +68,7 @@
 		{
 			"#": "10",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Detach O4 Otput"
+			"label": "Detach O4 Output"
 		},
 		{
 			"#": "17",

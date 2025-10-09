@@ -23,9 +23,10 @@ Device configuration files must follow this property order for consistency:
 8. `endpoints` - Endpoint-specific configuration (only if needed)
 9. `associations` - Association groups (only if needed)
 10. `paramInformation` - Configuration parameters array
-11. `proprietary` - Proprietary CC settings (only if needed)
-12. `compat` - Compatibility flags for non-compliant devices (only if needed)
-13. `metadata` - User-facing metadata (inclusion instructions, etc.)
+11. `scenes` - Custom labels and description for Central Scenes (only if needed)
+12. `proprietary` - Proprietary CC settings (only if needed)
+13. `compat` - Compatibility flags for non-compliant devices (only if needed)
+14. `metadata` - User-facing metadata (inclusion instructions, etc.)
 
 ## Consistency Guidelines
 
@@ -204,6 +205,50 @@ Becomes four partial parameters:
 - When adding a new device, defining associations in the config file is rarely necessary
 - All devices have a group for communication with the controller - this should be labeled "Lifeline"
 - Modern devices typically use Association group 1 as the lifeline, but older devices may use different numbers
+
+## Central Scene Labels
+
+The `scenes` property allows defining custom labels and descriptions for Central Scenes instead of the default "Scene 001", "Scene 002" format.
+
+### Structure
+
+```json
+{
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		},
+		"3": {
+			"label": "External Switch",
+			"description": "Only available on some devices"
+		}
+	}
+}
+```
+
+### Requirements
+
+- Scene numbers must be numeric strings between "1" and "255"
+- Each scene object must have a `label` property (string)
+- Each scene object may have an optional `description` property (string)
+- Use descriptive, user-friendly names that clearly indicate the scene's function
+- Follow Title Case formatting for scene labels
+- Follow Sentence case formatting for scene descriptions
+- Only define scenes that the device actually supports
+- Only add a description if it adds significant value beyond the label
+
+### Guidelines
+
+- Use clear, concise labels that users will easily understand
+- Prefer standardized terminology when possible:
+  - "Single Press", "Double Press", "Triple Press" for tap sequences
+  - "Hold" or "Press and Hold" for held down actions
+  - "Release" for key release actions
+- Avoid manufacturer-specific jargon unless it's commonly understood
+- Keep labels reasonably short to fit in user interfaces
 
 ## Conditional Settings
 

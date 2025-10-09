@@ -1,0 +1,108 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "WS300",
+	"description": "Scene Capable Wall Switch",
+	"devices": [
+		{
+			"productType": "0x4447",
+			"productId": "0x4047"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "templates/homeseer_template.json#led_indicator_inverted"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "6",
+			"$import": "templates/homeseer_template.json#scene_control"
+		},
+		{
+			"#": "13",
+			"$import": "templates/homeseer_template.json#status_mode",
+			"label": "Status Mode"
+		},
+		{
+			"#": "14",
+			"$import": "templates/homeseer_template.json#led_colors_ext",
+			"label": "LED Normal Color",
+			"description": "Set the LED color when in normal mode"
+		},
+		{
+			"#": "21",
+			"$import": "templates/homeseer_template.json#status_mode_choices_ext",
+			"label": "LED Status Color",
+			"description": "Set the LED color when in status mode"
+		},
+		{
+			"#": "30",
+			"$import": "templates/homeseer_template.json#blink_frequency",
+			"label": "LED Blink Frequency",
+			"description": "Set the blink frequency for the LED in status mode"
+		},
+		{
+			"#": "31",
+			"$import": "templates/homeseer_template.json#led_blink_status"
+		},
+		{
+			"#": "34",
+			"$import": "templates/homeseer_template.json#led_brightness_level"
+		},
+		{
+			"#": "35",
+			"$import": "templates/homeseer_template.json#paddle_behavior"
+		},
+		{
+			"#": "37",
+			"$import": "templates/homeseer_template.json#load_control"
+		},
+		{
+			"#": "38",
+			"$import": "templates/homeseer_template.json#power_fail_behavior"
+		},
+		{
+			"#": "41",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Custom Color Red Brightness",
+			"defaultValue": 5
+		},
+		{
+			"#": "42",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Custom Color Green Brightness",
+			"defaultValue": 5
+		},
+		{
+			"#": "43",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Custom Color Blue Brightness",
+			"defaultValue": 5
+		}
+	],
+	"metadata": {
+		"inclusion": "In rapid succession, tap the bottom paddle 2 times, then press & hold the bottom paddle.",
+		"exclusion": "In rapid succession, tap the bottom paddle 2 times, then press & hold the bottom paddle.",
+		"reset": "In rapid succession, tap the top paddle 3 times, then tap the bottom paddle 3 times. If the LED blinks magenta 3 times, factory reset was successful. If not, repeat this procedure.",
+		"manual": "https://docs.homeseer.com/products/ws300-user-guide"
+	}
+}

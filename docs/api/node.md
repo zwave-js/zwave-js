@@ -1017,6 +1017,7 @@ interface GenericDeviceClass {
 	readonly zwavePlusDeviceType?: string;
 	readonly requiresSecurity: boolean;
 	readonly maySupportBasicCC: boolean;
+	readonly supportsOptimisticValueUpdate: boolean;
 }
 ```
 

@@ -14,6 +14,7 @@ The following properties are defined and should always be present in the same or
 | `endpoints`        | Endpoint-specific configuration, [see below](#endpoints) for details. If this is present, `associations` must be specified on endpoint `"0"` instead of on the root level.                                                       |
 | `associations`     | The association groups the device supports, [see below](#associations) for details. Only needs to be present if the device does not support Z-Wave+ or requires changes to the default association config.                       |
 | `paramInformation` | An array of the configuration parameters the device supports. [See below](#paramInformation) for details.                                                                                                                        |
+| `scenes`           | Custom labels and descriptions for Central Scenes, [see below](#scenes) for details.                                                                                                                                             |
 | `proprietary`      | A dictionary of settings for the proprietary CC. The settings depend on each proprietary CC implementation.                                                                                                                      |
 | `compat`           | Compatibility flags used to influence the communication with non-compliant devices. [See below](#compat) for details.                                                                                                            |
 | `metadata`         | Metadata that is intended to help the user, like inclusion instructions etc. [See below](#metadata) for details.                                                                                                                 |
@@ -266,6 +267,34 @@ Partial parameters must follow these rules:
 ### Bitmask calculator
 
 <iframe height="270" width="400" src="config-files/bitmask-calculator.html" style="min-width: 0; width: 400px; height: 270px; border: 0; margin: 0 auto"></iframe>
+
+## `scenes`
+
+The `scenes` property allows defining custom labels and descriptions for Central Scenes instead of the default "Scene 001", "Scene 002" format. This helps create more user-friendly scene names in the UI.
+
+Each scene is identified by a numeric key (which must be a positive integer between 1 and 255) with an object defining its properties:
+
+```json
+"scenes": {
+    "1": {
+        "label": "Upper paddle",
+    },
+    "2": {
+        "label": "Lower paddle",
+    },
+    "3": {
+        "label": "External switch",
+        "description": "Only available on some devices"
+    }
+}
+```
+
+Each scene entry consists of:
+
+- A **label** (required) - A user-friendly name for the scene
+- An optional **description** - Additional information about the scene
+
+Scene definitions can also use `$import` syntax and conditional logic (`$if`) just like other parts of device configuration.
 
 ## `compat`
 

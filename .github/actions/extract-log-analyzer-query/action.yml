@@ -1,0 +1,15 @@
+name: 'Extract Query for Log Analyzer'
+description: 'Extract query from discussion using AI inference'
+inputs:
+  discussion-body:
+    description: 'The discussion body to analyze'
+    required: true
+  github-token:
+    description: 'GitHub token for AI inference'
+    required: true
+outputs:
+  result:
+    description: 'The extracted query response'
+runs:
+  using: 'node20'
+  main: 'index.js'
