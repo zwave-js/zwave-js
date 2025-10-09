@@ -414,6 +414,7 @@ function checkOptions(options: ZWaveOptions): void {
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
+
 	if (
 		options.timeouts.sendDataAbort < 5000
 		|| options.timeouts.sendDataAbort
@@ -3927,6 +3928,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...this.autoRefreshNodeValueTimers.values(),
 				this.statisticsTimeout,
 				this.pollBackgroundRSSITimer,
+				this.poolBackgroundRSSIHFTimer,
 				...this.sendNodeToSleepTimers.values(),
 				...this.awaitedCommands.map((c) => c.timeout),
 				...this.awaitedMessages.map((m) => m.timeout),
@@ -9192,38 +9194,147 @@ integrity: ${update.integrity}`;
 		}
 	}
 
+	// region Background RSSI Polling
+
+	// RSSI Polling related values
+	private readonly pollBackgroundRSSIMinimunIdleTimeout = 5_000;
+	private readonly pollBackgroundRSSIIntervalMs = 30_000;
+	private readonly pollBackgroundRSSIHFIntervalMs = 2_000;
+
+	// If set, enables the HF background RSSI polling when the send queue is idle.
+	private poolBackgroundRSSIHFIntervalMs: number | undefined = undefined;
+	// Used to store the timer that polls the background RSSI when the send queue is idle
 	private pollBackgroundRSSITimer: Timer | undefined;
-	private lastBackgroundRSSITimestamp = 0;
+	// Timestamp of the last background RSSI query
+	private poolBackgroundRSSILastTimestamp = 0;
+
+	/**
+	 * Sets the background RSSI timer to call getBackgroundRSSI after the given timeout time.
+	 *
+	 * @param timeoutMs The maximum time to wait before calling getBackgroundRSSI.
+	 */
+	private setBackgroundRSSITimer(timeoutMs: number): void {
+		this.pollBackgroundRSSITimer = setTimer(async () => {
+			// Due to the timeout, the driver might have been destroyed in the meantime
+			if (!this.ready) return;
+
+			this.poolBackgroundRSSILastTimestamp = Date.now();
+			try {
+				await this.controller.getBackgroundRSSI();
+			} catch {
+				// ignore errors
+			}
+		}, timeoutMs).unref();
+	}
+
+	/**
+	 * Clears the background RSSI timer
+	 */
+	private clearBackgroundRSSITimer(): void {
+		this.pollBackgroundRSSITimer?.clear();
+		this.pollBackgroundRSSITimer = undefined;
+	}
 
 	private handleQueueIdleChange(idle: boolean): void {
 		if (!this.ready) return;
 		if (
 			this.controller.isFunctionSupported(FunctionType.GetBackgroundRSSI)
 		) {
-			// When the send thread stays idle for 5 seconds, poll the background RSSI, but at most every 30s
+			// When the queue becomes idle, start polling the background RSSI
 			if (idle) {
-				const timeout = Math.max(
-					// Wait at least 5s
-					5000,
-					// and up to 30s if we recently queried the RSSI
-					30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
-				);
-				this.pollBackgroundRSSITimer = setTimer(async () => {
-					// Due to the timeout, the driver might have been destroyed in the meantime
-					if (!this.ready) return;
+				let timeoutMs: number;
 
-					this.lastBackgroundRSSITimestamp = Date.now();
-					try {
-						await this.controller.getBackgroundRSSI();
-					} catch {
-						// ignore errors
-					}
-				}, timeout).unref();
+				// If HF mode is enabled, use HF timeout
+				if (this.poolBackgroundRSSIHFIntervalMs !== undefined) {
+					timeoutMs = this.poolBackgroundRSSIHFIntervalMs;
+				} else { // If HF mode is not enabled, ensure we wait at least the minimum idle timeout, then 30s
+					timeoutMs = Math.max(
+						// Wait at least 2s in idle state before beginning
+						this.pollBackgroundRSSIMinimunIdleTimeout,
+						// and up to poolBackgroundRSSILastTimestamp if we recently queried the RSSI
+						this.pollBackgroundRSSIIntervalMs
+							- (Date.now()
+								- this.poolBackgroundRSSILastTimestamp),
+					);
+				}
+
+				this.setBackgroundRSSITimer(timeoutMs);
 			} else {
-				this.pollBackgroundRSSITimer?.clear();
-				this.pollBackgroundRSSITimer = undefined;
+				this.clearBackgroundRSSITimer();
 			}
 		}
+	}
+
+	// Used to store the timeout that disables high frequency background RSSI polling
+	private poolBackgroundRSSIHFTimer: Timer | undefined;
+
+	/**
+	 * Returns true if high frequency background RSSI polling is enabled.
+	 */
+	public get poolBackgroundRSSIHFModeEnabled(): boolean {
+		return this.poolBackgroundRSSIHFIntervalMs !== undefined;
+	}
+
+	/**
+	 * Sets the timer for high frequency background RSSI polling.
+	 * @param timeoutMs The time in milliseconds after which the high frequency background RSSI polling will be disabled automatically.
+	 */
+	private setBackgroundRSSIHFTimer(timeoutMs: number): void {
+		this.poolBackgroundRSSIHFTimer = setTimer(() => {
+			this.disableBackgroundRSSIHFMode();
+		}, timeoutMs).unref();
+	}
+
+	/**
+	 * Clears the timer for high frequency background RSSI polling.
+	 */
+	private clearBackgroundRSSIHFTimer(): void {
+		this.poolBackgroundRSSIHFTimer?.clear();
+		this.poolBackgroundRSSIHFTimer = undefined;
+	}
+
+	/**
+	 * Enables high frequency background RSSI polling.
+	 * This will make the driver poll the background RSSI every `timeoutMs` milliseconds when idle until `timeMs` milliseconds have passed or the mode is disabled manually.
+	 * @param timeoutMs The duration in milliseconds at which the background RSSI will be polled when the send queue is idle.
+	 * @param durationMs The time in milliseconds after which the high frequency background RSSI polling will be disabled automatically.
+	 */
+	public enableBackgroundRSSIHFMode(
+		durationMs: number = 2 * 60_000,
+	): void {
+		// Check the controller supports GetBackgroundRSSI, if not ensure that we don't enable this feature
+		if (
+			this.controller.isFunctionSupported(FunctionType.GetBackgroundRSSI)
+				=== false
+		) {
+			throw new ZWaveError(
+				`The controller does not support GetBackgroundRSSI!`,
+				ZWaveErrorCodes.Controller_NotSupported,
+			);
+		}
+
+		if (durationMs > 10 * 60_000) { // If duration is greater than 10 minutes, throw an error
+			throw new ZWaveError(
+				`The duration must be at most 10 minutes!`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		this.poolBackgroundRSSIHFIntervalMs =
+			this.pollBackgroundRSSIHFIntervalMs; // HF polling timeout is 2 seconds
+		this.handleQueueIdleChange(this.queueIdle);
+
+		if (durationMs !== undefined && durationMs > 0) {
+			this.setBackgroundRSSIHFTimer(durationMs);
+		}
+	}
+
+	/** Disable high frequency background RSSI polling.
+	 * This will restore the default behavior of polling the background RSSI only once every 30 seconds.
+	 */
+	public disableBackgroundRSSIHFMode(): void {
+		this.clearBackgroundRSSIHFTimer();
+		this.poolBackgroundRSSIHFIntervalMs = undefined;
 	}
 
 	private _powerlevelTestNodeContext: {
