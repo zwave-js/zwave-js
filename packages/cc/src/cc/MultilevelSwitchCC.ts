@@ -769,16 +769,36 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 		const supportsWindowCovering = endpoint.supportsCC(CommandClasses["Window Covering"]);
 
 		if (supportsWindowCovering) {
-			// Map MultilevelSwitch values to Window Covering CC values
-			// Use parameter 1 ("Outbound Left") as the primary position parameter
-			const windowCoveringParameter = 1;
+			// Look up supported Window Covering parameters from the value database
+			const valueDB = this.getValueDB(ctx);
+			const supportedParameters = valueDB.getValue<readonly WindowCoveringParameter[]>(
+				WindowCoveringCCValues.supportedParameters.endpoint(this.endpointIndex),
+			);
+
+			if (!supportedParameters || supportedParameters.length === 0) {
+				// If no supported parameters are known yet, fall back to normal persistence
+				// This can happen if the Window Covering CC hasn't been interviewed yet
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message: "Window Covering CC supported but parameters not yet known, persisting MultilevelSwitchCCReport values normally",
+				});
+				return super.persistValues(ctx);
+			}
+
+			// Find the first odd parameter (has position support)
+			let windowCoveringParameter = supportedParameters.find(p => p % 2 === 1);
+
+			// If no odd parameter is found, use the first supported parameter
+			if (windowCoveringParameter === undefined) {
+				windowCoveringParameter = supportedParameters[0];
+			}
 
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: "mapping MultilevelSwitchCCReport to Window Covering CC values",
+				message: `mapping MultilevelSwitchCCReport to Window Covering CC parameter ${windowCoveringParameter} (${
+					getEnumMemberName(WindowCoveringParameter, windowCoveringParameter)
+				})`,
 			});
-
-			const valueDB = this.getValueDB(ctx);
 
 			if (this.currentValue !== undefined) {
 				valueDB.setValue(
