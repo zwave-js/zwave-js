@@ -10,9 +10,9 @@ import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
 	MockZWaveFrameType,
+	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -141,8 +141,6 @@ integrationTest(
 				transitionDuration: "1s",
 			});
 
-			await wait(500);
-
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
 					frame.type === MockZWaveFrameType.Request
@@ -155,13 +153,12 @@ integrationTest(
 				},
 			);
 
-			await wait(1000);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof MultilevelSwitchCCGet,
 				{
+					timeout: 1500,
 					errorMessage:
 						"Node should have received a MultilevelSwitchCCGet",
 				},
