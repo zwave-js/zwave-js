@@ -77,7 +77,6 @@ integrationTest("Communication via Security S0 works", {
 					);
 
 					const nonceReport = await self.expectControllerFrame(
-						1000,
 						(
 							resp,
 						): resp is MockZWaveFrame & {
@@ -85,6 +84,7 @@ integrationTest("Communication via Security S0 works", {
 							payload: SecurityCCNonceReport;
 						} => resp.type === MockZWaveFrameType.Request
 							&& resp.payload instanceof SecurityCCNonceReport,
+						{ timeout: 1000 },
 					);
 					const receiverNonce = nonceReport.payload.nonce;
 
@@ -131,7 +131,6 @@ integrationTest("Communication via Security S0 works", {
 					);
 
 					const nonceReport = await self.expectControllerFrame(
-						1000,
 						(
 							resp,
 						): resp is MockZWaveFrame & {
@@ -139,6 +138,7 @@ integrationTest("Communication via Security S0 works", {
 							payload: SecurityCCNonceReport;
 						} => resp.type === MockZWaveFrameType.Request
 							&& resp.payload instanceof SecurityCCNonceReport,
+						{ timeout: 1000 },
 					);
 					const receiverNonce = nonceReport.payload.nonce;
 

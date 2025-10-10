@@ -48,8 +48,8 @@ integrationTest(
 			await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
 			const { payload: response } = await mockNode.expectControllerFrame(
-				1000,
 				(msg) => msg.type === MockZWaveFrameType.Request,
+				{ timeout: 1000 },
 			);
 
 			t.expect(response instanceof CRC16CCCommandEncapsulation).toBe(
@@ -101,9 +101,9 @@ integrationTest(
 			const { payload: response } = await mockNode.expectControllerFrame<
 				MockZWaveRequestFrame
 			>(
-				1000,
 				(msg): msg is MockZWaveRequestFrame =>
 					msg.type === MockZWaveFrameType.Request,
+				{ timeout: 1000 },
 			);
 
 			t.expect(response instanceof MultiChannelCCCommandEncapsulation)
@@ -155,9 +155,9 @@ integrationTest(
 			const { payload: response } = await mockNode.expectControllerFrame<
 				MockZWaveRequestFrame
 			>(
-				1000,
 				(msg): msg is MockZWaveRequestFrame =>
 					msg.type === MockZWaveFrameType.Request,
+				{ timeout: 1000 },
 			);
 
 			t.expect(response instanceof SupervisionCCReport).toBe(true);
@@ -211,9 +211,9 @@ integrationTest(
 			const { payload: response } = await mockNode.expectControllerFrame<
 				MockZWaveRequestFrame
 			>(
-				1000,
 				(msg): msg is MockZWaveRequestFrame =>
 					msg.type === MockZWaveFrameType.Request,
+				{ timeout: 1000 },
 			);
 
 			t.expect(response instanceof MultiChannelCCCommandEncapsulation)

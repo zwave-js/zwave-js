@@ -241,21 +241,35 @@ export class MockNode {
 	/**
 	 * Waits until the controller sends a frame matching the given predicate or a timeout has elapsed.
 	 *
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param predicate A predicate function to test incoming frames
+	 * @param options Optional configuration
+	 * @param options.timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected. Default: 5000ms
+	 * @param options.preventDefault If true, the default behavior will not be executed after the expectation is fulfilled. Default: false
 	 */
 	public async expectControllerFrame<
 		T extends MockZWaveFrame = MockZWaveFrame,
 	>(
-		timeout: number,
 		predicate: (msg: MockZWaveFrame) => msg is T,
+		options?: {
+			timeout?: number;
+			preventDefault?: boolean;
+			errorMessage?: string;
+		},
 	): Promise<T> {
+		const {
+			timeout = 5000,
+			preventDefault = false,
+			errorMessage =
+				"The controller did not send the expected frame within the provided timeout!",
+		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
 		>(
 			timeout,
 			predicate,
-			"The controller did not send the expected frame within the provided timeout!",
+			errorMessage,
+			preventDefault,
 		);
 		try {
 			this.expectedControllerFrames.push(expectation);
@@ -273,11 +287,14 @@ export class MockNode {
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 */
-	public expectControllerACK(timeout: number): Promise<MockZWaveAckFrame> {
+	public expectControllerACK(
+		timeout: number,
+		errorMessage?: string,
+	): Promise<MockZWaveAckFrame> {
 		return this.expectControllerFrame(
-			timeout,
 			(msg): msg is MockZWaveAckFrame =>
 				msg.type === MockZWaveFrameType.ACK,
+			{ timeout, errorMessage },
 		);
 	}
 
@@ -289,7 +306,9 @@ export class MockNode {
 	): Promise<MockZWaveAckFrame | undefined> {
 		this.controller["air"].add({
 			source: this.id,
-			onTransmit: (frame) => this.sentControllerFrames.push(frame),
+			onTransmit: (frame) => {
+				this.sentControllerFrames.push(frame);
+			},
 			...frame,
 		});
 
@@ -311,12 +330,21 @@ export class MockNode {
 		}
 
 		// Handle message buffer. Check for pending expectations first.
-		const handler = this.expectedControllerFrames.find(
+		const handlers = this.expectedControllerFrames.filter(
 			(e) => !e.predicate || e.predicate(frame),
 		);
-		if (handler) {
+
+		// Resolve all matching expectations
+		for (const handler of handlers) {
 			handler.resolve(frame);
-		} else if (frame.type === MockZWaveFrameType.Request) {
+		}
+
+		// If any handler has preventDefault set, skip default behaviors
+		if (handlers.some((h) => h.preventDefault)) {
+			return;
+		}
+
+		if (frame.type === MockZWaveFrameType.Request) {
 			let cc = frame.payload;
 			let response: MockNodeResponse | undefined;
 

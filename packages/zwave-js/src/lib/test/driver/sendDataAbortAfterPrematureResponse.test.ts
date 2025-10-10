@@ -10,7 +10,6 @@ import type {
 	MockControllerBehavior,
 	MockNodeBehavior,
 } from "@zwave-js/testing";
-import { wait } from "alcalzone-shared/async";
 import path from "node:path";
 import {
 	MockControllerCommunicationState,
@@ -79,14 +78,12 @@ integrationTest(
 			const result = await node.commandClasses.Basic.get();
 			t.expect(result?.currentValue).toBe(42);
 
-			// Wait a bit to allow any pending operations to complete
-			await wait(50);
-
 			// Assert that the controller received a SendDataAbort
 			// This proves that the ongoing transaction was aborted when the
 			// premature response arrived
-			mockController.assertReceivedHostMessage(
+			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
+				{ timeout: 500 },
 			);
 		},
 	},

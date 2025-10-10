@@ -645,6 +645,10 @@ type AwaitedMessageEntry = AwaitedThing<Message>;
 type AwaitedCommandEntry = AwaitedThing<CCId>;
 type AwaitedCLIChunkEntry = AwaitedThing<CLIChunk>;
 export type AwaitedBootloaderChunkEntry = AwaitedThing<BootloaderChunk>;
+type AwaitedIdleEntry = Omit<
+	AwaitedThing<void>,
+	"predicate" | "refreshPredicate"
+>;
 
 interface TransportServiceSession {
 	fragmentSize: number;
@@ -1023,6 +1027,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private awaitedBootloaderChunks: AwaitedBootloaderChunkEntry[] = [];
 	/** A list of awaited chunks from the end device CLI */
 	private awaitedCLIChunks: AwaitedCLIChunkEntry[] = [];
+	/** A list of promises waiting for the queues to become idle */
+	private awaitedIdle: AwaitedIdleEntry[] = [];
 
 	/** A map of Node ID -> ongoing sessions */
 	private nodeSessions = new Map<number, Sessions>();
@@ -7685,6 +7691,56 @@ ${handlers.length} left`,
 	}
 
 	/**
+	 * Waits until the driver queues become idle or an optional timeout has elapsed.
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param abortSignal An optional abort signal to cancel the wait
+	 */
+	public waitForIdle(
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			// If the queues are already idle, resolve immediately
+			if (this.queueIdle) {
+				resolve();
+				return;
+			}
+
+			const promise = createDeferredPromise<void>();
+			const entry: AwaitedIdleEntry = {
+				handler: () => promise.resolve(),
+				timeout: undefined,
+			};
+			this.awaitedIdle.push(entry);
+			const removeEntry = () => {
+				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
+				const index = this.awaitedIdle.indexOf(entry);
+				if (index !== -1) this.awaitedIdle.splice(index, 1);
+			};
+			// When the timeout elapses, remove the wait entry and reject the returned Promise
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`The queues did not become idle within the provided timeout!`,
+							ZWaveErrorCodes.Controller_NodeTimeout,
+						),
+					);
+				}, timeout);
+			}
+			// When the promise is resolved, remove the wait entry and resolve the returned Promise
+			void promise.then(() => {
+				removeEntry();
+				resolve();
+			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
+		});
+	}
+
+	/**
 	 * Calls the given handler function every time a CommandClass is received that matches the given predicate.
 	 * @param predicate A predicate function to test all incoming command classes
 	 */
@@ -9196,6 +9252,13 @@ integrity: ${update.integrity}`;
 	private lastBackgroundRSSITimestamp = 0;
 
 	private handleQueueIdleChange(idle: boolean): void {
+		// Resolve all awaited idle promises when the queue becomes idle
+		if (idle) {
+			for (const entry of this.awaitedIdle) {
+				entry.handler();
+			}
+		}
+
 		if (!this.ready) return;
 		if (
 			this.controller.isFunctionSupported(FunctionType.GetBackgroundRSSI)

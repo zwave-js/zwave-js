@@ -685,8 +685,8 @@ const handleRequestNodeInfo: MockControllerBehavior = {
 			void controller.sendToNode(node, frame);
 			const nodeInfoPromise = controller.expectNodeCC(
 				node,
-				MOCK_FRAME_ACK_TIMEOUT,
 				(cc) => cc instanceof ZWaveProtocolCCNodeInformationFrame,
+				{ timeout: MOCK_FRAME_ACK_TIMEOUT },
 			);
 
 			// Notify the host that the message was sent

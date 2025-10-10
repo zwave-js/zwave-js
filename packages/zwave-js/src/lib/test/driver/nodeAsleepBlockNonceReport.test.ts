@@ -8,6 +8,7 @@ import {
 	MOCK_FRAME_ACK_TIMEOUT,
 	type MockNodeBehavior,
 	MockZWaveFrameType,
+	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
@@ -94,12 +95,12 @@ integrationTest(
 			);
 
 			// The driver should send a Nonce Report command
-			await wait(200);
-			mockNode.assertReceivedControllerFrame(
-				(f) =>
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
 					f.type === MockZWaveFrameType.Request
 					&& f.payload instanceof SecurityCCNonceReport,
 				{
+					timeout: 200,
 					errorMessage: "Expected a Nonce Report to be sent",
 				},
 			);
@@ -131,12 +132,12 @@ integrationTest(
 				}),
 			);
 
-			await wait(200);
-			mockNode.assertReceivedControllerFrame(
-				(f) =>
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
 					f.type === MockZWaveFrameType.Request
 					&& f.payload instanceof SecurityCCNonceReport,
 				{
+					timeout: 200,
 					errorMessage: "Expected a Nonce Report to be sent",
 				},
 			);
