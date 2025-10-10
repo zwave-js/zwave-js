@@ -73,13 +73,10 @@ integrationTest(
 
 			// Mark the node as asleep. This should abort the ongoing transaction.
 			node10.markAsAsleep();
-			await wait(50);
 
-			mockController.assertReceivedHostMessage(
+			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
-				{
-					errorMessage: "The SendData was not aborted",
-				},
+				{ timeout: 500 },
 			);
 
 			// Now ack the ping so the SendData command will be finished
