@@ -253,16 +253,22 @@ export class MockNode {
 		options?: {
 			timeout?: number;
 			preventDefault?: boolean;
+			errorMessage?: string;
 		},
 	): Promise<T> {
-		const { timeout = 5000, preventDefault = false } = options ?? {};
+		const {
+			timeout = 5000,
+			preventDefault = false,
+			errorMessage =
+				"The controller did not send the expected frame within the provided timeout!",
+		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
 		>(
 			timeout,
 			predicate,
-			"The controller did not send the expected frame within the provided timeout!",
+			errorMessage,
 			preventDefault,
 		);
 		try {
@@ -281,11 +287,14 @@ export class MockNode {
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 */
-	public expectControllerACK(timeout: number): Promise<MockZWaveAckFrame> {
+	public expectControllerACK(
+		timeout: number,
+		errorMessage?: string,
+	): Promise<MockZWaveAckFrame> {
 		return this.expectControllerFrame(
 			(msg): msg is MockZWaveAckFrame =>
 				msg.type === MockZWaveFrameType.ACK,
-			{ timeout },
+			{ timeout, errorMessage },
 		);
 	}
 

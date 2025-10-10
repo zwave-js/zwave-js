@@ -308,11 +308,15 @@ export class MockController {
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 */
-	public async expectHostACK(timeout: number): Promise<void> {
+	public async expectHostACK(
+		timeout: number,
+		errorMessage?: string,
+	): Promise<void> {
 		const ack = new TimedExpectation(
 			timeout,
 			undefined,
-			"Host did not respond with an ACK within the provided timeout!",
+			errorMessage
+				?? "Host did not respond with an ACK within the provided timeout!",
 		);
 		try {
 			this.expectedHostACKs.push(ack);
@@ -336,13 +340,19 @@ export class MockController {
 		options?: {
 			timeout?: number;
 			preventDefault?: boolean;
+			errorMessage?: string;
 		},
 	): Promise<Message> {
-		const { timeout = 5000, preventDefault = false } = options ?? {};
+		const {
+			timeout = 5000,
+			preventDefault = false,
+			errorMessage =
+				"Host did not send the expected message within the provided timeout!",
+		} = options ?? {};
 		const expectation = new TimedExpectation<Message, Message>(
 			timeout,
 			predicate,
-			"Host did not send the expected message within the provided timeout!",
+			errorMessage,
 			preventDefault,
 		);
 		try {
@@ -369,16 +379,22 @@ export class MockController {
 		options?: {
 			timeout?: number;
 			preventDefault?: boolean;
+			errorMessage?: string;
 		},
 	): Promise<T> {
-		const { timeout = 5000, preventDefault = false } = options ?? {};
+		const {
+			timeout = 5000,
+			preventDefault = false,
+			errorMessage =
+				`Node ${node.id} did not send the expected frame within the provided timeout!`,
+		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
 		>(
 			timeout,
 			predicate,
-			`Node ${node.id} did not send the expected frame within the provided timeout!`,
+			errorMessage,
 			preventDefault,
 		);
 		try {
@@ -411,6 +427,7 @@ export class MockController {
 		options?: {
 			timeout?: number;
 			preventDefault?: boolean;
+			errorMessage?: string;
 		},
 	): Promise<T> {
 		const ret = await this.expectNodeFrame(
@@ -431,12 +448,13 @@ export class MockController {
 	public expectNodeACK(
 		node: MockNode,
 		timeout: number,
+		errorMessage?: string,
 	): Promise<MockZWaveAckFrame> {
 		return this.expectNodeFrame(
 			node,
 			(msg): msg is MockZWaveAckFrame =>
 				msg.type === MockZWaveFrameType.ACK,
-			{ timeout },
+			{ timeout, errorMessage },
 		);
 	}
 
