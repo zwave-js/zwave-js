@@ -83,6 +83,7 @@ import {
 	BasicDeviceClass,
 	CommandClasses,
 	Duration,
+	type DurationLike,
 	EncapsulationFlags,
 	type MaybeNotKnown,
 	MessagePriority,
@@ -426,10 +427,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		);
 	}
 
-	public set defaultTransitionDuration(value: string | Duration | undefined) {
+	public set defaultTransitionDuration(
+		value: string | Duration | DurationLike | undefined,
+	) {
 		// Normalize to strings
-		if (typeof value === "string") value = Duration.from(value);
-		if (Duration.isDuration(value)) value = value.toString();
+		value = Duration.from(value)?.toString();
 
 		this.driver.cacheSet(
 			cacheKeys.node(this.id).defaultTransitionDuration,

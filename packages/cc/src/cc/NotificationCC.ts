@@ -1225,7 +1225,7 @@ export class NotificationCCReport extends NotificationCC {
 				}
 			} else if (isUint8Array(this.eventParameters)) {
 				message["event parameters"] = buffer2hex(this.eventParameters);
-			} else if (Duration.isDuration(this.eventParameters)) {
+			} else if (this.eventParameters instanceof Duration) {
 				message["event parameters"] = this.eventParameters.toString();
 			} else {
 				message["event parameters"] = Object.entries(
