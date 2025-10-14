@@ -1,7 +1,7 @@
 {
 	"manufacturer": "Philips",
 	"manufacturerId": "0x021d",
-	"label": "DDL240X",
+	"label": "DDL240X-1HZW",
 	"description": "Home Access Keyed Touchscreen Deadbolt",
 	"devices": [
 		{
@@ -59,9 +59,38 @@
 			"#": "4",
 			"label": "Association Group 2: Basic Set Value",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 6,
-			"defaultValue": 1
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable completely",
+					"value": 0
+				},
+				{
+					"label": "Unlocked: 0xff; Locked: 0x00",
+					"value": 1
+				},
+				{
+					"label": "Unlocked: 0x00; Locked: 0xff",
+					"value": 2
+				},
+				{
+					"label": "Unlocked: 0xff; Locked: No command",
+					"value": 3
+				},
+				{
+					"label": "Unlocked: No command; Locked: 0x00",
+					"value": 4
+				},
+				{
+					"label": "Unlocked: 0x00; Locked: No command",
+					"value": 5
+				},
+				{
+					"label": "Unlocked: No command; Locked: 0xff",
+					"value": 6
+				}
+			]
 		},
 		{
 			"#": "5",
