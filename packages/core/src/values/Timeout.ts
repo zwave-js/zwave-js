@@ -3,6 +3,12 @@ import { clamp } from "alcalzone-shared/math";
 
 export type TimeoutUnit = "seconds" | "minutes" | "none" | "infinite";
 
+/** An object that has the same shape as a Timeout instance */
+export interface TimeoutLike {
+	value: number;
+	unit: TimeoutUnit;
+}
+
 /** Represents a timeout that is used by some command classes */
 export class Timeout {
 	public constructor(value: number, public unit: TimeoutUnit) {
@@ -24,7 +30,7 @@ export class Timeout {
 		this._value = clamp(v, 0, this.unit === "seconds" ? 60 : 191);
 	}
 
-	public static isTimeout(value: any): value is Timeout {
+	public static isTimeout(value: any): value is TimeoutLike {
 		return typeof value === "object"
 			&& value != null
 			&& "value" in value
