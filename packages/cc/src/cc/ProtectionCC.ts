@@ -86,7 +86,7 @@ export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
 	...V.staticProperty(
 		"timeout",
 		{
-			...ValueMetadata.UInt8,
+			...ValueMetadata.Timeout,
 			label: "RF protection timeout",
 		} as const,
 		{ minVersion: 2 } as const,
