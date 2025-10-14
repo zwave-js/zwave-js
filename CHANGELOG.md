@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixes a rare issue with the cache serialization of certain values that could lead to out-of-memory crashes, often immediately or shortly after startup (#8353)
+
+### Config file changes
+* Add Namron 4512774 Remote Controller (#8335)
+
 ## 15.15.1 (2025-10-08)
 ### Bugfixes
 * Fixed a warning in bundlers about an unexpected `node:net` import (#8343)
