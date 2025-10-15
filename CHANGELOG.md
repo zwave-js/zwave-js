@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.15.3 (2025-10-15)
 ### Changes under the hood
 * Fixes an issue with loading the DB library when Z-Wave JS was bundled as CommonJS (#8356)
 
