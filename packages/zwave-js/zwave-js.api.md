@@ -48,6 +48,7 @@ import type { DeferredPromise } from 'alcalzone-shared/deferred-promise';
 import { DeviceConfig } from '@zwave-js/config';
 import type { DeviceID } from '@zwave-js/config';
 import { Duration } from '@zwave-js/core';
+import { DurationLike } from '@zwave-js/core';
 import { DurationUnit } from '@zwave-js/core';
 import { EndpointId } from '@zwave-js/core';
 import { EntryControlDataTypes } from '@zwave-js/cc';
@@ -2142,7 +2143,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     checkRouteHealth(targetNodeId: number, rounds?: number, onProgress?: (round: number, totalRounds: number, lastRating: number, lastResult: RouteHealthCheckResult) => void): Promise<RouteHealthCheckSummary>;
     createDump(): NodeDump;
     get defaultTransitionDuration(): string | undefined;
-    set defaultTransitionDuration(value: string | Duration | undefined);
+    set defaultTransitionDuration(value: string | Duration | DurationLike | undefined);
     get defaultVolume(): number | undefined;
     set defaultVolume(value: number | undefined);
     destroy(): void;
@@ -2572,7 +2573,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:8460:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/Driver.ts:8463:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
 // src/lib/driver/ZWaveOptions.ts:347:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2147:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2149:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:738:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:739:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
