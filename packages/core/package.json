@@ -118,7 +118,7 @@
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "dependencies": {
-    "@alcalzone/jsonl-db": "^4.0.1",
+    "@alcalzone/jsonl-db": "^4.0.2",
     "@zwave-js/shared": "workspace:*",
     "alcalzone-shared": "^5.0.0",
     "ansi-colors": "^4.1.3",
