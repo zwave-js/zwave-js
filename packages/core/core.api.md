@@ -497,6 +497,8 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
     // (undocumented)
     description?: string;
     // (undocumented)
+    destructive?: boolean;
+    // (undocumented)
     format?: ConfigValueFormat;
     // (undocumented)
     isAdvanced?: boolean;

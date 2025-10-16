@@ -332,6 +332,8 @@ export class ConditionalParamInformation implements ConditionalItem<ParamInforma
     // (undocumented)
     readonly description?: string;
     // (undocumented)
+    readonly destructive?: boolean;
+    // (undocumented)
     evaluateCondition(deviceId?: DeviceID): ParamInformation | undefined;
     // (undocumented)
     readonly label: string;
