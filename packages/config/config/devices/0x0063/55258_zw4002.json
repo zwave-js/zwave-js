@@ -34,7 +34,8 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion >= 5.51",
-			"$import": "~/templates/master_template.json#led_indicator_four_options"
+			"$import": "~/templates/master_template.json#led_indicator_three_options_inverted",
+			"defaultValue": 1
 		},
 		{
 			"#": "4",
