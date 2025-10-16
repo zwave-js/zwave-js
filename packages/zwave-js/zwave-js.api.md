@@ -427,7 +427,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     get controller(): ZWaveController;
     createSendDataMessage(command: CommandClass, options?: Omit<SendCommandOptions, keyof SendMessageOptions>): SendDataMessage & ContainsCC;
     destroy(): Promise<void>;
+    disableFrequentRSSIMonitoring(): void;
     disableStatistics(): void;
+    enableFrequentRSSIMonitoring(durationMs: number): void;
     // Warning: (ae-forgotten-export) The symbol "AppInfo" needs to be exported by the entry point index.d.ts
     enableStatistics(appInfo: Pick<AppInfo, "applicationName" | "applicationVersion">): void;
     // (undocumented)
@@ -478,6 +480,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     isCCSecure(ccId: CommandClasses, nodeId: number, endpointIndex?: number): boolean;
+    // (undocumented)
+    get isFrequentRSSIMonitoringEnabled(): boolean;
     isOTWFirmwareUpdateInProgress(): boolean;
     leaveBootloader(): Promise<void>;
     // (undocumented)
