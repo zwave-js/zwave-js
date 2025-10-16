@@ -32,8 +32,33 @@
 	},
 	"paramInformation": [
 		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
 			"#": "4",
 			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "40",
+			"label": "Fan Speed Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Press and hold",
+					"value": 0
+				},
+				{
+					"label": "Single button presses",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "84",
+			"$import": "templates/jasco_template.json#factory_default"
 		}
 	],
 	"compat": {
