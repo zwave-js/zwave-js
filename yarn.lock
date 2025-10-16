@@ -85,13 +85,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@alcalzone/jsonl-db@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@alcalzone/jsonl-db@npm:4.0.0"
+"@alcalzone/jsonl-db@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@alcalzone/jsonl-db@npm:4.0.2"
   dependencies:
     "@alcalzone/proper-lockfile": "npm:^4.1.3-0"
     alcalzone-shared: "npm:^5.0.0"
-  checksum: 10/a192ebab1bec09e0ac6bc1d30be7ae737a2fdd6d3ba95dfa170d34698e14f64c416a69e89e5b41eaa491b72ac19ede7a12050116bc52b8f6faeff4afd12dafcb
+  checksum: 10/101de61fdb05fd84382ad39c90aacbe0eb2d7e4235511f750c6943ca27fe57a3d88f7f11386672e12f6709985488b2ec633ea6c4dee7de869317bbe5f21cf461
   languageName: node
   linkType: hard
 
@@ -2947,7 +2947,7 @@ __metadata:
   resolution: "@zwave-js/core@workspace:packages/core"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@alcalzone/jsonl-db": "npm:^4.0.0"
+    "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@microsoft/api-extractor": "npm:^7.52.11"
     "@types/node": "npm:^20.19.9"
     "@types/semver": "npm:^7.7.1"
@@ -3114,7 +3114,7 @@ __metadata:
     "@actions/exec": "npm:^1.1.1"
     "@actions/github": "npm:^6.0.1"
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@alcalzone/jsonl-db": "npm:^4.0.0"
+    "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@alcalzone/monopack": "npm:^1.4.0"
     "@alcalzone/release-script": "npm:~4.0.0"
     "@commitlint/cli": "npm:^19.8.1"
@@ -11131,7 +11131,7 @@ __metadata:
   resolution: "zwave-js@workspace:packages/zwave-js"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@alcalzone/jsonl-db": "npm:^4.0.0"
+    "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@andrewbranch/untar.js": "npm:^1.0.3"
     "@homebridge/ciao": "npm:^1.3.4"
     "@microsoft/api-extractor": "npm:^7.52.11"

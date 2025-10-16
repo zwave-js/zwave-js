@@ -4,6 +4,12 @@ import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 export type DurationUnit = "seconds" | "minutes" | "unknown" | "default";
 
+/** An object that has the same shape as a Duration instance */
+export interface DurationLike {
+	value: number;
+	unit: DurationUnit;
+}
+
 const durationStringRegex =
 	/^(?:(?<hoursStr>\d+)h)?(?:(?<minutesStr>\d+)m)?(?:(?<secondsStr>\d+)s)?$/i;
 
@@ -39,7 +45,7 @@ export class Duration {
 		return new Duration(0, "default");
 	}
 
-	public static isDuration(value: any): value is Duration {
+	public static isDuration(value: any): value is DurationLike {
 		return typeof value === "object"
 			&& value != null
 			&& "value" in value
@@ -100,14 +106,20 @@ export class Duration {
 	}
 
 	/**
-	 * Takes a user-friendly duration string or a Duration instance and returns a Duration instance (if one was given)
+	 * Takes a user-friendly duration string, a DurationLike object, or a Duration instance and returns a Duration instance
 	 */
 	public static from(input: "default"): Duration;
-	public static from(input?: Duration | string): Duration | undefined;
+	public static from(
+		input?: Duration | DurationLike | string,
+	): Duration | undefined;
 
-	public static from(input?: Duration | string): Duration | undefined {
-		if (Duration.isDuration(input)) {
+	public static from(
+		input?: Duration | DurationLike | string,
+	): Duration | undefined {
+		if (input instanceof Duration) {
 			return input;
+		} else if (Duration.isDuration(input)) {
+			return new Duration(input.value, input.unit);
 		} else if (input) {
 			return Duration.parseString(input);
 		} else {

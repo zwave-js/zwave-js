@@ -15468,9 +15468,7 @@ export const ProtectionCCValues: Readonly<{
         is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "RF protection timeout";
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
+            readonly type: "timeout";
             readonly readable: true;
             readonly writeable: true;
         };

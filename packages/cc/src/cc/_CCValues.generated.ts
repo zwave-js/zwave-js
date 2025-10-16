@@ -7303,7 +7303,7 @@ export const ProtectionCCValues = Object.freeze({
 		},
 		get meta() {
 			return {
-				...ValueMetadata.UInt8,
+				...ValueMetadata.Timeout,
 				label: "RF protection timeout",
 			} as const;
 		},

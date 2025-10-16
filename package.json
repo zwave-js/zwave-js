@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/repo",
-  "version": "15.15.1",
+  "version": "15.15.3",
   "private": true,
   "description": "Z-Wave driver written entirely in JavaScript/TypeScript",
   "type": "module",
@@ -33,7 +33,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
     "@alcalzone/esm2cjs": "^1.4.2",
-    "@alcalzone/jsonl-db": "^4.0.0",
+    "@alcalzone/jsonl-db": "^4.0.2",
     "@alcalzone/monopack": "^1.4.0",
     "@alcalzone/release-script": "~4.0.0",
     "@commitlint/cli": "^19.8.1",

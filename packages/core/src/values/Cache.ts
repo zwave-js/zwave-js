@@ -7,6 +7,7 @@ import {
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import { Duration } from "./Duration.js";
 import type { ValueMetadata } from "./Metadata.js";
+import { Timeout } from "./Timeout.js";
 import type { ValueID } from "./_Types.js";
 
 // export type SerializableValue = number | string | boolean | Map<string | number, any> | JSONObject;
@@ -44,13 +45,21 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 			),
 			[SPECIAL_TYPE_KEY]: "map",
 		};
-	} else if (Duration.isDuration(value)) {
+	} else if (value instanceof Duration) {
 		const valueAsJSON = value.toJSON();
 		return {
 			...(typeof valueAsJSON === "string"
 				? { unit: valueAsJSON }
 				: valueAsJSON),
 			[SPECIAL_TYPE_KEY]: "duration",
+		};
+	} else if (value instanceof Timeout) {
+		const valueAsJSON = value.toJSON();
+		return {
+			...(typeof valueAsJSON === "string"
+				? { unit: valueAsJSON }
+				: valueAsJSON),
+			[SPECIAL_TYPE_KEY]: "timeout",
 		};
 	} else if (isUint8Array(value)) {
 		return {
@@ -89,9 +98,19 @@ export function deserializeCacheValue(value: SerializedValue): unknown {
 			);
 		} else if (specialType === "duration") {
 			return new Duration(value.value ?? 1, value.unit);
+		} else if (specialType === "timeout") {
+			return new Timeout(value.value ?? 1, value.unit);
 		} else if (specialType === "buffer") {
 			return hexToUint8Array(value.data);
 		}
 	}
+
+	// Some versions incorrectly encoded Timeout instances
+	// without the special type key, causing them to be detected as
+	// DurationLike objects. We try to detect and fix this here.
+	if (Timeout.isTimeout(value)) {
+		value = new Timeout(value.value ?? 1, value.unit);
+	}
+
 	return value;
 }
