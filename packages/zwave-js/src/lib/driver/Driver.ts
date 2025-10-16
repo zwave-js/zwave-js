@@ -9226,6 +9226,7 @@ integrity: ${update.integrity}`;
 		this.pollBackgroundRSSITimer = undefined;
 	}
 
+	/** Enable frequent RSSI monitoring for the given amount of milliseconds. During this time, the background RSSI will be measured every 2 seconds. */
 	public enableFrequentRSSIMonitoring(
 		durationMs: number,
 	): void {
@@ -9235,6 +9236,7 @@ integrity: ${update.integrity}`;
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
+
 		this.hfBackgroundRSSIEndTimestamp = Date.now() + durationMs;
 		// Restart a running timer to poll as soon as possible
 		if (this.pollBackgroundRSSITimer) {
@@ -9243,6 +9245,7 @@ integrity: ${update.integrity}`;
 		}
 	}
 
+	/** Disable frequent RSSI monitoring */
 	public disableFrequentRSSIMonitoring(): void {
 		this.hfBackgroundRSSIEndTimestamp = 0;
 		// Restart a running timer to lower the polling frequency
