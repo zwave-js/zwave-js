@@ -9194,6 +9194,7 @@ integrity: ${update.integrity}`;
 
 	private pollBackgroundRSSITimer: Timer | undefined;
 	private lastBackgroundRSSITimestamp = 0;
+	private hfBackgroundRSSIEndTimestamp = 0;
 
 	private handleQueueIdleChange(idle: boolean): void {
 		if (!this.ready) return;
@@ -9202,28 +9203,78 @@ integrity: ${update.integrity}`;
 		) {
 			// When the send thread stays idle for 5 seconds, poll the background RSSI, but at most every 30s
 			if (idle) {
-				const timeout = Math.max(
-					// Wait at least 5s
-					5000,
-					// and up to 30s if we recently queried the RSSI
-					30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
-				);
-				this.pollBackgroundRSSITimer = setTimer(async () => {
-					// Due to the timeout, the driver might have been destroyed in the meantime
-					if (!this.ready) return;
-
-					this.lastBackgroundRSSITimestamp = Date.now();
-					try {
-						await this.controller.getBackgroundRSSI();
-					} catch {
-						// ignore errors
-					}
-				}, timeout).unref();
+				this.setBackgroundRSSITimer();
 			} else {
-				this.pollBackgroundRSSITimer?.clear();
-				this.pollBackgroundRSSITimer = undefined;
+				this.clearBackgroundRSSITimer();
 			}
 		}
+	}
+
+	private setBackgroundRSSITimer(): void {
+		let timeout: number;
+		if (Date.now() < this.hfBackgroundRSSIEndTimestamp) {
+			// During high-frequency measurement periods, poll every 2s
+			timeout = Math.max(
+				2000,
+				2000 - (Date.now() - this.lastBackgroundRSSITimestamp),
+			);
+		} else {
+			timeout = Math.max(
+				// Wait at least 5s
+				5000,
+				// and up to 30s if we recently queried the RSSI
+				30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
+			);
+		}
+		this.pollBackgroundRSSITimer = setTimer(async () => {
+			// Due to the timeout, the driver might have been destroyed in the meantime
+			if (!this.ready) return;
+
+			this.lastBackgroundRSSITimestamp = Date.now();
+			try {
+				await this.controller.getBackgroundRSSI();
+			} catch {
+				// ignore errors
+			}
+		}, timeout).unref();
+	}
+
+	private clearBackgroundRSSITimer(): void {
+		this.pollBackgroundRSSITimer?.clear();
+		this.pollBackgroundRSSITimer = undefined;
+	}
+
+	/** Enable frequent RSSI monitoring for the given amount of milliseconds. During this time, the background RSSI will be measured every 2 seconds. */
+	public enableFrequentRSSIMonitoring(
+		durationMs: number,
+	): void {
+		if (durationMs < 10000 || durationMs > 3600 * 1000) {
+			throw new ZWaveError(
+				`The duration must be between 10 seconds and one hour!`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		this.hfBackgroundRSSIEndTimestamp = Date.now() + durationMs;
+		// Restart a running timer to poll as soon as possible
+		if (this.pollBackgroundRSSITimer) {
+			this.clearBackgroundRSSITimer();
+			this.setBackgroundRSSITimer();
+		}
+	}
+
+	/** Disable frequent RSSI monitoring */
+	public disableFrequentRSSIMonitoring(): void {
+		this.hfBackgroundRSSIEndTimestamp = 0;
+		// Restart a running timer to lower the polling frequency
+		if (this.pollBackgroundRSSITimer) {
+			this.clearBackgroundRSSITimer();
+			this.setBackgroundRSSITimer();
+		}
+	}
+
+	public get isFrequentRSSIMonitoringEnabled(): boolean {
+		return Date.now() < this.hfBackgroundRSSIEndTimestamp;
 	}
 
 	private _powerlevelTestNodeContext: {

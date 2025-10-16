@@ -365,6 +365,28 @@ This requires an external configuration directory to be configured using the `de
 
 > [!NOTE] Although the updated config gets loaded after the update, bugfixes and changes to device configuration generally require either a driver restart or re-interview of the changed devices to take effect.
 
+Disable sending usage statistics.
+
+### Background RSSI (noise) monitoring
+
+Z-Wave JS periodically measures the background RSSI (noise level) to provide insights about the network environment. By default, this is done only when the queue is idle for several seconds, and repeated at 30s intervals. It can be desirable to get quicker feedback about the noise levels at a certain location, for example when trying to find a good location for a new node or repeater. To achive that, you can enable frequent RSSI monitoring.
+
+### `enableFrequentRSSIMonitoring`
+
+```ts
+enableFrequentRSSIMonitoring(durationMs: number): void
+```
+
+Enables frequent background RSSI monitoring for a given amount of milliseconds. During this time, the background RSSI will be measured every 2 seconds, but only when the queue is idle. The readings will be emitted as statistics event as usual.
+
+### `disableFrequentRSSIMonitoring`
+
+```ts
+disableFrequentRSSIMonitoring(): void
+```
+
+Disables frequent background RSSI monitoring.
+
 ## Driver properties
 
 ### `cacheDir`
@@ -417,6 +439,14 @@ readonly statisticsEnabled: boolean
 ```
 
 Returns whether reporting usage statistics is currently enabled.
+
+### `isFrequentRSSIMonitoringEnabled`
+
+```ts
+readonly isFrequentRSSIMonitoringEnabled: boolean
+```
+
+Returns whether frequent background RSSI monitoring is currently enabled.
 
 ### `userAgent`
 
