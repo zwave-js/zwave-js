@@ -212,9 +212,6 @@ export enum ZWaveErrorCodes {
 
 	/** Unsupported target node for a powerlevel test */
 	PowerlevelCC_UnsupportedTestNode = 1600,
-
-	/** Confirmation is required to set a destructive configuration parameter */
-	ConfigurationCC_ConfirmationRequired = 1003,
 }
 
 export function getErrorSuffix(code: ZWaveErrorCodes): string {

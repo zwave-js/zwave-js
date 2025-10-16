@@ -113,7 +113,6 @@ export const ConfigurationCCValues = V.defineCCValues(
 export type ConfigurationCCAPISetOptions =
 	& {
 		parameter: number;
-		confirm?: boolean;
 	}
 	& (
 		| {
@@ -140,7 +139,6 @@ type NormalizedConfigurationCCAPISetOptions =
 		parameter: number;
 		valueSize: 1 | 2 | 4;
 		valueFormat: ConfigValueFormat;
-		confirm?: boolean;
 	}
 	& (
 		| { bitMask?: undefined; value: ConfigValue }
@@ -181,7 +179,6 @@ function normalizeConfigurationCCAPISetOptions(
 			value: options.value,
 			valueSize: paramInfo.valueSize as any,
 			valueFormat: paramInfo.format!,
-			confirm: options.confirm,
 		};
 	} else if ("valueSize" in options) {
 		// Variant 2: Normal parameter, not defined in a config file
@@ -190,7 +187,6 @@ function normalizeConfigurationCCAPISetOptions(
 			"value",
 			"valueSize",
 			"valueFormat",
-			"confirm",
 		]);
 	} else {
 		// Variant 1: Normal parameter, defined in a config file
@@ -211,7 +207,6 @@ function normalizeConfigurationCCAPISetOptions(
 			value: options.value,
 			valueSize: paramInfo.valueSize as any,
 			valueFormat: paramInfo.format!,
-			confirm: options.confirm,
 		};
 	}
 }
@@ -383,7 +378,6 @@ export class ConfigurationCCAPI extends CCAPI {
 			this: ConfigurationCCAPI,
 			{ property, propertyKey },
 			value,
-			options,
 		) {
 			// Config parameters are addressed with numeric properties/keys
 			if (typeof property !== "number") {
@@ -516,7 +510,6 @@ export class ConfigurationCCAPI extends CCAPI {
 				value: targetValue,
 				valueSize: valueSize as any,
 				valueFormat,
-				confirm: options?.confirm,
 			});
 
 			if (
@@ -737,21 +730,6 @@ export class ConfigurationCCAPI extends CCAPI {
 			this.endpoint,
 			options,
 		);
-
-		// Check if this is a destructive parameter that requires confirmation
-		const ccc = createConfigurationCCInstance(this.endpoint);
-		const paramInfo = ccc.getParamInformation(
-			this.host,
-			normalized.parameter,
-			normalized.bitMask,
-		);
-		if (paramInfo.destructive && !normalized.confirm) {
-			throw new ZWaveError(
-				`Setting parameter #${normalized.parameter} requires confirmation because it is marked as destructive. Pass { confirm: true } to proceed.`,
-				ZWaveErrorCodes.ConfigurationCC_ConfirmationRequired,
-			);
-		}
-
 		let value = normalized.value;
 		if (normalized.bitMask) {
 			const ccc = createConfigurationCCInstance(this.endpoint);
@@ -790,23 +768,6 @@ export class ConfigurationCCAPI extends CCAPI {
 				v,
 			)
 		);
-
-		// Check for destructive parameters that require confirmation
-		const ccc = createConfigurationCCInstance(this.endpoint);
-		for (const norm of normalized) {
-			const paramInfo = ccc.getParamInformation(
-				this.host,
-				norm.parameter,
-				norm.bitMask,
-			);
-			if (paramInfo.destructive && !norm.confirm) {
-				throw new ZWaveError(
-					`Setting parameter #${norm.parameter} requires confirmation because it is marked as destructive. Pass { confirm: true } to proceed.`,
-					ZWaveErrorCodes.ConfigurationCC_ConfirmationRequired,
-				);
-			}
-		}
-
 		// And merge multiple partials that belong the same "full" value
 		const allParams = bulkMergePartialParamValues(
 			this.host,

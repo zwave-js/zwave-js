@@ -171,7 +171,7 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 			throwInvalidConfig(
 				"devices",
 				`packages/config/config/devices/${parent.filename}:
-		Parameter #${parameterNumber} has a non-boolean property destructive`,
+Parameter #${parameterNumber} has a non-boolean property destructive`,
 			);
 		}
 		this.destructive = definition.destructive;
@@ -188,7 +188,7 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 			throwInvalidConfig(
 				"devices",
 				`packages/config/config/devices/${parent.filename}:
-		Parameter #${parameterNumber}: options is malformed!`,
+Parameter #${parameterNumber}: options is malformed!`,
 			);
 		}
 

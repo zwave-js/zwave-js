@@ -437,7 +437,7 @@
 				},
 				"destructive": {
 					"type": "boolean",
-					"description": "Whether this parameter is destructive and requires confirmation before setting"
+					"description": "Whether this parameter is destructive and should require confirmation before setting"
 				},
 				"options": {
 					"type": "array",
