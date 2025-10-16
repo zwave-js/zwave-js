@@ -33,6 +33,7 @@
 	"paramInformation": [
 		{
 			"#": "3",
+			"$if": "firmwareVersion >= 5.51",
 			"$import": "~/templates/master_template.json#led_indicator_four_options"
 		},
 		{
@@ -41,6 +42,7 @@
 		},
 		{
 			"#": "40",
+			"$if": "firmwareVersion >= 5.51",
 			"label": "Fan Speed Control",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -58,6 +60,7 @@
 		},
 		{
 			"#": "84",
+			"$if": "firmwareVersion >= 5.51",
 			"$import": "templates/jasco_template.json#factory_default"
 		}
 	],
@@ -68,6 +71,6 @@
 		"inclusion": "Press and release the top or bottom rocker.",
 		"exclusion": "Press and release the top or bottom rocker.",
 		"reset": "1. Quickly press the top button three times, then immediately press the bottom button three times. 2. The LED will flash on/off five times when completed successfully.",
-		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3928/55258%20QSG%20v1%20(5).pdf"
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/52589/55258%20QSG%20v1%20(5).pdf"
 	}
 }
