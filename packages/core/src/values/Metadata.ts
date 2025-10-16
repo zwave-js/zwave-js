@@ -188,6 +188,7 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
 	states?: Record<number, string>;
 	allowManualEntry?: boolean;
 	isFromConfig?: boolean;
+	destructive?: boolean;
 }
 
 export type ValueMetadata =
