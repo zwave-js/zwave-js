@@ -5602,12 +5602,12 @@ ${handlers.length} left`,
 			) {
 				// The message we're currently sending is still in progress but expects this message in response.
 				// Remember the message there.
-					this.controllerLog.logNode(msg.getNodeId()!, {
-						message:
+				this.controllerLog.logNode(msg.getNodeId()!, {
+					message:
 						`received expected response prematurely, remembering it...`,
-						level: "verbose",
-						direction: "inbound",
-					});
+					level: "verbose",
+					direction: "inbound",
+				});
 				currentMessage.prematureNodeUpdate = msg;
 				return;
 			}
@@ -9229,6 +9229,12 @@ integrity: ${update.integrity}`;
 	public enableFrequentRSSIMonitoring(
 		durationMs: number,
 	): void {
+		if (durationMs < 10000 || durationMs > 3600 * 1000) {
+			throw new ZWaveError(
+				`The duration must be between 10 seconds and one hour!`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
 		this.hfBackgroundRSSIEndTimestamp = Date.now() + durationMs;
 		// Restart a running timer to poll as soon as possible
 		if (this.pollBackgroundRSSITimer) {
