@@ -1,9 +1,8 @@
 // demo.ts
-import { Buffer } from "node:buffer";
 import { exit } from "node:process";
 import { type ControllerStatistics, Driver } from "zwave-js";
 
-const MINIMUN_RSSI = -120;
+const MINIMUM_RSSI = -120;
 const HF_MODE_TIMEOUT = 300_000; // The amount of time to keep high-frequency mode enabled. in milliseconds
 const PORT = "/dev/ttyACM0"; // Adjust this to your USB stick port (e.g., /dev/tty.usbmodemXYZ or /dev/ttyACM0)
 
@@ -13,7 +12,7 @@ const PORT = "/dev/ttyACM0"; // Adjust this to your USB stick port (e.g., /dev/t
  * @returns The progress bar string
  */
 function drawRSSIProgressBar(current: number, width = 40): string {
-	const ratio = current / MINIMUN_RSSI;
+	const ratio = current / MINIMUM_RSSI;
 	const empty = Math.round(ratio * width);
 	const filled = width - empty;
 	// Ensure no negative values in case of very good RSSI
@@ -21,15 +20,6 @@ function drawRSSIProgressBar(current: number, width = 40): string {
 		return `[${"█".repeat(width)}]`;
 	}
 	return `[${"█".repeat(filled)}${"·".repeat(empty)}]`;
-}
-
-// Generates a random 16-byte key
-function generateRandomKey(): Buffer<ArrayBuffer> {
-	const key = Buffer.alloc(16);
-	for (let i = 0; i < 16; i++) {
-		key[i] = Math.floor(Math.random() * 256);
-	}
-	return key;
 }
 
 // It draws a row with all the channel information in the terminal
@@ -53,7 +43,7 @@ function writeChannelRow(
 				\r\x1b[${row};12H${
 				drawRSSIProgressBar(
 					channel.current
-						|| MINIMUN_RSSI,
+						|| MINIMUM_RSSI,
 					30,
 				)
 			} `,
@@ -92,10 +82,8 @@ function updateChannelsDisplay(
 				1,
 				{
 					id: id,
-					average: channel
-						?.average,
-					current: channel
-						?.current,
+					average: channel?.average,
+					current: channel?.current,
 				},
 			);
 		}
@@ -120,7 +108,7 @@ let lastHintTimeout: NodeJS.Timeout;
 function showTemporalUpdateHint() {
 	// Clear any previous timeout
 	if (lastHintTimeout) clearTimeout(lastHintTimeout);
-	// write on line 6 a red squre
+	// write on line 6 a red square
 	process.stdout.write(
 		`\r\x1b[7;63HX`,
 	);
@@ -144,16 +132,6 @@ async function main(args: string[] = process.argv.slice(2)) {
 	const driver = new Driver(
 		args[0] || PORT, // Read the first param as the port if provided
 		{
-			securityKeys: {
-				S0_Legacy: generateRandomKey(),
-				S2_Unauthenticated: generateRandomKey(),
-				S2_AccessControl: generateRandomKey(),
-				S2_Authenticated: generateRandomKey(),
-			},
-			securityKeysLongRange: {
-				S2_Authenticated: generateRandomKey(),
-				S2_AccessControl: generateRandomKey(),
-			},
 			logConfig: {
 				enabled: true,
 				level: "error",
@@ -186,17 +164,17 @@ async function main(args: string[] = process.argv.slice(2)) {
 			}
 			// 'h' toggles high-frequency mode
 			if (key === "h") {
-				if (!driver.poolBackgroundRSSIHFModeEnabled) {
-					driver.enableBackgroundRSSIHFMode(
+				if (!driver.isFrequentRSSIMonitoringEnabled) {
+					driver.enableFrequentRSSIMonitoring(
 						HF_MODE_TIMEOUT,
 					);
 				} else {
-					driver.disableBackgroundRSSIHFMode();
+					driver.disableFrequentRSSIMonitoring();
 				}
 				// Update stats to show the new HF mode status
 				updateChannelsDisplay(
 					storedStats,
-					driver.poolBackgroundRSSIHFModeEnabled,
+					driver.isFrequentRSSIMonitoringEnabled,
 				);
 			}
 		};
@@ -208,7 +186,7 @@ async function main(args: string[] = process.argv.slice(2)) {
 			// Update the stats to reflect the new values
 			updateChannelsDisplay(
 				storedStats,
-				driver.poolBackgroundRSSIHFModeEnabled,
+				driver.isFrequentRSSIMonitoringEnabled,
 			);
 		});
 	});
