@@ -42,6 +42,10 @@
 			"$import": "~/templates/master_template.json#orientation"
 		},
 		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion_menu"
+		},
+		{
 			"#": "40",
 			"$if": "firmwareVersion >= 5.51",
 			"label": "Fan Speed Control",
