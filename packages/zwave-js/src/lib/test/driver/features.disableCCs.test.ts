@@ -5,9 +5,9 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import {
 	MockZWaveFrameType,
+	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -32,15 +32,14 @@ integrationTest(
 				ackRequested: false,
 			}));
 
-			await wait(100);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof VersionCCCommandClassReport
 					&& frame.payload.requestedCC
 						=== CommandClasses["Binary Switch"]
 					&& frame.payload.ccVersion === 0,
+				{ timeout: 100 },
 			);
 		},
 	},

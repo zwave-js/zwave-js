@@ -240,7 +240,6 @@ integrationTest(
 						);
 
 						const nonceReport = await self.expectControllerFrame(
-							1000,
 							(
 								resp,
 							): resp is MockZWaveFrame & {
@@ -249,6 +248,7 @@ integrationTest(
 							} => resp.type === MockZWaveFrameType.Request
 								&& resp.payload
 									instanceof SecurityCCNonceReport,
+							{ timeout: 1000 },
 						);
 						const receiverNonce = nonceReport.payload.nonce;
 
@@ -301,7 +301,6 @@ integrationTest(
 						);
 
 						const nonceReport = await self.expectControllerFrame(
-							1000,
 							(
 								resp,
 							): resp is MockZWaveFrame & {
@@ -310,6 +309,7 @@ integrationTest(
 							} => resp.type === MockZWaveFrameType.Request
 								&& resp.payload
 									instanceof SecurityCCNonceReport,
+							{ timeout: 1000 },
 						);
 						const receiverNonce = nonceReport.payload.nonce;
 

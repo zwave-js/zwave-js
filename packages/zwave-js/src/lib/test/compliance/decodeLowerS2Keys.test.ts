@@ -190,8 +190,6 @@ integrationTest(
 			mockNode.clearReceivedControllerFrames();
 			await node.commandClasses.Basic.set(0xff);
 
-			await wait(200);
-
 			// The controller MUST have sent a NonceGet
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
