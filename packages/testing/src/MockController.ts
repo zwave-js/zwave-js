@@ -419,7 +419,7 @@ export class MockController {
 	 * @param predicate A predicate function to test incoming CCs
 	 * @param options Optional configuration
 	 * @param options.timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected. Default: 5000ms
-	 * @param options.preventDefault If true, the default behavior will not be executed after the expectation is fulfilled. Default: true
+	 * @param options.preventDefault If true, the default behavior will not be executed after the expectation is fulfilled. Default: false
 	 */
 	public async expectNodeCC<T extends CCId = CCId>(
 		node: MockNode,
