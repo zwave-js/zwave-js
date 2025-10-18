@@ -134,10 +134,10 @@ integrationTest(
 	},
 );
 
-integrationTest.only(
+integrationTest(
 	"Recover controller if callback times out after timed out SendData response",
 	{
-		debug: true,
+		// debug: true,
 
 		controllerCapabilities: controllerCapabilitiesNoBridge,
 
