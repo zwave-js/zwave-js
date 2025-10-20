@@ -47,6 +47,7 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "bootstrap": "yarn build",
     "clean": "del-cli build/ *.tsbuildinfo",
     "lint:ts": "eslint --cache --cache-location .eslintcache/ -c ../../eslint.config.mjs src/**/*.ts",
     "lint:ts:fix": "yarn run lint:ts --fix"
