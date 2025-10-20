@@ -109,10 +109,9 @@ integrationTest(
 			const basicSetPromise = node.commandClasses.Basic.set(99)
 				.catch((e) => e);
 
-			await wait(2000);
-
-			mockController.assertReceivedHostMessage(
+			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
+				{ timeout: 2000 },
 			);
 			mockController.clearReceivedHostMessages();
 
@@ -192,17 +191,18 @@ integrationTest(
 
 			const basicSetPromise = node.commandClasses.Basic.set(99);
 
-			await wait(2000);
-
-			mockController.assertReceivedHostMessage(
+			// The transmission should be aborted after the response timeout elapses
+			// We leave 500ms of leeway for tests.
+			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
+				{ timeout: 1000 },
 			);
-			mockController.clearReceivedHostMessages();
 
-			// The stick should have been soft-reset
-			await wait(1000);
-			mockController.assertReceivedHostMessage(
+			// Soft reset should be done after roughly 2 seconds. Again, leave
+			// a bit of leeway for the tests
+			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SoftReset,
+				{ timeout: 2500 },
 			);
 
 			// And the command should eventually succeed

@@ -491,13 +491,13 @@ integrationTest(
 				}),
 			);
 			const reportConfirmation = mockNode.expectControllerFrame(
-				500,
 				(f): f is MockZWaveRequestFrame =>
 					f.type === MockZWaveFrameType.Request
 					&& f.payload instanceof Security2CCMessageEncapsulation
 					&& f.payload.encapsulated instanceof SupervisionCCReport
 					&& f.payload.encapsulated.status
 						=== SupervisionStatus.Success,
+				{ timeout: 500 },
 			);
 
 			// We want both transactions to be completed successfully

@@ -10,12 +10,16 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 {
 	public constructor(
 		timeoutMs: number,
-		public readonly predicate?: (input: TPredicate) => boolean,
-		private readonly timeoutErrorMessage: string =
+		predicate?: (input: TPredicate) => boolean,
+		timeoutErrorMessage: string =
 			"Expectation was not fulfilled within the timeout",
+		preventDefault: boolean = false,
 	) {
 		this.promise = createDeferredPromise<TResult>();
 		this.timeout = setTimer(() => this.reject(), timeoutMs);
+		this.timeoutErrorMessage = timeoutErrorMessage;
+		this.predicate = predicate;
+		this.preventDefault = preventDefault;
 
 		// We need create the stack on a temporary object or the Error
 		// class will try to print the message
@@ -27,6 +31,9 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 	private promise: DeferredPromise<TResult>;
 	private timeout?: Timer;
 	private _done: boolean = false;
+	private readonly timeoutErrorMessage: string;
+	public readonly predicate?: (input: TPredicate) => boolean;
+	public readonly preventDefault: boolean;
 
 	/** The stack trace where the timed expectation was created */
 	public readonly stack: string;

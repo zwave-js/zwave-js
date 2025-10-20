@@ -9,6 +9,7 @@ import { FunctionType } from "@zwave-js/serial";
 import {
 	type MockNodeBehavior,
 	MockZWaveFrameType,
+	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
@@ -61,25 +62,22 @@ integrationTest(
 			const pingPromise17 = node17.ping();
 
 			// Ping for 10 should be sent
-			await wait(50);
-			mockNode10.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode10.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof NoOperationCC,
 				{
+					timeout: 50,
 					errorMessage: "Node 10 did not receive the ping",
 				},
 			);
 
 			// Mark the node as asleep. This should abort the ongoing transaction.
 			node10.markAsAsleep();
-			await wait(50);
 
-			mockController.assertReceivedHostMessage(
+			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
-				{
-					errorMessage: "The SendData was not aborted",
-				},
+				{ timeout: 500 },
 			);
 
 			// Now ack the ping so the SendData command will be finished
@@ -90,12 +88,12 @@ integrationTest(
 			t.expect(pingResult10).toBe(false);
 
 			// Now the ping for 17 should go out
-			await wait(500);
-			mockNode17.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode17.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof NoOperationCC,
 				{
+					timeout: 500,
 					errorMessage: "Node 17 did not receive the ping",
 				},
 			);
