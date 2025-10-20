@@ -88,6 +88,9 @@
 			"#": "46",
 			"label": "Motor Resistance",
 			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 4294967295,
+			"unsigned": true,
 			"readOnly": true
 		}
 	]
