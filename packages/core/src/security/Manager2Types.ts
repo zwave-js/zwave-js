@@ -1,3 +1,4 @@
+import { BytesView } from "@zwave-js/shared";
 import type {
 	S2SecurityClass,
 	SecurityClass,
@@ -5,14 +6,14 @@ import type {
 import type { CtrDRBG } from "./ctr_drbg.js";
 
 export interface NetworkKeys {
-	pnk: Uint8Array;
-	keyCCM: Uint8Array;
-	keyMPAN: Uint8Array;
-	personalizationString: Uint8Array;
+	pnk: BytesView;
+	keyCCM: BytesView;
+	keyMPAN: BytesView;
+	personalizationString: BytesView;
 }
 export interface TempNetworkKeys {
-	keyCCM: Uint8Array;
-	personalizationString: Uint8Array;
+	keyCCM: BytesView;
+	personalizationString: BytesView;
 }
 
 export enum SPANState {
@@ -39,12 +40,12 @@ export type SPANTableEntry =
 	| {
 		// We know the other node's receiver's entropy input, but we didn't send it our sender's EI yet
 		type: SPANState.RemoteEI;
-		receiverEI: Uint8Array;
+		receiverEI: BytesView;
 	}
 	| {
 		// We've sent the other node our receiver's entropy input, but we didn't receive its sender's EI yet
 		type: SPANState.LocalEI;
-		receiverEI: Uint8Array;
+		receiverEI: BytesView;
 	}
 	| {
 		// We've established an SPAN with the other node
@@ -53,7 +54,7 @@ export type SPANTableEntry =
 		rng: CtrDRBG;
 		/** The most recent generated SPAN */
 		currentSPAN?: {
-			nonce: Uint8Array;
+			nonce: BytesView;
 			expires: number;
 		};
 	};
@@ -64,7 +65,7 @@ export type MPANTableEntry =
 	}
 	| {
 		type: MPANState.MPAN;
-		currentMPAN: Uint8Array;
+		currentMPAN: BytesView;
 	};
 
 export interface MulticastGroup {

@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import { BLOCK_SIZE, leftShift1, xor, zeroPad } from "./shared.js";
 
 // Import the correct primitives based on the environment
@@ -43,18 +43,18 @@ const constantEI = new Uint8Array(15).fill(0x88);
 
 /** Computes a message authentication code for Security S0 (as described in SDS10865) */
 export async function computeMAC(
-	authData: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array = new Uint8Array(BLOCK_SIZE).fill(0),
-): Promise<Uint8Array> {
+	authData: BytesView,
+	key: BytesView,
+	iv: BytesView = new Uint8Array(BLOCK_SIZE).fill(0),
+): Promise<BytesView> {
 	const ciphertext = await encryptAES128CBC(authData, key, iv);
 	// The MAC is the first 8 bytes of the last 16 byte block
 	return ciphertext.subarray(ciphertext.length - BLOCK_SIZE).subarray(0, 8);
 }
 
 async function generateAES128CMACSubkeys(
-	key: Uint8Array,
-): Promise<[k1: Uint8Array, k2: Uint8Array]> {
+	key: BytesView,
+): Promise<[k1: BytesView, k2: BytesView]> {
 	// NIST SP 800-38B, chapter 6.1
 	const L = await encryptAES128ECB(Z128, key);
 	const k1 = !(L[0] & 0x80) ? leftShift1(L) : xor(leftShift1(L), R128);
@@ -64,9 +64,9 @@ async function generateAES128CMACSubkeys(
 
 /** Computes a message authentication code for Security S2 (as described in SDS13783) */
 export async function computeCMAC(
-	message: Uint8Array,
-	key: Uint8Array,
-): Promise<Uint8Array> {
+	message: BytesView,
+	key: BytesView,
+): Promise<BytesView> {
 	const blockSize = 16;
 	const numBlocks = Math.ceil(message.length / blockSize);
 	let lastBlock = message.subarray((numBlocks - 1) * blockSize);
@@ -95,9 +95,9 @@ export async function computeCMAC(
 
 /** Computes the Pseudo Random Key (PRK) used to derive auth, encryption and nonce keys */
 export function computePRK(
-	ecdhSharedSecret: Uint8Array,
-	pubKeyA: Uint8Array,
-	pubKeyB: Uint8Array,
+	ecdhSharedSecret: BytesView,
+	pubKeyA: BytesView,
+	pubKeyB: BytesView,
 ): Promise<Uint8Array> {
 	const message = Bytes.concat([ecdhSharedSecret, pubKeyA, pubKeyB]);
 	return computeCMAC(message, constantPRK);
@@ -105,8 +105,8 @@ export function computePRK(
 
 /** Derives the temporary auth, encryption and nonce keys from the PRK */
 export async function deriveTempKeys(
-	PRK: Uint8Array,
-): Promise<{ tempKeyCCM: Uint8Array; tempPersonalizationString: Uint8Array }> {
+	PRK: BytesView,
+): Promise<{ tempKeyCCM: BytesView; tempPersonalizationString: BytesView }> {
 	const T1 = await computeCMAC(
 		Bytes.concat([constantTE, [0x01]]),
 		PRK,
@@ -127,12 +127,12 @@ export async function deriveTempKeys(
 
 /** Derives the CCM, MPAN keys and the personalization string from the permanent network key (PNK) */
 export async function deriveNetworkKeys(
-	PNK: Uint8Array,
+	PNK: BytesView,
 ): Promise<
 	{
-		keyCCM: Uint8Array;
-		keyMPAN: Uint8Array;
-		personalizationString: Uint8Array;
+		keyCCM: BytesView;
+		keyMPAN: BytesView;
+		personalizationString: BytesView;
 	}
 > {
 	const T1 = await computeCMAC(
@@ -160,15 +160,15 @@ export async function deriveNetworkKeys(
 
 /** Computes the Pseudo Random Key (PRK) used to derive the mixed entropy input (MEI) for nonce generation */
 export function computeNoncePRK(
-	senderEI: Uint8Array,
-	receiverEI: Uint8Array,
-): Promise<Uint8Array> {
+	senderEI: BytesView,
+	receiverEI: BytesView,
+): Promise<BytesView> {
 	const message = Bytes.concat([senderEI, receiverEI]);
 	return computeCMAC(message, constantNonce);
 }
 
 /** Derives the MEI from the nonce PRK */
-export async function deriveMEI(noncePRK: Uint8Array): Promise<Uint8Array> {
+export async function deriveMEI(noncePRK: BytesView): Promise<BytesView> {
 	const T1 = await computeCMAC(
 		Bytes.concat([
 			constantEI,

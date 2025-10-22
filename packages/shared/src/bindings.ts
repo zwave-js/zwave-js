@@ -2,70 +2,71 @@
 // file system access, etc.
 
 import type { ReadableWritablePair } from "node:stream/web";
+import { BytesView } from "./Bytes.js";
 
 export interface CryptoPrimitives {
-	randomBytes(length: number): Uint8Array;
+	randomBytes(length: number): BytesView;
 	/** Encrypts a payload using AES-128-ECB */
 	encryptAES128ECB(
-		plaintext: Uint8Array,
-		key: Uint8Array,
-	): Promise<Uint8Array>;
+		plaintext: BytesView,
+		key: BytesView,
+	): Promise<BytesView>;
 	/** Encrypts a payload using AES-128-CBC */
 	encryptAES128CBC(
-		plaintext: Uint8Array,
-		key: Uint8Array,
-		iv: Uint8Array,
-	): Promise<Uint8Array>;
+		plaintext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+	): Promise<BytesView>;
 	/** Encrypts a payload using AES-128-OFB */
 	encryptAES128OFB(
-		plaintext: Uint8Array,
-		key: Uint8Array,
-		iv: Uint8Array,
-	): Promise<Uint8Array>;
+		plaintext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+	): Promise<BytesView>;
 	/** Decrypts a payload using AES-128-OFB */
 	decryptAES128OFB(
-		ciphertext: Uint8Array,
-		key: Uint8Array,
-		iv: Uint8Array,
-	): Promise<Uint8Array>;
+		ciphertext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+	): Promise<BytesView>;
 	/** Decrypts a payload using AES-256-CBC */
 	decryptAES256CBC(
-		ciphertext: Uint8Array,
-		key: Uint8Array,
-		iv: Uint8Array,
-	): Promise<Uint8Array>;
+		ciphertext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+	): Promise<BytesView>;
 	/** Encrypts and authenticates a payload using AES-128-CCM */
 	encryptAES128CCM(
-		plaintext: Uint8Array,
-		key: Uint8Array,
-		iv: Uint8Array,
-		additionalData: Uint8Array,
+		plaintext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+		additionalData: BytesView,
 		authTagLength: number,
-	): Promise<{ ciphertext: Uint8Array; authTag: Uint8Array }>;
+	): Promise<{ ciphertext: BytesView; authTag: BytesView }>;
 	/** Decrypts and verifies a payload using AES-128-CCM */
 	decryptAES128CCM(
-		ciphertext: Uint8Array,
-		key: Uint8Array,
-		iv: Uint8Array,
-		additionalData: Uint8Array,
-		authTag: Uint8Array,
-	): Promise<{ plaintext: Uint8Array; authOK: boolean }>;
+		ciphertext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+		additionalData: BytesView,
+		authTag: BytesView,
+	): Promise<{ plaintext: BytesView; authOK: boolean }>;
 	digest(
 		algorithm: "md5" | "sha-1" | "sha-256",
-		data: Uint8Array,
-	): Promise<Uint8Array>;
+		data: BytesView,
+	): Promise<BytesView>;
 
 	/** Generates an x25519 / ECDH key pair */
 	generateECDHKeyPair(): Promise<KeyPair>;
 	/** Expand an x25519 / ECDH private key into the full key pair */
-	keyPairFromRawECDHPrivateKey(privateKey: Uint8Array): Promise<KeyPair>;
+	keyPairFromRawECDHPrivateKey(privateKey: BytesView): Promise<KeyPair>;
 	/** Derives the shared ECDH secret from an x25519 / ECDH key pair */
-	deriveSharedECDHSecret(keyPair: KeyPair): Promise<Uint8Array>;
+	deriveSharedECDHSecret(keyPair: KeyPair): Promise<BytesView>;
 }
 
 export interface KeyPair {
-	publicKey: Uint8Array;
-	privateKey: Uint8Array;
+	publicKey: BytesView;
+	privateKey: BytesView;
 }
 
 export interface FSStats {
@@ -76,15 +77,15 @@ export interface FSStats {
 }
 
 export interface FileHandle
-	extends ReadableWritablePair<Uint8Array, Uint8Array>
+	extends ReadableWritablePair<BytesView, BytesView>
 {
 	close(): Promise<void>;
 	read(
 		position?: number | null,
 		length?: number,
-	): Promise<{ data: Uint8Array; bytesRead: number }>;
+	): Promise<{ data: BytesView; bytesRead: number }>;
 	write(
-		data: Uint8Array,
+		data: BytesView,
 		position?: number | null,
 	): Promise<{ bytesWritten: number }>;
 	stat(): Promise<FSStats>;
@@ -92,12 +93,12 @@ export interface FileHandle
 
 export interface ReadFile {
 	/** Reads the given file */
-	readFile(path: string): Promise<Uint8Array>;
+	readFile(path: string): Promise<BytesView>;
 }
 
 export interface WriteFile {
 	/** Writes the given data to a file */
-	writeFile(path: string, data: Uint8Array): Promise<void>;
+	writeFile(path: string, data: BytesView): Promise<void>;
 }
 
 export interface CopyFile {

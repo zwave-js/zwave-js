@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
 import type { webcrypto } from "node:crypto";
 import {
@@ -9,16 +9,16 @@ import {
 	zeroPad,
 } from "../shared.js";
 
-function randomBytes(length: number): Uint8Array {
+function randomBytes(length: number): BytesView {
 	const buffer = new Uint8Array(length);
 	return crypto.getRandomValues(buffer);
 }
 
 /** Encrypts a payload using AES-128-ECB */
 async function encryptAES128ECB(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-): Promise<Uint8Array> {
+	plaintext: BytesView,
+	key: BytesView,
+): Promise<BytesView> {
 	// ECB for a single block is identical to the CBC mode, with an IV of all zeros
 	// FIXME: Assert that both the plaintext and the key are 16 bytes long
 	return encryptAES128CBC(plaintext, key, new Uint8Array(BLOCK_SIZE).fill(0));
@@ -26,10 +26,10 @@ async function encryptAES128ECB(
 
 /** Encrypts a payload using AES-128-CBC */
 async function encryptAES128CBC(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	const cryptoKey = await crypto.subtle.importKey(
 		"raw",
 		key,
@@ -54,10 +54,10 @@ async function encryptAES128CBC(
 
 /** Decrypts a payload using AES-256-CBC */
 async function decryptAES256CBC(
-	ciphertext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	const cryptoKey = await crypto.subtle.importKey(
 		"raw",
 		key,
@@ -81,10 +81,10 @@ async function decryptAES256CBC(
 
 /** Encrypts a payload using AES-128-OFB */
 async function encryptAES128OFB(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	// The Web Crypto API does not support OFB mode, but it supports CTR mode.
 	// We can use that to fake OFB mode, by using the IV as the value for the counter
 	// when encrypting block 1, and ciphertext N-1 XOR plaintext N-1 as the counter
@@ -130,10 +130,10 @@ async function encryptAES128OFB(
 
 /** Decrypts a payload using AES-128-OFB */
 async function decryptAES128OFB(
-	ciphertext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	// The Web Crypto API does not support OFB mode, but it supports CTR mode.
 	// We can use that to fake OFB mode, by using the IV as the value for the counter
 	// when encrypting block 1, and ciphertext N-1 XOR plaintext N-1 as the counter
@@ -178,12 +178,12 @@ async function decryptAES128OFB(
 }
 
 async function encryptAES128CCM(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-	additionalData: Uint8Array,
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+	additionalData: BytesView,
 	authTagLength: number,
-): Promise<{ ciphertext: Uint8Array; authTag: Uint8Array }> {
+): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
 	// FIXME: Validate iv and authTagLength
 
 	const M = (authTagLength - 2) >> 1;
@@ -239,7 +239,7 @@ async function encryptAES128CCM(
 	return { ciphertext, authTag };
 }
 
-async function computeCBCMac(B: Bytes, key: Uint8Array) {
+async function computeCBCMac(B: Bytes, key: BytesView) {
 	// There is an opportunity here to optimize memory usage by keeping only the last block
 	// during the encryption process
 	const macOutput = await encryptAES128CBC(
@@ -251,7 +251,7 @@ async function computeCBCMac(B: Bytes, key: Uint8Array) {
 	return X;
 }
 
-function getCCMPlaintextBlocks(plaintext: Uint8Array) {
+function getCCMPlaintextBlocks(plaintext: BytesView) {
 	const plaintextBlocks = new Bytes(
 		// plaintext | ...padding
 		Math.ceil(plaintext.length / BLOCK_SIZE) * BLOCK_SIZE,
@@ -264,9 +264,9 @@ function getCCMAuthenticationBlocks(
 	hasAData: boolean,
 	M: number,
 	L: number,
-	iv: Uint8Array,
-	plaintext: Uint8Array,
-	additionalData: Uint8Array,
+	iv: BytesView,
+	plaintext: BytesView,
+	additionalData: BytesView,
 	plaintextBlocks: Bytes,
 ) {
 	const B0 = new Bytes(BLOCK_SIZE);
@@ -309,12 +309,12 @@ function getCCMAuthenticationBlocks(
 }
 
 async function decryptAES128CCM(
-	ciphertext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-	additionalData: Uint8Array,
-	authTag: Uint8Array,
-): Promise<{ plaintext: Uint8Array; authOK: boolean }> {
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+	additionalData: BytesView,
+	authTag: BytesView,
+): Promise<{ plaintext: BytesView; authOK: boolean }> {
 	const M = (authTag.length - 2) >> 1;
 	const L = 15 - iv.length;
 	const hasAData = additionalData.length > 0;
@@ -384,8 +384,8 @@ async function decryptAES128CCM(
 
 async function digest(
 	algorithm: "md5" | "sha-1" | "sha-256",
-	data: Uint8Array,
-): Promise<Uint8Array> {
+	data: BytesView,
+): Promise<BytesView> {
 	// The WebCrypto API does not support MD5, but we don't actually care.
 	// MD5 is only used for hashing cached device configurations, and if anyone
 	// is going to use these methods, they should be on a new installation anyways.
@@ -416,7 +416,7 @@ async function generateECDHKeyPair(): Promise<KeyPair> {
 }
 
 async function keyPairFromRawECDHPrivateKey(
-	privateKey: Uint8Array,
+	privateKey: BytesView,
 ): Promise<KeyPair> {
 	const privateKeyObject = await crypto.subtle.importKey(
 		"pkcs8",
@@ -446,7 +446,7 @@ async function keyPairFromRawECDHPrivateKey(
 	return { publicKey, privateKey };
 }
 
-async function deriveSharedECDHSecret(keyPair: KeyPair): Promise<Uint8Array> {
+async function deriveSharedECDHSecret(keyPair: KeyPair): Promise<BytesView> {
 	const publicKey = await crypto.subtle.importKey(
 		"raw",
 		keyPair.publicKey,

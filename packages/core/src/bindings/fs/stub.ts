@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { BytesView } from "@zwave-js/shared";
 import type {
 	FSStats,
 	FileHandle,
@@ -12,10 +13,10 @@ function fail(): never {
 }
 
 export const fs: FileSystem = {
-	readFile: function(path: string): Promise<Uint8Array> {
+	readFile: function(path: string): Promise<BytesView> {
 		fail();
 	},
-	writeFile: function(path: string, data: Uint8Array): Promise<void> {
+	writeFile: function(path: string, data: BytesView): Promise<void> {
 		fail();
 	},
 	copyFile: function(source: string, dest: string): Promise<void> {

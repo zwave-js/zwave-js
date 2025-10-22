@@ -36,7 +36,7 @@ import {
 	securityClassOrder,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, BytesView, buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { isArray } from "alcalzone-shared/typeguards";
 import { CCAPI } from "../lib/API.js";
@@ -82,7 +82,7 @@ function securityClassToBitMask(key: SecurityClass): Bytes {
 }
 
 function bitMaskToSecurityClass(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	offset: number,
 ): SecurityClass {
 	const keys = parseBitMask(
@@ -100,8 +100,8 @@ function getAuthenticationData(
 	destination: number,
 	homeId: number,
 	commandLength: number,
-	unencryptedPayload: Uint8Array,
-): Uint8Array {
+	unencryptedPayload: BytesView,
+): BytesView {
 	const nodeIdSize =
 		isLongRangeNodeId(sendingNodeId) || isLongRangeNodeId(destination)
 			? 2
@@ -163,10 +163,10 @@ const MAX_DECRYPT_ATTEMPTS_SC_FOLLOWUP = 1;
 
 // @publicAPI
 export interface DecryptionResult {
-	plaintext: Uint8Array;
+	plaintext: BytesView;
 	authOK: boolean;
-	key?: Uint8Array;
-	iv?: Uint8Array;
+	key?: BytesView;
+	iv?: BytesView;
 	securityClass: SecurityClass | undefined;
 }
 
@@ -221,15 +221,15 @@ async function decryptSinglecast(
 	sendingNodeId: number,
 	curSequenceNumber: number,
 	prevSequenceNumber: number,
-	ciphertext: Uint8Array,
-	authData: Uint8Array,
-	authTag: Uint8Array,
+	ciphertext: BytesView,
+	authData: BytesView,
+	authTag: BytesView,
 	spanState: SPANTableEntry & {
 		type: SPANState.SPAN | SPANState.LocalEI;
 	},
 	extensions: Security2Extension[],
 ): Promise<DecryptionResult> {
-	const decryptWithNonce = async (nonce: Uint8Array) => {
+	const decryptWithNonce = async (nonce: BytesView) => {
 		const { keyCCM: key } = securityManager.getKeysForNode(
 			sendingNodeId,
 		);
@@ -397,9 +397,9 @@ async function decryptMulticast(
 	sendingNodeId: number,
 	securityManager: SecurityManager2,
 	groupId: number,
-	ciphertext: Uint8Array,
-	authData: Uint8Array,
-	authTag: Uint8Array,
+	ciphertext: BytesView,
+	authData: BytesView,
+	authTag: BytesView,
 ): Promise<DecryptionResult> {
 	const iv = await securityManager.nextPeerMPAN(
 		sendingNodeId,
@@ -423,7 +423,7 @@ async function decryptMulticast(
 	};
 }
 
-function parseExtensions(buffer: Uint8Array, wasEncrypted: boolean): {
+function parseExtensions(buffer: BytesView, wasEncrypted: boolean): {
 	extensions: Security2Extension[];
 	mustDiscardCommand: boolean;
 	bytesRead: number;
@@ -547,7 +547,7 @@ function getMulticastGroupId(
 }
 
 /** Returns the Sender's Entropy Input if this command contains an SPAN extension */
-function getSenderEI(extensions: Security2Extension[]): Uint8Array | undefined {
+function getSenderEI(extensions: Security2Extension[]): BytesView | undefined {
 	const spanExtension = extensions.find(
 		(e) => e instanceof SPANExtension,
 	);
@@ -674,7 +674,7 @@ export class Security2CCAPI extends CCAPI {
 	/** Sends the given MPAN to the node */
 	public async sendMPAN(
 		groupId: number,
-		innerMPANState: Uint8Array,
+		innerMPANState: BytesView,
 	): Promise<boolean> {
 		this.assertSupportsCommand(
 			Security2Command,
@@ -891,7 +891,7 @@ export class Security2CCAPI extends CCAPI {
 	}
 
 	public async sendPublicKey(
-		publicKey: Uint8Array,
+		publicKey: BytesView,
 		includingNode: boolean = true,
 	): Promise<void> {
 		this.assertSupportsCommand(
@@ -926,7 +926,7 @@ export class Security2CCAPI extends CCAPI {
 
 	public async sendNetworkKey(
 		securityClass: SecurityClass,
-		networkKey: Uint8Array,
+		networkKey: BytesView,
 	): Promise<void> {
 		this.assertSupportsCommand(
 			Security2Command,
@@ -1612,10 +1612,10 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				);
 		}
 
-		let plaintext: Uint8Array | undefined;
+		let plaintext: BytesView | undefined;
 		let authOK = false;
-		let key: Uint8Array | undefined;
-		let iv: Uint8Array | undefined;
+		let key: BytesView | undefined;
+		let iv: BytesView | undefined;
 		let decryptionSecurityClass: SecurityClass | undefined;
 
 		// If the Receiver is unable to authenticate the singlecast message with the current SPAN,
@@ -1743,12 +1743,12 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 	public readonly securityClass?: SecurityClass;
 
 	// Only used for testing/debugging purposes
-	private key?: Uint8Array;
-	private iv?: Uint8Array;
-	private authData?: Uint8Array;
-	private authTag?: Uint8Array;
-	private ciphertext?: Uint8Array;
-	private plaintext?: Uint8Array;
+	private key?: BytesView;
+	private iv?: BytesView;
+	private authData?: BytesView;
+	private authTag?: BytesView;
+	private ciphertext?: BytesView;
+	private plaintext?: BytesView;
 
 	public readonly verifyDelivery: boolean = true;
 
@@ -1786,7 +1786,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 	}
 
 	/** Returns the Sender's Entropy Input if this command contains an SPAN extension */
-	public getSenderEI(): Uint8Array | undefined {
+	public getSenderEI(): BytesView | undefined {
 		return getSenderEI(this.extensions);
 	}
 
@@ -1911,8 +1911,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			unencryptedPayload,
 		);
 
-		let key: Uint8Array;
-		let iv: Uint8Array;
+		let key: BytesView;
+		let iv: BytesView;
 
 		if (this.isSinglecast()) {
 			// Singlecast:
@@ -2034,7 +2034,7 @@ export type Security2CCNonceReportOptions =
 		| {
 			MOS: boolean;
 			SOS: true;
-			receiverEI: Uint8Array;
+			receiverEI: BytesView;
 		}
 		| {
 			MOS: true;
@@ -2121,7 +2121,7 @@ export class Security2CCNonceReport extends Security2CC {
 
 	public readonly SOS: boolean;
 	public readonly MOS: boolean;
-	public readonly receiverEI?: Uint8Array;
+	public readonly receiverEI?: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const securityManager = assertSecurityTX(ctx, this.nodeId);
@@ -2511,7 +2511,7 @@ export class Security2CCKEXFail extends Security2CC {
 // @publicAPI
 export interface Security2CCPublicKeyReportOptions {
 	includingNode: boolean;
-	publicKey: Uint8Array;
+	publicKey: BytesView;
 }
 
 @CCCommand(Security2Command.PublicKeyReport)
@@ -2530,7 +2530,7 @@ export class Security2CCPublicKeyReport extends Security2CC {
 	): Security2CCPublicKeyReport {
 		validatePayload(raw.payload.length >= 17);
 		const includingNode = !!(raw.payload[0] & 0b1);
-		const publicKey: Uint8Array = raw.payload.subarray(1);
+		const publicKey: BytesView = raw.payload.subarray(1);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -2540,7 +2540,7 @@ export class Security2CCPublicKeyReport extends Security2CC {
 	}
 
 	public includingNode: boolean;
-	public publicKey: Uint8Array;
+	public publicKey: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
@@ -2564,7 +2564,7 @@ export class Security2CCPublicKeyReport extends Security2CC {
 // @publicAPI
 export interface Security2CCNetworkKeyReportOptions {
 	grantedKey: SecurityClass;
-	networkKey: Uint8Array;
+	networkKey: BytesView;
 }
 
 @CCCommand(Security2Command.NetworkKeyReport)
@@ -2596,7 +2596,7 @@ export class Security2CCNetworkKeyReport extends Security2CC {
 	}
 
 	public grantedKey: SecurityClass;
-	public networkKey: Uint8Array;
+	public networkKey: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
