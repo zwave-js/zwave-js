@@ -52,6 +52,6 @@
     "ts-morph": "^27.0.2",
     "tsutils": "^3.21.0",
     "typescript": "5.9.3",
-    "vitest": "^2.1.9"
+    "vitest": "^4.0.0"
   }
 }
