@@ -45,6 +45,6 @@
     "eslint": "^9.36.0",
     "eslint-compat-utils": "^0.6.5",
     "eslint-plugin-jsonc": "^2.20.1",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   }
 }
