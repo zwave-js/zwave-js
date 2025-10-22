@@ -3,6 +3,7 @@ import type {
 	FileHandle,
 	FileSystem,
 } from "@zwave-js/shared/bindings";
+import { BytesView } from "@zwave-js/shared";
 
 const DB_NAME_FS = "filesystem";
 const DB_VERSION_FS = 1;
@@ -32,7 +33,7 @@ function openDatabase(): Promise<IDBDatabase> {
 async function writeFile(
 	db: IDBDatabase,
 	path: string,
-	data: Uint8Array,
+	data: BytesView,
 ): Promise<void> {
 	const transaction = db.transaction(OBJECT_STORE_FILES, "readwrite");
 	const store = transaction.objectStore(OBJECT_STORE_FILES);
@@ -46,7 +47,7 @@ async function writeFile(
 }
 
 // Datei lesen
-async function readFile(db: IDBDatabase, path: string): Promise<Uint8Array> {
+async function readFile(db: IDBDatabase, path: string): Promise<BytesView> {
 	const transaction = db.transaction(OBJECT_STORE_FILES, "readonly");
 	const store = transaction.objectStore(OBJECT_STORE_FILES);
 
@@ -135,12 +136,12 @@ export class IndexedDBFileSystem implements FileSystem {
 		return this.#db;
 	}
 
-	async readFile(path: string): Promise<Uint8Array> {
+	async readFile(path: string): Promise<BytesView> {
 		const db = await this.#getDb();
 		return readFile(db, path);
 	}
 
-	async writeFile(path: string, data: Uint8Array): Promise<void> {
+	async writeFile(path: string, data: BytesView): Promise<void> {
 		const db = await this.#getDb();
 		return writeFile(db, path, data);
 	}

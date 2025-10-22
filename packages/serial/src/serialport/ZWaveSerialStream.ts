@@ -10,7 +10,7 @@
 // 1 └─────────────────┘ └─────────────────┘ └──
 
 import type { LogContainer } from "@zwave-js/core";
-import { noop } from "@zwave-js/shared";
+import { BytesView, noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
 	UnderlyingSink,
@@ -26,8 +26,8 @@ import { ZWaveSerialMode } from "./definitions.js";
  * The `sink` is guaranteed to be opened first, so possible setup should be done in
  * the `start` method there. */
 export interface ZWaveSerialBinding {
-	sink: UnderlyingSink<Uint8Array>;
-	source: UnderlyingSource<Uint8Array>;
+	sink: UnderlyingSink<BytesView>;
+	source: UnderlyingSource<BytesView>;
 }
 
 export type ZWaveSerialBindingFactory = () => Promise<ZWaveSerialBinding>;
@@ -65,12 +65,12 @@ export class ZWaveSerialStream implements
 		// The serial binding emits ZWaveSerialFrames
 		ZWaveSerialFrame,
 		// and accepts binary data
-		Uint8Array
+		BytesView
 	>
 {
 	constructor(
-		source: UnderlyingSource<Uint8Array>,
-		sink: UnderlyingSink<Uint8Array>,
+		source: UnderlyingSource<BytesView>,
+		sink: UnderlyingSink<BytesView>,
 		logger: SerialLogger,
 	) {
 		this.logger = logger;
@@ -101,7 +101,7 @@ export class ZWaveSerialStream implements
 
 	// Public interface to let consumers read from and write to this stream
 	public readonly readable: ReadableStream<ZWaveSerialFrame>;
-	public readonly writable: WritableStream<Uint8Array>;
+	public readonly writable: WritableStream<BytesView>;
 
 	// Signal to close the underlying stream
 	#abort: AbortController;
@@ -147,9 +147,9 @@ export class ZWaveSerialStream implements
 		return this._isOpen;
 	}
 
-	private _writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
+	private _writer: WritableStreamDefaultWriter<BytesView> | undefined;
 
-	public async writeAsync(data: Uint8Array): Promise<void> {
+	public async writeAsync(data: BytesView): Promise<void> {
 		if (!this.isOpen) {
 			throw new Error("The serial port is not open!");
 		}

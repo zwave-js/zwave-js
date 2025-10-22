@@ -13,7 +13,7 @@ import {
 	ZWaveErrorCodes,
 	isZWaveError,
 } from "@zwave-js/core/error";
-import { Bytes, buffer2hex, cloneDeep, num2hex, pick } from "@zwave-js/shared";
+import { Bytes, buffer2hex, BytesView, cloneDeep, num2hex, pick } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { SemVer } from "semver";
 import semverGte from "semver/functions/gte.js";
@@ -719,7 +719,7 @@ function nvmJSONControllerToFileOptions(
 
 /** Reads an NVM buffer of a 700+ series stick and returns its JSON representation */
 export async function nvmToJSON(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	debugLogs: boolean = false,
 ): Promise<NVMJSONWithMeta> {
 	const io = new NVMMemoryIO(buffer);
@@ -1040,7 +1040,7 @@ export async function nvmToJSON(
 
 /** Reads an NVM buffer of a 500-series stick and returns its JSON representation */
 export async function nvm500ToJSON(
-	buffer: Uint8Array,
+	buffer: BytesView,
 ): Promise<Required<NVM500JSON>> {
 	const io = new NVMMemoryIO(buffer);
 	const nvm = new NVM500(io);
@@ -1272,7 +1272,7 @@ export async function nvm500ToJSON(
 export async function jsonToNVM(
 	json: NVMJSON,
 	targetSDKVersion: string,
-): Promise<Uint8Array> {
+): Promise<BytesView> {
 	const parsedVersion = semverParse(targetSDKVersion);
 	if (!parsedVersion) {
 		throw new ZWaveError(
@@ -1568,7 +1568,7 @@ export async function jsonToNVM(
 export async function jsonToNVM500(
 	json: Required<NVM500JSON>,
 	protocolVersion: string,
-): Promise<Uint8Array> {
+): Promise<BytesView> {
 	// Try to find a matching implementation
 	const impl = nvm500Impls.find(
 		(p) =>
@@ -1974,10 +1974,10 @@ export function json700To500(json: NVMJSON): NVM500JSON {
 
 /** Converts the given source NVM into a format that is compatible with the given target NVM */
 export async function migrateNVM(
-	sourceNVM: Uint8Array,
-	targetNVM: Uint8Array,
+	sourceNVM: BytesView,
+	targetNVM: BytesView,
 	options: MigrateNVMOptions = {},
-): Promise<Uint8Array> {
+): Promise<BytesView> {
 	let source: ParsedNVM;
 	let target: ParsedNVM;
 	let sourceProtocolFileFormat: number | undefined;

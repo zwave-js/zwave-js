@@ -1,4 +1,4 @@
-import { Bytes, getErrorMessage, isUint8Array } from "@zwave-js/shared";
+import { Bytes, BytesView, getErrorMessage, isUint8Array } from "@zwave-js/shared";
 import { unzipSync } from "fflate";
 import { decryptAES256CBC } from "../crypto/index.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
@@ -27,7 +27,7 @@ const firmwareIndicators = {
  */
 export function guessFirmwareFileFormat(
 	filename: string,
-	rawData: Uint8Array,
+	rawData: BytesView,
 ): FirmwareFileFormat {
 	filename = filename.toLowerCase();
 	const rawBuffer = Bytes.view(rawData);
@@ -70,10 +70,10 @@ export function guessFirmwareFileFormat(
  * of the firmware file from the ZIP archive, or `undefined` if no compatible
  * firmware file could be extracted.
  */
-export function tryUnzipFirmwareFile(zipData: Uint8Array): {
+export function tryUnzipFirmwareFile(zipData: BytesView): {
 	filename: string;
 	format: FirmwareFileFormat;
-	rawData: Uint8Array;
+	rawData: BytesView;
 } | undefined {
 	// Extract files we can work with
 	const unzipped = unzipSync(zipData, {
@@ -105,7 +105,7 @@ export function tryUnzipFirmwareFile(zipData: Uint8Array): {
  * The returned firmware data and target can be used to start a firmware update process with `node.beginFirmwareUpdate`
  */
 export async function extractFirmware(
-	rawData: Uint8Array,
+	rawData: BytesView,
 	format: FirmwareFileFormat,
 ): Promise<Firmware> {
 	switch (format) {
@@ -145,11 +145,11 @@ export async function extractFirmware(
 	}
 }
 
-function extractFirmwareRAW(data: Uint8Array): Firmware {
+function extractFirmwareRAW(data: BytesView): Firmware {
 	return { data };
 }
 
-function extractFirmwareAeotec(data: Uint8Array): Firmware {
+function extractFirmwareAeotec(data: BytesView): Firmware {
 	const buffer = Bytes.view(data);
 	// Check if this is an EXE file
 	if (buffer.readUInt16BE(0) !== 0x4d5a) {
@@ -245,7 +245,7 @@ function extractFirmwareAeotec(data: Uint8Array): Firmware {
 	return ret;
 }
 
-function extractFirmwareHEX(dataHEX: Uint8Array | string): Firmware {
+function extractFirmwareHEX(dataHEX: BytesView | string): Firmware {
 	try {
 		if (isUint8Array(dataHEX)) {
 			dataHEX = Bytes.view(dataHEX).toString("ascii");
@@ -273,7 +273,7 @@ function extractFirmwareHEX(dataHEX: Uint8Array | string): Firmware {
 	}
 }
 
-async function extractFirmwareHEC(data: Uint8Array): Promise<Firmware> {
+async function extractFirmwareHEC(data: BytesView): Promise<Firmware> {
 	const key =
 		"d7a68def0f4a1241940f6cb8017121d15f0e2682e258c9f7553e706e834923b7";
 	const iv = "0e6519297530583708612a2823663844";

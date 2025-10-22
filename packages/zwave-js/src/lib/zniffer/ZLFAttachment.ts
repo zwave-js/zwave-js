@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 
 export enum AttachmentTypes {
 	NetworkKeys = 0x03,
@@ -33,7 +33,7 @@ export class ZLFAttachmentRaw {
 		public readonly data: Bytes,
 	) {}
 
-	public static parse(buffer: Uint8Array): {
+	public static parse(buffer: BytesView): {
 		raw: ZLFAttachmentRaw;
 		bytesRead: number;
 	} {
@@ -92,7 +92,7 @@ export class ZLFAttachment {
 	}
 
 	public static parse(
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): {
 		attachment: ZLFAttachment;
 		bytesRead: number;
@@ -131,8 +131,8 @@ export interface ZLFNetworkKeysAttachmentOptions
 	extends ZLFAttachmentBaseOptions
 {
 	homeId: number;
-	keys: Uint8Array[];
-	tempKeys: Uint8Array[];
+	keys: BytesView[];
+	tempKeys: BytesView[];
 }
 
 export class ZLFNetworkKeysAttachment extends ZLFAttachment {

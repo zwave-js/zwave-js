@@ -1,6 +1,8 @@
+import { BytesView } from "@zwave-js/shared";
+
 // Implementation based on SDS13782
 export function CRC16_CCITT(
-	data: Uint8Array,
+	data: BytesView,
 	startValue: number = 0x1d0f,
 ): number {
 	let crc = startValue;

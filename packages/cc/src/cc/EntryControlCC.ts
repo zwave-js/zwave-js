@@ -16,7 +16,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, pick } from "@zwave-js/shared";
+import { Bytes, buffer2hex, BytesView, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -493,7 +493,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 	public readonly sequenceNumber: number;
 	public readonly dataType: EntryControlDataTypes;
 	public readonly eventType: EntryControlEventTypes;
-	public readonly eventData?: Uint8Array | string;
+	public readonly eventData?: BytesView | string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {

@@ -1,6 +1,6 @@
 import { CRC16_CCITT, ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { XModemMessageHeaders } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 
 export enum BootloaderState {
 	Menu,
@@ -10,7 +10,7 @@ export enum BootloaderState {
 /** Encapsulates information about the currently active bootloader */
 export class Bootloader {
 	public constructor(
-		writeSerial: (data: Uint8Array) => Promise<void>,
+		writeSerial: (data: BytesView) => Promise<void>,
 		version: string,
 		options: { num: number; option: string }[],
 	) {
@@ -39,7 +39,7 @@ export class Bootloader {
 		this.runOption = runOption;
 	}
 
-	public readonly writeSerial: (data: Uint8Array) => Promise<void>;
+	public readonly writeSerial: (data: BytesView) => Promise<void>;
 	public state: BootloaderState = BootloaderState.Menu;
 	public readonly version: string;
 
@@ -72,7 +72,7 @@ export class Bootloader {
 
 	public async uploadFragment(
 		fragmentNumber: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<void> {
 		const command = Bytes.concat([
 			Bytes.from([

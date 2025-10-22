@@ -18,6 +18,7 @@ import {
 import { createReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	Bytes,
+	BytesView,
 	type JSONObject,
 	type TypedClassDecorator,
 	num2hex,
@@ -90,7 +91,7 @@ export function hasNodeId<T extends Message>(msg: T): msg is T & HasNodeId {
 }
 
 /** Returns the number of bytes the first message in the buffer occupies */
-function getMessageLength(data: Uint8Array): number {
+function getMessageLength(data: BytesView): number {
 	const remainingLength = data[1];
 	return remainingLength + 2;
 }
@@ -102,7 +103,7 @@ export class MessageRaw {
 		public readonly payload: Bytes,
 	) {}
 
-	public static parse(data: Uint8Array): MessageRaw {
+	public static parse(data: BytesView): MessageRaw {
 		// SOF, length, type, commandId and checksum must be present
 		if (!data.length || data.length < 5) {
 			throw new ZWaveError(
@@ -190,7 +191,7 @@ export class Message {
 	}
 
 	public static parse(
-		data: Uint8Array,
+		data: BytesView,
 		ctx: MessageParsingContext,
 	): Message {
 		const raw = MessageRaw.parse(data);
@@ -448,7 +449,7 @@ export class Message {
 }
 
 /** Computes the checksum for a serialized message as defined in the Z-Wave specs */
-function computeChecksum(message: Uint8Array): number {
+function computeChecksum(message: BytesView): number {
 	let ret = 0xff;
 	// exclude SOF and checksum byte from the computation
 	for (let i = 1; i < message.length - 1; i++) {

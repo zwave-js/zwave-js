@@ -23,7 +23,7 @@ import {
 	type SuccessIndicator,
 	messageTypes,
 } from "@zwave-js/serial";
-import { Bytes, buffer2hex, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, buffer2hex, BytesView, getEnumMemberName } from "@zwave-js/shared";
 
 export enum ApplicationUpdateTypes {
 	SmartStart_NodeInfo_Received = 0x86, // An included smart start node has been powered up
@@ -198,7 +198,7 @@ export class ApplicationUpdateRequestNodeRemoved
 
 export interface ApplicationUpdateRequestSmartStartHomeIDReceivedBaseOptions {
 	remoteNodeId: number;
-	nwiHomeId: Uint8Array;
+	nwiHomeId: BytesView;
 	basicDeviceClass: BasicDeviceClass;
 	genericDeviceClass: number;
 	specificDeviceClass: number;
@@ -258,7 +258,7 @@ class ApplicationUpdateRequestSmartStartHomeIDReceivedBase
 	}
 
 	public readonly remoteNodeId: number;
-	public readonly nwiHomeId: Uint8Array;
+	public readonly nwiHomeId: BytesView;
 
 	public readonly basicDeviceClass: BasicDeviceClass;
 	public readonly genericDeviceClass: number;

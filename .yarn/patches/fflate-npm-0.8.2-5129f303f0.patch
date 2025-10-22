@@ -1,0 +1,2980 @@
+diff --git a/esm/browser.d.ts b/esm/browser.d.ts
+index a3b5b01f92fc79723f24dcc3fe59778767e1a6a7..6918a2df324b162ac21c9f468f90b79d32222e9b 100644
+--- a/esm/browser.d.ts
++++ b/esm/browser.d.ts
+@@ -36,7 +36,7 @@ export interface InflateStreamOptions {
+      *
+      * Supplying the wrong dictionary during decompression usually yields corrupt output or causes an invalid distance error.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing DEFLATE data
+@@ -47,7 +47,7 @@ export interface InflateOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a GZIP stream
+@@ -63,7 +63,7 @@ export interface GunzipOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a Zlib stream
+@@ -115,7 +115,7 @@ export interface DeflateOptions {
+      *
+      * Avoid using dictionaries with GZIP and ZIP to maximize software compatibility.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for compressing data into a GZIP format
+@@ -142,14 +142,14 @@ export interface ZlibOptions extends DeflateOptions {
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type FlateStreamHandler = (data: Uint8Array, final: boolean) => void;
++export type FlateStreamHandler = (data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for asynchronous data (de)compression streams
+  * @param err Any error that occurred
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array, final: boolean) => void;
++export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for the asynchronous completion of (de)compression for a data chunk
+  * @param size The number of bytes that were processed. This is measured in terms of the input
+@@ -161,7 +161,7 @@ export type AsyncFlateDrainHandler = (size: number) => void;
+  * @param err Any error that occurred
+  * @param data The resulting data. Only present if `err` is null
+  */
+-export type FlateCallback = (err: FlateError | null, data: Uint8Array) => void;
++export type FlateCallback = (err: FlateError | null, data: Uint8Array<ArrayBuffer>) => void;
+ interface AsyncOptions {
+     /**
+      * Whether or not to "consume" the source data. This will make the typed array/buffer you pass in
+@@ -242,7 +242,7 @@ export declare class Deflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -281,7 +281,7 @@ export declare class AsyncDeflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -300,20 +300,20 @@ export declare class AsyncDeflate {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function deflate(data: Uint8Array, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function deflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The deflated version of the data
+  */
+-export declare function deflateSync(data: Uint8Array, opts?: DeflateOptions): Uint8Array;
++export declare function deflateSync(data: Uint8Array<ArrayBuffer>, opts?: DeflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming DEFLATE decompression
+  */
+@@ -344,7 +344,7 @@ export declare class Inflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the final chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression
+@@ -378,7 +378,7 @@ export declare class AsyncInflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -392,21 +392,21 @@ export declare class AsyncInflate {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function inflateSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function inflateSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming GZIP compression
+  */
+@@ -436,7 +436,7 @@ export declare class Gzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -476,7 +476,7 @@ export declare class AsyncGzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * GZIPped output for small inputs.
+@@ -495,21 +495,21 @@ export declare class AsyncGzip {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function gzip(data: Uint8Array, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with GZIP
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with GZIP
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The gzipped version of the data
+  */
+-export declare function gzipSync(data: Uint8Array, opts?: GzipOptions): Uint8Array;
++export declare function gzipSync(data: Uint8Array<ArrayBuffer>, opts?: GzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Handler for new GZIP members in concatenated GZIP streams. Useful for building indices used to perform random-access reads on compressed files.
+  * @param offset The offset of the new member relative to the start of the stream
+@@ -548,7 +548,7 @@ export declare class Gunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming single or multi-member GZIP decompression
+@@ -586,7 +586,7 @@ export declare class AsyncGunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -600,21 +600,21 @@ export declare class AsyncGunzip {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands GZIP data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands GZIP data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function gunzipSync(data: Uint8Array, opts?: GunzipOptions): Uint8Array;
++export declare function gunzipSync(data: Uint8Array<ArrayBuffer>, opts?: GunzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib compression
+  */
+@@ -643,7 +643,7 @@ export declare class Zlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -683,7 +683,7 @@ export declare class AsyncZlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * zlibbed output for small inputs.
+@@ -701,21 +701,21 @@ export declare class AsyncZlib {
+  * @param opts The compression options
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function zlib(data: Uint8Array, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with Zlib
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function zlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compress data with Zlib
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The zlib-compressed version of the data
+  */
+-export declare function zlibSync(data: Uint8Array, opts?: ZlibOptions): Uint8Array;
++export declare function zlibSync(data: Uint8Array<ArrayBuffer>, opts?: ZlibOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib decompression
+  */
+@@ -742,7 +742,7 @@ export declare class Unzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming Zlib decompression
+@@ -776,7 +776,7 @@ export declare class AsyncUnzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -790,21 +790,21 @@ export declare class AsyncUnzlib {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands Zlib data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands Zlib data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function unzlibSync(data: Uint8Array, opts?: UnzlibOptions): Uint8Array;
++export declare function unzlibSync(data: Uint8Array<ArrayBuffer>, opts?: UnzlibOptions): Uint8Array<ArrayBuffer>;
+ export { gzip as compress, AsyncGzip as AsyncCompress };
+ export { gzipSync as compressSync, Gzip as Compress };
+ /**
+@@ -838,7 +838,7 @@ export declare class Decompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming GZIP, Zlib, or raw DEFLATE decompression
+@@ -876,7 +876,7 @@ export declare class AsyncDecompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+@@ -885,21 +885,21 @@ export declare class AsyncDecompress {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function decompressSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function decompressSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Attributes for files added to a ZIP archive object
+  */
+@@ -940,7 +940,7 @@ export interface ZipAttributes {
+      * This field is incredibly rare and almost never needed except for compliance with
+      * proprietary standards and software.
+      */
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     /**
+      * The comment to attach to the file. This field is defined by PKZIP's APPNOTE.txt,
+      * section 4.4.26. The comment must be at most 65,535 bytes long UTF-8 encoded. This
+@@ -979,11 +979,11 @@ export interface AsyncUnzipOptions extends UnzipOptions {
+ /**
+  * A file that can be used to create a ZIP archive
+  */
+-export type ZippableFile = Uint8Array | Zippable | [Uint8Array | Zippable, ZipOptions];
++export type ZippableFile = Uint8Array<ArrayBuffer> | Zippable | [Uint8Array<ArrayBuffer> | Zippable, ZipOptions];
+ /**
+  * A file that can be used to asynchronously create a ZIP archive
+  */
+-export type AsyncZippableFile = Uint8Array | AsyncZippable | [Uint8Array | AsyncZippable, AsyncZipOptions];
++export type AsyncZippableFile = Uint8Array<ArrayBuffer> | AsyncZippable | [Uint8Array<ArrayBuffer> | AsyncZippable, AsyncZipOptions];
+ /**
+  * The complete directory structure of a ZIPpable archive
+  */
+@@ -1001,7 +1001,7 @@ export interface AsyncZippable {
+  * and the file is the value
+  */
+ export interface Unzipped {
+-    [path: string]: Uint8Array;
++    [path: string]: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Handler for string generation streams
+@@ -1036,7 +1036,7 @@ export declare class DecodeUTF8 {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * The handler to call whenever data is available
+      */
+@@ -1064,21 +1064,21 @@ export declare class EncodeUTF8 {
+     ondata: FlateStreamHandler;
+ }
+ /**
+- * Converts a string into a Uint8Array for use with compression/decompression methods
++ * Converts a string into a Uint8Array<ArrayBuffer> for use with compression/decompression methods
+  * @param str The string to encode
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless decoding a binary string.
+  * @returns The string encoded in UTF-8/Latin-1 binary
+  */
+-export declare function strToU8(str: string, latin1?: boolean): Uint8Array;
++export declare function strToU8(str: string, latin1?: boolean): Uint8Array<ArrayBuffer>;
+ /**
+- * Converts a Uint8Array to a string
++ * Converts a Uint8Array<ArrayBuffer> to a string
+  * @param dat The data to decode to string
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless encoding to binary string.
+  * @returns The original UTF-8/Latin-1 string
+  */
+-export declare function strFromU8(dat: Uint8Array, latin1?: boolean): string;
++export declare function strFromU8(dat: Uint8Array<ArrayBuffer>, latin1?: boolean): string;
+ /**
+  * A stream that can be used to create a file in a ZIP archive
+  */
+@@ -1129,7 +1129,7 @@ export interface ZipInputFile extends ZipAttributes {
+      *
+      * error = any error that occurred (null if there was no error)
+      *
+-     * chunk = a Uint8Array of the data that was added (null if there was an
++     * chunk = a Uint8Array<ArrayBuffer> of the data that was added (null if there was an
+      * error)
+      *
+      * final = boolean, whether this is the final chunk in the stream
+@@ -1154,7 +1154,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private c;
+@@ -1171,7 +1171,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to process
+      * @param final Whether this is the last chunk
+      */
+-    protected process(chunk: Uint8Array, final: boolean): void;
++    protected process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be added. If you are subclassing this with a custom
+      * compression algorithm, note that you must push data from the source
+@@ -1179,7 +1179,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE compression for ZIP archives. Prefer using AsyncZipDeflate
+@@ -1194,7 +1194,7 @@ export declare class ZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1204,13 +1204,13 @@ export declare class ZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE compression for ZIP archives
+@@ -1224,7 +1224,7 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1235,13 +1235,13 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * A zippable archive to which files can incrementally be added
+@@ -1299,7 +1299,7 @@ export declare function zip(data: AsyncZippable, cb: FlateCallback): AsyncTermin
+  * @param opts The main options, merged with per-file options
+  * @returns The generated ZIP archive
+  */
+-export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array;
++export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * A decoder for files in ZIP streams
+  */
+@@ -1313,7 +1313,7 @@ export interface UnzipDecoder {
+      * @param data The data in this chunk. Do not consume (detach) this data.
+      * @param final Whether this is the last chunk in the data stream
+      */
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * A method to terminate any internal workers used by the stream. Subsequent
+      * calls to push() should silently fail.
+@@ -1415,7 +1415,7 @@ export interface UnzipFile {
+ export declare class UnzipPassThrough implements UnzipDecoder {
+     static compression: number;
+     ondata: AsyncFlateStreamHandler;
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE decompression for ZIP archives. Prefer AsyncZipInflate for
+@@ -1429,7 +1429,7 @@ export declare class UnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor();
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression for ZIP archives
+@@ -1443,7 +1443,7 @@ export declare class AsyncUnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor(_: string, sz?: number);
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * A ZIP archive decompression stream that emits files as they are discovered
+@@ -1464,7 +1464,7 @@ export declare class Unzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): any;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): any;
+     /**
+      * Registers a decoder with the stream, allowing for files compressed with
+      * the compression type provided to be expanded correctly
+@@ -1483,14 +1483,14 @@ export declare class Unzip {
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Asynchronously decompresses a ZIP archive
+  * @param data The raw compressed ZIP file
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Synchronously decompresses a ZIP archive. Prefer using `unzip` for better
+  * performance with more than one file.
+@@ -1498,4 +1498,4 @@ export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTermina
+  * @param opts The ZIP extraction options
+  * @returns The decompressed files
+  */
+-export declare function unzipSync(data: Uint8Array, opts?: UnzipOptions): Unzipped;
++export declare function unzipSync(data: Uint8Array<ArrayBuffer>, opts?: UnzipOptions): Unzipped;
+diff --git a/esm/index.d.mts b/esm/index.d.mts
+index a3b5b01f92fc79723f24dcc3fe59778767e1a6a7..6918a2df324b162ac21c9f468f90b79d32222e9b 100644
+--- a/esm/index.d.mts
++++ b/esm/index.d.mts
+@@ -36,7 +36,7 @@ export interface InflateStreamOptions {
+      *
+      * Supplying the wrong dictionary during decompression usually yields corrupt output or causes an invalid distance error.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing DEFLATE data
+@@ -47,7 +47,7 @@ export interface InflateOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a GZIP stream
+@@ -63,7 +63,7 @@ export interface GunzipOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a Zlib stream
+@@ -115,7 +115,7 @@ export interface DeflateOptions {
+      *
+      * Avoid using dictionaries with GZIP and ZIP to maximize software compatibility.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for compressing data into a GZIP format
+@@ -142,14 +142,14 @@ export interface ZlibOptions extends DeflateOptions {
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type FlateStreamHandler = (data: Uint8Array, final: boolean) => void;
++export type FlateStreamHandler = (data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for asynchronous data (de)compression streams
+  * @param err Any error that occurred
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array, final: boolean) => void;
++export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for the asynchronous completion of (de)compression for a data chunk
+  * @param size The number of bytes that were processed. This is measured in terms of the input
+@@ -161,7 +161,7 @@ export type AsyncFlateDrainHandler = (size: number) => void;
+  * @param err Any error that occurred
+  * @param data The resulting data. Only present if `err` is null
+  */
+-export type FlateCallback = (err: FlateError | null, data: Uint8Array) => void;
++export type FlateCallback = (err: FlateError | null, data: Uint8Array<ArrayBuffer>) => void;
+ interface AsyncOptions {
+     /**
+      * Whether or not to "consume" the source data. This will make the typed array/buffer you pass in
+@@ -242,7 +242,7 @@ export declare class Deflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -281,7 +281,7 @@ export declare class AsyncDeflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -300,20 +300,20 @@ export declare class AsyncDeflate {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function deflate(data: Uint8Array, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function deflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The deflated version of the data
+  */
+-export declare function deflateSync(data: Uint8Array, opts?: DeflateOptions): Uint8Array;
++export declare function deflateSync(data: Uint8Array<ArrayBuffer>, opts?: DeflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming DEFLATE decompression
+  */
+@@ -344,7 +344,7 @@ export declare class Inflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the final chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression
+@@ -378,7 +378,7 @@ export declare class AsyncInflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -392,21 +392,21 @@ export declare class AsyncInflate {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function inflateSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function inflateSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming GZIP compression
+  */
+@@ -436,7 +436,7 @@ export declare class Gzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -476,7 +476,7 @@ export declare class AsyncGzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * GZIPped output for small inputs.
+@@ -495,21 +495,21 @@ export declare class AsyncGzip {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function gzip(data: Uint8Array, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with GZIP
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with GZIP
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The gzipped version of the data
+  */
+-export declare function gzipSync(data: Uint8Array, opts?: GzipOptions): Uint8Array;
++export declare function gzipSync(data: Uint8Array<ArrayBuffer>, opts?: GzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Handler for new GZIP members in concatenated GZIP streams. Useful for building indices used to perform random-access reads on compressed files.
+  * @param offset The offset of the new member relative to the start of the stream
+@@ -548,7 +548,7 @@ export declare class Gunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming single or multi-member GZIP decompression
+@@ -586,7 +586,7 @@ export declare class AsyncGunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -600,21 +600,21 @@ export declare class AsyncGunzip {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands GZIP data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands GZIP data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function gunzipSync(data: Uint8Array, opts?: GunzipOptions): Uint8Array;
++export declare function gunzipSync(data: Uint8Array<ArrayBuffer>, opts?: GunzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib compression
+  */
+@@ -643,7 +643,7 @@ export declare class Zlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -683,7 +683,7 @@ export declare class AsyncZlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * zlibbed output for small inputs.
+@@ -701,21 +701,21 @@ export declare class AsyncZlib {
+  * @param opts The compression options
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function zlib(data: Uint8Array, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with Zlib
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function zlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compress data with Zlib
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The zlib-compressed version of the data
+  */
+-export declare function zlibSync(data: Uint8Array, opts?: ZlibOptions): Uint8Array;
++export declare function zlibSync(data: Uint8Array<ArrayBuffer>, opts?: ZlibOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib decompression
+  */
+@@ -742,7 +742,7 @@ export declare class Unzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming Zlib decompression
+@@ -776,7 +776,7 @@ export declare class AsyncUnzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -790,21 +790,21 @@ export declare class AsyncUnzlib {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands Zlib data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands Zlib data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function unzlibSync(data: Uint8Array, opts?: UnzlibOptions): Uint8Array;
++export declare function unzlibSync(data: Uint8Array<ArrayBuffer>, opts?: UnzlibOptions): Uint8Array<ArrayBuffer>;
+ export { gzip as compress, AsyncGzip as AsyncCompress };
+ export { gzipSync as compressSync, Gzip as Compress };
+ /**
+@@ -838,7 +838,7 @@ export declare class Decompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming GZIP, Zlib, or raw DEFLATE decompression
+@@ -876,7 +876,7 @@ export declare class AsyncDecompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+@@ -885,21 +885,21 @@ export declare class AsyncDecompress {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function decompressSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function decompressSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Attributes for files added to a ZIP archive object
+  */
+@@ -940,7 +940,7 @@ export interface ZipAttributes {
+      * This field is incredibly rare and almost never needed except for compliance with
+      * proprietary standards and software.
+      */
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     /**
+      * The comment to attach to the file. This field is defined by PKZIP's APPNOTE.txt,
+      * section 4.4.26. The comment must be at most 65,535 bytes long UTF-8 encoded. This
+@@ -979,11 +979,11 @@ export interface AsyncUnzipOptions extends UnzipOptions {
+ /**
+  * A file that can be used to create a ZIP archive
+  */
+-export type ZippableFile = Uint8Array | Zippable | [Uint8Array | Zippable, ZipOptions];
++export type ZippableFile = Uint8Array<ArrayBuffer> | Zippable | [Uint8Array<ArrayBuffer> | Zippable, ZipOptions];
+ /**
+  * A file that can be used to asynchronously create a ZIP archive
+  */
+-export type AsyncZippableFile = Uint8Array | AsyncZippable | [Uint8Array | AsyncZippable, AsyncZipOptions];
++export type AsyncZippableFile = Uint8Array<ArrayBuffer> | AsyncZippable | [Uint8Array<ArrayBuffer> | AsyncZippable, AsyncZipOptions];
+ /**
+  * The complete directory structure of a ZIPpable archive
+  */
+@@ -1001,7 +1001,7 @@ export interface AsyncZippable {
+  * and the file is the value
+  */
+ export interface Unzipped {
+-    [path: string]: Uint8Array;
++    [path: string]: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Handler for string generation streams
+@@ -1036,7 +1036,7 @@ export declare class DecodeUTF8 {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * The handler to call whenever data is available
+      */
+@@ -1064,21 +1064,21 @@ export declare class EncodeUTF8 {
+     ondata: FlateStreamHandler;
+ }
+ /**
+- * Converts a string into a Uint8Array for use with compression/decompression methods
++ * Converts a string into a Uint8Array<ArrayBuffer> for use with compression/decompression methods
+  * @param str The string to encode
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless decoding a binary string.
+  * @returns The string encoded in UTF-8/Latin-1 binary
+  */
+-export declare function strToU8(str: string, latin1?: boolean): Uint8Array;
++export declare function strToU8(str: string, latin1?: boolean): Uint8Array<ArrayBuffer>;
+ /**
+- * Converts a Uint8Array to a string
++ * Converts a Uint8Array<ArrayBuffer> to a string
+  * @param dat The data to decode to string
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless encoding to binary string.
+  * @returns The original UTF-8/Latin-1 string
+  */
+-export declare function strFromU8(dat: Uint8Array, latin1?: boolean): string;
++export declare function strFromU8(dat: Uint8Array<ArrayBuffer>, latin1?: boolean): string;
+ /**
+  * A stream that can be used to create a file in a ZIP archive
+  */
+@@ -1129,7 +1129,7 @@ export interface ZipInputFile extends ZipAttributes {
+      *
+      * error = any error that occurred (null if there was no error)
+      *
+-     * chunk = a Uint8Array of the data that was added (null if there was an
++     * chunk = a Uint8Array<ArrayBuffer> of the data that was added (null if there was an
+      * error)
+      *
+      * final = boolean, whether this is the final chunk in the stream
+@@ -1154,7 +1154,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private c;
+@@ -1171,7 +1171,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to process
+      * @param final Whether this is the last chunk
+      */
+-    protected process(chunk: Uint8Array, final: boolean): void;
++    protected process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be added. If you are subclassing this with a custom
+      * compression algorithm, note that you must push data from the source
+@@ -1179,7 +1179,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE compression for ZIP archives. Prefer using AsyncZipDeflate
+@@ -1194,7 +1194,7 @@ export declare class ZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1204,13 +1204,13 @@ export declare class ZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE compression for ZIP archives
+@@ -1224,7 +1224,7 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1235,13 +1235,13 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * A zippable archive to which files can incrementally be added
+@@ -1299,7 +1299,7 @@ export declare function zip(data: AsyncZippable, cb: FlateCallback): AsyncTermin
+  * @param opts The main options, merged with per-file options
+  * @returns The generated ZIP archive
+  */
+-export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array;
++export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * A decoder for files in ZIP streams
+  */
+@@ -1313,7 +1313,7 @@ export interface UnzipDecoder {
+      * @param data The data in this chunk. Do not consume (detach) this data.
+      * @param final Whether this is the last chunk in the data stream
+      */
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * A method to terminate any internal workers used by the stream. Subsequent
+      * calls to push() should silently fail.
+@@ -1415,7 +1415,7 @@ export interface UnzipFile {
+ export declare class UnzipPassThrough implements UnzipDecoder {
+     static compression: number;
+     ondata: AsyncFlateStreamHandler;
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE decompression for ZIP archives. Prefer AsyncZipInflate for
+@@ -1429,7 +1429,7 @@ export declare class UnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor();
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression for ZIP archives
+@@ -1443,7 +1443,7 @@ export declare class AsyncUnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor(_: string, sz?: number);
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * A ZIP archive decompression stream that emits files as they are discovered
+@@ -1464,7 +1464,7 @@ export declare class Unzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): any;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): any;
+     /**
+      * Registers a decoder with the stream, allowing for files compressed with
+      * the compression type provided to be expanded correctly
+@@ -1483,14 +1483,14 @@ export declare class Unzip {
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Asynchronously decompresses a ZIP archive
+  * @param data The raw compressed ZIP file
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Synchronously decompresses a ZIP archive. Prefer using `unzip` for better
+  * performance with more than one file.
+@@ -1498,4 +1498,4 @@ export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTermina
+  * @param opts The ZIP extraction options
+  * @returns The decompressed files
+  */
+-export declare function unzipSync(data: Uint8Array, opts?: UnzipOptions): Unzipped;
++export declare function unzipSync(data: Uint8Array<ArrayBuffer>, opts?: UnzipOptions): Unzipped;
+diff --git a/lib/browser.d.cts b/lib/browser.d.cts
+index a3b5b01f92fc79723f24dcc3fe59778767e1a6a7..6918a2df324b162ac21c9f468f90b79d32222e9b 100644
+--- a/lib/browser.d.cts
++++ b/lib/browser.d.cts
+@@ -36,7 +36,7 @@ export interface InflateStreamOptions {
+      *
+      * Supplying the wrong dictionary during decompression usually yields corrupt output or causes an invalid distance error.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing DEFLATE data
+@@ -47,7 +47,7 @@ export interface InflateOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a GZIP stream
+@@ -63,7 +63,7 @@ export interface GunzipOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a Zlib stream
+@@ -115,7 +115,7 @@ export interface DeflateOptions {
+      *
+      * Avoid using dictionaries with GZIP and ZIP to maximize software compatibility.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for compressing data into a GZIP format
+@@ -142,14 +142,14 @@ export interface ZlibOptions extends DeflateOptions {
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type FlateStreamHandler = (data: Uint8Array, final: boolean) => void;
++export type FlateStreamHandler = (data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for asynchronous data (de)compression streams
+  * @param err Any error that occurred
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array, final: boolean) => void;
++export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for the asynchronous completion of (de)compression for a data chunk
+  * @param size The number of bytes that were processed. This is measured in terms of the input
+@@ -161,7 +161,7 @@ export type AsyncFlateDrainHandler = (size: number) => void;
+  * @param err Any error that occurred
+  * @param data The resulting data. Only present if `err` is null
+  */
+-export type FlateCallback = (err: FlateError | null, data: Uint8Array) => void;
++export type FlateCallback = (err: FlateError | null, data: Uint8Array<ArrayBuffer>) => void;
+ interface AsyncOptions {
+     /**
+      * Whether or not to "consume" the source data. This will make the typed array/buffer you pass in
+@@ -242,7 +242,7 @@ export declare class Deflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -281,7 +281,7 @@ export declare class AsyncDeflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -300,20 +300,20 @@ export declare class AsyncDeflate {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function deflate(data: Uint8Array, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function deflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The deflated version of the data
+  */
+-export declare function deflateSync(data: Uint8Array, opts?: DeflateOptions): Uint8Array;
++export declare function deflateSync(data: Uint8Array<ArrayBuffer>, opts?: DeflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming DEFLATE decompression
+  */
+@@ -344,7 +344,7 @@ export declare class Inflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the final chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression
+@@ -378,7 +378,7 @@ export declare class AsyncInflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -392,21 +392,21 @@ export declare class AsyncInflate {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function inflateSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function inflateSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming GZIP compression
+  */
+@@ -436,7 +436,7 @@ export declare class Gzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -476,7 +476,7 @@ export declare class AsyncGzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * GZIPped output for small inputs.
+@@ -495,21 +495,21 @@ export declare class AsyncGzip {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function gzip(data: Uint8Array, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with GZIP
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with GZIP
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The gzipped version of the data
+  */
+-export declare function gzipSync(data: Uint8Array, opts?: GzipOptions): Uint8Array;
++export declare function gzipSync(data: Uint8Array<ArrayBuffer>, opts?: GzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Handler for new GZIP members in concatenated GZIP streams. Useful for building indices used to perform random-access reads on compressed files.
+  * @param offset The offset of the new member relative to the start of the stream
+@@ -548,7 +548,7 @@ export declare class Gunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming single or multi-member GZIP decompression
+@@ -586,7 +586,7 @@ export declare class AsyncGunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -600,21 +600,21 @@ export declare class AsyncGunzip {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands GZIP data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands GZIP data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function gunzipSync(data: Uint8Array, opts?: GunzipOptions): Uint8Array;
++export declare function gunzipSync(data: Uint8Array<ArrayBuffer>, opts?: GunzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib compression
+  */
+@@ -643,7 +643,7 @@ export declare class Zlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -683,7 +683,7 @@ export declare class AsyncZlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * zlibbed output for small inputs.
+@@ -701,21 +701,21 @@ export declare class AsyncZlib {
+  * @param opts The compression options
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function zlib(data: Uint8Array, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with Zlib
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function zlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compress data with Zlib
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The zlib-compressed version of the data
+  */
+-export declare function zlibSync(data: Uint8Array, opts?: ZlibOptions): Uint8Array;
++export declare function zlibSync(data: Uint8Array<ArrayBuffer>, opts?: ZlibOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib decompression
+  */
+@@ -742,7 +742,7 @@ export declare class Unzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming Zlib decompression
+@@ -776,7 +776,7 @@ export declare class AsyncUnzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -790,21 +790,21 @@ export declare class AsyncUnzlib {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands Zlib data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands Zlib data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function unzlibSync(data: Uint8Array, opts?: UnzlibOptions): Uint8Array;
++export declare function unzlibSync(data: Uint8Array<ArrayBuffer>, opts?: UnzlibOptions): Uint8Array<ArrayBuffer>;
+ export { gzip as compress, AsyncGzip as AsyncCompress };
+ export { gzipSync as compressSync, Gzip as Compress };
+ /**
+@@ -838,7 +838,7 @@ export declare class Decompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming GZIP, Zlib, or raw DEFLATE decompression
+@@ -876,7 +876,7 @@ export declare class AsyncDecompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+@@ -885,21 +885,21 @@ export declare class AsyncDecompress {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function decompressSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function decompressSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Attributes for files added to a ZIP archive object
+  */
+@@ -940,7 +940,7 @@ export interface ZipAttributes {
+      * This field is incredibly rare and almost never needed except for compliance with
+      * proprietary standards and software.
+      */
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     /**
+      * The comment to attach to the file. This field is defined by PKZIP's APPNOTE.txt,
+      * section 4.4.26. The comment must be at most 65,535 bytes long UTF-8 encoded. This
+@@ -979,11 +979,11 @@ export interface AsyncUnzipOptions extends UnzipOptions {
+ /**
+  * A file that can be used to create a ZIP archive
+  */
+-export type ZippableFile = Uint8Array | Zippable | [Uint8Array | Zippable, ZipOptions];
++export type ZippableFile = Uint8Array<ArrayBuffer> | Zippable | [Uint8Array<ArrayBuffer> | Zippable, ZipOptions];
+ /**
+  * A file that can be used to asynchronously create a ZIP archive
+  */
+-export type AsyncZippableFile = Uint8Array | AsyncZippable | [Uint8Array | AsyncZippable, AsyncZipOptions];
++export type AsyncZippableFile = Uint8Array<ArrayBuffer> | AsyncZippable | [Uint8Array<ArrayBuffer> | AsyncZippable, AsyncZipOptions];
+ /**
+  * The complete directory structure of a ZIPpable archive
+  */
+@@ -1001,7 +1001,7 @@ export interface AsyncZippable {
+  * and the file is the value
+  */
+ export interface Unzipped {
+-    [path: string]: Uint8Array;
++    [path: string]: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Handler for string generation streams
+@@ -1036,7 +1036,7 @@ export declare class DecodeUTF8 {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * The handler to call whenever data is available
+      */
+@@ -1064,21 +1064,21 @@ export declare class EncodeUTF8 {
+     ondata: FlateStreamHandler;
+ }
+ /**
+- * Converts a string into a Uint8Array for use with compression/decompression methods
++ * Converts a string into a Uint8Array<ArrayBuffer> for use with compression/decompression methods
+  * @param str The string to encode
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless decoding a binary string.
+  * @returns The string encoded in UTF-8/Latin-1 binary
+  */
+-export declare function strToU8(str: string, latin1?: boolean): Uint8Array;
++export declare function strToU8(str: string, latin1?: boolean): Uint8Array<ArrayBuffer>;
+ /**
+- * Converts a Uint8Array to a string
++ * Converts a Uint8Array<ArrayBuffer> to a string
+  * @param dat The data to decode to string
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless encoding to binary string.
+  * @returns The original UTF-8/Latin-1 string
+  */
+-export declare function strFromU8(dat: Uint8Array, latin1?: boolean): string;
++export declare function strFromU8(dat: Uint8Array<ArrayBuffer>, latin1?: boolean): string;
+ /**
+  * A stream that can be used to create a file in a ZIP archive
+  */
+@@ -1129,7 +1129,7 @@ export interface ZipInputFile extends ZipAttributes {
+      *
+      * error = any error that occurred (null if there was no error)
+      *
+-     * chunk = a Uint8Array of the data that was added (null if there was an
++     * chunk = a Uint8Array<ArrayBuffer> of the data that was added (null if there was an
+      * error)
+      *
+      * final = boolean, whether this is the final chunk in the stream
+@@ -1154,7 +1154,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private c;
+@@ -1171,7 +1171,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to process
+      * @param final Whether this is the last chunk
+      */
+-    protected process(chunk: Uint8Array, final: boolean): void;
++    protected process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be added. If you are subclassing this with a custom
+      * compression algorithm, note that you must push data from the source
+@@ -1179,7 +1179,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE compression for ZIP archives. Prefer using AsyncZipDeflate
+@@ -1194,7 +1194,7 @@ export declare class ZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1204,13 +1204,13 @@ export declare class ZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE compression for ZIP archives
+@@ -1224,7 +1224,7 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1235,13 +1235,13 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * A zippable archive to which files can incrementally be added
+@@ -1299,7 +1299,7 @@ export declare function zip(data: AsyncZippable, cb: FlateCallback): AsyncTermin
+  * @param opts The main options, merged with per-file options
+  * @returns The generated ZIP archive
+  */
+-export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array;
++export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * A decoder for files in ZIP streams
+  */
+@@ -1313,7 +1313,7 @@ export interface UnzipDecoder {
+      * @param data The data in this chunk. Do not consume (detach) this data.
+      * @param final Whether this is the last chunk in the data stream
+      */
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * A method to terminate any internal workers used by the stream. Subsequent
+      * calls to push() should silently fail.
+@@ -1415,7 +1415,7 @@ export interface UnzipFile {
+ export declare class UnzipPassThrough implements UnzipDecoder {
+     static compression: number;
+     ondata: AsyncFlateStreamHandler;
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE decompression for ZIP archives. Prefer AsyncZipInflate for
+@@ -1429,7 +1429,7 @@ export declare class UnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor();
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression for ZIP archives
+@@ -1443,7 +1443,7 @@ export declare class AsyncUnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor(_: string, sz?: number);
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * A ZIP archive decompression stream that emits files as they are discovered
+@@ -1464,7 +1464,7 @@ export declare class Unzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): any;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): any;
+     /**
+      * Registers a decoder with the stream, allowing for files compressed with
+      * the compression type provided to be expanded correctly
+@@ -1483,14 +1483,14 @@ export declare class Unzip {
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Asynchronously decompresses a ZIP archive
+  * @param data The raw compressed ZIP file
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Synchronously decompresses a ZIP archive. Prefer using `unzip` for better
+  * performance with more than one file.
+@@ -1498,4 +1498,4 @@ export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTermina
+  * @param opts The ZIP extraction options
+  * @returns The decompressed files
+  */
+-export declare function unzipSync(data: Uint8Array, opts?: UnzipOptions): Unzipped;
++export declare function unzipSync(data: Uint8Array<ArrayBuffer>, opts?: UnzipOptions): Unzipped;
+diff --git a/lib/index.d.ts b/lib/index.d.ts
+index a3b5b01f92fc79723f24dcc3fe59778767e1a6a7..6918a2df324b162ac21c9f468f90b79d32222e9b 100644
+--- a/lib/index.d.ts
++++ b/lib/index.d.ts
+@@ -36,7 +36,7 @@ export interface InflateStreamOptions {
+      *
+      * Supplying the wrong dictionary during decompression usually yields corrupt output or causes an invalid distance error.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing DEFLATE data
+@@ -47,7 +47,7 @@ export interface InflateOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a GZIP stream
+@@ -63,7 +63,7 @@ export interface GunzipOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a Zlib stream
+@@ -115,7 +115,7 @@ export interface DeflateOptions {
+      *
+      * Avoid using dictionaries with GZIP and ZIP to maximize software compatibility.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for compressing data into a GZIP format
+@@ -142,14 +142,14 @@ export interface ZlibOptions extends DeflateOptions {
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type FlateStreamHandler = (data: Uint8Array, final: boolean) => void;
++export type FlateStreamHandler = (data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for asynchronous data (de)compression streams
+  * @param err Any error that occurred
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array, final: boolean) => void;
++export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for the asynchronous completion of (de)compression for a data chunk
+  * @param size The number of bytes that were processed. This is measured in terms of the input
+@@ -161,7 +161,7 @@ export type AsyncFlateDrainHandler = (size: number) => void;
+  * @param err Any error that occurred
+  * @param data The resulting data. Only present if `err` is null
+  */
+-export type FlateCallback = (err: FlateError | null, data: Uint8Array) => void;
++export type FlateCallback = (err: FlateError | null, data: Uint8Array<ArrayBuffer>) => void;
+ interface AsyncOptions {
+     /**
+      * Whether or not to "consume" the source data. This will make the typed array/buffer you pass in
+@@ -242,7 +242,7 @@ export declare class Deflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -281,7 +281,7 @@ export declare class AsyncDeflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -300,20 +300,20 @@ export declare class AsyncDeflate {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function deflate(data: Uint8Array, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function deflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The deflated version of the data
+  */
+-export declare function deflateSync(data: Uint8Array, opts?: DeflateOptions): Uint8Array;
++export declare function deflateSync(data: Uint8Array<ArrayBuffer>, opts?: DeflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming DEFLATE decompression
+  */
+@@ -344,7 +344,7 @@ export declare class Inflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the final chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression
+@@ -378,7 +378,7 @@ export declare class AsyncInflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -392,21 +392,21 @@ export declare class AsyncInflate {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function inflateSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function inflateSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming GZIP compression
+  */
+@@ -436,7 +436,7 @@ export declare class Gzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -476,7 +476,7 @@ export declare class AsyncGzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * GZIPped output for small inputs.
+@@ -495,21 +495,21 @@ export declare class AsyncGzip {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function gzip(data: Uint8Array, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with GZIP
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with GZIP
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The gzipped version of the data
+  */
+-export declare function gzipSync(data: Uint8Array, opts?: GzipOptions): Uint8Array;
++export declare function gzipSync(data: Uint8Array<ArrayBuffer>, opts?: GzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Handler for new GZIP members in concatenated GZIP streams. Useful for building indices used to perform random-access reads on compressed files.
+  * @param offset The offset of the new member relative to the start of the stream
+@@ -548,7 +548,7 @@ export declare class Gunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming single or multi-member GZIP decompression
+@@ -586,7 +586,7 @@ export declare class AsyncGunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -600,21 +600,21 @@ export declare class AsyncGunzip {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands GZIP data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands GZIP data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function gunzipSync(data: Uint8Array, opts?: GunzipOptions): Uint8Array;
++export declare function gunzipSync(data: Uint8Array<ArrayBuffer>, opts?: GunzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib compression
+  */
+@@ -643,7 +643,7 @@ export declare class Zlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -683,7 +683,7 @@ export declare class AsyncZlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * zlibbed output for small inputs.
+@@ -701,21 +701,21 @@ export declare class AsyncZlib {
+  * @param opts The compression options
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function zlib(data: Uint8Array, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with Zlib
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function zlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compress data with Zlib
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The zlib-compressed version of the data
+  */
+-export declare function zlibSync(data: Uint8Array, opts?: ZlibOptions): Uint8Array;
++export declare function zlibSync(data: Uint8Array<ArrayBuffer>, opts?: ZlibOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib decompression
+  */
+@@ -742,7 +742,7 @@ export declare class Unzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming Zlib decompression
+@@ -776,7 +776,7 @@ export declare class AsyncUnzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -790,21 +790,21 @@ export declare class AsyncUnzlib {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands Zlib data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands Zlib data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function unzlibSync(data: Uint8Array, opts?: UnzlibOptions): Uint8Array;
++export declare function unzlibSync(data: Uint8Array<ArrayBuffer>, opts?: UnzlibOptions): Uint8Array<ArrayBuffer>;
+ export { gzip as compress, AsyncGzip as AsyncCompress };
+ export { gzipSync as compressSync, Gzip as Compress };
+ /**
+@@ -838,7 +838,7 @@ export declare class Decompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming GZIP, Zlib, or raw DEFLATE decompression
+@@ -876,7 +876,7 @@ export declare class AsyncDecompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+@@ -885,21 +885,21 @@ export declare class AsyncDecompress {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function decompressSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function decompressSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Attributes for files added to a ZIP archive object
+  */
+@@ -940,7 +940,7 @@ export interface ZipAttributes {
+      * This field is incredibly rare and almost never needed except for compliance with
+      * proprietary standards and software.
+      */
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     /**
+      * The comment to attach to the file. This field is defined by PKZIP's APPNOTE.txt,
+      * section 4.4.26. The comment must be at most 65,535 bytes long UTF-8 encoded. This
+@@ -979,11 +979,11 @@ export interface AsyncUnzipOptions extends UnzipOptions {
+ /**
+  * A file that can be used to create a ZIP archive
+  */
+-export type ZippableFile = Uint8Array | Zippable | [Uint8Array | Zippable, ZipOptions];
++export type ZippableFile = Uint8Array<ArrayBuffer> | Zippable | [Uint8Array<ArrayBuffer> | Zippable, ZipOptions];
+ /**
+  * A file that can be used to asynchronously create a ZIP archive
+  */
+-export type AsyncZippableFile = Uint8Array | AsyncZippable | [Uint8Array | AsyncZippable, AsyncZipOptions];
++export type AsyncZippableFile = Uint8Array<ArrayBuffer> | AsyncZippable | [Uint8Array<ArrayBuffer> | AsyncZippable, AsyncZipOptions];
+ /**
+  * The complete directory structure of a ZIPpable archive
+  */
+@@ -1001,7 +1001,7 @@ export interface AsyncZippable {
+  * and the file is the value
+  */
+ export interface Unzipped {
+-    [path: string]: Uint8Array;
++    [path: string]: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Handler for string generation streams
+@@ -1036,7 +1036,7 @@ export declare class DecodeUTF8 {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * The handler to call whenever data is available
+      */
+@@ -1064,21 +1064,21 @@ export declare class EncodeUTF8 {
+     ondata: FlateStreamHandler;
+ }
+ /**
+- * Converts a string into a Uint8Array for use with compression/decompression methods
++ * Converts a string into a Uint8Array<ArrayBuffer> for use with compression/decompression methods
+  * @param str The string to encode
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless decoding a binary string.
+  * @returns The string encoded in UTF-8/Latin-1 binary
+  */
+-export declare function strToU8(str: string, latin1?: boolean): Uint8Array;
++export declare function strToU8(str: string, latin1?: boolean): Uint8Array<ArrayBuffer>;
+ /**
+- * Converts a Uint8Array to a string
++ * Converts a Uint8Array<ArrayBuffer> to a string
+  * @param dat The data to decode to string
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless encoding to binary string.
+  * @returns The original UTF-8/Latin-1 string
+  */
+-export declare function strFromU8(dat: Uint8Array, latin1?: boolean): string;
++export declare function strFromU8(dat: Uint8Array<ArrayBuffer>, latin1?: boolean): string;
+ /**
+  * A stream that can be used to create a file in a ZIP archive
+  */
+@@ -1129,7 +1129,7 @@ export interface ZipInputFile extends ZipAttributes {
+      *
+      * error = any error that occurred (null if there was no error)
+      *
+-     * chunk = a Uint8Array of the data that was added (null if there was an
++     * chunk = a Uint8Array<ArrayBuffer> of the data that was added (null if there was an
+      * error)
+      *
+      * final = boolean, whether this is the final chunk in the stream
+@@ -1154,7 +1154,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private c;
+@@ -1171,7 +1171,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to process
+      * @param final Whether this is the last chunk
+      */
+-    protected process(chunk: Uint8Array, final: boolean): void;
++    protected process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be added. If you are subclassing this with a custom
+      * compression algorithm, note that you must push data from the source
+@@ -1179,7 +1179,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE compression for ZIP archives. Prefer using AsyncZipDeflate
+@@ -1194,7 +1194,7 @@ export declare class ZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1204,13 +1204,13 @@ export declare class ZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE compression for ZIP archives
+@@ -1224,7 +1224,7 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1235,13 +1235,13 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * A zippable archive to which files can incrementally be added
+@@ -1299,7 +1299,7 @@ export declare function zip(data: AsyncZippable, cb: FlateCallback): AsyncTermin
+  * @param opts The main options, merged with per-file options
+  * @returns The generated ZIP archive
+  */
+-export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array;
++export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * A decoder for files in ZIP streams
+  */
+@@ -1313,7 +1313,7 @@ export interface UnzipDecoder {
+      * @param data The data in this chunk. Do not consume (detach) this data.
+      * @param final Whether this is the last chunk in the data stream
+      */
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * A method to terminate any internal workers used by the stream. Subsequent
+      * calls to push() should silently fail.
+@@ -1415,7 +1415,7 @@ export interface UnzipFile {
+ export declare class UnzipPassThrough implements UnzipDecoder {
+     static compression: number;
+     ondata: AsyncFlateStreamHandler;
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE decompression for ZIP archives. Prefer AsyncZipInflate for
+@@ -1429,7 +1429,7 @@ export declare class UnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor();
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression for ZIP archives
+@@ -1443,7 +1443,7 @@ export declare class AsyncUnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor(_: string, sz?: number);
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * A ZIP archive decompression stream that emits files as they are discovered
+@@ -1464,7 +1464,7 @@ export declare class Unzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): any;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): any;
+     /**
+      * Registers a decoder with the stream, allowing for files compressed with
+      * the compression type provided to be expanded correctly
+@@ -1483,14 +1483,14 @@ export declare class Unzip {
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Asynchronously decompresses a ZIP archive
+  * @param data The raw compressed ZIP file
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Synchronously decompresses a ZIP archive. Prefer using `unzip` for better
+  * performance with more than one file.
+@@ -1498,4 +1498,4 @@ export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTermina
+  * @param opts The ZIP extraction options
+  * @returns The decompressed files
+  */
+-export declare function unzipSync(data: Uint8Array, opts?: UnzipOptions): Unzipped;
++export declare function unzipSync(data: Uint8Array<ArrayBuffer>, opts?: UnzipOptions): Unzipped;
+diff --git a/lib/node.d.cts b/lib/node.d.cts
+index a3b5b01f92fc79723f24dcc3fe59778767e1a6a7..6918a2df324b162ac21c9f468f90b79d32222e9b 100644
+--- a/lib/node.d.cts
++++ b/lib/node.d.cts
+@@ -36,7 +36,7 @@ export interface InflateStreamOptions {
+      *
+      * Supplying the wrong dictionary during decompression usually yields corrupt output or causes an invalid distance error.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing DEFLATE data
+@@ -47,7 +47,7 @@ export interface InflateOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a GZIP stream
+@@ -63,7 +63,7 @@ export interface GunzipOptions extends InflateStreamOptions {
+      *
+      * Note that if the decompression result is larger than the size of this buffer, it will be truncated to fit.
+      */
+-    out?: Uint8Array;
++    out?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for decompressing a Zlib stream
+@@ -115,7 +115,7 @@ export interface DeflateOptions {
+      *
+      * Avoid using dictionaries with GZIP and ZIP to maximize software compatibility.
+      */
+-    dictionary?: Uint8Array;
++    dictionary?: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Options for compressing data into a GZIP format
+@@ -142,14 +142,14 @@ export interface ZlibOptions extends DeflateOptions {
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type FlateStreamHandler = (data: Uint8Array, final: boolean) => void;
++export type FlateStreamHandler = (data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for asynchronous data (de)compression streams
+  * @param err Any error that occurred
+  * @param data The data output from the stream processor
+  * @param final Whether this is the final block
+  */
+-export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array, final: boolean) => void;
++export type AsyncFlateStreamHandler = (err: FlateError | null, data: Uint8Array<ArrayBuffer>, final: boolean) => void;
+ /**
+  * Handler for the asynchronous completion of (de)compression for a data chunk
+  * @param size The number of bytes that were processed. This is measured in terms of the input
+@@ -161,7 +161,7 @@ export type AsyncFlateDrainHandler = (size: number) => void;
+  * @param err Any error that occurred
+  * @param data The resulting data. Only present if `err` is null
+  */
+-export type FlateCallback = (err: FlateError | null, data: Uint8Array) => void;
++export type FlateCallback = (err: FlateError | null, data: Uint8Array<ArrayBuffer>) => void;
+ interface AsyncOptions {
+     /**
+      * Whether or not to "consume" the source data. This will make the typed array/buffer you pass in
+@@ -242,7 +242,7 @@ export declare class Deflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -281,7 +281,7 @@ export declare class AsyncDeflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * deflated output for small inputs.
+@@ -300,20 +300,20 @@ export declare class AsyncDeflate {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function deflate(data: Uint8Array, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, opts: AsyncDeflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function deflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function deflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with DEFLATE without any wrapper
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The deflated version of the data
+  */
+-export declare function deflateSync(data: Uint8Array, opts?: DeflateOptions): Uint8Array;
++export declare function deflateSync(data: Uint8Array<ArrayBuffer>, opts?: DeflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming DEFLATE decompression
+  */
+@@ -344,7 +344,7 @@ export declare class Inflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the final chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression
+@@ -378,7 +378,7 @@ export declare class AsyncInflate {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -392,21 +392,21 @@ export declare class AsyncInflate {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function inflate(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function inflate(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands DEFLATE data with no wrapper
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function inflateSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function inflateSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming GZIP compression
+  */
+@@ -436,7 +436,7 @@ export declare class Gzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -476,7 +476,7 @@ export declare class AsyncGzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * GZIPped output for small inputs.
+@@ -495,21 +495,21 @@ export declare class AsyncGzip {
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function gzip(data: Uint8Array, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with GZIP
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compresses data with GZIP
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The gzipped version of the data
+  */
+-export declare function gzipSync(data: Uint8Array, opts?: GzipOptions): Uint8Array;
++export declare function gzipSync(data: Uint8Array<ArrayBuffer>, opts?: GzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Handler for new GZIP members in concatenated GZIP streams. Useful for building indices used to perform random-access reads on compressed files.
+  * @param offset The offset of the new member relative to the start of the stream
+@@ -548,7 +548,7 @@ export declare class Gunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming single or multi-member GZIP decompression
+@@ -586,7 +586,7 @@ export declare class AsyncGunzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -600,21 +600,21 @@ export declare class AsyncGunzip {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, opts: AsyncGunzipOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands GZIP data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function gunzip(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function gunzip(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands GZIP data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function gunzipSync(data: Uint8Array, opts?: GunzipOptions): Uint8Array;
++export declare function gunzipSync(data: Uint8Array<ArrayBuffer>, opts?: GunzipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib compression
+  */
+@@ -643,7 +643,7 @@ export declare class Zlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     private p;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+@@ -683,7 +683,7 @@ export declare class AsyncZlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * Flushes buffered uncompressed data. Useful to immediately retrieve the
+      * zlibbed output for small inputs.
+@@ -701,21 +701,21 @@ export declare class AsyncZlib {
+  * @param opts The compression options
+  * @param cb The function to be called upon compression completion
+  */
+-export declare function zlib(data: Uint8Array, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, opts: AsyncZlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously compresses data with Zlib
+  * @param data The data to compress
+  * @param cb The function to be called upon compression completion
+  * @returns A function that can be used to immediately terminate the compression
+  */
+-export declare function zlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function zlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Compress data with Zlib
+  * @param data The data to compress
+  * @param opts The compression options
+  * @returns The zlib-compressed version of the data
+  */
+-export declare function zlibSync(data: Uint8Array, opts?: ZlibOptions): Uint8Array;
++export declare function zlibSync(data: Uint8Array<ArrayBuffer>, opts?: ZlibOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Streaming Zlib decompression
+  */
+@@ -742,7 +742,7 @@ export declare class Unzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming Zlib decompression
+@@ -776,7 +776,7 @@ export declare class AsyncUnzlib {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * A method to terminate the stream's internal worker. Subsequent calls to
+      * push() will silently fail.
+@@ -790,21 +790,21 @@ export declare class AsyncUnzlib {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzlibOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchronously expands Zlib data
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function unzlib(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function unzlib(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands Zlib data
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function unzlibSync(data: Uint8Array, opts?: UnzlibOptions): Uint8Array;
++export declare function unzlibSync(data: Uint8Array<ArrayBuffer>, opts?: UnzlibOptions): Uint8Array<ArrayBuffer>;
+ export { gzip as compress, AsyncGzip as AsyncCompress };
+ export { gzipSync as compressSync, Gzip as Compress };
+ /**
+@@ -838,7 +838,7 @@ export declare class Decompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming GZIP, Zlib, or raw DEFLATE decompression
+@@ -876,7 +876,7 @@ export declare class AsyncDecompress {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+@@ -885,21 +885,21 @@ export declare class AsyncDecompress {
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, opts: AsyncInflateOptions, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Asynchrononously expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param cb The function to be called upon decompression completion
+  * @returns A function that can be used to immediately terminate the decompression
+  */
+-export declare function decompress(data: Uint8Array, cb: FlateCallback): AsyncTerminable;
++export declare function decompress(data: Uint8Array<ArrayBuffer>, cb: FlateCallback): AsyncTerminable;
+ /**
+  * Expands compressed GZIP, Zlib, or raw DEFLATE data, automatically detecting the format
+  * @param data The data to decompress
+  * @param opts The decompression options
+  * @returns The decompressed version of the data
+  */
+-export declare function decompressSync(data: Uint8Array, opts?: InflateOptions): Uint8Array;
++export declare function decompressSync(data: Uint8Array<ArrayBuffer>, opts?: InflateOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * Attributes for files added to a ZIP archive object
+  */
+@@ -940,7 +940,7 @@ export interface ZipAttributes {
+      * This field is incredibly rare and almost never needed except for compliance with
+      * proprietary standards and software.
+      */
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     /**
+      * The comment to attach to the file. This field is defined by PKZIP's APPNOTE.txt,
+      * section 4.4.26. The comment must be at most 65,535 bytes long UTF-8 encoded. This
+@@ -979,11 +979,11 @@ export interface AsyncUnzipOptions extends UnzipOptions {
+ /**
+  * A file that can be used to create a ZIP archive
+  */
+-export type ZippableFile = Uint8Array | Zippable | [Uint8Array | Zippable, ZipOptions];
++export type ZippableFile = Uint8Array<ArrayBuffer> | Zippable | [Uint8Array<ArrayBuffer> | Zippable, ZipOptions];
+ /**
+  * A file that can be used to asynchronously create a ZIP archive
+  */
+-export type AsyncZippableFile = Uint8Array | AsyncZippable | [Uint8Array | AsyncZippable, AsyncZipOptions];
++export type AsyncZippableFile = Uint8Array<ArrayBuffer> | AsyncZippable | [Uint8Array<ArrayBuffer> | AsyncZippable, AsyncZipOptions];
+ /**
+  * The complete directory structure of a ZIPpable archive
+  */
+@@ -1001,7 +1001,7 @@ export interface AsyncZippable {
+  * and the file is the value
+  */
+ export interface Unzipped {
+-    [path: string]: Uint8Array;
++    [path: string]: Uint8Array<ArrayBuffer>;
+ }
+ /**
+  * Handler for string generation streams
+@@ -1036,7 +1036,7 @@ export declare class DecodeUTF8 {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+     /**
+      * The handler to call whenever data is available
+      */
+@@ -1064,21 +1064,21 @@ export declare class EncodeUTF8 {
+     ondata: FlateStreamHandler;
+ }
+ /**
+- * Converts a string into a Uint8Array for use with compression/decompression methods
++ * Converts a string into a Uint8Array<ArrayBuffer> for use with compression/decompression methods
+  * @param str The string to encode
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless decoding a binary string.
+  * @returns The string encoded in UTF-8/Latin-1 binary
+  */
+-export declare function strToU8(str: string, latin1?: boolean): Uint8Array;
++export declare function strToU8(str: string, latin1?: boolean): Uint8Array<ArrayBuffer>;
+ /**
+- * Converts a Uint8Array to a string
++ * Converts a Uint8Array<ArrayBuffer> to a string
+  * @param dat The data to decode to string
+  * @param latin1 Whether or not to interpret the data as Latin-1. This should
+  *               not need to be true unless encoding to binary string.
+  * @returns The original UTF-8/Latin-1 string
+  */
+-export declare function strFromU8(dat: Uint8Array, latin1?: boolean): string;
++export declare function strFromU8(dat: Uint8Array<ArrayBuffer>, latin1?: boolean): string;
+ /**
+  * A stream that can be used to create a file in a ZIP archive
+  */
+@@ -1129,7 +1129,7 @@ export interface ZipInputFile extends ZipAttributes {
+      *
+      * error = any error that occurred (null if there was no error)
+      *
+-     * chunk = a Uint8Array of the data that was added (null if there was an
++     * chunk = a Uint8Array<ArrayBuffer> of the data that was added (null if there was an
+      * error)
+      *
+      * final = boolean, whether this is the final chunk in the stream
+@@ -1154,7 +1154,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private c;
+@@ -1171,7 +1171,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to process
+      * @param final Whether this is the last chunk
+      */
+-    protected process(chunk: Uint8Array, final: boolean): void;
++    protected process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be added. If you are subclassing this with a custom
+      * compression algorithm, note that you must push data from the source
+@@ -1179,7 +1179,7 @@ export declare class ZipPassThrough implements ZipInputFile {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE compression for ZIP archives. Prefer using AsyncZipDeflate
+@@ -1194,7 +1194,7 @@ export declare class ZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1204,13 +1204,13 @@ export declare class ZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE compression for ZIP archives
+@@ -1224,7 +1224,7 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+     os?: number;
+     attrs?: number;
+     comment?: string;
+-    extra?: Record<number, Uint8Array>;
++    extra?: Record<number, Uint8Array<ArrayBuffer>>;
+     mtime?: GzipOptions['mtime'];
+     ondata: AsyncFlateStreamHandler;
+     private d;
+@@ -1235,13 +1235,13 @@ export declare class AsyncZipDeflate implements ZipInputFile {
+      * @param opts The compression options
+      */
+     constructor(filename: string, opts?: DeflateOptions);
+-    process(chunk: Uint8Array, final: boolean): void;
++    process(chunk: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * Pushes a chunk to be deflated
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): void;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): void;
+ }
+ /**
+  * A zippable archive to which files can incrementally be added
+@@ -1299,7 +1299,7 @@ export declare function zip(data: AsyncZippable, cb: FlateCallback): AsyncTermin
+  * @param opts The main options, merged with per-file options
+  * @returns The generated ZIP archive
+  */
+-export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array;
++export declare function zipSync(data: Zippable, opts?: ZipOptions): Uint8Array<ArrayBuffer>;
+ /**
+  * A decoder for files in ZIP streams
+  */
+@@ -1313,7 +1313,7 @@ export interface UnzipDecoder {
+      * @param data The data in this chunk. Do not consume (detach) this data.
+      * @param final Whether this is the last chunk in the data stream
+      */
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+     /**
+      * A method to terminate any internal workers used by the stream. Subsequent
+      * calls to push() should silently fail.
+@@ -1415,7 +1415,7 @@ export interface UnzipFile {
+ export declare class UnzipPassThrough implements UnzipDecoder {
+     static compression: number;
+     ondata: AsyncFlateStreamHandler;
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Streaming DEFLATE decompression for ZIP archives. Prefer AsyncZipInflate for
+@@ -1429,7 +1429,7 @@ export declare class UnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor();
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * Asynchronous streaming DEFLATE decompression for ZIP archives
+@@ -1443,7 +1443,7 @@ export declare class AsyncUnzipInflate implements UnzipDecoder {
+      * Creates a DEFLATE decompression that can be used in ZIP archives
+      */
+     constructor(_: string, sz?: number);
+-    push(data: Uint8Array, final: boolean): void;
++    push(data: Uint8Array<ArrayBuffer>, final: boolean): void;
+ }
+ /**
+  * A ZIP archive decompression stream that emits files as they are discovered
+@@ -1464,7 +1464,7 @@ export declare class Unzip {
+      * @param chunk The chunk to push
+      * @param final Whether this is the last chunk
+      */
+-    push(chunk: Uint8Array, final?: boolean): any;
++    push(chunk: Uint8Array<ArrayBuffer>, final?: boolean): any;
+     /**
+      * Registers a decoder with the stream, allowing for files compressed with
+      * the compression type provided to be expanded correctly
+@@ -1483,14 +1483,14 @@ export declare class Unzip {
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, opts: AsyncUnzipOptions, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Asynchronously decompresses a ZIP archive
+  * @param data The raw compressed ZIP file
+  * @param cb The callback to call with the decompressed files
+  * @returns A function that can be used to immediately terminate the unzipping
+  */
+-export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTerminable;
++export declare function unzip(data: Uint8Array<ArrayBuffer>, cb: UnzipCallback): AsyncTerminable;
+ /**
+  * Synchronously decompresses a ZIP archive. Prefer using `unzip` for better
+  * performance with more than one file.
+@@ -1498,4 +1498,4 @@ export declare function unzip(data: Uint8Array, cb: UnzipCallback): AsyncTermina
+  * @param opts The ZIP extraction options
+  * @returns The decompressed files
+  */
+-export declare function unzipSync(data: Uint8Array, opts?: UnzipOptions): Unzipped;
++export declare function unzipSync(data: Uint8Array<ArrayBuffer>, opts?: UnzipOptions): Unzipped;

@@ -5,7 +5,7 @@ import {
 	encodeBitMask,
 	parseBitMask,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView, num2hex } from "@zwave-js/shared";
 import { type NVM, NVMAccess, type NVMIO } from "./common/definitions.js";
 import { type Route, encodeRoute, parseRoute } from "./common/routeCache.js";
 import {
@@ -258,7 +258,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 	private async readSingleRawEntry(
 		entry: ResolvedNVMEntry,
 		index: number,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		if (index >= entry.count) {
 			throw new ZWaveError(
 				`Index out of range. Tried to read entry ${index} of ${entry.count}.`,
@@ -274,8 +274,8 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 
 	private async readRawEntry(
 		entry: ResolvedNVMEntry,
-	): Promise<Uint8Array[]> {
-		const ret: Uint8Array[] = [];
+	): Promise<BytesView[]> {
+		const ret: BytesView[] = [];
 		const nvmData = await nvmReadBuffer(
 			this._io,
 			entry.offset,
@@ -329,7 +329,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 	private async readEntry(
 		entry: ResolvedNVMEntry,
 	): Promise<NVMData[]> {
-		const data: Uint8Array[] = await this.readRawEntry(entry);
+		const data: BytesView[] = await this.readRawEntry(entry);
 		return data.map((buffer) =>
 			this.parseEntry(entry.type, Bytes.view(buffer))
 		);
@@ -416,7 +416,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 	private async writeSingleRawEntry(
 		entry: ResolvedNVMEntry,
 		index: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<void> {
 		if (index >= entry.count) {
 			throw new ZWaveError(
@@ -433,7 +433,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 
 	private async writeRawEntry(
 		entry: ResolvedNVMEntry,
-		data: Uint8Array[],
+		data: BytesView[],
 	): Promise<void> {
 		await nvmWriteBuffer(
 			this._io,

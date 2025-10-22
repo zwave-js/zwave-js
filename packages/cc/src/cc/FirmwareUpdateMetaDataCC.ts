@@ -15,6 +15,7 @@ import {
 import {
 	type AllOrNone,
 	Bytes,
+	BytesView,
 	getEnumMemberName,
 	num2hex,
 	pick,
@@ -238,7 +239,7 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 	public async sendFirmwareFragment(
 		fragmentNumber: number,
 		isLastFragment: boolean,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<void> {
 		this.assertSupportsCommand(
 			FirmwareUpdateMetaDataCommand,
@@ -870,7 +871,7 @@ export class FirmwareUpdateMetaDataCCGet extends FirmwareUpdateMetaDataCC {
 export interface FirmwareUpdateMetaDataCCReportOptions {
 	isLast: boolean;
 	reportNumber: number;
-	firmwareData: Uint8Array;
+	firmwareData: BytesView;
 }
 
 @CCCommand(FirmwareUpdateMetaDataCommand.Report)
@@ -902,7 +903,7 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 
 	public isLast: boolean;
 	public reportNumber: number;
-	public firmwareData: Uint8Array;
+	public firmwareData: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const commandBuffer = Bytes.concat([

@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import type { NVMIO } from "./definitions.js";
 
 export async function nvmReadUInt32LE(
@@ -49,7 +49,7 @@ export async function nvmReadUInt8(
 export async function nvmWriteBuffer(
 	io: NVMIO,
 	position: number,
-	buffer: Uint8Array,
+	buffer: BytesView,
 ): Promise<void> {
 	const chunkSize = await io.determineChunkSize();
 	let offset = 0;
@@ -64,7 +64,7 @@ export async function nvmReadBuffer(
 	io: NVMIO,
 	position: number,
 	length: number,
-): Promise<Uint8Array> {
+): Promise<BytesView> {
 	const ret = new Uint8Array(length);
 	const chunkSize = await io.determineChunkSize();
 	let offset = 0;

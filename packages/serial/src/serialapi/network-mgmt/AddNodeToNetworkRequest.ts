@@ -30,7 +30,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, buffer2hex, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, buffer2hex, BytesView, getEnumMemberName } from "@zwave-js/shared";
 
 export enum AddNodeType {
 	Any = 1,
@@ -67,8 +67,8 @@ export interface AddNodeToNetworkRequestOptions {
 }
 
 export interface AddNodeDSKToNetworkRequestOptions {
-	nwiHomeId: Uint8Array;
-	authHomeId: Uint8Array;
+	nwiHomeId: BytesView;
+	authHomeId: BytesView;
 	highPower?: boolean;
 	networkWide?: boolean;
 	protocol?: Protocols;
@@ -256,8 +256,8 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 	}
 
 	/** The home IDs of node to add */
-	public nwiHomeId: Uint8Array;
-	public authHomeId: Uint8Array;
+	public nwiHomeId: BytesView;
+	public authHomeId: BytesView;
 	/** Whether to use high power */
 	public highPower: boolean;
 	/** Whether to include network wide */

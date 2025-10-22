@@ -1,4 +1,5 @@
 import { wait } from "alcalzone-shared/async";
+import { BytesView } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import {
 	type ZWaveSerialBindingFactory,
@@ -8,7 +9,7 @@ import {
 
 export class MockPort {
 	public constructor() {
-		const { readable, writable: sink } = new TransformStream<Uint8Array>();
+		const { readable, writable: sink } = new TransformStream<BytesView>();
 		this.#sink = sink;
 		this.readable = readable;
 	}
@@ -17,20 +18,20 @@ export class MockPort {
 	public writeDelay: number = 0;
 
 	// Remembers the last written data
-	public lastWrite: Uint8Array | undefined;
+	public lastWrite: BytesView | undefined;
 
 	// Internal stream to allow emitting data from the port
-	#sourceController: ReadableStreamDefaultController<Uint8Array> | undefined;
+	#sourceController: ReadableStreamDefaultController<BytesView> | undefined;
 
 	// Public readable stream to allow handling the written data
-	#sink: WritableStream<Uint8Array>;
+	#sink: WritableStream<BytesView>;
 	/** Exposes the data written by the host as a readable stream */
-	public readonly readable: ReadableStream<Uint8Array>;
+	public readonly readable: ReadableStream<BytesView>;
 
 	public factory(): ZWaveSerialBindingFactory {
 		return () => {
-			let writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
-			const sink: UnderlyingSink<Uint8Array> = {
+			let writer: WritableStreamDefaultWriter<BytesView> | undefined;
+			const sink: UnderlyingSink<BytesView> = {
 				write: async (chunk, _controller) => {
 					// Remember the last written data
 					this.lastWrite = chunk;
@@ -51,7 +52,7 @@ export class MockPort {
 				},
 			};
 
-			const source: UnderlyingSource<Uint8Array> = {
+			const source: UnderlyingSource<BytesView> = {
 				start: (controller) => {
 					this.#sourceController = controller;
 				},
@@ -61,7 +62,7 @@ export class MockPort {
 		};
 	}
 
-	public emitData(data: Uint8Array): void {
+	public emitData(data: BytesView): void {
 		this.#sourceController?.enqueue(data);
 	}
 

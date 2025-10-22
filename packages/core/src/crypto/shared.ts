@@ -52,7 +52,7 @@ export function decodeX25519KeyDER(key: BytesView): BytesView {
 }
 
 /** Encodes an x25519 key from a raw buffer with DER/PKCS#8 */
-export function encodeX25519KeyDERPKCS8(key: Uint8Array): BytesView {
+export function encodeX25519KeyDERPKCS8(key: BytesView): BytesView {
 	// We could encode this with asn1js but that doesn't seem necessary for now
 	return Bytes.concat([
 		Bytes.from("302e020100300506032b656e04220420", "hex"),
@@ -61,7 +61,7 @@ export function encodeX25519KeyDERPKCS8(key: Uint8Array): BytesView {
 }
 
 /** Encodes an x25519 key from a raw buffer with DER/SPKI */
-export function encodeX25519KeyDERSPKI(key: Uint8Array): BytesView {
+export function encodeX25519KeyDERSPKI(key: BytesView): BytesView {
 	// We could encode this with asn1js but that doesn't seem necessary for now
 	return Bytes.concat([Bytes.from("302a300506032b656e032100", "hex"), key]);
 }

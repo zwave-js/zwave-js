@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import {
 	FragmentType,
 	NVM3_CODE_LARGE_SHIFT,
@@ -34,10 +34,10 @@ export interface NVM3Object {
 	type: ObjectType;
 	fragmentType: FragmentType;
 	key: number;
-	data?: Uint8Array;
+	data?: BytesView;
 }
 
-export function serializeObject(obj: NVM3Object): Uint8Array {
+export function serializeObject(obj: NVM3Object): BytesView {
 	const isLarge = obj.type === ObjectType.DataLarge
 		|| obj.type === ObjectType.CounterLarge;
 	const headerSize = isLarge

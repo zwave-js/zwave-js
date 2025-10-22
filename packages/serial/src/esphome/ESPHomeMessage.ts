@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import { decodeVarInt, encodeVarInt } from "./ProtobufHelpers.js";
 
 /**
@@ -33,7 +33,7 @@ export class ESPHomeMessageRaw {
 	/**
 	 * Parses a raw ESPHome frame into a MessageRaw instance
 	 */
-	public static parse(data: Uint8Array): ESPHomeMessageRaw {
+	public static parse(data: BytesView): ESPHomeMessageRaw {
 		if (data.length < 3) {
 			throw new ZWaveError(
 				"Frame too short",
@@ -122,7 +122,7 @@ export class ESPHomeMessage {
 	/**
 	 * Parses a raw ESPHome message and returns the appropriate message instance
 	 */
-	public static parse(data: Uint8Array): ESPHomeMessage {
+	public static parse(data: BytesView): ESPHomeMessage {
 		const raw = ESPHomeMessageRaw.parse(data);
 		const Constructor = getESPHomeMessageConstructor(raw.messageType)
 			?? ESPHomeMessage;

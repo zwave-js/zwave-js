@@ -1,4 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { BytesView } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
@@ -87,7 +88,7 @@ export function createNodeSocketFactory(
 		// Once the socket is opened, wrap it as web streams.
 		// This could be done in the start method of the sink, but handling async errors is a pain there.
 
-		const sink: UnderlyingSink<Uint8Array> = {
+		const sink: UnderlyingSink<BytesView> = {
 			write(data, controller) {
 				if (!isOpen) {
 					controller.error(new Error("The serial port is not open!"));
@@ -108,7 +109,7 @@ export function createNodeSocketFactory(
 			},
 		};
 
-		const source: UnderlyingSource<Uint8Array> = {
+		const source: UnderlyingSource<BytesView> = {
 			start(controller) {
 				socket.on("data", (data) => controller.enqueue(data));
 				// Abort source controller too if the serial port closes

@@ -1,10 +1,10 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 
 /** Encapsulates information about the currently active bootloader */
 export class EndDeviceCLI {
 	public constructor(
-		writeSerial: (data: Uint8Array) => Promise<void>,
+		writeSerial: (data: BytesView) => Promise<void>,
 		expectMessage: (timeoutMs?: number) => Promise<string | undefined>,
 	) {
 		this.writeSerial = writeSerial;
@@ -12,7 +12,7 @@ export class EndDeviceCLI {
 		this._commands = new Map();
 	}
 
-	public readonly writeSerial: (data: Uint8Array) => Promise<void>;
+	public readonly writeSerial: (data: BytesView) => Promise<void>;
 	public readonly expectMessage: () => Promise<string | undefined>;
 
 	private _commands: Map<string, string>;

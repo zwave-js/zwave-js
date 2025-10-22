@@ -1,4 +1,4 @@
-import { Bytes, getenv } from "@zwave-js/shared";
+import { Bytes, BytesView, getenv } from "@zwave-js/shared";
 import { bootloaderMenuPreamble } from "../parsers/BootloaderParsers.js";
 import { ZWaveSerialMode } from "../serialport/definitions.js";
 
@@ -7,7 +7,7 @@ const IS_TEST = process.env.NODE_ENV === "test" || !!getenv("CI");
 // A transform stream with two outputs, where only one of both is
 // active at the same time
 
-export class SerialModeSwitch extends WritableStream<Uint8Array> {
+export class SerialModeSwitch extends WritableStream<BytesView> {
 	private possiblyCLI = false;
 
 	#mode: ZWaveSerialMode | undefined;
@@ -20,14 +20,14 @@ export class SerialModeSwitch extends WritableStream<Uint8Array> {
 	}
 
 	// The output sides of the stream
-	#serialAPIWriter: WritableStreamDefaultWriter<Uint8Array>;
-	public readonly toSerialAPI: ReadableStream<Uint8Array>;
+	#serialAPIWriter: WritableStreamDefaultWriter<BytesView>;
+	public readonly toSerialAPI: ReadableStream<BytesView>;
 
-	#bootloaderWriter: WritableStreamDefaultWriter<Uint8Array>;
-	public readonly toBootloader: ReadableStream<Uint8Array>;
+	#bootloaderWriter: WritableStreamDefaultWriter<BytesView>;
+	public readonly toBootloader: ReadableStream<BytesView>;
 
-	#cliWriter: WritableStreamDefaultWriter<Uint8Array>;
-	public readonly toCLI: ReadableStream<Uint8Array>;
+	#cliWriter: WritableStreamDefaultWriter<BytesView>;
+	public readonly toCLI: ReadableStream<BytesView>;
 
 	public constructor() {
 		// Set up a writable stream for the input side of the public interface

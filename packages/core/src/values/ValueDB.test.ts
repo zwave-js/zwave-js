@@ -1008,13 +1008,13 @@ test("valueEquals() -> should return false for primitive types with different va
 	t.expect(valueEquals(undefined, null)).toBe(false);
 });
 
-test("valueEquals() -> should return true for equal Uint8Array values", (t) => {
+test("valueEquals() -> should return true for equal BytesView values", (t) => {
 	const a = new Uint8Array([1, 2, 3]);
 	const b = new Uint8Array([1, 2, 3]);
 	t.expect(valueEquals(a, b)).toBe(true);
 });
 
-test("valueEquals() -> should return false for different Uint8Array values", (t) => {
+test("valueEquals() -> should return false for different BytesView values", (t) => {
 	const a = new Uint8Array([1, 2, 3]);
 	const b = new Uint8Array([4, 5, 6]);
 	t.expect(valueEquals(a, b)).toBe(false);

@@ -1,4 +1,4 @@
-import { noop } from "@zwave-js/shared";
+import { BytesView, noop } from "@zwave-js/shared";
 import type { SerialLogger } from "../log/Logger.js";
 import {
 	BootloaderParser,
@@ -59,7 +59,7 @@ export class ZWaveSerialParser {
 	}
 	// Public interface to let consumers read from and write to this stream
 	public readonly readable: ReadableStream<ZWaveSerialFrame>;
-	public get writable(): WritableStream<Uint8Array> {
+	public get writable(): WritableStream<BytesView> {
 		return this.modeSwitch;
 	}
 

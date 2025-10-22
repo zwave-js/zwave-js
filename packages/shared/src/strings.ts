@@ -1,4 +1,4 @@
-import { Bytes } from "./Bytes.js";
+import { Bytes, BytesView } from "./Bytes.js";
 import { uint8ArrayToHex } from "./uint8array-extras.js";
 
 /** Translates a null-terminated (C++) string to JS */
@@ -47,7 +47,7 @@ export function stringify(arg: unknown, space: 4 | "\t" = 4): string {
  * @param uppercase Whether uppercase letters should be used
  */
 export function buffer2hex(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	uppercase: boolean = false,
 ): string {
 	if (buffer.length === 0) return "(empty)";
@@ -82,7 +82,7 @@ export function formatDate(year: number, month: number, day: number): string {
 	}-${day.toString().padStart(2, "0")}`;
 }
 
-export function stringToUint8ArrayUTF16BE(str: string): Uint8Array {
+export function stringToUint8ArrayUTF16BE(str: string): BytesView {
 	// TextEncoder only supports UTF-8, so we have to do this manually
 	const ret = new Bytes(str.length * 2);
 	for (let i = 0; i < str.length; i++) {
@@ -92,7 +92,7 @@ export function stringToUint8ArrayUTF16BE(str: string): Uint8Array {
 	return ret;
 }
 
-export function uint8ArrayToStringUTF16BE(arr: Uint8Array): string {
+export function uint8ArrayToStringUTF16BE(arr: BytesView): string {
 	// TextDecoder only supports UTF-8, so we have to do this manually
 	let ret = "";
 	const view = Bytes.view(arr);

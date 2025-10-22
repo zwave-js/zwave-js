@@ -3,7 +3,7 @@ import {
 	encodeNodeProtocolInfo,
 	parseNodeProtocolInfo,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import type { NVMModuleType } from "./shared.js";
 
 export interface NVMDescriptor {
@@ -16,7 +16,7 @@ export interface NVMDescriptor {
 }
 
 export function parseNVMDescriptor(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number = 0,
 ): NVMDescriptor {
 	const buffer = Bytes.view(data);
@@ -62,7 +62,7 @@ export interface NVMModuleDescriptor {
 }
 
 export function parseNVMModuleDescriptor(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number = 0,
 ): NVMModuleDescriptor {
 	const buffer = Bytes.view(data);
@@ -93,7 +93,7 @@ export interface NVM500NodeInfo
 }
 
 export function parseNVM500NodeInfo(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	offset: number,
 ): NVM500NodeInfo {
 	const { hasSpecificDeviceClass, ...protocolInfo } = parseNodeProtocolInfo(

@@ -1,5 +1,5 @@
 import type { CommandClasses } from "@zwave-js/core";
-import type { Expand } from "@zwave-js/shared";
+import { BytesView, type Expand } from "@zwave-js/shared";
 import type {
 	ApplicationCCsFile,
 	ApplicationRFConfigFile,
@@ -46,7 +46,7 @@ export interface NVMIO {
 	read(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+	): Promise<{ buffer: BytesView; endOfFile: boolean }>;
 
 	/**
 	 * Writes a chunk of data with the given length from the NVM.
@@ -54,7 +54,7 @@ export interface NVMIO {
 	 */
 	write(
 		offset: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<{ bytesWritten: number; endOfFile: boolean }>;
 
 	/** Closes the NVM */
@@ -115,7 +115,7 @@ export type ControllerNVMPropertyTypes = Expand<
 		protocolVersion: string;
 		protocolFileFormat: number;
 		applicationVersion: string;
-		applicationData: Uint8Array;
+		applicationData: BytesView;
 		preferredRepeaters?: number[];
 		sucUpdateEntries: SUCUpdateEntry[];
 		appRouteLock: number[];
@@ -133,7 +133,7 @@ export type ControllerNVMPropertyTypes = Expand<
 	}>
 	// 500 series only
 	& Partial<{
-		learnedHomeId: Uint8Array;
+		learnedHomeId: BytesView;
 		commandClasses: CommandClasses[];
 		systemState: number;
 		watchdogStarted: number;

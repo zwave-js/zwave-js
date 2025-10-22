@@ -5,7 +5,7 @@ import {
 	encodeCCList,
 	parseCCList,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import {
 	SUC_UPDATE_ENTRY_SIZE,
 	SUC_UPDATE_NODEPARM_MAX,
@@ -19,7 +19,7 @@ export interface SUCUpdateEntry {
 }
 
 export function parseSUCUpdateEntry(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	offset: number,
 ): SUCUpdateEntry | undefined {
 	const slice = buffer.subarray(offset, offset + SUC_UPDATE_ENTRY_SIZE);

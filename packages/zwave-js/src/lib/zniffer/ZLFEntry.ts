@@ -4,13 +4,13 @@ import {
 	ZnifferMessage,
 	ZnifferMessageType,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import { ZLFAttachment } from "./ZLFAttachment.js";
 import type { CapturedData } from "./Zniffer.js";
 
 export function captureToZLFEntry(
 	capture: CapturedData,
-): Uint8Array {
+): BytesView {
 	const buffer = new Bytes(14 + capture.rawData.length).fill(0);
 	// Convert the date to a .NET datetime
 	let ticks = BigInt(capture.timestamp.getTime()) * 10000n
@@ -28,7 +28,7 @@ export function captureToZLFEntry(
 	return buffer;
 }
 
-export function parseZLFHeader(buffer: Uint8Array): {
+export function parseZLFHeader(buffer: BytesView): {
 	znifferVersion: number;
 	checksum: number;
 	bytesRead: number;
@@ -92,7 +92,7 @@ type ParseZLFEntryResult =
 
 /** @internal */
 export function parseZLFEntry(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	offset: number,
 	accumulator?: CapturedData,
 ): ParseZLFEntryResult {

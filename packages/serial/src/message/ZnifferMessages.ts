@@ -8,7 +8,7 @@ import {
 	getZWaveChipType,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, BytesView, getEnumMemberName } from "@zwave-js/shared";
 import {
 	ZnifferFrameType,
 	ZnifferFunctionType,
@@ -41,7 +41,7 @@ export class ZnifferMessageRaw {
 		public readonly payload: Bytes,
 	) {}
 
-	public static parse(data: Uint8Array): {
+	public static parse(data: BytesView): {
 		raw: ZnifferMessageRaw;
 		bytesRead: number;
 	} {
@@ -178,7 +178,7 @@ export class ZnifferMessage {
 	}
 
 	public static parse(
-		data: Uint8Array,
+		data: BytesView,
 	): {
 		msg: ZnifferMessage;
 		bytesRead: number;
@@ -231,7 +231,7 @@ export class ZnifferMessage {
 	}
 }
 
-function computeChecksumXOR(buffer: Uint8Array): number {
+function computeChecksumXOR(buffer: BytesView): number {
 	let ret = 0xff;
 	for (let i = 0; i < buffer.length; i++) {
 		ret ^= buffer[i];

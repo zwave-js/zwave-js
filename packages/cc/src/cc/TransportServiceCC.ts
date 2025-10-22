@@ -10,7 +10,7 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex } from "@zwave-js/shared";
+import { Bytes, buffer2hex, BytesView } from "@zwave-js/shared";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	CCCommand,
@@ -53,8 +53,8 @@ export class TransportServiceCC extends CommandClass
 export interface TransportServiceCCFirstSegmentOptions {
 	datagramSize: number;
 	sessionId: number;
-	headerExtension?: Uint8Array | undefined;
-	partialDatagram: Uint8Array;
+	headerExtension?: BytesView | undefined;
+	partialDatagram: BytesView;
 }
 
 /** @publicAPI */
@@ -111,14 +111,14 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 
 		// If there is a header extension, read it
 		const hasHeaderExtension = !!(raw.payload[2] & 0b1000);
-		let headerExtension: Uint8Array | undefined;
+		let headerExtension: BytesView | undefined;
 
 		if (hasHeaderExtension) {
 			const extLength = raw.payload[3];
 			headerExtension = raw.payload.subarray(4, 4 + extLength);
 			payloadOffset += 1 + extLength;
 		}
-		const partialDatagram: Uint8Array = raw.payload.subarray(
+		const partialDatagram: BytesView = raw.payload.subarray(
 			payloadOffset,
 			-2,
 		);
@@ -138,8 +138,8 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 
 	public datagramSize: number;
 	public sessionId: number;
-	public headerExtension: Uint8Array | undefined;
-	public partialDatagram: Uint8Array;
+	public headerExtension: BytesView | undefined;
+	public partialDatagram: BytesView;
 	public encapsulated!: CommandClass;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -285,8 +285,8 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 	public datagramSize: number;
 	public datagramOffset: number;
 	public sessionId: number;
-	public headerExtension: Uint8Array | undefined;
-	public partialDatagram: Uint8Array;
+	public headerExtension: BytesView | undefined;
+	public partialDatagram: BytesView;
 
 	// This can only be received
 	private _encapsulated!: CommandClass;

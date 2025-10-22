@@ -98,7 +98,7 @@ export function computePRK(
 	ecdhSharedSecret: BytesView,
 	pubKeyA: BytesView,
 	pubKeyB: BytesView,
-): Promise<Uint8Array> {
+): Promise<BytesView> {
 	const message = Bytes.concat([ecdhSharedSecret, pubKeyA, pubKeyB]);
 	return computeCMAC(message, constantPRK);
 }

@@ -51,8 +51,9 @@ console.log(isUint8Array(new ArrayBuffer(10)));
 //=> false
 ```
 */
-export function isUint8Array(value: unknown): value is Uint8Array {
-	return isType(value, Uint8Array, uint8ArrayStringified);
+export function isUint8Array(value: unknown): value is Uint8Array<ArrayBuffer> {
+	return isType(value, Uint8Array, uint8ArrayStringified)
+		&& (value.buffer instanceof ArrayBuffer);
 }
 
 function isArrayBuffer(value: unknown): value is ArrayBuffer {
@@ -68,13 +69,13 @@ function isArrayLike(value: unknown): value is ArrayLike<number> {
 
 export function isUint8ArrayOrArrayBuffer(
 	value: unknown,
-): value is Uint8Array | ArrayBuffer {
+): value is Uint8Array<ArrayBuffer> | ArrayBuffer {
 	return isUint8Array(value) || isArrayBuffer(value);
 }
 
 export function isUint8ArrayOrArrayLike(
 	value: unknown,
-): value is Uint8Array | ArrayLike<number> {
+): value is Uint8Array<ArrayBuffer> | ArrayLike<number> {
 	return isUint8Array(value) || isArrayBuffer(value);
 }
 
@@ -92,7 +93,7 @@ try {
 }
 ```
 */
-export function assertUint8Array(value: unknown): asserts value is Uint8Array {
+export function assertUint8Array(value: unknown): asserts value is Uint8Array<ArrayBuffer> {
 	if (!isUint8Array(value)) {
 		throw new TypeError(`Expected \`Uint8Array\`, got \`${typeof value}\``);
 	}
@@ -100,7 +101,7 @@ export function assertUint8Array(value: unknown): asserts value is Uint8Array {
 
 export function assertUint8ArrayOrArrayBuffer(
 	value: unknown,
-): asserts value is Uint8Array | ArrayBuffer {
+): asserts value is Uint8Array<ArrayBuffer> | ArrayBuffer {
 	if (!isUint8ArrayOrArrayBuffer(value)) {
 		throw new TypeError(
 			`Expected \`Uint8Array\` or \`ArrayBuffer\`, got \`${typeof value}\``,
@@ -110,7 +111,7 @@ export function assertUint8ArrayOrArrayBuffer(
 
 export function assertUint8ArrayOrArrayLike(
 	value: unknown,
-): asserts value is Uint8Array | ArrayLike<number> {
+): asserts value is Uint8Array<ArrayBuffer> | ArrayLike<number> {
 	if (!isUint8Array(value) && !isArrayLike(value)) {
 		throw new TypeError(
 			`Expected \`Uint8Array\` or a numeric array, got \`${typeof value}\``,
@@ -162,7 +163,7 @@ console.log(concatUint8Arrays([a, b]));
 export function concatUint8Arrays(
 	arrays: readonly (Uint8Array | ArrayLike<number>)[],
 	totalLength?: number,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
 	if (arrays.length === 0) {
 		return new Uint8Array(0);
 	}
@@ -334,7 +335,7 @@ console.log(stringToUint8Array('Hello'));
 //=> Uint8Array [72, 101, 108, 108, 111]
 ```
 */
-export function stringToUint8Array(string: string): Uint8Array {
+export function stringToUint8Array(string: string): Uint8Array<ArrayBuffer> {
 	assertString(string);
 	return cachedEncoder.encode(string);
 }
@@ -407,7 +408,7 @@ console.log(base64ToUint8Array('SGVsbG8='));
 //=> Uint8Array [72, 101, 108, 108, 111]
 ```
 */
-export function base64ToUint8Array(base64String: string): Uint8Array {
+export function base64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 	assertString(base64String);
 	return Uint8Array.from(
 		globalThis.atob(base64UrlToBase64(base64String)),
@@ -527,7 +528,7 @@ console.log(hexToUint8Array('48656c6c6f'));
 //=> Uint8Array [72, 101, 108, 108, 111]
 ```
 */
-export function hexToUint8Array(hexString: string): Uint8Array {
+export function hexToUint8Array(hexString: string): Uint8Array<ArrayBuffer> {
 	assertString(hexString);
 
 	if (hexString.length % 2 !== 0) {

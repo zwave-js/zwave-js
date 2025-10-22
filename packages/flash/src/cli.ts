@@ -1,5 +1,6 @@
 import { ZWaveErrorCodes, isZWaveError } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
+import { BytesView } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import path from "pathe";
 import yargs from "yargs";
@@ -23,7 +24,7 @@ if (!port || !filename) {
 
 const verbose = !!argv.verbose;
 
-let firmware: Uint8Array;
+let firmware: BytesView;
 
 const driver = new Driver(port, {
 	logConfig: verbose
@@ -101,7 +102,7 @@ async function flash() {
 }
 
 async function main() {
-	let rawFile: Uint8Array;
+	let rawFile: BytesView;
 	try {
 		const fullPath = path.isAbsolute(filename)
 			? filename
@@ -113,7 +114,7 @@ async function main() {
 	}
 
 	try {
-		let firmwareFile: Uint8Array;
+		let firmwareFile: BytesView;
 		let firmwareFilename: string;
 
 		// Check if the file is a ZIP archive and try to extract a single firmware file

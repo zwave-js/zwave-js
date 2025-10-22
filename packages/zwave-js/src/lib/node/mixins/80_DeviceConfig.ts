@@ -1,7 +1,7 @@
 import { refreshMetadataStringsFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
 import { DeviceConfig } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
-import { Bytes, formatId } from "@zwave-js/shared";
+import { Bytes, BytesView, formatId } from "@zwave-js/shared";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
 
@@ -34,13 +34,13 @@ export interface NodeDeviceConfig {
 	 * @internal
 	 * The hash of the device config that was applied during the last interview.
 	 */
-	get cachedDeviceConfigHash(): Uint8Array | undefined;
+	get cachedDeviceConfigHash(): BytesView | undefined;
 
 	/**
 	 * @internal
 	 * The hash of the currently used device config
 	 */
-	get currentDeviceConfigHash(): Uint8Array | undefined;
+	get currentDeviceConfigHash(): BytesView | undefined;
 }
 
 export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
@@ -120,23 +120,23 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 	 * @internal
 	 * The hash of the device config that was applied during the last interview.
 	 */
-	public get cachedDeviceConfigHash(): Uint8Array | undefined {
+	public get cachedDeviceConfigHash(): BytesView | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).deviceConfigHash);
 	}
 
-	protected set cachedDeviceConfigHash(value: Uint8Array | undefined) {
+	protected set cachedDeviceConfigHash(value: BytesView | undefined) {
 		this.driver.cacheSet(cacheKeys.node(this.id).deviceConfigHash, value);
 	}
 
-	private _currentDeviceConfigHash: Uint8Array | undefined;
+	private _currentDeviceConfigHash: BytesView | undefined;
 	/**
 	 * @internal
 	 * The hash of the currently used device config
 	 */
-	public get currentDeviceConfigHash(): Uint8Array | undefined {
+	public get currentDeviceConfigHash(): BytesView | undefined {
 		return this._currentDeviceConfigHash;
 	}
-	protected set currentDeviceConfigHash(value: Uint8Array | undefined) {
+	protected set currentDeviceConfigHash(value: BytesView | undefined) {
 		this._currentDeviceConfigHash = value;
 	}
 

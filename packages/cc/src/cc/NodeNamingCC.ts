@@ -14,6 +14,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	BytesView,
 	stringToUint8ArrayUTF16BE,
 	uint8ArrayToStringUTF16BE,
 } from "@zwave-js/shared";
@@ -306,7 +307,7 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 			1 + this.name.length * (encoding === "ascii" ? 1 : 2),
 		);
 		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let nameBuffer: Uint8Array;
+		let nameBuffer: BytesView;
 		if (encoding === "utf16le") {
 			nameBuffer = stringToUint8ArrayUTF16BE(this.name);
 		} else {
@@ -418,7 +419,7 @@ export class NodeNamingAndLocationCCLocationSet
 			1 + this.location.length * (encoding === "ascii" ? 1 : 2),
 		);
 		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let locationBuffer: Uint8Array;
+		let locationBuffer: BytesView;
 		if (encoding === "utf16le") {
 			locationBuffer = stringToUint8ArrayUTF16BE(this.location);
 		} else {

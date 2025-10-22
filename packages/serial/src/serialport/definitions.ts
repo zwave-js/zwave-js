@@ -1,10 +1,11 @@
+import { BytesView } from "@zwave-js/shared";
 import type { MessageHeaders } from "../message/MessageHeaders.js";
 
 export type ZWaveSerialChunk =
 	| MessageHeaders.ACK
 	| MessageHeaders.NAK
 	| MessageHeaders.CAN
-	| Uint8Array;
+	| BytesView;
 
 export enum ZWaveSerialMode {
 	// Controller or end device Serial API

@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import { DisconnectRequest } from "../esphome/ConnectionMessages.js";
@@ -48,7 +48,7 @@ export function createESPHomeFactory(
 		let connectionState = ConnectionState.Disconnected;
 		let deviceInfo: DeviceInfoResponse | undefined;
 		let sourceController:
-			| ReadableStreamDefaultController<Uint8Array>
+			| ReadableStreamDefaultController<BytesView>
 			| undefined;
 
 		// Buffer for incoming frame reassembly
@@ -316,7 +316,7 @@ export function createESPHomeFactory(
 		await open();
 		let isOpen = true;
 
-		const sink: UnderlyingSink<Uint8Array> = {
+		const sink: UnderlyingSink<BytesView> = {
 			async write(data, controller) {
 				if (!isOpen || connectionState !== ConnectionState.Ready) {
 					controller.error(
@@ -352,7 +352,7 @@ export function createESPHomeFactory(
 			},
 		};
 
-		const source: UnderlyingSource<Uint8Array> = {
+		const source: UnderlyingSource<BytesView> = {
 			start(controller) {
 				// Store the controller so we can enqueue data when needed
 				sourceController = controller;

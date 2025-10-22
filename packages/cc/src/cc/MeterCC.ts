@@ -36,6 +36,7 @@ import {
 import {
 	type AllOrNone,
 	Bytes,
+	BytesView,
 	getEnumMemberName,
 	num2hex,
 	pick,
@@ -178,7 +179,7 @@ function getValueLabel(
 	return ret;
 }
 
-function parseMeterValueAndInfo(data: Uint8Array, offset: number): {
+function parseMeterValueAndInfo(data: BytesView, offset: number): {
 	type: number;
 	rateType: RateType;
 	scale1: number;
@@ -241,7 +242,7 @@ function encodeMeterValueAndInfo(
 
 function parseScale(
 	scale1: number,
-	data: Uint8Array,
+	data: BytesView,
 	scale2Offset: number,
 ): number {
 	if (scale1 === 7) {

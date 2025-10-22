@@ -1,6 +1,6 @@
 import { ZWaveError, ZWaveErrorCodes, validatePayload } from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
-import { Bytes, buffer2hex, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, buffer2hex, BytesView, getEnumMemberName } from "@zwave-js/shared";
 
 enum S2ExtensionType {
 	SPAN = 0x01,
@@ -82,10 +82,10 @@ export class Security2ExtensionRaw {
 		public type: S2ExtensionType,
 		public critical: boolean,
 		public readonly moreToFollow: boolean,
-		public payload: Uint8Array,
+		public payload: BytesView,
 	) {}
 
-	public static parse(data: Uint8Array): Security2ExtensionRaw {
+	public static parse(data: BytesView): Security2ExtensionRaw {
 		validatePayload(data.length >= 2);
 		const totalLength = data[0];
 		const moreToFollow = !!(data[1] & 0b1000_0000);
@@ -113,7 +113,7 @@ interface Security2ExtensionBaseOptions {
 
 interface Security2ExtensionOptions extends Security2ExtensionBaseOptions {
 	type?: S2ExtensionType;
-	payload?: Uint8Array;
+	payload?: BytesView;
 }
 
 export class Security2Extension {
@@ -140,7 +140,7 @@ export class Security2Extension {
 	}
 
 	public static parse(
-		data: Uint8Array,
+		data: BytesView,
 	): Security2Extension {
 		const raw = Security2ExtensionRaw.parse(data);
 		const Constructor = getS2ExtensionConstructor(raw.type)
@@ -163,7 +163,7 @@ export class Security2Extension {
 	public type: S2ExtensionType;
 	public critical: boolean;
 	public readonly moreToFollow?: boolean;
-	public payload: Uint8Array;
+	public payload: BytesView;
 
 	public isEncrypted(): boolean {
 		return false;
@@ -183,7 +183,7 @@ export class Security2Extension {
 
 	/** Returns the number of bytes the first extension in the buffer occupies */
 	public static getExtensionLength(
-		data: Uint8Array,
+		data: BytesView,
 	): { expected?: number; actual: number } {
 		const actual = data[0];
 		let expected: number | undefined;
@@ -228,7 +228,7 @@ export class InvalidExtension extends Security2Extension {
 }
 
 interface SPANExtensionOptions {
-	senderEI: Uint8Array;
+	senderEI: BytesView;
 }
 
 @extensionType(S2ExtensionType.SPAN)
@@ -257,7 +257,7 @@ export class SPANExtension extends Security2Extension {
 		});
 	}
 
-	public senderEI: Uint8Array;
+	public senderEI: BytesView;
 	public static readonly expectedLength = 18;
 
 	public serialize(moreToFollow: boolean): Bytes {
@@ -274,7 +274,7 @@ export class SPANExtension extends Security2Extension {
 
 interface MPANExtensionOptions {
 	groupId: number;
-	innerMPANState: Uint8Array;
+	innerMPANState: BytesView;
 }
 
 @extensionType(S2ExtensionType.MPAN)
@@ -307,7 +307,7 @@ export class MPANExtension extends Security2Extension {
 	}
 
 	public groupId: number;
-	public innerMPANState: Uint8Array;
+	public innerMPANState: BytesView;
 
 	public isEncrypted(): boolean {
 		return true;

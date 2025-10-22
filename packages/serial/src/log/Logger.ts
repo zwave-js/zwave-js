@@ -4,7 +4,7 @@ import {
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 } from "@zwave-js/core";
-import { buffer2hex, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import { buffer2hex, BytesView, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { MessageHeaders } from "../message/MessageHeaders.js";
 import {
 	SERIAL_LABEL,
@@ -54,7 +54,7 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
 	/**
 	 * Logs receipt of unexpected data while waiting for an ACK, NAK, CAN, or data frame
 	 */
-	public discarded(data: Uint8Array): void {
+	public discarded(data: BytesView): void {
 		if (this.isVisible()) {
 			const direction: DataDirection = "inbound";
 			this.logger.log({
@@ -94,7 +94,7 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
 	 * @param direction The direction the data was sent
 	 * @param data The data that was transmitted or received
 	 */
-	public data(direction: DataDirection, data: Uint8Array): void {
+	public data(direction: DataDirection, data: BytesView): void {
 		if (this.isVisible()) {
 			this.logger.log({
 				level: SERIAL_LOGLEVEL,

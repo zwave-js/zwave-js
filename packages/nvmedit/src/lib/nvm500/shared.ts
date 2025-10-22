@@ -7,6 +7,7 @@ import type {
 	NVMDescriptor,
 	NVMModuleDescriptor,
 } from "./EntryParsers.js";
+import { BytesView } from "@zwave-js/shared";
 
 export enum NVMEntryType {
 	NVMModuleSize,
@@ -96,7 +97,7 @@ export interface NVMEntry {
 export type ResolvedNVMEntry = Required<NVMEntry>;
 
 export type NVMData =
-	| Uint8Array
+	| BytesView
 	| number
 	| NVMDescriptor
 	| number[]

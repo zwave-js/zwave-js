@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import {
 	ESPHomeMessage,
 	type ESPHomeMessageBaseOptions,
@@ -95,7 +95,7 @@ export class HelloRequest extends ESPHomeMessage {
 	public apiVersionMinor: number;
 
 	public serialize(): Bytes {
-		const parts: (Uint8Array | number[])[] = [];
+		const parts: (BytesView | number[])[] = [];
 
 		// Field 1: client_info (string)
 		if (this.clientInfo) {
@@ -207,7 +207,7 @@ export class HelloResponse extends ESPHomeMessage {
 	public name: string;
 
 	public serialize(): Bytes {
-		const parts: (Uint8Array | number[])[] = [];
+		const parts: (BytesView | number[])[] = [];
 
 		// Field 1: api_version_major (uint32)
 		parts.push(encodeVarintField(1, this.apiVersionMajor));

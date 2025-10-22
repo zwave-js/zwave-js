@@ -20,7 +20,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import type { MessageWithCC } from "../utils.js";
 
 export enum ApplicationCommandStatusFlags {
@@ -43,7 +43,7 @@ export type ApplicationCommandRequestOptions =
 		| { command: CommandClass }
 		| {
 			nodeId: number;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -153,8 +153,8 @@ export class ApplicationCommandRequest extends Message
 		return this._nodeId ?? super.getNodeId();
 	}
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(

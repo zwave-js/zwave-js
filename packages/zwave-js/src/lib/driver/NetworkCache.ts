@@ -10,7 +10,7 @@ import {
 	dskToString,
 	securityClassOrder,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, num2hex, pickDeep } from "@zwave-js/shared";
+import { Bytes, BytesView, getEnumMemberName, num2hex, pickDeep } from "@zwave-js/shared";
 import type {
 	Database,
 	ReadFile,
@@ -365,7 +365,7 @@ function tryParseAssociationAddress(
 
 function tryParseBuffer(
 	value: unknown,
-): Uint8Array | undefined {
+): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "hex");
@@ -377,7 +377,7 @@ function tryParseBuffer(
 
 function tryParseBufferBase64(
 	value: unknown,
-): Uint8Array | undefined {
+): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "base64");
@@ -487,7 +487,7 @@ export function deserializeNetworkCacheValue(
 				if (value) {
 					value = Bytes.concat([
 						Bytes.from(versionMatch, "utf8"),
-						value as Uint8Array,
+						value as BytesView,
 					]);
 				}
 			} else {
@@ -558,7 +558,7 @@ export function serializeNetworkCacheValue(
 			return ret;
 		}
 		case "dsk": {
-			return dskToString(value as Uint8Array);
+			return dskToString(value as BytesView);
 		}
 		case "lastSeen": {
 			// Dates are stored as timestamps
@@ -567,25 +567,25 @@ export function serializeNetworkCacheValue(
 
 		case "deviceConfigHash": {
 			// Preserve the version prefix if it exists
-			const valueAsString = Bytes.view(value as Uint8Array).toString(
+			const valueAsString = Bytes.view(value as BytesView).toString(
 				"utf8",
 			);
 			const versionMatch = valueAsString.match(/^\$v\d+\$/)?.[0];
 			if (versionMatch) {
 				return versionMatch
-					+ Bytes.view(value as Uint8Array).subarray(
+					+ Bytes.view(value as BytesView).subarray(
 						versionMatch.length,
 					).toString("base64");
 			} else {
 				// For lecacy hashes, just return the hex representation
-				return Bytes.view(value as Uint8Array).toString("hex");
+				return Bytes.view(value as BytesView).toString("hex");
 			}
 		}
 	}
 
 	// Other dynamic properties
 	if (key.startsWith("controller.securityKeys.")) {
-		return Bytes.view(value as Uint8Array).toString("hex");
+		return Bytes.view(value as BytesView).toString("hex");
 	}
 
 	// Other fixed properties
@@ -626,7 +626,7 @@ export function serializeNetworkCacheValue(
 			return ret;
 		}
 		case cacheKeys.controller.privateKey: {
-			return Bytes.view(value as Uint8Array).toString("hex");
+			return Bytes.view(value as BytesView).toString("hex");
 		}
 	}
 

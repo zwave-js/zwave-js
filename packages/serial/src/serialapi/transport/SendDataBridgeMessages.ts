@@ -29,7 +29,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import { Bytes, BytesView, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
 import { ApplicationCommandRequest } from "../application/ApplicationCommandRequest.js";
 import { BridgeApplicationCommandRequest } from "../application/BridgeApplicationCommandRequest.js";
@@ -63,7 +63,7 @@ export type SendDataBridgeRequestOptions<
 		| { command: CCType }
 		| {
 			nodeId: number;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -164,8 +164,8 @@ export class SendDataBridgeRequest<CCType extends CommandClass = CommandClass>
 		return this.command?.nodeId ?? this._nodeId;
 	}
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(
@@ -386,7 +386,7 @@ export type SendDataMulticastBridgeRequestOptions<
 		| { command: CCType }
 		| {
 			nodeIds: MulticastDestination;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -503,8 +503,8 @@ export class SendDataMulticastBridgeRequest<
 		return undefined;
 	}
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(

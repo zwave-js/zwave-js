@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import {
 	NVM3_MIN_PAGE_SIZE,
 	NVM3_PAGE_COUNTER_MASK,
@@ -39,7 +39,7 @@ export function pageSizeFromBits(bits: number): number {
 
 export function serializePageHeader(
 	header: Omit<NVM3PageHeader, "offset">,
-): Uint8Array {
+): BytesView {
 	const ret = new Bytes(NVM3_PAGE_HEADER_SIZE);
 
 	ret.writeUInt16LE(header.version, 0);

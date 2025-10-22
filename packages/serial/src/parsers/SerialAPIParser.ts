@@ -1,4 +1,4 @@
-import { Bytes, num2hex } from "@zwave-js/shared";
+import { Bytes, BytesView, num2hex } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
 import type { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
@@ -11,12 +11,12 @@ import {
 /**
  * Checks if there's enough data in the buffer to deserialize a complete message
  */
-function containsCompleteMessage(data?: Uint8Array): boolean {
+function containsCompleteMessage(data?: BytesView): boolean {
 	return !!data && data.length >= 5 && data.length >= getMessageLength(data);
 }
 
 /** Given a buffer that starts with SOF, this method returns the number of bytes the first message occupies in the buffer */
-function getMessageLength(data: Uint8Array): number {
+function getMessageLength(data: BytesView): number {
 	const remainingLength = data[1];
 	return remainingLength + 2;
 }
@@ -38,7 +38,7 @@ function wrapSerialAPIChunk(
 
 class SerialAPIParserTransformer implements
 	Transformer<
-		Uint8Array,
+		BytesView,
 		SerialAPIParserTransformerOutput
 	>
 {
@@ -50,7 +50,7 @@ class SerialAPIParserTransformer implements
 	public ignoreAckHighNibble: boolean = false;
 
 	transform(
-		chunk: Uint8Array,
+		chunk: BytesView,
 		controller: TransformStreamDefaultController<
 			SerialAPIParserTransformerOutput
 		>,

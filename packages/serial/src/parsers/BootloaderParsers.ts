@@ -1,4 +1,4 @@
-import { Bytes, type Timer, setTimer } from "@zwave-js/shared";
+import { Bytes, BytesView, type Timer, setTimer } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
 import type { SerialLogger } from "../log/Logger.js";
 import { XModemMessageHeaders } from "../message/MessageHeaders.js";
@@ -19,7 +19,7 @@ function isFlowControl(byte: number): boolean {
 }
 
 class BootloaderScreenParserTransformer
-	implements Transformer<Uint8Array, number | string>
+	implements Transformer<BytesView, number | string>
 {
 	constructor(private logger?: SerialLogger) {}
 
@@ -27,7 +27,7 @@ class BootloaderScreenParserTransformer
 	private flushTimeout: Timer | undefined;
 
 	transform(
-		chunk: Uint8Array,
+		chunk: BytesView,
 		controller: TransformStreamDefaultController<number | string>,
 	) {
 		this.flushTimeout?.clear();
@@ -81,7 +81,7 @@ class BootloaderScreenParserTransformer
 
 /** Parses the screen output from the bootloader, either waiting for a NUL char or a timeout */
 export class BootloaderScreenParser
-	extends TransformStream<Uint8Array, number | string>
+	extends TransformStream<BytesView, number | string>
 {
 	constructor(
 		logger?: SerialLogger,

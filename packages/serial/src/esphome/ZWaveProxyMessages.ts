@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import {
 	ESPHomeMessage,
 	type ESPHomeMessageBaseOptions,
@@ -72,7 +72,7 @@ export class ZWaveProxyFrame extends ESPHomeMessage {
 	public data: Bytes;
 
 	public serialize(): Bytes {
-		const parts: (Uint8Array | number[])[] = [];
+		const parts: (BytesView | number[])[] = [];
 
 		// Field 1: data (bytes encoded as string field on wire)
 		if (this.data.length > 0) {
@@ -94,7 +94,7 @@ export class ZWaveProxyRequest extends ESPHomeMessage {
 	public type: ESPHomeZWaveProxyRequestType;
 
 	public serialize(): Bytes {
-		const parts: (Uint8Array | number[])[] = [];
+		const parts: (BytesView | number[])[] = [];
 
 		// Field 1: request type (varint encoded on wire)
 		parts.push(encodeVarintField(1, this.type));
