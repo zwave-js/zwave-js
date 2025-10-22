@@ -42,6 +42,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	buffer2hex,
 	isUint8Array,
 	num2hex,
@@ -965,7 +966,7 @@ export type NotificationCCReportOptions = {
 	notificationType?: number;
 	notificationEvent?: number;
 	notificationStatus?: number;
-	eventParameters?: Uint8Array;
+	eventParameters?: BytesView;
 	sequenceNumber?: number;
 };
 
@@ -1019,7 +1020,7 @@ export class NotificationCCReport extends NotificationCC {
 
 		const containsSeqNum = !!(raw.payload[6] & 0b1000_0000);
 		const numEventParams = raw.payload[6] & 0b11111;
-		let eventParameters: Uint8Array | undefined;
+		let eventParameters: BytesView | undefined;
 		if (numEventParams > 0) {
 			validatePayload(raw.payload.length >= 7 + numEventParams);
 			eventParameters = raw.payload.subarray(7, 7 + numEventParams);
@@ -1151,7 +1152,7 @@ export class NotificationCCReport extends NotificationCC {
 	public notificationEvent: number | undefined;
 
 	public eventParameters:
-		| Uint8Array
+		| BytesView
 		| Duration
 		| Record<string, number>
 		| number

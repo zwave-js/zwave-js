@@ -24,7 +24,7 @@ import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
 import { integrationTest } from "../integrationTestSuite.js";
 
-function buildCCBuffer(payload: Uint8Array): Uint8Array {
+function buildCCBuffer(payload: BytesView): BytesView {
 	return Bytes.concat([
 		Uint8Array.from([
 			CommandClasses["Multi Channel"], // CC

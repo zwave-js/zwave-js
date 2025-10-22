@@ -43,6 +43,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	type JSONObject,
 	buffer2hex,
 	getEnumMemberName,
@@ -78,7 +79,7 @@ import type { GetInterviewOptions } from "./traits.js";
 export interface CommandClassOptions extends CCAddress {
 	ccId?: number; // Used to overwrite the declared CC ID
 	ccCommand?: number; // undefined = NoOp
-	payload?: Uint8Array;
+	payload?: BytesView;
 }
 
 // Defines the necessary traits an endpoint passed to a CC instance must have
@@ -156,7 +157,7 @@ export class CCRaw {
 		public payload: Bytes,
 	) {}
 
-	public static parse(data: Uint8Array): CCRaw {
+	public static parse(data: BytesView): CCRaw {
 		const { ccId, bytesRead: ccIdLength } = parseCCId(data);
 		// There are so few exceptions that we can handle them here manually
 		if (ccId === CommandClasses["No Operation"]) {
@@ -210,7 +211,7 @@ export class CommandClass implements CCId {
 	}
 
 	public static async parse(
-		data: Uint8Array,
+		data: BytesView,
 		ctx: CCParsingContext,
 	): Promise<CommandClass> {
 		const raw = CCRaw.parse(data);

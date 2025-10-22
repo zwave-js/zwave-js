@@ -19,7 +19,12 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+} from "@zwave-js/shared";
 
 export enum ExtendedNVMOperationsCommand {
 	Open = 0x00,
@@ -162,7 +167,7 @@ export class ExtendedNVMOperationsReadRequest
 
 export interface ExtendedNVMOperationsWriteRequestOptions {
 	offset: number;
-	buffer: Uint8Array;
+	buffer: BytesView;
 }
 
 export class ExtendedNVMOperationsWriteRequest
@@ -204,7 +209,7 @@ export class ExtendedNVMOperationsWriteRequest
 	}
 
 	public offset: number;
-	public buffer: Uint8Array;
+	public buffer: BytesView;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(1 + 4 + this.buffer.length);
@@ -233,7 +238,7 @@ export class ExtendedNVMOperationsWriteRequest
 export interface ExtendedNVMOperationsResponseOptions {
 	status: ExtendedNVMOperationStatus;
 	offsetOrSize: number;
-	bufferOrBitmask: Uint8Array;
+	bufferOrBitmask: BytesView;
 }
 
 @messageTypes(MessageType.Response, FunctionType.ExtendedNVMOperations)
@@ -269,7 +274,7 @@ export class ExtendedNVMOperationsResponse extends Message
 		// - Read command: the read NVM data
 		// - Write/Close command: nothing
 		// - Open command: bit mask of supported sub-commands
-		let bufferOrBitmask: Uint8Array;
+		let bufferOrBitmask: BytesView;
 		if (dataLength > 0 && raw.payload.length >= offset + dataLength) {
 			bufferOrBitmask = raw.payload.subarray(
 				offset,
@@ -295,7 +300,7 @@ export class ExtendedNVMOperationsResponse extends Message
 
 	public readonly status: ExtendedNVMOperationStatus;
 	public readonly offsetOrSize: number;
-	public readonly bufferOrBitmask: Uint8Array;
+	public readonly bufferOrBitmask: BytesView;
 
 	public toLogEntry(): MessageOrCCLogEntry {
 		const message: MessageRecord = {

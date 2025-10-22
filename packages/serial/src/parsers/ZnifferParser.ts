@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
 import type { SerialLogger } from "../log/Logger.js";
 import { ZnifferFrameType } from "../message/Constants.js";
@@ -9,7 +9,7 @@ import {
 } from "./ZnifferSerialFrame.js";
 
 /** Given a buffer that starts with SOF, this method returns the number of bytes the first message occupies in the buffer */
-function getMessageLength(data: Uint8Array): number | undefined {
+function getMessageLength(data: BytesView): number | undefined {
 	if (!data || data.length === 0) return;
 	if (data[0] === ZnifferMessageHeaders.SOCF) {
 		// Control frame: SOF, CMD, remaining length
@@ -33,7 +33,7 @@ function getMessageLength(data: Uint8Array): number | undefined {
 }
 
 class ZnifferParserTransformer
-	implements Transformer<Uint8Array, ZnifferSerialFrame>
+	implements Transformer<BytesView, ZnifferSerialFrame>
 {
 	constructor(
 		private logger?: SerialLogger,
@@ -45,7 +45,7 @@ class ZnifferParserTransformer
 	public ignoreAckHighNibble: boolean = false;
 
 	transform(
-		chunk: Uint8Array,
+		chunk: BytesView,
 		controller: TransformStreamDefaultController<ZnifferSerialFrame>,
 	) {
 		this.receiveBuffer = Bytes.concat([this.receiveBuffer, chunk]);
@@ -98,7 +98,7 @@ class ZnifferParserTransformer
 }
 
 export class ZnifferParser
-	extends TransformStream<Uint8Array, ZnifferSerialFrame>
+	extends TransformStream<BytesView, ZnifferSerialFrame>
 {
 	constructor(
 		logger?: SerialLogger,

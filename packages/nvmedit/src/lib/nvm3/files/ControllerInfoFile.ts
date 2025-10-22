@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes, stripUndefined } from "@zwave-js/core";
-import { Bytes, buffer2hex } from "@zwave-js/shared";
+import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
 import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,
@@ -13,7 +13,7 @@ import {
 export type ControllerInfoFileOptions =
 	& NVMFileCreationOptions
 	& {
-		homeId: Uint8Array;
+		homeId: BytesView;
 		nodeId: number;
 		lastNodeId: number;
 		staticControllerNodeId: number;
@@ -100,7 +100,7 @@ export class ControllerInfoFile extends NVMFile {
 		}
 	}
 
-	public homeId: Uint8Array;
+	public homeId: BytesView;
 	public nodeId: number;
 	public lastNodeId: number;
 	public staticControllerNodeId: number;

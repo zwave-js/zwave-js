@@ -3,7 +3,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
 import { SUC_MAX_UPDATES } from "../../consts.js";
 import type { NVM500, NVM500Info } from "../NVM500.js";
@@ -98,7 +98,7 @@ export class NVM500Adapter implements NVMAdapter {
 				return 500;
 
 			case "applicationData":
-				return this.getOnly<Uint8Array>(
+				return this.getOnly<BytesView>(
 					"EEOFFSET_HOST_OFFSET_START_far",
 				);
 

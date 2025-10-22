@@ -21,8 +21,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function bufferEquals(
 	expect: ExpectStatic,
-	actual: Uint8Array,
-	expected: Uint8Array,
+	actual: BytesView,
+	expected: BytesView,
 ) {
 	expect(actual.buffer).toStrictEqual(expected.buffer);
 }

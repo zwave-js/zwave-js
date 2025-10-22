@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import {
 	MAX_NODES_LR,
 	NUM_LR_NODES_PER_SEGMENT,
@@ -78,7 +78,7 @@ export function maybeUnknownToString<T>(
  * Parses a floating point value with a scale from a buffer.
  */
 export function parseFloatWithScale(
-	payload: Uint8Array,
+	payload: BytesView,
 	allowEmpty?: false,
 ): {
 	value: number;
@@ -91,7 +91,7 @@ export function parseFloatWithScale(
  * @param allowEmpty Whether empty floats (precision = scale = size = 0 no value) are accepted
  */
 export function parseFloatWithScale(
-	payload: Uint8Array,
+	payload: BytesView,
 	allowEmpty: true,
 ): {
 	value?: number;
@@ -104,7 +104,7 @@ export function parseFloatWithScale(
  * @param allowEmpty Whether empty floats (precision = scale = size = 0 no value) are accepted
  */
 export function parseFloatWithScale(
-	payload: Uint8Array,
+	payload: BytesView,
 	allowEmpty: boolean = false,
 ): {
 	value?: number;
@@ -243,7 +243,7 @@ export function encodeFloatWithScale(
 
 /** Parses a bit mask into a numeric array */
 export function parseBitMask(
-	mask: Uint8Array | ArrayLike<number>,
+	mask: BytesView | ArrayLike<number>,
 	startValue: number = 1,
 	numBits: number = mask.length * 8,
 ): number[] {
@@ -277,12 +277,12 @@ export function encodeBitMask(
 	return ret;
 }
 
-export function parseNodeBitMask(mask: Uint8Array): number[] {
+export function parseNodeBitMask(mask: BytesView): number[] {
 	return parseBitMask(mask.subarray(0, NUM_NODEMASK_BYTES));
 }
 
 export function parseLongRangeNodeBitMask(
-	mask: Uint8Array | ArrayLike<number>,
+	mask: BytesView | ArrayLike<number>,
 	startValue: number,
 ): number[] {
 	return parseBitMask(mask, startValue);

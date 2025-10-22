@@ -20,6 +20,7 @@ import {
 import type { MockPort } from "@zwave-js/serial/mock";
 import {
 	AsyncQueue,
+	type BytesView,
 	TimedExpectation,
 	isAbortError,
 	noop,
@@ -239,7 +240,7 @@ export class MockController {
 	/** Gets called when parsed/chunked data is received from the serial port */
 	private async serialOnData(
 		data:
-			| Uint8Array
+			| BytesView
 			| MessageHeaders.ACK
 			| MessageHeaders.CAN
 			| MessageHeaders.NAK,
@@ -468,7 +469,7 @@ export class MockController {
 		msg: Message,
 		fromNode?: MockNode,
 	): Promise<void> {
-		let data: Uint8Array;
+		let data: BytesView;
 		if (fromNode) {
 			data = await msg.serialize({
 				nodeIdType: this.encodingContext.nodeIdType,
@@ -485,7 +486,7 @@ export class MockController {
 	}
 
 	/** Sends a raw buffer to the host/driver and expect an ACK */
-	public async sendToHost(data: Uint8Array): Promise<void> {
+	public async sendToHost(data: BytesView): Promise<void> {
 		this.mockPort.emitData(data);
 		// TODO: make the timeout match the configured ACK timeout
 		await this.expectHostACK(1000);
@@ -642,7 +643,7 @@ export interface MockControllerBehavior {
 	 */
 	onHostData?: (
 		controller: MockController,
-		data: Uint8Array,
+		data: BytesView,
 	) => Promise<boolean | undefined> | boolean | undefined;
 	/** Gets called when a message from the host is received. Return `true` to indicate that the message has been handled. */
 	onHostMessage?: (

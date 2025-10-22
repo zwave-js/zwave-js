@@ -20,9 +20,9 @@ import { LongRangeFrameType, ZWaveFrameType } from "zwave-js";
  */
 
 function formatCommandClassChain(
-	payload: Uint8Array | CommandClass | undefined,
+	payload: BytesView | CommandClass | undefined,
 ): string {
-	if (!payload || payload instanceof Uint8Array) {
+	if (!payload || payload instanceof BytesView) {
 		return "";
 	}
 
@@ -89,7 +89,7 @@ function convertFrameToCSVRow(
 	capturedFrame: {
 		timestamp: Date;
 		parsedFrame: Frame | CorruptedFrame;
-		frameData: Uint8Array;
+		frameData: BytesView;
 	},
 ): string {
 	const row: string[] = [];
@@ -346,7 +346,7 @@ function convertFrameToCSVRow(
 
 	// Column 21: Payload (as CommandClass chain or raw data)
 	if ("payload" in validFrame) {
-		if (validFrame.payload instanceof Uint8Array) {
+		if (validFrame.payload instanceof BytesView) {
 			row.push(escapeCSVValue(`[${validFrame.payload.length} bytes]`));
 		} else {
 			row.push(

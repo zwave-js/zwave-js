@@ -7,6 +7,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	type JSONObject,
 	cloneDeep,
 	enumFilesRecursive,
@@ -1053,13 +1054,13 @@ export class DeviceConfig {
 	 */
 	public async getHash(
 		version: 0 | 1 | 2 = DeviceConfig.maxHashVersion,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		// Figure out what to hash
 		const hashable = this.getHashable(version);
 
 		// And create a "hash" from it. Older versions used a non-cryptographic hash,
 		// newer versions compress a subset of the config file.
-		let hash: Uint8Array;
+		let hash: BytesView;
 		if (version === 0) {
 			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
 			return await digest("md5", buffer);
@@ -1083,7 +1084,7 @@ export class DeviceConfig {
 		return 2;
 	}
 
-	public static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean {
+	public static areHashesEqual(hash: BytesView, other: BytesView): boolean {
 		const parsedHash = parseHash(hash);
 		const parsedOther = parseHash(other);
 		// If one of the hashes could not be parsed, they are not equal
@@ -1113,9 +1114,9 @@ export class DeviceConfig {
 	}
 }
 
-function parseHash(hash: Uint8Array): {
+function parseHash(hash: BytesView): {
 	version: number;
-	hashData: Uint8Array;
+	hashData: BytesView;
 } | undefined {
 	const hashString = Bytes.view(hash).toString("utf8");
 	const versionMatch = hashString.match(/^\$v(\d+)\$/);

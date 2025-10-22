@@ -179,6 +179,7 @@ import {
 import {
 	AsyncQueue,
 	Bytes,
+	type BytesView,
 	type Interval,
 	type Timer,
 	TypedEventTarget,
@@ -1210,7 +1211,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public async getLearnModeAuthenticatedKeyPair(): Promise<KeyPair> {
 		if (this._learnModeAuthenticatedKeyPair == undefined) {
 			// Try restoring from cache
-			const privateKey = this.cacheGet<Uint8Array>(
+			const privateKey = this.cacheGet<BytesView>(
 				cacheKeys.controller.privateKey,
 			);
 			if (privateKey) {
@@ -2186,11 +2187,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				].map(
 					(sc) => ([
 						sc,
-						this.cacheGet<Uint8Array>(
+						this.cacheGet<BytesView>(
 							cacheKeys.controller.securityKeysLongRange(sc),
 						),
-					] as [SecurityClass, Uint8Array | undefined]),
-				).filter((v): v is [SecurityClass, Uint8Array] =>
+					] as [SecurityClass, BytesView | undefined]),
+				).filter((v): v is [SecurityClass, BytesView] =>
 					v[1] != undefined
 				);
 				if (securityKeysLongRange.length) {
@@ -2230,7 +2231,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					);
 				}
 			} else {
-				const s0Key = this.cacheGet<Uint8Array>(
+				const s0Key = this.cacheGet<BytesView>(
 					cacheKeys.controller.securityKeys(SecurityClass.S0_Legacy),
 				);
 				if (s0Key) {
@@ -2260,11 +2261,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				const securityKeys = securityClassOrder.map(
 					(sc) => ([
 						sc,
-						this.cacheGet<Uint8Array>(
+						this.cacheGet<BytesView>(
 							cacheKeys.controller.securityKeys(sc),
 						),
-					] as [SecurityClass, Uint8Array | undefined]),
-				).filter((v): v is [SecurityClass, Uint8Array] =>
+					] as [SecurityClass, BytesView | undefined]),
+				).filter((v): v is [SecurityClass, BytesView] =>
 					v[1] != undefined
 				);
 				if (securityKeys.length) {
@@ -3703,7 +3704,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 
 		// Preserve the private key for the authenticated learn mode ECDH key pair
-		const oldPrivateKey = this.cacheGet<Uint8Array>(
+		const oldPrivateKey = this.cacheGet<BytesView>(
 			cacheKeys.controller.privateKey,
 		);
 
@@ -4004,7 +4005,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 */
 	private async serialport_onData(
 		data:
-			| Uint8Array
+			| BytesView
 			| MessageHeaders.ACK
 			| MessageHeaders.CAN
 			| MessageHeaders.NAK,
@@ -4267,7 +4268,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	/** Handles a decoding error and returns the desired reply to the stick */
 	private handleDecodeError(
 		e: Error,
-		data: Uint8Array,
+		data: BytesView,
 		msg: Message | undefined,
 	): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
@@ -7504,7 +7505,7 @@ ${handlers.length} left`,
 	}
 
 	/** Sends a raw datagram to the serialport (if that is open) */
-	private async writeSerial(data: Uint8Array): Promise<void> {
+	private async writeSerial(data: BytesView): Promise<void> {
 		return this.serial?.writeAsync(data);
 	}
 
@@ -8453,7 +8454,7 @@ ${handlers.length} left`,
 	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
 	 */
 	public async firmwareUpdateOTW(
-		data: Uint8Array | FirmwareUpdateInfo,
+		data: BytesView | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
@@ -8518,7 +8519,7 @@ ${handlers.length} left`,
 	 */
 	private async extractOTWUpdateInfo(
 		updateInfo: FirmwareUpdateInfo,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		// Controller updates must have exactly one file
 		if (updateInfo.files?.length !== 1) {
 			throw new ZWaveError(
@@ -8599,7 +8600,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW500(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
 		let turnedRadioOff = false;
@@ -8688,7 +8689,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW700(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
 		let result!: OTWFirmwareUpdateResult;
@@ -8730,7 +8731,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW700Internal(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
 

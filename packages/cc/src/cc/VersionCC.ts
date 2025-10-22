@@ -18,7 +18,13 @@ import {
 	securityClassOrder,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+	pick,
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -188,7 +194,7 @@ export const VersionCCValues = V.defineCCValues(CommandClasses.Version, {
 	),
 });
 
-function parseVersion(buffer: Uint8Array): string {
+function parseVersion(buffer: BytesView): string {
 	if (buffer[0] === 0 && buffer[1] === 0 && buffer[2] === 0) return "unused";
 	return `${buffer[0]}.${buffer[1]}.${buffer[2]}`;
 }

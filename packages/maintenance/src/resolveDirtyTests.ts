@@ -25,7 +25,7 @@ function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 			// import "bar"
 			return node.moduleSpecifier;
 		} else if (
-			!node.importClause.isTypeOnly
+			node.importClause.phaseModifier !== ts.SyntaxKind.TypeKeyword
 			// import foo from "bar"
 			&& (!node.importClause.namedBindings
 				// import * as foo from "bar"

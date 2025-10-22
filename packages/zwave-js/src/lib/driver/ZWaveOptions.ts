@@ -7,7 +7,7 @@ import type {
 	RFRegion,
 } from "@zwave-js/core";
 import type { Serial, ZWaveSerialStream } from "@zwave-js/serial";
-import type { DeepPartial, Expand } from "@zwave-js/shared";
+import type { BytesView, DeepPartial, Expand } from "@zwave-js/shared";
 import type { DatabaseFactory, FileSystem } from "@zwave-js/shared/bindings";
 import type {
 	InclusionUserCallbacks,
@@ -204,18 +204,18 @@ export interface ZWaveOptions {
 	 * Specify the security keys to use for encryption (Z-Wave Classic). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeys?: {
-		S2_AccessControl?: Uint8Array;
-		S2_Authenticated?: Uint8Array;
-		S2_Unauthenticated?: Uint8Array;
-		S0_Legacy?: Uint8Array;
+		S2_AccessControl?: BytesView;
+		S2_Authenticated?: BytesView;
+		S2_Unauthenticated?: BytesView;
+		S0_Legacy?: BytesView;
 	};
 
 	/**
 	 * Specify the security keys to use for encryption (Z-Wave Long Range). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeysLongRange?: {
-		S2_AccessControl?: Uint8Array;
-		S2_Authenticated?: Uint8Array;
+		S2_AccessControl?: BytesView;
+		S2_Authenticated?: BytesView;
 	};
 
 	/**

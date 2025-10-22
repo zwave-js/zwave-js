@@ -21,6 +21,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	getEnumMemberName,
 	isPrintableASCII,
 	isPrintableASCIIWithWhitespace,
@@ -180,7 +181,7 @@ function setUserCodeMetadata(
 	this: UserCodeCC,
 	ctx: GetValueDB & GetSupportedCCVersion,
 	userId: number,
-	userCode?: string | Uint8Array,
+	userCode?: string | BytesView,
 ) {
 	const statusValue = UserCodeCCValues.userIdStatus(userId);
 	const codeValue = UserCodeCCValues.userCode(userId);
@@ -252,7 +253,7 @@ function persistUserCode(
 }
 
 /** Formats a user code in a way that's safe to print in public logs */
-export function userCodeToLogString(userCode: string | Uint8Array): string {
+export function userCodeToLogString(userCode: string | BytesView): string {
 	if (userCode.length === 0) return "(empty)";
 	return "*".repeat(userCode.length);
 }
@@ -519,7 +520,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			UserIDStatus,
 			UserIDStatus.Available | UserIDStatus.StatusNotAvailable
 		>,
-		userCode: string | Uint8Array,
+		userCode: string | BytesView,
 	): Promise<SupervisionResult | undefined> {
 		if (userId > 255) {
 			return this.setMany([{ userId, userIdStatus, userCode }]);
@@ -1193,10 +1194,10 @@ export class UserCodeCC extends CommandClass {
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 		userId: number,
-	): MaybeNotKnown<string | Uint8Array> {
+	): MaybeNotKnown<string | BytesView> {
 		return ctx
 			.getValueDB(endpoint.nodeId)
-			.getValue<string | Uint8Array>(
+			.getValue<string | BytesView>(
 				UserCodeCCValues.userCode(userId).endpoint(endpoint.index),
 			);
 	}
@@ -1220,7 +1221,7 @@ export type UserCodeCCSetOptions =
 			UserIDStatus,
 			UserIDStatus.Available | UserIDStatus.StatusNotAvailable
 		>;
-		userCode: string | Uint8Array;
+		userCode: string | BytesView;
 	};
 
 @CCCommand(UserCodeCommand.Set)
@@ -1293,7 +1294,7 @@ export class UserCodeCCSet extends UserCodeCC {
 
 	public userId: number;
 	public userIdStatus: UserIDStatus;
-	public userCode: string | Uint8Array;
+	public userCode: string | BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
