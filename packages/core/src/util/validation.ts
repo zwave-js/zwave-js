@@ -558,7 +558,7 @@ const klass = (
 
 export { klass as class };
 
-export const BytesView =
+export const uint8array =
 	(ctx: ValidatorContext) => (value: any): ValidatorResult => {
 		if (isUint8Array(value)) return { success: true };
 		return {
