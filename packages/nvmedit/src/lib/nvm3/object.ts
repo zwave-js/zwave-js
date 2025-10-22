@@ -1,4 +1,4 @@
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import {
 	FragmentType,
 	NVM3_CODE_LARGE_SHIFT,

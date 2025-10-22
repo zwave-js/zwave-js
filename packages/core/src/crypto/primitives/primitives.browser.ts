@@ -1,4 +1,4 @@
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
 import type { webcrypto } from "node:crypto";
 import {

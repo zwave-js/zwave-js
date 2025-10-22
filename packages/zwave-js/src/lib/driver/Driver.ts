@@ -179,7 +179,7 @@ import {
 import {
 	AsyncQueue,
 	Bytes,
-	BytesView,
+	type BytesView,
 	type Interval,
 	type Timer,
 	TypedEventTarget,

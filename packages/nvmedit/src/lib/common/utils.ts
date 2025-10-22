@@ -1,4 +1,4 @@
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { NVMIO } from "./definitions.js";
 
 export async function nvmReadUInt32LE(

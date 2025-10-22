@@ -26,7 +26,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, BytesView, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import { tryParseRSSI } from "../transport/SendDataShared.js";
 import type { MessageWithCC } from "../utils.js";
 import { ApplicationCommandStatusFlags } from "./ApplicationCommandRequest.js";

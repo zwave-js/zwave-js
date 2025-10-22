@@ -42,7 +42,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	buffer2hex,
 	isUint8Array,
 	num2hex,

@@ -10,7 +10,7 @@
 // 1 └─────────────────┘ └─────────────────┘ └──
 
 import type { LogContainer } from "@zwave-js/core";
-import { BytesView, noop } from "@zwave-js/shared";
+import { type BytesView, noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
 	UnderlyingSink,

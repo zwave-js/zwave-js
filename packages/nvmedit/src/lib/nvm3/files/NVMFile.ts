@@ -2,7 +2,7 @@ import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	type TypedClassDecorator,
 	isUint8Array,
 	num2hex,

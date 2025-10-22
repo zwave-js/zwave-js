@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import { DisconnectRequest } from "../esphome/ConnectionMessages.js";

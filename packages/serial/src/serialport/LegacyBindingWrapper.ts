@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import type { ZWaveSerialPortImplementation } from "./ZWaveSerialPortImplementation.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";

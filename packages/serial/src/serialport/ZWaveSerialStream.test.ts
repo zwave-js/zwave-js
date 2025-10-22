@@ -1,5 +1,5 @@
 import { log as createZWaveLogContainer } from "@zwave-js/core/bindings/log/node";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, BytesView } from "@zwave-js/shared";
 import { isUint8Array } from "node:util/types";
 import {
 	type ExpectStatic,

@@ -18,7 +18,7 @@ import {
 	securityClassOrder,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, BytesView, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
+import { Bytes, type BytesView, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {

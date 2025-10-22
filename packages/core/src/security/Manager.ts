@@ -1,6 +1,6 @@
 /** Management class and utils for Security S0 */
 
-import { BytesView, type Timer, setTimer } from "@zwave-js/shared";
+import { type BytesView, type Timer, setTimer } from "@zwave-js/shared";
 import { encryptAES128ECB, randomBytes } from "../crypto/index.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 

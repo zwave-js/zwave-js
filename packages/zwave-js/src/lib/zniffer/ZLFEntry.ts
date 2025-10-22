@@ -4,7 +4,7 @@ import {
 	ZnifferMessage,
 	ZnifferMessageType,
 } from "@zwave-js/serial";
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { ZLFAttachment } from "./ZLFAttachment.js";
 import type { CapturedData } from "./Zniffer.js";
 

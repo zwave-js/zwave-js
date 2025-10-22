@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";

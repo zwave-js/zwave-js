@@ -7,7 +7,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	type JSONObject,
 	cloneDeep,
 	enumFilesRecursive,

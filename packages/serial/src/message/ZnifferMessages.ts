@@ -8,7 +8,7 @@ import {
 	getZWaveChipType,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, BytesView, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import {
 	ZnifferFrameType,
 	ZnifferFunctionType,

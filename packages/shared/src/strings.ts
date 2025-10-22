@@ -1,4 +1,4 @@
-import { Bytes, BytesView } from "./Bytes.js";
+import { Bytes, type BytesView } from "./Bytes.js";
 import { uint8ArrayToHex } from "./uint8array-extras.js";
 
 /** Translates a null-terminated (C++) string to JS */

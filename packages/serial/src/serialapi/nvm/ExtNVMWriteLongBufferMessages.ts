@@ -16,7 +16,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, BytesView, num2hex } from "@zwave-js/shared";
+import { Bytes, type BytesView, num2hex } from "@zwave-js/shared";
 
 export interface ExtNVMWriteLongBufferRequestOptions {
 	offset: number;

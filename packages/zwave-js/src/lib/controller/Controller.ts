@@ -280,7 +280,7 @@ import {
 } from "@zwave-js/serial/serialapi";
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	Mixin,
 	ObjectKeyMap,
 	type ReadonlyObjectKeyMap,

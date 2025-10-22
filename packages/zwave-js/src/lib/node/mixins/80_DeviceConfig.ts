@@ -1,7 +1,7 @@
 import { refreshMetadataStringsFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
 import { DeviceConfig } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
-import { Bytes, BytesView, formatId } from "@zwave-js/shared";
+import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
 

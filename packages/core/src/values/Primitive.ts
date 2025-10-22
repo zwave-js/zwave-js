@@ -1,4 +1,4 @@
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import {
 	MAX_NODES_LR,
 	NUM_LR_NODES_PER_SEGMENT,

@@ -2,7 +2,7 @@
 
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	createWrappingCounter,
 	getEnumMemberName,
 } from "@zwave-js/shared";

@@ -7,7 +7,7 @@ import type {
 	NVMDescriptor,
 	NVMModuleDescriptor,
 } from "./EntryParsers.js";
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 
 export enum NVMEntryType {
 	NVMModuleSize,

@@ -1,6 +1,6 @@
 import { untar } from "@andrewbranch/untar.js";
 import { ZWaveError, ZWaveErrorCodes, gunzipSync } from "@zwave-js/core";
-import { BytesView, getErrorMessage, writeTextFile } from "@zwave-js/shared";
+import { type BytesView, getErrorMessage, writeTextFile } from "@zwave-js/shared";
 import type {
 	CopyFile,
 	MakeTempDirectory,

@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 import fs, { type FileHandle } from "node:fs/promises";
 import { NVMAccess, type NVMIO } from "../common/definitions.js";
 

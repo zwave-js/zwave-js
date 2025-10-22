@@ -1,4 +1,4 @@
-import { Bytes, BytesView, getenv } from "@zwave-js/shared";
+import { Bytes, type BytesView, getenv } from "@zwave-js/shared";
 import { bootloaderMenuPreamble } from "../parsers/BootloaderParsers.js";
 import { ZWaveSerialMode } from "../serialport/definitions.js";
 

@@ -5,7 +5,7 @@ import {
 	encodeBitMask,
 	parseBitMask,
 } from "@zwave-js/core";
-import { Bytes, BytesView, num2hex } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { type NVM, NVMAccess, type NVMIO } from "./common/definitions.js";
 import { type Route, encodeRoute, parseRoute } from "./common/routeCache.js";
 import {

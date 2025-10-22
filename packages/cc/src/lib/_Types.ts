@@ -9,7 +9,7 @@ import {
 	type ValueMetadata,
 	ZWaveDataRate,
 } from "@zwave-js/core";
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 
 export enum AlarmSensorCommand {
 	Get = 0x01,

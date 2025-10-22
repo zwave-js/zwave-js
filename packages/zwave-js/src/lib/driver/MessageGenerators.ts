@@ -50,7 +50,7 @@ import {
 	isSendData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
-import { BytesView, getErrorMessage } from "@zwave-js/shared";
+import { type BytesView, getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,

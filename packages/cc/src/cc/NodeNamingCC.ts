@@ -14,7 +14,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	stringToUint8ArrayUTF16BE,
 	uint8ArrayToStringUTF16BE,
 } from "@zwave-js/shared";

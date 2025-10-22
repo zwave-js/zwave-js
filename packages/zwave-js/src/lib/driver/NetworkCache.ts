@@ -10,7 +10,7 @@ import {
 	dskToString,
 	securityClassOrder,
 } from "@zwave-js/core";
-import { Bytes, BytesView, getEnumMemberName, num2hex, pickDeep } from "@zwave-js/shared";
+import { Bytes, type BytesView, getEnumMemberName, num2hex, pickDeep } from "@zwave-js/shared";
 import type {
 	Database,
 	ReadFile,

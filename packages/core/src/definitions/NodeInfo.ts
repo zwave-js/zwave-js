@@ -1,4 +1,4 @@
-import { Bytes, BytesView, sum } from "@zwave-js/shared";
+import { Bytes, type BytesView, sum } from "@zwave-js/shared";
 import type { BasicDeviceClass } from "../registries/DeviceClasses.js";
 import { validatePayload } from "../util/misc.js";
 import { CommandClasses } from "./CommandClasses.js";

@@ -1,5 +1,5 @@
 import {
-	BytesView,
+	type BytesView,
 	fileHandleToReadableStream,
 	fileHandleToWritableStream,
 } from "@zwave-js/shared";

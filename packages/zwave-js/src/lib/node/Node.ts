@@ -141,7 +141,7 @@ import {
 	RequestNodeInfoResponse,
 } from "@zwave-js/serial/serialapi";
 import {
-	BytesView,
+	type BytesView,
 	Mixin,
 	TypedEventTarget,
 	cloneDeep,

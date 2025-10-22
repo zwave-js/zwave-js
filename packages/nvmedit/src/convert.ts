@@ -13,7 +13,7 @@ import {
 	ZWaveErrorCodes,
 	isZWaveError,
 } from "@zwave-js/core/error";
-import { Bytes, buffer2hex, BytesView, cloneDeep, num2hex, pick } from "@zwave-js/shared";
+import { Bytes, buffer2hex, type BytesView, cloneDeep, num2hex, pick } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { SemVer } from "semver";
 import semverGte from "semver/functions/gte.js";

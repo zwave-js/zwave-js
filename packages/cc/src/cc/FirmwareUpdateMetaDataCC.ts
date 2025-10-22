@@ -15,7 +15,7 @@ import {
 import {
 	type AllOrNone,
 	Bytes,
-	BytesView,
+	type BytesView,
 	getEnumMemberName,
 	num2hex,
 	pick,

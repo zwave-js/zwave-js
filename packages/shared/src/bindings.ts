@@ -2,7 +2,7 @@
 // file system access, etc.
 
 import type { ReadableWritablePair } from "node:stream/web";
-import { BytesView } from "./Bytes.js";
+import type { BytesView } from "./Bytes.js";
 
 export interface CryptoPrimitives {
 	randomBytes(length: number): BytesView;

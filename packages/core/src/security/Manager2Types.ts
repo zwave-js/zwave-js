@@ -1,4 +1,4 @@
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 import type {
 	S2SecurityClass,
 	SecurityClass,

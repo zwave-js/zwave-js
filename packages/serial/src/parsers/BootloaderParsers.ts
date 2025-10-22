@@ -1,4 +1,4 @@
-import { Bytes, BytesView, type Timer, setTimer } from "@zwave-js/shared";
+import { Bytes, type BytesView, type Timer, setTimer } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
 import type { SerialLogger } from "../log/Logger.js";
 import { XModemMessageHeaders } from "../message/MessageHeaders.js";

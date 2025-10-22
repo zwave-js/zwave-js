@@ -26,7 +26,7 @@ import { parseRSSI } from "@zwave-js/serial/serialapi";
 import {
 	type AllOrNone,
 	Bytes,
-	BytesView,
+	type BytesView,
 	buffer2hex,
 	pick,
 	staticExtends,

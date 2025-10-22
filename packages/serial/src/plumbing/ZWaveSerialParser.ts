@@ -1,4 +1,4 @@
-import { BytesView, noop } from "@zwave-js/shared";
+import { type BytesView, noop } from "@zwave-js/shared";
 import type { SerialLogger } from "../log/Logger.js";
 import {
 	BootloaderParser,

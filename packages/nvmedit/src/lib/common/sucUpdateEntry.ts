@@ -5,7 +5,7 @@ import {
 	encodeCCList,
 	parseCCList,
 } from "@zwave-js/core";
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import {
 	SUC_UPDATE_ENTRY_SIZE,
 	SUC_UPDATE_NODEPARM_MAX,

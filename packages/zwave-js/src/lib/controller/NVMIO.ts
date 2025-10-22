@@ -2,7 +2,7 @@ import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { NVMAccess, type NVMIO } from "@zwave-js/nvmedit";
 import { FunctionType } from "@zwave-js/serial";
 import { nvmSizeToBufferSize } from "@zwave-js/serial/serialapi";
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 import type { ZWaveController } from "./Controller.js";
 
 /** NVM IO over serial for 500 series controllers */

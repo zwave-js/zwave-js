@@ -11,7 +11,7 @@ import {
 	parseBitMask,
 	parseNodeProtocolInfo,
 } from "@zwave-js/core";
-import { Bytes, BytesView, pick } from "@zwave-js/shared";
+import { Bytes, type BytesView, pick } from "@zwave-js/shared";
 import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,

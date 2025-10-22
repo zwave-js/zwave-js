@@ -73,7 +73,7 @@ import {
 } from "@zwave-js/serial";
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	TypedEventTarget,
 	getEnumMemberName,
 	getErrorMessage,

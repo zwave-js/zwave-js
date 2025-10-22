@@ -17,7 +17,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, BytesView, getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, buffer2hex, type BytesView, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,

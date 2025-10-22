@@ -1,6 +1,6 @@
 import { ZWaveErrorCodes, isZWaveError } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import path from "pathe";
 import yargs from "yargs";

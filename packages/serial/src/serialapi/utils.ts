@@ -1,6 +1,6 @@
 import { CommandClass } from "@zwave-js/cc";
 import type { Message } from "@zwave-js/serial";
-import { BytesView, isUint8Array } from "@zwave-js/shared";
+import { type BytesView, isUint8Array } from "@zwave-js/shared";
 import { ApplicationCommandRequest } from "./application/ApplicationCommandRequest.js";
 import { BridgeApplicationCommandRequest } from "./application/BridgeApplicationCommandRequest.js";
 import {

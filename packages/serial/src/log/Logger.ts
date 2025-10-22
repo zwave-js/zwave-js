@@ -4,7 +4,7 @@ import {
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 } from "@zwave-js/core";
-import { buffer2hex, BytesView, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import { buffer2hex, type BytesView, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { MessageHeaders } from "../message/MessageHeaders.js";
 import {
 	SERIAL_LABEL,

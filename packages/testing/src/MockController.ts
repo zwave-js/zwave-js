@@ -20,7 +20,7 @@ import {
 import type { MockPort } from "@zwave-js/serial/mock";
 import {
 	AsyncQueue,
-	BytesView,
+	type BytesView,
 	TimedExpectation,
 	isAbortError,
 	noop,

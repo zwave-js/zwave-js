@@ -1,6 +1,6 @@
 import { ZWaveError, ZWaveErrorCodes, validatePayload } from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
-import { Bytes, buffer2hex, BytesView, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, buffer2hex, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 
 enum S2ExtensionType {
 	SPAN = 0x01,

@@ -1,4 +1,4 @@
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import {
 	NVM3_MIN_PAGE_SIZE,
 	NVM3_PAGE_COUNTER_MASK,

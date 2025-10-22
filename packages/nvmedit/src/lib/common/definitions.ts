@@ -1,5 +1,5 @@
 import type { CommandClasses } from "@zwave-js/core";
-import { BytesView, type Expand } from "@zwave-js/shared";
+import type { BytesView, Expand } from "@zwave-js/shared";
 import type {
 	ApplicationCCsFile,
 	ApplicationRFConfigFile,

@@ -18,7 +18,7 @@ import {
 import { createReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	Bytes,
-	BytesView,
+	type BytesView,
 	type JSONObject,
 	type TypedClassDecorator,
 	num2hex,

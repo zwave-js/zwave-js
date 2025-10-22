@@ -23,7 +23,7 @@ import {
 	type SuccessIndicator,
 	messageTypes,
 } from "@zwave-js/serial";
-import { Bytes, buffer2hex, BytesView, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, buffer2hex, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 
 export enum ApplicationUpdateTypes {
 	SmartStart_NodeInfo_Received = 0x86, // An included smart start node has been powered up

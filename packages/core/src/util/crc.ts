@@ -1,4 +1,4 @@
-import { BytesView } from "@zwave-js/shared";
+import type { BytesView } from "@zwave-js/shared";
 
 // Implementation based on SDS13782
 export function CRC16_CCITT(

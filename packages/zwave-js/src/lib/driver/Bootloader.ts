@@ -1,6 +1,6 @@
 import { CRC16_CCITT, ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { XModemMessageHeaders } from "@zwave-js/serial";
-import { Bytes, BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 
 export enum BootloaderState {
 	Menu,

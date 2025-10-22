@@ -10,7 +10,7 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, BytesView } from "@zwave-js/shared";
+import { Bytes, buffer2hex, type BytesView } from "@zwave-js/shared";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	CCCommand,

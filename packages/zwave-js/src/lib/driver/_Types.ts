@@ -1,4 +1,3 @@
-import { BytesView } from "@zwave-js/shared";
 
 export interface OTWFirmwareUpdateProgress {
 	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */

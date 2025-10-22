@@ -25,7 +25,7 @@ import {
 	isPrintableASCII,
 	isPrintableASCIIWithWhitespace,
 	isUint8Array,
-	BytesView,
+	type BytesView,
 	num2hex,
 	pick,
 	uint8ArrayToString,
