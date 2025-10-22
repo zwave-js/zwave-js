@@ -1,9 +1,9 @@
+import { BytesView } from "@zwave-js/shared";
 import type {
 	FSStats,
 	FileHandle,
 	FileSystem,
 } from "@zwave-js/shared/bindings";
-import { BytesView } from "@zwave-js/shared";
 
 const DB_NAME_FS = "filesystem";
 const DB_VERSION_FS = 1;

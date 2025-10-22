@@ -36,7 +36,13 @@ import {
 	securityClassOrder,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, type BytesView, buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	buffer2hex,
+	getEnumMemberName,
+	pick,
+} from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { isArray } from "alcalzone-shared/typeguards";
 import { CCAPI } from "../lib/API.js";

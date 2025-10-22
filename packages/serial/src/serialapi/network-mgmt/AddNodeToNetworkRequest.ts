@@ -30,7 +30,12 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, buffer2hex, type BytesView, getEnumMemberName } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	buffer2hex,
+	getEnumMemberName,
+} from "@zwave-js/shared";
 
 export enum AddNodeType {
 	Any = 1,

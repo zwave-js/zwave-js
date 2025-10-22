@@ -25,7 +25,13 @@ import {
 	randomBytes,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, type BytesView, buffer2hex, num2hex, pick } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	buffer2hex,
+	num2hex,
+	pick,
+} from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {

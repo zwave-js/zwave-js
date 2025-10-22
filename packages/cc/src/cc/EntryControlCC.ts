@@ -16,7 +16,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, type BytesView, pick } from "@zwave-js/shared";
+import { Bytes, type BytesView, buffer2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,

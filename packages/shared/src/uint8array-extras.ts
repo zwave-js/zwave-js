@@ -93,7 +93,9 @@ try {
 }
 ```
 */
-export function assertUint8Array(value: unknown): asserts value is Uint8Array<ArrayBuffer> {
+export function assertUint8Array(
+	value: unknown,
+): asserts value is Uint8Array<ArrayBuffer> {
 	if (!isUint8Array(value)) {
 		throw new TypeError(`Expected \`Uint8Array\`, got \`${typeof value}\``);
 	}
@@ -408,7 +410,9 @@ console.log(base64ToUint8Array('SGVsbG8='));
 //=> Uint8Array [72, 101, 108, 108, 111]
 ```
 */
-export function base64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
+export function base64ToUint8Array(
+	base64String: string,
+): Uint8Array<ArrayBuffer> {
 	assertString(base64String);
 	return Uint8Array.from(
 		globalThis.atob(base64UrlToBase64(base64String)),

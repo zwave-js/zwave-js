@@ -17,7 +17,7 @@ import {
 /**
  * A non-shared Uint8Array. This type alias is used where Uint8Array is normally used,
  * to avoid having to put `<ArrayBuffer>` everywhere in the codebase.
- * 
+ *
  * This should mostly be considered readonly.
  */
 export type BytesView = Uint8Array<ArrayBuffer>;

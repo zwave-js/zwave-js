@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes, stripUndefined } from "@zwave-js/core";
-import { Bytes, buffer2hex, type BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
 import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,

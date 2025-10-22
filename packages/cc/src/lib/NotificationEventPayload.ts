@@ -1,6 +1,6 @@
 import type { Duration } from "@zwave-js/core";
-import type { CommandClass } from "./CommandClass.js";
 import type { BytesView } from "@zwave-js/shared";
+import type { CommandClass } from "./CommandClass.js";
 
 export interface NotificationEventPayload {
 	toNotificationEventParameters():

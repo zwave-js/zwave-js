@@ -76,9 +76,7 @@ export interface FSStats {
 	size: number;
 }
 
-export interface FileHandle
-	extends ReadableWritablePair<BytesView, BytesView>
-{
+export interface FileHandle extends ReadableWritablePair<BytesView, BytesView> {
 	close(): Promise<void>;
 	read(
 		position?: number | null,

@@ -19,7 +19,12 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, buffer2hex, type BytesView, getEnumMemberName } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	buffer2hex,
+	getEnumMemberName,
+} from "@zwave-js/shared";
 
 const LEARN_MODE_EMPTY_NODE_ID = 0xef; // who knows why...
 

@@ -21,11 +21,11 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	getEnumMemberName,
 	isPrintableASCII,
 	isPrintableASCIIWithWhitespace,
 	isUint8Array,
-	type BytesView,
 	num2hex,
 	pick,
 	uint8ArrayToString,

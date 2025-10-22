@@ -1,5 +1,5 @@
-import { wait } from "alcalzone-shared/async";
 import type { BytesView } from "@zwave-js/shared";
+import { wait } from "alcalzone-shared/async";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import {
 	type ZWaveSerialBindingFactory,

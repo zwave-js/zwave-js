@@ -1,5 +1,10 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes, type BytesView, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+} from "@zwave-js/shared";
 import { type NVM, NVMAccess, type NVMIO } from "./common/definitions.js";
 import {
 	nvmReadBuffer,
