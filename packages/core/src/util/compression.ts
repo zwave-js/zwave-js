@@ -11,16 +11,16 @@ export function deflateSync(
 	data: BytesView,
 	opts?: DeflateOptions,
 ): BytesView {
-	return defflateSync(data, opts);
+	return defflateSync(data, opts) as BytesView;
 }
 
 export function inflateSync(
 	data: BytesView,
 	opts?: InflateOptions,
 ): BytesView {
-	return infflateSync(data, opts);
+	return infflateSync(data, opts) as BytesView;
 }
 
 export function gunzipSync(data: BytesView): BytesView {
-	return fgunzipSync(data);
+	return fgunzipSync(data) as BytesView;
 }
