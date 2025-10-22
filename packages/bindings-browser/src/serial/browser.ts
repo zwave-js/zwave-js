@@ -21,7 +21,9 @@ export function createWebSerialPortFactory(
 
 	const source: UnderlyingDefaultSource<BytesView> = {
 		async start(controller) {
-			reader = port.readable!.getReader() as ReadableStreamDefaultReader<BytesView>;
+			reader = port.readable!.getReader() as ReadableStreamDefaultReader<
+				BytesView
+			>;
 			try {
 				while (true) {
 					const { value, done } = await reader.read();
