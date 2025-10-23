@@ -4,10 +4,10 @@ import semverGt from "semver/functions/gt.js";
 import semverGte from "semver/functions/gte.js";
 import semverLt from "semver/functions/lt.js";
 import semverLte from "semver/functions/lte.js";
-import { parse } from "./LogicParser.js";
 
 // The types are not correct:
 import { type RulesLogic, default as JsonLogic } from "json-logic-js";
+import { parse, toRulesLogic } from "./LogicParser.js";
 const { add_operation, apply } = JsonLogic;
 
 function tryOr<T extends (...args: any[]) => any>(
@@ -44,13 +44,12 @@ add_operation(
 	tryOr((a, b) => semverEq(padVersion(a), padVersion(b)), false),
 );
 
-export function parseLogic(logic: string): RulesLogic {
-	try {
-		// The generated types for the version comparisons are not compatible with the RulesLogic type
-		return parse(logic) as unknown as RulesLogic;
-	} catch (e: any) {
-		throw new Error(`Invalid logic: ${logic}\n${e.message}`);
+export function parseLogic(input: string): RulesLogic {
+	const expr = parse(input);
+	if (!expr) {
+		throw new Error(`Failed to parse expression: ${input}`);
 	}
+	return toRulesLogic(expr);
 }
 
 export function evaluate(

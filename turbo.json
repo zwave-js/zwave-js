@@ -21,7 +21,7 @@
 			]
 		},
 		"@zwave-js/config#codegen": {
-			"outputs": ["src/LogicParser.ts"]
+			"outputs": ["src/_version.ts"]
 		},
 
 		// We just define a single build script, as it turns out that
