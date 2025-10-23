@@ -44,7 +44,7 @@ add_operation(
 	tryOr((a, b) => semverEq(padVersion(a), padVersion(b)), false),
 );
 
-function parseLogic(input: string): RulesLogic {
+export function parseLogic(input: string): RulesLogic {
 	const expr = parse(input);
 	if (!expr) {
 		throw new Error(`Failed to parse expression: ${input}`);
