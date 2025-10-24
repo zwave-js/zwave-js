@@ -396,7 +396,7 @@ This method an array of firmware updates, each of which contains the following p
 
 ```ts
 interface Firmware {
-	data: Uint8Array;
+	data: BytesView;
 	firmwareTarget?: number;
 	firmwareId?: number;
 }
@@ -1533,7 +1533,7 @@ interface ZWaveNotificationCallbackArgs_EntryControlCC {
 	dataType: EntryControlDataTypes;
 	/** A human-readable label for the data type */
 	dataTypeLabel: string;
-	eventData?: Uint8Array | string;
+	eventData?: BytesView | string;
 }
 ```
 

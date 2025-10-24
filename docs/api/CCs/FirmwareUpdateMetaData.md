@@ -58,7 +58,7 @@ Responds to a firmware download request.
 async sendFirmwareFragment(
 	fragmentNumber: number,
 	isLastFragment: boolean,
-	data: Uint8Array,
+	data: BytesView,
 ): Promise<void>;
 ```
 

@@ -4,6 +4,7 @@
 
 ```ts
 
+import { BytesView } from '@zwave-js/shared';
 import type { CCEncodingContext } from '@zwave-js/cc';
 import { CCId } from '@zwave-js/core';
 import type { ColorComponent } from '@zwave-js/cc';
@@ -255,15 +256,38 @@ export class MockController {
     // (undocumented)
     execute(): Promise<void>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectHostACK(timeout: number): Promise<void>;
+    expectHostACK(timeout: number, errorMessage?: string): Promise<void>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectHostMessage(timeout: number, predicate: (msg: Message) => boolean): Promise<Message>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectNodeACK(node: MockNode, timeout: number): Promise<MockZWaveAckFrame>;
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    expectHostMessage(predicate: (msg: Message) => boolean, options?: {
+        timeout?: number;
+        preventDefault?: boolean;
+        errorMessage?: string;
+    }): Promise<Message>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectNodeCC<T extends CCId = CCId>(node: MockNode, timeout: number, predicate: (cc: CCId) => cc is T): Promise<T>;
+    expectNodeACK(node: MockNode, timeout: number, errorMessage?: string): Promise<MockZWaveAckFrame>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectNodeFrame<T extends MockZWaveFrame = MockZWaveFrame>(node: MockNode, timeout: number, predicate: (msg: MockZWaveFrame) => msg is T): Promise<T>;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    expectNodeCC<T extends CCId = CCId>(node: MockNode, predicate: (cc: CCId) => cc is T, options?: {
+        timeout?: number;
+        preventDefault?: boolean;
+        errorMessage?: string;
+    }): Promise<T>;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    expectNodeFrame<T extends MockZWaveFrame = MockZWaveFrame>(node: MockNode, predicate: (msg: MockZWaveFrame) => msg is T, options?: {
+        timeout?: number;
+        preventDefault?: boolean;
+        errorMessage?: string;
+    }): Promise<T>;
     // (undocumented)
     homeId: number;
     // (undocumented)
@@ -285,7 +309,7 @@ export class MockController {
     // (undocumented)
     securityManagers: SecurityManagers;
     sendMessageToHost(msg: Message, fromNode?: MockNode): Promise<void>;
-    sendToHost(data: Uint8Array): Promise<void>;
+    sendToHost(data: BytesView): Promise<void>;
     sendToNode(node: MockNode, frame: LazyMockZWaveFrame): Promise<MockZWaveAckFrame | undefined>;
     // (undocumented)
     readonly serial: ZWaveSerialStream;
@@ -296,7 +320,7 @@ export class MockController {
 //
 // @public (undocumented)
 export interface MockControllerBehavior {
-    onHostData?: (controller: MockController, data: Uint8Array) => Promise<boolean | undefined> | boolean | undefined;
+    onHostData?: (controller: MockController, data: BytesView) => Promise<boolean | undefined> | boolean | undefined;
     onHostMessage?: (controller: MockController, msg: Message) => Promise<boolean | undefined> | boolean | undefined;
     onNodeFrame?: (controller: MockController, node: MockNode, frame: MockZWaveFrame) => Promise<boolean | undefined> | boolean | undefined;
 }
@@ -434,9 +458,16 @@ export class MockNode {
     // (undocumented)
     readonly endpoints: Map<number, MockEndpoint>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectControllerACK(timeout: number): Promise<MockZWaveAckFrame>;
+    expectControllerACK(timeout: number, errorMessage?: string): Promise<MockZWaveAckFrame>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectControllerFrame<T extends MockZWaveFrame = MockZWaveFrame>(timeout: number, predicate: (msg: MockZWaveFrame) => msg is T): Promise<T>;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    // Warning: (tsdoc-param-tag-with-invalid-name) The @param block should be followed by a valid parameter name: The identifier cannot non-word characters
+    expectControllerFrame<T extends MockZWaveFrame = MockZWaveFrame>(predicate: (msg: MockZWaveFrame) => msg is T, options?: {
+        timeout?: number;
+        preventDefault?: boolean;
+        errorMessage?: string;
+    }): Promise<T>;
     // (undocumented)
     getCCCapabilities<T extends CommandClasses>(ccId: T, endpointIndex?: number): Partial<CCIdToCapabilities<T>> | undefined;
     // (undocumented)
