@@ -1,0 +1,92 @@
+{
+	"manufacturer": "Example Corp",
+	"manufacturerId": "0x1234",
+	"label": "EX-100",
+	"description": "Example Smart Switch",
+	"devices": [
+		{
+			"productType": "0x5678",
+			"productId": "0x9abc"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "LED Indicator",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"recommendedValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				},
+				{
+					"label": "Blink on activity",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Auto Turn-Off Timer",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 3600,
+			"defaultValue": 0,
+			"recommendedValue": 300
+		},
+		{
+			"#": "7[0x01]",
+			"label": "Physical Button",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"recommendedValue": 1,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "7[0x02]",
+			"label": "Z-Wave Commands",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1,
+			"recommendedValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				}
+			]
+		}
+	]
+}

@@ -151,6 +151,18 @@ Parameter #${parameterNumber} has a non-numeric property defaultValue`,
 		this.defaultValue = definition.defaultValue;
 
 		if (
+			definition.recommendedValue != undefined
+			&& typeof definition.recommendedValue !== "number"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-numeric property recommendedValue`,
+			);
+		}
+		this.recommendedValue = definition.recommendedValue;
+
+		if (
 			definition.allowManualEntry != undefined
 			&& definition.allowManualEntry !== false
 		) {
@@ -208,6 +220,7 @@ Parameter #${parameterNumber}: options is malformed!`,
 	public readonly maxValue?: number;
 	public readonly unsigned?: boolean;
 	public readonly defaultValue: number;
+	public readonly recommendedValue?: number;
 	public readonly unit?: string;
 	public readonly readOnly?: true;
 	public readonly writeOnly?: true;
@@ -233,6 +246,7 @@ Parameter #${parameterNumber}: options is malformed!`,
 				"maxValue",
 				"unsigned",
 				"defaultValue",
+				"recommendedValue",
 				"unit",
 				"readOnly",
 				"writeOnly",
