@@ -94,7 +94,7 @@ export interface InterviewOptions {
 	 * Whether configuration parameters should be set to their recommended values during the interview.
 	 * Parameters are updated only if their current value equals the default value.
 	 */
-	applyConfigurationRecommendedValues?: boolean;
+	applyRecommendedConfigParamValues?: boolean;
 }
 
 /** Allows reading options to use for interviewing devices */
