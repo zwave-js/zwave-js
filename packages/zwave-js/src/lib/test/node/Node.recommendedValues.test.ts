@@ -92,7 +92,7 @@ integrationTest("Auto apply recommended values during interview", {
 	additionalDriverOptions: {
 		// Enable applying recommended configuration values
 		interview: {
-			applyConfigurationRecommendedValues: true,
+			applyRecommendedConfigParamValues: true,
 		},
 		storage: {
 			deviceConfigPriorityDir: deviceConfigPriorityDir,
@@ -100,7 +100,7 @@ integrationTest("Auto apply recommended values during interview", {
 	},
 
 	async testBody(t, driver, node, mockController, mockNode) {
-		// Because applyConfigurationRecommendedValues is enabled, the values should be set to the recommended values
+		// Because applyRecommendedConfigParamValues is enabled, the values should be set to the recommended values
 
 		const propertyToValue: PropertyExpectation[] = [
 			{ property: 1, expected: 2 },
@@ -115,7 +115,7 @@ integrationTest("Auto apply recommended values during interview", {
 });
 
 integrationTest(
-	"Keep existing values during interview when applyConfigurationRecommendedValues is disabled",
+	"Keep existing values during interview when applyRecommendedConfigParamValues is disabled",
 	{
 		// Enable debug mode to see logs and keep test directory for inspection
 		// debug: true,
@@ -125,7 +125,7 @@ integrationTest(
 		// Provide the directory containing our custom device config
 		additionalDriverOptions: {
 			interview: {
-				applyConfigurationRecommendedValues: false,
+				applyRecommendedConfigParamValues: false,
 			},
 			storage: {
 				deviceConfigPriorityDir: deviceConfigPriorityDir,
@@ -133,7 +133,7 @@ integrationTest(
 		},
 
 		async testBody(t, driver, node, mockController, mockNode) {
-			// Because applyConfigurationRecommendedValues is disabled, the values should remain at their current/default values
+			// Because applyRecommendedConfigParamValues is disabled, the values should remain at their current/default values
 
 			const propertyToValue: PropertyExpectation[] = [
 				{ property: 1, expected: 1 },

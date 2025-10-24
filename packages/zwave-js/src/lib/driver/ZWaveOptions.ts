@@ -147,7 +147,7 @@ export interface ZWaveOptions {
 		 *
 		 * Default: `false`
 		 */
-		applyConfigurationRecommendedValues?: boolean;
+		applyRecommendedConfigParamValues?: boolean;
 	};
 
 	/** Host abstractions allowing Z-Wave JS to run on different platforms */

@@ -348,7 +348,7 @@ const defaultOptions: ZWaveOptions = {
 	bootloaderMode: "recover",
 	interview: {
 		queryAllUserCodes: false,
-		applyConfigurationRecommendedValues: false,
+		applyRecommendedConfigParamValues: false,
 	},
 	storage: {
 		cacheDir: typeof process !== "undefined"

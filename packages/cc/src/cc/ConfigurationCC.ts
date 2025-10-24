@@ -1259,7 +1259,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		// Apply recommended values from device config
 		if (
 			paramInfo !== undefined
-			&& ctx.getInterviewOptions().applyConfigurationRecommendedValues
+			&& ctx.getInterviewOptions().applyRecommendedConfigParamValues
 				=== true
 		) {
 			await this.applyRecommendedValues(ctx, node, paramInfo, api);
