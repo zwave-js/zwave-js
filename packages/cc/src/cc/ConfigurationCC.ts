@@ -34,7 +34,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
 import {
@@ -1280,14 +1280,6 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		paramInfo: ParamInfoMap,
 		api: ConfigurationCCAPI,
 	): Promise<void> {
-		ctx.logNode(node.id, {
-			endpoint: this.endpointIndex,
-			message:
-				`Start applying recommended parameter values during interview...`,
-			direction: "none",
-			level: "debug",
-		});
-
 		const parametersNeededUpdate: ConfigurationCCAPISetOptions[] = [];
 
 		// Find parameters for which current value doesn't match the recommended value
@@ -1325,37 +1317,24 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 			}
 		}
 
-		if (parametersNeededUpdate.length === 0) {
-			ctx.logNode(node.id, {
-				endpoint: this.endpointIndex,
-				message: `No configuration parameters need to be updated`,
-				direction: "none",
-				level: "debug",
-			});
-			return;
-		}
+		if (parametersNeededUpdate.length === 0) return;
 
 		// Log what we're about to do
+		let message =
+			`Applying recommended config parameter values during interview:`;
 		for (const param of parametersNeededUpdate) {
 			const formatterBitMask = param.bitMask
-				? `[0x${
-					param.bitMask.toString(16).toUpperCase().padStart(
-						2,
-						"0",
-					)
-				}]`
+				? `[0x${num2hex(param.bitMask)}]`
 				: "";
 			const fullParamKey = `${param.parameter}${formatterBitMask}`;
-
-			ctx.logNode(node.id, {
-				endpoint: this.endpointIndex,
-				message:
-					`Setting parameter ${fullParamKey} to recommended value: ${
-						String(param.value)
-					}`,
-				direction: "outbound",
-			});
+			message += `\n· #${fullParamKey} => ${param.value}`;
 		}
+
+		ctx.logNode(node.id, {
+			endpoint: this.endpointIndex,
+			message,
+			direction: "none",
+		});
 
 		await api.setBulk(parametersNeededUpdate);
 		await api.getBulk(parametersNeededUpdate.map((param) => ({
