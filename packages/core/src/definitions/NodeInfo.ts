@@ -1,4 +1,4 @@
-import { Bytes, sum } from "@zwave-js/shared";
+import { Bytes, type BytesView, sum } from "@zwave-js/shared";
 import type { BasicDeviceClass } from "../registries/DeviceClasses.js";
 import { validatePayload } from "../util/misc.js";
 import { CommandClasses } from "./CommandClasses.js";
@@ -12,7 +12,7 @@ export interface ApplicationNodeInformation {
 }
 
 export function parseApplicationNodeInformation(
-	nif: Uint8Array,
+	nif: BytesView,
 ): ApplicationNodeInformation {
 	validatePayload(nif.length >= 2);
 	return {
@@ -38,7 +38,7 @@ export interface NodeUpdatePayload extends ApplicationNodeInformation {
 }
 
 export function parseNodeUpdatePayload(
-	nif: Uint8Array,
+	nif: BytesView,
 	nodeIdType: NodeIDType = NodeIDType.Short,
 ): NodeUpdatePayload {
 	let offset = 0;
@@ -86,7 +86,7 @@ function isExtendedCCId(ccId: CommandClasses): boolean {
  * @param offset The offset at which the CC id is located
  */
 export function parseCCId(
-	payload: Uint8Array,
+	payload: BytesView,
 	offset: number = 0,
 ): { ccId: CommandClasses; bytesRead: number } {
 	const isExtended = isExtendedCCId(payload[offset]);
@@ -117,7 +117,7 @@ export function encodeCCId(
 	}
 }
 
-export function parseCCList(payload: Uint8Array): {
+export function parseCCList(payload: BytesView): {
 	supportedCCs: CommandClasses[];
 	controlledCCs: CommandClasses[];
 } {
@@ -209,7 +209,7 @@ export type NodeInformationFrame =
 	& ApplicationNodeInformation;
 
 export function parseNodeProtocolInfo(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	offset: number,
 	isLongRange: boolean = false,
 ): NodeProtocolInfo {
@@ -325,7 +325,7 @@ export function encodeNodeProtocolInfo(
 }
 
 export function parseNodeProtocolInfoAndDeviceClass(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	isLongRange: boolean = false,
 ): {
 	info: NodeProtocolInfoAndDeviceClass;
@@ -375,7 +375,7 @@ export function encodeNodeProtocolInfoAndDeviceClass(
 }
 
 export function parseNodeInformationFrame(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	isLongRange: boolean = false,
 ): NodeInformationFrame {
 	const result = parseNodeProtocolInfoAndDeviceClass(
@@ -385,7 +385,7 @@ export function parseNodeInformationFrame(
 	const info = result.info;
 	let offset = result.bytesRead;
 
-	let ccList: Uint8Array;
+	let ccList: BytesView;
 	if (isLongRange) {
 		const ccListLength = buffer[offset];
 		offset += 1;
@@ -421,7 +421,7 @@ export function encodeNodeInformationFrame(
 }
 
 export function parseNodeID(
-	buffer: Uint8Array,
+	buffer: BytesView,
 	type: NodeIDType = NodeIDType.Short,
 	offset: number = 0,
 ): {

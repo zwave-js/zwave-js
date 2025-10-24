@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/serial",
-  "version": "15.13.0",
+  "version": "15.15.3",
   "description": "zwave-js: Serialport driver",
   "keywords": [],
   "publishConfig": {
@@ -87,17 +87,17 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
+    "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.52.11",
     "@serialport/binding-mock": "^10.2.2",
     "@serialport/bindings-interface": "patch:@serialport/bindings-interface@npm%3A1.2.2#~/.yarn/patches/@serialport-bindings-interface-npm-1.2.2-e597dbc676.patch",
-    "@types/node": "^20.19.9",
+    "@types/node": "^20.19.23",
     "@types/sinon": "^17.0.4",
     "ansi-colors": "^4.1.3",
     "del-cli": "^6.0.0",
     "sinon": "^21.0.0",
     "tsx": "^4.20.5",
-    "typescript": "5.8.3",
-    "vitest": "^2.1.9"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.0"
   }
 }

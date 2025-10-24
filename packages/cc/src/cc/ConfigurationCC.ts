@@ -1700,6 +1700,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				label: info.label,
 				description: info.description,
 				isFromConfig: true,
+				destructive: info.destructive,
 			});
 			this.extendParamInformation(
 				ctx,

@@ -1,7 +1,7 @@
 import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import fs from "node:fs";
 import path from "node:path";
-import ts from "typescript";
+import ts, { SyntaxKind } from "typescript";
 
 // Whitelist some imports that are known not to import forbidden modules
 const whitelistedImports = [
@@ -47,7 +47,7 @@ function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 			// import "bar"
 			return node.moduleSpecifier;
 		} else if (
-			!node.importClause.isTypeOnly
+			node.importClause.phaseModifier !== SyntaxKind.TypeKeyword
 			// import foo from "bar"
 			&& (!node.importClause.namedBindings
 				// import * as foo from "bar"

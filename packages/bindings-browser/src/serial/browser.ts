@@ -1,11 +1,12 @@
 import { type ZWaveSerialBindingFactory } from "@zwave-js/serial";
+import { BytesView } from "@zwave-js/shared";
 
 export function createWebSerialPortFactory(
 	port: SerialPort,
 ): ZWaveSerialBindingFactory {
-	let writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
+	let writer: WritableStreamDefaultWriter<BytesView> | undefined;
 
-	const sink: UnderlyingSink<Uint8Array> = {
+	const sink: UnderlyingSink<BytesView> = {
 		close() {
 			writer?.releaseLock();
 			port.close();
@@ -16,11 +17,13 @@ export function createWebSerialPortFactory(
 		},
 	};
 
-	let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+	let reader: ReadableStreamDefaultReader<BytesView> | undefined;
 
-	const source: UnderlyingDefaultSource<Uint8Array> = {
+	const source: UnderlyingDefaultSource<BytesView> = {
 		async start(controller) {
-			reader = port.readable!.getReader();
+			reader = port.readable!.getReader() as ReadableStreamDefaultReader<
+				BytesView
+			>;
 			try {
 				while (true) {
 					const { value, done } = await reader.read();

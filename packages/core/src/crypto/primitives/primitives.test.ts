@@ -4,8 +4,8 @@ import { type ExpectStatic, test } from "vitest";
 
 function assertBufferEquals(
 	expect: ExpectStatic,
-	actual: Uint8Array,
-	expected: Uint8Array,
+	actual: BytesView,
+	expected: BytesView,
 ) {
 	expect(Uint8Array.from(actual)).toStrictEqual(Uint8Array.from(expected));
 }

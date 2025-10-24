@@ -50,7 +50,7 @@ import {
 	isSendData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
-import { getErrorMessage } from "@zwave-js/shared";
+import { type BytesView, getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,
@@ -165,8 +165,6 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 
 		// Pass this message to the send thread and wait for it to be sent
 		let result: Message;
-		// At this point we can't have received a premature update
-		msg.prematureNodeUpdate = undefined;
 
 		try {
 			// The yield can throw and must be handled here
@@ -194,9 +192,6 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 
 		// If the sent message expects an update from the node, wait for it
 		if (msg.expectsNodeUpdate()) {
-			// We might have received the update prematurely. In that case, return it.
-			if (msg.prematureNodeUpdate) return msg.prematureNodeUpdate;
-
 			// CommandTime is measured by the application
 			// ReportTime timeout SHOULD be set to CommandTime + 1 second.
 			const timeout = getNodeUpdateTimeout(
@@ -527,7 +522,7 @@ export const secureMessageGeneratorS0: MessageGeneratorImplementation<
 	let additionalTimeoutMs: number | undefined;
 
 	// Try to get a free nonce before requesting a new one
-	let nonce: Uint8Array | undefined = secMan.getFreeNonce(nodeId);
+	let nonce: BytesView | undefined = secMan.getFreeNonce(nodeId);
 	if (!nonce) {
 		// No free nonce, request a new one
 		const cc = new SecurityCCNonceGet({

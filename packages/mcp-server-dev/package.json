@@ -42,11 +42,12 @@
     "execa": "^9.6.0"
   },
   "devDependencies": {
-    "@types/node": "^20.19.9",
-    "typescript": "5.8.3"
+    "@types/node": "^20.19.23",
+    "typescript": "5.9.3"
   },
   "scripts": {
     "build": "tsc -b",
+    "bootstrap": "yarn build",
     "clean": "del-cli build/ *.tsbuildinfo",
     "lint:ts": "eslint --cache --cache-location .eslintcache/ -c ../../eslint.config.mjs src/**/*.ts",
     "lint:ts:fix": "yarn run lint:ts --fix"

@@ -27,6 +27,8 @@ integrationTest(
 						instanceof MultiChannelCCCommandEncapsulation
 					&& frame.payload.encapsulated instanceof BinarySwitchCCSet,
 			);
+
+			await driver.waitForIdle();
 		},
 	},
 );

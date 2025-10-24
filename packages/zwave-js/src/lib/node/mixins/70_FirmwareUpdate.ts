@@ -31,7 +31,7 @@ import {
 	timespan,
 } from "@zwave-js/core";
 import { containsCC } from "@zwave-js/serial/serialapi";
-import { getEnumMemberName, throttle } from "@zwave-js/shared";
+import { type BytesView, getEnumMemberName, throttle } from "@zwave-js/shared";
 import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
@@ -740,7 +740,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer */
 	private async *beginFirmwareUpdateInternal(
-		data: Uint8Array,
+		data: BytesView,
 		manufacturerId: number,
 		target: number,
 		firmwareId: number,
@@ -916,7 +916,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 	private async sendCorruptedFirmwareUpdateReport(
 		reportNum: number,
-		fragment: Uint8Array,
+		fragment: BytesView,
 		nonSecureTransfer: boolean = false,
 	): Promise<void> {
 		try {
@@ -947,7 +947,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 	}
 
 	private async *doFirmwareUpdateInternal(
-		data: Uint8Array,
+		data: BytesView,
 		fragmentSize: number,
 		nonSecureTransfer: boolean,
 		abortContext: AbortFirmwareUpdateContext,

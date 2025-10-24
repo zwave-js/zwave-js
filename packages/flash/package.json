@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/flash",
-  "version": "15.13.0",
+  "version": "15.15.3",
   "description": "zwave-js: firmware flash utility",
   "keywords": [],
   "publishConfig": {
@@ -47,9 +47,9 @@
     "lint:ts:fix": "yarn run lint:ts --fix"
   },
   "devDependencies": {
-    "@types/node": "^20.19.9",
+    "@types/node": "^20.19.23",
     "@types/yargs": "^17.0.33",
     "del-cli": "^6.0.0",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   }
 }

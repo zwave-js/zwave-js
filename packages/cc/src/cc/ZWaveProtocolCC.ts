@@ -22,7 +22,7 @@ import {
 	parseNodeProtocolInfoAndDeviceClass,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	CCCommand,
@@ -1396,7 +1396,7 @@ export class ZWaveProtocolCCAssignSUCReturnRoutePriority
 
 // @publicAPI
 export interface ZWaveProtocolCCSmartStartIncludedNodeInformationOptions {
-	nwiHomeId: Uint8Array;
+	nwiHomeId: BytesView;
 }
 
 @CCCommand(ZWaveProtocolCommand.SmartStartIncludedNodeInformation)
@@ -1431,7 +1431,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation
 		});
 	}
 
-	public nwiHomeId: Uint8Array;
+	public nwiHomeId: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from(this.nwiHomeId);

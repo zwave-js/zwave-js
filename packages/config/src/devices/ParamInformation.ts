@@ -177,6 +177,18 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 			?? (this.readOnly ? false : true);
 
 		if (
+			definition.destructive != undefined
+			&& typeof definition.destructive !== "boolean"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-boolean property destructive`,
+			);
+		}
+		this.destructive = definition.destructive;
+
+		if (
 			isArray(definition.options)
 			&& !definition.options.every(
 				(opt: unknown) =>
@@ -213,6 +225,7 @@ Parameter #${parameterNumber}: options is malformed!`,
 	public readonly readOnly?: true;
 	public readonly writeOnly?: true;
 	public readonly allowManualEntry: boolean;
+	public readonly destructive?: boolean;
 	public readonly options: readonly ConditionalConfigOption[];
 
 	public readonly condition?: string;
@@ -238,6 +251,7 @@ Parameter #${parameterNumber}: options is malformed!`,
 				"readOnly",
 				"writeOnly",
 				"allowManualEntry",
+				"destructive",
 			]),
 			options: evaluateDeep(this.options, deviceId, true),
 		};

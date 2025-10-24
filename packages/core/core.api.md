@@ -874,9 +874,9 @@ export class Duration {
     static default(): Duration;
     static from(input: "default"): Duration;
     // (undocumented)
-    static from(input?: Duration | string): Duration | undefined;
+    static from(input?: Duration | DurationLike | string): Duration | undefined;
     // (undocumented)
-    static isDuration(value: any): value is Duration;
+    static isDuration(value: any): value is DurationLike;
     static parseReport(payload?: number): Duration | undefined;
     static parseSet(payload?: number): Duration | undefined;
     static parseString(text: string): Duration | undefined;
@@ -895,6 +895,16 @@ export class Duration {
     // (undocumented)
     get value(): number;
     set value(v: number);
+}
+
+// Warning: (ae-missing-release-tag) "DurationLike" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface DurationLike {
+    // (undocumented)
+    unit: DurationUnit;
+    // (undocumented)
+    value: number;
 }
 
 // Warning: (ae-missing-release-tag) "DurationUnit" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1157,6 +1167,8 @@ export interface GenericDeviceClass {
     readonly maySupportBasicCC: boolean;
     // (undocumented)
     readonly requiresSecurity: boolean;
+    // (undocumented)
+    readonly supportsOptimisticValueUpdate: boolean;
     // (undocumented)
     readonly zwavePlusDeviceType?: string;
 }
@@ -2005,6 +2017,10 @@ export interface LogConfig {
     maxFiles: number;
     // (undocumented)
     nodeFilter?: number[];
+    // (undocumented)
+    raw?: boolean;
+    // (undocumented)
+    showLogo?: boolean;
     // (undocumented)
     transports: Transport[];
 }
@@ -3645,7 +3661,7 @@ export interface TempNetworkKeys {
 export class Timeout {
     constructor(value: number, unit: TimeoutUnit);
     // (undocumented)
-    static isTimeout(value: any): value is Timeout;
+    static isTimeout(value: any): value is TimeoutLike;
     static parse(payload: number): Timeout;
     // (undocumented)
     static parse(payload: undefined): undefined;
@@ -3661,6 +3677,16 @@ export class Timeout {
     // (undocumented)
     get value(): number;
     set value(v: number);
+}
+
+// Warning: (ae-missing-release-tag) "TimeoutLike" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface TimeoutLike {
+    // (undocumented)
+    unit: TimeoutUnit;
+    // (undocumented)
+    value: number;
 }
 
 // Warning: (ae-missing-release-tag) "TimeoutUnit" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4231,6 +4257,21 @@ export const ValueMetadata: {
         readonly type: "duration";
         readonly writeable: true;
     }>;
+    Timeout: Readonly<{
+        readonly type: "timeout";
+        readonly readable: true;
+        readonly writeable: true;
+    }>;
+    ReadOnlyTimeout: Readonly<{
+        readonly writeable: false;
+        readonly type: "timeout";
+        readonly readable: true;
+    }>;
+    WriteOnlyTimeout: Readonly<{
+        readonly readable: false;
+        readonly type: "timeout";
+        readonly writeable: true;
+    }>;
     Buffer: Readonly<{
         readonly type: "buffer";
         readonly readable: true;
@@ -4323,6 +4364,16 @@ export interface ValueMetadataString extends ValueMetadataAny {
     type: "string" | "color";
 }
 
+// Warning: (ae-missing-release-tag) "ValueMetadataTimeout" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ValueMetadataTimeout extends ValueMetadataAny {
+    // (undocumented)
+    default?: Timeout;
+    // (undocumented)
+    type: "timeout";
+}
+
 // Warning: (ae-missing-release-tag) "ValueNotificationArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -4342,7 +4393,7 @@ export interface ValueRemovedArgs extends ValueID {
 // Warning: (ae-missing-release-tag) "ValueType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ValueType = "number" | "boolean" | "string" | "number[]" | "boolean[]" | "string[]" | "duration" | "color" | "buffer" | "any";
+export type ValueType = "number" | "boolean" | "string" | "number[]" | "boolean[]" | "string[]" | "duration" | "timeout" | "color" | "buffer" | "any";
 
 // Warning: (ae-missing-release-tag) "ValueUpdatedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

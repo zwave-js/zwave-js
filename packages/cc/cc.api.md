@@ -15468,9 +15468,7 @@ export const ProtectionCCValues: Readonly<{
         is: (valueId: ValueID) => boolean;
         readonly meta: {
             readonly label: "RF protection timeout";
-            readonly min: 0;
-            readonly max: 255;
-            readonly type: "number";
+            readonly type: "timeout";
             readonly readable: true;
             readonly writeable: true;
         };
@@ -17538,6 +17536,8 @@ export class SecurityCCNonceReport extends SecurityCC {
 // @public (undocumented)
 export class SecurityCCSchemeGet extends SecurityCC {
     // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeGet;
+    // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
@@ -17547,6 +17547,8 @@ export class SecurityCCSchemeGet extends SecurityCC {
 //
 // @public (undocumented)
 export class SecurityCCSchemeInherit extends SecurityCC {
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeInherit;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)

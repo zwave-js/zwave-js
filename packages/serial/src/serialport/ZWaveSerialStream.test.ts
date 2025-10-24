@@ -1,5 +1,5 @@
 import { log as createZWaveLogContainer } from "@zwave-js/core/bindings/log/node";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { isUint8Array } from "node:util/types";
 import {
 	type ExpectStatic,
@@ -72,14 +72,14 @@ async function waitForData(
 function assertSerialAPIFrame(
 	expect: ExpectStatic,
 	frame: ZWaveSerialFrame,
-	expectedData: MessageHeaders | Uint8Array,
+	expectedData: MessageHeaders | BytesView,
 ) {
 	expect(frame.type).toBe(ZWaveSerialFrameType.SerialAPI);
 	if (typeof expectedData === "number") {
 		expect(frame.data).toStrictEqual(expectedData);
 	} else {
 		expect(isUint8Array(frame.data)).toBe(true);
-		expect(Bytes.view(frame.data as Uint8Array)).to.deep.equal(
+		expect(Bytes.view(frame.data as BytesView)).to.deep.equal(
 			expectedData,
 		);
 	}

@@ -107,5 +107,19 @@
 		"**/.yarn": true
 	},
 	"git.ignoredRepositories": ["specs", "vscode-config-editor"],
-	"search.followSymlinks": false
+	"search.followSymlinks": false,
+	"chat.tools.terminal.autoApprove": {
+		"git show": true,
+		"yarn fmt": true,
+		"rm": false,
+		"rmdir": false,
+		"del": false,
+		"kill": false,
+		"curl": false,
+		"wget": false,
+		"eval": false,
+		"chmod": false,
+		"chown": false,
+		"/^Remove-Item\\b/i": false
+	}
 }

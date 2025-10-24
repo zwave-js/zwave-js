@@ -365,6 +365,28 @@ This requires an external configuration directory to be configured using the `de
 
 > [!NOTE] Although the updated config gets loaded after the update, bugfixes and changes to device configuration generally require either a driver restart or re-interview of the changed devices to take effect.
 
+Disable sending usage statistics.
+
+### Background RSSI (noise) monitoring
+
+Z-Wave JS periodically measures the background RSSI (noise level) to provide insights about the network environment. By default, this is done only when the queue is idle for several seconds, and repeated at 30s intervals. It can be desirable to get quicker feedback about the noise levels at a certain location, for example when trying to find a good location for a new node or repeater. To achive that, you can enable frequent RSSI monitoring.
+
+### `enableFrequentRSSIMonitoring`
+
+```ts
+enableFrequentRSSIMonitoring(durationMs: number): void
+```
+
+Enables frequent background RSSI monitoring for a given amount of milliseconds. During this time, the background RSSI will be measured every 2 seconds, but only when the queue is idle. The readings will be emitted as statistics event as usual.
+
+### `disableFrequentRSSIMonitoring`
+
+```ts
+disableFrequentRSSIMonitoring(): void
+```
+
+Disables frequent background RSSI monitoring.
+
 ## Driver properties
 
 ### `cacheDir`
@@ -417,6 +439,14 @@ readonly statisticsEnabled: boolean
 ```
 
 Returns whether reporting usage statistics is currently enabled.
+
+### `isFrequentRSSIMonitoringEnabled`
+
+```ts
+readonly isFrequentRSSIMonitoringEnabled: boolean
+```
+
+Returns whether frequent background RSSI monitoring is currently enabled.
 
 ### `userAgent`
 
@@ -536,6 +566,8 @@ interface LogConfig {
 	nodeFilter?: number[];
 	filename: string;
 	forceConsole: boolean;
+	showLogo?: boolean;
+	raw?: boolean;
 }
 ```
 
@@ -557,6 +589,8 @@ The **file transport** can be configured with the following properties:
 The **console transport** has the following options:
 
 - `forceConsole`: In order to reduce the CPU load, `zwave-js` does not log to the console if it is not connected to a TTY or if logging to file is enabled. By setting this option to `true`, these checks will be skipped and all logs will be printed to the console, Default: `false`.
+- `showLogo`: By default, Z-Wave JS prints an ASCII logo on driver startup. Setting this to `false` will disable the logo. Default: `true`.
+- `raw`: Z-Wave JS logging is optimized for human readability. This implies formatting Z-Wave commands, even when using a transport without custom formatting. When setting `raw` to `true`, Z-Wave commands will instead be rendered as JSON.
 
 Using the `transports` option, providing custom [`winston`](https://github.com/winstonjs/winston) log transports is also possible. See [Custom log transports](usage/log-transports.md) for details. These will be used **in addition** to the internal transports. If that is not desired, disable them by setting `enabled` to `false`.
 

@@ -4,7 +4,7 @@ import {
 	RouteProtocolDataRate,
 	protocolDataRateMask,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 
 const ROUTE_SIZE = MAX_REPEATERS + 1;
 export const ROUTECACHE_SIZE = 2 * ROUTE_SIZE;
@@ -29,7 +29,7 @@ export interface RouteCache {
 	nlwr: Route;
 }
 
-export function parseRoute(buffer: Uint8Array, offset: number): Route {
+export function parseRoute(buffer: BytesView, offset: number): Route {
 	const routeConf = buffer[offset + MAX_REPEATERS];
 	const ret: Route = {
 		beaming: (Beaming[routeConf & 0x60] ?? false) as FLiRS,

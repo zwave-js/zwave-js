@@ -1,13 +1,14 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import type { BytesView } from "@zwave-js/shared";
 import { NVMAccess, type NVMIO } from "../common/definitions.js";
 
 /** An im-memory implementation of NVMIO */
 export class NVMMemoryIO implements NVMIO {
-	public constructor(buffer: Uint8Array) {
+	public constructor(buffer: BytesView) {
 		this._buffer = buffer;
 	}
 
-	private _buffer: Uint8Array;
+	private _buffer: BytesView;
 
 	open(_access: NVMAccess.Read | NVMAccess.Write): Promise<NVMAccess> {
 		// Nothing to do
@@ -30,7 +31,7 @@ export class NVMMemoryIO implements NVMIO {
 	read(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		return Promise.resolve({
 			buffer: this._buffer.subarray(offset, offset + length),
 			endOfFile: offset + length >= this._buffer.length,
@@ -39,7 +40,7 @@ export class NVMMemoryIO implements NVMIO {
 
 	write(
 		offset: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<{ bytesWritten: number; endOfFile: boolean }> {
 		if (offset + data.length > this.size) {
 			throw new ZWaveError(

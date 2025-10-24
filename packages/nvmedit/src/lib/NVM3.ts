@@ -1,5 +1,10 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+} from "@zwave-js/shared";
 import { type NVM, NVMAccess, type NVMIO } from "./common/definitions.js";
 import {
 	nvmReadBuffer,
@@ -90,7 +95,7 @@ export interface NVM3Meta {
 
 export type NVM3EraseOptions = Partial<NVM3Meta>;
 
-export class NVM3 implements NVM<number, Uint8Array> {
+export class NVM3 implements NVM<number, BytesView> {
 	public constructor(io: NVMIO) {
 		this._io = io;
 	}
@@ -290,7 +295,7 @@ export class NVM3 implements NVM<number, Uint8Array> {
 		return section.objectLocations.has(fileId);
 	}
 
-	public readObjectData(object: NVM3ObjectHeader): Promise<Uint8Array> {
+	public readObjectData(object: NVM3ObjectHeader): Promise<BytesView> {
 		return nvmReadBuffer(
 			this._io,
 			object.offset + object.headerSize,
@@ -298,18 +303,21 @@ export class NVM3 implements NVM<number, Uint8Array> {
 		);
 	}
 
-	public async get(fileId: number): Promise<Uint8Array | undefined> {
+	public async get(
+		fileId: number,
+		section?: NVM3SectionInfo,
+	): Promise<BytesView | undefined> {
 		this._info ??= await this.init();
 
-		// Determine which ring buffer to read in
-		const section = this.getNVMSectionForFile(fileId);
+		// Determine which ring buffer to read in, unless we were told to use a specific one
+		section ??= this.getNVMSectionForFile(fileId);
 
 		const pages = section.pages;
 
 		// TODO: There should be no need for scanning, since we know the object locations after init().
 
 		// Start scanning backwards through the pages ring buffer, starting with the current page
-		let parts: Uint8Array[] | undefined;
+		let parts: BytesView[] | undefined;
 		let complete = false;
 		let objType: ObjectType | undefined;
 		const resetFragments = () => {
@@ -526,7 +534,7 @@ export class NVM3 implements NVM<number, Uint8Array> {
 		}
 	}
 
-	public async set(property: number, value: Uint8Array): Promise<void> {
+	public async set(property: number, value: BytesView): Promise<void> {
 		if (!this._info) await this.init();
 		await this.ensureWritable();
 
@@ -543,7 +551,7 @@ export class NVM3 implements NVM<number, Uint8Array> {
 
 	/** Writes multiple values to the NVM at once. `null` / `undefined` cause the value to be deleted */
 	public async setMany(
-		values: [number, Uint8Array | null | undefined][],
+		values: [number, BytesView | null | undefined][],
 	): Promise<void> {
 		if (!this._info) await this.init();
 		await this.ensureWritable();
@@ -551,7 +559,7 @@ export class NVM3 implements NVM<number, Uint8Array> {
 		// Group objects by their NVM section
 		const objectsBySection = new Map<
 			number, /* offset */
-			[number, Uint8Array | null | undefined][]
+			[number, BytesView | null | undefined][]
 		>();
 		for (const [key, value] of values) {
 			const sectionOffset =
@@ -777,7 +785,7 @@ async function readPageHeader(
 }
 
 function tryGetVersionAndEraseCount(
-	header: Uint8Array,
+	header: BytesView,
 ): { version: number; eraseCount: number } {
 	const buffer = Bytes.view(header);
 	const version = buffer.readUInt16LE(0);

@@ -9,6 +9,7 @@ import {
 	type ValueMetadata,
 	ZWaveDataRate,
 } from "@zwave-js/core";
+import type { BytesView } from "@zwave-js/shared";
 
 export enum AlarmSensorCommand {
 	Get = 0x01,
@@ -681,7 +682,7 @@ export interface DoorLockLoggingRecord {
 	eventType: DoorLockLoggingEventType;
 	label: string;
 	userId?: number;
-	userCode?: string | Uint8Array;
+	userCode?: string | BytesView;
 }
 
 export enum DoorLockLoggingRecordStatus {

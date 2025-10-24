@@ -3,9 +3,17 @@
 import { validateArgs } from "@zwave-js/transformers";
 import assert from "node:assert";
 
+type BytesView = Uint8Array<ArrayBuffer>;
+
 class Test {
 	@validateArgs()
 	foo(arg1: Uint8Array): void {
+		arg1;
+		return void 0;
+	}
+
+	@validateArgs()
+	bar(arg1: BytesView): void {
 		arg1;
 		return void 0;
 	}
@@ -32,5 +40,11 @@ assert.throws(
 assert.throws(
 	// @ts-expect-error
 	() => test.foo({ type: "Buffer", data: [170, 187, 204] }),
+	/arg1 to be a Uint8Array/,
+);
+
+assert.throws(
+	// @ts-expect-error
+	() => test.bar(undefined),
 	/arg1 to be a Uint8Array/,
 );

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import type { BytesView } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import type { ZWaveSerialPortImplementation } from "./ZWaveSerialPortImplementation.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
@@ -19,7 +20,7 @@ export function wrapLegacySerialBinding(
 			}
 		}
 
-		const sink: UnderlyingSink<Uint8Array> = {
+		const sink: UnderlyingSink<BytesView> = {
 			start(controller) {
 				instance.on("error", (err) => controller.error(err));
 			},
@@ -43,7 +44,7 @@ export function wrapLegacySerialBinding(
 			},
 		};
 
-		const source: UnderlyingSource<Uint8Array> = {
+		const source: UnderlyingSource<BytesView> = {
 			start(controller) {
 				instance.on("data", (data) => controller.enqueue(data));
 				// Abort source controller too if the serial port closes

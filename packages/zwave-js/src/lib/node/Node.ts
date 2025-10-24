@@ -83,6 +83,7 @@ import {
 	BasicDeviceClass,
 	CommandClasses,
 	Duration,
+	type DurationLike,
 	EncapsulationFlags,
 	type MaybeNotKnown,
 	MessagePriority,
@@ -140,6 +141,7 @@ import {
 	RequestNodeInfoResponse,
 } from "@zwave-js/serial/serialapi";
 import {
+	type BytesView,
 	Mixin,
 	TypedEventTarget,
 	cloneDeep,
@@ -323,11 +325,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * The device specific key (DSK) of this node in binary format.
 	 * This is only set if included with Security S2.
 	 */
-	public get dsk(): Uint8Array | undefined {
+	public get dsk(): BytesView | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).dsk);
 	}
 	/** @internal */
-	public set dsk(value: Uint8Array | undefined) {
+	public set dsk(value: BytesView | undefined) {
 		const cacheKey = cacheKeys.node(this.id).dsk;
 		this.driver.cacheSet(cacheKey, value);
 	}
@@ -426,10 +428,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		);
 	}
 
-	public set defaultTransitionDuration(value: string | Duration | undefined) {
+	public set defaultTransitionDuration(
+		value: string | Duration | DurationLike | undefined,
+	) {
 		// Normalize to strings
-		if (typeof value === "string") value = Duration.from(value);
-		if (Duration.isDuration(value)) value = value.toString();
+		value = Duration.from(value)?.toString();
 
 		this.driver.cacheSet(
 			cacheKeys.node(this.id).defaultTransitionDuration,
@@ -636,9 +639,13 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 				const shouldUpdateOptimistically =
 					api.isSetValueOptimistic(valueId)
+					// Check if the device class supports optimistic value updates
+					&& (endpointInstance.deviceClass?.specific
+						.supportsOptimisticValueUpdate
+						?? true)
 					// For successful supervised commands, we know that an optimistic update is ok
 					&& (supervisedAndSuccessful
-						// For unsupervised commands that did not fail, we let the applciation decide whether
+						// For unsupervised commands that did not fail, we let the application decide whether
 						// to update related value optimistically
 						|| (!this.driver.options.disableOptimisticValueUpdate
 							&& result == undefined));

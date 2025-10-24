@@ -280,6 +280,7 @@ import {
 } from "@zwave-js/serial/serialapi";
 import {
 	Bytes,
+	type BytesView,
 	Mixin,
 	ObjectKeyMap,
 	type ReadonlyObjectKeyMap,
@@ -467,11 +468,11 @@ export class ZWaveController
 		return this._ownNodeId;
 	}
 
-	private _dsk: Uint8Array | undefined;
+	private _dsk: BytesView | undefined;
 	/**
 	 * The device specific key (DSK) of the controller in binary format.
 	 */
-	public async getDSK(): Promise<Uint8Array> {
+	public async getDSK(): Promise<BytesView> {
 		if (this._dsk == undefined) {
 			const { publicKey } = await this.driver
 				.getLearnModeAuthenticatedKeyPair();
@@ -770,7 +771,7 @@ export class ZWaveController
 	}
 
 	/** Returns the node with the given DSK */
-	public getNodeByDSK(dsk: Uint8Array | string): ZWaveNode | undefined {
+	public getNodeByDSK(dsk: BytesView | string): ZWaveNode | undefined {
 		try {
 			if (typeof dsk === "string") dsk = dskFromString(dsk);
 		} catch (e) {
@@ -893,14 +894,6 @@ export class ZWaveController
 		if (nodeIDs.length === 0) {
 			throw new ZWaveError(
 				"Cannot create an empty multicast group",
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
-		const firstNodeIsLR = isLongRangeNodeId(nodeIDs[0]);
-		if (nodeIDs.some((id) => isLongRangeNodeId(id) !== firstNodeIsLR)) {
-			throw new ZWaveError(
-				"Cannot create a multicast group with mixed Z-Wave Classic and Z-Wave Long Range nodes",
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -1273,6 +1266,26 @@ export class ZWaveController
 		);
 	}
 
+	/**
+	 * Helper function to determine whether the controller is capable of EU Long Range,
+	 * possibly without advertising it
+	 */
+	private isEULongRangeCapable(): MaybeNotKnown<boolean> {
+		// EU Long Range was added in SDK 7.22 for 800 series chips
+		// 7.22.1 adds support for querying the supported regions, so the following
+		// is really only necessary for 7.22.0.
+		//
+		// However, there seem to be cases where the new command is missing from
+		// later SDK versions too:
+		// https://github.com/zwave-js/zwave-js/issues/8174
+		return (
+			this.isLongRangeCapable()
+			&& typeof this._zwaveChipType === "string"
+			&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
+			&& this.sdkVersionGte("7.22")
+		);
+	}
+
 	/** Tries to determine the LR capable replacement of the given region. If none is found, the given region is returned. */
 	private tryGetLRCapableRegion(region: RFRegion): RFRegion {
 		if (this._supportedRegions) {
@@ -1292,6 +1305,10 @@ export class ZWaveController
 		// US_LR is the first supported LR region, so if the controller supports LR, US_LR is supported
 		if (region === RFRegion.USA && this.isLongRangeCapable()) {
 			return RFRegion["USA (Long Range)"];
+		}
+
+		if (region === RFRegion.Europe && this.isEULongRangeCapable()) {
+			return RFRegion["Europe (Long Range)"];
 		}
 
 		return region;
@@ -5307,6 +5324,10 @@ export class ZWaveController
 						.filter((id) => id !== self._ownNodeId!)
 						// ...and the node itself
 						.filter((id) => id !== node.id)
+						// Filter out invalid node IDs (must be in range 1-232)
+						.filter((id) => id >= 1 && id <= MAX_NODES)
+						// Filter out non-existing nodes
+						.filter((id) => self.nodes.has(id))
 						.sort();
 				} catch {
 					// ignore
@@ -5346,11 +5367,11 @@ export class ZWaveController
 							if (attempt === maxAttempts) {
 								self.driver.controllerLog.logNode(node.id, {
 									message:
-										`rebuilding routes failed: failed to assign return route after ${maxAttempts} attempts`,
+										`failed to assign return route to node ${destinationNodeId} after ${maxAttempts} attempts, continuing with other targets...`,
 									level: "warn",
 									direction: "none",
 								});
-								return false;
+								// Don't fail the entire process, just continue with the next target
 							}
 						}
 					}
@@ -7057,6 +7078,12 @@ export class ZWaveController
 		} else if (strategy === InclusionStrategy.Security_S0) {
 			bootstrapFailure = await this.secureBootstrapS0(
 				newNode,
+				// When replacing a node, we don't receive NIF, so we have to make
+				// some assumptions, just like we do for Security S2 above.
+				// We don't know if the node is a controller, so just assume it is not.
+				false,
+				// Also we must assume that the node supports S0, because we
+				// don't know any better at this point.
 				true,
 			);
 			if (bootstrapFailure == undefined) {
@@ -7249,18 +7276,11 @@ export class ZWaveController
 			// All LR capable controllers support USA Long Range
 			ret.add(RFRegion["USA (Long Range)"]);
 			if (filterSubsets) ret.delete(RFRegion.USA);
+		}
 
-			// EU Long Range was added in SDK 7.22 for 800 series chips
-			// 7.22.1 adds support for querying the supported regions, so the following
-			// is really only necessary for 7.22.0.
-			if (
-				typeof this._zwaveChipType === "string"
-				&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
-				&& this.sdkVersionGte("7.22")
-			) {
-				ret.add(RFRegion["Europe (Long Range)"]);
-				if (filterSubsets) ret.delete(RFRegion.Europe);
-			}
+		if (this.isEULongRangeCapable()) {
+			ret.add(RFRegion["Europe (Long Range)"]);
+			if (filterSubsets) ret.delete(RFRegion.Europe);
 		}
 
 		return [...ret].sort((a, b) => a - b);
@@ -8009,7 +8029,7 @@ export class ZWaveController
 	 */
 	public async firmwareUpdateNVMWrite(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<void> {
 		await this.driver.sendMessage<FirmwareUpdateNVM_WriteResponse>(
 			new FirmwareUpdateNVM_WriteRequest({
@@ -8085,7 +8105,7 @@ export class ZWaveController
 	public async externalNVMReadBuffer(
 		offset: number,
 		length: number,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		const ret = await this.driver.sendMessage<ExtNVMReadLongBufferResponse>(
 			new ExtNVMReadLongBufferRequest({
 				offset,
@@ -8105,7 +8125,7 @@ export class ZWaveController
 	public async externalNVMReadBuffer700(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
 			new NVMOperationsReadRequest({
 				offset,
@@ -8143,7 +8163,7 @@ export class ZWaveController
 	public async externalNVMReadBufferExt(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<
 			ExtendedNVMOperationsResponse
 		>(
@@ -8188,7 +8208,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBuffer(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			ExtNVMWriteLongBufferResponse
@@ -8213,7 +8233,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBuffer700(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<{ endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
 			new NVMOperationsWriteRequest({
@@ -8254,7 +8274,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBufferExt(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<{ endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<
 			ExtendedNVMOperationsResponse
@@ -8394,7 +8414,7 @@ export class ZWaveController
 	 */
 	public async backupNVMRaw(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		this.driver.controllerLog.print("Backing up NVM...");
 
 		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
@@ -8408,7 +8428,7 @@ export class ZWaveController
 		// Disable watchdog to prevent resets during NVM access
 		await this.stopWatchdog();
 
-		let ret: Uint8Array;
+		let ret: BytesView;
 		try {
 			if (this.sdkVersionGte("7.0")) {
 				ret = await this.backupNVMRaw700(onProgress);
@@ -8434,7 +8454,7 @@ export class ZWaveController
 
 	private async backupNVMRaw500(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
 		if (!size) {
 			throw new ZWaveError(
@@ -8479,12 +8499,12 @@ export class ZWaveController
 
 	private async backupNVMRaw700(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		let open: () => Promise<number>;
 		let read: (
 			offset: number,
 			length: number,
-		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+		) => Promise<{ buffer: BytesView; endOfFile: boolean }>;
 		let close: () => Promise<void>;
 
 		if (
@@ -8557,7 +8577,7 @@ export class ZWaveController
 	 * @param migrateOptions Influence which data should be preserved during a migration
 	 */
 	public async restoreNVM(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		convertProgress?: (bytesRead: number, total: number) => void,
 		restoreProgress?: (bytesWritten: number, total: number) => void,
 		migrateOptions?: MigrateNVMOptions,
@@ -8581,8 +8601,8 @@ export class ZWaveController
 		this.driver.controllerLog.print(
 			"Converting NVM to target format...",
 		);
-		let targetNVM: Uint8Array;
-		let convertedNVM: Uint8Array;
+		let targetNVM: BytesView;
+		let convertedNVM: BytesView;
 		try {
 			if (this.sdkVersionGte("7.0")) {
 				targetNVM = await this.backupNVMRaw700(convertProgress);
@@ -8647,7 +8667,7 @@ export class ZWaveController
 	 * @param onProgress Can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size
 	 */
 	public async restoreNVMRaw(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		this.driver.controllerLog.print("Restoring NVM...");
@@ -8707,7 +8727,7 @@ export class ZWaveController
 	}
 
 	private async restoreNVMRaw500(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
@@ -8760,17 +8780,17 @@ export class ZWaveController
 	}
 
 	private async restoreNVMRaw700(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		let open: () => Promise<number>;
 		let read: (
 			offset: number,
 			length: number,
-		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+		) => Promise<{ buffer: BytesView; endOfFile: boolean }>;
 		let write: (
 			offset: number,
-			buffer: Uint8Array,
+			buffer: BytesView,
 		) => Promise<{ endOfFile: boolean }>;
 		let close: () => Promise<void>;
 
@@ -9670,7 +9690,7 @@ export class ZWaveController
 			return SecurityBootstrapFailure.NoKeysConfigured;
 		}
 
-		const receivedKeys = new Map<SecurityClass, Uint8Array>();
+		const receivedKeys = new Map<SecurityClass, BytesView>();
 
 		const deleteTempKey = () => {
 			// Whatever happens, no further communication needs the temporary key

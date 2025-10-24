@@ -30,7 +30,12 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+} from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
 import { ApplicationCommandRequest } from "../application/ApplicationCommandRequest.js";
 import { BridgeApplicationCommandRequest } from "../application/BridgeApplicationCommandRequest.js";
@@ -66,7 +71,7 @@ export type SendDataRequestOptions<
 		| { command: CCType }
 		| {
 			nodeId: number;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -158,8 +163,8 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 		return this.command?.nodeId ?? this._nodeId;
 	}
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(
@@ -300,7 +305,9 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 					+ (this.txReport
 						? `, took ${this.txReport.txTicks * 10} ms`
 						: ""),
-				...(this.txReport
+				// Show TX report fields for OK and NoAck (NoAck still provides useful routing info)
+				...(this.txReport && (this.transmitStatus === TransmitStatus.OK
+						|| this.transmitStatus === TransmitStatus.NoAck)
 					? txReportToMessageRecord(this.txReport)
 					: {}),
 			},
@@ -371,7 +378,7 @@ export type SendDataMulticastRequestOptions<CCType extends CommandClass> =
 		| { command: CCType }
 		| {
 			nodeIds: MulticastDestination;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -478,8 +485,8 @@ export class SendDataMulticastRequest<
 		return undefined;
 	}
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(
