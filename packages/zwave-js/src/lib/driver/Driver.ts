@@ -179,6 +179,7 @@ import {
 import {
 	AsyncQueue,
 	Bytes,
+	type BytesView,
 	type Interval,
 	type Timer,
 	TypedEventTarget,
@@ -347,6 +348,7 @@ const defaultOptions: ZWaveOptions = {
 	bootloaderMode: "recover",
 	interview: {
 		queryAllUserCodes: false,
+		applyRecommendedConfigParamValues: false,
 	},
 	storage: {
 		cacheDir: typeof process !== "undefined"
@@ -645,6 +647,10 @@ type AwaitedMessageEntry = AwaitedThing<Message>;
 type AwaitedCommandEntry = AwaitedThing<CCId>;
 type AwaitedCLIChunkEntry = AwaitedThing<CLIChunk>;
 export type AwaitedBootloaderChunkEntry = AwaitedThing<BootloaderChunk>;
+type AwaitedIdleEntry = Omit<
+	AwaitedThing<void>,
+	"predicate" | "refreshPredicate"
+>;
 
 interface TransportServiceSession {
 	fragmentSize: number;
@@ -1023,6 +1029,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private awaitedBootloaderChunks: AwaitedBootloaderChunkEntry[] = [];
 	/** A list of awaited chunks from the end device CLI */
 	private awaitedCLIChunks: AwaitedCLIChunkEntry[] = [];
+	/** A list of promises waiting for the queues to become idle */
+	private awaitedIdle: AwaitedIdleEntry[] = [];
 
 	/** A map of Node ID -> ongoing sessions */
 	private nodeSessions = new Map<number, Sessions>();
@@ -1204,7 +1212,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public async getLearnModeAuthenticatedKeyPair(): Promise<KeyPair> {
 		if (this._learnModeAuthenticatedKeyPair == undefined) {
 			// Try restoring from cache
-			const privateKey = this.cacheGet<Uint8Array>(
+			const privateKey = this.cacheGet<BytesView>(
 				cacheKeys.controller.privateKey,
 			);
 			if (privateKey) {
@@ -2180,11 +2188,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				].map(
 					(sc) => ([
 						sc,
-						this.cacheGet<Uint8Array>(
+						this.cacheGet<BytesView>(
 							cacheKeys.controller.securityKeysLongRange(sc),
 						),
-					] as [SecurityClass, Uint8Array | undefined]),
-				).filter((v): v is [SecurityClass, Uint8Array] =>
+					] as [SecurityClass, BytesView | undefined]),
+				).filter((v): v is [SecurityClass, BytesView] =>
 					v[1] != undefined
 				);
 				if (securityKeysLongRange.length) {
@@ -2224,7 +2232,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					);
 				}
 			} else {
-				const s0Key = this.cacheGet<Uint8Array>(
+				const s0Key = this.cacheGet<BytesView>(
 					cacheKeys.controller.securityKeys(SecurityClass.S0_Legacy),
 				);
 				if (s0Key) {
@@ -2254,11 +2262,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				const securityKeys = securityClassOrder.map(
 					(sc) => ([
 						sc,
-						this.cacheGet<Uint8Array>(
+						this.cacheGet<BytesView>(
 							cacheKeys.controller.securityKeys(sc),
 						),
-					] as [SecurityClass, Uint8Array | undefined]),
-				).filter((v): v is [SecurityClass, Uint8Array] =>
+					] as [SecurityClass, BytesView | undefined]),
+				).filter((v): v is [SecurityClass, BytesView] =>
 					v[1] != undefined
 				);
 				if (securityKeys.length) {
@@ -3697,7 +3705,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 
 		// Preserve the private key for the authenticated learn mode ECDH key pair
-		const oldPrivateKey = this.cacheGet<Uint8Array>(
+		const oldPrivateKey = this.cacheGet<BytesView>(
 			cacheKeys.controller.privateKey,
 		);
 
@@ -3998,7 +4006,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 */
 	private async serialport_onData(
 		data:
-			| Uint8Array
+			| BytesView
 			| MessageHeaders.ACK
 			| MessageHeaders.CAN
 			| MessageHeaders.NAK,
@@ -4261,7 +4269,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	/** Handles a decoding error and returns the desired reply to the stick */
 	private handleDecodeError(
 		e: Error,
-		data: Uint8Array,
+		data: BytesView,
 		msg: Message | undefined,
 	): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
@@ -7498,7 +7506,7 @@ ${handlers.length} left`,
 	}
 
 	/** Sends a raw datagram to the serialport (if that is open) */
-	private async writeSerial(data: Uint8Array): Promise<void> {
+	private async writeSerial(data: BytesView): Promise<void> {
 		return this.serial?.writeAsync(data);
 	}
 
@@ -7678,6 +7686,56 @@ ${handlers.length} left`,
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
+			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
+		});
+	}
+
+	/**
+	 * Waits until the driver queues become idle or an optional timeout has elapsed.
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param abortSignal An optional abort signal to cancel the wait
+	 */
+	public waitForIdle(
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			// If the queues are already idle, resolve immediately
+			if (this.queueIdle) {
+				resolve();
+				return;
+			}
+
+			const promise = createDeferredPromise<void>();
+			const entry: AwaitedIdleEntry = {
+				handler: () => promise.resolve(),
+				timeout: undefined,
+			};
+			this.awaitedIdle.push(entry);
+			const removeEntry = () => {
+				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
+				const index = this.awaitedIdle.indexOf(entry);
+				if (index !== -1) this.awaitedIdle.splice(index, 1);
+			};
+			// When the timeout elapses, remove the wait entry and reject the returned Promise
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`The queues did not become idle within the provided timeout!`,
+							ZWaveErrorCodes.Controller_NodeTimeout,
+						),
+					);
+				}, timeout);
+			}
+			// When the promise is resolved, remove the wait entry and resolve the returned Promise
+			void promise.then(() => {
+				removeEntry();
+				resolve();
 			});
 			// When the abort signal is used, silently remove the wait entry
 			abortSignal?.addEventListener("abort", removeEntry);
@@ -8397,7 +8455,7 @@ ${handlers.length} left`,
 	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
 	 */
 	public async firmwareUpdateOTW(
-		data: Uint8Array | FirmwareUpdateInfo,
+		data: BytesView | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
@@ -8462,7 +8520,7 @@ ${handlers.length} left`,
 	 */
 	private async extractOTWUpdateInfo(
 		updateInfo: FirmwareUpdateInfo,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		// Controller updates must have exactly one file
 		if (updateInfo.files?.length !== 1) {
 			throw new ZWaveError(
@@ -8543,7 +8601,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW500(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
 		let turnedRadioOff = false;
@@ -8632,7 +8690,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW700(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
 		let result!: OTWFirmwareUpdateResult;
@@ -8674,7 +8732,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW700Internal(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
 
@@ -9194,36 +9252,94 @@ integrity: ${update.integrity}`;
 
 	private pollBackgroundRSSITimer: Timer | undefined;
 	private lastBackgroundRSSITimestamp = 0;
+	private hfBackgroundRSSIEndTimestamp = 0;
 
 	private handleQueueIdleChange(idle: boolean): void {
+		// Resolve all awaited idle promises when the queue becomes idle
+		if (idle) {
+			for (const entry of this.awaitedIdle) {
+				entry.handler();
+			}
+		}
+
 		if (!this.ready) return;
 		if (
 			this.controller.isFunctionSupported(FunctionType.GetBackgroundRSSI)
 		) {
 			// When the send thread stays idle for 5 seconds, poll the background RSSI, but at most every 30s
 			if (idle) {
-				const timeout = Math.max(
-					// Wait at least 5s
-					5000,
-					// and up to 30s if we recently queried the RSSI
-					30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
-				);
-				this.pollBackgroundRSSITimer = setTimer(async () => {
-					// Due to the timeout, the driver might have been destroyed in the meantime
-					if (!this.ready) return;
-
-					this.lastBackgroundRSSITimestamp = Date.now();
-					try {
-						await this.controller.getBackgroundRSSI();
-					} catch {
-						// ignore errors
-					}
-				}, timeout).unref();
+				this.setBackgroundRSSITimer();
 			} else {
-				this.pollBackgroundRSSITimer?.clear();
-				this.pollBackgroundRSSITimer = undefined;
+				this.clearBackgroundRSSITimer();
 			}
 		}
+	}
+
+	private setBackgroundRSSITimer(): void {
+		let timeout: number;
+		if (Date.now() < this.hfBackgroundRSSIEndTimestamp) {
+			// During high-frequency measurement periods, poll every 2s
+			timeout = Math.max(
+				2000,
+				2000 - (Date.now() - this.lastBackgroundRSSITimestamp),
+			);
+		} else {
+			timeout = Math.max(
+				// Wait at least 5s
+				5000,
+				// and up to 30s if we recently queried the RSSI
+				30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
+			);
+		}
+		this.pollBackgroundRSSITimer = setTimer(async () => {
+			// Due to the timeout, the driver might have been destroyed in the meantime
+			if (!this.ready) return;
+
+			this.lastBackgroundRSSITimestamp = Date.now();
+			try {
+				await this.controller.getBackgroundRSSI();
+			} catch {
+				// ignore errors
+			}
+		}, timeout).unref();
+	}
+
+	private clearBackgroundRSSITimer(): void {
+		this.pollBackgroundRSSITimer?.clear();
+		this.pollBackgroundRSSITimer = undefined;
+	}
+
+	/** Enable frequent RSSI monitoring for the given amount of milliseconds. During this time, the background RSSI will be measured every 2 seconds. */
+	public enableFrequentRSSIMonitoring(
+		durationMs: number,
+	): void {
+		if (durationMs < 10000 || durationMs > 3600 * 1000) {
+			throw new ZWaveError(
+				`The duration must be between 10 seconds and one hour!`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		this.hfBackgroundRSSIEndTimestamp = Date.now() + durationMs;
+		// Restart a running timer to poll as soon as possible
+		if (this.pollBackgroundRSSITimer) {
+			this.clearBackgroundRSSITimer();
+			this.setBackgroundRSSITimer();
+		}
+	}
+
+	/** Disable frequent RSSI monitoring */
+	public disableFrequentRSSIMonitoring(): void {
+		this.hfBackgroundRSSIEndTimestamp = 0;
+		// Restart a running timer to lower the polling frequency
+		if (this.pollBackgroundRSSITimer) {
+			this.clearBackgroundRSSITimer();
+			this.setBackgroundRSSITimer();
+		}
+	}
+
+	public get isFrequentRSSIMonitoringEnabled(): boolean {
+		return Date.now() < this.hfBackgroundRSSIEndTimestamp;
 	}
 
 	private _powerlevelTestNodeContext: {

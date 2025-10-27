@@ -35,13 +35,13 @@ integrationTest("Response to Z-Wave Plus Info Get", {
 		);
 
 		const { payload: response } = await mockNode.expectControllerFrame(
-			1000,
 			(
 				msg,
 			): msg is MockZWaveRequestFrame & {
 				payload: ZWavePlusCCReport;
 			} => msg.type === MockZWaveFrameType.Request
 				&& msg.payload instanceof ZWavePlusCCReport,
+			{ timeout: 1000 },
 		);
 
 		// Z-Wave+ v2 specifications, section 3.1

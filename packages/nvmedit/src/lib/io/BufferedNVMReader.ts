@@ -1,9 +1,9 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { NVMAccess, NVMIO } from "../common/definitions.js";
 
 interface BufferedChunk {
 	offset: number;
-	data: Uint8Array;
+	data: BytesView;
 }
 
 export class BufferedNVMReader implements NVMIO {
@@ -33,7 +33,7 @@ export class BufferedNVMReader implements NVMIO {
 	private async readBuffered(
 		alignedOffset: number,
 		chunkSize: number,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		let buffered = this._buffer.find((chunk) =>
 			chunk.offset === alignedOffset
 		);
@@ -51,7 +51,7 @@ export class BufferedNVMReader implements NVMIO {
 	async read(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		// Limit the read size to the chunk size. This ensures we have to deal with maximum 2 chunks or read requests
 		const chunkSize = await this.determineChunkSize();
 		length = Math.min(length, chunkSize);
@@ -62,7 +62,7 @@ export class BufferedNVMReader implements NVMIO {
 			- (offset + length) % chunkSize;
 
 		// Read one or two chunks, depending on how many are needed
-		const chunks: Uint8Array[] = [];
+		const chunks: BytesView[] = [];
 		chunks.push(await this.readBuffered(firstChunkStart, chunkSize));
 		if (secondChunkStart > firstChunkStart) {
 			chunks.push(await this.readBuffered(secondChunkStart, chunkSize));
@@ -84,7 +84,7 @@ export class BufferedNVMReader implements NVMIO {
 
 	async write(
 		offset: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<{ bytesWritten: number; endOfFile: boolean }> {
 		const ret = await this._inner.write(offset, data);
 

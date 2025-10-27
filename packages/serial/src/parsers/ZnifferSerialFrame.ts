@@ -1,4 +1,4 @@
-import type { Bytes } from "@zwave-js/shared";
+import type { Bytes, BytesView } from "@zwave-js/shared";
 
 export enum ZnifferSerialFrameType {
 	SerialAPI = 0,
@@ -10,5 +10,5 @@ export type ZnifferSerialFrame = {
 	data: Bytes;
 } | {
 	type: ZnifferSerialFrameType.Discarded;
-	data: Uint8Array;
+	data: BytesView;
 };

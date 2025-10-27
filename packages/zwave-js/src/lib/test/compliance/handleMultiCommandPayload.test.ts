@@ -46,10 +46,10 @@ integrationTest("All CCs contained in a Multi Command CC are handled", {
 		await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
 		const expectResponse = mockNode.expectControllerFrame(
-			1000,
 			(msg): msg is any =>
 				msg.type === MockZWaveFrameType.Request
 				&& msg.payload instanceof ZWavePlusCCReport,
+			{ timeout: 1000 },
 		);
 
 		const scaValue = SceneActivationCCValues.sceneId;

@@ -151,6 +151,18 @@ Parameter #${parameterNumber} has a non-numeric property defaultValue`,
 		this.defaultValue = definition.defaultValue;
 
 		if (
+			definition.recommendedValue != undefined
+			&& typeof definition.recommendedValue !== "number"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-numeric property recommendedValue`,
+			);
+		}
+		this.recommendedValue = definition.recommendedValue;
+
+		if (
 			definition.allowManualEntry != undefined
 			&& definition.allowManualEntry !== false
 		) {
@@ -163,6 +175,18 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 		// Default to allowing manual entry, except if the param is readonly
 		this.allowManualEntry = definition.allowManualEntry
 			?? (this.readOnly ? false : true);
+
+		if (
+			definition.destructive != undefined
+			&& typeof definition.destructive !== "boolean"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-boolean property destructive`,
+			);
+		}
+		this.destructive = definition.destructive;
 
 		if (
 			isArray(definition.options)
@@ -196,10 +220,12 @@ Parameter #${parameterNumber}: options is malformed!`,
 	public readonly maxValue?: number;
 	public readonly unsigned?: boolean;
 	public readonly defaultValue: number;
+	public readonly recommendedValue?: number;
 	public readonly unit?: string;
 	public readonly readOnly?: true;
 	public readonly writeOnly?: true;
 	public readonly allowManualEntry: boolean;
+	public readonly destructive?: boolean;
 	public readonly options: readonly ConditionalConfigOption[];
 
 	public readonly condition?: string;
@@ -220,10 +246,12 @@ Parameter #${parameterNumber}: options is malformed!`,
 				"maxValue",
 				"unsigned",
 				"defaultValue",
+				"recommendedValue",
 				"unit",
 				"readOnly",
 				"writeOnly",
 				"allowManualEntry",
+				"destructive",
 			]),
 			options: evaluateDeep(this.options, deviceId, true),
 		};

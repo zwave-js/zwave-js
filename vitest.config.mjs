@@ -11,7 +11,9 @@ export default defineConfig({
 			"packages/transformers/**",
 		],
 	},
-	resolve: {
-		conditions: ["@@dev"],
+	ssr: {
+		resolve: {
+			conditions: ["@@dev"],
+		},
 	},
 });

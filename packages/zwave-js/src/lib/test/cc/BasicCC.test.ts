@@ -17,7 +17,7 @@ import { type CreateTestNodeOptions, createTestNode } from "../mocks.js";
 
 const host = createTestingHost();
 
-function buildCCBuffer(payload: Uint8Array): Uint8Array {
+function buildCCBuffer(payload: BytesView): BytesView {
 	return Bytes.concat([
 		Uint8Array.from([
 			CommandClasses.Basic, // CC

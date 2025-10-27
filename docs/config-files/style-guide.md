@@ -314,3 +314,25 @@ While somewhat rare, sometimes parameters can only be read or written. Typically
 +		"readOnly": true
 	}
 ```
+
+### Recommended Values
+
+Use `recommendedValue` sparingly and only when there's a compelling reason to suggest a value different from the factory default that would provide better device performance or behavior and benefit most users. The recommended value should be based on manufacturer recommendations, community best practices, or empirical testing that demonstrates improved performance.
+
+**Note:** The `recommendedValue` is only automatically applied during device interview when the `applyRecommendedConfigParamValues` driver option is enabled. By default, this option is disabled, making this feature opt-in to avoid unexpected parameter changes.
+
+```json
+{
+	"#": "12",
+	"label": "Battery Report Interval",
+	"description": "How often to send battery level reports",
+	"valueSize": 2,
+	"unit": "hours",
+	"minValue": 1,
+	"maxValue": 168,
+	"defaultValue": 6,
+	"recommendedValue": 24
+}
+```
+
+Do not set `recommendedValue` to the same value as `defaultValue` - this provides no additional value to users.

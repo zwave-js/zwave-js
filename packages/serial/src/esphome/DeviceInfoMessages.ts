@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import {
 	ESPHomeMessage,
 	type ESPHomeMessageBaseOptions,
@@ -346,7 +346,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 	}
 
 	public serialize(): Bytes {
-		const parts: (Uint8Array | number[])[] = [];
+		const parts: (BytesView | number[])[] = [];
 
 		// Field 1: uses_password (bool)
 		if (this.usesPassword) {

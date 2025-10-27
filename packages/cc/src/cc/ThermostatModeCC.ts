@@ -17,7 +17,13 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, getEnumMemberName, pick } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	buffer2hex,
+	getEnumMemberName,
+	pick,
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -152,13 +158,13 @@ export class ThermostatModeCCAPI extends CCAPI {
 	): Promise<SupervisionResult | undefined>;
 	public async set(
 		mode: (typeof ThermostatMode)["Manufacturer specific"],
-		manufacturerData: Uint8Array | string,
+		manufacturerData: BytesView | string,
 	): Promise<SupervisionResult | undefined>;
 
 	@validateArgs({ strictEnums: true })
 	public async set(
 		mode: ThermostatMode,
-		manufacturerData?: Uint8Array | string,
+		manufacturerData?: BytesView | string,
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			ThermostatModeCommand,
@@ -313,7 +319,7 @@ export type ThermostatModeCCSetOptions =
 	}
 	| {
 		mode: (typeof ThermostatMode)["Manufacturer specific"];
-		manufacturerData: Uint8Array;
+		manufacturerData: BytesView;
 	};
 
 @CCCommand(ThermostatModeCommand.Set)
@@ -356,7 +362,7 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 	}
 
 	public mode: ThermostatMode;
-	public manufacturerData?: Uint8Array;
+	public manufacturerData?: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const manufacturerData =
@@ -399,7 +405,7 @@ export type ThermostatModeCCReportOptions =
 	}
 	| {
 		mode: (typeof ThermostatMode)["Manufacturer specific"];
-		manufacturerData?: Uint8Array;
+		manufacturerData?: BytesView;
 	};
 
 @CCCommand(ThermostatModeCommand.Report)
@@ -481,7 +487,7 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
 
 	public readonly mode: ThermostatMode;
 
-	public readonly manufacturerData: Uint8Array | undefined;
+	public readonly manufacturerData: BytesView | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const manufacturerDataLength =

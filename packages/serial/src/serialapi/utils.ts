@@ -1,6 +1,6 @@
 import { CommandClass } from "@zwave-js/cc";
 import type { Message } from "@zwave-js/serial";
-import { isUint8Array } from "@zwave-js/shared";
+import { type BytesView, isUint8Array } from "@zwave-js/shared";
 import { ApplicationCommandRequest } from "./application/ApplicationCommandRequest.js";
 import { BridgeApplicationCommandRequest } from "./application/BridgeApplicationCommandRequest.js";
 import {
@@ -20,7 +20,7 @@ export function isCommandRequest(
 }
 
 export interface MessageWithCC {
-	serializedCC: Uint8Array | undefined;
+	serializedCC: BytesView | undefined;
 	command: CommandClass | undefined;
 }
 
@@ -34,7 +34,7 @@ export function isMessageWithCC(
 }
 
 export interface ContainsSerializedCC {
-	serializedCC: Uint8Array;
+	serializedCC: BytesView;
 }
 
 export function containsSerializedCC<T extends object>(

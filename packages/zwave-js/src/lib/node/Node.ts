@@ -141,6 +141,7 @@ import {
 	RequestNodeInfoResponse,
 } from "@zwave-js/serial/serialapi";
 import {
+	type BytesView,
 	Mixin,
 	TypedEventTarget,
 	cloneDeep,
@@ -324,11 +325,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * The device specific key (DSK) of this node in binary format.
 	 * This is only set if included with Security S2.
 	 */
-	public get dsk(): Uint8Array | undefined {
+	public get dsk(): BytesView | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).dsk);
 	}
 	/** @internal */
-	public set dsk(value: Uint8Array | undefined) {
+	public set dsk(value: BytesView | undefined) {
 		const cacheKey = cacheKeys.node(this.id).dsk;
 		this.driver.cacheSet(cacheKey, value);
 	}

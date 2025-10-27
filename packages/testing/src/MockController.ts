@@ -20,6 +20,7 @@ import {
 import type { MockPort } from "@zwave-js/serial/mock";
 import {
 	AsyncQueue,
+	type BytesView,
 	TimedExpectation,
 	isAbortError,
 	noop,
@@ -239,7 +240,7 @@ export class MockController {
 	/** Gets called when parsed/chunked data is received from the serial port */
 	private async serialOnData(
 		data:
-			| Uint8Array
+			| BytesView
 			| MessageHeaders.ACK
 			| MessageHeaders.CAN
 			| MessageHeaders.NAK,
@@ -282,16 +283,23 @@ export class MockController {
 		}
 
 		// Handle message buffer. Check for pending expectations first.
-		const handler = this.expectedHostMessages.find(
+		const handlers = this.expectedHostMessages.filter(
 			(e) => !e.predicate || e.predicate(msg),
 		);
-		if (handler) {
+
+		// Resolve all matching expectations
+		for (const handler of handlers) {
 			handler.resolve(msg);
-		} else {
-			for (const behavior of this.behaviors) {
-				if (await behavior.onHostMessage?.(this, msg)) {
-					return;
-				}
+		}
+
+		// If any handler has preventDefault set, skip default behaviors
+		if (handlers.some((h) => h.preventDefault)) {
+			return;
+		}
+
+		for (const behavior of this.behaviors) {
+			if (await behavior.onHostMessage?.(this, msg)) {
+				return;
 			}
 		}
 	}
@@ -301,11 +309,15 @@ export class MockController {
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 */
-	public async expectHostACK(timeout: number): Promise<void> {
+	public async expectHostACK(
+		timeout: number,
+		errorMessage?: string,
+	): Promise<void> {
 		const ack = new TimedExpectation(
 			timeout,
 			undefined,
-			"Host did not respond with an ACK within the provided timeout!",
+			errorMessage
+				?? "Host did not respond with an ACK within the provided timeout!",
 		);
 		try {
 			this.expectedHostACKs.push(ack);
@@ -319,16 +331,30 @@ export class MockController {
 	/**
 	 * Waits until the host sends a message matching the given predicate or a timeout has elapsed.
 	 *
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param predicate A predicate function to test incoming messages
+	 * @param options Optional configuration
+	 * @param options.timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected. Default: 5000ms
+	 * @param options.preventDefault If true, the default behavior will not be executed after the expectation is fulfilled. Default: false
 	 */
 	public async expectHostMessage(
-		timeout: number,
 		predicate: (msg: Message) => boolean,
+		options?: {
+			timeout?: number;
+			preventDefault?: boolean;
+			errorMessage?: string;
+		},
 	): Promise<Message> {
+		const {
+			timeout = 5000,
+			preventDefault = false,
+			errorMessage =
+				"Host did not send the expected message within the provided timeout!",
+		} = options ?? {};
 		const expectation = new TimedExpectation<Message, Message>(
 			timeout,
 			predicate,
-			"Host did not send the expected message within the provided timeout!",
+			errorMessage,
+			preventDefault,
 		);
 		try {
 			this.expectedHostMessages.push(expectation);
@@ -342,20 +368,35 @@ export class MockController {
 	/**
 	 * Waits until the node sends a message matching the given predicate or a timeout has elapsed.
 	 *
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param node The node to expect a frame from
+	 * @param predicate A predicate function to test incoming frames
+	 * @param options Optional configuration
+	 * @param options.timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected. Default: 5000ms
+	 * @param options.preventDefault If true, the default behavior will not be executed after the expectation is fulfilled. Default: false
 	 */
 	public async expectNodeFrame<T extends MockZWaveFrame = MockZWaveFrame>(
 		node: MockNode,
-		timeout: number,
 		predicate: (msg: MockZWaveFrame) => msg is T,
+		options?: {
+			timeout?: number;
+			preventDefault?: boolean;
+			errorMessage?: string;
+		},
 	): Promise<T> {
+		const {
+			timeout = 5000,
+			preventDefault = false,
+			errorMessage =
+				`Node ${node.id} did not send the expected frame within the provided timeout!`,
+		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
 		>(
 			timeout,
 			predicate,
-			`Node ${node.id} did not send the expected frame within the provided timeout!`,
+			errorMessage,
+			preventDefault,
 		);
 		try {
 			if (!this.expectedNodeFrames.has(node.id)) {
@@ -375,19 +416,27 @@ export class MockController {
 	/**
 	 * Waits until the node sends a message matching the given predicate or a timeout has elapsed.
 	 *
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param node The node to expect a CC from
+	 * @param predicate A predicate function to test incoming CCs
+	 * @param options Optional configuration
+	 * @param options.timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected. Default: 5000ms
+	 * @param options.preventDefault If true, the default behavior will not be executed after the expectation is fulfilled. Default: false
 	 */
 	public async expectNodeCC<T extends CCId = CCId>(
 		node: MockNode,
-		timeout: number,
 		predicate: (cc: CCId) => cc is T,
+		options?: {
+			timeout?: number;
+			preventDefault?: boolean;
+			errorMessage?: string;
+		},
 	): Promise<T> {
 		const ret = await this.expectNodeFrame(
 			node,
-			timeout,
 			(msg): msg is MockZWaveRequestFrame & { payload: T } =>
 				msg.type === MockZWaveFrameType.Request
 				&& predicate(msg.payload),
+			options,
 		);
 		return ret.payload;
 	}
@@ -400,12 +449,13 @@ export class MockController {
 	public expectNodeACK(
 		node: MockNode,
 		timeout: number,
+		errorMessage?: string,
 	): Promise<MockZWaveAckFrame> {
 		return this.expectNodeFrame(
 			node,
-			timeout,
 			(msg): msg is MockZWaveAckFrame =>
 				msg.type === MockZWaveFrameType.ACK,
+			{ timeout, errorMessage },
 		);
 	}
 
@@ -419,7 +469,7 @@ export class MockController {
 		msg: Message,
 		fromNode?: MockNode,
 	): Promise<void> {
-		let data: Uint8Array;
+		let data: BytesView;
 		if (fromNode) {
 			data = await msg.serialize({
 				nodeIdType: this.encodingContext.nodeIdType,
@@ -436,7 +486,7 @@ export class MockController {
 	}
 
 	/** Sends a raw buffer to the host/driver and expect an ACK */
-	public async sendToHost(data: Uint8Array): Promise<void> {
+	public async sendToHost(data: BytesView): Promise<void> {
 		this.mockPort.emitData(data);
 		// TODO: make the timeout match the configured ACK timeout
 		await this.expectHostACK(1000);
@@ -470,19 +520,23 @@ export class MockController {
 		}
 
 		// Handle message buffer. Check for pending expectations first.
-		const handler = this.expectedNodeFrames
+		const handlers = this.expectedNodeFrames
 			.get(node.id)
-			?.find((e) => !e.predicate || e.predicate(frame));
-		if (handler) {
+			?.filter((e) => !e.predicate || e.predicate(frame)) ?? [];
+
+		// Resolve all matching expectations
+		for (const handler of handlers) {
 			handler.resolve(frame);
-		} else {
-			// Then apply generic predefined behavior
-			for (const behavior of this.behaviors) {
-				if (
-					await behavior.onNodeFrame?.(this, node, frame)
-				) {
-					return;
-				}
+		}
+
+		// If any handler has preventDefault set, skip default behaviors
+		if (handlers.some((h) => h.preventDefault)) {
+			return;
+		}
+
+		for (const behavior of this.behaviors) {
+			if (await behavior.onNodeFrame?.(this, node, frame)) {
+				return;
 			}
 		}
 	}
@@ -589,7 +643,7 @@ export interface MockControllerBehavior {
 	 */
 	onHostData?: (
 		controller: MockController,
-		data: Uint8Array,
+		data: BytesView,
 	) => Promise<boolean | undefined> | boolean | undefined;
 	/** Gets called when a message from the host is received. Return `true` to indicate that the message has been handled. */
 	onHostMessage?: (

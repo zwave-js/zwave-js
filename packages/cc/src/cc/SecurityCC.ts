@@ -25,7 +25,13 @@ import {
 	randomBytes,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, num2hex, pick } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	buffer2hex,
+	num2hex,
+	pick,
+} from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -48,13 +54,13 @@ import { TransportServiceCC } from "./TransportServiceCC.js";
 // @noSetValueAPI This is an encapsulation CC
 
 function getAuthenticationData(
-	senderNonce: Uint8Array,
-	receiverNonce: Uint8Array,
+	senderNonce: BytesView,
+	receiverNonce: BytesView,
 	ccCommand: SecurityCommand,
 	sendingNodeId: number,
 	receivingNodeId: number,
-	encryptedPayload: Uint8Array,
-): Uint8Array {
+	encryptedPayload: BytesView,
+): BytesView {
 	return Bytes.concat([
 		senderNonce,
 		receiverNonce,
@@ -155,7 +161,7 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 	/**
 	 * Requests a new nonce for Security CC encapsulation which is not directly linked to a specific command.
 	 */
-	public async getNonce(): Promise<Uint8Array | undefined> {
+	public async getNonce(): Promise<BytesView | undefined> {
 		this.assertSupportsCommand(SecurityCommand, SecurityCommand.NonceGet);
 
 		const cc = new SecurityCCNonceGet({
@@ -286,7 +292,7 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 		// There is only one scheme, so we don't return anything here
 	}
 
-	public async setNetworkKey(networkKey: Uint8Array): Promise<void> {
+	public async setNetworkKey(networkKey: BytesView): Promise<void> {
 		this.assertSupportsCommand(
 			SecurityCommand,
 			SecurityCommand.NetworkKeySet,
@@ -546,7 +552,7 @@ export class SecurityCC extends CommandClass {
 }
 
 interface SecurityCCNonceReportOptions {
-	nonce: Uint8Array;
+	nonce: BytesView;
 }
 
 @CCCommand(SecurityCommand.NonceReport)
@@ -578,7 +584,7 @@ export class SecurityCCNonceReport extends SecurityCC {
 		});
 	}
 
-	public nonce: Uint8Array;
+	public nonce: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.view(this.nonce);
@@ -600,12 +606,12 @@ export class SecurityCCNonceGet extends SecurityCC {}
 // @publicAPI
 export type SecurityCCCommandEncapsulationOptions =
 	& {
-		alternativeNetworkKey?: Uint8Array;
+		alternativeNetworkKey?: BytesView;
 	}
 	& ({
 		encapsulated: CommandClass;
 	} | {
-		decryptedCCBytes: Uint8Array;
+		decryptedCCBytes: BytesView;
 		sequenced: boolean;
 		secondFrame: boolean;
 		sequenceCounter: number;
@@ -700,7 +706,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		const sequenceCounter = frameControl & 0b1111;
 		const sequenced = !!(frameControl & 0b1_0000);
 		const secondFrame = !!(frameControl & 0b10_0000);
-		const decryptedCCBytes: Uint8Array | undefined =
+		const decryptedCCBytes: BytesView | undefined =
 			frameControlAndDecryptedCC
 				.subarray(1);
 
@@ -723,21 +729,21 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 	private secondFrame: boolean | undefined;
 	private sequenceCounter: number | undefined;
 
-	private decryptedCCBytes: Uint8Array | undefined;
+	private decryptedCCBytes: BytesView | undefined;
 	public encapsulated!: CommandClass;
 
-	private alternativeNetworkKey?: Uint8Array;
+	private alternativeNetworkKey?: BytesView;
 
 	public get nonceId(): number | undefined {
 		return this.nonce?.[0];
 	}
-	public nonce: Uint8Array | undefined;
+	public nonce: BytesView | undefined;
 
 	// Only used testing/for debugging purposes
-	private iv?: Uint8Array;
-	private authData?: Uint8Array;
-	private authCode?: Uint8Array;
-	private ciphertext?: Uint8Array;
+	private iv?: BytesView;
+	private authData?: BytesView;
+	private authCode?: BytesView;
+	private ciphertext?: BytesView;
 
 	public getPartialCCSessionId(): Record<string, any> | undefined {
 		if (this.sequenced) {
@@ -783,8 +789,8 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		}
 		assertSecurityTX(ctx);
 
-		let authKey: Uint8Array;
-		let encryptionKey: Uint8Array;
+		let authKey: BytesView;
+		let encryptionKey: BytesView;
 		if (this.alternativeNetworkKey) {
 			authKey = await generateAuthKey(this.alternativeNetworkKey);
 			encryptionKey = await generateEncryptionKey(
@@ -979,7 +985,7 @@ export class SecurityCCNetworkKeyVerify extends SecurityCC {}
 
 // @publicAPI
 export interface SecurityCCNetworkKeySetOptions {
-	networkKey: Uint8Array;
+	networkKey: BytesView;
 }
 
 @CCCommand(SecurityCommand.NetworkKeySet)
@@ -1003,7 +1009,7 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
 		ctx: CCParsingContext,
 	): SecurityCCNetworkKeySet {
 		validatePayload(raw.payload.length >= 16);
-		const networkKey: Uint8Array = raw.payload.subarray(0, 16);
+		const networkKey: BytesView = raw.payload.subarray(0, 16);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -1011,7 +1017,7 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
 		});
 	}
 
-	public networkKey: Uint8Array;
+	public networkKey: BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.view(this.networkKey);

@@ -24,24 +24,29 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const rel = relative(process.cwd(), __dirname);
 const glob = join(rel, "devices/**/*.json");
 
-export default {
-	files: [glob],
-	plugins: {
-		"@zwave-js": zjs,
+export default [
+	{
+		ignores: ["**/build/**"],
 	},
-	languageOptions: {
-		parser: jsonc,
+	{
+		files: [glob],
+		plugins: {
+			"@zwave-js": zjs,
+		},
+		languageOptions: {
+			parser: jsonc,
+		},
+		rules: {
+			"@zwave-js/auto-unsigned": "error",
+			"@zwave-js/consistent-config-string-case": "error",
+			"@zwave-js/consistent-device-config-property-order": "error",
+			"@zwave-js/consistent-param-units": "error",
+			"@zwave-js/no-misspelled-names": "error",
+			"@zwave-js/no-surrounding-whitespace": "error",
+			"@zwave-js/no-unnecessary-min-max-value": "error",
+			"@zwave-js/no-useless-description": "error",
+			"@zwave-js/no-value-in-option-label": "error",
+			"@zwave-js/prefer-defaultvalue": "error",
+		},
 	},
-	rules: {
-		"@zwave-js/auto-unsigned": "error",
-		"@zwave-js/consistent-config-string-case": "error",
-		"@zwave-js/consistent-device-config-property-order": "error",
-		"@zwave-js/consistent-param-units": "error",
-		"@zwave-js/no-misspelled-names": "error",
-		"@zwave-js/no-surrounding-whitespace": "error",
-		"@zwave-js/no-unnecessary-min-max-value": "error",
-		"@zwave-js/no-useless-description": "error",
-		"@zwave-js/no-value-in-option-label": "error",
-		"@zwave-js/prefer-defaultvalue": "error",
-	},
-};
+];

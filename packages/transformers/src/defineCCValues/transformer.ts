@@ -65,7 +65,7 @@ export default function transformer(
 		const importStatement = f.createImportDeclaration(
 			undefined,
 			f.createImportClause(
-				false,
+				undefined,
 				undefined,
 				f.createNamedImports([f.createImportSpecifier(
 					false,

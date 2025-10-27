@@ -283,6 +283,7 @@ const handleSendData: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
+				debugger;
 				throw new Error("Received SendDataRequest while not idle");
 			}
 
@@ -374,6 +375,7 @@ const handleSendDataMulticast: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
+				debugger;
 				throw new Error(
 					"Received SendDataMulticastRequest while not idle",
 				);
@@ -472,6 +474,7 @@ const handleSendDataBridge: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
+				debugger;
 				throw new Error(
 					"Received SendDataBridgeRequest while not idle",
 				);
@@ -565,6 +568,7 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
+				debugger;
 				throw new Error(
 					"Received SendDataMulticastBridgeRequest while not idle",
 				);
@@ -663,6 +667,7 @@ const handleRequestNodeInfo: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
+				debugger;
 				throw new Error(
 					"Received RequestNodeInfoRequest while not idle",
 				);
@@ -685,8 +690,13 @@ const handleRequestNodeInfo: MockControllerBehavior = {
 			void controller.sendToNode(node, frame);
 			const nodeInfoPromise = controller.expectNodeCC(
 				node,
-				MOCK_FRAME_ACK_TIMEOUT,
 				(cc) => cc instanceof ZWaveProtocolCCNodeInformationFrame,
+				{
+					timeout: MOCK_FRAME_ACK_TIMEOUT,
+					// Prevent forwarding the NIF to the host. Otherwise it will mess with
+					// the state tracking in the MockController.
+					preventDefault: true,
+				},
 			);
 
 			// Notify the host that the message was sent
@@ -784,6 +794,7 @@ const handleDeleteSUCReturnRoute: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
+				debugger;
 				throw new Error(
 					"Received DeleteSUCReturnRouteRequest while not idle",
 				);
@@ -845,6 +856,7 @@ const handleAssignSUCReturnRoute: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
+				debugger;
 				throw new Error(
 					"Received AssignSUCReturnRouteRequest while not idle",
 				);
