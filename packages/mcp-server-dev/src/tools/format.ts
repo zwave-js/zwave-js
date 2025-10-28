@@ -1,5 +1,5 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { execa } from "execa";
+import spawn from "nano-spawn";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ToolHandler } from "../types.js";
@@ -14,7 +14,7 @@ export const TOOL_NAME = "format";
 
 async function handleFormat(): Promise<CallToolResult> {
 	try {
-		const result = await execa("yarn", ["fmt"], {
+		const result = await spawn("yarn", ["fmt"], {
 			cwd: REPO_ROOT,
 			stdio: "pipe",
 		});

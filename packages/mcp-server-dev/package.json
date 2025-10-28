@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
-    "execa": "^9.6.0"
+    "nano-spawn": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.23",
