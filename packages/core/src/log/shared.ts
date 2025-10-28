@@ -162,6 +162,11 @@ export interface LogConfig {
 	filename: string;
 	forceConsole: boolean;
 	showLogo?: boolean;
+	/**
+	 * @deprecated This option is no longer used. To control message formatting, configure
+	 * the format on individual transports using `createDefaultTransportFormat()` with the
+	 * `serialMessageFormat` parameter set to "json" or "human-readable".
+	 */
 	raw?: boolean;
 }
 
