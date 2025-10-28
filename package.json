@@ -80,6 +80,7 @@
     "json5": "^2.2.3",
     "jsonc-eslint-parser": "^2.4.1",
     "lint-staged": "^16.2.6",
+    "nano-spawn": "^2.0.0",
     "openai": "^5.12.2",
     "p-queue": "^8.1.0",
     "reflect-metadata": "^0.2.2",
@@ -157,8 +158,5 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
-  "packageManager": "yarn@4.10.3",
-  "dependencies": {
-    "nano-spawn": "^2.0.0"
-  }
+  "packageManager": "yarn@4.10.3"
 }
