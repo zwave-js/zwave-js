@@ -48,6 +48,12 @@ export interface ZWaveLogInfo<TContext extends LogContext = LogContext>
 	label?: string;
 	message: string | string[];
 	context: TContext;
+	/** Raw serial message data for transport-level formatting */
+	serialMessage?: {
+		logEntry: MessageOrCCLogEntry;
+		isCCContainer: boolean;
+		command?: any;
+	};
 }
 
 export interface LogContext<T extends string = string> {
