@@ -79,15 +79,16 @@ export class SetLearnModeRequest extends SetLearnModeRequestBase {
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SetLearnModeRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		const intent: LearnModeIntent = raw.payload[0];
+		const callbackId = raw.payload[1];
 
-		// return new SetLearnModeRequest({});
+		return new this({
+			intent,
+			callbackId,
+		});
 	}
 
 	public intent: LearnModeIntent;
@@ -140,6 +141,11 @@ export class SetLearnModeResponse extends Message implements SuccessIndicator {
 	}
 
 	public readonly success: boolean;
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.success ? 1 : 0]);
+		return super.serialize(ctx);
+	}
 
 	isOK(): boolean {
 		return this.success;
@@ -198,6 +204,22 @@ export class SetLearnModeCallback extends SetLearnModeRequestBase
 	public readonly status: LearnModeStatus;
 	public readonly assignedNodeId: number;
 	public readonly statusMessage?: BytesView;
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.assertCallbackId();
+		const payload: number[] = [
+			this.callbackId,
+			this.status,
+			this.assignedNodeId,
+		];
+		if (this.statusMessage?.length) {
+			payload.push(this.statusMessage.length);
+			payload.push(...this.statusMessage);
+		}
+		this.payload = Bytes.from(payload);
+
+		return super.serialize(ctx);
+	}
 
 	isOK(): boolean {
 		return this.status !== LearnModeStatus.Failed;
