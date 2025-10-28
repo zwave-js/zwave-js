@@ -11,7 +11,9 @@ import {
 	SetLearnModeResponse,
 } from "@zwave-js/serial";
 
-test("SetLearnModeRequest should serialize and deserialize correctly", async (t) => {
+const HEADER_SIZE = 4; // Size of message header to skip when deserializing
+
+test("SetLearnModeRequest should serialize and deserialize correctly", async ({ expect }) => {
 	const request = new SetLearnModeRequest({
 		intent: LearnModeIntent.Inclusion,
 		callbackId: 1,
@@ -23,14 +25,14 @@ test("SetLearnModeRequest should serialize and deserialize correctly", async (t)
 		nodeIdType: 0,
 	});
 
-	t.expect(serialized).toBeDefined();
+	expect(serialized).toBeDefined();
 
 	// Deserialize
 	const deserialized = SetLearnModeRequest.from(
 		{
 			type: MessageType.Request,
 			functionType: FunctionType.SetLearnMode,
-			payload: serialized.subarray(4), // Skip header
+			payload: serialized.subarray(HEADER_SIZE),
 		},
 		{
 			homeId: 0x7e571000,
@@ -39,11 +41,11 @@ test("SetLearnModeRequest should serialize and deserialize correctly", async (t)
 		},
 	);
 
-	t.expect(deserialized.intent).toBe(LearnModeIntent.Inclusion);
-	t.expect(deserialized.callbackId).toBe(1);
+	expect(deserialized.intent).toBe(LearnModeIntent.Inclusion);
+	expect(deserialized.callbackId).toBe(1);
 });
 
-test("SetLearnModeResponse should serialize and deserialize correctly", async (t) => {
+test("SetLearnModeResponse should serialize and deserialize correctly", async ({ expect }) => {
 	const response = new SetLearnModeResponse({
 		success: true,
 	});
@@ -54,14 +56,14 @@ test("SetLearnModeResponse should serialize and deserialize correctly", async (t
 		nodeIdType: 0,
 	});
 
-	t.expect(serialized).toBeDefined();
+	expect(serialized).toBeDefined();
 
 	// Deserialize
 	const deserialized = SetLearnModeResponse.from(
 		{
 			type: MessageType.Response,
 			functionType: FunctionType.SetLearnMode,
-			payload: serialized.subarray(4), // Skip header
+			payload: serialized.subarray(HEADER_SIZE),
 		},
 		{
 			homeId: 0x7e571000,
@@ -70,11 +72,11 @@ test("SetLearnModeResponse should serialize and deserialize correctly", async (t
 		},
 	);
 
-	t.expect(deserialized.success).toBe(true);
-	t.expect(deserialized.isOK()).toBe(true);
+	expect(deserialized.success).toBe(true);
+	expect(deserialized.isOK()).toBe(true);
 });
 
-test("SetLearnModeCallback should serialize and deserialize correctly", async (t) => {
+test("SetLearnModeCallback should serialize and deserialize correctly", async ({ expect }) => {
 	const callback = new SetLearnModeCallback({
 		callbackId: 1,
 		status: LearnModeStatus.Completed,
@@ -87,14 +89,14 @@ test("SetLearnModeCallback should serialize and deserialize correctly", async (t
 		nodeIdType: 0,
 	});
 
-	t.expect(serialized).toBeDefined();
+	expect(serialized).toBeDefined();
 
 	// Deserialize
 	const deserialized = SetLearnModeCallback.from(
 		{
 			type: MessageType.Request,
 			functionType: FunctionType.SetLearnMode,
-			payload: serialized.subarray(4), // Skip header
+			payload: serialized.subarray(HEADER_SIZE),
 		},
 		{
 			homeId: 0x7e571000,
@@ -104,13 +106,13 @@ test("SetLearnModeCallback should serialize and deserialize correctly", async (t
 		},
 	);
 
-	t.expect(deserialized.status).toBe(LearnModeStatus.Completed);
-	t.expect(deserialized.assignedNodeId).toBe(2);
-	t.expect(deserialized.callbackId).toBe(1);
-	t.expect(deserialized.isOK()).toBe(true);
+	expect(deserialized.status).toBe(LearnModeStatus.Completed);
+	expect(deserialized.assignedNodeId).toBe(2);
+	expect(deserialized.callbackId).toBe(1);
+	expect(deserialized.isOK()).toBe(true);
 });
 
-test("SetLearnModeCallback with status message should serialize and deserialize correctly", async (t) => {
+test("SetLearnModeCallback with status message should serialize and deserialize correctly", async ({ expect }) => {
 	const statusMessage = Bytes.from([0x01, 0x02, 0x03, 0x04]);
 	const callback = new SetLearnModeCallback({
 		callbackId: 1,
@@ -125,14 +127,14 @@ test("SetLearnModeCallback with status message should serialize and deserialize 
 		nodeIdType: 0,
 	});
 
-	t.expect(serialized).toBeDefined();
+	expect(serialized).toBeDefined();
 
 	// Deserialize
 	const deserialized = SetLearnModeCallback.from(
 		{
 			type: MessageType.Request,
 			functionType: FunctionType.SetLearnMode,
-			payload: serialized.subarray(4), // Skip header
+			payload: serialized.subarray(HEADER_SIZE),
 		},
 		{
 			homeId: 0x7e571000,
@@ -142,8 +144,9 @@ test("SetLearnModeCallback with status message should serialize and deserialize 
 		},
 	);
 
-	t.expect(deserialized.status).toBe(LearnModeStatus.Started);
-	t.expect(deserialized.assignedNodeId).toBe(0xef);
-	t.expect(deserialized.statusMessage).toEqual(statusMessage);
-	t.expect(deserialized.isOK()).toBe(true);
+	expect(deserialized.status).toBe(LearnModeStatus.Started);
+	expect(deserialized.assignedNodeId).toBe(0xef);
+	expect(deserialized.statusMessage).toEqual(statusMessage);
+	expect(deserialized.isOK()).toBe(true);
 });
+
