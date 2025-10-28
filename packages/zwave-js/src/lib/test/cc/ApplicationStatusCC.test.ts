@@ -59,10 +59,12 @@ test("ApplicationStatusCCBusy with RequestQueued status should deserialize corre
 	t.expect(cc.waitTime).toBe(0);
 });
 
-test("ApplicationStatusCCRejectedRequest should deserialize correctly", async (t) => {
+test("ApplicationStatusCCRejectedRequest should deserialize correctly (matching real log data)", async (t) => {
+	// This matches the actual log from the issue:
+	// command: 0x02, payload: 0x00
 	const ccData = Uint8Array.from([
 		CommandClasses["Application Status"], // CC
-		ApplicationStatusCommand.RejectedRequest, // CC Command
+		ApplicationStatusCommand.RejectedRequest, // CC Command (0x02)
 		0, // Status (must be 0 according to spec)
 	]);
 	const cc = await CommandClass.parse(
