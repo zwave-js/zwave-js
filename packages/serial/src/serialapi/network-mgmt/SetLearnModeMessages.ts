@@ -2,8 +2,6 @@ import {
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
-	ZWaveError,
-	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import {
 	FunctionType,
