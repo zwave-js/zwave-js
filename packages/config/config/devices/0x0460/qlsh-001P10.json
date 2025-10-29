@@ -72,7 +72,9 @@
 		{
 			"#": "80",
 			"$import": "~/templates/master_template.json#base_0-127_nounit",
-			"label": "Stop Delay Time After Limit Detected"
+			"label": "Stop Delay Time After Limit Detected",
+			"defaultValue": 10,
+			"unit": "seconds"
 		},
 		{
 			"#": "81",
