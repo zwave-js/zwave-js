@@ -51,7 +51,8 @@
 		{
 			"#": "73",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Slats To Previous Position"
+			"label": "Slats To Previous Position",
+			"defaultValue": 1
 		},
 		{
 			"#": "76",
