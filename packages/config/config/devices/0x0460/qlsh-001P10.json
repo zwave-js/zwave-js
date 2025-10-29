@@ -44,7 +44,9 @@
 		{
 			"#": "72",
 			"$import": "~/templates/master_template.json#base_0-65535",
-			"label": "Slats Turning Time"
+			"label": "Slats Turning Time",
+			"unit": "seconds",
+			"valueSize": 2
 		},
 		{
 			"#": "73",
