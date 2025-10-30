@@ -416,7 +416,7 @@
 	},
 		"max_moving_time": {
 		"label": "Shutter Max Moving Time",
-		"description": "Defines the maximum time the motor can move before stopping",
+		"description": "Defines the maximum time the motor can move before stopping. Allowable range: 1-32000, 65000",
 		"unit": "seconds",
 		"valueSize": 2,
 		"minValue": 1,
