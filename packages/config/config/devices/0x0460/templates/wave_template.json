@@ -422,6 +422,7 @@
 		"minValue": 1,
 		"maxValue": 32000,
 		"defaultValue": 120,
+		"unsigned": true,
 		"options": [
 			{
 				"label": "unlimited time",
