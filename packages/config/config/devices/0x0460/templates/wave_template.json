@@ -404,7 +404,7 @@
 		"description": "Defines the delay before motor power is read after a relay switches ON. Allowable range: 0, 3-50.",
 		"unit": "0.1 seconds",
 		"valueSize": 1,
-		"minValue": 3,
+		"minValue": 0,
 		"maxValue": 50,
 		"defaultValue": 3,
 		"options": [
