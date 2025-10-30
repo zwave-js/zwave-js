@@ -402,7 +402,7 @@
 		"delay_limit_detection": {
 		"label": "Limit Detection Delay Time",
 		"description": "Defines the delay before motor power is read after a relay switches ON",
-		"unit": "0,1 sec",
+		"unit": "0.1 seconds",
 		"valueSize": 1,
 		"minValue": 3,
 		"maxValue": 50,
