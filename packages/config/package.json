@@ -88,7 +88,7 @@
     "json5": "^2.2.3",
     "pathe": "^2.0.3",
     "semver": "^7.7.2",
-    "winston": "^3.17.0"
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",

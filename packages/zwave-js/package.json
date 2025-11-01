@@ -150,7 +150,7 @@
     "semver": "^7.7.2",
     "serialport": "^13.0.0",
     "source-map-support": "^0.5.21",
-    "winston": "^3.17.0"
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
