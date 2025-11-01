@@ -2886,7 +2886,7 @@ __metadata:
     "@zwave-js/bindings-browser": "workspace:^"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/shared": "workspace:*"
-    esbuild: "npm:^0.25.9"
+    esbuild: "npm:^0.25.11"
     esbuild-plugins-node-modules-polyfill: "npm:^1.7.1"
     zwave-js: "workspace:*"
   languageName: unknown
@@ -4411,7 +4411,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.25.0":
+"esbuild@npm:^0.25.0, esbuild@npm:^0.25.11":
   version: 0.25.11
   resolution: "esbuild@npm:0.25.11"
   dependencies:
@@ -4500,7 +4500,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.25.10, esbuild@npm:^0.25.9, esbuild@npm:~0.25.0":
+"esbuild@npm:^0.25.10, esbuild@npm:~0.25.0":
   version: 0.25.10
   resolution: "esbuild@npm:0.25.10"
   dependencies:
