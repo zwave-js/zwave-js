@@ -34,7 +34,7 @@
     "@zwave-js/bindings-browser": "workspace:^",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/shared": "workspace:*",
-    "esbuild": "^0.25.9",
+    "esbuild": "^0.25.11",
     "esbuild-plugins-node-modules-polyfill": "^1.7.1",
     "zwave-js": "workspace:*"
   }
