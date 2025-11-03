@@ -52,22 +52,22 @@
 		},
 		{
 			"#": "7",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/wave_template.json#detached_mode",
 			"label": "Detach O1 Output"
 		},
 		{
 			"#": "8",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/wave_template.json#detached_mode",
 			"label": "Detach O2 Output"
 		},
 		{
 			"#": "9",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/wave_template.json#detached_mode",
 			"label": "Detach O3 Output"
 		},
 		{
 			"#": "10",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/wave_template.json#detached_mode",
 			"label": "Detach O4 Output"
 		},
 		{
