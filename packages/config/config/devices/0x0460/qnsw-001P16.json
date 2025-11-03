@@ -43,7 +43,7 @@
 		},
 		{
 			"#": "17",
-			"$import": "templates/wave_template.json#detached_mode",
+			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off",
 			"label": "O1: State After Power Failure"
 		},
 		{
