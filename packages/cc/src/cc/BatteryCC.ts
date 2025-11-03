@@ -445,6 +445,10 @@ export class BatteryCCReport extends BatteryCC {
 
 		validatePayload(raw.payload.length >= 1);
 		const level = raw.payload[0];
+		validatePayload.withReason(`Invalid battery level ${level}`)(
+			// This field MUST be in the range 0x00..0x64 or set to 0xFF
+			level <= 100 || level === 0xff,
+		);
 
 		ccOptions = {
 			level,
