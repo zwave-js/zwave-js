@@ -143,7 +143,10 @@ export class LongRangeMPDU implements MPDU {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
-		if (options.frameInfo.channel !== 3) {
+		if (
+			options.frameInfo.channel !== 3 // LR Channel A
+			&& options.frameInfo.channel !== 4 // LR Channel B
+		) {
 			validatePayload.fail(
 				`Unsupported channel ${options.frameInfo.channel} for LongRangeMPDU`,
 			);

@@ -1179,7 +1179,7 @@ supported frequencies: ${
 						`Failed to parse entry #${index} at offset ${
 							num2hex(offset - bytesRead)
 						}:`,
-						getErrorMessage(e),
+						getErrorMessage(e, true),
 					);
 				}
 				index++;
