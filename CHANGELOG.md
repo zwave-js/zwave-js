@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.16.0 (2025-11-04)
 ### Features
 * Config parameter values can now be marked as recommended and automatically be set during the interview (#8164, #8382)
 * Config parameters can now be marked as destructive, allowing applications to confirm before setting them (#8170)
