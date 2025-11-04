@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 
-import type { CommandClass } from "@zwave-js/cc";
+import { CommandClass } from "@zwave-js/cc";
 import {
 	isEncapsulatingCommandClass,
 	isMultiEncapsulatingCommandClass,
 } from "@zwave-js/cc";
 import { Protocols, znifferProtocolDataRateToString } from "@zwave-js/core";
 import { ZnifferRegion } from "@zwave-js/core";
-import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	getErrorMessage,
+} from "@zwave-js/shared";
 import { promises as fs } from "node:fs";
 import { resolve } from "node:path";
 import type { CorruptedFrame, Frame } from "zwave-js";
@@ -22,7 +27,7 @@ import { LongRangeFrameType, ZWaveFrameType } from "zwave-js";
 function formatCommandClassChain(
 	payload: BytesView | CommandClass | undefined,
 ): string {
-	if (!payload || payload instanceof BytesView) {
+	if (!(payload instanceof CommandClass)) {
 		return "";
 	}
 
@@ -346,12 +351,12 @@ function convertFrameToCSVRow(
 
 	// Column 21: Payload (as CommandClass chain or raw data)
 	if ("payload" in validFrame) {
-		if (validFrame.payload instanceof BytesView) {
-			row.push(escapeCSVValue(`[${validFrame.payload.length} bytes]`));
-		} else {
+		if (validFrame.payload instanceof CommandClass) {
 			row.push(
 				escapeCSVValue(formatCommandClassChain(validFrame.payload)),
 			);
+		} else {
+			row.push(escapeCSVValue(`[${validFrame.payload.length} bytes]`));
 		}
 	} else {
 		row.push("");
@@ -453,7 +458,7 @@ async function convertZnifferToCSV(
 			`Successfully converted ${frames.length} frames to ${outputPath}`,
 		);
 	} catch (error) {
-		console.error(`Error converting file: ${String(error)}`);
+		console.error(`Error converting file: ${getErrorMessage(error, true)}`);
 		throw error;
 	} finally {
 		// Clean up
