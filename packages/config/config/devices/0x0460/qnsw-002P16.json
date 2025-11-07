@@ -77,10 +77,24 @@
 		{
 			"#": "6",
 			"$import": "templates/wave_template.json#swap_inputs"
+			"label": "Inputs SW1 & SW2 Swap"
+		},
+		{
+			"#": "7",
+			"$if": "firmwareVersion > 12.0",
+			"$import": "templates/wave_template.json#detached_mode",
+			"label": "Detach O1 Output"
+		},
+		{
+			"#": "8",
+			"$if": "firmwareVersion > 12.0",
+			"$import": "templates/wave_template.json#detached_mode",
+			"label": "Detach O2 Output"
 		},
 		{
 			"#": "16",
 			"$import": "templates/wave_template.json#swap_outputs"
+			"label": "Outputs O1 & O2 Swap"
 		},
 		{
 			"#": "17",
@@ -154,23 +168,33 @@
 		},
 		{
 			"#": "91",
+			"$if": "firmwareVersion < 15.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Water"
 		},
 		{
 			"#": "92",
+			"$if": "firmwareVersion < 15.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Smoke"
 		},
 		{
 			"#": "93",
+			"$if": "firmwareVersion < 15.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: CO"
 		},
 		{
 			"#": "94",
+			"$if": "firmwareVersion < 15.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Heat"
+		},
+		{
+			"#": "117",
+			"$if": "firmwareVersion > 16.0",
+			"$import": "templates/wave_template.json#remote_reboot",
+			"label": "Remote Reboot"
 		},
 		{
 			"#": "120",
