@@ -76,7 +76,7 @@
 		},
 		{
 			"#": "6",
-			"$import": "templates/wave_template.json#swap_inputs"
+			"$import": "templates/wave_template.json#swap_inputs",
 			"label": "Inputs SW1 & SW2 Swap"
 		},
 		{
@@ -93,7 +93,7 @@
 		},
 		{
 			"#": "16",
-			"$import": "templates/wave_template.json#swap_outputs"
+			"$import": "templates/wave_template.json#swap_outputs",
 			"label": "Outputs O1 & O2 Swap"
 		},
 		{
