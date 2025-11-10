@@ -130,7 +130,7 @@
     "reflect-metadata": "^0.2.2",
     "semver": "^7.7.2",
     "triple-beam": "*",
-    "winston": "^3.17.0",
+    "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0",
     "winston-transport": "^4.9.0"
   },
