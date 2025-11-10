@@ -154,13 +154,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@alcalzone/release-script-plugin-git@npm:4.0.0":
-  version: 4.0.0
-  resolution: "@alcalzone/release-script-plugin-git@npm:4.0.0"
+"@alcalzone/release-script-plugin-git@npm:5.0.0":
+  version: 5.0.0
+  resolution: "@alcalzone/release-script-plugin-git@npm:5.0.0"
   dependencies:
     "@alcalzone/release-script-core": "npm:4.0.0"
     fs-extra: "npm:^10.1.0"
-  checksum: 10/7ff8519ed9ee123cbd6d73c65b6ed05b307dc31c39d9e5693afc8d44ba9c1cab720b8c3e27c7caab57231e34a47654d816dc649469dba4b19c1d62847286fec0
+  checksum: 10/30a79336a9db76c871184d01d596e90e962753dbdc88d53e46c17e6f3f85795646f4093776b732d3b50333156ff925be0a9bea450ce66c322749e5c40227fd9b
   languageName: node
   linkType: hard
 
@@ -190,14 +190,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@alcalzone/release-script@npm:~4.0.0":
-  version: 4.0.0
-  resolution: "@alcalzone/release-script@npm:4.0.0"
+"@alcalzone/release-script@npm:~5.0.0":
+  version: 5.0.0
+  resolution: "@alcalzone/release-script@npm:5.0.0"
   dependencies:
     "@alcalzone/release-script-core": "npm:4.0.0"
     "@alcalzone/release-script-plugin-changelog": "npm:4.0.0"
     "@alcalzone/release-script-plugin-exec": "npm:4.0.0"
-    "@alcalzone/release-script-plugin-git": "npm:4.0.0"
+    "@alcalzone/release-script-plugin-git": "npm:5.0.0"
     "@alcalzone/release-script-plugin-package": "npm:4.0.0"
     "@alcalzone/release-script-plugin-version": "npm:4.0.0"
     alcalzone-shared: "npm:^5.0.0"
@@ -210,7 +210,7 @@ __metadata:
     yargs: "npm:^17.4.1"
   bin:
     release-script: bin/release.js
-  checksum: 10/15bbb15b467615fe24e827fc3f6266605eaec009f5ccf25af182835edcb75cf89b0fd8254b82a9cbd394a27178a15b482a6e490d9178bf2356d86fdc8e9ed889
+  checksum: 10/0711df79b79c2c7f7b39e1baaad43aae2e1dd2af9d5699bf9b1c4c55d23ec9f7700f595d2439c93f19f4b337ad7a349448e5adbd717854866f3ec8e4f7dc80e1
   languageName: node
   linkType: hard
 
@@ -2720,7 +2720,7 @@ __metadata:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@alcalzone/monopack": "npm:^1.4.0"
-    "@alcalzone/release-script": "npm:~4.0.0"
+    "@alcalzone/release-script": "npm:~5.0.0"
     "@commitlint/cli": "npm:^20.1.0"
     "@commitlint/config-conventional": "npm:^20.0.0"
     "@dprint/formatter": "npm:^0.4.1"
