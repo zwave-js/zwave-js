@@ -2245,12 +2245,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/yargs@npm:^17.0.33":
-  version: 17.0.33
-  resolution: "@types/yargs@npm:17.0.33"
+"@types/yargs@npm:^17.0.34":
+  version: 17.0.34
+  resolution: "@types/yargs@npm:17.0.34"
   dependencies:
     "@types/yargs-parser": "npm:*"
-  checksum: 10/16f6681bf4d99fb671bf56029141ed01db2862e3db9df7fc92d8bea494359ac96a1b4b1c35a836d1e95e665fb18ad753ab2015fc0db663454e8fd4e5d5e2ef91
+  checksum: 10/8e7907479e649e9115dcca94cb059dfe2322992ac5d29120f759564c078abfc13673a31f7ad86a3a5c9de7f241a4e3d70042ba38b794fd1601e44f9a1bc5cefd
   languageName: node
   linkType: hard
 
@@ -2520,7 +2520,7 @@ __metadata:
     "@types/semver": "npm:^7.7.1"
     "@types/sinon": "npm:^17.0.4"
     "@types/xml2js": "npm:^0.4.14"
-    "@types/yargs": "npm:^17.0.33"
+    "@types/yargs": "npm:^17.0.34"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/maintenance": "workspace:*"
     "@zwave-js/shared": "workspace:*"
@@ -2599,7 +2599,7 @@ __metadata:
   resolution: "@zwave-js/flash@workspace:packages/flash"
   dependencies:
     "@types/node": "npm:^20.19.23"
-    "@types/yargs": "npm:^17.0.33"
+    "@types/yargs": "npm:^17.0.34"
     "@zwave-js/core": "workspace:*"
     del-cli: "npm:^6.0.0"
     pathe: "npm:^2.0.3"
@@ -2652,7 +2652,7 @@ __metadata:
     "@dprint/typescript": "npm:^0.95.11"
     "@types/globrex": "npm:^0.1.4"
     "@types/node": "npm:^20.19.23"
-    "@types/yargs": "npm:^17.0.33"
+    "@types/yargs": "npm:^17.0.34"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/fmt": "npm:^1.0.5"
     "@zwave-js/shared": "workspace:*"
@@ -2694,7 +2694,7 @@ __metadata:
     "@microsoft/api-extractor": "npm:^7.52.11"
     "@types/node": "npm:^20.19.23"
     "@types/semver": "npm:^7.7.1"
-    "@types/yargs": "npm:^17.0.33"
+    "@types/yargs": "npm:^17.0.34"
     "@zwave-js/core": "workspace:*"
     "@zwave-js/shared": "workspace:*"
     alcalzone-shared: "npm:^5.0.0"
