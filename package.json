@@ -73,7 +73,7 @@
     "del-cli": "^6.0.0",
     "dprint": "^0.50.2",
     "eslint": "^9.38.0",
-    "eslint-plugin-unicorn": "^60.0.0",
+    "eslint-plugin-unicorn": "^62.0.0",
     "eslint-plugin-unused-imports": "patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch",
     "execa": "^9.6.0",
     "husky": "^9.1.7",
