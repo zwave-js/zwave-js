@@ -40,7 +40,7 @@
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
     "@types/eslint": "^9.6.1",
-    "@typescript-eslint/utils": "^8.46.2",
+    "@typescript-eslint/utils": "^8.46.4",
     "@zwave-js/core": "workspace:*",
     "eslint": "^9.38.0",
     "eslint-compat-utils": "^0.6.5",
