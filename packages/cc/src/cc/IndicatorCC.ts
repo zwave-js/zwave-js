@@ -170,7 +170,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"valueV2",
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		(indicatorId: number, propertyId: number) => indicatorId,
 		(indicatorId: number, propertyId: number) => propertyId,
 		({ property, propertyKey }) =>
@@ -189,7 +189,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	...V.dynamicPropertyAndKeyWithName(
 		"timeout",
 		(indicatorId: number) => indicatorId,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		(indicatorId: number) => "timeout",
 		({ property, propertyKey }) =>
 			typeof property === "number" && propertyKey === "timeout",

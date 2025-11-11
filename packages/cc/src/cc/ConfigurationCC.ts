@@ -96,7 +96,7 @@ export const ConfigurationCCValues = V.defineCCValues(
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"paramInformation",
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			// oxlint-disable-next-line no-unused-vars
 			(parameter: number, bitMask?: number) => parameter,
 			(parameter: number, bitMask?: number) => bitMask,
 			({ property, propertyKey }) =>

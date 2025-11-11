@@ -49,6 +49,8 @@ export default tseslint.config(
 			"**/*.mjs",
 			// Ignore the browser bindings for now
 			"packages/bindings-browser/**/*.ts",
+			// And the editor extension
+			".vscode/extensions/**",
 			// Remove warning on this config file
 			"eslint.config.mjs",
 		],

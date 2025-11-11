@@ -205,7 +205,7 @@ export class Message {
 	/** Creates an instance of the message that is serialized in the given buffer */
 	public static from(
 		raw: MessageRaw,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		ctx: MessageParsingContext,
 	): Message {
 		return new this({
@@ -270,7 +270,7 @@ export class Message {
 	/**
 	 * Serializes this message into a Buffer
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	// oxlint-disable-next-line no-unused-vars, @typescript-eslint/require-await
 	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const ret = new Bytes(this.payload.length + 5);
 		ret[0] = MessageHeaders.SOF;
@@ -396,7 +396,7 @@ export class Message {
 	}
 
 	/** Checks if a message is an expected node update for this message */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// oxlint-disable-next-line no-unused-vars
 	public isExpectedNodeUpdate(msg: Message): boolean {
 		// Most messages don't expect an update by default
 		return false;

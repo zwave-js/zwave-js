@@ -198,7 +198,7 @@ export const NotificationCCValues = V.defineCCValues(
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"notificationVariable",
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			// oxlint-disable-next-line no-unused-vars
 			(notificationName: string, variableName: string) =>
 				notificationName,
 			(notificationName: string, variableName: string) => variableName,
