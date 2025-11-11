@@ -33,9 +33,7 @@
   "scripts": {
     "ts": "tsx --conditions=@@dev",
     "build": "tsc -b tsconfig.build.json --pretty",
-    "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "lint:ts": "eslint --cache \"src/**/*.ts\"",
-    "lint:ts:fix": "yarn run lint:ts --fix"
+    "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
