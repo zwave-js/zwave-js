@@ -1,0 +1,218 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+
+	// Ignore the browser bindings for now
+	"ignorePatterns": [
+		"packages/bindings-browser/**/*.ts",
+		".vscode/extensions/"
+	],
+
+	// Enable rule categories - similar to typescript-eslint/recommended
+	"categories": {
+		"correctness": "error",
+		"suspicious": "error",
+		"restriction": "error",
+		"perf": "error",
+		// "pedantic": "error",
+		"style": "error"
+	},
+
+	// Default plugins (typescript, unicorn, oxc are enabled by default)
+	// We don't need to specify them unless we want to disable or change them
+
+	"rules": {
+		// ========= TypeScript ESLint Rules =========
+		// Rules that need custom configuration (different from default)
+
+		"typescript/ban-ts-comment": [
+			"error",
+			{
+				"ts-expect-error": false,
+				"ts-ignore": true,
+				"ts-nocheck": true,
+				"ts-check": false
+			}
+		],
+
+		// Place to specify ESLint rules. Can be used to overwrite rules specified from the extended configs
+		// "@typescript-eslint/no-parameter-properties": "off", // Not available in OxLint
+		"typescript/no-explicit-any": "off",
+		"typescript/no-use-before-define": [
+			"error",
+			{
+				"functions": false,
+				"typedefs": false,
+				"classes": false
+			}
+		],
+		"typescript/no-unused-vars": [
+			"error",
+			{
+				"ignoreRestSiblings": true,
+				"argsIgnorePattern": "^_"
+			}
+		],
+		// "@typescript-eslint/no-object-literal-type-assertion": "off", // Not available in OxLint
+		// "@typescript-eslint/interface-name-prefix": "off", // Not available in OxLint
+		"typescript/no-non-null-assertion": "off", // This is necessary for Map.has()/get()!
+		"typescript/no-inferrable-types": [
+			"error",
+			{
+				"ignoreProperties": true,
+				"ignoreParameters": true
+			}
+		],
+
+		"typescript/restrict-template-expressions": [
+			"error",
+			{
+				"allowNumber": true,
+				"allowBoolean": true,
+				// This is necessary to log errors
+				// TODO: Consider switching to false when we may annotate catch clauses
+				"allowAny": true,
+				"allowNullish": true
+			}
+		],
+		"typescript/no-misused-promises": [
+			"error",
+			{
+				"checksVoidReturn": false
+			}
+		],
+
+		// Make sure type imports are used where necessary
+		"typescript/consistent-type-imports": [
+			"error",
+			{
+				"fixStyle": "inline-type-imports",
+				"disallowTypeAnnotations": false
+			}
+		],
+		"typescript/consistent-type-exports": "error",
+
+		// We can turn this on from time to time but in general these rules
+		// make our lives harder instead of easier
+		// Note: These rules ARE available in OxLint but not enabled by default
+		"typescript/no-unsafe-argument": "off",
+		"typescript/no-unsafe-assignment": "off",
+		"typescript/no-unsafe-member-access": "off",
+		"typescript/no-unsafe-return": "off",
+		"typescript/no-unsafe-call": "off",
+		"typescript/no-unsafe-enum-comparison": "off",
+		"typescript/no-unsafe-declaration-merging": "off",
+		"typescript/no-unsafe-type-assertion": "off",
+
+		// Although this rule makes sense, it takes about a second to execute (and we don't need it)
+		"typescript/no-implied-eval": "off",
+
+		"typescript/explicit-module-boundary-types": [
+			"warn",
+			{
+				"allowArgumentsExplicitlyTypedAsAny": true
+			}
+		],
+		"typescript/no-this-alias": "off",
+		"typescript/no-deprecated": "error",
+
+		// Prefer simple property access and declaration without quotes
+		// Note: ESLint config disables "dot-notation" in favor of "@typescript-eslint/dot-notation"
+		// Since OxLint doesn't have the TypeScript version with those options, we skip this rule
+		// "dot-notation": "off",
+		// "@typescript-eslint/dot-notation": [ ... ], // Not available with these options in OxLint
+
+		"eslint/quote-props": ["error", "as-needed"],
+
+		// ========= Unused Imports Plugin (not available) =========
+		// "unused-imports/no-unused-imports": "error", // Plugin not available in OxLint
+
+		// ========= Unicorn Plugin Rules =========
+		"unicorn/prefer-array-find": ["error", { "checkFromLast": true }],
+		"unicorn/prefer-array-flat-map": "error",
+		"unicorn/prefer-array-flat": "error",
+		"unicorn/prefer-array-index-of": "error",
+		"unicorn/prefer-array-some": "error",
+		"unicorn/prefer-at": "error",
+		"unicorn/prefer-includes": "error",
+		"unicorn/prefer-logical-operator-over-ternary": "error",
+		"unicorn/prefer-modern-math-apis": "error",
+		"unicorn/prefer-negative-index": "error",
+		"unicorn/prefer-node-protocol": "error",
+		"unicorn/prefer-regexp-test": "error",
+		"unicorn/prefer-string-slice": "error",
+		"unicorn/prefer-string-starts-ends-with": "error",
+		"unicorn/prefer-string-replace-all": "error",
+
+		// ========= Global Restrictions (not available) =========
+		// Prefer our own Buffer implementation (compatible with native Uint8array)
+		// See https://sindresorhus.com/blog/goodbye-nodejs-buffer for the reason behind this
+		"eslint/no-restricted-globals": ["error", {
+		  "name": "Buffer",
+		  "message": "Use Uint8Array or the Bytes implementation from @zwave-js/shared instead."
+		}] // Not available in OxLint yet
+	},
+
+	"overrides": [
+		// Disable unnecessarily strict rules for test files
+		{
+			"files": ["**/*.test.ts"],
+			"rules": {
+				"typescript/explicit-function-return-type": "off",
+				"typescript/no-empty-function": "off",
+				"typescript/ban-ts-comment": "off",
+				// Note: These rules ARE available in OxLint but not enabled by default,
+				// so we don't need to explicitly turn them off
+				// "typescript/no-unsafe-argument": "off",
+				// "typescript/no-unsafe-assignment": "off",
+				// "typescript/no-unsafe-member-access": "off",
+				// "typescript/no-unsafe-member-return": "off", // Not available in OxLint
+				// "typescript/no-unsafe-return": "off",
+				// "typescript/no-unsafe-call": "off",
+				"typescript/no-floating-promises": "off",
+				// "typescript/require-await": "off", // Not available in OxLint (use eslint/require-await)
+				"typescript/unbound-method": "off",
+				"typescript/no-unused-vars": "off"
+				// "@typescript-eslint/dot-notation": "off", // Not available with TypeScript options
+
+				// "@zwave-js/no-debug-in-tests": "error", // Custom plugin not available
+			}
+		},
+		// Disable all TS-related rules for JS files
+		{
+			"files": ["**/*.js"],
+			"rules": {
+				// Disable all TypeScript rules for JS files
+				// OxLint doesn't support pattern matching for rule names,
+				// so we need to list them explicitly
+				"typescript/ban-ts-comment": "off",
+				"typescript/no-explicit-any": "off",
+				"typescript/no-unused-vars": "off",
+				"typescript/no-non-null-assertion": "off",
+				"typescript/no-inferrable-types": "off",
+				"typescript/consistent-type-imports": "off",
+				"typescript/consistent-type-exports": "off",
+				"typescript/no-unsafe-declaration-merging": "off",
+				"typescript/explicit-module-boundary-types": "off",
+				"typescript/no-this-alias": "off",
+				"typescript/restrict-template-expressions": "off",
+				"typescript/no-misused-promises": "off",
+				"typescript/no-implied-eval": "off",
+				"typescript/no-floating-promises": "off",
+				"typescript/unbound-method": "off",
+				"typescript/no-use-before-define": "off"
+				// "typescript/no-deprecated": "off"
+			}
+		}
+		// Note: Browser-specific TypeScript configuration for
+		// packages/**/*.browser.ts and packages/**/index_browser.ts
+		// cannot be replicated as OxLint doesn't support multiple tsconfig files
+	]
+
+	// Enable rules from the local plugin for relevant files
+	// These custom rules are not available in OxLint:
+	// - @zwave-js/ccapi-validate-args
+	// - @zwave-js/no-internal-cc-types
+	// - @zwave-js/consistent-cc-classes
+	// - @zwave-js/no-forbidden-imports
+	// - @zwave-js/consistent-import-declarations
+}
