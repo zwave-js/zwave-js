@@ -254,7 +254,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 		return result;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getNumSlots() {
 		this.assertSupportsCommand(
 			ScheduleEntryLockCommand,

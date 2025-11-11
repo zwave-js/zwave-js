@@ -292,7 +292,7 @@ async function lintDevices(): Promise<void> {
 	await configManager.loadDeviceIndex();
 	const index = configManager.getIndex()!;
 	// Device config files are lazy-loaded, so we need to parse them all
-	const uniqueFiles = distinct(index.map((e) => e.filename)).sort();
+	const uniqueFiles = distinct(index.map((e) => e.filename)).toSorted();
 
 	for (const file of uniqueFiles) {
 		const filePath = path.join(rootDir, file);

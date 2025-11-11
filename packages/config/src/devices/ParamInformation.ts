@@ -173,8 +173,7 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 			);
 		}
 		// Default to allowing manual entry, except if the param is readonly
-		this.allowManualEntry = definition.allowManualEntry
-			?? (this.readOnly ? false : true);
+		this.allowManualEntry = definition.allowManualEntry ?? !this.readOnly;
 
 		if (
 			definition.destructive != undefined

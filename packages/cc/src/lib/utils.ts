@@ -688,7 +688,7 @@ export function getLifelineGroupIds(
 		);
 	}
 
-	return distinct(lifelineGroups).sort();
+	return distinct(lifelineGroups).toSorted((a, b) => a - b);
 }
 
 export async function configureLifelineAssociations(

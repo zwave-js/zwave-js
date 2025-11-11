@@ -1080,16 +1080,14 @@ export class IndicatorCCSet extends IndicatorCC {
 			message["indicator 0 value"] = this.indicator0Value;
 		}
 		if (this.values != undefined) {
-			message.values = `${
-				this.values
-					.map(
-						(v) => `
+			message.values = this.values
+				.map(
+					(v) => `
 · indicatorId: ${v.indicatorId}
   propertyId:  ${v.propertyId}
   value:       ${v.value}`,
-					)
-					.join("")
-			}`;
+				)
+				.join("");
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -1339,16 +1337,14 @@ export class IndicatorCCReport extends IndicatorCC {
 			message["indicator 0 value"] = this.indicator0Value;
 		}
 		if (this.values != undefined) {
-			message.values = `${
-				this.values
-					.map(
-						(v) => `
+			message.values = this.values
+				.map(
+					(v) => `
 · indicatorId: ${v.indicatorId}
   propertyId:  ${v.propertyId}
   value:       ${v.value}`,
-					)
-					.join("")
-			}`;
+				)
+				.join("");
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -1491,15 +1487,13 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 			...super.toLogEntry(ctx),
 			message: {
 				indicator: getIndicatorName(this.indicatorId),
-				"supported properties": `${
-					this.supportedProperties
-						.map(
-							(id) =>
-								getIndicatorProperty(id)?.label
-									?? `Unknown (${num2hex(id)})`,
-						)
-						.join(", ")
-				}`,
+				"supported properties": this.supportedProperties
+					.map(
+						(id) =>
+							getIndicatorProperty(id)?.label
+								?? `Unknown (${num2hex(id)})`,
+					)
+					.join(", "),
 				"next indicator": getIndicatorName(this.nextIndicatorId),
 			},
 		};

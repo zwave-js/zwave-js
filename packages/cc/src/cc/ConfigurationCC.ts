@@ -949,7 +949,7 @@ export class ConfigurationCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getProperties(parameter: number) {
 		// Get-type commands are only possible in singlecast
 		this.assertPhysicalEndpoint(this.endpoint);
@@ -2346,7 +2346,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 		if (!super.persistValues(ctx)) return false;
 
 		// Store every received parameter
-		// eslint-disable-next-line prefer-const
+		 
 		for (let [parameter, value] of this._values.entries()) {
 			// Check if the initial assumption of SignedInteger holds true
 			const oldParamInformation = this.getParamInformation(
@@ -2430,7 +2430,7 @@ export class ConfigurationCCBulkGet extends ConfigurationCC {
 		options: WithAddress<ConfigurationCCBulkGetOptions>,
 	) {
 		super(options);
-		this._parameters = options.parameters.sort();
+		this._parameters = options.parameters.toSorted((a, b) => a - b);
 		if (!isConsecutiveArray(this.parameters)) {
 			throw new ZWaveError(
 				`A ConfigurationCC.BulkGet can only be used for consecutive parameters`,
@@ -2693,7 +2693,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 		const partialParams = this.getPartialParamInfos(
 			ctx,
 			this.parameter,
-		).sort(
+		).toSorted(
 			(a, b) =>
 				((a.propertyKey as number) ?? 0)
 				- ((b.propertyKey as number) ?? 0),

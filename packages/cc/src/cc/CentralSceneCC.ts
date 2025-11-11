@@ -100,7 +100,7 @@ export class CentralSceneCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(
 			CentralSceneCommand,
@@ -126,7 +126,7 @@ export class CentralSceneCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getConfiguration() {
 		this.assertSupportsCommand(
 			CentralSceneCommand,

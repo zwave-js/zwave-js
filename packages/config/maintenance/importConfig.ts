@@ -1,3 +1,5 @@
+// oxlint-disable
+
 /*!
  * This script is used to import the Z-Wave device database from
  * https://www.cd-jackson.com/zwave_device_database/zwave-database-json.gz.tar
@@ -1176,7 +1178,7 @@ function sanitizeFields(json: Record<string, any>[]) {
 					? param.Name.replaceAll(".\"", "\"")
 					: "";
 				param.Name = param.Name
-					? param.Name.replace(/[\,\.\:]$/, "\"")
+					? param.Name.replace(/[,.:]$/, "\"")
 					: "";
 				param.Name = param.Name
 					? param.Name.replaceAll(":\"", "\"")
@@ -1190,7 +1192,7 @@ function sanitizeFields(json: Record<string, any>[]) {
 							? sanitizeString(value.Description)
 							: "";
 						value.Description = value.Description
-							? value.Description.replace(/[\,\.\:]$/, "\"")
+							? value.Description.replace(/[,.:]$/, "\"")
 							: "";
 					}
 				}
@@ -1731,11 +1733,11 @@ async function retrieveZWADeviceIds(
 		let currentUrl =
 			`https://products.z-wavealliance.org/search/DoAdvancedSearch?productName=&productIdentifier=&productDescription=&category=-1&brand=${manu}&regionId=-1&order=&page=${page}`;
 		const firstPage = await ky.get(currentUrl).text();
-		for (const i of firstPage.match(/(?<=productId=).*?(?=[\&\"])/g)!) {
+		for (const i of firstPage.match(/(?<=productId=).*?(?=[&"])/g)!) {
 			deviceIdsSet.add(i);
 		}
-		const pageNumbers = /(?<=page=\d+">).*?(?=\<)/g.test(firstPage)
-			? firstPage.match(/(?<=page=\d+">).*?(?=\<)/g)!
+		const pageNumbers = /(?<=page=\d+">).*?(?=<)/g.test(firstPage)
+			? firstPage.match(/(?<=page=\d+">).*?(?=<)/g)!
 			: [1];
 		const lastPage = Math.max(...pageNumbers);
 
@@ -1753,7 +1755,7 @@ async function retrieveZWADeviceIds(
 					`https://products.z-wavealliance.org/search/DoAdvancedSearch?productName=&productIdentifier=&productDescription=&category=-1&brand=${manu}&regionId=-1&order=&page=${page}`;
 				const nextPage = await ky.get(currentUrl).text();
 				const nextPageIds = nextPage.match(
-					/(?<=productId=).*?(?=[\&\"])/g,
+					/(?<=productId=).*?(?=[&"])/g,
 				)!;
 
 				for (const i of nextPageIds) {
@@ -1891,7 +1893,7 @@ function sanitizeNumber(
 
 	let ret = Number(value);
 	if (Number.isNaN(ret)) {
-		value = value.replaceAll(/[^0-9-\.\,]/g, "");
+		value = value.replaceAll(/[^0-9-.,]/g, "");
 		ret = Number(value);
 	}
 	return ret;
@@ -2244,10 +2246,10 @@ function sanitizeString(originalString: string) {
 		.replaceAll("\t", " ")
 		.replaceAll("\"\"", "\"")
 		.replaceAll(/ {2,}/g, " ")
-		.replaceAll(/\,s*$/g, "")
-		.replaceAll(/\„s*$/g, "")
+		.replaceAll(/,s*$/g, "")
+		.replaceAll(/„s*$/g, "")
 		.replaceAll(/\.s*$/g, "")
-		.replaceAll(/\:s*$/g, "")
+		.replaceAll(/:s*$/g, "")
 		.trim();
 }
 /****************************************************************************
@@ -2341,11 +2343,11 @@ async function updateManufacturerNames(): Promise<void> {
 	for (const file of configFiles) {
 		let fileContents = await fs.readFile(file, "utf8");
 		const id = parseInt(
-			/"manufacturerId"\: "0x([0-9a-fA-F]+)"/.exec(fileContents)![1],
+			/"manufacturerId": "0x([0-9a-fA-F]+)"/.exec(fileContents)![1],
 			16,
 		);
 		const name = configManager.lookupManufacturer(id);
-		const oldName = /"manufacturer"\: "([^\"]+)"/.exec(fileContents)![1];
+		const oldName = /"manufacturer": "([^"]+)"/.exec(fileContents)![1];
 		if (oldName && name && name !== oldName) {
 			fileContents = fileContents.replace(
 				`// ${oldName} `,

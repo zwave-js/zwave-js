@@ -38,7 +38,7 @@ const defaultCCValueOptions = {
 	autoCreate: true,
 } as const;
 
-const ignoredImports = ["V", "ValueMetadata"];
+const ignoredImports = new Set(["V", "ValueMetadata"]);
 
 export async function generateCCValueDefinitions(): Promise<void> {
 	const project = new Project({
@@ -269,7 +269,7 @@ ${getErrorMessage(e, true)}`);
 			const importedName = imp.getName();
 			const isTypeOnly = imp.isTypeOnly()
 				|| imp.getImportDeclaration().isTypeOnly();
-			if (ignoredImports.includes(importedName)) continue;
+			if (ignoredImports.has(importedName)) continue;
 			// Ignore imports we already have and which aren't type-only
 			if (allImports.get(importedName) === false) continue;
 

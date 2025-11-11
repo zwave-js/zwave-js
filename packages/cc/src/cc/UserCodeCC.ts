@@ -174,7 +174,7 @@ function parseExtendedUserCode(payload: Bytes): {
 
 function validateCode(code: string, supportedChars: string): boolean {
 	if (code.length < 4 || code.length > 10) return false;
-	return [...code].every((char) => supportedChars.includes(char));
+	return code.split("").every((char) => supportedChars.includes(char));
 }
 
 function setUserCodeMetadata(
@@ -466,7 +466,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	>;
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(userId: number, multiple: boolean = false) {
 		if (userId > 255 || multiple) {
 			this.assertSupportsCommand(
@@ -697,7 +697,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCapabilities() {
 		this.assertSupportsCommand(
 			UserCodeCommand,
@@ -1425,7 +1425,7 @@ export class UserCodeCCReport extends UserCodeCC
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public toNotificationEventParameters() {
 		return { userId: this.userId };
 	}
@@ -1693,7 +1693,7 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 			| (this.supportsMultipleUserCodeSet ? 0b001_00000 : 0)
 			| (supportedKeypadModesBitmask.length & 0b000_11111);
 
-		const keysAsNumbers = [...this.supportedASCIIChars].map((char) =>
+		const keysAsNumbers = this.supportedASCIIChars.split("").map((char) =>
 			char.charCodeAt(0)
 		);
 		const supportedKeysBitmask = encodeBitMask(keysAsNumbers, undefined, 0);

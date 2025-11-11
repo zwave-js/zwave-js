@@ -909,7 +909,7 @@ export class DeviceConfig {
 
 		const sortObject = (obj: Record<string, any>) => {
 			const ret: Record<string, any> = {};
-			for (const key of Object.keys(obj).sort()) {
+			for (const key of Object.keys(obj).toSorted()) {
 				ret[key] = obj[key];
 			}
 			return ret;
@@ -942,7 +942,7 @@ export class DeviceConfig {
 					param.valueBitMask ? `[${num2hex(param.valueBitMask)}]` : ""
 				}`;
 			target.paramInformation = [...map.values()]
-				.sort((a, b) => getParamKey(a).localeCompare(getParamKey(b)))
+				.toSorted((a, b) => getParamKey(a).localeCompare(getParamKey(b)))
 				.map((p) => cloneDeep(p));
 		};
 
@@ -1019,7 +1019,7 @@ export class DeviceConfig {
 				c.removeCCs = Object.fromEntries(this.compat.removeCCs);
 			}
 			if (this.compat.treatSetAsReport) {
-				c.treatSetAsReport = [...this.compat.treatSetAsReport].sort();
+				c.treatSetAsReport = [...this.compat.treatSetAsReport].toSorted();
 			}
 
 			c = sortObject(c);

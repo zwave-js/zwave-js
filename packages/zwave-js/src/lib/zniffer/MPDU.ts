@@ -678,10 +678,6 @@ export class ExplorerZWaveMPDU extends ZWaveMPDU {
 }
 
 export class NormalExplorerZWaveMPDU extends ExplorerZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-	}
-
 	public toLogEntry(): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry();
 		tags[0] = formatRoute(

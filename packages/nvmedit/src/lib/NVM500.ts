@@ -507,7 +507,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 					data.push(new Uint8Array(size).fill(value));
 					break;
 				case NVMEntryType.NodeMask:
-					data.push(new Array(size).fill(value));
+					data.push(Array.from<number>({ length: size }).fill(value));
 					break;
 				case NVMEntryType.NodeInfo:
 				case NVMEntryType.Route:
