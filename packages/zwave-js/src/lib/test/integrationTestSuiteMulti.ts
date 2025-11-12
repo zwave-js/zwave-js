@@ -106,6 +106,7 @@ function suite(
 			serial,
 			{
 				capabilities: controllerCapabilities,
+				securityKeys: driver.options.securityKeys,
 			},
 			// TODO: This isn't ideal as it requires us to provide the
 			// node capabilities in addition to the provisioning directory

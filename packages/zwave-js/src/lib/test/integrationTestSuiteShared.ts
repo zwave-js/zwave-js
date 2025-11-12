@@ -75,7 +75,7 @@ export function prepareMocks(
 	serial: ZWaveSerialStream,
 	controller: Pick<
 		MockControllerOptions,
-		"ownNodeId" | "homeId" | "capabilities"
+		"ownNodeId" | "homeId" | "capabilities" | "securityKeys"
 	> = {},
 	nodes: Pick<MockNodeOptions, "id" | "capabilities">[] = [],
 ): {

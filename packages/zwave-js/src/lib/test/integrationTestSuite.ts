@@ -110,6 +110,7 @@ function suite(
 			serial,
 			{
 				capabilities: controllerCapabilities,
+				securityKeys: driver.options.securityKeys,
 			},
 			[
 				{
