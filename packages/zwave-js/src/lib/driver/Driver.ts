@@ -6111,9 +6111,9 @@ ${handlers.length} left`,
 		) {
 			// The command was received using the highest security class. Return the list of supported CCs
 
-			const implementedCCs = new Set(allCCs.filter((cc) =>
-				getImplementedVersion(cc) > 0
-			));
+			const implementedCCs = new Set(
+				allCCs.filter((cc) => getImplementedVersion(cc) > 0),
+			);
 
 			// Encapsulation CCs are always supported
 			const implementedEncapsulationCCs = encapsulationCCs.filter(

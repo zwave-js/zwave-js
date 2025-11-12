@@ -80,7 +80,7 @@ export default tseslint.config(
 			"@zwave-js/no-forbidden-imports": "error",
 		},
 	},
-		// Enable CC-specific custom rules
+	// Enable CC-specific custom rules
 	{
 		files: ["packages/cc/src/**/*CC.ts"],
 		rules: {

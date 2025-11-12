@@ -942,7 +942,9 @@ export class DeviceConfig {
 					param.valueBitMask ? `[${num2hex(param.valueBitMask)}]` : ""
 				}`;
 			target.paramInformation = [...map.values()]
-				.toSorted((a, b) => getParamKey(a).localeCompare(getParamKey(b)))
+				.toSorted((a, b) =>
+					getParamKey(a).localeCompare(getParamKey(b))
+				)
 				.map((p) => cloneDeep(p));
 		};
 
@@ -1019,7 +1021,8 @@ export class DeviceConfig {
 				c.removeCCs = Object.fromEntries(this.compat.removeCCs);
 			}
 			if (this.compat.treatSetAsReport) {
-				c.treatSetAsReport = [...this.compat.treatSetAsReport].toSorted();
+				c.treatSetAsReport = [...this.compat.treatSetAsReport]
+					.toSorted();
 			}
 
 			c = sortObject(c);

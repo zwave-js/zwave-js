@@ -2346,7 +2346,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 		if (!super.persistValues(ctx)) return false;
 
 		// Store every received parameter
-		 
+
 		for (let [parameter, value] of this._values.entries()) {
 			// Check if the initial assumption of SignedInteger holds true
 			const oldParamInformation = this.getParamInformation(

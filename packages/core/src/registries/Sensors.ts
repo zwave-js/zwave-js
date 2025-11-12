@@ -777,8 +777,8 @@ export function getSensorScale<
 	// @ts-expect-error Undefined is valid if the sensor is not found
 	if (!sensor) return;
 
-	const scaleDef: ScaleDefinition | undefined =
-		(sensor?.scales as any)?.[scale];
+	const scaleDef: ScaleDefinition | undefined = (sensor?.scales as any)
+		?.[scale];
 	// @ts-expect-error Undefined is valid if the scale is not found
 	if (!scaleDef) return;
 
