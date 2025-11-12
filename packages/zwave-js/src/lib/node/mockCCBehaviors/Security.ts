@@ -105,7 +105,7 @@ const respondToS0CommandsSupportedGet: MockNodeBehavior = {
 	},
 };
 
-// Parse and unwrap Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
+// Parse and unwrap Security CC commands.
 const encapsulateS0CC: MockNodeBehavior = {
 	async transformIncomingCC(controller, self, receivedCC) {
 		// We don't support sequenced commands here

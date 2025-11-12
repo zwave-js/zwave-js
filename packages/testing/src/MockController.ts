@@ -5,6 +5,7 @@ import {
 	NodeIDType,
 	SecurityClass,
 	SecurityManager,
+	SecurityManager2,
 	type SecurityManagers,
 	randomBytes,
 	securityClassOrder,
@@ -60,7 +61,16 @@ export interface MockControllerOptions {
 
 /** A mock Z-Wave controller which interacts with {@link MockNode}s and can be controlled via a {@link MockSerialPort} */
 export class MockController {
-	public constructor(options: MockControllerOptions) {
+	public static async create(
+		options: MockControllerOptions,
+	): Promise<MockController> {
+		const ret = new MockController(options);
+		await ret.setupSecurityManagers();
+		return ret;
+	}
+
+	private constructor(options: MockControllerOptions) {
+		this._options = options;
 		this.mockPort = options.mockPort;
 		this.serial = options.serial;
 
@@ -72,26 +82,6 @@ export class MockController {
 		this.capabilities = {
 			...getDefaultMockControllerCapabilities(),
 			...options.capabilities,
-		};
-
-		// Set up security managers depending on the provided keys
-		let securityManager: SecurityManager | undefined;
-		if (options.securityKeys?.S0_Legacy) {
-			securityManager = new SecurityManager({
-				ownNodeId: this.ownNodeId,
-				networkKey: options.securityKeys.S0_Legacy,
-				// Use a high nonce timeout to allow debugging tests more easily
-				nonceTimeout: 100000,
-			});
-		}
-
-		const securityManager2: SecurityManager | undefined = undefined;
-		const securityManagerLR: SecurityManager | undefined = undefined;
-
-		this.securityManagers = {
-			securityManager,
-			securityManager2,
-			securityManagerLR,
 		};
 
 		const securityClasses = new Map<number, Map<SecurityClass, boolean>>();
@@ -165,10 +155,70 @@ export class MockController {
 		void this.execute();
 	}
 
+	private _options: MockControllerOptions;
+
 	public homeId: number;
 	public ownNodeId: number;
 
-	public securityManagers: SecurityManagers;
+	public securityManagers: SecurityManagers = {
+		securityManager: undefined,
+		securityManager2: undefined,
+		securityManagerLR: undefined,
+	};
+
+	private async setupSecurityManagers(): Promise<void> {
+		// Set up security managers depending on the provided keys
+		let securityManager: SecurityManager | undefined;
+		if (this._options.securityKeys?.S0_Legacy) {
+			securityManager = new SecurityManager({
+				ownNodeId: this.ownNodeId,
+				networkKey: this._options.securityKeys.S0_Legacy,
+				// Use a high nonce timeout to allow debugging tests more easily
+				nonceTimeout: 100000,
+			});
+		}
+
+		let securityManager2: SecurityManager2 | undefined = undefined;
+		if (
+			this._options.securityKeys?.S2_AccessControl
+			|| this._options.securityKeys?.S2_Authenticated
+			|| this._options.securityKeys?.S2_Unauthenticated
+		) {
+			securityManager2 = await SecurityManager2.create();
+			if (this._options.securityKeys.S2_AccessControl) {
+				await securityManager2.setKey(
+					SecurityClass.S2_AccessControl,
+					this._options.securityKeys.S2_AccessControl,
+				);
+			}
+			if (this._options.securityKeys.S2_Authenticated) {
+				await securityManager2.setKey(
+					SecurityClass.S2_Authenticated,
+					this._options.securityKeys.S2_Authenticated,
+				);
+			}
+			if (this._options.securityKeys.S2_Unauthenticated) {
+				await securityManager2.setKey(
+					SecurityClass.S2_Unauthenticated,
+					this._options.securityKeys.S2_Unauthenticated,
+				);
+			}
+			if (this._options.securityKeys.S0_Legacy) {
+				await securityManager2.setKey(
+					SecurityClass.S0_Legacy,
+					this._options.securityKeys.S0_Legacy,
+				);
+			}
+		}
+
+		const securityManagerLR: SecurityManager | undefined = undefined;
+
+		this.securityManagers = {
+			securityManager,
+			securityManager2,
+			securityManagerLR,
+		};
+	}
 
 	public encodingContext: MessageEncodingContext;
 	public parsingContext: MessageParsingContext;

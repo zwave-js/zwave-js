@@ -241,16 +241,19 @@ async function decryptSinglecast(
 		);
 
 		const iv = nonce;
+
+		const ret = await decryptAES128CCM(
+			ciphertext,
+			key,
+			iv,
+			authData,
+			authTag,
+		);
+
 		return {
 			key,
 			iv,
-			...(await decryptAES128CCM(
-				ciphertext,
-				key,
-				iv,
-				authData,
-				authTag,
-			)),
+			...ret,
 		};
 	};
 	const getNonceAndDecrypt = async () => {

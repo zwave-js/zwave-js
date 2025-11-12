@@ -969,7 +969,7 @@ const handleAddNode: MockControllerBehavior = {
 				if (controller.nodePendingInclusion) {
 					const { setup: testSpecificSetup, ...nodeOptions } =
 						controller.nodePendingInclusion;
-					const node = new MockNode({
+					const node = await MockNode.create({
 						controller,
 						...nodeOptions,
 					});

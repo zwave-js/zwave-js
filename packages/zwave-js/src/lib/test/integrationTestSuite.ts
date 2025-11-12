@@ -105,7 +105,7 @@ function suite(
 		({
 			mockController,
 			mockNodes: [mockNode],
-		} = prepareMocks(
+		} = await prepareMocks(
 			mockPort,
 			serial,
 			{

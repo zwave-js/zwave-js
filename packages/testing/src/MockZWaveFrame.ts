@@ -43,9 +43,13 @@ export enum MockZWaveFrameType {
 	ACK,
 }
 
+export type CreateMockZWaveRequestFrameOptions = Partial<
+	Omit<MockZWaveRequestFrame, "direction" | "payload">
+>;
+
 export function createMockZWaveRequestFrame(
 	payload: CommandClass | (() => Promise<CommandClass>),
-	options: Partial<Omit<MockZWaveRequestFrame, "direction" | "payload">> = {},
+	options: CreateMockZWaveRequestFrameOptions = {},
 ): LazyMockZWaveRequestFrame {
 	const { repeaters = [], ackRequested = true } = options;
 	return {

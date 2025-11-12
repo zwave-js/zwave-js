@@ -36,6 +36,10 @@ import {
 	SecurityCCBehaviors,
 	SecurityCCHooks,
 } from "./mockCCBehaviors/Security.js";
+import {
+	Security2CCBehaviors,
+	Security2CCHooks,
+} from "./mockCCBehaviors/Security2.js";
 import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch.js";
 import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
 import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
@@ -90,7 +94,7 @@ const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 			}
 
 			const cc = new VersionCCCommandClassReport({
-				nodeId: self.id,
+				nodeId: controller.ownNodeId,
 				endpointIndex: "index" in endpoint ? endpoint.index : undefined,
 				requestedCC: receivedCC.requestedCC,
 				ccVersion: version,
@@ -155,6 +159,8 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 
 		...SecurityCCHooks,
 		...SecurityCCBehaviors,
+		...Security2CCHooks,
+		...Security2CCBehaviors,
 
 		...MultiChannelCCHooks,
 		...MultiChannelCCBehaviors,

@@ -101,7 +101,7 @@ function suite(
 			debug,
 			additionalDriverOptions,
 		));
-		({ mockController, mockNodes } = prepareMocks(
+		({ mockController, mockNodes } = await prepareMocks(
 			mockPort,
 			serial,
 			{
