@@ -351,7 +351,7 @@ export class CommandClass implements CCId {
 	/**
 	 * Serializes this CommandClass to be embedded in a message payload or another CC
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	// oxlint-disable-next-line no-unused-vars, @typescript-eslint/require-await
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// NoOp CCs have no command and no payload
 		if (this.ccId === CommandClasses["No Operation"]) {

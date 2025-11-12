@@ -1,3 +1,5 @@
+// oxlint-disable typescript/no-misused-spread
+
 import { CommandClass, WakeUpTime } from "@zwave-js/cc";
 import {
 	ZWaveProtocolCC,
@@ -283,7 +285,6 @@ const handleSendData: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error("Received SendDataRequest while not idle");
 			}
 
@@ -375,7 +376,6 @@ const handleSendDataMulticast: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received SendDataMulticastRequest while not idle",
 				);
@@ -474,7 +474,6 @@ const handleSendDataBridge: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received SendDataBridgeRequest while not idle",
 				);
@@ -568,7 +567,6 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received SendDataMulticastBridgeRequest while not idle",
 				);
@@ -667,7 +665,6 @@ const handleRequestNodeInfo: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received RequestNodeInfoRequest while not idle",
 				);
@@ -794,7 +791,6 @@ const handleDeleteSUCReturnRoute: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received DeleteSUCReturnRouteRequest while not idle",
 				);
@@ -856,7 +852,6 @@ const handleAssignSUCReturnRoute: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received AssignSUCReturnRouteRequest while not idle",
 				);

@@ -124,7 +124,7 @@ export class WakeUpCCAPI extends CCAPI {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getInterval() {
 		this.assertSupportsCommand(WakeUpCommand, WakeUpCommand.IntervalGet);
 
@@ -143,7 +143,7 @@ export class WakeUpCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getIntervalCapabilities() {
 		this.assertSupportsCommand(
 			WakeUpCommand,

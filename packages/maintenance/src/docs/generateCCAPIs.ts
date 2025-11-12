@@ -341,13 +341,13 @@ async function processCCDocFile(
 	const generatedSidebar = `\n\t- [${ccName} CC](api/CCs/${filename})`;
 
 	// Enumerate all useful public methods
-	const ignoredMethods: string[] = [
+	const ignoredMethods = new Set([
 		"supportsCommand",
 		"isSetValueOptimistic",
-	];
+	]);
 	const methods = APIClass.getInstanceMethods()
 		.filter((m) => m.hasModifier(SyntaxKind.PublicKeyword))
-		.filter((m) => !ignoredMethods.includes(m.getName()));
+		.filter((m) => !ignoredMethods.has(m.getName()));
 
 	if (methods.length) {
 		text += `## ${ccName} CC methods\n\n`;
@@ -447,7 +447,7 @@ ${
 
 		const sortedProperties = type
 			.getProperties()
-			.sort((a, b) => a.getName().localeCompare(b.getName()));
+			.toSorted((a, b) => a.getName().localeCompare(b.getName()));
 
 		for (const value of sortedProperties) {
 			let valueType = value.getTypeAtLocation(valueIDsConst);

@@ -439,7 +439,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(MeterCommand, MeterCommand.SupportedGet);
 
@@ -1355,14 +1355,12 @@ export class MeterCCSupportedReport extends MeterCC {
 		const message: MessageRecord = {
 			"meter type": getMeterName(this.type),
 			"supports reset": this.supportsReset,
-			"supported scales": `${
-				this.supportedScales
-					.map(
-						(scale) => `
+			"supported scales": this.supportedScales
+				.map(
+					(scale) => `
 · ${(getMeterScale(this.type, scale) ?? getUnknownMeterScale(scale)).label}`,
-					)
-					.join("")
-			}`,
+				)
+				.join(""),
 			"supported rate types": this.supportedRateTypes
 				.map((rt) => getEnumMemberName(RateType, rt))
 				.join(", "),

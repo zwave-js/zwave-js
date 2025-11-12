@@ -163,14 +163,14 @@ function areEndpointsUnnecessary(
 	}
 
 	// Endpoints are necessary if more than 1 of them has a switch-type device class
-	const switchTypeDeviceClasses = [
+	const switchTypeDeviceClasses = new Set([
 		0x10, // Binary Switch
 		0x11, // Multilevel Switch
 		0x12, // Remote Switch
 		0x13, // Toggle Switch
-	];
+	]);
 	const numSwitchEndpoints = [...deviceClasses.values()].filter(
-		({ generic }) => switchTypeDeviceClasses.includes(generic),
+		({ generic }) => switchTypeDeviceClasses.has(generic),
 	).length;
 	if (numSwitchEndpoints > 1) return false;
 
@@ -202,7 +202,7 @@ export class MultiChannelCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getEndpoints() {
 		this.assertSupportsCommand(
 			MultiChannelCommand,

@@ -170,7 +170,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"valueV2",
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		(indicatorId: number, propertyId: number) => indicatorId,
 		(indicatorId: number, propertyId: number) => propertyId,
 		({ property, propertyKey }) =>
@@ -189,7 +189,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	...V.dynamicPropertyAndKeyWithName(
 		"timeout",
 		(indicatorId: number) => indicatorId,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		(indicatorId: number) => "timeout",
 		({ property, propertyKey }) =>
 			typeof property === "number" && propertyKey === "timeout",
@@ -1080,16 +1080,14 @@ export class IndicatorCCSet extends IndicatorCC {
 			message["indicator 0 value"] = this.indicator0Value;
 		}
 		if (this.values != undefined) {
-			message.values = `${
-				this.values
-					.map(
-						(v) => `
+			message.values = this.values
+				.map(
+					(v) => `
 · indicatorId: ${v.indicatorId}
   propertyId:  ${v.propertyId}
   value:       ${v.value}`,
-					)
-					.join("")
-			}`;
+				)
+				.join("");
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -1339,16 +1337,14 @@ export class IndicatorCCReport extends IndicatorCC {
 			message["indicator 0 value"] = this.indicator0Value;
 		}
 		if (this.values != undefined) {
-			message.values = `${
-				this.values
-					.map(
-						(v) => `
+			message.values = this.values
+				.map(
+					(v) => `
 · indicatorId: ${v.indicatorId}
   propertyId:  ${v.propertyId}
   value:       ${v.value}`,
-					)
-					.join("")
-			}`;
+				)
+				.join("");
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -1491,15 +1487,13 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 			...super.toLogEntry(ctx),
 			message: {
 				indicator: getIndicatorName(this.indicatorId),
-				"supported properties": `${
-					this.supportedProperties
-						.map(
-							(id) =>
-								getIndicatorProperty(id)?.label
-									?? `Unknown (${num2hex(id)})`,
-						)
-						.join(", ")
-				}`,
+				"supported properties": this.supportedProperties
+					.map(
+						(id) =>
+							getIndicatorProperty(id)?.label
+								?? `Unknown (${num2hex(id)})`,
+					)
+					.join(", "),
 				"next indicator": getIndicatorName(this.nextIndicatorId),
 			},
 		};

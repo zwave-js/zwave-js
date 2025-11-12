@@ -79,7 +79,7 @@ export function checkCCToLogEntry(): void {
 		});
 	}
 
-	const sortedCCs = [...results.keys()].sort();
+	const sortedCCs = [...results.keys()].toSorted();
 	for (const cc of sortedCCs) {
 		const checkResult = results.get(cc)!;
 		console.error(

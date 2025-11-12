@@ -126,8 +126,10 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		return {
 			firmwareUpgradable: true,
 			// TODO: Targets are not the list of IDs - maybe expose the IDs as well?
-			firmwareTargets: new Array(1 + meta.additionalFirmwareIDs.length)
-				.fill(0).map((_, i) => i),
+			firmwareTargets: Array
+				.from<number>({ length: 1 + meta.additionalFirmwareIDs.length })
+				.fill(0)
+				.map((_, i) => i),
 			continuesToFunction: meta.continuesToFunction,
 			supportsActivation: meta.supportsActivation,
 			supportsResuming: meta.supportsResuming,
@@ -166,7 +168,9 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		return {
 			firmwareUpgradable: true,
 			// TODO: Targets are not the list of IDs - maybe expose the IDs as well?
-			firmwareTargets: new Array(1 + additionalFirmwareIDs.length).fill(0)
+			firmwareTargets: Array
+				.from<number>({ length: 1 + additionalFirmwareIDs.length })
+				.fill(0)
 				.map((_, i) => i),
 			continuesToFunction,
 			supportsActivation,

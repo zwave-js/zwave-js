@@ -110,7 +110,7 @@ export enum FibaroCCIDs {
 
 @manufacturerProprietaryAPI(MANUFACTURERID_FIBARO)
 export class FibaroCCAPI extends ManufacturerProprietaryCCAPI {
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async fibaroVenetianBlindsGet() {
 		const cc = new FibaroVenetianBlindCCGet({
 			nodeId: this.endpoint.nodeId,

@@ -343,7 +343,7 @@ export function createMockNodeOptionsFromDump(
 	}
 
 	if (dump.endpoints) {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		for (const [indexStr, endpointDump] of Object.entries(dump.endpoints)) {
 			// FIXME: The mocks expect endpoints to be consecutive
 			// const index = parseInt(indexStr);

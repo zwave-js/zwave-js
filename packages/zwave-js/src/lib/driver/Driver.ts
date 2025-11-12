@@ -591,7 +591,7 @@ function checkOptions(options: ZWaveOptions): void {
 
 		if (options.features.disableCommandClasses?.length) {
 			// Ensure that all CCs may be disabled
-			const mandatory = [
+			const mandatory = new Set([
 				// Encapsulation CCs are always supported
 				...encapsulationCCs,
 				// All Root Devices or nodes MUST support
@@ -605,11 +605,11 @@ function checkOptions(options: ZWaveOptions): void {
 				CommandClasses.Powerlevel,
 				CommandClasses.Version,
 				CommandClasses["Z-Wave Plus Info"],
-			];
+			]);
 
 			const mandatoryDisabled = options.features.disableCommandClasses
 				.filter(
-					(cc) => mandatory.includes(cc),
+					(cc) => mandatory.has(cc),
 				);
 			if (mandatoryDisabled.length > 0) {
 				throw new ZWaveError(
@@ -2344,7 +2344,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// Then do all the nodes in parallel, but prioritize nodes that are more likely to be ready
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Fully-interviewed devices first (need the least amount of communication now)
 						(b.interviewStage - a.interviewStage)
 						// Always listening -> FLiRS -> sleeping
@@ -2419,7 +2419,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
 					.filter((n) => n.isListening || n.isFrequentListening)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Always listening -> FLiRS
 						(
 							(b.isListening ? 1 : 0)
@@ -3756,6 +3756,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		try {
 			if (result) await this.destroy();
 		} finally {
+			// oxlint-disable-next-line no-unsafe-finally - We want to return this value in any case
 			return result;
 		}
 	}
@@ -6110,14 +6111,14 @@ ${handlers.length} left`,
 		) {
 			// The command was received using the highest security class. Return the list of supported CCs
 
-			const implementedCCs = allCCs.filter((cc) =>
-				getImplementedVersion(cc) > 0
+			const implementedCCs = new Set(
+				allCCs.filter((cc) => getImplementedVersion(cc) > 0),
 			);
 
 			// Encapsulation CCs are always supported
 			const implementedEncapsulationCCs = encapsulationCCs.filter(
 				(cc) =>
-					implementedCCs.includes(cc)
+					implementedCCs.has(cc)
 					// A node MUST advertise support for Multi Channel Command Class only if it implements End Points.
 					// A node able to communicate using the Multi Channel encapsulation but implementing no End Point
 					// MUST NOT advertise support for the Multi Channel Command Class.

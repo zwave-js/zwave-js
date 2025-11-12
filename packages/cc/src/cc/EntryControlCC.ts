@@ -104,7 +104,7 @@ export class EntryControlCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupportedKeys() {
 		this.assertSupportsCommand(
 			EntryControlCommand,
@@ -124,7 +124,7 @@ export class EntryControlCCAPI extends CCAPI {
 		return response?.supportedKeys;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getEventCapabilities() {
 		this.assertSupportsCommand(
 			EntryControlCommand,
@@ -153,7 +153,7 @@ export class EntryControlCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getConfiguration() {
 		this.assertSupportsCommand(
 			EntryControlCommand,

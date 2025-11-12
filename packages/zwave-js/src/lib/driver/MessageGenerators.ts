@@ -319,7 +319,7 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 			// Clear the list of unhandled responses
 			unhandledResponses = [];
 			// Fill the list of unsent segments
-			const unsentSegments = new Array(numSegments)
+			const unsentSegments = Array.from<number>({ length: numSegments })
 				.fill(0)
 				.map((_, i) => i);
 			let didRetryLastSegment = false;

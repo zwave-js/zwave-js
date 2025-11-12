@@ -121,5 +121,7 @@
 		"chmod": false,
 		"chown": false,
 		"/^Remove-Item\\b/i": false
-	}
+	},
+	"oxc.typeAware": true,
+	"oxc.enable": true
 }
