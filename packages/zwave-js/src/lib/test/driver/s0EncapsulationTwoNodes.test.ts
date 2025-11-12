@@ -1,14 +1,10 @@
 import {
 	BasicCCGet,
 	BasicCCReport,
-	SecurityCC,
-	SecurityCCCommandEncapsulation,
-	SecurityCCCommandsSupportedGet,
-	SecurityCCCommandsSupportedReport,
 	SecurityCCNonceGet,
 	SecurityCCNonceReport,
 } from "@zwave-js/cc";
-import { CommandClasses, SecurityClass, SecurityManager } from "@zwave-js/core";
+import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
 	type MockZWaveFrame,
