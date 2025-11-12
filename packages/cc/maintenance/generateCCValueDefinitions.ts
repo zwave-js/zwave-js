@@ -70,12 +70,6 @@ export async function generateCCValueDefinitions(): Promise<void> {
 		]),
 	);
 	importsByModule.set(
-		"@zwave-js/config",
-		new Map([
-			["GetDeviceConfig", true],
-		]),
-	);
-	importsByModule.set(
 		"@zwave-js/shared",
 		new Map([
 			["getEnumMemberName", false],

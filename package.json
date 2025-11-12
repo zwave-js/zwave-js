@@ -127,7 +127,7 @@
     "lint:ts:fix": "yarn oxlint --type-aware --fix ; yarn eslint --fix",
     "fmt": "dprint fmt",
     "fmt:check": "dprint check > /dev/null",
-    "lint": " FORCE_COLOR=1 yarn turbo run lint:ts && yarn fmt:check",
+    "lint": "yarn run lint:ts && yarn fmt:check",
     "implemented_ccs": "yarn ts packages/maintenance/src/implementedCCs.ts",
     "gh-cc-table": "yarn run implemented_ccs --flavor=github --only-incomplete",
     "toLogEntryOverview": "yarn ts packages/cc/maintenance/checkCCToLogEntry.ts",

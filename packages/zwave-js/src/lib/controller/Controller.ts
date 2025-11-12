@@ -5569,7 +5569,7 @@ export class ZWaveController
 
 		// Keep track of which routes have been assigned
 		const assignedRoutes = Array
-			.from({ length: MAX_ROUTES })
+			.from<Route>({ length: MAX_ROUTES })
 			.fill(EMPTY_ROUTE);
 
 		let priorityRouteIndex = -1;
@@ -5637,7 +5637,7 @@ export class ZWaveController
 		// if an assignment fails.
 		while (
 			assignedRoutes.length > 0
-			&& isEmptyRoute(assignedRoutes.at(-1))
+			&& isEmptyRoute(assignedRoutes.at(-1)!)
 		) {
 			assignedRoutes.pop();
 		}
@@ -5880,7 +5880,7 @@ export class ZWaveController
 
 		// Keep track of which routes have been assigned
 		const assignedRoutes = Array
-			.from({ length: MAX_ROUTES })
+			.from<Route>({ length: MAX_ROUTES })
 			.fill(EMPTY_ROUTE);
 
 		let priorityRouteIndex = -1;
@@ -5948,7 +5948,7 @@ export class ZWaveController
 		// if an assignment fails.
 		while (
 			assignedRoutes.length > 0
-			&& isEmptyRoute(assignedRoutes.at(-1))
+			&& isEmptyRoute(assignedRoutes.at(-1)!)
 		) {
 			assignedRoutes.pop();
 		}
