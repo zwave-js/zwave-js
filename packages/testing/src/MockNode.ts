@@ -5,6 +5,7 @@ import {
 	type MaybeNotKnown,
 	NOT_KNOWN,
 	SecurityClass,
+	SecurityManager,
 	type SecurityManagers,
 	isCCInfoEqual,
 	securityClassOrder,
@@ -111,8 +112,38 @@ export class MockNode {
 		this.id = options.id;
 		this.controller = options.controller;
 
+		// Storage for remembering which security classes are granted to which nodes
 		const securityClasses = new Map<number, Map<SecurityClass, boolean>>();
 
+		// Set up security managers depending on the provided keys
+		let securityManager: SecurityManager | undefined;
+		if (
+			options.capabilities?.securityClasses?.has(SecurityClass.S0_Legacy)
+			&& options.controller.securityManagers.securityManager
+		) {
+			securityManager = new SecurityManager({
+				ownNodeId: this.id,
+				networkKey: options.controller.securityManagers.securityManager.networkKey,
+				// Use a high nonce timeout to allow debugging tests more easily
+				nonceTimeout: 100000,
+			});
+			// Remember that the controller has the S0 key
+			securityClasses.set(
+				this.controller.ownNodeId,
+				new Map([[SecurityClass.S0_Legacy, true]]),
+			);
+		}
+
+		const securityManager2: SecurityManager | undefined = undefined;
+		const securityManagerLR: SecurityManager | undefined = undefined;
+
+		this.securityManagers = {
+			securityManager,
+			securityManager2,
+			securityManagerLR,
+		};
+
+		// Set up capabilities and endpoints
 		const {
 			commandClasses = [],
 			endpoints = [],
@@ -144,7 +175,7 @@ export class MockNode {
 				}),
 			);
 		}
-
+		
 		const self = this;
 		this.encodingContext = {
 			homeId: this.controller.homeId,
@@ -205,11 +236,7 @@ export class MockNode {
 	public readonly controller: MockController;
 	public readonly capabilities: MockNodeCapabilities;
 
-	public securityManagers: SecurityManagers = {
-		securityManager: undefined,
-		securityManager2: undefined,
-		securityManagerLR: undefined,
-	};
+	public securityManagers: SecurityManagers;
 
 	public encodingContext: CCEncodingContext;
 

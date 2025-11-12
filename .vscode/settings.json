@@ -4,6 +4,7 @@
 	"editor.formatOnSave": false, // the default of true interferes with codeActionsOnSave
 	"editor.codeActionsOnSave": [
 		"source.fixAll.eslint",
+		"source.fixAll.oxc",
 		"source.formatDocument"
 	],
 	"eslint.codeActionsOnSave.mode": "problems",

@@ -967,7 +967,7 @@ const handleAddNode: MockControllerBehavior = {
 				// If there's a node pending inclusion, simulate the inclusion sequence
 				// after responding to the add request
 				if (controller.nodePendingInclusion) {
-					const { setup, ...nodeOptions } =
+					const { setup: testSpecificSetup, ...nodeOptions } =
 						controller.nodePendingInclusion;
 					const node = new MockNode({
 						controller,
@@ -976,7 +976,7 @@ const handleAddNode: MockControllerBehavior = {
 					// Apply default behaviors that are required for interacting with the driver correctly
 					node.defineBehavior(...createDefaultMockNodeBehaviors());
 					// Allow the tests to set up additional behavior before inclusion happens
-					setup?.(node);
+					testSpecificSetup?.(node);
 
 					const supportedCCs = [...node.implementedCCs]
 						.filter(([, info]) =>

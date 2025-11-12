@@ -2,8 +2,6 @@ import {
 	type CommandClass,
 	Security2CC,
 	Security2CCMessageEncapsulation,
-	SecurityCC,
-	SecurityCCCommandEncapsulation,
 	VersionCCCommandClassGet,
 	VersionCCCommandClassReport,
 	ZWavePlusNodeType,
@@ -34,6 +32,10 @@ import { MultilevelSensorCCBehaviors } from "./mockCCBehaviors/MultilevelSensor.
 import { MultilevelSwitchCCBehaviors } from "./mockCCBehaviors/MultilevelSwitch.js";
 import { NotificationCCBehaviors } from "./mockCCBehaviors/Notification.js";
 import { ScheduleEntryLockCCBehaviors } from "./mockCCBehaviors/ScheduleEntryLock.js";
+import {
+	SecurityCCBehaviors,
+	SecurityCCHooks,
+} from "./mockCCBehaviors/Security.js";
 import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch.js";
 import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
 import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
@@ -118,34 +120,6 @@ const respondToZWavePlusCCGet: MockNodeBehavior = {
 	},
 };
 
-// TODO: We should handle this more generically:
-const respondToS0ZWavePlusCCGet: MockNodeBehavior = {
-	handleCC(controller, self, receivedCC) {
-		if (
-			receivedCC instanceof SecurityCCCommandEncapsulation
-			&& receivedCC.encapsulated instanceof ZWavePlusCCGet
-		) {
-			let cc: CommandClass = new ZWavePlusCCReport({
-				nodeId: controller.ownNodeId,
-				zwavePlusVersion: 2,
-				nodeType: ZWavePlusNodeType.Node,
-				roleType: self.capabilities.isListening
-					? ZWavePlusRoleType.AlwaysOnSlave
-					: self.capabilities.isFrequentListening
-					? ZWavePlusRoleType.SleepingListeningSlave
-					: ZWavePlusRoleType.SleepingReportingSlave,
-				installerIcon: 0x0000,
-				userIcon: 0x0000,
-			});
-			cc = SecurityCC.encapsulate(
-				self.id,
-				self.securityManagers.securityManager!,
-				cc,
-			);
-			return { action: "sendCC", cc, ackRequested: true };
-		}
-	},
-};
 
 const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
@@ -180,13 +154,15 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 	return [
 		respondToRequestNodeInfo,
 
+		...SecurityCCHooks,
+		...SecurityCCBehaviors,
+
 		...MultiChannelCCHooks,
 		...MultiChannelCCBehaviors,
 
 		respondToVersionCCCommandClassGet,
 
 		respondToZWavePlusCCGet,
-		respondToS0ZWavePlusCCGet,
 		respondToS2ZWavePlusCCGet,
 
 		...BasicCCBehaviors,

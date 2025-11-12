@@ -4,6 +4,7 @@ import {
 	NOT_KNOWN,
 	NodeIDType,
 	SecurityClass,
+	SecurityManager,
 	type SecurityManagers,
 	randomBytes,
 	securityClassOrder,
@@ -23,7 +24,6 @@ import {
 	type BytesView,
 	TimedExpectation,
 	isAbortError,
-	noop,
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {
@@ -49,6 +49,13 @@ export interface MockControllerOptions {
 	ownNodeId?: number;
 	homeId?: number;
 	capabilities?: Partial<MockControllerCapabilities>;
+
+	securityKeys?: {
+		S2_AccessControl?: BytesView;
+		S2_Authenticated?: BytesView;
+		S2_Unauthenticated?: BytesView;
+		S0_Legacy?: BytesView;
+	};
 }
 
 /** A mock Z-Wave controller which interacts with {@link MockNode}s and can be controlled via a {@link MockSerialPort} */
@@ -65,6 +72,26 @@ export class MockController {
 		this.capabilities = {
 			...getDefaultMockControllerCapabilities(),
 			...options.capabilities,
+		};
+
+		// Set up security managers depending on the provided keys
+		let securityManager: SecurityManager | undefined;
+		if (options.securityKeys?.S0_Legacy) {
+			securityManager = new SecurityManager({
+				ownNodeId: this.ownNodeId,
+				networkKey: options.securityKeys.S0_Legacy,
+				// Use a high nonce timeout to allow debugging tests more easily
+				nonceTimeout: 100000,
+			});
+		}
+
+		const securityManager2: SecurityManager | undefined = undefined;
+		const securityManagerLR: SecurityManager | undefined = undefined;
+
+		this.securityManagers = {
+			securityManager,
+			securityManager2,
+			securityManagerLR,
 		};
 
 		const securityClasses = new Map<number, Map<SecurityClass, boolean>>();
@@ -141,11 +168,7 @@ export class MockController {
 	public homeId: number;
 	public ownNodeId: number;
 
-	public securityManagers: SecurityManagers = {
-		securityManager: undefined,
-		securityManager2: undefined,
-		securityManagerLR: undefined,
-	};
+	public securityManagers: SecurityManagers;
 
 	public encodingContext: MessageEncodingContext;
 	public parsingContext: MessageParsingContext;
@@ -225,11 +248,11 @@ export class MockController {
 						case MessageHeaders.ACK:
 						case MessageHeaders.NAK:
 						case MessageHeaders.CAN:
-							void this.serialOnData(header).catch(noop);
+							void this.serialOnData(header);
 							continue;
 					}
 				}
-				void this.serialOnData(data).catch(noop);
+				void this.serialOnData(data);
 			}
 		} catch (e) {
 			if (isAbortError(e)) return;
