@@ -120,7 +120,6 @@ const respondToZWavePlusCCGet: MockNodeBehavior = {
 	},
 };
 
-
 const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (

@@ -1,7 +1,4 @@
-import {
-	SecurityCCNonceGet,
-	SecurityCCNonceReport,
-} from "@zwave-js/cc";
+import { SecurityCCNonceGet, SecurityCCNonceReport } from "@zwave-js/cc";
 import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import {
 	MOCK_FRAME_ACK_TIMEOUT,
@@ -31,7 +28,6 @@ integrationTest(
 			],
 			securityClasses: new Set([SecurityClass.S0_Legacy]),
 		},
-
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// The node requests a nonce while asleep, but the ACK gets lost

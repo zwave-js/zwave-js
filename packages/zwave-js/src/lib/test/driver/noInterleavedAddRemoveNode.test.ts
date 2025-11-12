@@ -17,7 +17,7 @@ integrationTest(
 			// These two commands should not be interleaved
 			const expectation = mockController.expectHostMessage(
 				(msg) => msg instanceof RemoveFailedNodeRequest,
-				{timeout:500},
+				{ timeout: 500 },
 			).then(() => "FAIL").catch(() => "PASS");
 
 			void driver.controller["beginInclusionSmartStart"]({

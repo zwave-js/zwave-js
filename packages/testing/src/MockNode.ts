@@ -123,7 +123,8 @@ export class MockNode {
 		) {
 			securityManager = new SecurityManager({
 				ownNodeId: this.id,
-				networkKey: options.controller.securityManagers.securityManager.networkKey,
+				networkKey: options.controller.securityManagers.securityManager
+					.networkKey,
 				// Use a high nonce timeout to allow debugging tests more easily
 				nonceTimeout: 100000,
 			});
@@ -175,7 +176,7 @@ export class MockNode {
 				}),
 			);
 		}
-		
+
 		const self = this;
 		this.encodingContext = {
 			homeId: this.controller.homeId,
