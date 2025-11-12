@@ -33,15 +33,9 @@ import { integrationTest } from "../integrationTestSuite.js";
 import { integrationTest as integrationTestMulti } from "../integrationTestSuiteMulti.js";
 
 integrationTest(
-	"Device inclusion process should emit 'node added' event",
+	"Device inclusion process should emit 'node added' event and interview the device",
 	{
 		// debug: true,
-
-		additionalDriverOptions: {
-			testingHooks: {
-				skipNodeInterview: true,
-			},
-		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// Set up a promise to wait for the "node added" event
@@ -83,6 +77,14 @@ integrationTest(
 			const addedNode = driver.controller.nodes.get(3);
 			t.expect(addedNode).toBeDefined();
 			t.expect(addedNode?.id).toBe(3);
+
+			// Now wait for the interview to complete
+			const interviewCompletePromise = new Promise<void>((resolve) => {
+				addedNode!.once("interview completed", () => {
+					resolve();
+				});
+			});
+			await interviewCompletePromise;
 		},
 	},
 );
