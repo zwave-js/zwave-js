@@ -28,7 +28,7 @@ import {
 	deriveSharedECDHSecret,
 	deriveTempKeys,
 } from "@zwave-js/core";
-import { type BytesView, getEnumMemberName } from "@zwave-js/shared";
+import { type BytesView } from "@zwave-js/shared";
 import {
 	type MockController,
 	type MockNode,
@@ -236,7 +236,7 @@ const handleS2NetworkKeyReport: MockNodeBehavior = {
 				receivedCC.grantedKey,
 				true,
 			);
-			sm2Node.setKey(receivedCC.grantedKey, receivedCC.networkKey);
+			await sm2Node.setKey(receivedCC.grantedKey, receivedCC.networkKey);
 
 			// Verify the key
 			self.state.set(
@@ -406,7 +406,7 @@ const respondToS2NonceGet: MockNodeBehavior = {
 						secClass,
 						true,
 					);
-					sm2Node.setKey(secClass, key);
+					await sm2Node.setKey(secClass, key);
 
 					sm2Node.tempKeys.delete(controller.ownNodeId);
 					sm2Node.deleteNonce(controller.ownNodeId);

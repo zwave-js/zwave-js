@@ -1,33 +1,12 @@
-import {
-	BinarySwitchCCValues,
-	CommandClass,
-	SecurityCC,
-	SecurityCCCommandEncapsulation,
-	SecurityCCCommandsSupportedGet,
-	SecurityCCCommandsSupportedReport,
-	SecurityCCNetworkKeySet,
-	SecurityCCNetworkKeyVerify,
-	SecurityCCNonceGet,
-	SecurityCCNonceReport,
-	SecurityCCSchemeGet,
-	SecurityCCSchemeReport,
-} from "@zwave-js/cc";
+import { BinarySwitchCCValues } from "@zwave-js/cc";
 import {
 	BasicDeviceClass,
 	CommandClasses,
 	SecurityClass,
 	SecurityManager,
-	isEncapsulationCC,
 } from "@zwave-js/core";
 
-import {
-	type MockNode,
-	type MockNodeBehavior,
-	type MockZWaveFrame,
-	MockZWaveFrameType,
-	ccCaps,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { ccCaps } from "@zwave-js/testing";
 import { InclusionStrategy } from "../../controller/Inclusion.js";
 import type { ZWaveNode } from "../../node/Node.js";
 import { integrationTest } from "../integrationTestSuite.js";
@@ -93,7 +72,7 @@ integrationTest(
 integrationTestMulti(
 	"Inclusion with S2 should work",
 	{
-		debug: true,
+		// debug: true,
 
 		testBody: async (t, driver, nodes, mockController, mockNodes) => {
 			// Set up a promise to wait for the "node added" event

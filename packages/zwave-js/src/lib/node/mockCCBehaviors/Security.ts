@@ -137,7 +137,7 @@ const encapsulateS0CC: MockNodeBehavior = {
 			// encapsulating commands, so we have to do it ourselves here.
 			// This requires a nonce exchange.
 			const nonceGet = new SecurityCCNonceGet({
-				nodeId: controller.ownNodeId,
+				nodeId: response.cc.nodeId,
 			});
 			await self.sendToController(
 				createMockZWaveRequestFrame(nonceGet, {
