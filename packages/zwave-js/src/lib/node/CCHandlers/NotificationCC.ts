@@ -371,6 +371,25 @@ function handleKnownNotification(
 				command.eventParameters === 0x01 ? 0x01 : 0x00,
 			);
 		}
+	} else if (
+		// Access Control, all user codes deleted
+		command.notificationType === 0x06
+		&& command.notificationEvent === 0x0c
+		&& node.supportsCC(CommandClasses["User Code"])
+	) {
+		// When all user codes are deleted, we need to remove them from the cache
+		// Get all user code values for this endpoint
+		const userCodeValues = node.valueDB.findValues(
+			(vid) =>
+				vid.commandClass === CommandClasses["User Code"]
+				&& (vid.endpoint ?? 0) === command.endpointIndex
+				&& (vid.property === "userCode" || vid.property === "userIdStatus"),
+		);
+
+		// Remove each user code value from the cache
+		for (const valueId of userCodeValues) {
+			node.valueDB.removeValue(valueId);
+		}
 	}
 }
 
