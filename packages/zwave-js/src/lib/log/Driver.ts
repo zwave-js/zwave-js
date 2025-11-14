@@ -1,16 +1,10 @@
 import {
-	type CommandClass,
-	isEncapsulatingCommandClass,
-	isMultiEncapsulatingCommandClass,
-} from "@zwave-js/cc";
-import {
 	type DataDirection,
 	type LogContainer,
 	type LogContext,
 	MessagePriority,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
-	messageRecordToLines,
 	tagify,
 } from "@zwave-js/core";
 import {
@@ -134,89 +128,25 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 		const isCCContainer = containsCC(message);
 		const logEntry = message.toLogEntry();
 
-		if (this.driver.options.logConfig?.raw) {
-			// In raw mode, we just print the JSON representation of the message
-			this.logger.log({
-				level: DRIVER_LOGLEVEL,
-				primaryTags: tagify(logEntry.tags),
-				secondaryTags: secondaryTags && secondaryTags.length > 0
-					? tagify(secondaryTags)
-					: undefined,
-				message: JSON.stringify(logEntry),
-				// Since we are programming a controller, responses are always inbound
-				// (not to confuse with the message type, which may be Request or Response)
-				direction: getDirectionPrefix(direction),
-				context: { source: "driver", direction },
-			});
-			return;
-		}
-
-		// Otherwise, render the entire command tree
-		let msg = [tagify(logEntry.tags)];
-
-		if (logEntry.message) {
-			msg.push(
-				...messageRecordToLines(logEntry.message).map(
-					(line) => (isCCContainer ? "│ " : "  ") + line,
-				),
-			);
-		}
-
-		try {
-			// If possible, include information about the CCs
-			if (isCCContainer) {
-				// Remove the default payload message and draw a bracket
-				msg = msg.filter((line) => !line.startsWith("│ payload:"));
-
-				const logCC = (
-					cc: CommandClass,
-					indent: number = 0,
-				) => {
-					const isEncapCC = isEncapsulatingCommandClass(cc)
-						|| isMultiEncapsulatingCommandClass(cc);
-					const loggedCC = cc.toLogEntry(this.driver);
-					msg.push(
-						" ".repeat(indent * 2)
-							+ "└─"
-							+ tagify(loggedCC.tags),
-					);
-
-					indent++;
-					if (loggedCC.message) {
-						msg.push(
-							...messageRecordToLines(loggedCC.message).map(
-								(line) =>
-									`${" ".repeat(indent * 2)}${
-										isEncapCC ? "│ " : "  "
-									}${line}`,
-							),
-						);
-					}
-					// If this is an encap CC, continue
-					if (isEncapsulatingCommandClass(cc)) {
-						logCC(cc.encapsulated, indent);
-					} else if (isMultiEncapsulatingCommandClass(cc)) {
-						for (const encap of cc.encapsulated) {
-							logCC(encap, indent);
-						}
-					}
-				};
-
-				logCC(message.command);
-			}
-
-			this.logger.log({
-				level: DRIVER_LOGLEVEL,
-				secondaryTags: secondaryTags && secondaryTags.length > 0
-					? tagify(secondaryTags)
-					: undefined,
-				message: msg,
-				// Since we are programming a controller, responses are always inbound
-				// (not to confuse with the message type, which may be Request or Response)
-				direction: getDirectionPrefix(direction),
-				context: { source: "driver", direction },
-			});
-		} catch {}
+		// Pass raw log entry data to the logger
+		// The transport formatter will handle formatting based on its configuration
+		this.logger.log({
+			level: DRIVER_LOGLEVEL,
+			primaryTags: tagify(logEntry.tags),
+			secondaryTags: secondaryTags && secondaryTags.length > 0
+				? tagify(secondaryTags)
+				: undefined,
+			// Set a placeholder message that will be replaced by the formatter
+			message: "",
+			direction: getDirectionPrefix(direction),
+			context: { source: "driver", direction },
+			// Include raw serial message data for transport-level formatting
+			serialMessage: {
+				logEntry,
+				isCCContainer,
+				command: isCCContainer ? message.command : undefined,
+			},
+		});
 	}
 
 	/** Logs what's currently in the driver's send queue */
