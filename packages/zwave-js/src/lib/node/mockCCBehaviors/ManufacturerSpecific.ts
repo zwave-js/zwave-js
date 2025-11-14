@@ -8,7 +8,7 @@ const respondToManufacturerSpecificGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof ManufacturerSpecificCCGet) {
 			const cc = new ManufacturerSpecificCCReport({
-				nodeId: self.id,
+				nodeId: controller.ownNodeId,
 				manufacturerId: self.capabilities.manufacturerId,
 				productType: self.capabilities.productType,
 				productId: self.capabilities.productId,

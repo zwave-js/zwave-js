@@ -31,7 +31,7 @@ import {
 	type MockControllerCapabilities,
 	getDefaultMockControllerCapabilities,
 } from "./MockControllerCapabilities.js";
-import type { MockNode, MockNodeOptions } from "./MockNode.js";
+import type { MockNode, NodePendingInclusion } from "./MockNode.js";
 import {
 	type LazyMockZWaveFrame,
 	MOCK_FRAME_ACK_TIMEOUT,
@@ -152,7 +152,9 @@ export class MockController {
 			requestStorage,
 		};
 
-		void this.execute();
+		void this.execute().catch((e) => {
+			console.error(e);
+		});
 	}
 
 	private _options: MockControllerOptions;
@@ -268,12 +270,7 @@ export class MockController {
 	public readonly state = new Map<string, unknown>();
 
 	/** Node info for the node that is pending inclusion. Set this before starting inclusion to simulate a node joining. */
-	public nodePendingInclusion:
-		| (Omit<MockNodeOptions, "controller"> & {
-			/** Optional callback that is called when the node is created during inclusion */
-			setup?: (node: MockNode) => void;
-		})
-		| undefined;
+	public nodePendingInclusion: NodePendingInclusion | undefined;
 
 	/** Controls whether the controller automatically ACKs messages from the host before handling them */
 	public autoAckHostMessages: boolean = true;
@@ -350,6 +347,8 @@ export class MockController {
 				this.ackHostMessage();
 			}
 		} catch (e: any) {
+			// oxlint-disable-next-line no-debugger
+			debugger;
 			throw new Error(
 				`Mock controller received an invalid message from the host: ${e.stack}`,
 			);

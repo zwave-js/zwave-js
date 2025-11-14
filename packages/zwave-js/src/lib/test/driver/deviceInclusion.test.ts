@@ -15,6 +15,7 @@ import {
 import {
 	BasicDeviceClass,
 	CommandClasses,
+	SecurityClass,
 	SecurityManager,
 	isEncapsulationCC,
 } from "@zwave-js/core";
@@ -85,6 +86,99 @@ integrationTest(
 				});
 			});
 			await interviewCompletePromise;
+		},
+	},
+);
+
+integrationTestMulti(
+	"Inclusion with S2 should work",
+	{
+		debug: true,
+
+		testBody: async (t, driver, nodes, mockController, mockNodes) => {
+			// Set up a promise to wait for the "node added" event
+			let includedNode: ZWaveNode | undefined;
+			const nodeAddedPromise = new Promise<void>((resolve) => {
+				driver.controller.once("node added", (node) => {
+					includedNode = node;
+					resolve();
+				});
+			});
+
+			// Set up the node that will be included
+			let inclusionPIN: string | undefined;
+			mockController.nodePendingInclusion = {
+				id: 3,
+				capabilities: {
+					basicDeviceClass: 0x04,
+					genericDeviceClass: 0x10,
+					specificDeviceClass: 0x01,
+					commandClasses: [
+						CommandClasses["Z-Wave Plus Info"],
+						CommandClasses["Manufacturer Specific"],
+						CommandClasses["Device Reset Locally"],
+						CommandClasses["Security 2"],
+						CommandClasses.Powerlevel,
+						CommandClasses["Firmware Update Meta Data"],
+						ccCaps({
+							ccId: CommandClasses["Binary Switch"],
+							secure: true,
+							defaultValue: false,
+						}),
+					],
+					securityClasses: new Set([
+						SecurityClass.S2_Unauthenticated,
+					]),
+				},
+				setup(node) {
+					inclusionPIN = node.s2Pin;
+				},
+			};
+
+			// Start the inclusion process with S2
+			await driver.controller.beginInclusion({
+				strategy: InclusionStrategy.Security_S2,
+				userCallbacks: {
+					async grantSecurityClasses(requested) {
+						// Simply grant all requested classes for this test
+						return requested;
+					},
+					async validateDSKAndEnterPIN(dsk) {
+						return inclusionPIN!;
+					},
+					abort() {
+					},
+				},
+			});
+
+			// Wait for the "node added" event
+			await nodeAddedPromise;
+
+			// Wait for the interview to complete
+			const interviewCompletePromise = new Promise<void>((resolve) => {
+				includedNode!.once("interview completed", () => {
+					resolve();
+				});
+			});
+			await interviewCompletePromise;
+
+			// Verify that the node was added to the controller's nodes map
+			t.expect(includedNode).toBeDefined();
+			t.expect(includedNode!.id).toBe(3);
+			t.expect(includedNode!.isSecure).toBe(true);
+			t.expect(includedNode!.supportsCC(CommandClasses["Security 2"]))
+				.toBe(
+					true,
+				);
+
+			// That Binary Switch CC is only supported securely
+			t.expect(includedNode?.isCCSecure(CommandClasses["Binary Switch"]))
+				.toBe(true);
+
+			// And that we received a response when querying its value during the interview
+			t.expect(
+				includedNode?.getValue(BinarySwitchCCValues.currentValue.id),
+			).toBe(false);
 		},
 	},
 );

@@ -1814,6 +1814,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		const spanState = securityManager.getSPANState(
 			receiverNodeId,
 		);
+
 		if (
 			spanState.type === SPANState.None
 			|| spanState.type === SPANState.LocalEI

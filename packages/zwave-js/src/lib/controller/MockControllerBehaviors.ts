@@ -310,8 +310,9 @@ const handleSendData: MockControllerBehavior = {
 				node,
 				msg,
 			);
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-				ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+				ackRequested,
 			});
 			const ackPromise = controller.sendToNode(node, lazyFrame);
 
@@ -322,23 +323,27 @@ const handleSendData: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACK and notify the host
-				let ack = false;
-				try {
-					const ackResult = await ackPromise;
-					ack = !!ackResult?.ack;
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACK and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResult = await ackPromise;
+						ack = !!ackResult?.ack;
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,
@@ -398,6 +403,7 @@ const handleSendDataMulticast: MockControllerBehavior = {
 			// so CC knows it came from the controller's node ID.
 			const nodeIds = msg.nodeIds;
 
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const ackPromises = nodeIds.map((nodeId) => {
 				const node = controller.nodes.get(nodeId)!;
 				// Create a lazy frame, so it can be deserialized on the node after a short delay to simulate radio transmission
@@ -407,7 +413,7 @@ const handleSendDataMulticast: MockControllerBehavior = {
 					msg,
 				);
 				const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-					ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+					ackRequested,
 				});
 				const ackPromise = controller.sendToNode(node, lazyFrame);
 				return ackPromise;
@@ -420,23 +426,27 @@ const handleSendDataMulticast: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACKs and notify the host
-				let ack = false;
-				try {
-					const ackResults = await Promise.all(ackPromises);
-					ack = ackResults.every((result) => !!result?.ack);
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACKs and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResults = await Promise.all(ackPromises);
+						ack = ackResults.every((result) => !!result?.ack);
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,
@@ -501,8 +511,9 @@ const handleSendDataBridge: MockControllerBehavior = {
 				node,
 				msg,
 			);
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-				ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+				ackRequested,
 			});
 			const ackPromise = controller.sendToNode(node, lazyFrame);
 
@@ -513,23 +524,27 @@ const handleSendDataBridge: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACK and notify the host
-				let ack = false;
-				try {
-					const ackResult = await ackPromise;
-					ack = !!ackResult?.ack;
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACK and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResult = await ackPromise;
+						ack = !!ackResult?.ack;
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,
@@ -589,6 +604,7 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 			// so CC knows it came from the controller's node ID.
 			const nodeIds = msg.nodeIds;
 
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const ackPromises = nodeIds.map((nodeId) => {
 				const node = controller.nodes.get(nodeId)!;
 				// Create a lazy frame, so it can be deserialized on the node after a short delay to simulate radio transmission
@@ -598,7 +614,7 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 					msg,
 				);
 				const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-					ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+					ackRequested,
 				});
 				const ackPromise = controller.sendToNode(node, lazyFrame);
 				return ackPromise;
@@ -611,23 +627,27 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACKs and notify the host
-				let ack = false;
-				try {
-					const ackResults = await Promise.all(ackPromises);
-					ack = ackResults.every((result) => !!result?.ack);
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACKs and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResults = await Promise.all(ackPromises);
+						ack = ackResults.every((result) => !!result?.ack);
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,

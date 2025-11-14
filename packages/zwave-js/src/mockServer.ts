@@ -233,7 +233,7 @@ async function prepareMocks(
 	serial: ZWaveSerialStream,
 	controller: MockServerControllerOptions = {},
 	nodes: MockServerNodeOptions[] = [],
-): Promise<{ mockController: MockController; mockNodes: MockNode[]; }> {
+): Promise<{ mockController: MockController; mockNodes: MockNode[] }> {
 	const mockController = await MockController.create({
 		homeId: 0x7e570001,
 		ownNodeId: 1,

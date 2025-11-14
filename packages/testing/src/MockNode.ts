@@ -1,4 +1,4 @@
-import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
+import { type CCEncodingContext, type CommandClass } from "@zwave-js/cc";
 import {
 	type CommandClassInfo,
 	type CommandClasses,
@@ -8,10 +8,13 @@ import {
 	SecurityManager,
 	SecurityManager2,
 	type SecurityManagers,
+	dskToString,
+	generateECDHKeyPair,
 	isCCInfoEqual,
 	securityClassOrder,
 } from "@zwave-js/core";
 import { TimedExpectation } from "@zwave-js/shared";
+import { type KeyPair } from "@zwave-js/shared/bindings";
 import type { CCIdToCapabilities } from "./CCSpecificCapabilities.js";
 import type { MockController } from "./MockController.js";
 import {
@@ -60,6 +63,11 @@ export interface MockEndpointOptions {
 		commandClasses?: PartialCCCapabilities[];
 	};
 }
+
+export type NodePendingInclusion = Omit<MockNodeOptions, "controller"> & {
+	/** Optional callback that is called when the node is created during inclusion */
+	setup?: (node: MockNode) => void;
+};
 
 export class MockEndpoint {
 	public constructor(options: MockEndpointOptions) {
@@ -111,7 +119,7 @@ export class MockEndpoint {
 export class MockNode {
 	public static async create(options: MockNodeOptions): Promise<MockNode> {
 		const node = new MockNode(options);
-		await node.setupSecurityManagers();
+		await node.setupSecurity();
 		return node;
 	}
 
@@ -230,7 +238,21 @@ export class MockNode {
 		securityManagerLR: undefined,
 	};
 
-	private async setupSecurityManagers(): Promise<void> {
+	// These will be set during security setup
+	public ecdhKeyPair!: KeyPair;
+	public get dsk(): string {
+		// The DSK is the first 16 bytes of the public key
+		const dskBytes = this.ecdhKeyPair.publicKey.slice(1, 17);
+		return dskToString(dskBytes);
+	}
+	public get s2Pin(): string {
+		// The S2 PIN is the first group of 5 digits in the DSK
+		return this.dsk.slice(0, 5);
+	}
+
+	private async setupSecurity(): Promise<void> {
+		this.ecdhKeyPair = await generateECDHKeyPair();
+
 		const securityClasses = this._options.capabilities?.securityClasses;
 		if (!securityClasses) return;
 
