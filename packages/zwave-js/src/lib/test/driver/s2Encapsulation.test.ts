@@ -3,19 +3,19 @@ import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import { type MockNodeBehavior } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest("Communication via Security S0 works", {
+integrationTest("Communication via Security S2 works", {
 	// debug: true,
 
 	nodeCapabilities: {
 		commandClasses: [
 			CommandClasses.Version,
-			CommandClasses.Security,
+			CommandClasses["Security 2"],
 			{
 				ccId: CommandClasses.Basic,
 				secure: true,
 			},
 		],
-		securityClasses: new Set([SecurityClass.S0_Legacy]),
+		securityClasses: new Set([SecurityClass.S2_Unauthenticated]),
 	},
 
 	customSetup: async (driver, controller, mockNode) => {

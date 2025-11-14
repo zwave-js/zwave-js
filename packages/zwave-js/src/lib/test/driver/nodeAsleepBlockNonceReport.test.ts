@@ -1,12 +1,7 @@
-import {
-	SecurityCCCommandEncapsulation,
-	SecurityCCNonceGet,
-	SecurityCCNonceReport,
-} from "@zwave-js/cc";
-import { SecurityManager } from "@zwave-js/core";
+import { SecurityCCNonceGet, SecurityCCNonceReport } from "@zwave-js/cc";
+import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import {
 	MOCK_FRAME_ACK_TIMEOUT,
-	type MockNodeBehavior,
 	MockZWaveFrameType,
 	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
@@ -25,59 +20,13 @@ integrationTest(
 			"fixtures/nodeAsleepBlockNonceReport",
 		),
 
-		customSetup: async (driver, controller, mockNode) => {
-			// Create a security manager for the node
-			const sm0Node = new SecurityManager({
-				ownNodeId: mockNode.id,
-				networkKey: driver.options.securityKeys!.S0_Legacy!,
-				nonceTimeout: 100000,
-			});
-			mockNode.securityManagers.securityManager = sm0Node;
-
-			// Create a security manager for the controller
-			const sm0Ctrlr = new SecurityManager({
-				ownNodeId: controller.ownNodeId,
-				networkKey: driver.options.securityKeys!.S0_Legacy!,
-				nonceTimeout: 100000,
-			});
-			controller.securityManagers.securityManager = sm0Ctrlr;
-
-			// Respond to S0 Nonce Get
-			const respondToS0NonceGet: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof SecurityCCNonceGet) {
-						const nonce = sm0Node.generateNonce(
-							controller.ownNodeId,
-							8,
-						);
-						const cc = new SecurityCCNonceReport({
-							nodeId: controller.ownNodeId,
-							nonce,
-						});
-						return { action: "sendCC", cc };
-					}
-				},
-			};
-			mockNode.defineBehavior(respondToS0NonceGet);
-
-			// Parse Security CC commands. This MUST be defined last, since defineBehavior will prepend it to the list
-			const parseS0CC: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					// We don't support sequenced commands here
-					if (receivedCC instanceof SecurityCCCommandEncapsulation) {
-						await receivedCC.mergePartialCCs([], {
-							sourceNodeId: controller.ownNodeId,
-							__internalIsMockNode: true,
-							frameType: "singlecast",
-							...self.encodingContext,
-							...self.securityManagers,
-						});
-					}
-					// This just decodes - we need to call further handlers
-					return undefined;
-				},
-			};
-			mockNode.defineBehavior(parseS0CC);
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Basic,
+				CommandClasses["Wake Up"],
+				CommandClasses.Security,
+			],
+			securityClasses: new Set([SecurityClass.S0_Legacy]),
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {

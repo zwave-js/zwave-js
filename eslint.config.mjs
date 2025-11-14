@@ -67,6 +67,8 @@ export default tseslint.config(
 		rules: {
 			// Prevent debug logging in checked in tests
 			"@zwave-js/no-debug-in-tests": "error",
+			// Ensure consistent nodeId usage in MockNodeBehavior
+			"@zwave-js/consistent-mock-node-behaviors": "error",
 		},
 	},
 	{
@@ -92,6 +94,13 @@ export default tseslint.config(
 		files: ["packages/cc/src/**"],
 		rules: {
 			"@zwave-js/consistent-cc-classes": "error",
+		},
+	},
+	// Enable consistent mock node behaviors for mock CC behaviors
+	{
+		files: ["packages/zwave-js/src/lib/node/mockCCBehaviors/**/*.ts"],
+		rules: {
+			"@zwave-js/consistent-mock-node-behaviors": "error",
 		},
 	},
 	// {

@@ -4,6 +4,7 @@ import {
 	type CommandClasses,
 	type NodeProtocolInfoAndDeviceClass,
 	NodeType,
+	type SecurityClass,
 } from "@zwave-js/core";
 import type { CCIdToCapabilities } from "./CCSpecificCapabilities.js";
 
@@ -30,6 +31,8 @@ export interface MockNodeCapabilities extends NodeProtocolInfoAndDeviceClass {
 
 	/** How long it takes to send a command to or from the node */
 	txDelay: number;
+
+	securityClasses: Set<SecurityClass>;
 }
 
 export interface MockEndpointCapabilities {
@@ -58,6 +61,9 @@ export function getDefaultMockNodeCapabilities(): MockNodeCapabilities {
 		specificDeviceClass: 0x01, // General Appliance
 
 		txDelay: 10,
+
+		// No security by default
+		securityClasses: new Set(),
 	};
 }
 

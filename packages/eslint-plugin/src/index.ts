@@ -4,6 +4,7 @@ import { consistentCCClasses } from "./rules/consistent-cc-classes.js";
 import { consistentConfigStringCase } from "./rules/consistent-config-string-case.js";
 import { consistentDeviceConfigPropertyOrder } from "./rules/consistent-device-config-property-order.js";
 import { consistentImportDeclarations } from "./rules/consistent-import-declarations.js";
+import { consistentMockNodeBehaviors } from "./rules/consistent-mock-node-behaviors.js";
 import { consistentParamUnits } from "./rules/consistent-param-units.js";
 import { noDebugInTests } from "./rules/no-debug-in-tests.js";
 import { noForbiddenImports } from "./rules/no-forbidden-imports.js";
@@ -24,6 +25,7 @@ export default {
 		"consistent-device-config-property-order":
 			consistentDeviceConfigPropertyOrder,
 		"consistent-import-declarations": consistentImportDeclarations,
+		"consistent-mock-node-behaviors": consistentMockNodeBehaviors,
 		"consistent-param-units": consistentParamUnits,
 		"no-debug-in-tests": noDebugInTests,
 		"no-forbidden-imports": noForbiddenImports,
