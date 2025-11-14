@@ -74,9 +74,8 @@
 			"#": "4",
 			"label": "Association Group 2: Basic Set Value",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 6,
 			"defaultValue": 1,
+			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Disable completely",
