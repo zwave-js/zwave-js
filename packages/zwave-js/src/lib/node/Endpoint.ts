@@ -75,6 +75,16 @@ export class Endpoint
 		// Add optional CCs
 		if (supportedCCs != undefined) {
 			for (const cc of supportedCCs) {
+				if (cc === CommandClasses.Basic) {
+					// This codepath is only taken when we construct
+					// a node instance with info from a NIF.
+					//
+					// Basic CC MUST not be in the NIF. If it is anyways, we ignore it.
+					// If we blindly add it here as supported, it will always be exposed.
+					//
+					// Whether or not it should be exposed is determined at a later stage.
+					continue;
+				}
 				this.addCC(cc, { isSupported: true });
 			}
 		}
