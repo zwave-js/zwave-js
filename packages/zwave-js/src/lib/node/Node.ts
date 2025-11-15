@@ -639,16 +639,20 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 				const shouldUpdateOptimistically =
 					api.isSetValueOptimistic(valueId)
-					// Check if the device class supports optimistic value updates
-					&& (endpointInstance.deviceClass?.specific
-						.supportsOptimisticValueUpdate
-						?? true)
-					// For successful supervised commands, we know that an optimistic update is ok
-					&& (supervisedAndSuccessful
-						// For unsupervised commands that did not fail, we let the application decide whether
-						// to update related value optimistically
-						|| (!this.driver.options.disableOptimisticValueUpdate
-							&& result == undefined));
+					&& (
+						// For successful supervised commands, we know that an optimistic update is ok
+						// regardless of the device class
+						supervisedAndSuccessful
+						// For unsupervised commands, check if the device class supports optimistic value updates
+						// and let the application decide whether to update related values optimistically
+						|| (
+							(endpointInstance.deviceClass?.specific
+								.supportsOptimisticValueUpdate
+								?? true)
+							&& !this.driver.options.disableOptimisticValueUpdate
+							&& result == undefined
+						)
+					);
 
 				// The actual API implementation handles additional optimistic updates
 				if (shouldUpdateOptimistically) {
