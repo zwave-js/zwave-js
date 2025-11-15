@@ -798,6 +798,7 @@ export type APIConstructor<T extends CCAPI = CCAPI> = new (
 // Do not edit it by hand or your changes will be lost
 type CCNameMap = {
 	"Alarm Sensor": typeof CommandClasses["Alarm Sensor"];
+	"Application Status": typeof CommandClasses["Application Status"];
 	Association: typeof CommandClasses["Association"];
 	"Association Group Information":
 		typeof CommandClasses["Association Group Information"];
@@ -956,6 +957,8 @@ export interface CCAPIs {
 
 	// AUTO GENERATION BELOW
 	"Alarm Sensor": import("../cc/AlarmSensorCC.js").AlarmSensorCCAPI;
+	"Application Status":
+		import("../cc/ApplicationStatusCC.js").ApplicationStatusCCAPI;
 	Association: import("../cc/AssociationCC.js").AssociationCCAPI;
 	"Association Group Information":
 		import("../cc/AssociationGroupInfoCC.js").AssociationGroupInfoCCAPI;
