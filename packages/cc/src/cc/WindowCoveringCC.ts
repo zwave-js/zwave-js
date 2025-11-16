@@ -37,6 +37,7 @@ import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
+	type RefreshValuesContext,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -609,6 +610,43 @@ ${
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
+		const api = CCAPI.create(
+			CommandClasses["Window Covering"],
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+		});
+
+		const parameters: number[] = this.getValue(
+			ctx,
+			WindowCoveringCCValues.supportedParameters,
+		) ?? [];
+
+		for (const param of parameters) {
+			if (param % 2 == 0) {
+				continue; // Even parameter, no position support, no need to query
+			}
+
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: `querying position for parameter ${
+					getEnumMemberName(
+						WindowCoveringParameter,
+						param,
+					)
+				}...`,
+				direction: "outbound",
+			});
+			await api.get(param);
+		}
 	}
 
 	public translatePropertyKey(
