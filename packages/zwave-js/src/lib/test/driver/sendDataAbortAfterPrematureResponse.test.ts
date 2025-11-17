@@ -1,17 +1,5 @@
-import {
-	BasicCCGet,
-	BasicCCReport,
-	CommandClass,
-	Security2CC,
-	SupervisionCCGet,
-	SupervisionCCReport,
-} from "@zwave-js/cc";
-import {
-	SecurityClass,
-	SupervisionStatus,
-	TransmitStatus,
-	isSupervisionResult,
-} from "@zwave-js/core";
+import { BasicCCGet, BasicCCReport } from "@zwave-js/cc";
+import { TransmitStatus } from "@zwave-js/core";
 import {
 	FunctionType,
 	SendDataAbort,
@@ -21,7 +9,6 @@ import {
 import {
 	type MockControllerBehavior,
 	type MockNodeBehavior,
-	createMockZWaveAckFrame,
 } from "@zwave-js/testing";
 import path from "node:path";
 import {
