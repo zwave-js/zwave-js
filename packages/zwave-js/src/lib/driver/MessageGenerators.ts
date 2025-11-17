@@ -165,6 +165,8 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 
 		// Pass this message to the send thread and wait for it to be sent
 		let result: Message;
+		// At this point we can't have received a premature update yet
+		msg.prematureNodeUpdate = undefined;
 
 		try {
 			// The yield can throw and must be handled here
@@ -183,7 +185,12 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 		// we want to inspect the callback, for example to look at TX statistics
 		// or update the node status.
 		//
-		// We now need to throw because the callback was passed through so we could inspect it.
+		// There is one exception: If we aborted the transaction with SendDataAbort
+		// because of a premature response, we treat this as a successful transmission anyways.
+		if (msg.expectsNodeUpdate() && msg.prematureNodeUpdate) {
+			return msg.prematureNodeUpdate;
+		}
+
 		if (isTransmitReport(result) && !result.isOK()) {
 			// Throw the message in order to short-circuit all possible generators
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
