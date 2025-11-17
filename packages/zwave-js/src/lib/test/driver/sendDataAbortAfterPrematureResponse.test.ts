@@ -1,6 +1,14 @@
-import { BasicCCGet, BasicCCReport } from "@zwave-js/cc";
+import {
+	BasicCCGet,
+	BasicCCReport,
+	CommandClass,
+	Security2CC,
+	SupervisionCCGet,
+	SupervisionCCReport,
+} from "@zwave-js/cc";
 import {
 	SecurityClass,
+	SupervisionStatus,
 	TransmitStatus,
 	isSupervisionResult,
 } from "@zwave-js/core";
@@ -10,9 +18,10 @@ import {
 	SendDataBridgeRequest,
 	SendDataRequestTransmitReport,
 } from "@zwave-js/serial";
-import type {
-	MockControllerBehavior,
-	MockNodeBehavior,
+import {
+	type MockControllerBehavior,
+	type MockNodeBehavior,
+	createMockZWaveAckFrame,
 } from "@zwave-js/testing";
 import path from "node:path";
 import {
@@ -93,11 +102,11 @@ integrationTest(
 	},
 );
 
-integrationTest.only(
-	"A premature S2 Nonce Report does not abort a supervised transaction",
+integrationTest(
+	"A premature S2 Nonce Report does not cause an error for a supervised transaction",
 	{
 		// Repro for #8406
-		debug: true,
+		// debug: true,
 
 		provisioningDirectory: path.join(
 			__dirname,
@@ -110,36 +119,39 @@ integrationTest.only(
 		},
 
 		async customSetup(driver, mockController, mockNode) {
-				let lastCallbackId: number | undefined;
-				const handleSendDataAbort: MockControllerBehavior = {
-					onHostMessage(controller, msg) {
-						if (msg instanceof SendDataBridgeRequest) {
-							// Remember the last callback ID
-							lastCallbackId = msg.callbackId;
-							return false;
-						}
-						if (msg instanceof SendDataAbort && lastCallbackId) {
-							// Finish the transmission by sending the callback
-							const cb = new SendDataRequestTransmitReport({
-								callbackId: lastCallbackId,
-								transmitStatus: TransmitStatus.NoAck,
-							});
+			let lastCallbackId: number | undefined;
+			const handleSendDataAbort: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (msg instanceof SendDataBridgeRequest) {
+						// Remember the last callback ID
+						lastCallbackId = msg.callbackId;
+						return false;
+					}
+					if (msg instanceof SendDataAbort && lastCallbackId) {
+						// Finish the transmission by sending the callback
+						const cb = new SendDataRequestTransmitReport({
+							callbackId: lastCallbackId,
+							transmitStatus: TransmitStatus.NoAck,
+						});
 
-							setTimeout(() => {
-								controller.sendMessageToHost(cb);
-							}, 100);
+						setTimeout(() => {
+							controller.sendMessageToHost(cb);
+						}, 100);
 
-							// Put the controller into idle state
-							controller.state.set(
-								MockControllerStateKeys.CommunicationState,
-								MockControllerCommunicationState.Idle,
-							);
+						// Put the controller into idle state
+						controller.state.set(
+							MockControllerStateKeys.CommunicationState,
+							MockControllerCommunicationState.Idle,
+						);
 
-							return true;
-						}
-					},
-				};
-				mockController.defineBehavior(handleSendDataAbort);
+						// Return to normal operation
+						mockNode.autoAckControllerFrames = true;
+
+						return true;
+					}
+				},
+			};
+			mockController.defineBehavior(handleSendDataAbort);
 
 			const respondToBasicGet: MockNodeBehavior = {
 				async handleCC(controller, self, receivedCC) {
@@ -153,6 +165,24 @@ integrationTest.only(
 				},
 			};
 			mockNode.defineBehavior(respondToBasicGet);
+
+			// Just have the node respond to all Supervision Get positively
+			const respondToSupervisionGet: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof SupervisionCCGet
+					) {
+						const cc = new SupervisionCCReport({
+							nodeId: controller.ownNodeId,
+							sessionId: receivedCC.sessionId,
+							moreUpdatesFollow: false,
+							status: SupervisionStatus.Success,
+						});
+						return { action: "sendCC", cc };
+					}
+				},
+			};
+			mockNode.defineBehavior(respondToSupervisionGet);
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {

@@ -5611,6 +5611,10 @@ ${handlers.length} left`,
 			// It could also be that this is the node's response for a CC that we sent, but where the ACK is delayed
 			const currentTransaction = this.queue.currentTransaction;
 			const currentMessage = currentTransaction?.getCurrentMessage();
+			const isSOSNonceReport =
+				msg.command instanceof Security2CCNonceReport
+				&& msg.command.SOS
+				&& !!msg.command.receiverEI;
 			if (
 				currentMessage
 				&& currentMessage.expectsNodeUpdate()
@@ -5619,20 +5623,30 @@ ${handlers.length} left`,
 				// The message we're currently sending is still in progress but expects this message in response,
 				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
 
-				// Abort the current transaction with the received message as the result.
-				currentTransaction!.abort(msg);
+				// An SOS nonce report is treated like an expected node update,
+				// but it is not considered a valid result of the ongoing transaction.
+				if (isSOSNonceReport) {
+					// Due to how the message generators are architected, it is currently not possible to short-circuit
+					// waiting for the transmit report, so we remember the SOS Nonce Report for later processing.
+					currentMessage.prematureNodeUpdate = msg;
+				}
 
 				if (isSendData(currentMessage)) {
 					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
 					this.controllerLog.logNode(msg.getNodeId()!, {
 						message:
-							`received expected response prematurely, aborting transaction...`,
+							`received expected response prematurely, aborting ongoing transmission...`,
 						level: "verbose",
 						direction: "inbound",
 					});
 
 					void this.abortSendData();
 				}
+
+				// If this is a valid result of the current transaction, abort the
+				// transaction with the received message as the result.
+				if (!isSOSNonceReport) currentTransaction!.abort(msg);
+
 				return;
 			}
 
@@ -6700,6 +6714,13 @@ ${handlers.length} left`,
 						) {
 							// We gave up on this command, so don't retry it
 							throw e;
+						}
+
+						// If we receive a premature node update, we abort the transaction
+						// so we should end up here with transmit status NoACK.
+						// This is expected and intended, so continue with the next message.
+						if (msg.prematureNodeUpdate) {
+							break attemptMessage;
 						}
 
 						if (
