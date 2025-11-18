@@ -1,18 +1,23 @@
-import { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import { UserCodeCCValues, UserIDStatus } from "@zwave-js/cc";
-import { createMockZWaveRequestFrame } from "@zwave-js/testing";
+import { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
+import { CommandClasses } from "@zwave-js/core";
+import { ccCaps, createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"When receiving a NotificationCC::Report with 'All user codes deleted' event, all user codes should be cleared from the cache",
 	{
 		// debug: true,
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/notificationAndUserCodeCC",
-		),
+
+		nodeCapabilities: {
+			commandClasses: [
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					numUsers: 2,
+				}),
+			],
+		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// Set up some user codes in the cache

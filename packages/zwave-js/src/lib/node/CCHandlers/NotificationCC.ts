@@ -6,7 +6,6 @@ import {
 	NotificationCCValues,
 	type PersistValuesContext,
 	UserCodeCC,
-	UserCodeCCValues,
 	UserIDStatus,
 	getEffectiveCCVersion,
 } from "@zwave-js/cc";
@@ -17,7 +16,9 @@ import {
 } from "@zwave-js/cc/NotificationCC";
 import {
 	CommandClasses,
+	type EndpointId,
 	type GetSupportedCCVersion,
+	type GetValueDB,
 	type LogNode,
 	type NodeId,
 	type Notification,
@@ -293,7 +294,7 @@ export function handleNotificationReport(
 }
 
 function handleKnownNotification(
-	ctx: PersistValuesContext & LogNode,
+	ctx: GetValueDB,
 	node: ZWaveNode,
 	command: NotificationCCReport,
 ): void {
@@ -381,25 +382,16 @@ function handleKnownNotification(
 		&& command.notificationEvent === 0x0c
 		&& node.supportsCC(CommandClasses["User Code"])
 	) {
-		// When all user codes are deleted, we need to clear them from the cache
-		// This means setting userIdStatus to Available and userCode to empty string
-		// Get all user ID status values for this endpoint to find which users exist
-		const userIdStatusValues = node.valueDB.findValues(
-			(vid) =>
-				vid.commandClass === CommandClasses["User Code"]
-				&& (vid.endpoint ?? 0) === command.endpointIndex
-				&& vid.property === "userIdStatus",
-		);
+		// Clear all user codes from the cache
+		const endpoint: EndpointId = {
+			nodeId: node.id,
+			index: command.endpointIndex,
+			virtual: false,
+		};
+		const numUsers = UserCodeCC.getSupportedUsersCached(ctx, endpoint) ?? 0;
 
 		// Clear each user code by setting status to Available and code to empty
-		for (const valueId of userIdStatusValues) {
-			const userId = valueId.propertyKey as number;
-			const endpoint = {
-				nodeId: node.id,
-				index: command.endpointIndex,
-				virtual: false as const,
-			};
-
+		for (let userId = 1; userId <= numUsers; userId++) {
 			UserCodeCC.setUserIdStatusCached(
 				ctx,
 				endpoint,
