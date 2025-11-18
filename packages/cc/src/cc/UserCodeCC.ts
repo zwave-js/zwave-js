@@ -1201,6 +1201,40 @@ export class UserCodeCC extends CommandClass {
 				UserCodeCCValues.userCode(userId).endpoint(endpoint.index),
 			);
 	}
+
+	/**
+	 * Sets the status of a user ID in the cache.
+	 */
+	public static setUserIdStatusCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		userId: number,
+		status: UserIDStatus,
+	): void {
+		ctx
+			.getValueDB(endpoint.nodeId)
+			.setValue(
+				UserCodeCCValues.userIdStatus(userId).endpoint(endpoint.index),
+				status,
+			);
+	}
+
+	/**
+	 * Sets the code belonging to a user ID in the cache.
+	 */
+	public static setUserCodeCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		userId: number,
+		code: string | BytesView,
+	): void {
+		ctx
+			.getValueDB(endpoint.nodeId)
+			.setValue(
+				UserCodeCCValues.userCode(userId).endpoint(endpoint.index),
+				code,
+			);
+	}
 }
 
 // @publicAPI

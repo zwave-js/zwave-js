@@ -5,6 +5,8 @@ import {
 	type NotificationCCReport,
 	NotificationCCValues,
 	type PersistValuesContext,
+	UserCodeCC,
+	UserIDStatus,
 	getEffectiveCCVersion,
 } from "@zwave-js/cc";
 import {
@@ -14,7 +16,9 @@ import {
 } from "@zwave-js/cc/NotificationCC";
 import {
 	CommandClasses,
+	type EndpointId,
 	type GetSupportedCCVersion,
+	type GetValueDB,
 	type LogNode,
 	type NodeId,
 	type Notification,
@@ -165,7 +169,7 @@ export function handleNotificationReport(
 		}
 
 		// Perform some heuristics on the known notification
-		handleKnownNotification(node, command);
+		handleKnownNotification(ctx, node, command);
 
 		let allowIdleReset: boolean;
 		if (!valueConfig) {
@@ -290,6 +294,7 @@ export function handleNotificationReport(
 }
 
 function handleKnownNotification(
+	ctx: GetValueDB,
 	node: ZWaveNode,
 	command: NotificationCCReport,
 ): void {
@@ -370,6 +375,30 @@ function handleKnownNotification(
 				tiltValueId,
 				command.eventParameters === 0x01 ? 0x01 : 0x00,
 			);
+		}
+	} else if (
+		// Access Control, all user codes deleted
+		command.notificationType === 0x06
+		&& command.notificationEvent === 0x0c
+		&& node.supportsCC(CommandClasses["User Code"])
+	) {
+		// Clear all user codes from the cache
+		const endpoint: EndpointId = {
+			nodeId: node.id,
+			index: command.endpointIndex,
+			virtual: false,
+		};
+		const numUsers = UserCodeCC.getSupportedUsersCached(ctx, endpoint) ?? 0;
+
+		// Clear each user code by setting status to Available and code to empty
+		for (let userId = 1; userId <= numUsers; userId++) {
+			UserCodeCC.setUserIdStatusCached(
+				ctx,
+				endpoint,
+				userId,
+				UserIDStatus.Available,
+			);
+			UserCodeCC.setUserCodeCached(ctx, endpoint, userId, "");
 		}
 	}
 }
