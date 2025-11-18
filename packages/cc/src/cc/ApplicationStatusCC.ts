@@ -1,11 +1,12 @@
-import type { CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
+	CommandClasses,
+	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
-	type MaybeNotKnown,
-	CommandClasses,
 	validatePayload,
 } from "@zwave-js/core";
+import { Bytes } from "@zwave-js/shared";
 import { CCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -14,13 +15,7 @@ import {
 	commandClass,
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
-import {
-	ApplicationStatusCommand,
-	ApplicationStatusStatus,
-} from "../lib/_Types.js";
-
-// @noInterview: This CC has no interview procedure
-// @noSetValueAPI: This CC does not support setting values
+import { ApplicationStatus, ApplicationStatusCommand } from "../lib/_Types.js";
 
 @API(CommandClasses["Application Status"])
 export class ApplicationStatusCCAPI extends CCAPI {
@@ -40,11 +35,12 @@ export class ApplicationStatusCCAPI extends CCAPI {
 @implementedVersion(1)
 export class ApplicationStatusCC extends CommandClass {
 	declare ccCommand: ApplicationStatusCommand;
+	declare nodeId: number;
 }
 
 // @publicAPI
 export interface ApplicationStatusCCBusyOptions {
-	status: ApplicationStatusStatus;
+	status: ApplicationStatus;
 	waitTime: number;
 }
 
@@ -63,7 +59,7 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 		ctx: CCParsingContext,
 	): ApplicationStatusCCBusy {
 		validatePayload(raw.payload.length >= 2);
-		const status: ApplicationStatusStatus = raw.payload[0];
+		const status: ApplicationStatus = raw.payload[0];
 		const waitTime: number = raw.payload[1];
 
 		return new this({
@@ -73,15 +69,20 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 		});
 	}
 
-	public readonly status: ApplicationStatusStatus;
+	public readonly status: ApplicationStatus;
 	public readonly waitTime: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.status, this.waitTime]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
 		const message: MessageRecord = {
-			status: ApplicationStatusStatus[this.status],
+			status: ApplicationStatus[this.status],
 		};
 		if (
-			this.status === ApplicationStatusStatus.TryAgainInWaitTimeSeconds
+			this.status === ApplicationStatus.TryAgainInWaitTimeSeconds
 		) {
 			message["wait time"] = `${this.waitTime} seconds`;
 		}
@@ -99,35 +100,22 @@ export interface ApplicationStatusCCRejectedRequestOptions {
 
 @CCCommand(ApplicationStatusCommand.RejectedRequest)
 export class ApplicationStatusCCRejectedRequest extends ApplicationStatusCC {
-	public constructor(
-		options: ApplicationStatusCCRejectedRequestOptions & { nodeId: number },
-	) {
-		super(options);
-		this.status = options.status;
-	}
-
 	public static from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): ApplicationStatusCCRejectedRequest {
 		validatePayload(raw.payload.length >= 1);
 		const status: number = raw.payload[0];
+		// This field MUST be set to 0
+		validatePayload(status === 0);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			status,
 		});
 	}
 
-	public readonly status: number;
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			status: this.status,
-		};
-		return {
-			...super.toLogEntry(),
-			message,
-		};
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([0x00]);
+		return super.serialize(ctx);
 	}
 }
