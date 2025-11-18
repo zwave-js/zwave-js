@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/config",
-  "version": "15.15.3",
+  "version": "15.16.0",
   "description": "zwave-js: configuration files",
   "keywords": [],
   "publishConfig": {
@@ -88,7 +88,7 @@
     "json5": "^2.2.3",
     "pathe": "^2.0.3",
     "semver": "^7.7.2",
-    "winston": "^3.17.0"
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
@@ -99,7 +99,7 @@
     "@types/semver": "^7.7.1",
     "@types/sinon": "^17.0.4",
     "@types/xml2js": "^0.4.14",
-    "@types/yargs": "^17.0.33",
+    "@types/yargs": "^17.0.34",
     "@zwave-js/maintenance": "workspace:*",
     "comment-json": "^4.3.0",
     "del-cli": "^6.0.0",

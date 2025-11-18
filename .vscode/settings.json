@@ -4,6 +4,7 @@
 	"editor.formatOnSave": false, // the default of true interferes with codeActionsOnSave
 	"editor.codeActionsOnSave": [
 		"source.fixAll.eslint",
+		"source.fixAll.oxc",
 		"source.formatDocument"
 	],
 	"eslint.codeActionsOnSave.mode": "problems",
@@ -111,6 +112,7 @@
 	"chat.tools.terminal.autoApprove": {
 		"git show": true,
 		"yarn fmt": true,
+		"yarn vitest run": true,
 		"rm": false,
 		"rmdir": false,
 		"del": false,
@@ -121,5 +123,7 @@
 		"chmod": false,
 		"chown": false,
 		"/^Remove-Item\\b/i": false
-	}
+	},
+	"oxc.typeAware": true,
+	"oxc.enable": true
 }

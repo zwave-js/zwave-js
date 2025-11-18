@@ -1,3 +1,5 @@
+// oxlint-disable typescript/no-misused-spread
+
 import { CommandClass, WakeUpTime } from "@zwave-js/cc";
 import {
 	ZWaveProtocolCC,
@@ -283,7 +285,6 @@ const handleSendData: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error("Received SendDataRequest while not idle");
 			}
 
@@ -309,8 +310,9 @@ const handleSendData: MockControllerBehavior = {
 				node,
 				msg,
 			);
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-				ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+				ackRequested,
 			});
 			const ackPromise = controller.sendToNode(node, lazyFrame);
 
@@ -321,23 +323,27 @@ const handleSendData: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACK and notify the host
-				let ack = false;
-				try {
-					const ackResult = await ackPromise;
-					ack = !!ackResult?.ack;
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACK and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResult = await ackPromise;
+						ack = !!ackResult?.ack;
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,
@@ -375,7 +381,6 @@ const handleSendDataMulticast: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received SendDataMulticastRequest while not idle",
 				);
@@ -398,6 +403,7 @@ const handleSendDataMulticast: MockControllerBehavior = {
 			// so CC knows it came from the controller's node ID.
 			const nodeIds = msg.nodeIds;
 
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const ackPromises = nodeIds.map((nodeId) => {
 				const node = controller.nodes.get(nodeId)!;
 				// Create a lazy frame, so it can be deserialized on the node after a short delay to simulate radio transmission
@@ -407,7 +413,7 @@ const handleSendDataMulticast: MockControllerBehavior = {
 					msg,
 				);
 				const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-					ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+					ackRequested,
 				});
 				const ackPromise = controller.sendToNode(node, lazyFrame);
 				return ackPromise;
@@ -420,23 +426,27 @@ const handleSendDataMulticast: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACKs and notify the host
-				let ack = false;
-				try {
-					const ackResults = await Promise.all(ackPromises);
-					ack = ackResults.every((result) => !!result?.ack);
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACKs and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResults = await Promise.all(ackPromises);
+						ack = ackResults.every((result) => !!result?.ack);
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,
@@ -474,7 +484,6 @@ const handleSendDataBridge: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received SendDataBridgeRequest while not idle",
 				);
@@ -502,8 +511,9 @@ const handleSendDataBridge: MockControllerBehavior = {
 				node,
 				msg,
 			);
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-				ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+				ackRequested,
 			});
 			const ackPromise = controller.sendToNode(node, lazyFrame);
 
@@ -514,23 +524,27 @@ const handleSendDataBridge: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACK and notify the host
-				let ack = false;
-				try {
-					const ackResult = await ackPromise;
-					ack = !!ackResult?.ack;
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACK and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResult = await ackPromise;
+						ack = !!ackResult?.ack;
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,
@@ -568,7 +582,6 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received SendDataMulticastBridgeRequest while not idle",
 				);
@@ -591,6 +604,7 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 			// so CC knows it came from the controller's node ID.
 			const nodeIds = msg.nodeIds;
 
+			const ackRequested = !!(msg.transmitOptions & TransmitOptions.ACK);
 			const ackPromises = nodeIds.map((nodeId) => {
 				const node = controller.nodes.get(nodeId)!;
 				// Create a lazy frame, so it can be deserialized on the node after a short delay to simulate radio transmission
@@ -600,7 +614,7 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 					msg,
 				);
 				const lazyFrame = createMockZWaveRequestFrame(lazyPayload, {
-					ackRequested: !!(msg.transmitOptions & TransmitOptions.ACK),
+					ackRequested,
 				});
 				const ackPromise = controller.sendToNode(node, lazyFrame);
 				return ackPromise;
@@ -613,23 +627,27 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 					MockControllerCommunicationState.WaitingForNode,
 				);
 
-				// Wait for the ACKs and notify the host
-				let ack = false;
-				try {
-					const ackResults = await Promise.all(ackPromises);
-					ack = ackResults.every((result) => !!result?.ack);
-				} catch (e) {
-					// We want to know when we're using a command in tests that cannot be decoded yet
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.Deserialization_NotImplemented
-					) {
-						console.error(e.message);
-						throw e;
-					}
+				// If an ACK is requested, wait for the ACKs and notify the host
+				let ack = true;
+				if (ackRequested) {
+					try {
+						const ackResults = await Promise.all(ackPromises);
+						ack = ackResults.every((result) => !!result?.ack);
+					} catch (e) {
+						// We want to know when we're using a command in tests that cannot be decoded yet
+						if (
+							isZWaveError(e)
+							&& e.code
+								=== ZWaveErrorCodes
+									.Deserialization_NotImplemented
+						) {
+							console.error(e.message);
+							throw e;
+						}
 
-					// Treat all other errors as no response
+						// Treat all other errors as no response
+						ack = false;
+					}
 				}
 				controller.state.set(
 					MockControllerStateKeys.CommunicationState,
@@ -667,7 +685,6 @@ const handleRequestNodeInfo: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received RequestNodeInfoRequest while not idle",
 				);
@@ -794,7 +811,6 @@ const handleDeleteSUCReturnRoute: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received DeleteSUCReturnRouteRequest while not idle",
 				);
@@ -856,7 +872,6 @@ const handleAssignSUCReturnRoute: MockControllerBehavior = {
 				state != undefined
 				&& state !== MockControllerCommunicationState.Idle
 			) {
-				debugger;
 				throw new Error(
 					"Received AssignSUCReturnRouteRequest while not idle",
 				);
@@ -972,16 +987,16 @@ const handleAddNode: MockControllerBehavior = {
 				// If there's a node pending inclusion, simulate the inclusion sequence
 				// after responding to the add request
 				if (controller.nodePendingInclusion) {
-					const { setup, ...nodeOptions } =
+					const { setup: testSpecificSetup, ...nodeOptions } =
 						controller.nodePendingInclusion;
-					const node = new MockNode({
+					const node = await MockNode.create({
 						controller,
 						...nodeOptions,
 					});
 					// Apply default behaviors that are required for interacting with the driver correctly
 					node.defineBehavior(...createDefaultMockNodeBehaviors());
 					// Allow the tests to set up additional behavior before inclusion happens
-					setup?.(node);
+					testSpecificSetup?.(node);
 
 					const supportedCCs = [...node.implementedCCs]
 						.filter(([, info]) =>

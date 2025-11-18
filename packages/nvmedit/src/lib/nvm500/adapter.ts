@@ -416,7 +416,8 @@ export class NVM500Adapter implements NVMAdapter {
 					"EEOFFSET_CMDCLASS_LEN_far",
 					value.length,
 				);
-				const CCs = new Array(APPL_NODEPARM_MAX).fill(0xff);
+				const CCs = Array.from<number>({ length: APPL_NODEPARM_MAX })
+					.fill(0xff);
 				for (let i = 0; i < value.length; i++) {
 					if (i < APPL_NODEPARM_MAX) {
 						CCs[i] = value[i];
@@ -464,9 +465,11 @@ export class NVM500Adapter implements NVMAdapter {
 
 			case "sucUpdateEntries": {
 				const entries = value as SUCUpdateEntry[];
-				const sucUpdateEntries = new Array(SUC_MAX_UPDATES).fill(
-					undefined,
-				);
+				const sucUpdateEntries = Array
+					.from<SUCUpdateEntry | undefined>({
+						length: SUC_MAX_UPDATES,
+					})
+					.fill(undefined);
 				for (let i = 0; i < entries.length; i++) {
 					if (i < SUC_MAX_UPDATES) {
 						sucUpdateEntries[i] = entries[i];

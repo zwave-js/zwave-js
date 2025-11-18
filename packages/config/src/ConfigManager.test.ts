@@ -19,7 +19,6 @@ interface LocalTestContext {
 	};
 }
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const ownVersion = require("../package.json").version;
 
 const test = baseTest.extend<LocalTestContext>({

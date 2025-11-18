@@ -105,11 +105,12 @@ function suite(
 		({
 			mockController,
 			mockNodes: [mockNode],
-		} = prepareMocks(
+		} = await prepareMocks(
 			mockPort,
 			serial,
 			{
 				capabilities: controllerCapabilities,
+				securityKeys: driver.options.securityKeys,
 			},
 			[
 				{

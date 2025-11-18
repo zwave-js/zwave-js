@@ -227,7 +227,7 @@ export class VersionCCAPI extends PhysicalCCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(VersionCommand, VersionCommand.Get);
 
@@ -326,7 +326,7 @@ export class VersionCCAPI extends PhysicalCCAPI {
 		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCapabilities() {
 		this.assertSupportsCommand(
 			VersionCommand,
@@ -363,7 +363,7 @@ export class VersionCCAPI extends PhysicalCCAPI {
 		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getZWaveSoftware() {
 		this.assertSupportsCommand(
 			VersionCommand,

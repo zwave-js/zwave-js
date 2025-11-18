@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/shared",
-  "version": "15.15.1",
+  "version": "15.16.0",
   "description": "zwave-js: shared utilities",
   "keywords": [],
   "publishConfig": {
@@ -59,8 +59,6 @@
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:ts": "eslint --cache \"src/**/*.ts\"",
-    "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },

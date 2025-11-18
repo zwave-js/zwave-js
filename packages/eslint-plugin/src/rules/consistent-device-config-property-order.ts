@@ -85,10 +85,10 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 							0,
 							withRanges[0].property.loc.start.column,
 						);
-					// TODO: Change to .toSorted() once on node 20.
-					const desiredOrder = [...propsWithComments].sort((a, b) =>
-						a.index - b.index
-					).map((prop) => {
+					const desiredOrder = [...propsWithComments].toSorted((
+						a,
+						b,
+					) => a.index - b.index).map((prop) => {
 						const start = Math.min(
 							prop.property.range[0],
 							...prop.comments.leading.map((c) => c.range![0]),

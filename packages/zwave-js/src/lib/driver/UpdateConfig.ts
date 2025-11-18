@@ -51,7 +51,7 @@ export async function checkForConfigUpdates(
 	// Find the highest possible prepatch update (e.g. 7.2.4 -> 7.2.5-20200424)
 	const allVersions = Object.keys(registry.versions)
 		.filter((v) => !!semverValid(v))
-		.filter((v) => /\-\d{8}$/.test(v));
+		.filter((v) => /-\d{8}$/.test(v));
 	const updateRange = `>${currentVersion} <${
 		semverInc(
 			currentVersion,

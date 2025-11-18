@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-exports */
 export * from "./AsyncQueue.js";
 export { Bytes, type BytesView } from "./Bytes.js";
 export * from "./EventTarget.js";

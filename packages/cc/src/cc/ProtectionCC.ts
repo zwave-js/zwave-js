@@ -209,7 +209,7 @@ export class ProtectionCCAPI extends CCAPI {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(ProtectionCommand, ProtectionCommand.Get);
 
@@ -242,7 +242,7 @@ export class ProtectionCCAPI extends CCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(
 			ProtectionCommand,

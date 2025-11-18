@@ -325,7 +325,7 @@ export class SecurityCCAPI extends PhysicalCCAPI {
 		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupportedCommands() {
 		this.assertSupportsCommand(
 			SecurityCommand,

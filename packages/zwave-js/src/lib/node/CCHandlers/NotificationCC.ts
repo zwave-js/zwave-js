@@ -298,8 +298,8 @@ function handleKnownNotification(
 	node: ZWaveNode,
 	command: NotificationCCReport,
 ): void {
-	const lockEvents = [0x01, 0x03, 0x05, 0x09];
-	const unlockEvents = [0x02, 0x04, 0x06];
+	const lockEvents = new Set([0x01, 0x03, 0x05, 0x09]);
+	const unlockEvents = new Set([0x02, 0x04, 0x06]);
 	const doorStatusEvents = [
 		// Actual status
 		0x16,
@@ -311,8 +311,8 @@ function handleKnownNotification(
 	if (
 		// Access Control, manual/keypad/rf/auto (un)lock operation
 		command.notificationType === 0x06
-		&& (lockEvents.includes(command.notificationEvent as number)
-			|| unlockEvents.includes(command.notificationEvent as number))
+		&& (lockEvents.has(command.notificationEvent as number)
+			|| unlockEvents.has(command.notificationEvent as number))
 		&& (node.supportsCC(CommandClasses["Door Lock"])
 			|| node.supportsCC(CommandClasses.Lock))
 	) {
@@ -321,7 +321,7 @@ function handleKnownNotification(
 		// different key. This way the device can notify devices which don't belong
 		// to the S2 Access Control key group of changes in its state.
 
-		const isLocked = lockEvents.includes(
+		const isLocked = lockEvents.has(
 			command.notificationEvent as number,
 		);
 

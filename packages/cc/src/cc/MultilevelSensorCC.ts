@@ -251,7 +251,7 @@ export class MultilevelSensorCCAPI extends PhysicalCCAPI {
 	): Promise<MaybeNotKnown<number>>;
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(sensorType?: number, scale?: number) {
 		this.assertSupportsCommand(
 			MultilevelSensorCommand,

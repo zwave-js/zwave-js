@@ -83,7 +83,7 @@ export async function saveManufacturersInternal(
 	const data: Record<string, string> = {};
 
 	const orderedMap = new Map(
-		[...manufacturers].sort((a, b) => (a[0] > b[0] ? 1 : -1)),
+		[...manufacturers].toSorted((a, b) => (a[0] > b[0] ? 1 : -1)),
 	);
 
 	for (const [id, name] of orderedMap) {
