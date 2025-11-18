@@ -1,7 +1,7 @@
 {
 	"manufacturer": "Shelly Europe Ltd.",
 	"manufacturerId": "0x0460",
-	"label": "QNSW-002P16",
+	"label": "QNSW-002P16EU / QLSW-002P14US",
 	"description": "Wave 2PM",
 	"devices": [
 		{
