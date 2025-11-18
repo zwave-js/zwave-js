@@ -6,7 +6,7 @@ import {
 	type MessageRecord,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { CCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -79,7 +79,7 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 
 	public toLogEntry(): MessageOrCCLogEntry {
 		const message: MessageRecord = {
-			status: ApplicationStatus[this.status],
+			status: getEnumMemberName(ApplicationStatus, this.status),
 		};
 		if (
 			this.status === ApplicationStatus.TryAgainInWaitTimeSeconds
