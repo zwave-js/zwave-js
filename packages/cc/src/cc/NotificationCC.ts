@@ -198,7 +198,7 @@ export const NotificationCCValues = V.defineCCValues(
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"notificationVariable",
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			// oxlint-disable-next-line no-unused-vars
 			(notificationName: string, variableName: string) =>
 				notificationName,
 			(notificationName: string, variableName: string) => variableName,
@@ -317,7 +317,7 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(options: NotificationCCGetOptions) {
 		const response = await this.getInternal(options);
 		if (response) {
@@ -350,7 +350,7 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(
 			NotificationCommand,

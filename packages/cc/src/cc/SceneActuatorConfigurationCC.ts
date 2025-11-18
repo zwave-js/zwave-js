@@ -294,7 +294,6 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 export class SceneActuatorConfigurationCC extends CommandClass {
 	declare ccCommand: SceneActuatorConfigurationCommand;
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	public async interview(
 		ctx: InterviewContext,
 	): Promise<void> {

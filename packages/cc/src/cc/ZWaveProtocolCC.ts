@@ -66,7 +66,6 @@ export class ZWaveProtocolCC extends CommandClass {
 }
 
 // @publicAPI
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ZWaveProtocolCCNodeInformationFrameOptions
 	extends NodeInformationFrame
 {}

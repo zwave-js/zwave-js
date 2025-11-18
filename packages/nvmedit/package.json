@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/nvmedit",
-  "version": "15.15.3",
+  "version": "15.16.0",
   "description": "zwave-js: library to edit NVM backups",
   "keywords": [],
   "publishConfig": {
@@ -60,8 +60,6 @@
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:ts": "eslint --cache \"src/**/*.ts\"",
-    "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
@@ -70,7 +68,7 @@
     "@microsoft/api-extractor": "^7.52.11",
     "@types/node": "^20.19.23",
     "@types/semver": "^7.7.1",
-    "@types/yargs": "^17.0.33",
+    "@types/yargs": "^17.0.34",
     "del-cli": "^6.0.0",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",

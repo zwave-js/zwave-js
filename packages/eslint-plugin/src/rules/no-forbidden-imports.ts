@@ -4,7 +4,7 @@ import path from "node:path";
 import ts, { SyntaxKind } from "typescript";
 
 // Whitelist some imports that are known not to import forbidden modules
-const whitelistedImports = [
+const whitelistedImports = new Set([
 	"reflect-metadata",
 	// These are browser-compatible
 	"fflate",
@@ -21,7 +21,7 @@ const whitelistedImports = [
 	"alcalzone-shared/sorted-list",
 	"alcalzone-shared/typeguards",
 	"@zwave-js/waddle",
-];
+]);
 const whitelistedImportsRegex: RegExp[] = [];
 
 // FIXME: When looking at node modules, consider the imports of the implementation
@@ -29,7 +29,7 @@ const whitelistedImportsRegex: RegExp[] = [];
 // even though they are not used in the implementation.
 
 // Whitelist some more imports that should be ignored in the checking
-const ignoredImports = ["@zwave-js/transformers", "pathe"];
+const ignoredImports = new Set(["@zwave-js/transformers", "pathe"]);
 const ignoredImportsRegex: RegExp[] = [
 	/^semver\/functions\/.+/,
 	/^semver\/ranges\/.+/,
@@ -221,7 +221,7 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 
 		function relativeToProject(filename: string): string {
 			return path.relative(projectRoot, filename).replaceAll(
-				/[\\\/]/g,
+				/[\\/]/g,
 				path.sep,
 			);
 		}
@@ -292,7 +292,7 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 		): "ignored" | "forbidden" | "ok" {
 			const trimmedImport = imp.name.replaceAll("\"", "");
 			if (
-				ignoredImports.includes(trimmedImport)
+				ignoredImports.has(trimmedImport)
 				|| ignoredImportsRegex.some((regex) =>
 					regex.test(trimmedImport)
 				)
@@ -304,7 +304,7 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 
 				if (
 					imp.sourceFile.fileName.includes("node_modules")
-					&& !whitelistedImports.includes(trimmedImport)
+					&& !whitelistedImports.has(trimmedImport)
 					&& !whitelistedImportsRegex.some((regex) =>
 						regex.test(trimmedImport)
 					)

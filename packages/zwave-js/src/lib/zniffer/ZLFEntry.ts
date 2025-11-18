@@ -224,8 +224,6 @@ export function parseZLFEntry(
 				entries: parsed,
 			};
 		}
-
-		debugger;
 		throw e;
 	}
 }

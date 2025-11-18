@@ -591,7 +591,7 @@ function checkOptions(options: ZWaveOptions): void {
 
 		if (options.features.disableCommandClasses?.length) {
 			// Ensure that all CCs may be disabled
-			const mandatory = [
+			const mandatory = new Set([
 				// Encapsulation CCs are always supported
 				...encapsulationCCs,
 				// All Root Devices or nodes MUST support
@@ -605,11 +605,11 @@ function checkOptions(options: ZWaveOptions): void {
 				CommandClasses.Powerlevel,
 				CommandClasses.Version,
 				CommandClasses["Z-Wave Plus Info"],
-			];
+			]);
 
 			const mandatoryDisabled = options.features.disableCommandClasses
 				.filter(
-					(cc) => mandatory.includes(cc),
+					(cc) => mandatory.has(cc),
 				);
 			if (mandatoryDisabled.length > 0) {
 				throw new ZWaveError(
@@ -2344,7 +2344,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// Then do all the nodes in parallel, but prioritize nodes that are more likely to be ready
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Fully-interviewed devices first (need the least amount of communication now)
 						(b.interviewStage - a.interviewStage)
 						// Always listening -> FLiRS -> sleeping
@@ -2419,7 +2419,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
 					.filter((n) => n.isListening || n.isFrequentListening)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Always listening -> FLiRS
 						(
 							(b.isListening ? 1 : 0)
@@ -3756,6 +3756,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		try {
 			if (result) await this.destroy();
 		} finally {
+			// oxlint-disable-next-line no-unsafe-finally - We want to return this value in any case
 			return result;
 		}
 	}
@@ -5610,6 +5611,10 @@ ${handlers.length} left`,
 			// It could also be that this is the node's response for a CC that we sent, but where the ACK is delayed
 			const currentTransaction = this.queue.currentTransaction;
 			const currentMessage = currentTransaction?.getCurrentMessage();
+			const isSOSNonceReport =
+				msg.command instanceof Security2CCNonceReport
+				&& msg.command.SOS
+				&& !!msg.command.receiverEI;
 			if (
 				currentMessage
 				&& currentMessage.expectsNodeUpdate()
@@ -5618,20 +5623,30 @@ ${handlers.length} left`,
 				// The message we're currently sending is still in progress but expects this message in response,
 				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
 
-				// Abort the current transaction with the received message as the result.
-				currentTransaction!.abort(msg);
+				// An SOS nonce report is treated like an expected node update,
+				// but it is not considered a valid result of the ongoing transaction.
+				if (isSOSNonceReport) {
+					// Due to how the message generators are architected, it is currently not possible to short-circuit
+					// waiting for the transmit report, so we remember the SOS Nonce Report for later processing.
+					currentMessage.prematureNodeUpdate = msg;
+				}
 
 				if (isSendData(currentMessage)) {
 					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
 					this.controllerLog.logNode(msg.getNodeId()!, {
 						message:
-							`received expected response prematurely, aborting transaction...`,
+							`received expected response prematurely, aborting ongoing transmission...`,
 						level: "verbose",
 						direction: "inbound",
 					});
 
 					void this.abortSendData();
 				}
+
+				// If this is a valid result of the current transaction, abort the
+				// transaction with the received message as the result.
+				if (!isSOSNonceReport) currentTransaction!.abort(msg);
+
 				return;
 			}
 
@@ -6110,14 +6125,14 @@ ${handlers.length} left`,
 		) {
 			// The command was received using the highest security class. Return the list of supported CCs
 
-			const implementedCCs = allCCs.filter((cc) =>
-				getImplementedVersion(cc) > 0
+			const implementedCCs = new Set(
+				allCCs.filter((cc) => getImplementedVersion(cc) > 0),
 			);
 
 			// Encapsulation CCs are always supported
 			const implementedEncapsulationCCs = encapsulationCCs.filter(
 				(cc) =>
-					implementedCCs.includes(cc)
+					implementedCCs.has(cc)
 					// A node MUST advertise support for Multi Channel Command Class only if it implements End Points.
 					// A node able to communicate using the Multi Channel encapsulation but implementing no End Point
 					// MUST NOT advertise support for the Multi Channel Command Class.
@@ -6699,6 +6714,13 @@ ${handlers.length} left`,
 						) {
 							// We gave up on this command, so don't retry it
 							throw e;
+						}
+
+						// If we receive a premature node update, we abort the transaction
+						// so we should end up here with transmit status NoACK.
+						// This is expected and intended, so continue with the next message.
+						if (msg.prematureNodeUpdate) {
+							break attemptMessage;
 						}
 
 						if (

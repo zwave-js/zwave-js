@@ -370,7 +370,6 @@ export class SceneControllerConfigurationCC extends CommandClass {
 		];
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	public async interview(
 		ctx: InterviewContext,
 	): Promise<void> {

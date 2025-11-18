@@ -134,7 +134,7 @@ export class AssociationGroupInfoCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getGroupInfo(groupId: number, refreshCache: boolean = false) {
 		this.assertSupportsCommand(
 			AssociationGroupInfoCommand,
@@ -676,17 +676,15 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 			message: {
 				"is list mode": this.isListMode,
 				"has dynamic info": this.hasDynamicInfo,
-				groups: `${
-					this.groups
-						.map(
-							(g) => `
+				groups: this.groups
+					.map(
+						(g) => `
 · Group #${g.groupId}
   mode:       ${g.mode}
   profile:    ${g.profile}
   event code: ${g.eventCode}`,
-						)
-						.join("")
-				}`,
+					)
+					.join(""),
 			},
 		};
 	}
@@ -849,17 +847,15 @@ export class AssociationGroupInfoCCCommandListReport
 			...super.toLogEntry(ctx),
 			message: {
 				"group id": this.groupId,
-				commands: `${
-					[...this.commands]
-						.map(([cc, cmds]) => {
-							return `\n· ${getCCName(cc)}: ${
-								cmds
-									.map((cmd) => num2hex(cmd))
-									.join(", ")
-							}`;
-						})
-						.join("")
-				}`,
+				commands: [...this.commands]
+					.map(([cc, cmds]) => {
+						return `\n· ${getCCName(cc)}: ${
+							cmds
+								.map((cmd) => num2hex(cmd))
+								.join(", ")
+						}`;
+					})
+					.join(""),
 			},
 		};
 	}

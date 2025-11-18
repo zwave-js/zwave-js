@@ -75,6 +75,18 @@
 			"label": "SW2 Switch Type"
 		},
 		{
+			"#": "7",
+			"$if": "firmwareVersion >= 16.00",
+			"$import": "templates/wave_template.json#detached_mode",
+			"label": "Detach O1 Output"
+		},
+		{
+			"#": "8",
+			"$if": "firmwareVersion >= 16.00",
+			"$import": "templates/wave_template.json#detached_mode",
+			"label": "Detach O2 Output"
+		},
+		{
 			"#": "6",
 			"$import": "templates/wave_template.json#swap_inputs"
 		},
@@ -154,23 +166,32 @@
 		},
 		{
 			"#": "91",
+			"$if": "firmwareVersion < 15.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Water"
 		},
 		{
 			"#": "92",
+			"$if": "firmwareVersion < 15.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Smoke"
 		},
 		{
 			"#": "93",
+			"$if": "firmwareVersion < 15.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: CO"
 		},
 		{
 			"#": "94",
+			"$if": "firmwareVersion < 15.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Heat"
+		},
+		{
+			"#": "117",
+			"$if": "firmwareVersion >= 16.00",
+			"$import": "templates/wave_template.json#remote_reboot"
 		},
 		{
 			"#": "120",

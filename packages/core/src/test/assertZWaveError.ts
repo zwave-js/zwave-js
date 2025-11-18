@@ -51,7 +51,8 @@ export function assertZWaveError<T>(
 				) as any;
 			}
 		} catch (e) {
-			return void handleError(e) as any;
+			handleError(e);
+			return undefined as any;
 		}
 		fail();
 	} else {

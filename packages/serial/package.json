@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/serial",
-  "version": "15.15.3",
+  "version": "15.16.0",
   "description": "zwave-js: Serialport driver",
   "keywords": [],
   "publishConfig": {
@@ -71,8 +71,6 @@
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:ts": "eslint --cache \"src/**/*.ts\"",
-    "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
@@ -84,7 +82,7 @@
     "@zwave-js/shared": "workspace:*",
     "alcalzone-shared": "^5.0.0",
     "serialport": "^13.0.0",
-    "winston": "^3.17.0"
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",

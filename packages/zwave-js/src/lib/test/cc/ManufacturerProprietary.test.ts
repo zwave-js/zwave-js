@@ -26,7 +26,7 @@ integrationTest(
 						const received =
 							receivedCC as ManufacturerProprietaryCC;
 						const response = new ManufacturerProprietaryCC({
-							nodeId: self.id,
+							nodeId: controller.ownNodeId,
 							manufacturerId: received.manufacturerId!,
 							payload: received.payload,
 						});

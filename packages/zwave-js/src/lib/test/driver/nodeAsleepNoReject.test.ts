@@ -79,12 +79,12 @@ integrationTest(
 			t.expect(
 				(
 					(sendQueue.transactions.get(0)?.message as SendDataRequest)
-						.command as BasicCCSet
-				).targetValue,
+						?.command as BasicCCSet
+				)?.targetValue,
 			).toBe(99);
 			t.expect(
 				(sendQueue.transactions.get(1)?.message as SendDataRequest)
-					.command instanceof BasicCCGet,
+					?.command instanceof BasicCCGet,
 			).toBe(true);
 		},
 	},

@@ -1163,6 +1163,9 @@ const notifications = Object.freeze(
 				[0x03]: {
 					label: "Contact medical service",
 				},
+				[0x04]: {
+					label: "Panic alert",
+				},
 			},
 		},
 		[0x0b]: {

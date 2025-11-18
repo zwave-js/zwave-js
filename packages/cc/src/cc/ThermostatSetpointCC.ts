@@ -258,7 +258,7 @@ export class ThermostatSetpointCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCapabilities(setpointType: ThermostatSetpointType) {
 		this.assertSupportsCommand(
 			ThermostatSetpointCommand,

@@ -123,7 +123,7 @@ export class AlarmSensorCCAPI extends PhysicalCCAPI {
 	 * @param sensorType The (optional) sensor type to retrieve the value for
 	 */
 	@validateArgs({ strictEnums: true })
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(sensorType?: AlarmSensorType) {
 		this.assertSupportsCommand(AlarmSensorCommand, AlarmSensorCommand.Get);
 
@@ -139,7 +139,7 @@ export class AlarmSensorCCAPI extends PhysicalCCAPI {
 		if (response) return pick(response, ["state", "severity", "duration"]);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupportedSensorTypes() {
 		this.assertSupportsCommand(
 			AlarmSensorCommand,
