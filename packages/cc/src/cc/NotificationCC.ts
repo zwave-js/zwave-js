@@ -686,6 +686,9 @@ export class NotificationCC extends CommandClass {
 			if (notificationMode === "pull") {
 				await this.refreshValues(ctx);
 			} /* if (notificationMode === "push") */ else {
+				// First, query the current state of each supported notification
+				await this.refreshValues(ctx);
+
 				for (let i = 0; i < supportedNotificationTypes.length; i++) {
 					const type = supportedNotificationTypes[i];
 					const name = supportedNotificationNames[i];
@@ -828,54 +831,51 @@ export class NotificationCC extends CommandClass {
 		ctx: RefreshValuesContext,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
-		// Refreshing values only works on pull nodes
-		if (NotificationCC.getNotificationMode(ctx, node) === "pull") {
-			const endpoint = this.getEndpoint(ctx)!;
-			const api = CCAPI.create(
-				CommandClasses.Notification,
-				ctx,
-				endpoint,
-			).withOptions({
-				priority: MessagePriority.NodeQuery,
+		const endpoint = this.getEndpoint(ctx)!;
+		const api = CCAPI.create(
+			CommandClasses.Notification,
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+		});
+
+		// Load supported notification types and events from cache
+		const supportedNotificationTypes = this.getValue<readonly number[]>(
+			ctx,
+			NotificationCCValues.supportedNotificationTypes,
+		) ?? [];
+		const supportedNotificationNames = supportedNotificationTypes.map(
+			getNotificationName,
+		);
+
+		for (let i = 0; i < supportedNotificationTypes.length; i++) {
+			const type = supportedNotificationTypes[i];
+			const name = supportedNotificationNames[i];
+
+			// Always query each notification for its current status
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: `querying notification status for ${name}...`,
+				direction: "outbound",
 			});
+			const response = await api.getInternal({
+				notificationType: type,
+			});
+			// NotificationReports don't store their values themselves,
+			// because the behaviour is too complex and spans the lifetime
+			// of several reports. Thus we handle it in the Node instance
 
-			// Load supported notification types and events from cache
-			const supportedNotificationTypes = this.getValue<readonly number[]>(
-				ctx,
-				NotificationCCValues.supportedNotificationTypes,
-			) ?? [];
-			const supportedNotificationNames = supportedNotificationTypes.map(
-				getNotificationName,
-			);
-
-			for (let i = 0; i < supportedNotificationTypes.length; i++) {
-				const type = supportedNotificationTypes[i];
-				const name = supportedNotificationNames[i];
-
-				// Always query each notification for its current status
-				ctx.logNode(node.id, {
-					endpoint: this.endpointIndex,
-					message: `querying notification status for ${name}...`,
-					direction: "outbound",
-				});
-				const response = await api.getInternal({
-					notificationType: type,
-				});
-				// NotificationReports don't store their values themselves,
-				// because the behaviour is too complex and spans the lifetime
-				// of several reports. Thus we handle it in the Node instance
-
-				// @ts-expect-error
-				if (response) await node.handleCommand(response);
-			}
-
-			// Remember when we did this
-			this.setValue(
-				ctx,
-				NotificationCCValues.lastRefresh,
-				Date.now(),
-			);
+			// @ts-expect-error
+			if (response) await node.handleCommand(response);
 		}
+
+		// Remember when we did this
+		this.setValue(
+			ctx,
+			NotificationCCValues.lastRefresh,
+			Date.now(),
+		);
 	}
 
 	public shouldRefreshValues(
