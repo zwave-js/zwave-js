@@ -8,12 +8,16 @@ import { Bytes } from "@zwave-js/shared";
 import { randomBytes } from "node:crypto";
 import { test } from "vitest";
 
+const supportsNoCC = {
+	getNode: () => ({ supportsCC: () => false }),
+} as any;
+
 test("WakeUpCCNoMoreInformation should expect no response", (t) => {
 	const cc = new WakeUpCCNoMoreInformation({
 		nodeId: 2,
 		endpointIndex: 2,
 	});
-	t.expect(cc.expectsCCResponse()).toBe(false);
+	t.expect(cc.expectsCCResponse(supportsNoCC)).toBe(false);
 });
 
 test("MultiChannelCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
@@ -23,7 +27,7 @@ test("MultiChannelCC/WakeUpCCNoMoreInformation should expect NO response", (t) =
 			endpointIndex: 2,
 		}),
 	);
-	t.expect(ccRequest.expectsCCResponse()).toBe(false);
+	t.expect(ccRequest.expectsCCResponse(supportsNoCC)).toBe(false);
 });
 
 test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
@@ -46,5 +50,5 @@ test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
 			endpointIndex: 2,
 		}),
 	);
-	t.expect(ccRequest.expectsCCResponse()).toBe(false);
+	t.expect(ccRequest.expectsCCResponse(supportsNoCC)).toBe(false);
 });

@@ -1,5 +1,6 @@
 import type { JsonlDBOptions } from "@alcalzone/jsonl-db";
 import {
+	ApplicationStatusCCRejectedRequest,
 	type CCAPIHost,
 	type CCEncodingContext,
 	type CCParsingContext,
@@ -5617,8 +5618,8 @@ ${handlers.length} left`,
 				&& !!msg.command.receiverEI;
 			if (
 				currentMessage
-				&& currentMessage.expectsNodeUpdate()
-				&& currentMessage.isExpectedNodeUpdate(msg)
+				&& currentMessage.expectsNodeUpdate(this)
+				&& currentMessage.isExpectedNodeUpdate(this, msg)
 			) {
 				// The message we're currently sending is still in progress but expects this message in response,
 				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
@@ -7463,6 +7464,15 @@ ${handlers.length} left`,
 
 		// Fall back to non-supervised commands
 		const result = await this.sendCommandInternal(command, options);
+
+		// ApplicationStatusCCRejectedRequest is treated like a SupervisionReport with Fail status
+		if (result instanceof ApplicationStatusCCRejectedRequest) {
+			// @ts-expect-error TS doesn't know we've narrowed the return type to match
+			return {
+				status: SupervisionStatus.Fail,
+				remainingDuration: undefined,
+			};
+		}
 
 		// When sending S2 multicast commands to supporting nodes, the singlecast followups
 		// may use supervision. In this case, the multicast message generator returns a

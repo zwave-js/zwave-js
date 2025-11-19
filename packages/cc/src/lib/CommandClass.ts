@@ -961,7 +961,7 @@ export class CommandClass implements CCId {
 	}
 
 	/** Tests whether this CC expects at least one command in return */
-	public expectsCCResponse(): boolean {
+	public expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean {
 		let expected:
 			| DynamicCCResponse<this>
 			| ReturnType<DynamicCCResponse<this>> = getExpectedCCResponse(this);
@@ -971,7 +971,7 @@ export class CommandClass implements CCId {
 			typeof expected === "function"
 			&& !staticExtends(expected, CommandClass)
 		) {
-			expected = expected(this);
+			expected = expected(ctx, this);
 		}
 		if (expected === undefined) return false;
 		if (isArray(expected)) {
@@ -981,7 +981,10 @@ export class CommandClass implements CCId {
 		}
 	}
 
-	public isExpectedCCResponse(received: CommandClass): boolean {
+	public isExpectedCCResponse(
+		ctx: GetNode<NodeId & SupportsCC>,
+		received: CommandClass,
+	): boolean {
 		if (received.nodeId !== this.nodeId) return false;
 
 		let expected:
@@ -993,7 +996,7 @@ export class CommandClass implements CCId {
 			typeof expected === "function"
 			&& !staticExtends(expected, CommandClass)
 		) {
-			expected = expected(this);
+			expected = expected(ctx, this);
 		}
 
 		if (expected == undefined) {
@@ -1023,6 +1026,7 @@ export class CommandClass implements CCId {
 				&& isEncapsulatingCommandClass(received)
 			) {
 				return this.encapsulated.isExpectedCCResponse(
+					ctx,
 					received.encapsulated,
 				);
 			} else {
@@ -1189,6 +1193,7 @@ export type DynamicCCResponse<
 	TSent extends CommandClass,
 	TReceived extends CommandClass = CommandClass,
 > = (
+	ctx: GetNode<NodeId & SupportsCC>,
 	sentCC: TSent,
 ) => CCConstructor<TReceived> | CCConstructor<TReceived>[] | undefined;
 

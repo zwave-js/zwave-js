@@ -81,6 +81,7 @@ import { isNotificationEventPayload } from "../lib/NotificationEventPayload.js";
 import { V } from "../lib/Values.js";
 import { NotificationCommand, UserCodeCommand } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
+import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 import { AssociationGroupInfoCC } from "./AssociationGroupInfoCC.js";
 
 export const NotificationCCValues = V.defineCCValues(
@@ -914,7 +915,28 @@ export interface NotificationCCSetOptions {
 	notificationStatus: boolean;
 }
 
+function getCCResponseForNotificationCCSet(
+	ctx: GetNode<NodeId & SupportsCC>,
+	sent: NotificationCCSet,
+) {
+	// CC:0071.03.06.11.008: A receiving node MAY deny the deactivation
+	// of a specific Notification Type. In that case, the receiving node
+	// MUST respond to this command with an Application Rejected Request
+	// Command.
+	if (
+		sent.isSinglecast()
+		&& !sent.notificationStatus
+		&& !sent.isEncapsulatedWith(CommandClasses.Supervision)
+		&& ctx.getNode(sent.nodeId)?.supportsCC(
+			CommandClasses["Application Status"],
+		)
+	) {
+		return ApplicationStatusCCRejectedRequest;
+	}
+}
+
 @CCCommand(NotificationCommand.Set)
+@expectedCCResponse(getCCResponseForNotificationCCSet)
 @useSupervision()
 export class NotificationCCSet extends NotificationCC {
 	public constructor(

@@ -3,12 +3,15 @@ import {
 	type ApplicationNodeInformation,
 	CommandClasses,
 	type GenericDeviceClass,
+	type GetNode,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
+	type NodeId,
 	type SpecificDeviceClass,
+	type SupportsCC,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -1366,11 +1369,12 @@ export interface MultiChannelCCCommandEncapsulationOptions {
 // Destination End Point field specifies multiple End Points via bit mask addressing.
 
 function getCCResponseForCommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: MultiChannelCCCommandEncapsulation,
 ) {
 	if (
 		typeof sent.destination === "number"
-		&& sent.encapsulated.expectsCCResponse()
+		&& sent.encapsulated.expectsCCResponse(ctx)
 	) {
 		// Allow both versions of the encapsulation command
 		// Our implementation check is a bit too strict, so change the return type
@@ -1619,9 +1623,10 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
 }
 
 function getResponseForV1CommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: MultiChannelCCV1CommandEncapsulation,
 ) {
-	if (sent.encapsulated.expectsCCResponse()) {
+	if (sent.encapsulated.expectsCCResponse(ctx)) {
 		return MultiChannelCCV1CommandEncapsulation;
 	}
 }

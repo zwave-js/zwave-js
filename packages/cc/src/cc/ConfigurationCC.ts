@@ -2130,7 +2130,10 @@ export type ConfigurationCCBulkSetOptions =
 		}
 	);
 
-function getResponseForBulkSet(cc: ConfigurationCCBulkSet) {
+function getResponseForBulkSet(
+	ctx: GetNode<NodeId & SupportsCC>,
+	cc: ConfigurationCCBulkSet,
+) {
 	return cc.handshake ? ConfigurationCCBulkReport : undefined;
 }
 

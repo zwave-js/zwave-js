@@ -59,19 +59,23 @@ test("the Report command should be deserialized correctly", async (t) => {
 	t.expect(cc.tilt).toBe(0);
 });
 
+const supportsNoCC = {
+	getNode: () => ({ supportsCC: () => false }),
+} as any;
+
 test("FibaroVenetianBlindCCSet should expect no response", (t) => {
 	const cc = new FibaroVenetianBlindCCSet({
 		nodeId: 2,
 		tilt: 7,
 	});
-	t.expect(cc.expectsCCResponse()).toBe(false);
+	t.expect(cc.expectsCCResponse(supportsNoCC)).toBe(false);
 });
 
 test("FibaroVenetianBlindCCGet should expect a response", (t) => {
 	const cc = new FibaroVenetianBlindCCGet({
 		nodeId: 2,
 	});
-	t.expect(cc.expectsCCResponse()).toBe(true);
+	t.expect(cc.expectsCCResponse(supportsNoCC)).toBe(true);
 });
 
 test("FibaroVenetianBlindCCSet => FibaroVenetianBlindCCReport = unexpected", async (t) => {
@@ -91,7 +95,9 @@ test("FibaroVenetianBlindCCSet => FibaroVenetianBlindCCReport = unexpected", asy
 		{ sourceNodeId: 2 } as any,
 	) as FibaroVenetianBlindCCReport;
 
-	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
+	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+		false,
+	);
 });
 
 test("FibaroVenetianBlindCCGet => FibaroVenetianBlindCCReport = expected", async (t) => {
@@ -110,5 +116,7 @@ test("FibaroVenetianBlindCCGet => FibaroVenetianBlindCCReport = expected", async
 		{ sourceNodeId: 2 } as any,
 	) as FibaroVenetianBlindCCReport;
 
-	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(true);
+	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+		true,
+	);
 });
