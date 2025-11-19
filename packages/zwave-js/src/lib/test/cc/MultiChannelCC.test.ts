@@ -126,10 +126,6 @@ test("the AggregatedMembersGet command should serialize correctly", async (t) =>
 	);
 });
 
-const supportsNoCC = {
-	getNode: () => ({ supportsCC: () => false }),
-} as any;
-
 test("the CommandEncapsulation command should also accept V1CommandEncapsulation as a response", (t) => {
 	// GH#938
 	const sent = new MultiChannelCCCommandEncapsulation({
@@ -145,7 +141,7 @@ test("the CommandEncapsulation command should also accept V1CommandEncapsulation
 		}),
 	});
 	received.endpointIndex = sent.destination as any;
-	t.expect(sent.isExpectedCCResponse(supportsNoCC, received)).toBe(true);
+	t.expect(sent.isExpectedCCResponse({} as any, received)).toBe(true);
 });
 
 // test("the Report command (v2) should be deserialized correctly", (t) => {
@@ -210,7 +206,7 @@ test("MultiChannelCC/BasicCCGet should expect a response", (t) => {
 			endpointIndex: 2,
 		}),
 	);
-	t.expect(ccRequest.expectsCCResponse(supportsNoCC)).toBe(true);
+	t.expect(ccRequest.expectsCCResponse({} as any)).toBe(true);
 });
 
 test("MultiChannelCC/BasicCCGet (multicast) should expect NO response", (t) => {
@@ -222,7 +218,7 @@ test("MultiChannelCC/BasicCCGet (multicast) should expect NO response", (t) => {
 	);
 	// A multicast request never expects a response
 	ccRequest.destination = [1, 2, 3];
-	t.expect(ccRequest.expectsCCResponse(supportsNoCC)).toBe(false);
+	t.expect(ccRequest.expectsCCResponse({} as any)).toBe(false);
 });
 
 test("MultiChannelCC/BasicCCSet should expect NO response", (t) => {
@@ -233,7 +229,7 @@ test("MultiChannelCC/BasicCCSet should expect NO response", (t) => {
 			targetValue: 7,
 		}),
 	);
-	t.expect(ccRequest.expectsCCResponse(supportsNoCC)).toBe(false);
+	t.expect(ccRequest.expectsCCResponse({} as any)).toBe(false);
 });
 
 test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCReport = expected", (t) => {
@@ -251,7 +247,7 @@ test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCReport = expected", (t)
 	);
 	ccResponse.endpointIndex = 2;
 
-	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
 		true,
 	);
 });
@@ -271,7 +267,7 @@ test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCGet = unexpected", (t) 
 	);
 	ccResponse.endpointIndex = 2;
 
-	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
 		false,
 	);
 });
@@ -291,7 +287,7 @@ test("MultiChannelCC/BasicCCGet => MultiCommandCC/BasicCCReport = unexpected", (
 	]);
 	ccResponse.endpointIndex = 2;
 
-	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
 		false,
 	);
 });

@@ -149,17 +149,13 @@ test("getDefinedValueIDs() should include the target value for all endpoints exc
 	t.expect(endpointIndizes).toStrictEqual([1, 2]);
 });
 
-const supportsNoCC = {
-	getNode: () => ({ supportsCC: () => false }),
-} as any;
-
 test("BasicCCSet should expect no response", (t) => {
 	const cc = new BasicCCSet({
 		nodeId: 2,
 		endpointIndex: 2,
 		targetValue: 7,
 	});
-	t.expect(cc.expectsCCResponse(supportsNoCC)).toBe(false);
+	t.expect(cc.expectsCCResponse({} as any)).toBe(false);
 });
 
 test("BasicCCSet => BasicCCReport = unexpected", (t) => {
@@ -173,7 +169,7 @@ test("BasicCCSet => BasicCCReport = unexpected", (t) => {
 		currentValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
 		false,
 	);
 });
@@ -182,7 +178,7 @@ test("BasicCCGet should expect a response", (t) => {
 	const cc = new BasicCCGet({
 		nodeId: 2,
 	});
-	t.expect(cc.expectsCCResponse(supportsNoCC)).toBe(true);
+	t.expect(cc.expectsCCResponse({} as any)).toBe(true);
 });
 
 test("BasicCCGet => BasicCCReport = expected", (t) => {
@@ -194,7 +190,7 @@ test("BasicCCGet => BasicCCReport = expected", (t) => {
 		currentValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
 		true,
 	);
 });
@@ -208,7 +204,7 @@ test("BasicCCGet => BasicCCReport (wrong node) = unexpected", (t) => {
 		currentValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
 		false,
 	);
 });
@@ -222,7 +218,7 @@ test("BasicCCGet => BasicCCSet = unexpected", (t) => {
 		targetValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(supportsNoCC, ccResponse)).toBe(
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
 		false,
 	);
 });
