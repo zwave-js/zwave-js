@@ -2214,13 +2214,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/js-yaml@npm:^4":
-  version: 4.0.9
-  resolution: "@types/js-yaml@npm:4.0.9"
-  checksum: 10/a0ce595db8a987904badd21fc50f9f444cb73069f4b95a76cc222e0a17b3ff180669059c763ec314bc4c3ce284379177a9da80e83c5f650c6c1310cafbfaa8e6
-  languageName: node
-  linkType: hard
-
 "@types/json-logic-js@npm:^2.0.8":
   version: 2.0.8
   resolution: "@types/json-logic-js@npm:2.0.8"
@@ -2828,7 +2821,6 @@ __metadata:
     "@microsoft/api-extractor": "npm:^7.52.11"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
     "@tsconfig/node20": "npm:^20.1.6"
-    "@types/js-yaml": "npm:^4"
     "@types/node": "npm:^20.19.23"
     "@types/semver": "npm:^7.7.1"
     "@types/source-map-support": "npm:^0.5.10"
@@ -2861,7 +2853,6 @@ __metadata:
     eslint-plugin-unused-imports: "patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch"
     execa: "npm:^9.6.0"
     husky: "npm:^9.1.7"
-    js-yaml: "npm:^4.1.1"
     json5: "npm:^2.2.3"
     jsonc-eslint-parser: "npm:^2.4.1"
     lint-staged: "npm:^16.2.6"
@@ -6297,17 +6288,6 @@ __metadata:
   linkType: hard
 
 "js-yaml@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "js-yaml@npm:4.1.0"
-  dependencies:
-    argparse: "npm:^2.0.1"
-  bin:
-    js-yaml: bin/js-yaml.js
-  checksum: 10/c138a34a3fd0d08ebaf71273ad4465569a483b8a639e0b118ff65698d257c2791d3199e3f303631f2cb98213fa7b5f5d6a4621fd0fff819421b990d30d967140
-  languageName: node
-  linkType: hard
-
-"js-yaml@npm:^4.1.1":
   version: 4.1.1
   resolution: "js-yaml@npm:4.1.1"
   dependencies:
