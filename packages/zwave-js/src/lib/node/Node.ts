@@ -641,20 +641,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 				const shouldUpdateOptimistically =
 					api.isSetValueOptimistic(valueId)
-					&& (
-						// For successful supervised commands, we know that an optimistic update is ok
-						// regardless of the device class
-						supervisedAndSuccessful
-						// For unsupervised commands, check if the device class supports optimistic value updates
-						// and let the application decide whether to update related values optimistically
-						|| (
-							(endpointInstance.deviceClass?.specific
-								.supportsOptimisticValueUpdate
-								?? true)
-							&& !this.driver.options.disableOptimisticValueUpdate
-							&& result == undefined
-						)
-					);
+					// Check if the device class supports optimistic value updates
+					&& (endpointInstance.deviceClass?.specific
+						.supportsOptimisticValueUpdate
+						?? true)
+					// For successful supervised commands, we know that an optimistic update is ok
+					&& (supervisedAndSuccessful
+						// For unsupervised commands that did not fail, we let the application decide whether
+						// to update related value optimistically
+						|| (!this.driver.options.disableOptimisticValueUpdate
+							&& result == undefined));
 
 				// The actual API implementation handles additional optimistic updates
 				if (shouldUpdateOptimistically) {
@@ -663,11 +659,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 					);
 				}
 
+				const isSlowDeviceClass = endpointInstance.deviceClass?.specific
+					.supportsOptimisticValueUpdate === false;
+
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
+				//    ... and this is not a slow device class
 				// ...and the CC API decides not to verify anyways
 				if (
 					!supervisedCommandSucceeded(result)
+					|| isSlowDeviceClass
 					|| hooks.forceVerifyChanges?.()
 				) {
 					// Let the CC API implementation handle the verification.

@@ -761,12 +761,19 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 	}
 
 	public readonly parameter: WindowCoveringParameter;
-
 	public readonly currentValue: number;
-
 	public readonly targetValue: number;
-
 	public readonly duration: Duration;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.parameter,
+			this.currentValue,
+			this.targetValue,
+			this.duration.serializeReport(),
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
