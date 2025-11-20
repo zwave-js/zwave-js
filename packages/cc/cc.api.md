@@ -7,6 +7,7 @@
 import { AlarmSensorCCAPI } from '../cc/AlarmSensorCC.js';
 import { AllOrNone } from '@zwave-js/shared';
 import { ApplicationNodeInformation } from '@zwave-js/core';
+import { ApplicationStatusCCAPI } from '../cc/ApplicationStatusCC.js';
 import { AssociationCCAPI } from '../cc/AssociationCC.js';
 import { AssociationGroupInfoCCAPI } from '../cc/AssociationGroupInfoCC.js';
 import { BarrierOperatorCCAPI } from '../cc/BarrierOperatorCC.js';
@@ -18,6 +19,7 @@ import { BinarySensorCCAPI } from '../cc/BinarySensorCC.js';
 import { BinarySwitchCCAPI } from '../cc/BinarySwitchCC.js';
 import { BroadcastCC } from '@zwave-js/core';
 import { Bytes } from '@zwave-js/shared';
+import { BytesView } from '@zwave-js/shared';
 import { CCAddress } from '@zwave-js/core';
 import type { CCEncodingContext as CCEncodingContext_2 } from '@zwave-js/cc';
 import { CCId } from '@zwave-js/core';
@@ -443,6 +445,83 @@ export type APIConstructor<T extends CCAPI = CCAPI> = new (host: CCAPIHost, endp
 //
 // @public (undocumented)
 export type APIMethodsOf<CC extends CCNameOrId> = Omit<OnlyMethods<CCToAPI<CC>>, "ccId" | "getNode" | "tryGetNode" | "isSetValueOptimistic" | "isSupported" | "pollValue" | "setValue" | "version" | "supportsCommand" | "withOptions" | "withTXReport">;
+
+// Warning: (ae-missing-release-tag) "ApplicationStatus" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ApplicationStatus {
+    // (undocumented)
+    RequestQueued = 2,
+    // (undocumented)
+    TryAgainInWaitTimeSeconds = 1,
+    // (undocumented)
+    TryAgainLater = 0
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ApplicationStatusCC extends CommandClass implements SinglecastCC<ApplicationStatusCC> {
+    // (undocumented)
+    ccCommand: ApplicationStatusCommand;
+    // (undocumented)
+    nodeId: number;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCBusy" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ApplicationStatusCCBusy extends ApplicationStatusCC {
+    constructor(options: WithAddress<ApplicationStatusCCBusyOptions>);
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ApplicationStatusCCBusy;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
+    readonly status: ApplicationStatus;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+    // (undocumented)
+    readonly waitTime: number | undefined;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCBusyOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ApplicationStatusCCBusyOptions {
+    // (undocumented)
+    status: ApplicationStatus;
+    // (undocumented)
+    waitTime?: number;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCRejectedRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ApplicationStatusCCRejectedRequest extends ApplicationStatusCC {
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ApplicationStatusCCRejectedRequest;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCRejectedRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ApplicationStatusCCRejectedRequestOptions {
+    // (undocumented)
+    status: number;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ApplicationStatusCommand {
+    // (undocumented)
+    Busy = 1,
+    // (undocumented)
+    RejectedRequest = 2
+}
 
 // Warning: (ae-missing-release-tag) "assignLifelineIssueingCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3107,6 +3186,8 @@ export interface CCAPIs {
     // (undocumented)
     "Alarm Sensor": AlarmSensorCCAPI;
     // (undocumented)
+    "Application Status": ApplicationStatusCCAPI;
+    // (undocumented)
     "Association Group Information": AssociationGroupInfoCCAPI;
     // (undocumented)
     "Barrier Operator": BarrierOperatorCCAPI;
@@ -3311,7 +3392,7 @@ export class CCRaw {
     // (undocumented)
     ccId: CommandClasses;
     // (undocumented)
-    static parse(data: Uint8Array): CCRaw;
+    static parse(data: BytesView): CCRaw;
     // (undocumented)
     payload: Bytes;
     // (undocumented)
@@ -4576,7 +4657,7 @@ export class CommandClass implements CCId {
     protected ensureMetadata(ctx: GetValueDB, ccValue: CCValue, meta?: ValueMetadata): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     expectMoreMessages(_session: CommandClass[]): boolean;
-    expectsCCResponse(): boolean;
+    expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean;
     readonly frameType?: FrameType;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): CommandClass | Promise<CommandClass>;
@@ -4598,7 +4679,7 @@ export class CommandClass implements CCId {
     isBroadcast(): this is BroadcastCC<this>;
     isEncapsulatedWith(ccId: CommandClasses, ccCommand?: number): boolean;
     // (undocumented)
-    isExpectedCCResponse(received: CommandClass): boolean;
+    isExpectedCCResponse(ctx: GetNode<NodeId & SupportsCC>, received: CommandClass): boolean;
     isExtended(): boolean;
     isInternalValue(properties: ValueIDProperties): boolean;
     isInterviewComplete(host: GetValueDB): boolean;
@@ -4611,7 +4692,7 @@ export class CommandClass implements CCId {
     mergePartialCCs(_partials: CommandClass[], _ctx: CCParsingContext_2): Promise<void>;
     nodeId: number | MulticastDestination;
     // (undocumented)
-    static parse(data: Uint8Array, ctx: CCParsingContext_2): Promise<CommandClass>;
+    static parse(data: BytesView, ctx: CCParsingContext_2): Promise<CommandClass>;
     // (undocumented)
     payload: Bytes;
     // Warning: (tsdoc-characters-after-block-tag) The token "@ccValue" looks like a TSDoc tag but contains an invalid character "."; if it is not a tag, use a backslash to escape the "@"
@@ -4658,7 +4739,7 @@ export interface CommandClassOptions extends CCAddress {
     // (undocumented)
     ccId?: number;
     // (undocumented)
-    payload?: Uint8Array;
+    payload?: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5262,11 +5343,11 @@ export interface DecryptionResult {
     // (undocumented)
     authOK: boolean;
     // (undocumented)
-    iv?: Uint8Array;
+    iv?: BytesView;
     // (undocumented)
-    key?: Uint8Array;
+    key?: BytesView;
     // (undocumented)
-    plaintext: Uint8Array;
+    plaintext: BytesView;
     // (undocumented)
     securityClass: SecurityClass | undefined;
 }
@@ -6529,7 +6610,7 @@ export interface DoorLockLoggingRecord {
     // (undocumented)
     timestamp: string;
     // (undocumented)
-    userCode?: string | Uint8Array;
+    userCode?: string | BytesView;
     // (undocumented)
     userId?: number;
 }
@@ -6580,7 +6661,7 @@ export enum DoorLockOperationType {
 // Warning: (ae-missing-release-tag) "DynamicCCResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export type DynamicCCResponse<TSent extends CommandClass, TReceived extends CommandClass = CommandClass> = (sentCC: TSent) => CCConstructor<TReceived> | CCConstructor<TReceived>[] | undefined;
+export type DynamicCCResponse<TSent extends CommandClass, TReceived extends CommandClass = CommandClass> = (ctx: GetNode<NodeId & SupportsCC>, sentCC: TSent) => CCConstructor<TReceived> | CCConstructor<TReceived>[] | undefined;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "ECDHProfiles" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6908,7 +6989,7 @@ export class EntryControlCCNotification extends EntryControlCC {
     // (undocumented)
     readonly dataType: EntryControlDataTypes;
     // (undocumented)
-    readonly eventData?: Uint8Array | string;
+    readonly eventData?: BytesView | string;
     // (undocumented)
     readonly eventType: EntryControlEventTypes;
     // (undocumented)
@@ -7643,7 +7724,7 @@ export interface FirmwareUpdateMetaDataCCPrepareReportOptions {
 export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
     constructor(options: WithAddress<FirmwareUpdateMetaDataCCReportOptions>);
     // (undocumented)
-    firmwareData: Uint8Array;
+    firmwareData: BytesView;
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCReport;
     // (undocumented)
@@ -7661,7 +7742,7 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 // @public (undocumented)
 export interface FirmwareUpdateMetaDataCCReportOptions {
     // (undocumented)
-    firmwareData: Uint8Array;
+    firmwareData: BytesView;
     // (undocumented)
     isLast: boolean;
     // (undocumented)
@@ -9531,6 +9612,7 @@ export type InterviewContext = CCAPIHost<CCAPINode & GetCCs & SupportsCC & Contr
 //
 // @public (undocumented)
 export interface InterviewOptions {
+    applyRecommendedConfigParamValues?: boolean;
     queryAllUserCodes?: boolean;
 }
 
@@ -11732,7 +11814,7 @@ export interface ManufacturerProprietaryCCOptions {
     // (undocumented)
     manufacturerId?: number;
     // (undocumented)
-    payload?: Uint8Array;
+    payload?: BytesView;
     // (undocumented)
     unspecifiedExpectsResponse?: boolean;
 }
@@ -12426,7 +12508,7 @@ export class MPANExtension extends Security2Extension {
     // (undocumented)
     groupId: number;
     // (undocumented)
-    innerMPANState: Uint8Array;
+    innerMPANState: BytesView;
     // (undocumented)
     isEncrypted(): boolean;
     // (undocumented)
@@ -14441,7 +14523,7 @@ export class NotificationCCReport extends NotificationCC {
     // (undocumented)
     alarmType: number | undefined;
     // (undocumented)
-    eventParameters: Uint8Array | Duration | Record<string, number> | number | undefined;
+    eventParameters: BytesView | Duration | Record<string, number> | number | undefined;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCReport;
     // (undocumented)
@@ -14469,7 +14551,7 @@ export type NotificationCCReportOptions = {
     notificationType?: number;
     notificationEvent?: number;
     notificationStatus?: number;
-    eventParameters?: Uint8Array;
+    eventParameters?: BytesView;
     sequenceNumber?: number;
 };
 
@@ -17111,7 +17193,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<Security2CCMessageEncapsulation>;
     getMulticastGroupId(): number | undefined;
-    getSenderEI(): Uint8Array | undefined;
+    getSenderEI(): BytesView | undefined;
     // (undocumented)
     hasMOSExtension(): boolean;
     // (undocumented)
@@ -17176,7 +17258,7 @@ export class Security2CCNetworkKeyReport extends Security2CC {
     // (undocumented)
     grantedKey: SecurityClass;
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -17190,7 +17272,7 @@ export interface Security2CCNetworkKeyReportOptions {
     // (undocumented)
     grantedKey: SecurityClass;
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCNetworkKeyVerify" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17232,7 +17314,7 @@ export class Security2CCNonceReport extends Security2CC {
     // (undocumented)
     readonly MOS: boolean;
     // (undocumented)
-    readonly receiverEI?: Uint8Array;
+    readonly receiverEI?: BytesView;
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
@@ -17251,7 +17333,7 @@ export type Security2CCNonceReportOptions = {
 } & ({
     MOS: boolean;
     SOS: true;
-    receiverEI: Uint8Array;
+    receiverEI: BytesView;
 } | {
     MOS: true;
     SOS: false;
@@ -17268,7 +17350,7 @@ export class Security2CCPublicKeyReport extends Security2CC {
     // (undocumented)
     includingNode: boolean;
     // (undocumented)
-    publicKey: Uint8Array;
+    publicKey: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -17282,7 +17364,7 @@ export interface Security2CCPublicKeyReportOptions {
     // (undocumented)
     includingNode: boolean;
     // (undocumented)
-    publicKey: Uint8Array;
+    publicKey: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCTransferEnd" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17356,7 +17438,7 @@ export class Security2Extension {
     // (undocumented)
     critical: boolean;
     static from(raw: Security2ExtensionRaw): Security2Extension;
-    static getExtensionLength(data: Uint8Array): {
+    static getExtensionLength(data: BytesView): {
         expected?: number;
         actual: number;
     };
@@ -17365,9 +17447,9 @@ export class Security2Extension {
     // (undocumented)
     readonly moreToFollow?: boolean;
     // (undocumented)
-    static parse(data: Uint8Array): Security2Extension;
+    static parse(data: BytesView): Security2Extension;
     // (undocumented)
-    payload: Uint8Array;
+    payload: BytesView;
     // (undocumented)
     serialize(moreToFollow: boolean): Bytes;
     // (undocumented)
@@ -17408,7 +17490,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     // (undocumented)
     mergePartialCCs(partials: SecurityCCCommandEncapsulation[], ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
-    nonce: Uint8Array | undefined;
+    nonce: BytesView | undefined;
     // (undocumented)
     get nonceId(): number | undefined;
     // (undocumented)
@@ -17427,11 +17509,11 @@ export class SecurityCCCommandEncapsulationNonceGet extends SecurityCCCommandEnc
 //
 // @public (undocumented)
 export type SecurityCCCommandEncapsulationOptions = {
-    alternativeNetworkKey?: Uint8Array;
+    alternativeNetworkKey?: BytesView;
 } & ({
     encapsulated: CommandClass;
 } | {
-    decryptedCCBytes: Uint8Array;
+    decryptedCCBytes: BytesView;
     sequenced: boolean;
     secondFrame: boolean;
     sequenceCounter: number;
@@ -17488,7 +17570,7 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCNetworkKeySet;
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -17500,7 +17582,7 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
 // @public (undocumented)
 export interface SecurityCCNetworkKeySetOptions {
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCNetworkKeyVerify" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17524,7 +17606,7 @@ export class SecurityCCNonceReport extends SecurityCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCNonceReport;
     // (undocumented)
-    nonce: Uint8Array;
+    nonce: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -18101,7 +18183,7 @@ export class SPANExtension extends Security2Extension {
     // (undocumented)
     static from(raw: Security2ExtensionRaw): Security2Extension;
     // (undocumented)
-    senderEI: Uint8Array;
+    senderEI: BytesView;
     // (undocumented)
     serialize(moreToFollow: boolean): Bytes;
     // (undocumented)
@@ -18702,7 +18784,7 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatModeCCReport;
     // (undocumented)
-    readonly manufacturerData: Uint8Array | undefined;
+    readonly manufacturerData: BytesView | undefined;
     // (undocumented)
     readonly mode: ThermostatMode;
     // (undocumented)
@@ -18721,7 +18803,7 @@ export type ThermostatModeCCReportOptions = {
     manufacturerData?: undefined;
 } | {
     mode: (typeof ThermostatMode)["Manufacturer specific"];
-    manufacturerData?: Uint8Array;
+    manufacturerData?: BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "ThermostatModeCCSet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18732,7 +18814,7 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatModeCCSet;
     // (undocumented)
-    manufacturerData?: Uint8Array;
+    manufacturerData?: BytesView;
     // (undocumented)
     mode: ThermostatMode;
     // (undocumented)
@@ -18748,7 +18830,7 @@ export type ThermostatModeCCSetOptions = {
     mode: Exclude<ThermostatMode, (typeof ThermostatMode)["Manufacturer specific"]>;
 } | {
     mode: (typeof ThermostatMode)["Manufacturer specific"];
-    manufacturerData: Uint8Array;
+    manufacturerData: BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "ThermostatModeCCSupportedGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19806,9 +19888,9 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    headerExtension: Uint8Array | undefined;
+    headerExtension: BytesView | undefined;
     // (undocumented)
-    partialDatagram: Uint8Array;
+    partialDatagram: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -19824,9 +19906,9 @@ export interface TransportServiceCCFirstSegmentOptions {
     // (undocumented)
     datagramSize: number;
     // (undocumented)
-    headerExtension?: Uint8Array | undefined;
+    headerExtension?: BytesView | undefined;
     // (undocumented)
-    partialDatagram: Uint8Array;
+    partialDatagram: BytesView;
     // (undocumented)
     sessionId: number;
 }
@@ -19927,14 +20009,14 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    headerExtension: Uint8Array | undefined;
+    headerExtension: BytesView | undefined;
     // (undocumented)
     mergePartialCCs(partials: [
     TransportServiceCCFirstSegment,
     ...TransportServiceCCSubsequentSegment[]
     ], ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
-    partialDatagram: Uint8Array;
+    partialDatagram: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -19990,12 +20072,14 @@ export class UserCodeCC extends CommandClass {
     static getSupportedKeypadModesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<KeypadMode[]>;
     static getSupportedUserIDStatusesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<UserIDStatus[]>;
     static getSupportedUsersCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<number>;
-    static getUserCodeCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<string | Uint8Array>;
+    static getUserCodeCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<string | BytesView>;
     static getUserIdStatusCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<UserIDStatus>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
+    static setUserCodeCached(ctx: GetValueDB, endpoint: EndpointId, userId: number, code: string | BytesView): void;
+    static setUserIdStatusCached(ctx: GetValueDB, endpoint: EndpointId, userId: number, status: UserIDStatus): void;
     static supportsAdminCodeCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
     static supportsAdminCodeDeactivationCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
     static supportsMultipleUserCodeSetCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
@@ -20316,7 +20400,7 @@ export class UserCodeCCSet extends UserCodeCC {
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
-    userCode: string | Uint8Array;
+    userCode: string | BytesView;
     // (undocumented)
     userId: number;
     // (undocumented)
@@ -20337,7 +20421,7 @@ export type UserCodeCCSetOptions = {
 } | {
     userId: number;
     userIdStatus: Exclude<UserIDStatus, UserIDStatus.Available | UserIDStatus.StatusNotAvailable>;
-    userCode: string | Uint8Array;
+    userCode: string | BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "UserCodeCCUserCodeChecksumGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21801,6 +21885,8 @@ export class WindowCoveringCC extends CommandClass {
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
+    refreshValues(ctx: RefreshValuesContext): Promise<void>;
+    // (undocumented)
     translatePropertyKey(ctx: GetValueDB, property: string | number, propertyKey: string | number): string | undefined;
 }
 
@@ -21840,6 +21926,8 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
     static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCReport;
     // (undocumented)
     readonly parameter: WindowCoveringParameter;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: number;
     // (undocumented)
@@ -23072,7 +23160,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation extends ZWaveProto
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSmartStartIncludedNodeInformation;
     // (undocumented)
-    nwiHomeId: Uint8Array;
+    nwiHomeId: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
@@ -23082,7 +23170,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation extends ZWaveProto
 // @public (undocumented)
 export interface ZWaveProtocolCCSmartStartIncludedNodeInformationOptions {
     // (undocumented)
-    nwiHomeId: Uint8Array;
+    nwiHomeId: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSmartStartInclusionRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

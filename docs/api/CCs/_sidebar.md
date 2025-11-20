@@ -28,6 +28,7 @@
   - [Command Classes](api/CCs/index.md)
 
     - [Alarm Sensor CC](api/CCs/AlarmSensor.md)
+    - [Application Status CC](api/CCs/ApplicationStatus.md)
     - [Association CC](api/CCs/Association.md)
     - [Association Group Information CC](api/CCs/AssociationGroupInfo.md)
     - [Barrier Operator CC](api/CCs/BarrierOperator.md)
