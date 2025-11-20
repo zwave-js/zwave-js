@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.17.0 (2025-11-20)
 ### Features
 * Add rudimentary support for Application Status Command Class (#8390)
 * Implement `refreshValues` for Window Covering CC (#8436)

@@ -1,7 +1,7 @@
 {
   "name": "@zwave-js/web",
   "private": true,
-  "version": "15.16.0",
+  "version": "15.17.0",
   "description": "zwave-js: web stuff",
   "keywords": [],
   "type": "module",
