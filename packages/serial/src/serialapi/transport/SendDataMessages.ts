@@ -1,4 +1,5 @@
 import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
+import type { GetNode, NodeId, SupportsCC } from "@zwave-js/core";
 import {
 	MAX_NODES,
 	type MessageOrCCLogEntry,
@@ -210,25 +211,28 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 		};
 	}
 
-	public expectsNodeUpdate(): boolean {
+	public expectsNodeUpdate(ctx: GetNode<NodeId & SupportsCC>): boolean {
 		return (
 			// We can only answer this if the command is known
 			this.command != undefined
 			// Only true singlecast commands may expect a response
 			&& this.command.isSinglecast()
 			// ... and only if the command expects a response
-			&& this.command.expectsCCResponse()
+			&& this.command.expectsCCResponse(ctx)
 		);
 	}
 
-	public isExpectedNodeUpdate(msg: Message): boolean {
+	public isExpectedNodeUpdate(
+		ctx: GetNode<NodeId & SupportsCC>,
+		msg: Message,
+	): boolean {
 		return (
 			// We can only answer this if the command is known
 			this.command != undefined
 			&& (msg instanceof ApplicationCommandRequest
 				|| msg instanceof BridgeApplicationCommandRequest)
 			&& containsCC(msg)
-			&& this.command.isExpectedCCResponse(msg.command)
+			&& this.command.isExpectedCCResponse(ctx, msg.command)
 		);
 	}
 }

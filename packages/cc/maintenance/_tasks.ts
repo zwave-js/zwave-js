@@ -1,3 +1,4 @@
+// oxlint-disable prefer-set-has
 import c from "ansi-colors";
 import { generateCCAPIInterface } from "./generateCCAPIInterface.js";
 import { generateCCExports } from "./generateCCExports.js";

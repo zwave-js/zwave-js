@@ -128,7 +128,7 @@ export class ThermostatModeCCAPI extends CCAPI {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(
 			ThermostatModeCommand,
@@ -471,7 +471,7 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
 			&& !supportedModes.includes(this.mode)
 		) {
 			supportedModes.push(this.mode);
-			supportedModes.sort();
+			supportedModes.sort((a, b) => a - b);
 
 			this.setMetadata(ctx, thermostatModeValue, {
 				...thermostatModeValue.meta,

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-exports */
 /* @forbiddenImports external */
 
 export * from "./definitions/index.js";

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-exports */
 export { SerialLogger } from "./log/Logger.js";
 export type { SerialLogContext } from "./log/Logger_safe.js";
 export * from "./message/Constants.js";

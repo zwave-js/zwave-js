@@ -55,6 +55,7 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 	}
 
 	// Make this await-able
+	// oxlint-disable-next-line no-thenable
 	then<TResult1 = TResult, TResult2 = never>(
 		onfulfilled?:
 			| ((value: TResult) => TResult1 | PromiseLike<TResult1>)

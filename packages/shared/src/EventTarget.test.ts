@@ -17,7 +17,6 @@ interface TestEvents {
 		baseProp2 = "base";
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	interface Test extends TypedEventTarget<TestEvents> {}
 
 	@Mixin([TypedEventTarget])
@@ -79,7 +78,7 @@ interface TestEvents {
 	});
 
 	test("removeAllListeners() works", (t) => {
-		return new Promise<void>(async (resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			const testClass = new Test();
 			testClass.on("test1", (arg1) => {
 				reject(new Error("Listener was not removed"));
@@ -90,8 +89,7 @@ interface TestEvents {
 			testClass.removeAllListeners();
 			testClass.emit1();
 			testClass.emit2();
-			await wait(50);
-			resolve();
+			wait(50).then(resolve);
 		});
 	});
 }

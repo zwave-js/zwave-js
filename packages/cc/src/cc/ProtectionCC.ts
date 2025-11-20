@@ -1,13 +1,16 @@
 import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetNode,
 	type GetValueDB,
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
+	type NodeId,
 	type SupervisionResult,
+	type SupportsCC,
 	Timeout,
 	ValueMetadata,
 	type WithAddress,
@@ -52,6 +55,7 @@ import {
 	ProtectionCommand,
 	RFProtectionState,
 } from "../lib/_Types.js";
+import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 
 export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
 	...V.staticProperty(
@@ -209,7 +213,7 @@ export class ProtectionCCAPI extends CCAPI {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(ProtectionCommand, ProtectionCommand.Get);
 
@@ -242,7 +246,7 @@ export class ProtectionCCAPI extends CCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(
 			ProtectionCommand,
@@ -494,7 +498,28 @@ export interface ProtectionCCSetOptions {
 	rf?: RFProtectionState;
 }
 
+function getCCResponseForProtectionCCSet(
+	ctx: GetNode<NodeId & SupportsCC>,
+	sent: ProtectionCCSet,
+) {
+	// The NodeID that has exclusive control can override the RF protection
+	// state of the device and can control it regardless of the protection
+	// state. Commands from any other nodes in the network may be restricted
+	// by the RF protection state. In that case, the Application Rejected
+	// Request Command MUST be returned.
+	if (
+		sent.isSinglecast()
+		&& !sent.isEncapsulatedWith(CommandClasses.Supervision)
+		&& ctx.getNode(sent.nodeId)?.supportsCC(
+			CommandClasses["Application Status"],
+		)
+	) {
+		return ApplicationStatusCCRejectedRequest;
+	}
+}
+
 @CCCommand(ProtectionCommand.Set)
+@expectedCCResponse(getCCResponseForProtectionCCSet)
 @useSupervision()
 export class ProtectionCCSet extends ProtectionCC {
 	public constructor(

@@ -1,0 +1,287 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+
+	// Ignore the browser bindings for now
+	"ignorePatterns": [
+		".vscode/extensions/",
+		"**/node_modules",
+		"**/build",
+		// Don't lint JS files
+		"**/*.js",
+		"**/*.cjs",
+		"**/*.mjs",
+		// Oxlint complains about the tsconfig here, but it looks fine
+		"maintenance/**",
+		// Ignore the browser bindings for now
+		"packages/bindings-browser/**/*.ts",
+		// And the web stub
+		"packages/web/**",
+		// And transformer tests
+		"packages/transformers/test/fixtures/**",
+		// Remove warning on eslint config files
+		"eslint.config.mjs"
+	],
+
+	"categories": {
+		"correctness": "error",
+		"suspicious": "error",
+		"restriction": "allow", // Do not enable globally, decide on a case-by-case basis
+		"perf": "error"
+		// "pedantic": "error",
+		// "style": "error"
+	},
+
+	// Default plugins (typescript, unicorn, oxc are enabled by default)
+	// We don't need to specify them unless we want to disable or change them
+
+	"rules": {
+		// TODO: Go thorugh these "restriction" rules and check which ones to enable later
+		"eslint/class-methods-use-this": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/class-methods-use-this.html
+		"eslint/default-case": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/default-case.html
+		"eslint/no-alert": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-alert.html
+		"eslint/no-bitwise": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-bitwise.html
+		"eslint/no-console": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-console.html
+		"eslint/no-div-regex": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-div-regex.html
+		"eslint/no-empty": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-empty.html
+		"eslint/no-empty-function": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-empty-function.html
+		"eslint/no-eq-null": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-eq-null.html
+		"eslint/no-iterator": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-iterator.html
+		"eslint/no-param-reassign": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-param-reassign.html
+		"eslint/no-plusplus": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-plusplus.html
+		"eslint/no-proto": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-proto.html
+		"eslint/no-regex-spaces": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-regex-spaces.html
+		"eslint/no-restricted-imports": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-restricted-imports.html
+		"eslint/no-undefined": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-undefined.html
+		"eslint/no-var": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-var.html
+		"eslint/no-void": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-void.html
+		"eslint/unicode-bom": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/unicode-bom.html
+		"import/extensions": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/extensions.html
+		"import/no-amd": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/no-amd.html
+		"import/no-commonjs": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/no-commonjs.html
+		"import/no-cycle": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/no-cycle.html
+		"import/no-default-export": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/no-default-export.html
+		"import/no-dynamic-require": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/no-dynamic-require.html
+		"import/no-webpack-loader-syntax": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/no-webpack-loader-syntax.html
+		"import/unambiguous": "off", // https://oxc.rs/docs/guide/usage/linter/rules/import/unambiguous.html
+		"node/no-new-require": "off", // https://oxc.rs/docs/guide/usage/linter/rules/node/no-new-require.html
+		"node/no-process-env": "off", // https://oxc.rs/docs/guide/usage/linter/rules/node/no-process-env.html
+		"oxc/bad-bitwise-operator": "off", // https://oxc.rs/docs/guide/usage/linter/rules/oxc/bad-bitwise-operator.html
+		"oxc/no-async-await": "off", // https://oxc.rs/docs/guide/usage/linter/rules/oxc/no-async-await.html
+		"oxc/no-barrel-file": "off", // https://oxc.rs/docs/guide/usage/linter/rules/oxc/no-barrel-file.html
+		"oxc/no-const-enum": "off", // https://oxc.rs/docs/guide/usage/linter/rules/oxc/no-const-enum.html
+		"oxc/no-optional-chaining": "off", // https://oxc.rs/docs/guide/usage/linter/rules/oxc/no-optional-chaining.html
+		"oxc/no-rest-spread-properties": "off", // https://oxc.rs/docs/guide/usage/linter/rules/oxc/no-rest-spread-properties.html
+		"promise/catch-or-return": "off", // https://oxc.rs/docs/guide/usage/linter/rules/promise/catch-or-return.html
+		"promise/spec-only": "off", // https://oxc.rs/docs/guide/usage/linter/rules/promise/spec-only.html
+		"typescript/explicit-function-return-type": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/explicit-function-return-type.html
+		"typescript/no-dynamic-delete": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-dynamic-delete.html
+		"typescript/no-empty-object-type": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-empty-object-type.html
+		"typescript/no-import-type-side-effects": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-import-type-side-effects.html
+		"typescript/no-namespace": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-namespace.html
+		"typescript/no-non-null-asserted-nullish-coalescing": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-non-null-asserted-nullish-coalescing.html
+		"typescript/no-require-imports": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-require-imports.html
+		"typescript/no-var-requires": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-var-requires.html
+		"typescript/non-nullable-type-assertion-style": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/non-nullable-type-assertion-style.html
+		"typescript/prefer-literal-enum-member": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/prefer-literal-enum-member.html
+		"typescript/promise-function-async": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/promise-function-async.html
+		"typescript/use-unknown-in-catch-callback-variable": "off", // https://oxc.rs/docs/guide/usage/linter/rules/typescript/use-unknown-in-catch-callback-variable.html
+		"unicorn/no-abusive-eslint-disable": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-abusive-eslint-disable.html
+		"unicorn/no-anonymous-default-export": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-anonymous-default-export.html
+		"unicorn/no-array-for-each": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-array-for-each.html
+		"unicorn/no-array-reduce": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-array-reduce.html
+		"unicorn/no-document-cookie": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-document-cookie.html
+		"unicorn/no-length-as-slice-end": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-length-as-slice-end.html
+		"unicorn/no-magic-array-flat-depth": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-magic-array-flat-depth.html
+		"unicorn/no-process-exit": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-process-exit.html
+		"unicorn/no-useless-error-capture-stack-trace": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/no-useless-error-capture-stack-trace.html
+		"unicorn/prefer-number-properties": "off", // https://oxc.rs/docs/guide/usage/linter/rules/unicorn/prefer-number-properties.html
+
+		// Reconfigure existing rules to better fit our codebase
+		// "correctness"
+		"eslint/no-control-regex": "off", // We need control characters in regexes sometimes
+		"no-extra-boolean-cast": "off", // Sometimes explicit boolean casts improve readability
+		"typescript/no-meaningless-void-operator": "off", // Sometimes void is used for consistency/readability
+		// "suspicious"
+		"unicorn/consistent-function-scoping": "off", // This does not play well with classes when code should be grouped for readability
+		"typescript/no-unnecessary-boolean-literal-compare": "off", // Technically a good rule, but causes a bit too much noise/inconsistency
+		"typescript/no-unnecessary-type-arguments": "off", // explicit > implicit
+		"eslint/preserve-caught-error": "off", // TODO: For now this is okay, but we should really enable this
+		// "pedantic"
+		"typescript/no-deprecated": "off", // Causes false-positives: https://github.com/oxc-project/oxc/issues/15594
+		// "perf"
+		"eslint/no-await-in-loop": "off", // This is a very typical pattern in our codebase
+
+		// ========= TypeScript ESLint Rules =========
+		// Rules that need custom configuration (different from default)
+
+		"typescript/ban-ts-comment": [
+			"error",
+			{
+				"ts-expect-error": false,
+				"ts-ignore": true,
+				"ts-nocheck": true,
+				"ts-check": false
+			}
+		],
+
+		// Place to specify ESLint rules. Can be used to overwrite rules specified from the extended configs
+		// "@typescript-eslint/no-parameter-properties": "off", // Not available in Oxlint
+		"typescript/no-explicit-any": "off",
+		"typescript/no-use-before-define": [
+			"error",
+			{
+				"functions": false,
+				"typedefs": false,
+				"classes": false
+			}
+		],
+		"typescript/no-unused-vars": [
+			"error",
+			{
+				"ignoreRestSiblings": true,
+				"argsIgnorePattern": "^_"
+			}
+		],
+		// "@typescript-eslint/no-object-literal-type-assertion": "off", // Not available in Oxlint
+		// "@typescript-eslint/interface-name-prefix": "off", // Not available in Oxlint
+		"typescript/no-non-null-assertion": "off", // This is necessary for Map.has()/get()!
+		"typescript/no-inferrable-types": [
+			"error",
+			{
+				"ignoreProperties": true,
+				"ignoreParameters": true
+			}
+		],
+
+		"typescript/restrict-template-expressions": [
+			"error",
+			{
+				"allowNumber": true,
+				"allowBoolean": true,
+				// This is necessary to log errors
+				// TODO: Consider switching to false when we may annotate catch clauses
+				"allowAny": true,
+				"allowNullish": true
+			}
+		],
+		"typescript/no-misused-promises": "off",
+		// TODO: The checksVoidReturn is not supported in Oxlint yet
+		// "typescript/no-misused-promises": [
+		// 	"error",
+		// 	{
+		// 		"checksVoidReturn": false
+		// 	}
+		// ],
+
+		// Make sure type imports are used where necessary
+		"typescript/consistent-type-imports": [
+			"error",
+			{
+				"fixStyle": "inline-type-imports",
+				"disallowTypeAnnotations": false
+			}
+		],
+		"typescript/consistent-type-exports": "error",
+
+		// We can turn this on from time to time but in general these rules
+		// make our lives harder instead of easier
+		// Note: These rules ARE available in Oxlint but not enabled by default
+		"typescript/no-unsafe-argument": "off",
+		"typescript/no-unsafe-assignment": "off",
+		"typescript/no-unsafe-member-access": "off",
+		"typescript/no-unsafe-return": "off",
+		"typescript/no-unsafe-call": "off",
+		"typescript/no-unsafe-enum-comparison": "off",
+		"typescript/no-unsafe-declaration-merging": "off",
+		"typescript/no-unsafe-type-assertion": "off",
+
+		// Although this rule makes sense, it takes about a second to execute (and we don't need it)
+		"typescript/no-implied-eval": "off",
+
+		"typescript/explicit-module-boundary-types": [
+			"warn",
+			{
+				"allowArgumentsExplicitlyTypedAsAny": true
+			}
+		],
+		"typescript/no-this-alias": "off",
+
+		// Prefer simple property access and declaration without quotes
+		// Note: ESLint config disables "dot-notation" in favor of "@typescript-eslint/dot-notation"
+		// Since Oxlint doesn't have the TypeScript version with those options, we skip this rule
+		// "dot-notation": "off",
+		// "@typescript-eslint/dot-notation": [ ... ], // Not available with these options in Oxlint
+
+		"eslint/quote-props": ["error", "as-needed"],
+
+		// ========= Unused Imports Plugin (not available) =========
+		// "unused-imports/no-unused-imports": "error", // Plugin not available in Oxlint
+
+		// ========= Unicorn Plugin Rules =========
+		"unicorn/prefer-array-find": ["error", { "checkFromLast": true }],
+		"unicorn/prefer-array-flat-map": "error",
+		"unicorn/prefer-array-flat": "error",
+		"unicorn/prefer-array-index-of": "error",
+		"unicorn/prefer-array-some": "error",
+		"unicorn/prefer-at": "error",
+		"unicorn/prefer-includes": "error",
+		"unicorn/prefer-logical-operator-over-ternary": "error",
+		"unicorn/prefer-modern-math-apis": "error",
+		"unicorn/prefer-negative-index": "error",
+		"unicorn/prefer-node-protocol": "error",
+		"unicorn/prefer-regexp-test": "error",
+		"unicorn/prefer-string-slice": "error",
+		"unicorn/prefer-string-starts-ends-with": "error",
+		"unicorn/prefer-string-replace-all": "error",
+
+		// ========= Global Restrictions (not available) =========
+		// Prefer our own Buffer implementation (compatible with native Uint8array)
+		// See https://sindresorhus.com/blog/goodbye-nodejs-buffer for the reason behind this
+		"eslint/no-restricted-globals": [
+			"error",
+			{
+				"name": "Buffer",
+				"message": "Use Uint8Array or the Bytes implementation from @zwave-js/shared instead."
+			}
+		] // Not available in Oxlint yet
+	},
+
+	"overrides": [
+		{
+			// In tests, the ESLint plugin, maintenance scripts and transformers,
+			// we can be more sloppy
+			"files": [
+				"**/*.test.ts",
+				"test/*.*",
+				"packages/transformers/**",
+				"packages/maintenance/**",
+				"packages/*/maintenance/**",
+				"packages/eslint-plugin/**"
+			],
+			"rules": {
+				"eslint/no-debugger": "off",
+				"typescript/unbound-method": "off",
+				"typescript/no-floating-promises": "off"
+			}
+		},
+		// Disable unnecessarily strict rules for test files
+		{
+			"files": ["**/*.test.ts", "test/*.*"],
+			"rules": {
+				"oxc/erasing-op": "off", // Sometimes necessary for clarity in tests
+				"eslint/no-unused-vars": "off",
+				"eslint/no-unused-expressions": "off",
+				"eslint/no-empty-pattern": "off",
+				"eslint/no-async-promise-executor": "off",
+				"eslint/no-restricted-globals": "off",
+				"typescript/explicit-function-return-type": "off",
+				"typescript/no-empty-function": "off",
+				"typescript/ban-ts-comment": "off",
+				"typescript/no-misused-promises": "off",
+				"typescript/no-floating-promises": "off",
+				"typescript/unbound-method": "off",
+				"typescript/no-unused-vars": "off"
+			}
+		}
+	]
+}

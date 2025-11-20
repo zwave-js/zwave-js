@@ -227,7 +227,7 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(BatteryCommand, BatteryCommand.Get);
 
@@ -254,7 +254,7 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getHealth() {
 		this.assertSupportsCommand(BatteryCommand, BatteryCommand.HealthGet);
 
@@ -445,6 +445,10 @@ export class BatteryCCReport extends BatteryCC {
 
 		validatePayload(raw.payload.length >= 1);
 		const level = raw.payload[0];
+		validatePayload.withReason(`Invalid battery level ${level}`)(
+			// This field MUST be in the range 0x00..0x64 or set to 0xFF
+			level <= 100 || level === 0xff,
+		);
 
 		ccOptions = {
 			level,

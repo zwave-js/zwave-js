@@ -305,7 +305,8 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 			return true;
 		}
 		const datagramSize = session[0].datagramSize;
-		const receivedBytes = new Array<boolean>(datagramSize).fill(false);
+		const receivedBytes = Array.from<boolean>({ length: datagramSize })
+			.fill(false);
 		for (const segment of [...session, this]) {
 			const offset = segment instanceof TransportServiceCCFirstSegment
 				? 0

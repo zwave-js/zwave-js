@@ -1,5 +1,6 @@
 import type { JsonlDBOptions } from "@alcalzone/jsonl-db";
 import {
+	ApplicationStatusCCRejectedRequest,
 	type CCAPIHost,
 	type CCEncodingContext,
 	type CCParsingContext,
@@ -591,7 +592,7 @@ function checkOptions(options: ZWaveOptions): void {
 
 		if (options.features.disableCommandClasses?.length) {
 			// Ensure that all CCs may be disabled
-			const mandatory = [
+			const mandatory = new Set([
 				// Encapsulation CCs are always supported
 				...encapsulationCCs,
 				// All Root Devices or nodes MUST support
@@ -605,11 +606,11 @@ function checkOptions(options: ZWaveOptions): void {
 				CommandClasses.Powerlevel,
 				CommandClasses.Version,
 				CommandClasses["Z-Wave Plus Info"],
-			];
+			]);
 
 			const mandatoryDisabled = options.features.disableCommandClasses
 				.filter(
-					(cc) => mandatory.includes(cc),
+					(cc) => mandatory.has(cc),
 				);
 			if (mandatoryDisabled.length > 0) {
 				throw new ZWaveError(
@@ -902,6 +903,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private immediateQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
 	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
+	// Timers for delayed transaction re-queuing
+	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
 	/** Gives access to the transaction queues, ordered by priority */
 	private get queues(): TransactionQueue[] {
@@ -947,6 +950,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): Promise<void> {
+		// Clear all delayed requeue timers
+		for (const set of this.requeueTimers.values()) {
+			for (const timer of set) {
+				timer.clear();
+			}
+		}
+		this.requeueTimers.clear();
+
 		// The queues might not have been initialized yet
 		for (const queue of this.queues) {
 			if (!queue) return;
@@ -2344,7 +2355,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// Then do all the nodes in parallel, but prioritize nodes that are more likely to be ready
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Fully-interviewed devices first (need the least amount of communication now)
 						(b.interviewStage - a.interviewStage)
 						// Always listening -> FLiRS -> sleeping
@@ -2419,7 +2430,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
 					.filter((n) => n.isListening || n.isFrequentListening)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Always listening -> FLiRS
 						(
 							(b.isListening ? 1 : 0)
@@ -2974,6 +2985,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (this.autoRefreshNodeValueTimers.has(node.id)) {
 			this.autoRefreshNodeValueTimers.get(node.id)?.clear();
 			this.autoRefreshNodeValueTimers.delete(node.id);
+		}
+		if (this.requeueTimers.has(node.id)) {
+			for (const timer of this.requeueTimers.get(node.id)!) {
+				timer.clear();
+			}
+			this.requeueTimers.delete(node.id);
 		}
 
 		// purge node values from the DB
@@ -3756,6 +3773,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		try {
 			if (result) await this.destroy();
 		} finally {
+			// oxlint-disable-next-line no-unsafe-finally - We want to return this value in any case
 			return result;
 		}
 	}
@@ -3941,6 +3959,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...this.awaitedMessageHeaders.map((h) => h.timeout),
 				...this.awaitedBootloaderChunks.map((b) => b.timeout),
 				...this.awaitedCLIChunks.map((c) => c.timeout),
+				...[...this.requeueTimers.values()].flatMap(
+					(t) => [...t.values()],
+				),
 			]
 		) {
 			timeout?.clear();
@@ -5610,28 +5631,42 @@ ${handlers.length} left`,
 			// It could also be that this is the node's response for a CC that we sent, but where the ACK is delayed
 			const currentTransaction = this.queue.currentTransaction;
 			const currentMessage = currentTransaction?.getCurrentMessage();
+			const isSOSNonceReport =
+				msg.command instanceof Security2CCNonceReport
+				&& msg.command.SOS
+				&& !!msg.command.receiverEI;
 			if (
 				currentMessage
-				&& currentMessage.expectsNodeUpdate()
-				&& currentMessage.isExpectedNodeUpdate(msg)
+				&& currentMessage.expectsNodeUpdate(this)
+				&& currentMessage.isExpectedNodeUpdate(this, msg)
 			) {
 				// The message we're currently sending is still in progress but expects this message in response,
 				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
 
-				// Abort the current transaction with the received message as the result.
-				currentTransaction!.abort(msg);
+				// An SOS nonce report is treated like an expected node update,
+				// but it is not considered a valid result of the ongoing transaction.
+				if (isSOSNonceReport) {
+					// Due to how the message generators are architected, it is currently not possible to short-circuit
+					// waiting for the transmit report, so we remember the SOS Nonce Report for later processing.
+					currentMessage.prematureNodeUpdate = msg;
+				}
 
 				if (isSendData(currentMessage)) {
 					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
 					this.controllerLog.logNode(msg.getNodeId()!, {
 						message:
-							`received expected response prematurely, aborting transaction...`,
+							`received expected response prematurely, aborting ongoing transmission...`,
 						level: "verbose",
 						direction: "inbound",
 					});
 
 					void this.abortSendData();
 				}
+
+				// If this is a valid result of the current transaction, abort the
+				// transaction with the received message as the result.
+				if (!isSOSNonceReport) currentTransaction!.abort(msg);
+
 				return;
 			}
 
@@ -6110,14 +6145,14 @@ ${handlers.length} left`,
 		) {
 			// The command was received using the highest security class. Return the list of supported CCs
 
-			const implementedCCs = allCCs.filter((cc) =>
-				getImplementedVersion(cc) > 0
+			const implementedCCs = new Set(
+				allCCs.filter((cc) => getImplementedVersion(cc) > 0),
 			);
 
 			// Encapsulation CCs are always supported
 			const implementedEncapsulationCCs = encapsulationCCs.filter(
 				(cc) =>
-					implementedCCs.includes(cc)
+					implementedCCs.has(cc)
 					// A node MUST advertise support for Multi Channel Command Class only if it implements End Points.
 					// A node able to communicate using the Multi Channel encapsulation but implementing no End Point
 					// MUST NOT advertise support for the Multi Channel Command Class.
@@ -6699,6 +6734,13 @@ ${handlers.length} left`,
 						) {
 							// We gave up on this command, so don't retry it
 							throw e;
+						}
+
+						// If we receive a premature node update, we abort the transaction
+						// so we should end up here with transmit status NoACK.
+						// This is expected and intended, so continue with the next message.
+						if (msg.prematureNodeUpdate) {
+							break attemptMessage;
 						}
 
 						if (
@@ -7442,6 +7484,15 @@ ${handlers.length} left`,
 		// Fall back to non-supervised commands
 		const result = await this.sendCommandInternal(command, options);
 
+		// ApplicationStatusCCRejectedRequest is treated like a SupervisionReport with Fail status
+		if (result instanceof ApplicationStatusCCRejectedRequest) {
+			// @ts-expect-error TS doesn't know we've narrowed the return type to match
+			return {
+				status: SupervisionStatus.Fail,
+				remainingDuration: undefined,
+			};
+		}
+
 		// When sending S2 multicast commands to supporting nodes, the singlecast followups
 		// may use supervision. In this case, the multicast message generator returns a
 		// synthetic SupervisionCCReport.
@@ -7911,6 +7962,47 @@ ${handlers.length} left`,
 			errorMsg,
 			errorCode,
 		);
+	}
+
+	/**
+	 * @internal
+	 * Re-queues all pending transactions for a node after a delay
+	 */
+	public async delayTransactionsForNode(
+		nodeId: number,
+		delaySeconds: number,
+	): Promise<void> {
+		const requeue: Transaction[] = [];
+
+		await this.reduceQueues((transaction, source) => {
+			// Only handle transactions for this node that are still queued (not currently active)
+			if (
+				transaction.message.getNodeId() === nodeId
+				&& source === "queue"
+			) {
+				requeue.push(transaction);
+				return { type: "drop" };
+			}
+			return { type: "keep" };
+		});
+
+		if (requeue.length > 0) {
+			if (!this.requeueTimers.has(nodeId)) {
+				this.requeueTimers.set(
+					nodeId,
+					new Set(),
+				);
+			}
+			const timerSet = this.requeueTimers.get(nodeId)!;
+			const timer = setTimer(() => {
+				timerSet.delete(timer);
+				const requeued = requeue.map((t) => t.clone());
+				for (const t of requeued) {
+					this.getQueueForTransaction(t).add(t);
+				}
+			}, delaySeconds * 1000).unref();
+			timerSet.add(timer);
+		}
 	}
 
 	/**

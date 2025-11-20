@@ -6,9 +6,9 @@ import {
 	SendDataBridgeRequest,
 	SendDataRequestTransmitReport,
 } from "@zwave-js/serial";
-import type {
-	MockControllerBehavior,
-	MockNodeBehavior,
+import {
+	type MockControllerBehavior,
+	type MockNodeBehavior,
 } from "@zwave-js/testing";
 import path from "node:path";
 import {
@@ -60,7 +60,7 @@ integrationTest(
 				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof BasicCCGet) {
 						const cc = new BasicCCReport({
-							nodeId: self.id,
+							nodeId: controller.ownNodeId,
 							currentValue: 42,
 						});
 						return { action: "sendCC", cc };

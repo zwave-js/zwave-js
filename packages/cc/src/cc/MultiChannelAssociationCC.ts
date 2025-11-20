@@ -222,7 +222,7 @@ export class MultiChannelAssociationCCAPI extends PhysicalCCAPI {
 	 * Returns information about an association group.
 	 */
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getGroup(groupId: number) {
 		this.assertSupportsCommand(
 			MultiChannelAssociationCommand,

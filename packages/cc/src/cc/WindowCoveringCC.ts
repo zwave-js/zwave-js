@@ -431,7 +431,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 	}
 
 	@validateArgs({ strictEnums: true })
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(parameter: WindowCoveringParameter) {
 		this.assertSupportsCommand(
 			WindowCoveringCommand,

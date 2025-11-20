@@ -109,7 +109,7 @@ export class MockServer {
 
 		// Hook up a fake controller and nodes
 		({ mockController: this.mockController, mockNodes: this.mockNodes } =
-			prepareMocks(
+			await prepareMocks(
 				mockPort,
 				serial,
 				this.options.config?.controller,
@@ -228,13 +228,13 @@ export class MockServer {
 	}
 }
 
-function prepareMocks(
+async function prepareMocks(
 	mockPort: MockPort,
 	serial: ZWaveSerialStream,
 	controller: MockServerControllerOptions = {},
 	nodes: MockServerNodeOptions[] = [],
-): { mockController: MockController; mockNodes: MockNode[] } {
-	const mockController = new MockController({
+): Promise<{ mockController: MockController; mockNodes: MockNode[] }> {
+	const mockController = await MockController.create({
 		homeId: 0x7e570001,
 		ownNodeId: 1,
 		...controller,
@@ -250,7 +250,7 @@ function prepareMocks(
 
 	const mockNodes: MockNode[] = [];
 	for (const node of nodes) {
-		const mockNode = new MockNode({
+		const mockNode = await MockNode.create({
 			...node,
 			controller: mockController,
 		});
@@ -343,7 +343,7 @@ export function createMockNodeOptionsFromDump(
 	}
 
 	if (dump.endpoints) {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		for (const [indexStr, endpointDump] of Object.entries(dump.endpoints)) {
 			// FIXME: The mocks expect endpoints to be consecutive
 			// const index = parseInt(indexStr);

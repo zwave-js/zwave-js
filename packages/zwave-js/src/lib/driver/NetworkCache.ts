@@ -115,7 +115,7 @@ export const cacheKeyUtils = {
 		}
 	},
 	nodePropertyFromKey: (key: string): string | undefined => {
-		const match = /^node\.\d+\.(?<property>[^\.]+)$/.exec(key);
+		const match = /^node\.\d+\.(?<property>[^.]+)$/.exec(key);
 		return match?.groups?.property;
 	},
 	isEndpointKey: (key: string): boolean => {

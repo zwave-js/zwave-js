@@ -122,7 +122,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 								label,
 							};
 						}).filter(Boolean)
-						.sort((a, b) => a!.value - b!.value);
+						.toSorted((a, b) => a!.value - b!.value);
 
 					if (sortedOptions.length === 0) return;
 

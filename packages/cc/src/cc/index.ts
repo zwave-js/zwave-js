@@ -23,6 +23,20 @@ export {
 	AlarmSensorCCValues,
 };
 export type {
+	ApplicationStatusCCBusyOptions,
+	ApplicationStatusCCRejectedRequestOptions,
+} from "./ApplicationStatusCC.js";
+import {
+	ApplicationStatusCC,
+	ApplicationStatusCCBusy,
+	ApplicationStatusCCRejectedRequest,
+} from "./ApplicationStatusCC.js";
+export {
+	ApplicationStatusCC,
+	ApplicationStatusCCBusy,
+	ApplicationStatusCCRejectedRequest,
+};
+export type {
 	AssociationCCGetOptions,
 	AssociationCCRemoveOptions,
 	AssociationCCReportOptions,
@@ -1733,6 +1747,9 @@ export function registerCCs(): void {
 		AlarmSensorCCGet,
 		AlarmSensorCCSupportedReport,
 		AlarmSensorCCSupportedGet;
+	void ApplicationStatusCC,
+		ApplicationStatusCCBusy,
+		ApplicationStatusCCRejectedRequest;
 	void AssociationCCValues,
 		AssociationCC,
 		AssociationCCSet,

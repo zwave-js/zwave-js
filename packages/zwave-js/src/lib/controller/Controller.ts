@@ -5328,7 +5328,7 @@ export class ZWaveController
 						.filter((id) => id >= 1 && id <= MAX_NODES)
 						// Filter out non-existing nodes
 						.filter((id) => self.nodes.has(id))
-						.sort();
+						.toSorted((a, b) => a - b);
 				} catch {
 					// ignore
 				}
@@ -5568,7 +5568,9 @@ export class ZWaveController
 		const MAX_ROUTES = 4;
 
 		// Keep track of which routes have been assigned
-		const assignedRoutes = new Array(MAX_ROUTES).fill(EMPTY_ROUTE);
+		const assignedRoutes = Array
+			.from<Route>({ length: MAX_ROUTES })
+			.fill(EMPTY_ROUTE);
 
 		let priorityRouteIndex = -1;
 		// If a priority route is given, add it to the end of the routes array to mimick what the Z-Wave controller does
@@ -5635,7 +5637,7 @@ export class ZWaveController
 		// if an assignment fails.
 		while (
 			assignedRoutes.length > 0
-			&& isEmptyRoute(assignedRoutes.at(-1))
+			&& isEmptyRoute(assignedRoutes.at(-1)!)
 		) {
 			assignedRoutes.pop();
 		}
@@ -5877,7 +5879,9 @@ export class ZWaveController
 		const MAX_ROUTES = 4;
 
 		// Keep track of which routes have been assigned
-		const assignedRoutes = new Array(MAX_ROUTES).fill(EMPTY_ROUTE);
+		const assignedRoutes = Array
+			.from<Route>({ length: MAX_ROUTES })
+			.fill(EMPTY_ROUTE);
 
 		let priorityRouteIndex = -1;
 		// If a priority route is given, add it to the end of the routes array to mimick what the Z-Wave controller does
@@ -5944,7 +5948,7 @@ export class ZWaveController
 		// if an assignment fails.
 		while (
 			assignedRoutes.length > 0
-			&& isEmptyRoute(assignedRoutes.at(-1))
+			&& isEmptyRoute(assignedRoutes.at(-1)!)
 		) {
 			assignedRoutes.pop();
 		}
@@ -7253,7 +7257,7 @@ export class ZWaveController
 					}
 				}
 			}
-			return [...allRegions].sort((a, b) => a - b);
+			return [...allRegions].toSorted((a, b) => a - b);
 		}
 
 		// Fallback: Hardcoded list of known supported regions
@@ -7283,7 +7287,7 @@ export class ZWaveController
 			if (filterSubsets) ret.delete(RFRegion.Europe);
 		}
 
-		return [...ret].sort((a, b) => a - b);
+		return [...ret].toSorted((a, b) => a - b);
 	}
 
 	private async applyLegalPowerlevelLimits(

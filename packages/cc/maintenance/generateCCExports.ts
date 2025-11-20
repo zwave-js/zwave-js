@@ -175,7 +175,7 @@ export async function generateCCExports(): Promise<void> {
 
 	// Generate type and value exports for all found symbols
 	for (
-		const [filename, fileExports] of [...findExports().entries()].sort(
+		const [filename, fileExports] of [...findExports().entries()].toSorted(
 			([fileA], [fileB]) => compareStrings(fileA, fileB),
 		)
 	) {

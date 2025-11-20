@@ -4,6 +4,29 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.16.0 (2025-11-04)
+### Features
+* Config parameter values can now be marked as recommended and automatically be set during the interview (#8164, #8382)
+* Config parameters can now be marked as destructive, allowing applications to confirm before setting them (#8170)
+* Add API to enable more frequent background RSSI measurements (#8193)
+
+### Bugfixes
+* Battery CC reports with invalid levels are now discarded (#8404)
+
+### Config file changes
+* Add fingerprint to Kwikset HC-620 (#8371)
+* Add Zooz ZSE11 800LR (#8373)
+* Add version conditionals and correct parameters for Enbrighten 55258 (#8359)
+* Replace wrong troubleshooting link in 700 series firmware warning template (#8365)
+* Add Kwikset 918 (#8368)
+* Correct user code slot bit field for BE468ZP/BE469/BE469ZP (#8366)
+* Add parameters 3, 40 and 84 for Enbrighten 55258, firmware version 5.51 (#8357)
+
+### Changes under the hood
+* Updated several dependencies
+* The parser for conditional logic in configuration files has been rewritten from scratch instead of being generated (#8380)
+* Optimized some timed assertions in integration tests (#8349)
+
 ## 15.15.3 (2025-10-15)
 ### Changes under the hood
 * Fixes an issue with loading the DB library when Z-Wave JS was bundled as CommonJS (#8356)

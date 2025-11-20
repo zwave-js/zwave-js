@@ -104,7 +104,7 @@ export class GetRoutingInfoResponse extends Message {
 	public toLogEntry(): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(),
-			message: { "node ids": `${this.nodeIds.join(", ")}` },
+			message: { "node ids": this.nodeIds.join(", ") },
 		};
 	}
 }
