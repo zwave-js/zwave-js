@@ -37,6 +37,7 @@ import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
+	type RefreshValuesContext,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -589,26 +590,50 @@ ${
 					ctx,
 					WindowCoveringCCValues.levelChangeDown(param),
 				);
-
-				// And for the odd parameters (with position support), query the position
-				if (param % 2 === 1) {
-					ctx.logNode(node.id, {
-						endpoint: this.endpointIndex,
-						message: `querying position for parameter ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								param,
-							)
-						}...`,
-						direction: "outbound",
-					});
-					await api.get(param);
-				}
 			}
+
+			// Query current values for all supported parameters
+			await this.refreshValues(ctx);
 		}
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
+		const api = CCAPI.create(
+			CommandClasses["Window Covering"],
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+		});
+
+		const parameters: number[] = this.getValue(
+			ctx,
+			WindowCoveringCCValues.supportedParameters,
+		) ?? [];
+
+		for (const param of parameters) {
+			// Only query odd parameters (with position support)
+			if (param % 2 == 0) continue;
+
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: `querying position for parameter ${
+					getEnumMemberName(
+						WindowCoveringParameter,
+						param,
+					)
+				}...`,
+				direction: "outbound",
+			});
+			await api.get(param);
+		}
 	}
 
 	public translatePropertyKey(
