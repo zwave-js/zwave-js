@@ -659,11 +659,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 					);
 				}
 
+				const isSlowDeviceClass = endpointInstance.deviceClass?.specific
+					.supportsOptimisticValueUpdate === false;
+
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
+				//    ... and this is not a slow device class
 				// ...and the CC API decides not to verify anyways
 				if (
 					!supervisedCommandSucceeded(result)
+					|| isSlowDeviceClass
 					|| hooks.forceVerifyChanges?.()
 				) {
 					// Let the CC API implementation handle the verification.
