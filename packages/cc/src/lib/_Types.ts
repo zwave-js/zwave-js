@@ -34,6 +34,17 @@ export type AlarmSensorValueMetadata = ValueMetadata & {
 	};
 };
 
+export enum ApplicationStatusCommand {
+	Busy = 0x01,
+	RejectedRequest = 0x02,
+}
+
+export enum ApplicationStatus {
+	TryAgainLater = 0x00,
+	TryAgainInWaitTimeSeconds = 0x01,
+	RequestQueued = 0x02,
+}
+
 export enum AssociationCommand {
 	Set = 0x01,
 	Get = 0x02,

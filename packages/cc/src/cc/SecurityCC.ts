@@ -2,13 +2,16 @@ import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
+	type GetNode,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
+	type NodeId,
 	SecurityClass,
 	type SecurityManager,
+	type SupportsCC,
 	TransmitOptions,
 	type WithAddress,
 	ZWaveError,
@@ -618,9 +621,10 @@ export type SecurityCCCommandEncapsulationOptions =
 	});
 
 function getCCResponseForCommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: SecurityCCCommandEncapsulation,
 ) {
-	if (sent.encapsulated.expectsCCResponse()) {
+	if (sent.encapsulated.expectsCCResponse(ctx)) {
 		return SecurityCCCommandEncapsulation;
 	}
 }

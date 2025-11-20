@@ -10,6 +10,7 @@ import {
 	type NodeId,
 	type SecurityClass,
 	type SecurityManagers,
+	type SupportsCC,
 	ZWaveError,
 	ZWaveErrorCodes,
 	getNodeTag,
@@ -363,7 +364,8 @@ export class Message {
 	}
 
 	/** Tests whether this message expects an update from the target node to finalize the transaction */
-	public expectsNodeUpdate(): boolean {
+	// oxlint-disable-next-line no-unused-vars
+	public expectsNodeUpdate(ctx: GetNode<NodeId & SupportsCC>): boolean {
 		// Most messages don't expect an update by default
 		return false;
 	}
@@ -396,8 +398,12 @@ export class Message {
 	}
 
 	/** Checks if a message is an expected node update for this message */
-	// oxlint-disable-next-line no-unused-vars
-	public isExpectedNodeUpdate(msg: Message): boolean {
+	public isExpectedNodeUpdate(
+		// oxlint-disable-next-line no-unused-vars
+		ctx: GetNode<NodeId & SupportsCC>,
+		// oxlint-disable-next-line no-unused-vars
+		msg: Message,
+	): boolean {
 		// Most messages don't expect an update by default
 		return false;
 	}

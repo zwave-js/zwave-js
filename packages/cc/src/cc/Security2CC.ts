@@ -2,6 +2,7 @@ import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
+	type GetNode,
 	type GetValueDB,
 	MPANState,
 	type MaybeNotKnown,
@@ -11,12 +12,14 @@ import {
 	type MulticastDestination,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
+	type NodeId,
 	type S2SecurityClass,
 	SPANState,
 	type SPANTableEntry,
 	SecurityClass,
 	type SecurityManager2,
 	type SecurityManagers,
+	type SupportsCC,
 	TransmitOptions,
 	type WithAddress,
 	ZWaveError,
@@ -1378,9 +1381,10 @@ export interface Security2CCMessageEncapsulationOptions {
 
 // An S2 encapsulated command may result in a NonceReport to be sent by the node if it couldn't decrypt the message
 function getCCResponseForMessageEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: Security2CCMessageEncapsulation,
 ) {
-	if (sent.encapsulated?.expectsCCResponse()) {
+	if (sent.encapsulated?.expectsCCResponse(ctx)) {
 		const ret = [
 			Security2CCMessageEncapsulation as any,
 			Security2CCNonceReport as any,
@@ -2355,7 +2359,10 @@ export interface Security2CCKEXSetOptions {
 	grantedKeys: SecurityClass[];
 }
 
-function getExpectedResponseForKEXSet(sent: Security2CCKEXSet) {
+function getExpectedResponseForKEXSet(
+	ctx: GetNode<NodeId & SupportsCC>,
+	sent: Security2CCKEXSet,
+) {
 	if (sent.echo) {
 		return [Security2CCKEXReport, Security2CCKEXFail];
 	} else {

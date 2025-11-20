@@ -2,9 +2,12 @@ import {
 	CRC16_CCITT,
 	CommandClasses,
 	EncapsulationFlags,
+	type GetNode,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
+	type NodeId,
+	type SupportsCC,
 	type WithAddress,
 	validatePayload,
 } from "@zwave-js/core";
@@ -96,9 +99,10 @@ export interface CRC16CCCommandEncapsulationOptions {
 }
 
 function getCCResponseForCommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: CRC16CCCommandEncapsulation,
 ) {
-	if (sent.encapsulated?.expectsCCResponse()) {
+	if (sent.encapsulated?.expectsCCResponse(ctx)) {
 		return CRC16CCCommandEncapsulation;
 	}
 }

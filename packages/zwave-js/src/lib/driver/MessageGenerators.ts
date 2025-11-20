@@ -30,13 +30,16 @@ import {
 import {
 	CommandClasses,
 	EncapsulationFlags,
+	type GetNode,
 	MessagePriority,
 	NODE_ID_BROADCAST,
+	type NodeId,
 	SPANState,
 	SecurityClass,
 	type SendCommandOptions,
 	type SupervisionResult,
 	SupervisionStatus,
+	type SupportsCC,
 	TransmitOptions,
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -74,7 +77,11 @@ export type MessageGeneratorImplementation<T extends Message> = (
 	additionalCommandTimeoutMs?: number,
 ) => AsyncGenerator<Message, Message, Message>;
 
-function maybePartialNodeUpdate(sent: Message, received: Message): boolean {
+function maybePartialNodeUpdate(
+	ctx: GetNode<NodeId & SupportsCC>,
+	sent: Message,
+	received: Message,
+): boolean {
 	// Some commands are returned in multiple segments, which may take longer than
 	// the configured timeout.
 	if (!containsCC(sent) || !containsCC(received)) {
@@ -93,7 +100,7 @@ function maybePartialNodeUpdate(sent: Message, received: Message): boolean {
 	// This also doesn't check for correct encapsulation, but that is good enough to refresh the timer.
 	const sentCommand = getInnermostCommandClass(sent.command);
 	const receivedCommand = getInnermostCommandClass(received.command);
-	return sentCommand.isExpectedCCResponse(receivedCommand);
+	return sentCommand.isExpectedCCResponse(ctx, receivedCommand);
 }
 
 export async function waitForNodeUpdate<T extends Message>(
@@ -103,9 +110,9 @@ export async function waitForNodeUpdate<T extends Message>(
 ): Promise<T> {
 	try {
 		return await driver.waitForMessage<T>(
-			(received) => msg.isExpectedNodeUpdate(received),
+			(received) => msg.isExpectedNodeUpdate(driver, received),
 			timeoutMs,
-			(received) => maybePartialNodeUpdate(msg, received),
+			(received) => maybePartialNodeUpdate(driver, msg, received),
 		);
 	} catch {
 		throw new ZWaveError(
@@ -187,7 +194,7 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 		//
 		// There is one exception: If we aborted the transaction with SendDataAbort
 		// because of a premature response, we treat this as a successful transmission anyways.
-		if (msg.expectsNodeUpdate() && msg.prematureNodeUpdate) {
+		if (msg.expectsNodeUpdate(driver) && msg.prematureNodeUpdate) {
 			return msg.prematureNodeUpdate;
 		}
 
@@ -198,7 +205,7 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 		}
 
 		// If the sent message expects an update from the node, wait for it
-		if (msg.expectsNodeUpdate()) {
+		if (msg.expectsNodeUpdate(driver)) {
 			// CommandTime is measured by the application
 			// ReportTime timeout SHOULD be set to CommandTime + 1 second.
 			const timeout = getNodeUpdateTimeout(
@@ -465,7 +472,7 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 	// Therefore we need to replicate the waiting from simpleMessageGenerator here
 
 	// If the sent message expects an update from the node, wait for it
-	if (msg.expectsNodeUpdate()) {
+	if (msg.expectsNodeUpdate(driver)) {
 		// TODO: Figure out if we can handle premature updates with Transport Service CC
 		const timeout = getNodeUpdateTimeout(
 			driver,
@@ -658,7 +665,7 @@ export const secureMessageGeneratorS2: MessageGeneratorImplementation<
 	if (
 		isTransmitReport(response)
 		&& msg.command.verifyDelivery
-		&& !msg.command.expectsCCResponse()
+		&& !msg.command.expectsCCResponse(driver)
 		&& !msg.command.getEncapsulatedCC(
 			CommandClasses.Supervision,
 			SupervisionCommand.Get,
