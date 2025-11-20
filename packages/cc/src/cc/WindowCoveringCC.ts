@@ -590,22 +590,10 @@ ${
 					ctx,
 					WindowCoveringCCValues.levelChangeDown(param),
 				);
-
-				// And for the odd parameters (with position support), query the position
-				if (param % 2 === 1) {
-					ctx.logNode(node.id, {
-						endpoint: this.endpointIndex,
-						message: `querying position for parameter ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								param,
-							)
-						}...`,
-						direction: "outbound",
-					});
-					await api.get(param);
-				}
 			}
+
+			// Query current values for all supported parameters
+			await this.refreshValues(ctx);
 		}
 
 		// Remember that the interview is complete
@@ -631,9 +619,8 @@ ${
 		) ?? [];
 
 		for (const param of parameters) {
-			if (param % 2 == 0) {
-				continue; // Even parameter, no position support, no need to query
-			}
+			// Only query odd parameters (with position support)
+			if (param % 2 == 0) continue;
 
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
