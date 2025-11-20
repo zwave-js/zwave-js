@@ -31,6 +31,7 @@ import {
 	supervisionResultToSetValueResult,
 	utils as ccUtils,
 } from "@zwave-js/cc";
+import { ApplicationStatusCCBusy } from "@zwave-js/cc/ApplicationStatusCC";
 import {
 	AssociationCCGet,
 	AssociationCCRemove,
@@ -161,6 +162,7 @@ import path from "pathe";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
+import { handleApplicationBusy } from "./CCHandlers/ApplicationStatusCC.js";
 import {
 	handleAssociationGet,
 	handleAssociationRemove,
@@ -2526,6 +2528,13 @@ protocol version:      ${this.protocolVersion}`;
 			return handleDeviceResetLocallyNotification(
 				this.driver,
 				this.driver.controller,
+				this,
+				command,
+			);
+		} else if (command instanceof ApplicationStatusCCBusy) {
+			return handleApplicationBusy(
+				this.driver,
+				this.driver,
 				this,
 				command,
 			);

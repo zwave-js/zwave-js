@@ -4,6 +4,8 @@ import {
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
+	type SinglecastCC,
+	type WithAddress,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
@@ -33,7 +35,9 @@ export class ApplicationStatusCCAPI extends CCAPI {
 
 @commandClass(CommandClasses["Application Status"])
 @implementedVersion(1)
-export class ApplicationStatusCC extends CommandClass {
+export class ApplicationStatusCC extends CommandClass
+	implements SinglecastCC<ApplicationStatusCC>
+{
 	declare ccCommand: ApplicationStatusCommand;
 	declare nodeId: number;
 }
@@ -41,13 +45,13 @@ export class ApplicationStatusCC extends CommandClass {
 // @publicAPI
 export interface ApplicationStatusCCBusyOptions {
 	status: ApplicationStatus;
-	waitTime: number;
+	waitTime?: number;
 }
 
 @CCCommand(ApplicationStatusCommand.Busy)
 export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 	public constructor(
-		options: ApplicationStatusCCBusyOptions & { nodeId: number },
+		options: WithAddress<ApplicationStatusCCBusyOptions>,
 	) {
 		super(options);
 		this.status = options.status;
@@ -58,9 +62,15 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): ApplicationStatusCCBusy {
-		validatePayload(raw.payload.length >= 2);
+		validatePayload(raw.payload.length >= 1);
 		const status: ApplicationStatus = raw.payload[0];
-		const waitTime: number = raw.payload[1];
+		let waitTime: number | undefined;
+		if (
+			status === ApplicationStatus.TryAgainInWaitTimeSeconds
+			&& raw.payload.length >= 2
+		) {
+			waitTime = raw.payload[1];
+		}
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -70,10 +80,10 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 	}
 
 	public readonly status: ApplicationStatus;
-	public readonly waitTime: number;
+	public readonly waitTime: number | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([this.status, this.waitTime]);
+		this.payload = Bytes.from([this.status, this.waitTime ?? 0]);
 		return super.serialize(ctx);
 	}
 

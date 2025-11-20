@@ -903,6 +903,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private immediateQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
 	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
+	// Timers for delayed transaction re-queuing
+	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
 	/** Gives access to the transaction queues, ordered by priority */
 	private get queues(): TransactionQueue[] {
@@ -948,6 +950,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): Promise<void> {
+		// Clear all delayed requeue timers
+		for (const set of this.requeueTimers.values()) {
+			for (const timer of set) {
+				timer.clear();
+			}
+		}
+		this.requeueTimers.clear();
+
 		// The queues might not have been initialized yet
 		for (const queue of this.queues) {
 			if (!queue) return;
@@ -2976,6 +2986,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this.autoRefreshNodeValueTimers.get(node.id)?.clear();
 			this.autoRefreshNodeValueTimers.delete(node.id);
 		}
+		if (this.requeueTimers.has(node.id)) {
+			for (const timer of this.requeueTimers.get(node.id)!) {
+				timer.clear();
+			}
+			this.requeueTimers.delete(node.id);
+		}
 
 		// purge node values from the DB
 		node.valueDB.clear();
@@ -3943,6 +3959,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...this.awaitedMessageHeaders.map((h) => h.timeout),
 				...this.awaitedBootloaderChunks.map((b) => b.timeout),
 				...this.awaitedCLIChunks.map((c) => c.timeout),
+				...[...this.requeueTimers.values()].flatMap(
+					(t) => [...t.values()],
+				),
 			]
 		) {
 			timeout?.clear();
@@ -7943,6 +7962,47 @@ ${handlers.length} left`,
 			errorMsg,
 			errorCode,
 		);
+	}
+
+	/**
+	 * @internal
+	 * Re-queues all pending transactions for a node after a delay
+	 */
+	public async delayTransactionsForNode(
+		nodeId: number,
+		delaySeconds: number,
+	): Promise<void> {
+		const requeue: Transaction[] = [];
+
+		await this.reduceQueues((transaction, source) => {
+			// Only handle transactions for this node that are still queued (not currently active)
+			if (
+				transaction.message.getNodeId() === nodeId
+				&& source === "queue"
+			) {
+				requeue.push(transaction);
+				return { type: "drop" };
+			}
+			return { type: "keep" };
+		});
+
+		if (requeue.length > 0) {
+			if (!this.requeueTimers.has(nodeId)) {
+				this.requeueTimers.set(
+					nodeId,
+					new Set(),
+				);
+			}
+			const timerSet = this.requeueTimers.get(nodeId)!;
+			const timer = setTimer(() => {
+				timerSet.delete(timer);
+				const requeued = requeue.map((t) => t.clone());
+				for (const t of requeued) {
+					this.getQueueForTransaction(t).add(t);
+				}
+			}, delaySeconds * 1000).unref();
+			timerSet.add(timer);
+		}
 	}
 
 	/**
