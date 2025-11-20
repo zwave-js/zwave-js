@@ -4,6 +4,31 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Add rudimentary support for Application Status Command Class (#8390)
+* Implement `refreshValues` for Window Covering CC (#8436)
+
+### Bugfixes
+* Add missing "Panic alert" event to "Emergency Alarm" notification (#8415)
+* Fixed an issue where Basic CC values were incorrectly exposed after including a device (#8430)
+* Fixed an error that could happen when receiving an S2 Nonce Report before the request acknowledgement (#8437)
+* Cached user codes are now cleared when an "All user codes deleted" notification is received (#8389)
+* For notification sensors operating in push mode, the notification state is now queried during the interview (#8442)
+* Fixed a regression where value changes were not verified on slow devices after immediately successful supervised commands (#8385)
+
+### Config file changes
+* Add Shelly Wave Shutter, update Wave 1, Wave 1PM, Wave 2PM, Wave Plug S (#8393)
+* Add product id `0x03b9` to Kwikset 918 (#8432)
+* Update documentation link for Eurotronic Comet Z (#8426)
+* Add Philips DDL240X Touchscreen Deadbolt (#8352)
+* Add US variant to Shelly Wave 2PM (#8439)
+
+### Changes under the hood
+* Fixed an error in Zniffer when attempting to parse Long Range MPDUs on channel B (#8407)
+* Most of the linting tasks were migrated from ESLint to Oxlint, bringing the lint time from over a minute down to ~15-20 seconds total (#8425)
+* Mock based tests now support simulating inclusion of secure devices, working with S2 encryption in tests is much easier now (#8427)
+
 ## 15.16.0 (2025-11-04)
 ### Features
 * Config parameter values can now be marked as recommended and automatically be set during the interview (#8164, #8382)
