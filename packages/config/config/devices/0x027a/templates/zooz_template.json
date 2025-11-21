@@ -732,6 +732,64 @@
 			}
 		]
 	},
+	"external_switch_type_0-12": {
+		"$import": "#external_switch_type_0-3",
+		"maxValue": 12,
+		"options": [
+			{
+				"label": "Automatic detection",
+				"value": 0
+			},
+			{
+				"label": "Toggle switch (state changes whenever the switch is toggled)",
+				"value": 1
+			},
+			{
+				"label": "Momentary push button",
+				"value": 2
+			},
+			{
+				"label": "Toggle switch (light on when the switch is toggled up, light off when the switch is toggled down)",
+				"value": 3
+			},
+			{
+				"label": "Leak alarm (water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "On/Off report (dry contact switch/sensor)",
+				"value": 10
+			},
+			{
+				"label": "Garage door mode",
+				"value": 11
+			},
+			{
+				"label": "Garage door mode for the relay (momentary contact) and door sensor type for the input (use with wired analog door/window sensors and garage gate openers)",
+				"value": 12
+			}
+		]
+	},
 	"impulse_duration": {
 		"label": "Impulse Duration",
 		"description": "Expected duration of the impulse in Split 3-Way mode",
@@ -1085,6 +1143,23 @@
 			{
 				"label": "On/Off report (Dry contact switch/sensor)",
 				"value": 10
+			}
+		]
+	},
+	"relay_reverse_for_selected_input_type": {
+		"label": "Reverse the reported values for your selected input type (value 1). Expert users only. See manual for details.",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Values reported as normally open, not reversed",
+				"value": 0
+			},
+			{
+				"label": "Input values reversed",
+				"value": 1
 			}
 		]
 	},
