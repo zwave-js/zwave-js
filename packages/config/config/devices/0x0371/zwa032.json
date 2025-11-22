@@ -1,0 +1,100 @@
+{
+	"manufacturer": "Aeotec Ltd.",
+	"manufacturerId": "0x0371",
+	"label": "ZWA050",
+
+	"description": "SmokeShield for Ei Smoke Detectors",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x0032"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 10,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Smoke Action",
+			"maxNodes": 10
+		},
+		"3": {
+			"label": "Smoke Alarm",
+			"maxNodes": 10
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_command_type",
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "On and off",
+					"value": 0
+				},
+				{
+					"label": "On",
+					"value": 1
+				},
+				{
+					"label": "Off",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on"
+		},
+		{
+			"#": "3",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off",
+			"defaultValue": 0
+		},
+		{
+			"#": "4",
+			"$import": "~/0x0086/templates/aeotec_template.json#low_battery_threshold",
+			"defaultValue": 20
+		},
+		{
+			"#": "80",
+			"$import": "~/0x0086/templates/aeotec_template.json#enable_binary_report",
+			"description": "Enable Binary Sensor report for group 1 and group 3"
+		},
+		{
+			"#": "111",
+			"$import": "~/0x0086/templates/aeotec_template.json#auto_report_interval",
+			"label": "Automatic Reporting Interval: Battery and Ei Header Status",
+			"description": "Set how often to check the battery level and Ei header status in seconds",
+			"minValue": 0,
+			"maxValue": 864000,
+			"defaultValue": 86400,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+
+		{
+			"#": "252",
+			"$import": "~/0x0086/templates/aeotec_template.json#lock_configuration"
+		}
+	],
+
+	"metadata": {
+		"wakeup": "Press and hold the Action Button for 2 seconds and then release the button.",
+		"inclusion": "1. Turn your main controller or gateway into adding / inclusion mode. 2. Quick press the Action Button on product twice.",
+		"exclusion": "1. Turn your main controller or gateway into removing/ exclusion mode. 2. Quick press the Action Button on product twice.",
+		"reset": "Press and hold the Action Button for 12 seconds and then release the button.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80606/SPEC-ZWA050SmokeShield20250725-2.pdf"
+	}
+}
