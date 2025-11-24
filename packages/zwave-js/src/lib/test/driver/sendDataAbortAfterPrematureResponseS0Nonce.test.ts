@@ -7,15 +7,8 @@ import {
 	SecurityCCNonceGet,
 	SecurityCCNonceReport,
 	SetValueStatus,
-	SupervisionCCGet,
-	SupervisionCCReport,
 } from "@zwave-js/cc";
-import {
-	SecurityClass,
-	SupervisionStatus,
-	TransmitStatus,
-	isSupervisionResult,
-} from "@zwave-js/core";
+import { SecurityClass, TransmitStatus } from "@zwave-js/core";
 import {
 	SendDataAbort,
 	SendDataBridgeRequest,
