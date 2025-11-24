@@ -2,9 +2,11 @@ import {
 	BasicCCGet,
 	BasicCCReport,
 	BasicCCSet,
+	BasicCCValues,
 	SecurityCCCommandEncapsulation,
 	SecurityCCNonceGet,
 	SecurityCCNonceReport,
+	SetValueStatus,
 	SupervisionCCGet,
 	SupervisionCCReport,
 } from "@zwave-js/cc";
@@ -41,7 +43,7 @@ integrationTest(
 	"A premature S0 Nonce Report does not cause an error",
 	{
 		// Repro for #8406, part 2
-		debug: true,
+		// debug: true,
 
 		provisioningDirectory: path.join(
 			__dirname,
@@ -133,9 +135,12 @@ integrationTest(
 			mockNode.autoAckControllerFrames = false;
 
 			// For this command, the NonceReport should arrive before the transmit report.
-			const result = await node.commandClasses.Basic.set(99);
-			// We still expect to return a (fake) supervision result
-			t.expect(isSupervisionResult(result)).toBe(true);
+			const targetValue = BasicCCValues.targetValue.id;
+			const result = await node.setValue(targetValue, 99);
+			// We still expect to return a SetValueResult
+			t.expect(result).toMatchObject({
+				status: SetValueStatus.SuccessUnsupervised,
+			});
 			t.expect(
 				mockNode.assertReceivedControllerFrame((frame) =>
 					frame.type === MockZWaveFrameType.Request

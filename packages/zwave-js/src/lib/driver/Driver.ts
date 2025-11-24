@@ -5631,10 +5631,12 @@ ${handlers.length} left`,
 			// It could also be that this is the node's response for a CC that we sent, but where the ACK is delayed
 			const currentTransaction = this.queue.currentTransaction;
 			const currentMessage = currentTransaction?.getCurrentMessage();
-			const isSOSNonceReport =
+			const isS2NonceReportSOS =
 				msg.command instanceof Security2CCNonceReport
 				&& msg.command.SOS
 				&& !!msg.command.receiverEI;
+			const isS0NonceReport = msg.command instanceof SecurityCCNonceReport;
+			const isNonceReport = isS0NonceReport || isS2NonceReportSOS;
 			if (
 				currentMessage
 				&& currentMessage.expectsNodeUpdate(this)
@@ -5643,11 +5645,11 @@ ${handlers.length} left`,
 				// The message we're currently sending is still in progress but expects this message in response,
 				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
 
-				// An SOS nonce report is treated like an expected node update,
+				// A S0/S2 nonce report is treated like an expected node update,
 				// but it is not considered a valid result of the ongoing transaction.
-				if (isSOSNonceReport) {
+				if (isNonceReport) {
 					// Due to how the message generators are architected, it is currently not possible to short-circuit
-					// waiting for the transmit report, so we remember the SOS Nonce Report for later processing.
+					// waiting for the transmit report, so we remember the Nonce Report for later processing.
 					currentMessage.prematureNodeUpdate = msg;
 				}
 
@@ -5665,7 +5667,7 @@ ${handlers.length} left`,
 
 				// If this is a valid result of the current transaction, abort the
 				// transaction with the received message as the result.
-				if (!isSOSNonceReport) currentTransaction!.abort(msg);
+				if (!isNonceReport) currentTransaction!.abort(msg);
 
 				return;
 			}
