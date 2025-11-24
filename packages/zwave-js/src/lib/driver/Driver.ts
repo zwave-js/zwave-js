@@ -5635,7 +5635,8 @@ ${handlers.length} left`,
 				msg.command instanceof Security2CCNonceReport
 				&& msg.command.SOS
 				&& !!msg.command.receiverEI;
-			const isS0NonceReport = msg.command instanceof SecurityCCNonceReport;
+			const isS0NonceReport = msg.command
+				instanceof SecurityCCNonceReport;
 			const isNonceReport = isS0NonceReport || isS2NonceReportSOS;
 			if (
 				currentMessage
