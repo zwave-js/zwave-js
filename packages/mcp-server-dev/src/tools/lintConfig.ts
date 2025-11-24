@@ -127,8 +127,7 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 			content: [
 				{
 					type: "text",
-					text:
-						"No linting issues found in the configuration file.",
+					text: "No linting issues found in the configuration file.",
 				},
 			],
 		};
