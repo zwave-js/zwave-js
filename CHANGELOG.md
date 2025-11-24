@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.17.1 (2025-11-24)
 ### Bugfixes
 * Fixed an error that could happen when receiving an S0 Nonce Report before the request acknowledgement (#8447)
 
