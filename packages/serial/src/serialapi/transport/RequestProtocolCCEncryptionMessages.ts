@@ -161,6 +161,13 @@ export class RequestProtocolCCEncryptionResponse extends Message {
 
 	public status: ProtocolCCEncryptionStatus;
 
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.assertCallbackId();
+		this.payload = Bytes.from([this.status, this.callbackId]);
+
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(),
