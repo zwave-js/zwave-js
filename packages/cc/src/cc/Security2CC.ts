@@ -1110,7 +1110,7 @@ export class Security2CCAPI extends CCAPI {
 }
 
 @commandClass(CommandClasses["Security 2"])
-@implementedVersion(1)
+@implementedVersion(2)
 export class Security2CC extends CommandClass {
 	declare ccCommand: Security2Command;
 
@@ -1377,6 +1377,11 @@ export class Security2CC extends CommandClass {
 				case Security2Command.NetworkKeyReport:
 				case Security2Command.NetworkKeyVerify:
 				case Security2Command.TransferEnd:
+				case Security2Command.NLSStateSet:
+				case Security2Command.NLSStateGet:
+				case Security2Command.NLSStateReport:
+				case Security2Command.NLSNodeListGet:
+				case Security2Command.NLSNodeListReport:
 					return true;
 
 				case Security2Command.KEXSet:

@@ -2623,7 +2623,7 @@ export class ZWaveController
 			const actualSecurityClass = newNode
 				.getHighestSecurityClass();
 
-			if (bootstrapResult.success === false) {
+			if (bootstrapResult.success) {
 				if (
 					actualSecurityClass
 						== SecurityClass.S0_Legacy
@@ -2683,7 +2683,7 @@ export class ZWaveController
 				newNode,
 				newNodeIsController,
 			));
-			if (bootstrapResult.success === false) {
+			if (bootstrapResult.success) {
 				const actualSecurityClass = newNode
 					.getHighestSecurityClass();
 				if (
@@ -4051,7 +4051,7 @@ export class ZWaveController
 					};
 				}
 			}
-			if (bootstrapFailure != undefined) {
+			if (!bootstrapResult.success) {
 				newNode.failedS2Bootstrapping = true;
 			}
 		} else if (
@@ -4311,6 +4311,8 @@ export class ZWaveController
 						securityClasses: requested.securityClasses.filter((r) =>
 							grantedSecurityClasses.includes(r)
 						),
+						// By default, enable NLS if supported
+						networkLevelSecurity: requested.networkLevelSecurity,
 					});
 				},
 				validateDSKAndEnterPIN: (dsk) => {
@@ -4939,6 +4941,13 @@ export class ZWaveController
 			}
 			// Remember the DSK (first 16 bytes of the public key)
 			node.dsk = nodePublicKey.subarray(0, 16);
+
+			// If the node supports NLS, we now also know that S2v2 is supported
+			if (kexParams.supportsNLS) {
+				node.addCC(CommandClasses["Security 2"], {
+					version: 2,
+				});
+			}
 
 			this.driver.controllerLog.logNode(node.id, {
 				message:
@@ -7257,7 +7266,7 @@ export class ZWaveController
 				options,
 				true,
 			);
-			if (bootstrapResult.success === false) {
+			if (bootstrapResult.success) {
 				const actualSecurityClass = newNode
 					.getHighestSecurityClass();
 				if (
@@ -7271,7 +7280,7 @@ export class ZWaveController
 					};
 				}
 			}
-			if (bootstrapFailure != undefined) {
+			if (!bootstrapResult.success) {
 				newNode.failedS2Bootstrapping = true;
 			}
 		} else if (strategy === InclusionStrategy.Security_S0) {
@@ -7285,7 +7294,7 @@ export class ZWaveController
 				// don't know any better at this point.
 				true,
 			);
-			if (bootstrapResult.success === false) {
+			if (bootstrapResult.success) {
 				const actualSecurityClass = newNode
 					.getHighestSecurityClass();
 				if (
