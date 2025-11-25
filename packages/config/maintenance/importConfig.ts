@@ -16,7 +16,6 @@ import {
 	enumFilesRecursive,
 	formatId,
 	getErrorMessage,
-	getHttpClient,
 	num2hex,
 	padVersion,
 	readJSON,
@@ -186,21 +185,21 @@ function updateNumberOrDefault(
 
 /** Retrieves the list of database IDs from the OpenSmartHouse DB */
 async function fetchIDsOH(): Promise<number[]> {
-	const ky = await getHttpClient();
+	const { default: ky } = await import("ky");
 	const data = (await ky.get(ohUrlIDs).json()) as any;
 	return data.devices.map((d: any) => d.id);
 }
 
 /** Retrieves the definition for a specific device from the OpenSmartHouse DB */
 async function fetchDeviceOH(id: number): Promise<string> {
-	const ky = await getHttpClient();
+	const { default: ky } = await import("ky");
 	const source = (await ky.get(ohUrlDevice(id)).json()) as any;
 	return stringify(source, "\t");
 }
 
 /** Retrieves the definition for a specific device from the Z-Wave Alliance DB */
 async function fetchDeviceZWA(id: number): Promise<string> {
-	const ky = await getHttpClient();
+	const { default: ky } = await import("ky");
 	const source = (await ky.get(zwaUrlDevice(id)).json()) as any;
 	return stringify(source, "\t");
 }
@@ -208,7 +207,7 @@ async function fetchDeviceZWA(id: number): Promise<string> {
 /** Downloads ozw master archive and store it on `tmpDir` */
 async function downloadOZWConfig(): Promise<string> {
 	console.log("downloading ozw archive...");
-	const ky = await getHttpClient();
+	const { default: ky } = await import("ky");
 
 	// create tmp directory if missing
 	await fs.mkdir(ozwTempDir, { recursive: true });
@@ -1725,7 +1724,7 @@ async function retrieveZWADeviceIds(
 	highestDeviceOnly: boolean = true,
 	manufacturer: number[] = [-1],
 ): Promise<number[]> {
-	const ky = await getHttpClient();
+	const { default: ky } = await import("ky");
 	const deviceIdsSet = new Set<number>();
 
 	for (const manu of manufacturer) {
@@ -1838,7 +1837,7 @@ async function downloadDevicesOH(IDs?: number[]): Promise<void> {
 async function downloadManufacturersOH(): Promise<void> {
 	process.stdout.write("Fetching manufacturers...");
 
-	const ky = await getHttpClient();
+	const { default: ky } = await import("ky");
 	const data = await ky.get(ohUrlManufacturers).json();
 
 	// Delete the last line

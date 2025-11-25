@@ -3,7 +3,6 @@ import { ZWaveError, ZWaveErrorCodes, gunzipSync } from "@zwave-js/core";
 import {
 	type BytesView,
 	getErrorMessage,
-	getHttpClient,
 	writeTextFile,
 } from "@zwave-js/shared";
 import type {
@@ -19,6 +18,7 @@ import path from "pathe";
 import semverInc from "semver/functions/inc.js";
 import semverValid from "semver/functions/valid.js";
 import semverMaxSatisfying from "semver/ranges/max-satisfying.js";
+import { getHttpClient } from "./httpClient.js";
 
 /**
  * Checks whether there is a compatible update for the currently installed config package.

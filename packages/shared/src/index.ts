@@ -9,7 +9,6 @@ export * from "./Timers.js";
 export * from "./env.js";
 export * from "./errors.js";
 export * from "./fs.js";
-export * from "./httpClient.js";
 export * from "./inheritance.js";
 export * from "./strings.js";
 export * from "./types.js";

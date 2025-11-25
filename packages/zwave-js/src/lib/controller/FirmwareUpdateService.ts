@@ -13,12 +13,12 @@ import {
 	type Timer,
 	formatId,
 	getenv,
-	getHttpClient,
 	padVersion,
 	setTimer,
 } from "@zwave-js/shared";
 import type { Options as KyOptions } from "ky";
 import type PQueue from "p-queue";
+import { getHttpClient } from "../driver/httpClient.js";
 import type {
 	FirmwareUpdateBulkInfo,
 	FirmwareUpdateDeviceID,
