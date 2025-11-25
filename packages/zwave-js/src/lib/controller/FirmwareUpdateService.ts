@@ -18,7 +18,6 @@ import {
 } from "@zwave-js/shared";
 import type { Options as KyOptions } from "ky";
 import type PQueue from "p-queue";
-import { getHttpClient } from "../driver/httpClient.js";
 import type {
 	FirmwareUpdateBulkInfo,
 	FirmwareUpdateDeviceID,
@@ -109,6 +108,7 @@ async function makeRequest<T>(
 	url: string,
 	config: KyOptions,
 ): Promise<{ data: T; expiry: number }> {
+	const { getHttpClient } = await import("../driver/HTTPClient.js");
 	const ky = await getHttpClient();
 	const response = await ky(url, config);
 	const responseJson = await response.json<T>();
@@ -323,6 +323,7 @@ export async function downloadFirmwareUpdate(
 	// TODO: Make request abort-able (requires AbortController, Node 14.17+ / Node 16)
 
 	// Download the firmware file
+	const { getHttpClient } = await import("../driver/HTTPClient.js");
 	const ky = await getHttpClient();
 	const downloadResponse = await ky.get(file.url, {
 		timeout: DOWNLOAD_TIMEOUT,
