@@ -1,0 +1,85 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZEN57",
+	"description": "Long Range 240V XS Relay",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0321"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off Control",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#enable_led_indicator"
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "3",
+			"$import": "templates/zooz_template.json#association_reports_binary"
+		},
+		{
+			"#": "4",
+			"$import": "templates/zooz_template.json#enable_scene_control"
+		},
+		{
+			"#": "5",
+			"$import": "templates/zooz_template.json#zen5x_external_switch_type_0-10"
+		},
+		{
+			"#": "6",
+			"$import": "templates/zooz_template.json#local_programming"
+		},
+		{
+			"#": "7",
+			"$import": "templates/zooz_template.json#auto_off_timer_5x"
+		},
+		{
+			"#": "8",
+			"$import": "templates/zooz_template.json#auto_on_timer_5x"
+		},
+		{
+			"#": "9",
+			"$import": "~/templates/master_template.json#smart_switch_mode_0-2"
+		},
+		{
+			"#": "10",
+			"$import": "templates/zooz_template.json#relay_type_behavior"
+		},
+		{
+			"#": "11",
+			"$import": "templates/zooz_template.json#local_control"
+		},
+		{
+			"#": "12",
+			"$import": "templates/zooz_template.json#zen5x_external_switch_multiple_click"
+		},
+		{
+			"#": "13",
+			"$import": "templates/zooz_template.json#zen5x_relay_reverse_reported_value"
+		}
+	],
+	"metadata": {
+		"$import": "templates/zooz_template.json#zen5x_metadata",
+		"manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-z-wave-long-range-240v-xs-relay-zen57-manual.pdf"
+	}
+}

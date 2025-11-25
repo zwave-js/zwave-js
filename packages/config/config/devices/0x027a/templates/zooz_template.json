@@ -1136,6 +1136,90 @@
 		"label": "On/Off Switch Mode",
 		"description": "Disables dimming, locks brightness at 100% and sets all ramp rates to instant on/off."
 	},
+	"zen5x_external_switch_type_0-10": {
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 10,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Automatic detection",
+				"value": 0
+			},
+			{
+				"label": "Toggle (change state on toggle)",
+				"value": 1
+			},
+			{
+				"label": "Momentary",
+				"value": 2
+			},
+			{
+				"label": "Toggle (follow switch)",
+				"value": 3
+			},
+			{
+				"label": "Leak alarm (Water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (Door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "On/Off report (Dry contact switch/sensor)",
+				"value": 10
+			}
+		]
+	},
+	"zen5x_external_switch_type_0-12": {
+		"$import": "#zen5x_external_switch_type_0-10",
+		"maxValue": 12,
+		"options": [
+			{
+				"label": "Garage door mode (momentary)",
+				"value": 11
+			},
+			{
+				"label": "Garage door mode (Relay), door sensor (Input)",
+				"value": 12
+			}
+		]
+	},
+	"zen5x_relay_reverse_reported_value": {
+		"valueSize": 1,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Values reported normally, not reversed",
+				"value": 0
+			},
+			{
+				"label": "Input values reversed",
+				"value": 1
+			}
+		]
+	},
 	"zen5x_external_switch_multiple_click": {
 		"$import": "~/templates/master_template.json#base_enable_disable",
 		"label": "External Switch: Multiple Click Detection",
