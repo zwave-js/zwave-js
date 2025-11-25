@@ -1805,6 +1805,16 @@ export class ConfigurationCCReport extends ConfigurationCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
+		// Skip hidden parameters entirely - don't persist values
+		const paramInfo = getParamInformationFromConfigFile(
+			ctx,
+			this.nodeId as number,
+			this.endpointIndex,
+		);
+		if (paramInfo?.get({ parameter: this.parameter })?.hidden) {
+			return true;
+		}
+
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 
 		// This parameter may be a partial param in the following cases:
