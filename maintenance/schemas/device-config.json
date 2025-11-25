@@ -474,6 +474,10 @@
 						],
 						"additionalProperties": false
 					}
+				},
+				"hidden": {
+					"type": "boolean",
+					"description": "Whether this parameter should be hidden in UIs and outputs"
 				}
 			},
 			"additionalProperties": false,
