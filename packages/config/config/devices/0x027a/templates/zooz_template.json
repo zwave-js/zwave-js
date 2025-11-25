@@ -1196,6 +1196,50 @@
 		"maxValue": 12,
 		"options": [
 			{
+				"label": "Automatic detection",
+				"value": 0
+			},
+			{
+				"label": "Toggle (change state on toggle)",
+				"value": 1
+			},
+			{
+				"label": "Momentary",
+				"value": 2
+			},
+			{
+				"label": "Toggle (follow switch)",
+				"value": 3
+			},
+			{
+				"label": "Leak alarm (Water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (Door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "On/Off report (Dry contact switch/sensor)",
+				"value": 10
+			},
+			{
 				"label": "Garage door mode (momentary)",
 				"value": 11
 			},
