@@ -1,3 +1,4 @@
 {
+	"*.{js,ts}": "yarn oxlint --type-aware",
 	"*.{js,ts,json,md}": "node maintenance/fmt-staged.js"
 }
