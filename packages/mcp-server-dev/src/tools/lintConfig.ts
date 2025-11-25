@@ -1,5 +1,5 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { execa } from "execa";
+import spawn from "nano-spawn";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ToolHandler } from "../types.js";
@@ -25,7 +25,7 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 	// 2. If that succeeds, run ESLint on the specific file
 
 	try {
-		const result = await execa(
+		await spawn(
 			"yarn",
 			[
 				"workspace",
@@ -36,22 +36,8 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 			{
 				cwd: REPO_ROOT,
 				stdio: "pipe",
-				reject: false, // Don't throw on non-zero exit codes
 			},
 		);
-
-		if (result.exitCode !== 0) {
-			return {
-				content: [
-					{
-						type: "text",
-						text:
-							`Custom linting script failed:\n\n${result.stdout}\n\nStderr:\n${result.stderr}`,
-					},
-				],
-				isError: true,
-			};
-		}
 	} catch (error: any) {
 		return {
 			content: [
@@ -83,8 +69,9 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 		};
 	}
 
+	let eslintResult;
 	try {
-		const eslintResult = await execa(
+		eslintResult = await spawn(
 			"yarn",
 			[
 				"workspace",
@@ -98,80 +85,66 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 			{
 				cwd: REPO_ROOT,
 				stdio: "pipe",
-				reject: false, // Don't throw on non-zero exit codes
 			},
 		);
-
-		let results: any[];
-		try {
-			results = JSON.parse(eslintResult.stdout);
-		} catch (parseError) {
-			return {
-				content: [
-					{
-						type: "text",
-						text: `Failed to parse ESLint output: ${
-							String(parseError)
-						}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
-					},
-				],
-				isError: true,
-			};
-		}
-
-		if (!results || results.length === 0) {
-			return {
-				content: [
-					{
-						type: "text",
-						text: "No ESLint results found for the file.",
-					},
-				],
-			};
-		}
-
-		const issues = results.flatMap((result) => result.messages);
-		if (issues.length === 0) {
-			return {
-				content: [
-					{
-						type: "text",
-						text:
-							"No linting issues found in the configuration file.",
-					},
-				],
-			};
-		}
-
-		return {
-			content: [
-				{
-					type: "text",
-					text: `Linting issues found in ${filename}:\n\n`
-						+ issues.map((issue) => {
-							return `- ${issue.message} (line ${issue.line}, column ${issue.column})`;
-						}).join("\n"),
-				},
-			],
-			isError: true,
-		};
 	} catch (error: any) {
+		// ESLint returns non-zero exit code when there are issues,
+		// but we still want to parse the output
+		eslintResult = error;
+	}
+
+	let results: any[];
+	try {
+		results = JSON.parse(eslintResult.stdout);
+	} catch (parseError) {
 		return {
 			content: [
 				{
 					type: "text",
-					text: `ESLint check failed: ${error.message}\n\nOutput:\n${
-						error.stdout || ""
-					}${
-						error.stderr
-							? `\nStderr:\n${error.stderr}`
-							: ""
-					}`,
+					text: `Failed to parse ESLint output: ${
+						String(parseError)
+					}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
 				},
 			],
 			isError: true,
 		};
 	}
+
+	if (!results || results.length === 0) {
+		return {
+			content: [
+				{
+					type: "text",
+					text: "No ESLint results found for the file.",
+				},
+			],
+		};
+	}
+
+	const issues = results.flatMap((result) => result.messages);
+	if (issues.length === 0) {
+		return {
+			content: [
+				{
+					type: "text",
+					text: "No linting issues found in the configuration file.",
+				},
+			],
+		};
+	}
+
+	return {
+		content: [
+			{
+				type: "text",
+				text: `Linting issues found in ${filename}:\n\n`
+					+ issues.map((issue) => {
+						return `- ${issue.message} (line ${issue.line}, column ${issue.column})`;
+					}).join("\n"),
+			},
+		],
+		isError: true,
+	};
 }
 
 export const lintConfigTool: ToolHandler = {
