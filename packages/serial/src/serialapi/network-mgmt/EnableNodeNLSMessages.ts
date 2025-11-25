@@ -20,7 +20,7 @@ import {
 import { type Bytes } from "@zwave-js/shared";
 
 export interface EnableNodeNLSRequestOptions {
-	nodeId: number;
+	nlsNodeId: number;
 }
 
 @messageTypes(MessageType.Request, FunctionType.EnableNodeNLS)
@@ -31,10 +31,10 @@ export class EnableNodeNLSRequest extends Message {
 		options: EnableNodeNLSRequestOptions & MessageBaseOptions,
 	) {
 		super(options);
-		this.nodeId = options.nodeId;
+		this.nlsNodeId = options.nlsNodeId;
 	}
 
-	public nodeId: number;
+	public nlsNodeId: number;
 
 	public static from(
 		raw: MessageRaw,
@@ -43,12 +43,12 @@ export class EnableNodeNLSRequest extends Message {
 		const { nodeId } = parseNodeID(raw.payload, ctx.nodeIdType, 0);
 
 		return new this({
-			nodeId,
+			nlsNodeId: nodeId,
 		});
 	}
 
 	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = encodeNodeID(this.nodeId);
+		this.payload = encodeNodeID(this.nlsNodeId);
 
 		return super.serialize(ctx);
 	}
@@ -57,7 +57,7 @@ export class EnableNodeNLSRequest extends Message {
 		return {
 			...super.toLogEntry(),
 			message: {
-				"node id": this.nodeId,
+				"NLS node id": this.nlsNodeId,
 			},
 		};
 	}

@@ -116,6 +116,7 @@ import {
 	migrateNVM,
 } from "@zwave-js/nvmedit";
 import {
+	EnableNodeNLSRequest,
 	FunctionType,
 	type Message,
 	type SuccessIndicator,
@@ -4999,29 +5000,60 @@ export class ZWaveController
 	}
 
 	private async enableAndVerifyNLS(node: ZWaveNode): Promise<boolean> {
+		let nlsEnabledOnNode = false;
 		try {
 			await node.commandClasses["Security 2"].enableNLS();
 			const result = await node.commandClasses["Security 2"]
 				.getNLSState();
 
+			nlsEnabledOnNode = result?.enabled === true;
+
 			if (result?.enabled) {
-				this.driver.controllerLog.logNode(
-					node.id,
-					`Network level security enabled`,
-				);
-				return true;
 			}
 		} catch {
 			// ignore
 		}
 
+		if (!nlsEnabledOnNode) {
+			this.driver.controllerLog.logNode(
+				node.id,
+				`Network level security could not be enabled on the node`,
+				"warn",
+			);
+
+			return false;
+		}
+
+		let nlsEnabledOnController = false;
+		try {
+			const result = await this.driver.sendMessage<
+				Message & SuccessIndicator
+			>(
+				new EnableNodeNLSRequest({
+					nlsNodeId: node.id,
+				}),
+			);
+			nlsEnabledOnController = result.isOK();
+		} catch {
+			// ignore
+		}
+
+		if (!nlsEnabledOnController) {
+			this.driver.controllerLog.logNode(
+				node.id,
+				`Network level security could not be enabled on the controller`,
+				"warn",
+			);
+
+			return false;
+		}
+
 		this.driver.controllerLog.logNode(
 			node.id,
-			`Network level security could not be enabled`,
-			"warn",
+			`Network level security enabled`,
 		);
 
-		return false;
+		return true;
 	}
 
 	private _rebuildRoutesProgress = new Map<number, RebuildRoutesStatus>();
