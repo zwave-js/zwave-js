@@ -52,7 +52,9 @@
   },
   "dependencies": {
     "alcalzone-shared": "^5.0.0",
-    "pathe": "^2.0.3"
+    "ky": "^1.8.1",
+    "pathe": "^2.0.3",
+    "undici": "^7.16.0"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",

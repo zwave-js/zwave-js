@@ -3,6 +3,7 @@ import { ZWaveError, ZWaveErrorCodes, gunzipSync } from "@zwave-js/core";
 import {
 	type BytesView,
 	getErrorMessage,
+	getHttpClient,
 	writeTextFile,
 } from "@zwave-js/shared";
 import type {
@@ -27,7 +28,7 @@ import semverMaxSatisfying from "semver/ranges/max-satisfying.js";
 export async function checkForConfigUpdates(
 	currentVersion: string,
 ): Promise<string | undefined> {
-	const { default: ky } = await import("ky");
+	const ky = await getHttpClient();
 	let registry: Record<string, unknown>;
 
 	try {
@@ -81,7 +82,7 @@ export async function installConfigUpdate(
 		configDir: string;
 	},
 ): Promise<void> {
-	const { default: ky } = await import("ky");
+	const ky = await getHttpClient();
 
 	let registryInfo: any;
 	try {

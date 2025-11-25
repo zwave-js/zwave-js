@@ -1,5 +1,5 @@
 import { digest } from "@zwave-js/core";
-import { Bytes, formatId } from "@zwave-js/shared";
+import { Bytes, formatId, getHttpClient } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { Driver } from "../driver/Driver.js";
 
@@ -52,7 +52,7 @@ export async function compileStatistics(
 export async function sendStatistics(
 	statistics: Record<string, any>,
 ): Promise<boolean | number> {
-	const { default: ky } = await import("ky");
+	const ky = await getHttpClient();
 
 	try {
 		const data = await ky
