@@ -75,9 +75,11 @@ integrationTest(
 			);
 
 			// Get the property numbers that are exposed
-			const exposedProperties = new Set(configValueIDs
-				.filter((v) => typeof v.property === "number")
-				.map((v) => v.property as number));
+			const exposedProperties = new Set(
+				configValueIDs
+					.filter((v) => typeof v.property === "number")
+					.map((v) => v.property as number),
+			);
 
 			// Visible parameters (1 and 3) should be exposed
 			t.expect(
