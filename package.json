@@ -136,6 +136,7 @@
     "release": "release-script",
     "release:all": "release-script --publish-all",
     "bootstrap": "./maintenance/bootstrap.sh",
+    "prepare": "husky",
     "config": "yarn ts packages/config/maintenance/importConfig.ts",
     "docs": "docsify serve docs",
     "docs:generate": "yarn docs:generate-examples && yarn docs:generate-imports && yarn docs:generate-cc-apis",
