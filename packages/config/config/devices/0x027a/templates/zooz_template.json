@@ -1137,11 +1137,12 @@
 		"description": "Disables dimming, locks brightness at 100% and sets all ramp rates to instant on/off."
 	},
 	"zen5x_external_switch_type_0-10": {
+		"label": "External Switch Type",
 		"valueSize": 1,
+		"unsigned": true,
 		"minValue": 0,
 		"maxValue": 10,
 		"defaultValue": 0,
-		"unsigned": true,
 		"allowManualEntry": false,
 		"options": [
 			{
