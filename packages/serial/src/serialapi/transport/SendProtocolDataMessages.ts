@@ -38,6 +38,8 @@ import {
 	buffer2hex,
 	getEnumMemberName,
 } from "@zwave-js/shared";
+import { clamp } from "alcalzone-shared/math";
+import { MAX_SEND_ATTEMPTS } from "./SendDataMessages.js";
 import {
 	encodeTXReport,
 	parseTXReport,
@@ -59,6 +61,7 @@ export type SendProtocolDataRequestOptions<
 	)
 	& {
 		protocolMetadata: BytesView;
+		maxSendAttempts?: number;
 	};
 
 @messageTypes(MessageType.Request, FunctionType.SendProtocolData)
@@ -103,6 +106,9 @@ export class SendProtocolDataRequest<CCType extends CommandClass = CommandClass>
 		}
 
 		this.protocolMetadata = options.protocolMetadata;
+		if (options.maxSendAttempts != undefined) {
+			this.maxSendAttempts = options.maxSendAttempts;
+		}
 	}
 
 	public static from(
@@ -164,6 +170,15 @@ export class SendProtocolDataRequest<CCType extends CommandClass = CommandClass>
 	}
 
 	public protocolMetadata: BytesView;
+
+	private _maxSendAttempts: number = 1;
+	/** The number of times the driver may try to send this message */
+	public get maxSendAttempts(): number {
+		return this._maxSendAttempts;
+	}
+	public set maxSendAttempts(value: number) {
+		this._maxSendAttempts = clamp(value, 1, MAX_SEND_ATTEMPTS);
+	}
 
 	public prepareRetransmission(): void {
 		this.command?.prepareRetransmission();
