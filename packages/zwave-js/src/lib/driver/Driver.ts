@@ -93,6 +93,7 @@ import {
 	type SupervisionResult,
 	SupervisionStatus,
 	type SupervisionUpdateHandler,
+	type TXReport,
 	TransactionState,
 	TransmitOptions,
 	TransmitStatus,
@@ -138,6 +139,7 @@ import {
 	SendProtocolDataRequest,
 	type SuccessIndicator,
 	TransferProtocolCCRequest,
+	TransmitReport,
 	XModemMessageHeaders,
 	type ZWaveSerialBindingFactory,
 	ZWaveSerialFrameType,
@@ -159,7 +161,6 @@ import {
 	EnterBootloaderRequest,
 	GetControllerVersionRequest,
 	MAX_SEND_ATTEMPTS,
-	ProtocolCCEncryptionStatus,
 	RequestProtocolCCEncryptionCallback,
 	RequestProtocolCCEncryptionRequest,
 	SendDataAbort,
@@ -181,6 +182,7 @@ import {
 	isSendData,
 	isSendDataSinglecast,
 	isSendDataTransmitReport,
+	isSendProtocolData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
 import {
@@ -909,6 +911,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private immediateQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
 	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
+	// A transaction queue that feeds into the protocol serial API queue
+	private protocolQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
+	// A parallel queue for protocol-level commands that can run alongside the serial API queue
+	private protocolSerialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initSerialAPIQueue()
 	// Timers for delayed transaction re-queuing
 	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
@@ -943,6 +949,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			name: "normal",
 			mayStartNextTransaction: (t) => this.mayStartTransaction(t),
 		});
+		this.protocolQueue = new TransactionQueue({
+			name: "protocol",
+			mayStartNextTransaction: (_t) => {
+				// Protocol transactions may always be started as long as the controller is ready
+				return this.controller.status === ControllerStatus.Ready;
+			},
+		});
 
 		this._queueIdle = false;
 
@@ -950,6 +963,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		for (const queue of this.queues) {
 			void this.drainTransactionQueue(queue);
 		}
+		// Drain the protocol transaction queue separately (it feeds into a different serial API queue)
+		void this.drainProtocolTransactionQueue();
 	}
 
 	private async destroyTransactionQueues(
@@ -981,6 +996,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		for (const queue of this.queues) {
 			queue.abort();
 		}
+
+		// Also destroy the protocol transaction queue
+		if (this.protocolQueue) {
+			this.protocolQueue.abort();
+		}
 	}
 
 	private _scheduler: TaskScheduler;
@@ -992,14 +1012,18 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	/** Used to immediately abort ongoing Serial API commands */
 	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
 
-	private initSerialAPIQueue(): void {
+	private initSerialAPIQueues(): void {
 		this.serialAPIQueue = new AsyncQueue();
 
 		// Start draining the queue
 		void this.drainSerialAPIQueue();
+
+		// Also initialize the protocol serial API queue
+		this.protocolSerialAPIQueue = new AsyncQueue();
+		void this.drainProtocolSerialAPIQueue();
 	}
 
-	private destroySerialAPIQueue(
+	private destroySerialAPIQueues(
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): void {
@@ -1015,6 +1039,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				errorCode ?? ZWaveErrorCodes.Driver_Destroyed,
 			),
 		);
+
+		// Also destroy the protocol serial API queue
+		if (this.protocolSerialAPIQueue) {
+			this.protocolSerialAPIQueue.abort();
+		}
 	}
 
 	// Keep track of which queues are currently busy
@@ -2022,7 +2051,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Create and start all queues after creating the controller instance
 		this.initTransactionQueues();
-		this.initSerialAPIQueue();
+		this.initSerialAPIQueues();
 
 		if (!this._options.testingHooks?.skipControllerIdentification) {
 			// Determine what the controller can do
@@ -3872,7 +3901,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			ZWaveErrorCodes.Driver_Destroyed,
 		);
 
-		this.destroySerialAPIQueue(
+		this.destroySerialAPIQueues(
 			"driver instance destroyed",
 			ZWaveErrorCodes.Driver_Destroyed,
 		);
@@ -3911,7 +3940,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			ZWaveErrorCodes.Driver_TaskRemoved,
 		);
 
-		this.destroySerialAPIQueue(
+		this.destroySerialAPIQueues(
 			"The controller instance is being destroyed",
 			ZWaveErrorCodes.Driver_TaskRemoved,
 		);
@@ -5383,6 +5412,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			frameType: "singlecast",
 			sourceNodeId: this.ownNodeId,
 		});
+		cc.nodeId = msg.destinationNodeId;
+
 		if (msg.useSupervision) {
 			cc = SupervisionCC.encapsulate(
 				cc,
@@ -5400,33 +5431,62 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			protocolMetadata: msg.protocolMetadata,
 		});
 
-		let sendResult: Message;
+		let sendResult: Message | undefined;
+		let txReport: TXReport | undefined;
 		try {
 			sendResult = await this.sendMessage(sendData, {
-				// The protocol wants this now
-				priority: MessagePriority.Immediate,
-				// TODO: Figure out if we want protocol level messages to update what we think of the node's status
+				// Protocol-level commands run in a separate queue
+				priority: MessagePriority.Protocol,
 				changeNodeStatusOnMissingACK: false,
+				// We need the TX report for the RPCCE callback
+				onTXReport: (report) => {
+					txReport = report;
+				},
 			});
 		} catch {
 			// SendData messages should not throw, so something must have gone terribly wrong
-			return;
+			// This will be treated as TransmitStatus.Fail
 		}
 
-		if (!isTransmitReport(sendResult)) {
+		let resp: RequestProtocolCCEncryptionCallback;
+		if (isTransmitReport(sendResult)) {
+			// Either we needed no Supervision, so this is the final result
+			// or sending failed. In either case, report this back to the controller
+			resp = new RequestProtocolCCEncryptionCallback({
+				transmitStatus: sendResult.transmitStatus,
+				txReport: hasTXReport(sendResult)
+					? sendResult.txReport
+					: undefined,
+				callbackId: msg.callbackId,
+			});
+		} else if (!txReport) {
 			// The message was not sent for some unknown reason
-			return;
+			resp = new RequestProtocolCCEncryptionCallback({
+				transmitStatus: TransmitStatus.Fail,
+				callbackId: msg.callbackId,
+			});
+		} else {
+			// For supervision, we don't actually need to know the result here.
+			// The entire point was to eliminate waiting for a potential SOS Nonce Report.
+			// Just report success.
+			// The message was not sent for some unknown reason
+			resp = new RequestProtocolCCEncryptionCallback({
+				transmitStatus: TransmitStatus.OK,
+				txReport,
+				callbackId: msg.callbackId,
+			});
 		}
 
-		// The message was sent and received a callback. Pass it to the Z-Wave module to finish this transaction.
-		const resp = new RequestProtocolCCEncryptionCallback({
-			transmitStatus: sendResult.transmitStatus,
-			txReport: hasTXReport(sendResult)
-				? sendResult.txReport
-				: undefined,
-			callbackId: msg.callbackId,
-		});
-		await this.sendMessage(resp).catch(noop);
+		// The current draft implementation expects TRANSMIT_COMPLETE_VERIFIED with some
+		// strange implications. Let's ignore this for now.
+		//
+		// const transmitStatus = (sendResult.transmitStatus === TransmitStatus.OK
+		// 	? 0x05 /* protocol expects TRANSMIT_COMPLETE_VERIFIED */
+		// 	: sendResult.transmitStatus) as TransmitStatus;
+
+		await this.sendMessage(resp, {
+			priority: MessagePriority.Protocol,
+		}).catch(noop);
 	}
 
 	/**
@@ -6575,6 +6635,11 @@ ${handlers.length} left`,
 					node.markAsAlive();
 				}
 			}
+		} else if (isSendProtocolData(msg)) {
+			// Make sure the onTXReport callback is being called
+			if (isTransmitReport(result) && hasTXReport(result)) {
+				options.onTXReport?.(result.txReport);
+			}
 		} else {
 			this._controller?.incrementStatistics("messagesTX");
 		}
@@ -6697,6 +6762,82 @@ ${handlers.length} left`,
 				this.markQueueBusy(queue, false);
 			});
 		}
+	}
+
+	/** Drains the protocol transaction queue (feeds into protocolSerialAPIQueue) */
+	private async drainProtocolTransactionQueue(): Promise<void> {
+		for await (const transaction of this.protocolQueue) {
+			let error: ZWaveError | undefined;
+			try {
+				await this.executeProtocolTransaction(transaction);
+			} catch (e) {
+				error = e as ZWaveError;
+			} finally {
+				this.protocolQueue.finalizeTransaction();
+			}
+
+			// Handle errors after clearing the current transaction
+			if (error) {
+				transaction.setProgress({
+					state: TransactionState.Failed,
+					reason: error.message,
+				});
+				transaction.abort(error);
+			}
+		}
+	}
+
+	/** Steps through the message generator of a protocol transaction. Throws an error if the transaction should fail. */
+	private async executeProtocolTransaction(
+		transaction: Transaction,
+	): Promise<void> {
+		let prevResult: Message | undefined;
+		let msg: Message | undefined;
+
+		transaction.start();
+		transaction.setProgress({ state: TransactionState.Active });
+
+		// Step through the transaction as long as it gives us a next message
+		while ((msg = await transaction.generateNextMessage(prevResult))) {
+			attemptMessage: for (let attemptNumber = 1;; attemptNumber++) {
+				try {
+					prevResult = await this.queueProtocolSerialAPICommand(
+						msg,
+						transaction.stack,
+					);
+					if (isTransmitReport(prevResult) && !prevResult.isOK()) {
+						throw new ZWaveError(
+							"The node did not acknowledge the command",
+							ZWaveErrorCodes.Controller_CallbackNOK,
+							prevResult,
+							transaction.stack,
+						);
+					}
+					// We got a result - it will be passed to the next iteration
+					break attemptMessage;
+				} catch (e: any) {
+					if (!isZWaveError(e)) {
+						throw createMessageDroppedUnexpectedError(e);
+					}
+
+					// Check if we should retry based on maxSendAttempts
+					if (
+						msg instanceof SendProtocolDataRequest
+						&& attemptNumber < msg.maxSendAttempts
+						&& e.code !== ZWaveErrorCodes.Controller_Timeout
+					) {
+						// Retry the command
+						continue attemptMessage;
+					}
+
+					// Sending the command failed, reject the transaction
+					throw e;
+				}
+			}
+		}
+
+		// This transaction completed successfully
+		transaction.setProgress({ state: TransactionState.Completed });
 	}
 
 	/** Steps through the message generator of a transaction. Throws an error if the transaction should fail. */
@@ -6920,6 +7061,65 @@ ${handlers.length} left`,
 	): Promise<Message | undefined> {
 		const result = createDeferredPromise<Message | undefined>();
 		this.serialAPIQueue.add({
+			msg,
+			transactionSource,
+			result,
+			[Symbol.dispose]: () => {
+				// Is called when the queue is aborted
+				result.reject(
+					new ZWaveError(
+						"The message has been removed from the queue",
+						ZWaveErrorCodes.Controller_MessageDropped,
+						undefined,
+						transactionSource,
+					),
+				);
+			},
+		});
+
+		return result;
+	}
+
+	/** Handles sequencing of queued protocol serial API commands (runs in parallel with the serial API queue) */
+	private async drainProtocolSerialAPIQueue(): Promise<void> {
+		for await (const item of this.protocolSerialAPIQueue) {
+			const { msg, transactionSource, result } = item;
+
+			// Attempt the command multiple times if necessary
+			attempts: for (let attempt = 1;; attempt++) {
+				try {
+					const ret = await this.executeSerialAPICommand(
+						msg,
+						transactionSource,
+					);
+					result.resolve(ret);
+				} catch (e) {
+					if (
+						isZWaveError(e)
+						&& e.code === ZWaveErrorCodes.Controller_MessageDropped
+						&& e.context === "CAN"
+						&& attempt < 3
+					) {
+						// Retry up to 3 times if there are serial collisions
+						await wait(100);
+						continue;
+					}
+
+					// In all other cases, reject the transaction
+					result.reject(e as Error);
+				}
+				break attempts;
+			}
+		}
+	}
+
+	/** Puts a message on the protocol serial API queue and returns or throws the command result */
+	private queueProtocolSerialAPICommand(
+		msg: Message,
+		transactionSource?: string,
+	): Promise<Message | undefined> {
+		const result = createDeferredPromise<Message | undefined>();
+		this.protocolSerialAPIQueue.add({
 			msg,
 			transactionSource,
 			result,
@@ -7175,7 +7375,9 @@ ${handlers.length} left`,
 	}
 
 	private getQueueForTransaction(t: Transaction): TransactionQueue {
-		if (
+		if (t.priority === MessagePriority.Protocol) {
+			return this.protocolQueue;
+		} else if (
 			t.priority === MessagePriority.Immediate
 			|| t.priority === MessagePriority.ControllerImmediate
 		) {
@@ -7247,6 +7449,8 @@ ${handlers.length} left`,
 			&& !(msg instanceof SendDataMulticastBridgeRequest)
 			// Nonces and responses to Supervision Get have to be sent immediately
 			&& options.priority !== MessagePriority.Immediate
+			// Protocol commands also have to be sent immediately
+			&& options.priority !== MessagePriority.Protocol
 		) {
 			if (options.priority === MessagePriority.NodeQuery) {
 				// Remember that this transaction was part of an interview
@@ -8458,7 +8662,9 @@ ${handlers.length} left`,
 	}
 
 	/** Computes the maximum payload size that can be transmitted with the given message */
-	public getMaxPayloadLength(msg: SendDataMessage): number {
+	public getMaxPayloadLength(
+		msg: SendDataMessage,
+	): number {
 		const nodeId = msg.getNodeId();
 
 		// For ZWLR, the result is simply the maximum payload size

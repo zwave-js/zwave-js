@@ -22,8 +22,14 @@ import {
 	parseTXReport,
 	priority,
 	serializableTXReportToTXReport,
+	txReportToMessageRecord,
 } from "@zwave-js/serial";
-import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	buffer2hex,
+	getEnumMemberName,
+} from "@zwave-js/shared";
 
 export enum ProtocolCCEncryptionStatus {
 	Started = 0x00,
@@ -203,7 +209,17 @@ export class RequestProtocolCCEncryptionCallback
 		return {
 			...super.toLogEntry(),
 			message: {
-				"callback id": this.callbackId!,
+				"callback id": this.callbackId ?? "(not set)",
+				"transmit status":
+					getEnumMemberName(TransmitStatus, this.transmitStatus)
+					+ (this.txReport
+						? `, took ${this.txReport.txTicks * 10} ms`
+						: ""),
+				// Show TX report fields for OK and NoAck (NoAck still provides useful routing info)
+				...(this.txReport && (this.transmitStatus === TransmitStatus.OK
+						|| this.transmitStatus === TransmitStatus.NoAck)
+					? txReportToMessageRecord(this.txReport)
+					: {}),
 			},
 		};
 	}
