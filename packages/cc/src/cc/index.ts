@@ -1741,535 +1741,554 @@ export {
 
 /* eslint-disable */
 export function registerCCs(): void {
-	void AlarmSensorCCValues,
-		AlarmSensorCC,
-		AlarmSensorCCReport,
-		AlarmSensorCCGet,
-		AlarmSensorCCSupportedReport,
-		AlarmSensorCCSupportedGet;
-	void ApplicationStatusCC,
-		ApplicationStatusCCBusy,
-		ApplicationStatusCCRejectedRequest;
-	void AssociationCCValues,
-		AssociationCC,
-		AssociationCCSet,
-		AssociationCCRemove,
-		AssociationCCReport,
-		AssociationCCGet,
-		AssociationCCSupportedGroupingsReport,
-		AssociationCCSupportedGroupingsGet,
-		AssociationCCSpecificGroupReport,
-		AssociationCCSpecificGroupGet;
-	void AssociationGroupInfoCCValues,
-		AssociationGroupInfoCC,
-		AssociationGroupInfoCCNameReport,
-		AssociationGroupInfoCCNameGet,
-		AssociationGroupInfoCCInfoReport,
-		AssociationGroupInfoCCInfoGet,
-		AssociationGroupInfoCCCommandListReport,
-		AssociationGroupInfoCCCommandListGet;
-	void BarrierOperatorCCValues,
-		BarrierOperatorCC,
-		BarrierOperatorCCSet,
-		BarrierOperatorCCReport,
-		BarrierOperatorCCGet,
-		BarrierOperatorCCSignalingCapabilitiesReport,
-		BarrierOperatorCCSignalingCapabilitiesGet,
-		BarrierOperatorCCEventSignalingSet,
-		BarrierOperatorCCEventSignalingReport,
-		BarrierOperatorCCEventSignalingGet;
-	void BasicCCValues, BasicCC, BasicCCSet, BasicCCReport, BasicCCGet;
-	void BasicWindowCoveringCCValues,
-		BasicWindowCoveringCC,
-		BasicWindowCoveringCCStartLevelChange,
-		BasicWindowCoveringCCStopLevelChange;
-	void BatteryCCValues,
-		BatteryCC,
-		BatteryCCReport,
-		BatteryCCGet,
-		BatteryCCHealthReport,
-		BatteryCCHealthGet;
-	void BinarySensorCCValues,
-		BinarySensorCC,
-		BinarySensorCCReport,
-		BinarySensorCCGet,
-		BinarySensorCCSupportedReport,
-		BinarySensorCCSupportedGet;
-	void BinarySwitchCCValues,
-		BinarySwitchCC,
-		BinarySwitchCCSet,
-		BinarySwitchCCReport,
-		BinarySwitchCCGet;
-	void CRC16CC, CRC16CCCommandEncapsulation;
-	void CentralSceneCCValues,
-		CentralSceneCC,
-		CentralSceneCCNotification,
-		CentralSceneCCSupportedReport,
-		CentralSceneCCSupportedGet,
-		CentralSceneCCConfigurationReport,
-		CentralSceneCCConfigurationGet,
-		CentralSceneCCConfigurationSet;
-	void ClimateControlScheduleCCValues,
-		ClimateControlScheduleCC,
-		ClimateControlScheduleCCSet,
-		ClimateControlScheduleCCReport,
-		ClimateControlScheduleCCGet,
-		ClimateControlScheduleCCChangedReport,
-		ClimateControlScheduleCCChangedGet,
-		ClimateControlScheduleCCOverrideReport,
-		ClimateControlScheduleCCOverrideGet,
-		ClimateControlScheduleCCOverrideSet;
-	void ClockCC, ClockCCSet, ClockCCReport, ClockCCGet;
-	void ColorSwitchCCValues,
-		ColorSwitchCC,
-		ColorSwitchCCSupportedReport,
-		ColorSwitchCCSupportedGet,
-		ColorSwitchCCReport,
-		ColorSwitchCCGet,
-		ColorSwitchCCSet,
-		ColorSwitchCCStartLevelChange,
-		ColorSwitchCCStopLevelChange;
-	void ConfigurationCCValues,
-		ConfigurationCC,
-		ConfigurationCCReport,
-		ConfigurationCCGet,
-		ConfigurationCCSet,
-		ConfigurationCCBulkSet,
-		ConfigurationCCBulkReport,
-		ConfigurationCCBulkGet,
-		ConfigurationCCNameReport,
-		ConfigurationCCNameGet,
-		ConfigurationCCInfoReport,
-		ConfigurationCCInfoGet,
-		ConfigurationCCPropertiesReport,
-		ConfigurationCCPropertiesGet,
-		ConfigurationCCDefaultReset;
-	void DeviceResetLocallyCC, DeviceResetLocallyCCNotification;
-	void DoorLockCCValues,
-		DoorLockCC,
-		DoorLockCCOperationSet,
-		DoorLockCCOperationReport,
-		DoorLockCCOperationGet,
-		DoorLockCCConfigurationReport,
-		DoorLockCCConfigurationGet,
-		DoorLockCCConfigurationSet,
-		DoorLockCCCapabilitiesReport,
-		DoorLockCCCapabilitiesGet;
-	void DoorLockLoggingCCValues,
-		DoorLockLoggingCC,
-		DoorLockLoggingCCRecordsSupportedReport,
-		DoorLockLoggingCCRecordsSupportedGet,
-		DoorLockLoggingCCRecordReport,
-		DoorLockLoggingCCRecordGet;
-	void EnergyProductionCCValues,
-		EnergyProductionCC,
-		EnergyProductionCCReport,
-		EnergyProductionCCGet;
-	void EntryControlCCValues,
-		EntryControlCC,
-		EntryControlCCNotification,
-		EntryControlCCKeySupportedReport,
-		EntryControlCCKeySupportedGet,
-		EntryControlCCEventSupportedReport,
-		EntryControlCCEventSupportedGet,
-		EntryControlCCConfigurationReport,
-		EntryControlCCConfigurationGet,
-		EntryControlCCConfigurationSet;
-	void FirmwareUpdateMetaDataCCValues,
-		FirmwareUpdateMetaDataCC,
-		FirmwareUpdateMetaDataCCMetaDataReport,
-		FirmwareUpdateMetaDataCCMetaDataGet,
-		FirmwareUpdateMetaDataCCRequestReport,
-		FirmwareUpdateMetaDataCCRequestGet,
-		FirmwareUpdateMetaDataCCGet,
-		FirmwareUpdateMetaDataCCReport,
-		FirmwareUpdateMetaDataCCStatusReport,
-		FirmwareUpdateMetaDataCCActivationReport,
-		FirmwareUpdateMetaDataCCActivationSet,
-		FirmwareUpdateMetaDataCCPrepareReport,
-		FirmwareUpdateMetaDataCCPrepareGet;
+	void AlarmSensorCCValues;
+	void AlarmSensorCC;
+	void AlarmSensorCCReport;
+	void AlarmSensorCCGet;
+	void AlarmSensorCCSupportedReport;
+	void AlarmSensorCCSupportedGet;
+	void ApplicationStatusCC;
+	void ApplicationStatusCCBusy;
+	void ApplicationStatusCCRejectedRequest;
+	void AssociationCCValues;
+	void AssociationCC;
+	void AssociationCCSet;
+	void AssociationCCRemove;
+	void AssociationCCReport;
+	void AssociationCCGet;
+	void AssociationCCSupportedGroupingsReport;
+	void AssociationCCSupportedGroupingsGet;
+	void AssociationCCSpecificGroupReport;
+	void AssociationCCSpecificGroupGet;
+	void AssociationGroupInfoCCValues;
+	void AssociationGroupInfoCC;
+	void AssociationGroupInfoCCNameReport;
+	void AssociationGroupInfoCCNameGet;
+	void AssociationGroupInfoCCInfoReport;
+	void AssociationGroupInfoCCInfoGet;
+	void AssociationGroupInfoCCCommandListReport;
+	void AssociationGroupInfoCCCommandListGet;
+	void BarrierOperatorCCValues;
+	void BarrierOperatorCC;
+	void BarrierOperatorCCSet;
+	void BarrierOperatorCCReport;
+	void BarrierOperatorCCGet;
+	void BarrierOperatorCCSignalingCapabilitiesReport;
+	void BarrierOperatorCCSignalingCapabilitiesGet;
+	void BarrierOperatorCCEventSignalingSet;
+	void BarrierOperatorCCEventSignalingReport;
+	void BarrierOperatorCCEventSignalingGet;
+	void BasicCCValues;
+	void BasicCC;
+	void BasicCCSet;
+	void BasicCCReport;
+	void BasicCCGet;
+	void BasicWindowCoveringCCValues;
+	void BasicWindowCoveringCC;
+	void BasicWindowCoveringCCStartLevelChange;
+	void BasicWindowCoveringCCStopLevelChange;
+	void BatteryCCValues;
+	void BatteryCC;
+	void BatteryCCReport;
+	void BatteryCCGet;
+	void BatteryCCHealthReport;
+	void BatteryCCHealthGet;
+	void BinarySensorCCValues;
+	void BinarySensorCC;
+	void BinarySensorCCReport;
+	void BinarySensorCCGet;
+	void BinarySensorCCSupportedReport;
+	void BinarySensorCCSupportedGet;
+	void BinarySwitchCCValues;
+	void BinarySwitchCC;
+	void BinarySwitchCCSet;
+	void BinarySwitchCCReport;
+	void BinarySwitchCCGet;
+	void CRC16CC;
+	void CRC16CCCommandEncapsulation;
+	void CentralSceneCCValues;
+	void CentralSceneCC;
+	void CentralSceneCCNotification;
+	void CentralSceneCCSupportedReport;
+	void CentralSceneCCSupportedGet;
+	void CentralSceneCCConfigurationReport;
+	void CentralSceneCCConfigurationGet;
+	void CentralSceneCCConfigurationSet;
+	void ClimateControlScheduleCCValues;
+	void ClimateControlScheduleCC;
+	void ClimateControlScheduleCCSet;
+	void ClimateControlScheduleCCReport;
+	void ClimateControlScheduleCCGet;
+	void ClimateControlScheduleCCChangedReport;
+	void ClimateControlScheduleCCChangedGet;
+	void ClimateControlScheduleCCOverrideReport;
+	void ClimateControlScheduleCCOverrideGet;
+	void ClimateControlScheduleCCOverrideSet;
+	void ClockCC;
+	void ClockCCSet;
+	void ClockCCReport;
+	void ClockCCGet;
+	void ColorSwitchCCValues;
+	void ColorSwitchCC;
+	void ColorSwitchCCSupportedReport;
+	void ColorSwitchCCSupportedGet;
+	void ColorSwitchCCReport;
+	void ColorSwitchCCGet;
+	void ColorSwitchCCSet;
+	void ColorSwitchCCStartLevelChange;
+	void ColorSwitchCCStopLevelChange;
+	void ConfigurationCCValues;
+	void ConfigurationCC;
+	void ConfigurationCCReport;
+	void ConfigurationCCGet;
+	void ConfigurationCCSet;
+	void ConfigurationCCBulkSet;
+	void ConfigurationCCBulkReport;
+	void ConfigurationCCBulkGet;
+	void ConfigurationCCNameReport;
+	void ConfigurationCCNameGet;
+	void ConfigurationCCInfoReport;
+	void ConfigurationCCInfoGet;
+	void ConfigurationCCPropertiesReport;
+	void ConfigurationCCPropertiesGet;
+	void ConfigurationCCDefaultReset;
+	void DeviceResetLocallyCC;
+	void DeviceResetLocallyCCNotification;
+	void DoorLockCCValues;
+	void DoorLockCC;
+	void DoorLockCCOperationSet;
+	void DoorLockCCOperationReport;
+	void DoorLockCCOperationGet;
+	void DoorLockCCConfigurationReport;
+	void DoorLockCCConfigurationGet;
+	void DoorLockCCConfigurationSet;
+	void DoorLockCCCapabilitiesReport;
+	void DoorLockCCCapabilitiesGet;
+	void DoorLockLoggingCCValues;
+	void DoorLockLoggingCC;
+	void DoorLockLoggingCCRecordsSupportedReport;
+	void DoorLockLoggingCCRecordsSupportedGet;
+	void DoorLockLoggingCCRecordReport;
+	void DoorLockLoggingCCRecordGet;
+	void EnergyProductionCCValues;
+	void EnergyProductionCC;
+	void EnergyProductionCCReport;
+	void EnergyProductionCCGet;
+	void EntryControlCCValues;
+	void EntryControlCC;
+	void EntryControlCCNotification;
+	void EntryControlCCKeySupportedReport;
+	void EntryControlCCKeySupportedGet;
+	void EntryControlCCEventSupportedReport;
+	void EntryControlCCEventSupportedGet;
+	void EntryControlCCConfigurationReport;
+	void EntryControlCCConfigurationGet;
+	void EntryControlCCConfigurationSet;
+	void FirmwareUpdateMetaDataCCValues;
+	void FirmwareUpdateMetaDataCC;
+	void FirmwareUpdateMetaDataCCMetaDataReport;
+	void FirmwareUpdateMetaDataCCMetaDataGet;
+	void FirmwareUpdateMetaDataCCRequestReport;
+	void FirmwareUpdateMetaDataCCRequestGet;
+	void FirmwareUpdateMetaDataCCGet;
+	void FirmwareUpdateMetaDataCCReport;
+	void FirmwareUpdateMetaDataCCStatusReport;
+	void FirmwareUpdateMetaDataCCActivationReport;
+	void FirmwareUpdateMetaDataCCActivationSet;
+	void FirmwareUpdateMetaDataCCPrepareReport;
+	void FirmwareUpdateMetaDataCCPrepareGet;
 	void HailCC;
-	void HumidityControlModeCCValues,
-		HumidityControlModeCC,
-		HumidityControlModeCCSet,
-		HumidityControlModeCCReport,
-		HumidityControlModeCCGet,
-		HumidityControlModeCCSupportedReport,
-		HumidityControlModeCCSupportedGet;
-	void HumidityControlOperatingStateCCValues,
-		HumidityControlOperatingStateCC,
-		HumidityControlOperatingStateCCReport,
-		HumidityControlOperatingStateCCGet;
-	void HumidityControlSetpointCCValues,
-		HumidityControlSetpointCC,
-		HumidityControlSetpointCCSet,
-		HumidityControlSetpointCCReport,
-		HumidityControlSetpointCCGet,
-		HumidityControlSetpointCCSupportedReport,
-		HumidityControlSetpointCCSupportedGet,
-		HumidityControlSetpointCCScaleSupportedReport,
-		HumidityControlSetpointCCScaleSupportedGet,
-		HumidityControlSetpointCCCapabilitiesReport,
-		HumidityControlSetpointCCCapabilitiesGet;
-	void InclusionControllerCC,
-		InclusionControllerCCComplete,
-		InclusionControllerCCInitiate;
-	void IndicatorCCValues,
-		IndicatorCC,
-		IndicatorCCSet,
-		IndicatorCCReport,
-		IndicatorCCGet,
-		IndicatorCCSupportedReport,
-		IndicatorCCSupportedGet,
-		IndicatorCCDescriptionReport,
-		IndicatorCCDescriptionGet;
-	void IrrigationCCValues,
-		IrrigationCC,
-		IrrigationCCSystemInfoReport,
-		IrrigationCCSystemInfoGet,
-		IrrigationCCSystemStatusReport,
-		IrrigationCCSystemStatusGet,
-		IrrigationCCSystemConfigSet,
-		IrrigationCCSystemConfigReport,
-		IrrigationCCSystemConfigGet,
-		IrrigationCCValveInfoReport,
-		IrrigationCCValveInfoGet,
-		IrrigationCCValveConfigSet,
-		IrrigationCCValveConfigReport,
-		IrrigationCCValveConfigGet,
-		IrrigationCCValveRun,
-		IrrigationCCValveTableSet,
-		IrrigationCCValveTableReport,
-		IrrigationCCValveTableGet,
-		IrrigationCCValveTableRun,
-		IrrigationCCSystemShutoff;
-	void LanguageCCValues,
-		LanguageCC,
-		LanguageCCSet,
-		LanguageCCReport,
-		LanguageCCGet;
-	void LockCCValues, LockCC, LockCCSet, LockCCReport, LockCCGet;
+	void HumidityControlModeCCValues;
+	void HumidityControlModeCC;
+	void HumidityControlModeCCSet;
+	void HumidityControlModeCCReport;
+	void HumidityControlModeCCGet;
+	void HumidityControlModeCCSupportedReport;
+	void HumidityControlModeCCSupportedGet;
+	void HumidityControlOperatingStateCCValues;
+	void HumidityControlOperatingStateCC;
+	void HumidityControlOperatingStateCCReport;
+	void HumidityControlOperatingStateCCGet;
+	void HumidityControlSetpointCCValues;
+	void HumidityControlSetpointCC;
+	void HumidityControlSetpointCCSet;
+	void HumidityControlSetpointCCReport;
+	void HumidityControlSetpointCCGet;
+	void HumidityControlSetpointCCSupportedReport;
+	void HumidityControlSetpointCCSupportedGet;
+	void HumidityControlSetpointCCScaleSupportedReport;
+	void HumidityControlSetpointCCScaleSupportedGet;
+	void HumidityControlSetpointCCCapabilitiesReport;
+	void HumidityControlSetpointCCCapabilitiesGet;
+	void InclusionControllerCC;
+	void InclusionControllerCCComplete;
+	void InclusionControllerCCInitiate;
+	void IndicatorCCValues;
+	void IndicatorCC;
+	void IndicatorCCSet;
+	void IndicatorCCReport;
+	void IndicatorCCGet;
+	void IndicatorCCSupportedReport;
+	void IndicatorCCSupportedGet;
+	void IndicatorCCDescriptionReport;
+	void IndicatorCCDescriptionGet;
+	void IrrigationCCValues;
+	void IrrigationCC;
+	void IrrigationCCSystemInfoReport;
+	void IrrigationCCSystemInfoGet;
+	void IrrigationCCSystemStatusReport;
+	void IrrigationCCSystemStatusGet;
+	void IrrigationCCSystemConfigSet;
+	void IrrigationCCSystemConfigReport;
+	void IrrigationCCSystemConfigGet;
+	void IrrigationCCValveInfoReport;
+	void IrrigationCCValveInfoGet;
+	void IrrigationCCValveConfigSet;
+	void IrrigationCCValveConfigReport;
+	void IrrigationCCValveConfigGet;
+	void IrrigationCCValveRun;
+	void IrrigationCCValveTableSet;
+	void IrrigationCCValveTableReport;
+	void IrrigationCCValveTableGet;
+	void IrrigationCCValveTableRun;
+	void IrrigationCCSystemShutoff;
+	void LanguageCCValues;
+	void LanguageCC;
+	void LanguageCCSet;
+	void LanguageCCReport;
+	void LanguageCCGet;
+	void LockCCValues;
+	void LockCC;
+	void LockCCSet;
+	void LockCCReport;
+	void LockCCGet;
 	void ManufacturerProprietaryCC;
-	void ManufacturerSpecificCCValues,
-		ManufacturerSpecificCC,
-		ManufacturerSpecificCCReport,
-		ManufacturerSpecificCCGet,
-		ManufacturerSpecificCCDeviceSpecificReport,
-		ManufacturerSpecificCCDeviceSpecificGet;
-	void MeterCCValues,
-		MeterCC,
-		MeterCCReport,
-		MeterCCGet,
-		MeterCCSupportedReport,
-		MeterCCSupportedGet,
-		MeterCCReset;
-	void MultiChannelAssociationCCValues,
-		MultiChannelAssociationCC,
-		MultiChannelAssociationCCSet,
-		MultiChannelAssociationCCRemove,
-		MultiChannelAssociationCCReport,
-		MultiChannelAssociationCCGet,
-		MultiChannelAssociationCCSupportedGroupingsReport,
-		MultiChannelAssociationCCSupportedGroupingsGet;
-	void MultiChannelCCValues,
-		MultiChannelCC,
-		MultiChannelCCEndPointReport,
-		MultiChannelCCEndPointGet,
-		MultiChannelCCCapabilityReport,
-		MultiChannelCCCapabilityGet,
-		MultiChannelCCEndPointFindReport,
-		MultiChannelCCEndPointFind,
-		MultiChannelCCAggregatedMembersReport,
-		MultiChannelCCAggregatedMembersGet,
-		MultiChannelCCCommandEncapsulation,
-		MultiChannelCCV1Report,
-		MultiChannelCCV1Get,
-		MultiChannelCCV1CommandEncapsulation;
-	void MultiCommandCC, MultiCommandCCCommandEncapsulation;
-	void MultilevelSensorCCValues,
-		MultilevelSensorCC,
-		MultilevelSensorCCReport,
-		MultilevelSensorCCGet,
-		MultilevelSensorCCSupportedSensorReport,
-		MultilevelSensorCCGetSupportedSensor,
-		MultilevelSensorCCSupportedScaleReport,
-		MultilevelSensorCCGetSupportedScale;
-	void MultilevelSwitchCCValues,
-		MultilevelSwitchCC,
-		MultilevelSwitchCCSet,
-		MultilevelSwitchCCReport,
-		MultilevelSwitchCCGet,
-		MultilevelSwitchCCStartLevelChange,
-		MultilevelSwitchCCStopLevelChange,
-		MultilevelSwitchCCSupportedReport,
-		MultilevelSwitchCCSupportedGet;
+	void ManufacturerSpecificCCValues;
+	void ManufacturerSpecificCC;
+	void ManufacturerSpecificCCReport;
+	void ManufacturerSpecificCCGet;
+	void ManufacturerSpecificCCDeviceSpecificReport;
+	void ManufacturerSpecificCCDeviceSpecificGet;
+	void MeterCCValues;
+	void MeterCC;
+	void MeterCCReport;
+	void MeterCCGet;
+	void MeterCCSupportedReport;
+	void MeterCCSupportedGet;
+	void MeterCCReset;
+	void MultiChannelAssociationCCValues;
+	void MultiChannelAssociationCC;
+	void MultiChannelAssociationCCSet;
+	void MultiChannelAssociationCCRemove;
+	void MultiChannelAssociationCCReport;
+	void MultiChannelAssociationCCGet;
+	void MultiChannelAssociationCCSupportedGroupingsReport;
+	void MultiChannelAssociationCCSupportedGroupingsGet;
+	void MultiChannelCCValues;
+	void MultiChannelCC;
+	void MultiChannelCCEndPointReport;
+	void MultiChannelCCEndPointGet;
+	void MultiChannelCCCapabilityReport;
+	void MultiChannelCCCapabilityGet;
+	void MultiChannelCCEndPointFindReport;
+	void MultiChannelCCEndPointFind;
+	void MultiChannelCCAggregatedMembersReport;
+	void MultiChannelCCAggregatedMembersGet;
+	void MultiChannelCCCommandEncapsulation;
+	void MultiChannelCCV1Report;
+	void MultiChannelCCV1Get;
+	void MultiChannelCCV1CommandEncapsulation;
+	void MultiCommandCC;
+	void MultiCommandCCCommandEncapsulation;
+	void MultilevelSensorCCValues;
+	void MultilevelSensorCC;
+	void MultilevelSensorCCReport;
+	void MultilevelSensorCCGet;
+	void MultilevelSensorCCSupportedSensorReport;
+	void MultilevelSensorCCGetSupportedSensor;
+	void MultilevelSensorCCSupportedScaleReport;
+	void MultilevelSensorCCGetSupportedScale;
+	void MultilevelSwitchCCValues;
+	void MultilevelSwitchCC;
+	void MultilevelSwitchCCSet;
+	void MultilevelSwitchCCReport;
+	void MultilevelSwitchCCGet;
+	void MultilevelSwitchCCStartLevelChange;
+	void MultilevelSwitchCCStopLevelChange;
+	void MultilevelSwitchCCSupportedReport;
+	void MultilevelSwitchCCSupportedGet;
 	void NoOperationCC;
-	void NodeNamingAndLocationCCValues,
-		NodeNamingAndLocationCC,
-		NodeNamingAndLocationCCNameSet,
-		NodeNamingAndLocationCCNameReport,
-		NodeNamingAndLocationCCNameGet,
-		NodeNamingAndLocationCCLocationSet,
-		NodeNamingAndLocationCCLocationReport,
-		NodeNamingAndLocationCCLocationGet;
-	void NotificationCCValues,
-		NotificationCC,
-		NotificationCCSet,
-		NotificationCCReport,
-		NotificationCCGet,
-		NotificationCCSupportedReport,
-		NotificationCCSupportedGet,
-		NotificationCCEventSupportedReport,
-		NotificationCCEventSupportedGet;
-	void PowerlevelCC,
-		PowerlevelCCSet,
-		PowerlevelCCReport,
-		PowerlevelCCGet,
-		PowerlevelCCTestNodeSet,
-		PowerlevelCCTestNodeReport,
-		PowerlevelCCTestNodeGet;
-	void ProtectionCCValues,
-		ProtectionCC,
-		ProtectionCCSet,
-		ProtectionCCReport,
-		ProtectionCCGet,
-		ProtectionCCSupportedReport,
-		ProtectionCCSupportedGet,
-		ProtectionCCExclusiveControlReport,
-		ProtectionCCExclusiveControlGet,
-		ProtectionCCExclusiveControlSet,
-		ProtectionCCTimeoutReport,
-		ProtectionCCTimeoutGet,
-		ProtectionCCTimeoutSet;
-	void SceneActivationCCValues, SceneActivationCC, SceneActivationCCSet;
-	void SceneActuatorConfigurationCCValues,
-		SceneActuatorConfigurationCC,
-		SceneActuatorConfigurationCCSet,
-		SceneActuatorConfigurationCCReport,
-		SceneActuatorConfigurationCCGet;
-	void SceneControllerConfigurationCCValues,
-		SceneControllerConfigurationCC,
-		SceneControllerConfigurationCCSet,
-		SceneControllerConfigurationCCReport,
-		SceneControllerConfigurationCCGet;
-	void ScheduleEntryLockCCValues,
-		ScheduleEntryLockCC,
-		ScheduleEntryLockCCEnableSet,
-		ScheduleEntryLockCCEnableAllSet,
-		ScheduleEntryLockCCSupportedReport,
-		ScheduleEntryLockCCSupportedGet,
-		ScheduleEntryLockCCWeekDayScheduleSet,
-		ScheduleEntryLockCCWeekDayScheduleReport,
-		ScheduleEntryLockCCWeekDayScheduleGet,
-		ScheduleEntryLockCCYearDayScheduleSet,
-		ScheduleEntryLockCCYearDayScheduleReport,
-		ScheduleEntryLockCCYearDayScheduleGet,
-		ScheduleEntryLockCCTimeOffsetSet,
-		ScheduleEntryLockCCTimeOffsetReport,
-		ScheduleEntryLockCCTimeOffsetGet,
-		ScheduleEntryLockCCDailyRepeatingScheduleSet,
-		ScheduleEntryLockCCDailyRepeatingScheduleReport,
-		ScheduleEntryLockCCDailyRepeatingScheduleGet;
-	void Security2CC,
-		Security2CCMessageEncapsulation,
-		Security2CCNonceReport,
-		Security2CCNonceGet,
-		Security2CCKEXReport,
-		Security2CCKEXGet,
-		Security2CCKEXSet,
-		Security2CCKEXFail,
-		Security2CCPublicKeyReport,
-		Security2CCNetworkKeyReport,
-		Security2CCNetworkKeyGet,
-		Security2CCNetworkKeyVerify,
-		Security2CCTransferEnd,
-		Security2CCCommandsSupportedReport,
-		Security2CCCommandsSupportedGet;
-	void SecurityCC,
-		SecurityCCNonceReport,
-		SecurityCCNonceGet,
-		SecurityCCCommandEncapsulation,
-		SecurityCCCommandEncapsulationNonceGet,
-		SecurityCCSchemeReport,
-		SecurityCCSchemeGet,
-		SecurityCCSchemeInherit,
-		SecurityCCNetworkKeyVerify,
-		SecurityCCNetworkKeySet,
-		SecurityCCCommandsSupportedReport,
-		SecurityCCCommandsSupportedGet;
-	void SoundSwitchCCValues,
-		SoundSwitchCC,
-		SoundSwitchCCTonesNumberReport,
-		SoundSwitchCCTonesNumberGet,
-		SoundSwitchCCToneInfoReport,
-		SoundSwitchCCToneInfoGet,
-		SoundSwitchCCConfigurationSet,
-		SoundSwitchCCConfigurationReport,
-		SoundSwitchCCConfigurationGet,
-		SoundSwitchCCTonePlaySet,
-		SoundSwitchCCTonePlayReport,
-		SoundSwitchCCTonePlayGet;
-	void SupervisionCCValues,
-		SupervisionCC,
-		SupervisionCCReport,
-		SupervisionCCGet;
-	void ThermostatFanModeCCValues,
-		ThermostatFanModeCC,
-		ThermostatFanModeCCSet,
-		ThermostatFanModeCCReport,
-		ThermostatFanModeCCGet,
-		ThermostatFanModeCCSupportedReport,
-		ThermostatFanModeCCSupportedGet;
-	void ThermostatFanStateCCValues,
-		ThermostatFanStateCC,
-		ThermostatFanStateCCReport,
-		ThermostatFanStateCCGet;
-	void ThermostatModeCCValues,
-		ThermostatModeCC,
-		ThermostatModeCCSet,
-		ThermostatModeCCReport,
-		ThermostatModeCCGet,
-		ThermostatModeCCSupportedReport,
-		ThermostatModeCCSupportedGet;
-	void ThermostatOperatingStateCCValues,
-		ThermostatOperatingStateCC,
-		ThermostatOperatingStateCCReport,
-		ThermostatOperatingStateCCGet;
-	void ThermostatSetbackCC,
-		ThermostatSetbackCCSet,
-		ThermostatSetbackCCReport,
-		ThermostatSetbackCCGet;
-	void ThermostatSetpointCCValues,
-		ThermostatSetpointCC,
-		ThermostatSetpointCCSet,
-		ThermostatSetpointCCReport,
-		ThermostatSetpointCCGet,
-		ThermostatSetpointCCCapabilitiesReport,
-		ThermostatSetpointCCCapabilitiesGet,
-		ThermostatSetpointCCSupportedReport,
-		ThermostatSetpointCCSupportedGet;
-	void TimeCC,
-		TimeCCTimeReport,
-		TimeCCTimeGet,
-		TimeCCDateReport,
-		TimeCCDateGet,
-		TimeCCTimeOffsetSet,
-		TimeCCTimeOffsetReport,
-		TimeCCTimeOffsetGet;
-	void TimeParametersCCValues,
-		TimeParametersCC,
-		TimeParametersCCReport,
-		TimeParametersCCGet,
-		TimeParametersCCSet;
-	void TransportServiceTimeouts,
-		TransportServiceCC,
-		isTransportServiceEncapsulation,
-		TransportServiceCCFirstSegment,
-		TransportServiceCCSubsequentSegment,
-		TransportServiceCCSegmentRequest,
-		TransportServiceCCSegmentComplete,
-		TransportServiceCCSegmentWait;
-	void UserCodeCCValues,
-		UserCodeCC,
-		UserCodeCCSet,
-		UserCodeCCReport,
-		UserCodeCCGet,
-		UserCodeCCUsersNumberReport,
-		UserCodeCCUsersNumberGet,
-		UserCodeCCCapabilitiesReport,
-		UserCodeCCCapabilitiesGet,
-		UserCodeCCKeypadModeSet,
-		UserCodeCCKeypadModeReport,
-		UserCodeCCKeypadModeGet,
-		UserCodeCCAdminCodeSet,
-		UserCodeCCAdminCodeReport,
-		UserCodeCCAdminCodeGet,
-		UserCodeCCUserCodeChecksumReport,
-		UserCodeCCUserCodeChecksumGet,
-		UserCodeCCExtendedUserCodeSet,
-		UserCodeCCExtendedUserCodeReport,
-		UserCodeCCExtendedUserCodeGet;
-	void VersionCCValues,
-		VersionCC,
-		VersionCCReport,
-		VersionCCGet,
-		VersionCCCommandClassReport,
-		VersionCCCommandClassGet,
-		VersionCCCapabilitiesReport,
-		VersionCCCapabilitiesGet,
-		VersionCCZWaveSoftwareReport,
-		VersionCCZWaveSoftwareGet;
-	void WakeUpCCValues,
-		WakeUpCC,
-		WakeUpCCIntervalSet,
-		WakeUpCCIntervalReport,
-		WakeUpCCIntervalGet,
-		WakeUpCCWakeUpNotification,
-		WakeUpCCNoMoreInformation,
-		WakeUpCCIntervalCapabilitiesReport,
-		WakeUpCCIntervalCapabilitiesGet;
-	void WindowCoveringCCValues,
-		WindowCoveringCC,
-		WindowCoveringCCSupportedReport,
-		WindowCoveringCCSupportedGet,
-		WindowCoveringCCReport,
-		WindowCoveringCCGet,
-		WindowCoveringCCSet,
-		WindowCoveringCCStartLevelChange,
-		WindowCoveringCCStopLevelChange;
+	void NodeNamingAndLocationCCValues;
+	void NodeNamingAndLocationCC;
+	void NodeNamingAndLocationCCNameSet;
+	void NodeNamingAndLocationCCNameReport;
+	void NodeNamingAndLocationCCNameGet;
+	void NodeNamingAndLocationCCLocationSet;
+	void NodeNamingAndLocationCCLocationReport;
+	void NodeNamingAndLocationCCLocationGet;
+	void NotificationCCValues;
+	void NotificationCC;
+	void NotificationCCSet;
+	void NotificationCCReport;
+	void NotificationCCGet;
+	void NotificationCCSupportedReport;
+	void NotificationCCSupportedGet;
+	void NotificationCCEventSupportedReport;
+	void NotificationCCEventSupportedGet;
+	void PowerlevelCC;
+	void PowerlevelCCSet;
+	void PowerlevelCCReport;
+	void PowerlevelCCGet;
+	void PowerlevelCCTestNodeSet;
+	void PowerlevelCCTestNodeReport;
+	void PowerlevelCCTestNodeGet;
+	void ProtectionCCValues;
+	void ProtectionCC;
+	void ProtectionCCSet;
+	void ProtectionCCReport;
+	void ProtectionCCGet;
+	void ProtectionCCSupportedReport;
+	void ProtectionCCSupportedGet;
+	void ProtectionCCExclusiveControlReport;
+	void ProtectionCCExclusiveControlGet;
+	void ProtectionCCExclusiveControlSet;
+	void ProtectionCCTimeoutReport;
+	void ProtectionCCTimeoutGet;
+	void ProtectionCCTimeoutSet;
+	void SceneActivationCCValues;
+	void SceneActivationCC;
+	void SceneActivationCCSet;
+	void SceneActuatorConfigurationCCValues;
+	void SceneActuatorConfigurationCC;
+	void SceneActuatorConfigurationCCSet;
+	void SceneActuatorConfigurationCCReport;
+	void SceneActuatorConfigurationCCGet;
+	void SceneControllerConfigurationCCValues;
+	void SceneControllerConfigurationCC;
+	void SceneControllerConfigurationCCSet;
+	void SceneControllerConfigurationCCReport;
+	void SceneControllerConfigurationCCGet;
+	void ScheduleEntryLockCCValues;
+	void ScheduleEntryLockCC;
+	void ScheduleEntryLockCCEnableSet;
+	void ScheduleEntryLockCCEnableAllSet;
+	void ScheduleEntryLockCCSupportedReport;
+	void ScheduleEntryLockCCSupportedGet;
+	void ScheduleEntryLockCCWeekDayScheduleSet;
+	void ScheduleEntryLockCCWeekDayScheduleReport;
+	void ScheduleEntryLockCCWeekDayScheduleGet;
+	void ScheduleEntryLockCCYearDayScheduleSet;
+	void ScheduleEntryLockCCYearDayScheduleReport;
+	void ScheduleEntryLockCCYearDayScheduleGet;
+	void ScheduleEntryLockCCTimeOffsetSet;
+	void ScheduleEntryLockCCTimeOffsetReport;
+	void ScheduleEntryLockCCTimeOffsetGet;
+	void ScheduleEntryLockCCDailyRepeatingScheduleSet;
+	void ScheduleEntryLockCCDailyRepeatingScheduleReport;
+	void ScheduleEntryLockCCDailyRepeatingScheduleGet;
+	void Security2CC;
+	void Security2CCMessageEncapsulation;
+	void Security2CCNonceReport;
+	void Security2CCNonceGet;
+	void Security2CCKEXReport;
+	void Security2CCKEXGet;
+	void Security2CCKEXSet;
+	void Security2CCKEXFail;
+	void Security2CCPublicKeyReport;
+	void Security2CCNetworkKeyReport;
+	void Security2CCNetworkKeyGet;
+	void Security2CCNetworkKeyVerify;
+	void Security2CCTransferEnd;
+	void Security2CCCommandsSupportedReport;
+	void Security2CCCommandsSupportedGet;
+	void SecurityCC;
+	void SecurityCCNonceReport;
+	void SecurityCCNonceGet;
+	void SecurityCCCommandEncapsulation;
+	void SecurityCCCommandEncapsulationNonceGet;
+	void SecurityCCSchemeReport;
+	void SecurityCCSchemeGet;
+	void SecurityCCSchemeInherit;
+	void SecurityCCNetworkKeyVerify;
+	void SecurityCCNetworkKeySet;
+	void SecurityCCCommandsSupportedReport;
+	void SecurityCCCommandsSupportedGet;
+	void SoundSwitchCCValues;
+	void SoundSwitchCC;
+	void SoundSwitchCCTonesNumberReport;
+	void SoundSwitchCCTonesNumberGet;
+	void SoundSwitchCCToneInfoReport;
+	void SoundSwitchCCToneInfoGet;
+	void SoundSwitchCCConfigurationSet;
+	void SoundSwitchCCConfigurationReport;
+	void SoundSwitchCCConfigurationGet;
+	void SoundSwitchCCTonePlaySet;
+	void SoundSwitchCCTonePlayReport;
+	void SoundSwitchCCTonePlayGet;
+	void SupervisionCCValues;
+	void SupervisionCC;
+	void SupervisionCCReport;
+	void SupervisionCCGet;
+	void ThermostatFanModeCCValues;
+	void ThermostatFanModeCC;
+	void ThermostatFanModeCCSet;
+	void ThermostatFanModeCCReport;
+	void ThermostatFanModeCCGet;
+	void ThermostatFanModeCCSupportedReport;
+	void ThermostatFanModeCCSupportedGet;
+	void ThermostatFanStateCCValues;
+	void ThermostatFanStateCC;
+	void ThermostatFanStateCCReport;
+	void ThermostatFanStateCCGet;
+	void ThermostatModeCCValues;
+	void ThermostatModeCC;
+	void ThermostatModeCCSet;
+	void ThermostatModeCCReport;
+	void ThermostatModeCCGet;
+	void ThermostatModeCCSupportedReport;
+	void ThermostatModeCCSupportedGet;
+	void ThermostatOperatingStateCCValues;
+	void ThermostatOperatingStateCC;
+	void ThermostatOperatingStateCCReport;
+	void ThermostatOperatingStateCCGet;
+	void ThermostatSetbackCC;
+	void ThermostatSetbackCCSet;
+	void ThermostatSetbackCCReport;
+	void ThermostatSetbackCCGet;
+	void ThermostatSetpointCCValues;
+	void ThermostatSetpointCC;
+	void ThermostatSetpointCCSet;
+	void ThermostatSetpointCCReport;
+	void ThermostatSetpointCCGet;
+	void ThermostatSetpointCCCapabilitiesReport;
+	void ThermostatSetpointCCCapabilitiesGet;
+	void ThermostatSetpointCCSupportedReport;
+	void ThermostatSetpointCCSupportedGet;
+	void TimeCC;
+	void TimeCCTimeReport;
+	void TimeCCTimeGet;
+	void TimeCCDateReport;
+	void TimeCCDateGet;
+	void TimeCCTimeOffsetSet;
+	void TimeCCTimeOffsetReport;
+	void TimeCCTimeOffsetGet;
+	void TimeParametersCCValues;
+	void TimeParametersCC;
+	void TimeParametersCCReport;
+	void TimeParametersCCGet;
+	void TimeParametersCCSet;
+	void TransportServiceTimeouts;
+	void TransportServiceCC;
+	void isTransportServiceEncapsulation;
+	void TransportServiceCCFirstSegment;
+	void TransportServiceCCSubsequentSegment;
+	void TransportServiceCCSegmentRequest;
+	void TransportServiceCCSegmentComplete;
+	void TransportServiceCCSegmentWait;
+	void UserCodeCCValues;
+	void UserCodeCC;
+	void UserCodeCCSet;
+	void UserCodeCCReport;
+	void UserCodeCCGet;
+	void UserCodeCCUsersNumberReport;
+	void UserCodeCCUsersNumberGet;
+	void UserCodeCCCapabilitiesReport;
+	void UserCodeCCCapabilitiesGet;
+	void UserCodeCCKeypadModeSet;
+	void UserCodeCCKeypadModeReport;
+	void UserCodeCCKeypadModeGet;
+	void UserCodeCCAdminCodeSet;
+	void UserCodeCCAdminCodeReport;
+	void UserCodeCCAdminCodeGet;
+	void UserCodeCCUserCodeChecksumReport;
+	void UserCodeCCUserCodeChecksumGet;
+	void UserCodeCCExtendedUserCodeSet;
+	void UserCodeCCExtendedUserCodeReport;
+	void UserCodeCCExtendedUserCodeGet;
+	void VersionCCValues;
+	void VersionCC;
+	void VersionCCReport;
+	void VersionCCGet;
+	void VersionCCCommandClassReport;
+	void VersionCCCommandClassGet;
+	void VersionCCCapabilitiesReport;
+	void VersionCCCapabilitiesGet;
+	void VersionCCZWaveSoftwareReport;
+	void VersionCCZWaveSoftwareGet;
+	void WakeUpCCValues;
+	void WakeUpCC;
+	void WakeUpCCIntervalSet;
+	void WakeUpCCIntervalReport;
+	void WakeUpCCIntervalGet;
+	void WakeUpCCWakeUpNotification;
+	void WakeUpCCNoMoreInformation;
+	void WakeUpCCIntervalCapabilitiesReport;
+	void WakeUpCCIntervalCapabilitiesGet;
+	void WindowCoveringCCValues;
+	void WindowCoveringCC;
+	void WindowCoveringCCSupportedReport;
+	void WindowCoveringCCSupportedGet;
+	void WindowCoveringCCReport;
+	void WindowCoveringCCGet;
+	void WindowCoveringCCSet;
+	void WindowCoveringCCStartLevelChange;
+	void WindowCoveringCCStopLevelChange;
 	void ZWaveLongRangeCC;
-	void ZWavePlusCCValues, ZWavePlusCC, ZWavePlusCCReport, ZWavePlusCCGet;
-	void ZWaveProtocolCC,
-		ZWaveProtocolCCNodeInformationFrame,
-		ZWaveProtocolCCRequestNodeInformationFrame,
-		ZWaveProtocolCCAssignIDs,
-		ZWaveProtocolCCFindNodesInRange,
-		ZWaveProtocolCCRangeInfo,
-		ZWaveProtocolCCGetNodesInRange,
-		ZWaveProtocolCCCommandComplete,
-		ZWaveProtocolCCTransferPresentation,
-		ZWaveProtocolCCTransferNodeInformation,
-		ZWaveProtocolCCTransferRangeInformation,
-		ZWaveProtocolCCTransferEnd,
-		ZWaveProtocolCCAssignReturnRoute,
-		ZWaveProtocolCCNewNodeRegistered,
-		ZWaveProtocolCCNewRangeRegistered,
-		ZWaveProtocolCCTransferNewPrimaryControllerComplete,
-		ZWaveProtocolCCAutomaticControllerUpdateStart,
-		ZWaveProtocolCCSUCNodeID,
-		ZWaveProtocolCCSetSUC,
-		ZWaveProtocolCCSetSUCAck,
-		ZWaveProtocolCCAssignSUCReturnRoute,
-		ZWaveProtocolCCStaticRouteRequest,
-		ZWaveProtocolCCLost,
-		ZWaveProtocolCCAcceptLost,
-		ZWaveProtocolCCNOPPower,
-		ZWaveProtocolCCReservedIDs,
-		ZWaveProtocolCCReserveNodeIDs,
-		ZWaveProtocolCCNodesExistReply,
-		ZWaveProtocolCCNodesExist,
-		ZWaveProtocolCCSetNWIMode,
-		ZWaveProtocolCCExcludeRequest,
-		ZWaveProtocolCCAssignReturnRoutePriority,
-		ZWaveProtocolCCAssignSUCReturnRoutePriority,
-		ZWaveProtocolCCSmartStartIncludedNodeInformation,
-		ZWaveProtocolCCSmartStartPrime,
-		ZWaveProtocolCCSmartStartInclusionRequest;
-	void manufacturerId,
-		getManufacturerId,
-		getManufacturerIdStatic,
-		getManufacturerProprietaryCCConstructor,
-		manufacturerProprietaryAPI,
-		getManufacturerProprietaryAPI,
-		fibaroCC,
-		getFibaroCCId,
-		getFibaroCCConstructor,
-		fibaroCCCommand,
-		getFibaroCCCommand,
-		getFibaroCCCommandConstructor;
-	void FibaroCC,
-		FibaroVenetianBlindCC,
-		FibaroVenetianBlindCCSet,
-		FibaroVenetianBlindCCReport,
-		FibaroVenetianBlindCCGet;
+	void ZWavePlusCCValues;
+	void ZWavePlusCC;
+	void ZWavePlusCCReport;
+	void ZWavePlusCCGet;
+	void ZWaveProtocolCC;
+	void ZWaveProtocolCCNodeInformationFrame;
+	void ZWaveProtocolCCRequestNodeInformationFrame;
+	void ZWaveProtocolCCAssignIDs;
+	void ZWaveProtocolCCFindNodesInRange;
+	void ZWaveProtocolCCRangeInfo;
+	void ZWaveProtocolCCGetNodesInRange;
+	void ZWaveProtocolCCCommandComplete;
+	void ZWaveProtocolCCTransferPresentation;
+	void ZWaveProtocolCCTransferNodeInformation;
+	void ZWaveProtocolCCTransferRangeInformation;
+	void ZWaveProtocolCCTransferEnd;
+	void ZWaveProtocolCCAssignReturnRoute;
+	void ZWaveProtocolCCNewNodeRegistered;
+	void ZWaveProtocolCCNewRangeRegistered;
+	void ZWaveProtocolCCTransferNewPrimaryControllerComplete;
+	void ZWaveProtocolCCAutomaticControllerUpdateStart;
+	void ZWaveProtocolCCSUCNodeID;
+	void ZWaveProtocolCCSetSUC;
+	void ZWaveProtocolCCSetSUCAck;
+	void ZWaveProtocolCCAssignSUCReturnRoute;
+	void ZWaveProtocolCCStaticRouteRequest;
+	void ZWaveProtocolCCLost;
+	void ZWaveProtocolCCAcceptLost;
+	void ZWaveProtocolCCNOPPower;
+	void ZWaveProtocolCCReservedIDs;
+	void ZWaveProtocolCCReserveNodeIDs;
+	void ZWaveProtocolCCNodesExistReply;
+	void ZWaveProtocolCCNodesExist;
+	void ZWaveProtocolCCSetNWIMode;
+	void ZWaveProtocolCCExcludeRequest;
+	void ZWaveProtocolCCAssignReturnRoutePriority;
+	void ZWaveProtocolCCAssignSUCReturnRoutePriority;
+	void ZWaveProtocolCCSmartStartIncludedNodeInformation;
+	void ZWaveProtocolCCSmartStartPrime;
+	void ZWaveProtocolCCSmartStartInclusionRequest;
+	void manufacturerId;
+	void getManufacturerId;
+	void getManufacturerIdStatic;
+	void getManufacturerProprietaryCCConstructor;
+	void manufacturerProprietaryAPI;
+	void getManufacturerProprietaryAPI;
+	void fibaroCC;
+	void getFibaroCCId;
+	void getFibaroCCConstructor;
+	void fibaroCCCommand;
+	void getFibaroCCCommand;
+	void getFibaroCCCommandConstructor;
+	void FibaroCC;
+	void FibaroVenetianBlindCC;
+	void FibaroVenetianBlindCCSet;
+	void FibaroVenetianBlindCCReport;
+	void FibaroVenetianBlindCCGet;
 }

@@ -209,11 +209,9 @@ export async function generateCCExports(): Promise<void> {
 					.join(", ")
 			} };\n`;
 
-			registerFunctionContent += `void ${
-				valueExports
-					.map((e) => e.name)
-					.join(", ")
-			};\n`;
+			registerFunctionContent += valueExports
+				.map((e) => `void ${e.name};`)
+				.join("\n") + "\n";
 		}
 	}
 
