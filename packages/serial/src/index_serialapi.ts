@@ -56,6 +56,7 @@ export * from "./serialapi/transport/RequestProtocolCCEncryptionMessages.js";
 export * from "./serialapi/transport/SendDataBridgeMessages.js";
 export * from "./serialapi/transport/SendDataMessages.js";
 export * from "./serialapi/transport/SendDataShared.js";
+export * from "./serialapi/transport/SendProtocolDataMessages.js";
 export * from "./serialapi/transport/SendTestFrameMessages.js";
 export * from "./serialapi/transport/TransferProtocolCCMessages.js";
 
