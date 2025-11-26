@@ -62,5 +62,8 @@
 			"maxValue": 1,
 			"defaultValue": 0
 		}
-	]
+	],
+	"compat": {
+		"encodeCCsUsingTargetVersion": true
+	}
 }
