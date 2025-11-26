@@ -139,7 +139,6 @@ import {
 	SendProtocolDataRequest,
 	type SuccessIndicator,
 	TransferProtocolCCRequest,
-	TransmitReport,
 	XModemMessageHeaders,
 	type ZWaveSerialBindingFactory,
 	ZWaveSerialFrameType,
