@@ -65,7 +65,6 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 				&& Symbol.dispose in removed
 				&& typeof removed[Symbol.dispose] === "function"
 			) {
-				console.log("dispose");
 				(removed as any)[Symbol.dispose]();
 			}
 		}

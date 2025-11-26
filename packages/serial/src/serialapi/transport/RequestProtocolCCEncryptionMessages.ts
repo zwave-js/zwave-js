@@ -3,7 +3,6 @@ import {
 	MessagePriority,
 	type SerializableTXReport,
 	type TXReport,
-	type TransmitOptions,
 	TransmitStatus,
 	encodeNodeID,
 	parseNodeID,
@@ -19,19 +18,12 @@ import {
 	MessageType,
 	encodeTXReport,
 	expectedCallback,
-	expectedResponse,
 	messageTypes,
 	parseTXReport,
 	priority,
 	serializableTXReportToTXReport,
 } from "@zwave-js/serial";
-import {
-	Bytes,
-	type BytesView,
-	buffer2hex,
-	getEnumMemberName,
-	num2hex,
-} from "@zwave-js/shared";
+import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
 
 export enum ProtocolCCEncryptionStatus {
 	Started = 0x00,
@@ -47,7 +39,8 @@ export class RequestProtocolCCEncryptionRequestBase extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): RequestProtocolCCEncryptionRequestBase {
-		if (ctx.origin === MessageOrigin.Host) {
+		// This message has a different direction than usual
+		if (ctx.origin !== MessageOrigin.Host) {
 			return RequestProtocolCCEncryptionRequest.from(raw, ctx);
 		} else {
 			return RequestProtocolCCEncryptionCallback.from(raw, ctx);
@@ -58,10 +51,10 @@ export class RequestProtocolCCEncryptionRequestBase extends Message {
 export interface RequestProtocolCCEncryptionRequestOptions {
 	destinationNodeId: number;
 	plaintext: BytesView;
-	transmitOptions: TransmitOptions;
+	protocolMetadata: BytesView;
+	useSupervision: boolean;
 }
 
-@expectedResponse(FunctionType.RequestProtocolCCEncryption)
 @expectedCallback(FunctionType.RequestProtocolCCEncryption)
 export class RequestProtocolCCEncryptionRequest
 	extends RequestProtocolCCEncryptionRequestBase
@@ -73,12 +66,14 @@ export class RequestProtocolCCEncryptionRequest
 
 		this.destinationNodeId = options.destinationNodeId;
 		this.plaintext = options.plaintext;
-		this.transmitOptions = options.transmitOptions;
+		this.protocolMetadata = options.protocolMetadata;
+		this.useSupervision = options.useSupervision;
 	}
 
 	public destinationNodeId: number;
 	public plaintext: BytesView;
-	public transmitOptions: TransmitOptions;
+	public protocolMetadata: BytesView;
+	public useSupervision: boolean;
 
 	public static from(
 		raw: MessageRaw,
@@ -95,13 +90,21 @@ export class RequestProtocolCCEncryptionRequest
 		const plaintext = raw.payload.slice(offset, offset + plaintextLength);
 		offset += plaintextLength;
 
-		const transmitOptions = raw.payload[offset++];
+		const protocolMetadataLength = raw.payload[offset++];
+		const protocolMetadata = raw.payload.slice(
+			offset,
+			offset + protocolMetadataLength,
+		);
+		offset += protocolMetadataLength;
+
+		const useSupervision = !!(raw.payload[offset++] & 0x80);
 		const callbackId = raw.payload[offset++];
 
 		return new this({
 			destinationNodeId,
 			plaintext,
-			transmitOptions,
+			protocolMetadata,
+			useSupervision,
 			callbackId,
 		});
 	}
@@ -112,7 +115,12 @@ export class RequestProtocolCCEncryptionRequest
 			encodeNodeID(this.destinationNodeId, ctx.nodeIdType),
 			[this.plaintext.length],
 			this.plaintext,
-			[this.transmitOptions, this.callbackId],
+			[this.protocolMetadata.length],
+			this.protocolMetadata,
+			[
+				this.useSupervision ? 0x80 : 0x00,
+				this.callbackId,
+			],
 		]);
 
 		return super.serialize(ctx);
@@ -123,59 +131,10 @@ export class RequestProtocolCCEncryptionRequest
 			...super.toLogEntry(),
 			message: {
 				"destination node": this.destinationNodeId,
-				"transmit options": num2hex(this.transmitOptions),
 				"callback id": this.callbackId ?? "(not set)",
 				plaintext: buffer2hex(this.plaintext),
-			},
-		};
-	}
-}
-
-export interface RequestProtocolCCEncryptionResponseOptions {
-	status: ProtocolCCEncryptionStatus;
-}
-
-@messageTypes(MessageType.Response, FunctionType.RequestProtocolCCEncryption)
-export class RequestProtocolCCEncryptionResponse extends Message {
-	public constructor(
-		options:
-			& RequestProtocolCCEncryptionResponseOptions
-			& MessageBaseOptions,
-	) {
-		super(options);
-		this.status = options.status;
-	}
-
-	public static from(
-		raw: MessageRaw,
-		_ctx: MessageParsingContext,
-	): RequestProtocolCCEncryptionResponse {
-		const status: ProtocolCCEncryptionStatus = raw.payload[0];
-		const callbackId = raw.payload[1];
-
-		return new this({
-			status,
-			callbackId,
-		});
-	}
-
-	public status: ProtocolCCEncryptionStatus;
-
-	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.assertCallbackId();
-		this.payload = Bytes.from([this.status, this.callbackId]);
-
-		return super.serialize(ctx);
-	}
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		return {
-			...super.toLogEntry(),
-			message: {
-				status: getEnumMemberName(
-					ProtocolCCEncryptionStatus,
-					this.status,
-				),
+				"protocol metadata": buffer2hex(this.protocolMetadata),
+				"use supervision": this.useSupervision,
 			},
 		};
 	}
