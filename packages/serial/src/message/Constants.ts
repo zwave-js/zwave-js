@@ -169,6 +169,7 @@ export enum FunctionType {
 	BridgeApplicationCommand = 0xa8, // A message from another node using the Bridge API
 	SendDataBridge = 0xa9, // Send data (Bridge API)
 	SendDataMulticastBridge = 0xab, // Send data using multicast (Bridge API)
+	SendProtocolData = 0xac, // Send encrypted protocol data (NLS)
 
 	EnableWatchdog500 = 0xb6, // Enable Watchdog (500 series and older)
 	DisableWatchdog500 = 0xb7, // Disable Watchdog (500 series and older)
