@@ -53,6 +53,196 @@ import {
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
 
+export const ActiveScheduleCCValues = Object.freeze({
+	supportedTargetCCs: {
+		id: {
+			commandClass: CommandClasses["Active Schedule"],
+			property: "supportedTargetCCs",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["Active Schedule"],
+			endpoint,
+			property: "supportedTargetCCs",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["Active Schedule"]
+				&& valueId.property === "supportedTargetCCs"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	targetCapabilities: Object.assign(
+		(targetCC: CommandClasses) => {
+			const property = "targetCapabilities";
+			const propertyKey = targetCC;
+
+			return {
+				id: {
+					commandClass: CommandClasses["Active Schedule"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["Active Schedule"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["Active Schedule"]
+					&& (({ property, propertyKey }) =>
+						property === "targetCapabilities"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	enabled: Object.assign(
+		(targetCC: CommandClasses, targetId: number) => {
+			const property = "enabled";
+			const propertyKey = (targetCC << 16) | targetId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["Active Schedule"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["Active Schedule"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["Active Schedule"]
+					&& (({ property, propertyKey }) =>
+						property === "enabled"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	yearDaySchedule: Object.assign(
+		(targetCC: CommandClasses, targetId: number, slotId: number) => {
+			const property = "yearDaySchedule";
+			const propertyKey = (targetCC << 24) | (targetId << 8) | slotId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["Active Schedule"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["Active Schedule"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["Active Schedule"]
+					&& (({ property, propertyKey }) =>
+						property === "yearDaySchedule"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	dailyRepeatingSchedule: Object.assign(
+		(targetCC: CommandClasses, targetId: number, slotId: number) => {
+			const property = "dailyRepeatingSchedule";
+			const propertyKey = (targetCC << 24) | (targetId << 8) | slotId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["Active Schedule"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["Active Schedule"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["Active Schedule"]
+					&& (({ property, propertyKey }) =>
+						property === "dailyRepeatingSchedule"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+});
+
 export const AlarmSensorCCValues = Object.freeze({
 	state: Object.assign(
 		(sensorType: AlarmSensorType) => {
@@ -9906,6 +10096,7 @@ export const ZWavePlusCCValues = Object.freeze({
 });
 
 export const CCValues = {
+	[CommandClasses["Active Schedule"]]: ActiveScheduleCCValues,
 	[CommandClasses["Alarm Sensor"]]: AlarmSensorCCValues,
 	[CommandClasses.Association]: AssociationCCValues,
 	[CommandClasses["Association Group Information"]]:
