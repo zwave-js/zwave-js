@@ -52,7 +52,8 @@ export async function compileStatistics(
 export async function sendStatistics(
 	statistics: Record<string, any>,
 ): Promise<boolean | number> {
-	const { default: ky } = await import("ky");
+	const { getHttpClient } = await import("../driver/HTTPClient.js");
+	const ky = await getHttpClient();
 
 	try {
 		const data = await ky
