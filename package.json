@@ -44,7 +44,7 @@
     "@dprint/typescript": "^0.95.11",
     "@microsoft/api-extractor": "^7.52.11",
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.11.0",
-    "@tsconfig/node20": "^20.1.6",
+    "@tsconfig/node20": "^20.1.8",
     "@types/js-yaml": "^4",
     "@types/node": "^20.19.23",
     "@types/semver": "^7.7.1",
