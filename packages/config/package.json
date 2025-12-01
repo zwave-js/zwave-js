@@ -102,7 +102,7 @@
     "@types/yargs": "^17.0.34",
     "@zwave-js/maintenance": "workspace:*",
     "comment-json": "^4.3.0",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "es-main": "^1.4.0",
     "js-levenshtein": "^1.1.6",
     "ky": "^1.8.1",
