@@ -69,7 +69,7 @@
     "@types/node": "^20.19.23",
     "@types/semver": "^7.7.1",
     "@types/yargs": "^17.0.34",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",
     "vitest": "^4.0.0"
