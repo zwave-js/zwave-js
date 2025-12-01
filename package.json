@@ -93,7 +93,7 @@
     "ts-morph": "^27.0.2",
     "ts-patch": "3.3.0",
     "tsx": "^4.20.5",
-    "turbo": "2.6.0",
+    "turbo": "2.6.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.46.4",
     "vitest": "^4.0.0",
