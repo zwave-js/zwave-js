@@ -1,5 +1,6 @@
 /// This file is auto-generated. All manual changes will be lost!
 
+import { type GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -38,7 +39,7 @@ import {
 	LocalProtectionState,
 	RFProtectionState,
 	RateType,
-	type ScheduleEntryLockScheduleKind,
+	ScheduleEntryLockScheduleKind,
 	ScheduleOverrideType,
 	SubsystemState,
 	SubsystemType,
