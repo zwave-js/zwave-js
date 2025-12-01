@@ -62,6 +62,7 @@ export const cacheKeys = {
 			_securityClassBaseKey: `${nodeBaseKey}securityClasses`,
 			_priorityReturnRouteBaseKey: `${nodeBaseKey}priorityReturnRoute`,
 			interviewStage: `${nodeBaseKey}interviewStage`,
+			failedS2: `${nodeBaseKey}failedS2`,
 			deviceClass: `${nodeBaseKey}deviceClass`,
 			isListening: `${nodeBaseKey}isListening`,
 			isFrequentListening: `${nodeBaseKey}isFrequentListening`,
@@ -481,6 +482,12 @@ export function deserializeNetworkCacheValue(
 		case "lastSeen": {
 			value = tryParseDate(value);
 			if (value) return value;
+			fail();
+		}
+
+		case "failedS2": {
+			const isBoolean = ensureType(value, "boolean");
+			if (isBoolean) return value;
 			fail();
 		}
 
