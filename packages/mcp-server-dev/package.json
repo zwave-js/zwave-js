@@ -38,7 +38,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "nano-spawn": "^2.0.0"
   },
   "devDependencies": {
