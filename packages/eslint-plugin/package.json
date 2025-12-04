@@ -31,9 +31,8 @@
     "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty",
-    "build:native": "tsgo -p tsconfig.build.json --pretty",
-    "bootstrap": "yarn build:native",
+    "build": "tsgo -b tsconfig.build.json --pretty",
+    "bootstrap": "yarn build",
     "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {
