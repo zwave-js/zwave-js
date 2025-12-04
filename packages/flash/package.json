@@ -41,8 +41,7 @@
     "zwave-js": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty",
-    "build:native": "tsgo -p tsconfig.build.json --pretty",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {

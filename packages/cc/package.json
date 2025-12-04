@@ -58,8 +58,7 @@
   "scripts": {
     "task": "yarn ts maintenance/_tasks.ts",
     "codegen": "yarn task codegen && yarn lint:codegen:fix",
-    "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
-    "build:native": "tsgo -p tsconfig.build.json --pretty",
+    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
