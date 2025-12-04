@@ -7,13 +7,13 @@
 
 		"bootstrap": {
 			// Dummy task to enable running all bootstrap tasks
-			"dependsOn": ["build:native"],
+			"dependsOn": ["build"],
 			"cache": false // TypeScript does the caching
 		},
 
-		"build:native": {
-			"dependsOn": ["^build:native"],
-			"cache": false // TSGO is fast enough
+		"build": {
+			"dependsOn": ["^build"],
+			"cache": false // tsgo is fast enough
 		},
 
 		"codegen": {

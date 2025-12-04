@@ -5,9 +5,6 @@ const buildArgs = process.argv
 	.slice(3)
 	.filter((a) => a !== "-w" && a !== "--watch");
 
-const useTSGO = process.env.TSGO === "1" || process.env.TSGO === "true";
-const buildCommand = useTSGO ? "build:native" : "build";
-
 // FIXME: Parse package.json dependency graph to figure out if codegen and/or
 // partial builds are necessary, instead of hardcoding it here.
 // FIXME: dependency graph is needed to create CJS builds for affected packages
@@ -41,38 +38,17 @@ const execOptions = {
 async function main() {
 	// Always build the maintenance project, so codegen tasks work
 	console.log("Building maintenance project...");
-	if (useTSGO) {
-		await spawn(
-			"yarn",
-			[
-				"workspaces",
-				"foreach",
-				"--topological",
-				"--topological-dev",
-				"--parallel",
-				"--recursive",
-				"--from",
-				"@zwave-js/maintenance",
-				"run",
-				buildCommand,
-				...buildArgs,
-			],
-			execOptions,
-		);
-	} else {
-		await spawn(
-			"yarn",
-			[
-				"workspace",
-				"@zwave-js/maintenance",
-				"run",
-				buildCommand,
-				"--verbose",
-				...buildArgs,
-			],
-			execOptions,
-		);
-	}
+	await spawn(
+		"yarn",
+		[
+			"workspace",
+			"@zwave-js/maintenance",
+			"run",
+			"build",
+			...buildArgs,
+		],
+		execOptions,
+	);
 
 	if (needsNoCodegen.includes(project)) {
 		// We built the project or more than needed, so we're done
@@ -86,8 +62,7 @@ async function main() {
 			"workspace",
 			"@zwave-js/transformers",
 			"run",
-			buildCommand,
-			...(useTSGO ? [] : ["--verbose"]),
+			"build",
 			...buildArgs,
 		],
 		execOptions,
@@ -127,29 +102,9 @@ async function main() {
 		);
 	}
 
-	if (useTSGO) {
-		// TSGO does not support project references yet, but it is 10x faster
-		// so we just build everything
-		await spawn(
-			"yarn",
-			[
-				"workspaces",
-				"foreach",
-				"--all",
-				"--topological",
-				"--topological-dev",
-				"--parallel",
-				"--exclude",
-				"@zwave-js/repo",
-				"run",
-				buildCommand,
-				...buildArgs,
-			],
-			execOptions,
-		);
-	} else if (project === "all") {
+	if (project === "all") {
 		// Simply build all projects that depend on zwave-js - this will
-		// build everything
+		// build everything via project references
 		for (const project of dependsOnZwaveJs) {
 			console.log();
 			console.log(`Building ${project}...`);
@@ -159,8 +114,7 @@ async function main() {
 					"workspace",
 					project,
 					"run",
-					buildCommand,
-					"--verbose",
+					"build",
 					...buildArgs,
 				],
 				execOptions,
@@ -172,7 +126,7 @@ async function main() {
 		console.log(`Building ${project}...`);
 		await spawn(
 			"yarn",
-			["workspace", project, "run", "build", "--verbose", ...buildArgs],
+			["workspace", project, "run", "build", ...buildArgs],
 			execOptions,
 		);
 	}
