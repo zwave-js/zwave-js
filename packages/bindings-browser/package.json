@@ -46,8 +46,7 @@
     "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.json --pretty",
-    "build:native": "tsgo -p tsconfig.json --pretty",
+    "build": "tsgo -b tsconfig.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {
