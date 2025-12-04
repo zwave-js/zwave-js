@@ -48,7 +48,7 @@
   "devDependencies": {
     "@types/node": "^20.19.23",
     "@types/yargs": "^17.0.34",
-    "@typescript/native-preview": "7.0.0-dev.20250904.1",
+    "@typescript/native-preview": "7.0.0-dev.20251204.1",
     "del-cli": "^6.0.0",
     "typescript": "5.9.3"
   }
