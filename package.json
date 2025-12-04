@@ -51,7 +51,7 @@
     "@types/source-map-support": "^0.5.10",
     "@types/tmp": "^0",
     "@types/xml2js": "^0.4.14",
-    "@typescript/native-preview": "7.0.0-dev.20250904.1",
+    "@typescript/native-preview": "7.0.0-dev.20251204.1",
     "@zwave-js/bindings-browser": "workspace:*",
     "@zwave-js/cc": "workspace:*",
     "@zwave-js/config": "workspace:*",
