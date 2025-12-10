@@ -151,8 +151,8 @@ export class SoundSwitchCCAPI extends CCAPI {
 
 	@validateArgs()
 	public async setConfiguration(
-		defaultToneId: number,
-		defaultVolume: number,
+		defaultToneId?: number,
+		defaultVolume?: number,
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -162,8 +162,8 @@ export class SoundSwitchCCAPI extends CCAPI {
 		const cc = new SoundSwitchCCConfigurationSet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
-			defaultToneId,
-			defaultVolume,
+			defaultToneId: defaultToneId ?? 0x00,
+			defaultVolume: defaultVolume ?? 0xff,
 		});
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
@@ -630,8 +630,8 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 
 // @publicAPI
 export interface SoundSwitchCCConfigurationSetOptions {
-	defaultVolume: number;
-	defaultToneId: number;
+	defaultVolume?: number;
+	defaultToneId?: number;
 }
 
 @CCCommand(SoundSwitchCommand.ConfigurationSet)
@@ -641,8 +641,8 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 		options: WithAddress<SoundSwitchCCConfigurationSetOptions>,
 	) {
 		super(options);
-		this.defaultVolume = options.defaultVolume;
-		this.defaultToneId = options.defaultToneId;
+		this.defaultVolume = options.defaultVolume ?? 0xff;
+		this.defaultToneId = options.defaultToneId ?? 0x00;
 	}
 
 	public static from(
