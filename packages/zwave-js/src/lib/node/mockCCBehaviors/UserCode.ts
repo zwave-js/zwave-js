@@ -5,6 +5,7 @@ import {
 	UserCodeCCAdminCodeSet,
 	UserCodeCCCapabilitiesGet,
 	UserCodeCCCapabilitiesReport,
+	UserCodeCCExtendedUserCodeSet,
 	UserCodeCCGet,
 	UserCodeCCKeypadModeGet,
 	UserCodeCCKeypadModeReport,
@@ -128,6 +129,51 @@ const respondToUserCodeSet: MockNodeBehavior = {
 	},
 };
 
+const respondToExtendedUserCodeSet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof UserCodeCCExtendedUserCodeSet) {
+			const capabilities = {
+				...defaultCapabilities,
+				...self.getCCCapabilities(
+					CommandClasses["User Code"],
+					receivedCC.endpointIndex,
+				),
+			};
+
+			// Process each user code in the request
+			for (const userCodeData of receivedCC.userCodes) {
+				const userId = userCodeData.userId;
+				const userIdStatus = userCodeData.userIdStatus;
+
+				// Skip if userId is 0 and we're clearing all codes
+				if (userId === 0 && userIdStatus === UserIDStatus.Available) {
+					// Clear all user codes
+					for (let i = 1; i <= capabilities.numUsers; i++) {
+						self.state.set(StateKeys.userIdStatus(i), UserIDStatus.Available);
+						self.state.set(StateKeys.userCode(i), undefined);
+					}
+					continue;
+				}
+
+				if (capabilities.numUsers >= userId) {
+					self.state.set(StateKeys.userIdStatus(userId), userIdStatus);
+
+					const code = userIdStatus !== UserIDStatus.Available
+							&& userIdStatus !== UserIDStatus.StatusNotAvailable
+						? userCodeData.userCode
+						: undefined;
+
+					self.state.set(StateKeys.userCode(userId), code);
+				} else {
+					return { action: "fail" };
+				}
+			}
+
+			return { action: "ok" };
+		}
+	},
+};
+
 const respondToUserCodeCapabilitiesGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof UserCodeCCCapabilitiesGet) {
@@ -145,8 +191,10 @@ const respondToUserCodeCapabilitiesGet: MockNodeBehavior = {
 					.supportsAdminCodeDeactivation!,
 				supportsUserCodeChecksum: capabilities
 					.supportsUserCodeChecksum!,
-				supportsMultipleUserCodeReport: false,
-				supportsMultipleUserCodeSet: false,
+				supportsMultipleUserCodeReport: capabilities
+					.supportsMultipleUserCodeReport ?? false,
+				supportsMultipleUserCodeSet: capabilities
+					.supportsMultipleUserCodeSet ?? false,
 				supportedUserIDStatuses: capabilities.supportedUserIDStatuses!,
 				supportedKeypadModes: capabilities.supportedKeypadModes!,
 				supportedASCIIChars: capabilities.supportedASCIIChars!,
@@ -305,6 +353,7 @@ export const UserCodeCCBehaviors = [
 	respondToUsersNumberGet,
 	respondToUserGet,
 	respondToUserCodeSet,
+	respondToExtendedUserCodeSet,
 	respondToUserCodeCapabilitiesGet,
 	respondToUserCodeKeypadModeGet,
 	respondToUserCodeKeypadModeSet,
