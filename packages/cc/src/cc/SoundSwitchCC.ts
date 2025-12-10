@@ -149,6 +149,14 @@ export class SoundSwitchCCAPI extends CCAPI {
 		if (response) return pick(response, ["duration", "name"]);
 	}
 
+	public async setConfiguration(
+		defaultToneId: number,
+		defaultVolume?: number,
+	): Promise<SupervisionResult | undefined>;
+	public async setConfiguration(
+		defaultToneId: number | undefined,
+		defaultVolume: number,
+	): Promise<SupervisionResult | undefined>;
 	@validateArgs()
 	public async setConfiguration(
 		defaultToneId?: number,
