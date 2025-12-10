@@ -637,10 +637,13 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 }
 
 // @publicAPI
-export interface SoundSwitchCCConfigurationSetOptions {
-	defaultVolume?: number;
+export type SoundSwitchCCConfigurationSetOptions = {
+	defaultVolume: number;
 	defaultToneId?: number;
-}
+} | {
+	defaultVolume?: number;
+	defaultToneId: number;
+};
 
 @CCCommand(SoundSwitchCommand.ConfigurationSet)
 @useSupervision()
