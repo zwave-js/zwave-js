@@ -35,7 +35,7 @@ async set(
 		UserIDStatus,
 		UserIDStatus.Available | UserIDStatus.StatusNotAvailable
 	>,
-	userCode: string | Uint8Array,
+	userCode: string | BytesView,
 ): Promise<SupervisionResult | undefined>;
 ```
 
