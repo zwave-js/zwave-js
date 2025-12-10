@@ -108,7 +108,8 @@ async function makeRequest<T>(
 	url: string,
 	config: KyOptions,
 ): Promise<{ data: T; expiry: number }> {
-	const { default: ky } = await import("ky");
+	const { getHttpClient } = await import("../driver/HTTPClient.js");
+	const ky = await getHttpClient();
 	const response = await ky(url, config);
 	const responseJson = await response.json<T>();
 
@@ -322,7 +323,8 @@ export async function downloadFirmwareUpdate(
 	// TODO: Make request abort-able (requires AbortController, Node 14.17+ / Node 16)
 
 	// Download the firmware file
-	const { default: ky } = await import("ky");
+	const { getHttpClient } = await import("../driver/HTTPClient.js");
+	const ky = await getHttpClient();
 	const downloadResponse = await ky.get(file.url, {
 		timeout: DOWNLOAD_TIMEOUT,
 		// TODO: figure out how to do maxContentLength: MAX_FIRMWARE_SIZE,
