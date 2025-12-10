@@ -148,14 +148,15 @@ const respondToExtendedUserCodeSet: MockNodeBehavior = {
 				// Skip if userId is 0 and we're clearing all codes
 				if (userId === 0 && userIdStatus === UserIDStatus.Available) {
 					// Clear all user codes
-					for (let i = 1; i <= capabilities.numUsers; i++) {
+					const numUsers = capabilities.numUsers ?? 0;
+					for (let i = 1; i <= numUsers; i++) {
 						self.state.set(StateKeys.userIdStatus(i), UserIDStatus.Available);
 						self.state.set(StateKeys.userCode(i), undefined);
 					}
 					continue;
 				}
 
-				if (capabilities.numUsers >= userId) {
+				if (capabilities.numUsers != undefined && capabilities.numUsers >= userId) {
 					self.state.set(StateKeys.userIdStatus(userId), userIdStatus);
 
 					const code = userIdStatus !== UserIDStatus.Available

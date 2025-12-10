@@ -2085,10 +2085,16 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 					userIdStatus,
 				});
 			} else {
-				const userCode = raw.payload.subarray(
+				const userCodeBuffer = raw.payload.subarray(
 					offset + 4,
 					offset + 4 + codeLength,
 				);
+				// Try to convert to string if it's printable ASCII
+				const userCodeString = userCodeBuffer.toString("utf8");
+				const userCode = isPrintableASCII(userCodeString)
+					? userCodeString
+					: userCodeBuffer;
+
 				userCodes.push({
 					userId,
 					userIdStatus,
