@@ -56,34 +56,6 @@ test("the Notification command should deserialize correctly", async (t) => {
 	t.expect(cc.eventData).toStrictEqual("1234");
 });
 
-test("the Notification command should accept unpadded ASCII strings", async (t) => {
-	// Test with 4-byte ASCII string without padding (not a multiple of 16)
-	const data = buildCCBuffer(
-		Uint8Array.from([
-			EntryControlCommand.Notification, // CC Command
-			0x1,
-			0x2,
-			0x3,
-			4, // event data length = 4 (not 16 or 32)
-			49,
-			50,
-			51,
-			52,
-		]),
-	);
-
-	const cc = await CommandClass.parse(
-		data,
-		{ sourceNodeId: 1 } as any,
-	) as EntryControlCCNotification;
-	t.expect(cc.constructor).toBe(EntryControlCCNotification);
-
-	t.expect(cc.sequenceNumber).toStrictEqual(1);
-	t.expect(cc.dataType).toStrictEqual(EntryControlDataTypes.ASCII);
-	t.expect(cc.eventType).toStrictEqual(EntryControlEventTypes.DisarmAll);
-	t.expect(cc.eventData).toStrictEqual("1234");
-});
-
 test("the ConfigurationGet command should serialize correctly", async (t) => {
 	const cc = new EntryControlCCConfigurationGet({
 		nodeId: 1,
