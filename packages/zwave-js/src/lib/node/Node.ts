@@ -4050,6 +4050,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				? [...this.supportedDataRates]
 				: "unknown",
 
+			failedS2Bootstrapping: this.failedS2Bootstrapping,
+
 			...endpointDump,
 		};
 

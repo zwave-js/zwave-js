@@ -2642,11 +2642,10 @@ export class ZWaveController
 				) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
-			} else if (
-				opts.strategy
-					=== InclusionStrategy.SmartStart
-			) {
-				smartStartFailed = true;
+			} else {
+				smartStartFailed =
+					opts.strategy === InclusionStrategy.SmartStart;
+				newNode.failedS2Bootstrapping = true;
 			}
 
 			if (
@@ -4007,6 +4006,9 @@ export class ZWaveController
 				) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
+			}
+			if (bootstrapFailure != undefined) {
+				newNode.failedS2Bootstrapping = true;
 			}
 		} else if (
 			newNode.supportsCC(CommandClasses.Security)
@@ -7078,6 +7080,9 @@ export class ZWaveController
 				) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
+			}
+			if (bootstrapFailure != undefined) {
+				newNode.failedS2Bootstrapping = true;
 			}
 		} else if (strategy === InclusionStrategy.Security_S0) {
 			bootstrapFailure = await this.secureBootstrapS0(
