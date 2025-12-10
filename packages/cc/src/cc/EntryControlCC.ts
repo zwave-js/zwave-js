@@ -449,11 +449,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 				case EntryControlDataTypes.ASCII:
 					// ASCII 1 to 32 ASCII encoded characters. ASCII codes MUST be in the value range 0x00-0xF7.
 					// The string MUST be padded with the value 0xFF to fit 16 byte blocks when sent in a notification.
-					if (!noStrictValidation) {
-						validatePayload(
-							eventDataLength === 16 || eventDataLength === 32,
-						);
-					}
+					// However, some devices do not follow this requirement, so we accept unpadded strings as well.
 					// Trim 0xff padding bytes
 					let paddingStart = eventDataLength;
 					while (
