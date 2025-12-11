@@ -6484,7 +6484,7 @@ export class ZWaveController
 	 * * the source node, endpoint or association group does not exist,
 	 * * the source node is a ZWLR node and the destination is not the SIS
 	 * * the destination node is a ZWLR node
-	 * * the association is not allowed for other reasons. In this case, the error's
+	 * * the association is not allowed for other reasons (unless `skipAssociationCheck` is set). In this case, the error's
 	 * `context` property will contain an array with all forbidden destinations, each with an added `checkResult` property
 	 * which contains the reason why the association is forbidden:
 	 *     ```ts
