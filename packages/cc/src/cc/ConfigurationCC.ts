@@ -1651,6 +1651,11 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		);
 
 		for (const [param, info] of config.entries()) {
+			// Skip hidden parameters entirely - don't create metadata or persist values
+			if (info.hidden) {
+				continue;
+			}
+
 			// We need to make the config information compatible with the
 			// format that ConfigurationCC reports
 			const paramInfo: Partial<ConfigurationMetadata> = stripUndefined({
@@ -1799,6 +1804,16 @@ export class ConfigurationCCReport extends ConfigurationCC {
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
+
+		// Skip hidden parameters entirely - don't persist values
+		const paramInfo = getParamInformationFromConfigFile(
+			ctx,
+			this.nodeId as number,
+			this.endpointIndex,
+		);
+		if (paramInfo?.get({ parameter: this.parameter })?.hidden) {
+			return true;
+		}
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 

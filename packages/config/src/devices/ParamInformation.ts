@@ -207,6 +207,18 @@ Parameter #${parameterNumber}: options is malformed!`,
 			(opt: any) =>
 				new ConditionalConfigOption(opt.value, opt.label, opt.$if),
 		) ?? [];
+
+		if (
+			definition.hidden != undefined
+			&& typeof definition.hidden !== "boolean"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-boolean property hidden`,
+			);
+		}
+		this.hidden = definition.hidden === true;
 	}
 
 	private parent: ConditionalDeviceConfig;
@@ -226,6 +238,7 @@ Parameter #${parameterNumber}: options is malformed!`,
 	public readonly allowManualEntry: boolean;
 	public readonly destructive?: boolean;
 	public readonly options: readonly ConditionalConfigOption[];
+	public readonly hidden?: boolean;
 
 	public readonly condition?: string;
 
@@ -251,6 +264,7 @@ Parameter #${parameterNumber}: options is malformed!`,
 				"writeOnly",
 				"allowManualEntry",
 				"destructive",
+				"hidden",
 			]),
 			options: evaluateDeep(this.options, deviceId, true),
 		};

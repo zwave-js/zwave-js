@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.17.1 (2025-11-24)
+### Bugfixes
+* Fixed an error that could happen when receiving an S0 Nonce Report before the request acknowledgement (#8447)
+
 ## 15.17.0 (2025-11-20)
 ### Features
 * Add rudimentary support for Application Status Command Class (#8390)
