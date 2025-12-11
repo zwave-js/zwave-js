@@ -375,6 +375,14 @@ export async function addAssociations(
 	endpoint: EndpointId & SupportsCC & ControlsCC,
 	group: number,
 	destinations: AssociationAddress[],
+	options?: {
+		/**
+		 * Whether to skip the check if associations are allowed.
+		 * **WARNING:** Use this at your own risk! Invalid associations may cause unexpected behavior
+		 * or not work at all.
+		 */
+		skipAssociationCheck?: boolean;
+	},
 ): Promise<void> {
 	const nodeAndEndpointString = `${endpoint.nodeId}${
 		endpoint.index > 0 ? `, endpoint ${endpoint.index}` : ""
@@ -446,34 +454,36 @@ export async function addAssociations(
 
 	if (groupIsMultiChannel) {
 		// Check that all associations are allowed
-		const disallowedAssociations = destinations.map(
-			(a) => ({
-				...a,
-				checkResult: checkAssociation(ctx, endpoint, group, a),
-			}),
-		).filter(({ checkResult }) =>
-			checkResult !== AssociationCheckResult.OK
-		);
-		if (disallowedAssociations.length) {
-			let message = `The following associations are not allowed:`;
-			message += disallowedAssociations
-				.map(
-					(a) =>
-						`\n· Node ${a.nodeId}${
-							a.endpoint ? `, endpoint ${a.endpoint}` : ""
-						}: ${
-							getEnumMemberName(
-								AssociationCheckResult,
-								a.checkResult,
-							).replace("Forbidden_", "")
-						}`,
-				)
-				.join("");
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.AssociationCC_NotAllowed,
-				disallowedAssociations,
+		if (!options?.skipAssociationCheck) {
+			const disallowedAssociations = destinations.map(
+				(a) => ({
+					...a,
+					checkResult: checkAssociation(ctx, endpoint, group, a),
+				}),
+			).filter(({ checkResult }) =>
+				checkResult !== AssociationCheckResult.OK
 			);
+			if (disallowedAssociations.length) {
+				let message = `The following associations are not allowed:`;
+				message += disallowedAssociations
+					.map(
+						(a) =>
+							`\n· Node ${a.nodeId}${
+								a.endpoint ? `, endpoint ${a.endpoint}` : ""
+							}: ${
+								getEnumMemberName(
+									AssociationCheckResult,
+									a.checkResult,
+								).replace("Forbidden_", "")
+							}`,
+					)
+					.join("");
+				throw new ZWaveError(
+					message,
+					ZWaveErrorCodes.AssociationCC_NotAllowed,
+					disallowedAssociations,
+				);
+			}
 		}
 
 		// And add them
@@ -499,34 +509,36 @@ export async function addAssociations(
 		}
 
 		// Check that all associations are allowed
-		const disallowedAssociations = destinations.map(
-			(a) => ({
-				...a,
-				checkResult: checkAssociation(ctx, endpoint, group, a),
-			}),
-		).filter(({ checkResult }) =>
-			checkResult !== AssociationCheckResult.OK
-		);
-		if (disallowedAssociations.length) {
-			let message =
-				`The associations to the following nodes are not allowed`;
-			message += disallowedAssociations
-				.map(
-					(a) =>
-						`\n· Node ${a.nodeId}: ${
-							getEnumMemberName(
-								AssociationCheckResult,
-								a.checkResult,
-							).replace("Forbidden_", "")
-						}`,
-				)
-				.join("");
-
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.AssociationCC_NotAllowed,
-				disallowedAssociations,
+		if (!options?.skipAssociationCheck) {
+			const disallowedAssociations = destinations.map(
+				(a) => ({
+					...a,
+					checkResult: checkAssociation(ctx, endpoint, group, a),
+				}),
+			).filter(({ checkResult }) =>
+				checkResult !== AssociationCheckResult.OK
 			);
+			if (disallowedAssociations.length) {
+				let message =
+					`The associations to the following nodes are not allowed`;
+				message += disallowedAssociations
+					.map(
+						(a) =>
+							`\n· Node ${a.nodeId}: ${
+								getEnumMemberName(
+									AssociationCheckResult,
+									a.checkResult,
+								).replace("Forbidden_", "")
+							}`,
+					)
+					.join("");
+
+				throw new ZWaveError(
+					message,
+					ZWaveErrorCodes.AssociationCC_NotAllowed,
+					disallowedAssociations,
+				);
+			}
 		}
 
 		const api = CCAPI.create(

@@ -6499,6 +6499,14 @@ export class ZWaveController
 		source: AssociationAddress,
 		group: number,
 		destinations: AssociationAddress[],
+		options?: {
+			/**
+			 * Whether to skip the check if associations are allowed.
+			 * **WARNING:** Use this at your own risk! Invalid associations may cause unexpected behavior
+			 * or not work at all.
+			 */
+			skipAssociationCheck?: boolean;
+		},
 	): Promise<void> {
 		const node = this.nodes.getOrThrow(source.nodeId);
 		const endpoint = node.getEndpointOrThrow(source.endpoint ?? 0);
@@ -6508,6 +6516,7 @@ export class ZWaveController
 			endpoint,
 			group,
 			destinations,
+			options,
 		);
 
 		if (isLongRangeNodeId(source.nodeId)) return;
