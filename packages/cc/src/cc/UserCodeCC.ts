@@ -522,7 +522,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 		>,
 		userCode: string | BytesView,
 	): Promise<SupervisionResult | undefined> {
-		// V2+ nodes must use Extended User Code Set
+		// CL:0063.01.31.02.1: V2+ nodes must use Extended User Code Set
 		if (this.version >= 2 || userId > 255) {
 			return this.setMany([{ userId, userIdStatus, userCode }]);
 		}
@@ -670,6 +670,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	public async clear(
 		userId: number = 0,
 	): Promise<SupervisionResult | undefined> {
+		// CL:0063.01.31.02.1: V2+ nodes must use Extended User Code Set
 		if (this.version >= 2 || userId > 255) {
 			return this.setMany([
 				{ userId, userIdStatus: UserIDStatus.Available },

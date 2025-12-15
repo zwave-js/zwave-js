@@ -150,16 +150,27 @@ const respondToExtendedUserCodeSet: MockNodeBehavior = {
 					// Clear all user codes
 					const numUsers = capabilities.numUsers ?? 0;
 					for (let i = 1; i <= numUsers; i++) {
-						self.state.set(StateKeys.userIdStatus(i), UserIDStatus.Available);
+						self.state.set(
+							StateKeys.userIdStatus(i),
+							UserIDStatus.Available,
+						);
 						self.state.set(StateKeys.userCode(i), undefined);
 					}
 					continue;
 				}
 
-				if (capabilities.numUsers != undefined && capabilities.numUsers >= userId) {
-					self.state.set(StateKeys.userIdStatus(userId), userIdStatus);
+				if (
+					capabilities.numUsers != undefined
+					&& capabilities.numUsers >= userId
+				) {
+					self.state.set(
+						StateKeys.userIdStatus(userId),
+						userIdStatus,
+					);
 
 					const code = userIdStatus !== UserIDStatus.Available
+							// @ts-expect-error Just making sure that we're not accidentally
+							// passing the wrong status
 							&& userIdStatus !== UserIDStatus.StatusNotAvailable
 						? userCodeData.userCode
 						: undefined;
@@ -192,10 +203,8 @@ const respondToUserCodeCapabilitiesGet: MockNodeBehavior = {
 					.supportsAdminCodeDeactivation!,
 				supportsUserCodeChecksum: capabilities
 					.supportsUserCodeChecksum!,
-				supportsMultipleUserCodeReport: capabilities
-					.supportsMultipleUserCodeReport ?? false,
-				supportsMultipleUserCodeSet: capabilities
-					.supportsMultipleUserCodeSet ?? false,
+				supportsMultipleUserCodeReport: false,
+				supportsMultipleUserCodeSet: false,
 				supportedUserIDStatuses: capabilities.supportedUserIDStatuses!,
 				supportedKeypadModes: capabilities.supportedKeypadModes!,
 				supportedASCIIChars: capabilities.supportedASCIIChars!,

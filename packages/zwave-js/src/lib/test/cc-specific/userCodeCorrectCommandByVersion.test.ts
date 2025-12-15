@@ -15,11 +15,11 @@ integrationTest(
 
 		nodeCapabilities: {
 			commandClasses: [
+				CommandClasses.Version,
 				ccCaps({
 					ccId: CommandClasses["User Code"],
 					version: 2,
 					numUsers: 10,
-					supportsMultipleUserCodeSet: true,
 					supportedASCIIChars: "0123456789",
 					supportedUserIDStatuses: [
 						UserIDStatus.Available,
@@ -68,11 +68,11 @@ integrationTest(
 
 		nodeCapabilities: {
 			commandClasses: [
+				CommandClasses.Version,
 				ccCaps({
 					ccId: CommandClasses["User Code"],
 					version: 2,
 					numUsers: 10,
-					supportsMultipleUserCodeSet: true,
 					supportedASCIIChars: "0123456789",
 					supportedUserIDStatuses: [
 						UserIDStatus.Available,
@@ -114,8 +114,108 @@ integrationTest(
 	},
 );
 
-// Note: Testing V1 behavior is challenging because the UserCodeCC class has @implementedVersion(2)
-// which affects how the test framework sets up the mock node. The important behavior is that
-// V2 nodes use Extended User Code Set, which is tested above. V1 nodes in the field will
-// simply not support the Extended commands and will fall back to the legacy Set command
-// through the assertSupportsCommand check in the API.
+integrationTest(
+	"UserCodeCCAPI.set uses legacy Set command on V1 nodes",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 1,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+						UserIDStatus.Disabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const api = node.commandClasses["User Code"];
+
+			// Set a user code on a V1 node
+			await api.set(1, UserIDStatus.Enabled, "1234");
+
+			// The node should have received a legacy Set command, not Extended User Code Set
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCSet,
+				{
+					errorMessage: "Node should have received UserCodeCCSet",
+				},
+			);
+
+			// Verify that the Extended User Code Set command was NOT used
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet,
+				{
+					errorMessage:
+						"Node should NOT have received UserCodeCCExtendedUserCodeSet",
+					noMatch: true,
+				},
+			);
+		},
+	},
+);
+
+integrationTest(
+	"UserCodeCCAPI.clear uses legacy Set command on V1 nodes",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 1,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+						UserIDStatus.Disabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const api = node.commandClasses["User Code"];
+
+			// Clear a user code on a V1 node
+			await api.clear(1);
+
+			// The node should have received a legacy Set command
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCSet,
+				{
+					errorMessage: "Node should have received UserCodeCCSet",
+				},
+			);
+
+			// Verify that the Extended User Code Set command was NOT used
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet,
+				{
+					errorMessage:
+						"Node should NOT have received UserCodeCCExtendedUserCodeSet",
+					noMatch: true,
+				},
+			);
+		},
+	},
+);
