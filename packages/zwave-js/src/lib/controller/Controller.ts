@@ -3800,6 +3800,12 @@ export class ZWaveController
 				return;
 			}
 
+			// It can also happen that this is received while we're including that node ourselves.
+			// In this case, we also ignore the message, otherwise we'd fail security bootstrapping.
+			if (this.inclusionState === InclusionState.Including) {
+				return;
+			}
+
 			const deviceClass = new DeviceClass(
 				nodeInfo.basicDeviceClass,
 				nodeInfo.genericDeviceClass,
