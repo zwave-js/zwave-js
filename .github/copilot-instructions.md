@@ -39,8 +39,9 @@ This repository holds the Z-Wave JS driver library, a TypeScript implementation 
 ## Testing
 
 - Use `vitest` for testing.
-- Do not create tests for functionality that interacts with (mock) devices, unless specifically instructed to do so.
 - Unit tests must be located next to the code they test, but with a `.test.ts` extension instead of `.ts`.
+- Do not create tests for functionality that interacts with (mock) devices, unless specifically instructed to do so.
+- Do not create tests when you are assigned a Github issue to fix, unless specifically instructed to do so.
 
 ## Reviewing Pull Requests
 
