@@ -378,8 +378,7 @@ export async function addAssociations(
 	options?: {
 		/**
 		 * Whether to force creating associations even if they are not allowed.
-		 * **WARNING:** Use this at your own risk! Invalid associations may cause unexpected behavior
-		 * or not work at all.
+		 * **Note:** Invalid associations will most likely not work
 		 */
 		force?: boolean;
 	},
