@@ -4,6 +4,21 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Device configuration parameters can now be marked as hidden (#8449)
+* Allow setting either `defaultToneId` or `defaultVolume` in Sound Switch CC (#8484)
+
+### Bugfixes
+* Remove overly strict ASCII event data padding validation in Entry Control CC (#8488)
+* Fixed an issue where an (unexpected) "Node ID added" notification during an ongoing inclusion would cause security bootstrapping to be skipped (#8496)
+* The `lastSeen` field is now restored when initalizing node statistics (#8499)
+* Spec compliance: use `Extended User Code Set` to control V2+ devices (#8486)
+
+### Config file changes
+* Omit `dimmingDuration` field for TKBHome Dimmer (#8458)
+* Add Heatit Z-TRM6 DC Thermostat (#8476)
+
 ## 15.17.1 (2025-11-24)
 ### Bugfixes
 * Fixed an error that could happen when receiving an S0 Nonce Report before the request acknowledgement (#8447)
