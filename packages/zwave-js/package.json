@@ -157,7 +157,7 @@
     "@types/semver": "^7.7.1",
     "@types/sinon": "^17.0.4",
     "@types/source-map-support": "^0.5.10",
-    "@typescript/native-preview": "7.0.0-dev.20251204.1",
+    "@typescript/native-preview": "7.0.0-dev.20251217.1",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",
     "del-cli": "^6.0.0",

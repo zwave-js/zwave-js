@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@types/w3c-web-serial": "^1.0.8",
-    "@typescript/native-preview": "7.0.0-dev.20251204.1",
+    "@typescript/native-preview": "7.0.0-dev.20251217.1",
     "@zwave-js/serial": "workspace:*",
     "@zwave-js/shared": "workspace:*",
     "del-cli": "^6.0.0",

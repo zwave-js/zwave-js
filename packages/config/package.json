@@ -100,7 +100,7 @@
     "@types/sinon": "^17.0.4",
     "@types/xml2js": "^0.4.14",
     "@types/yargs": "^17.0.34",
-    "@typescript/native-preview": "7.0.0-dev.20251204.1",
+    "@typescript/native-preview": "7.0.0-dev.20251217.1",
     "@zwave-js/maintenance": "workspace:*",
     "comment-json": "^4.3.0",
     "del-cli": "^6.0.0",
