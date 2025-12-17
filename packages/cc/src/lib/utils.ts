@@ -377,11 +377,11 @@ export async function addAssociations(
 	destinations: AssociationAddress[],
 	options?: {
 		/**
-		 * Whether to skip the check if associations are allowed.
+		 * Whether to force creating associations even if they are not allowed.
 		 * **WARNING:** Use this at your own risk! Invalid associations may cause unexpected behavior
 		 * or not work at all.
 		 */
-		skipAssociationCheck?: boolean;
+		force?: boolean;
 	},
 ): Promise<void> {
 	const nodeAndEndpointString = `${endpoint.nodeId}${
@@ -454,7 +454,7 @@ export async function addAssociations(
 
 	if (groupIsMultiChannel) {
 		// Check that all associations are allowed
-		if (!options?.skipAssociationCheck) {
+		if (!options?.force) {
 			const disallowedAssociations = destinations.map(
 				(a) => ({
 					...a,
@@ -509,7 +509,7 @@ export async function addAssociations(
 		}
 
 		// Check that all associations are allowed
-		if (!options?.skipAssociationCheck) {
+		if (!options?.force) {
 			const disallowedAssociations = destinations.map(
 				(a) => ({
 					...a,

@@ -708,7 +708,7 @@ getAllAssociations(nodeId: number): ReadonlyObjectKeyMap<
 
 checkAssociation(source: AssociationAddress, group: number, destination: AssociationAddress): AssociationCheckResult;
 
-addAssociations(source: AssociationAddress, group: number, destinations: AssociationAddress[]): Promise<void>;
+addAssociations(source: AssociationAddress, group: number, destinations: AssociationAddress[], options?: { force?: boolean }): Promise<void>;
 
 removeAssociations(source: AssociationAddress, group: number, destinations: AssociationAddress[]): Promise<void>;
 removeNodeFromAllAssociations(nodeId: number): Promise<void>;
@@ -718,7 +718,7 @@ removeNodeFromAllAssociations(nodeId: number): Promise<void>;
 - `getAllAssociationGroups` returns all association groups of a given **node and all its endpoints**. The returned `Map` uses the endpoint index as keys and its values are `Map`s of group IDs to their definition
 - `getAssociations` returns all defined associations of a given node **or** endpoint. If no endpoint is given, the associations for the root endpoint (`0`) are returned.
 - `getAllAssociations` returns all defined associations of a given **node and all its endpoints**. The returned `Map` uses the source node+endpoint as keys and its values are `Map`s of association group IDs to target node+endpoint.
-- `addAssociations` can be used to add one or more associations to a node's or endpoint's group. You should check if each association is allowed using `checkAssociation` before doing so.
+- `addAssociations` can be used to add one or more associations to a node's or endpoint's group. You should check if each association is allowed using `checkAssociation` before doing so, or use the `force` option to bypass the check.
 - To remove a previously added association, use `removeAssociations`
 - A node can be removed from all other nodes' associations using `removeNodeFromAllAssociations`
 
