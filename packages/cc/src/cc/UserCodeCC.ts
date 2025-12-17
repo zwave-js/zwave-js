@@ -522,7 +522,8 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 		>,
 		userCode: string | BytesView,
 	): Promise<SupervisionResult | undefined> {
-		if (userId > 255) {
+		// CL:0063.01.31.02.1: V2+ nodes must use Extended User Code Set
+		if (this.version >= 2 || userId > 255) {
 			return this.setMany([{ userId, userIdStatus, userCode }]);
 		}
 
@@ -669,7 +670,8 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	public async clear(
 		userId: number = 0,
 	): Promise<SupervisionResult | undefined> {
-		if (this.version > 1 || userId > 255) {
+		// CL:0063.01.31.02.1: V2+ nodes must use Extended User Code Set
+		if (this.version >= 2 || userId > 255) {
 			return this.setMany([
 				{ userId, userIdStatus: UserIDStatus.Available },
 			]);
@@ -2062,18 +2064,52 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): UserCodeCCExtendedUserCodeSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		validatePayload(raw.payload.length >= 1);
+		const numCodes = raw.payload[0];
+		let offset = 1;
+		const userCodes: UserCodeCCSetOptions[] = [];
 
-		// return new UserCodeCCExtendedUserCodeSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		// Parse each user code
+		for (let i = 0; i < numCodes; i++) {
+			validatePayload(raw.payload.length >= offset + 4);
+			const userId = raw.payload.readUInt16BE(offset);
+			const userIdStatus: UserIDStatus = raw.payload[offset + 2];
+			const codeLength = raw.payload[offset + 3];
+			validatePayload(raw.payload.length >= offset + 4 + codeLength);
+
+			if (userIdStatus === UserIDStatus.Available) {
+				userCodes.push({
+					userId,
+					userIdStatus,
+				});
+			} else {
+				const userCodeBuffer = raw.payload.subarray(
+					offset + 4,
+					offset + 4 + codeLength,
+				);
+				// Try to convert to string if it's printable ASCII
+				const userCodeString = userCodeBuffer.toString("utf8");
+				const userCode = isPrintableASCII(userCodeString)
+					? userCodeString
+					: userCodeBuffer;
+
+				userCodes.push({
+					userId,
+					userIdStatus,
+					userCode,
+				} as UserCodeCCSetOptions);
+			}
+
+			offset += 4 + codeLength;
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			userCodes,
+		});
 	}
 
 	public userCodes: UserCodeCCSetOptions[];
