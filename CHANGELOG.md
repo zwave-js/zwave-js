@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.18.0 (2025-12-17)
 ### Features
 * Device configuration parameters can now be marked as hidden (#8449)
 * Allow setting either `defaultToneId` or `defaultVolume` in Sound Switch CC (#8484)
