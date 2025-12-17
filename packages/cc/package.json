@@ -58,8 +58,8 @@
   "scripts": {
     "task": "yarn ts maintenance/_tasks.ts",
     "codegen": "yarn task codegen && yarn lint:codegen:fix",
-    "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
+    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
+    "postbuild": "tsx ../../maintenance/downlevel-decorators.ts build/esm && yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "ts": "tsx --conditions=@@dev",
@@ -79,6 +79,7 @@
     "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.55.1",
     "@types/node": "^20.19.23",
+    "@typescript/native-preview": "7.0.0-dev.20251217.1",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",
     "del-cli": "^6.0.0",

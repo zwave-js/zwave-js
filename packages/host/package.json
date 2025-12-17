@@ -40,7 +40,7 @@
     "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
+    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run"
@@ -55,6 +55,7 @@
     "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.55.1",
     "@types/node": "^20.19.23",
+    "@typescript/native-preview": "7.0.0-dev.20251217.1",
     "del-cli": "^6.0.0",
     "typescript": "5.9.3"
   }

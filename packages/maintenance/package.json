@@ -32,7 +32,7 @@
   },
   "scripts": {
     "ts": "tsx --conditions=@@dev",
-    "build": "tsc -b tsconfig.build.json --pretty",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {
@@ -44,6 +44,7 @@
     "@types/globrex": "^0.1.4",
     "@types/node": "^20.19.23",
     "@types/yargs": "^17.0.34",
+    "@typescript/native-preview": "7.0.0-dev.20251217.1",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/fmt": "^1.0.5",
     "@zwave-js/shared": "workspace:*",
