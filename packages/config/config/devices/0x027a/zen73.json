@@ -67,6 +67,21 @@
 			"#": "17",
 			"$if": "firmwareVersion >= 10.0",
 			"$import": "templates/zooz_template.json#local_programming"
+		},
+		{
+			"#": "18",
+			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_confirm_config_change"
+		},
+		{
+			"#": "19",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#scene_control_multi_tap"
+		},
+		{
+			"#": "20",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_color_opposite"
 		}
 	],
 	"compat": {
