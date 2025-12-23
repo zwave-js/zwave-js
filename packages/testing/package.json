@@ -58,7 +58,7 @@
     "@types/node": "^20.19.23",
     "@types/triple-beam": "^1.3.5",
     "@zwave-js/cc": "workspace:*",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "triple-beam": "*",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",
