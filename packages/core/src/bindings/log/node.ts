@@ -7,8 +7,10 @@ import DailyRotateFile from "winston-daily-rotate-file";
 import type Transport from "winston-transport";
 import { colorizer } from "../../log/Colorizer.js";
 import {
+	type SerialMessageFormatterMode,
 	combine,
 	formatLogMessage,
+	formatSerialMessage,
 	label,
 	printLogMessage,
 	timestamp,
@@ -58,8 +60,12 @@ export function createLoggerFormat(channel: string): Format {
 export function createDefaultTransportFormat(
 	colorize: boolean,
 	shortTimestamps: boolean,
+	serialMessageFormat: SerialMessageFormatterMode = "human-readable",
+	driver?: any,
 ): Format {
 	const formats = [
+		// Format serial messages first (before formatLogMessage)
+		formatSerialMessage(serialMessageFormat, driver),
 		// overwrite the default timestamp format if necessary
 		shortTimestamps
 			? timestamp(timestampFormatShort)
