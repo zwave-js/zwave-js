@@ -52,6 +52,7 @@ export interface NodeDump {
 		hardwareVersion?: number;
 	};
 	interviewStage: string;
+	failedS2: boolean;
 	ready: boolean;
 
 	dsk?: string;
