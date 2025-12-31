@@ -756,6 +756,13 @@
 			]
 		},
 		{
+			"$if": "firmwareVersion >= 1.4",
+			"#": "121",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Advanced Timer Mode",
+			"description": "Control timer with up taps, 1x = on, 2x = 5 min, 3x = 10 min, 4x = 15 min, 5x = 30 min. Overrides P12 and P53."
+		},
+		{
 			"#": "123",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Aux Switch Scenes",
