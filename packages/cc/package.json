@@ -84,7 +84,7 @@
     "del-cli": "^6.0.0",
     "es-main": "^1.4.0",
     "oxlint": "^1.28.0",
-    "oxlint-tsgolint": "^0.5.1",
+    "oxlint-tsgolint": "^0.10.0",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",
     "vitest": "^4.0.0"
