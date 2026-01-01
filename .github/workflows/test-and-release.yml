@@ -220,7 +220,7 @@ jobs:
         failure() &&
         github.event_name == 'pull_request' &&
         steps.lint.outputs.changed == 'true'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: lint-fix
         path: fix.patch
