@@ -1,4 +1,4 @@
-import ky, { type KyInstance } from "ky";
+import type { KyInstance } from "ky";
 
 let client: KyInstance | undefined;
 
@@ -9,6 +9,9 @@ let client: KyInstance | undefined;
  */
 export async function getHttpClient(): Promise<KyInstance> {
 	if (!client) {
+		// Dynamically import ky to avoid bundling it unnecessarily
+		const { default: ky } = await import("ky");
+
 		// Try to load undici for proxy support. This will fail in non-Node.js
 		// runtimes (e.g., browsers), so we fall back to plain ky without
 		// proxy support there

@@ -2,6 +2,7 @@ import { digest } from "@zwave-js/core";
 import { Bytes, formatId } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { Driver } from "../driver/Driver.js";
+import { getHttpClient } from "../driver/HTTPClient.js";
 
 const apiToken = "ef58278d935ccb26307800279458484d";
 const statisticsUrl = `https://stats.zwave-js.io/statistics`;
@@ -52,7 +53,6 @@ export async function compileStatistics(
 export async function sendStatistics(
 	statistics: Record<string, any>,
 ): Promise<boolean | number> {
-	const { getHttpClient } = await import("../driver/HTTPClient.js");
 	const ky = await getHttpClient();
 
 	try {

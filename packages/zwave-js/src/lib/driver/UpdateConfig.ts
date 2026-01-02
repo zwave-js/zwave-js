@@ -18,6 +18,7 @@ import path from "pathe";
 import semverInc from "semver/functions/inc.js";
 import semverValid from "semver/functions/valid.js";
 import semverMaxSatisfying from "semver/ranges/max-satisfying.js";
+import { getHttpClient } from "./HTTPClient.js";
 
 /**
  * Checks whether there is a compatible update for the currently installed config package.
@@ -27,7 +28,6 @@ import semverMaxSatisfying from "semver/ranges/max-satisfying.js";
 export async function checkForConfigUpdates(
 	currentVersion: string,
 ): Promise<string | undefined> {
-	const { getHttpClient } = await import("./HTTPClient.js");
 	const ky = await getHttpClient();
 	let registry: Record<string, unknown>;
 
@@ -82,7 +82,6 @@ export async function installConfigUpdate(
 		configDir: string;
 	},
 ): Promise<void> {
-	const { getHttpClient } = await import("./HTTPClient.js");
 	const ky = await getHttpClient();
 
 	let registryInfo: any;
