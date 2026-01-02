@@ -53,7 +53,7 @@
     "@types/w3c-web-serial": "^1.0.8",
     "@zwave-js/serial": "workspace:*",
     "@zwave-js/shared": "workspace:*",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "typescript": "5.9.3",
     "zwave-js": "workspace:*"
   }

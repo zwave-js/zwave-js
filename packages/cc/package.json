@@ -81,7 +81,7 @@
     "@types/node": "^20.19.23",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "es-main": "^1.4.0",
     "oxlint": "^1.28.0",
     "oxlint-tsgolint": "^0.10.0",
