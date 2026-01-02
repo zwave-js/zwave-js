@@ -6490,7 +6490,7 @@ export class ZWaveController
 	 * * the source node, endpoint or association group does not exist,
 	 * * the source node is a ZWLR node and the destination is not the SIS
 	 * * the destination node is a ZWLR node
-	 * * the association is not allowed for other reasons. In this case, the error's
+	 * * the association is not allowed for other reasons (unless `force` is set). In this case, the error's
 	 * `context` property will contain an array with all forbidden destinations, each with an added `checkResult` property
 	 * which contains the reason why the association is forbidden:
 	 *     ```ts
@@ -6505,6 +6505,13 @@ export class ZWaveController
 		source: AssociationAddress,
 		group: number,
 		destinations: AssociationAddress[],
+		options?: {
+			/**
+			 * Whether to force creating associations even if they are not allowed.
+			 * **Note:** Invalid associations will most likely not work
+			 */
+			force?: boolean;
+		},
 	): Promise<void> {
 		const node = this.nodes.getOrThrow(source.nodeId);
 		const endpoint = node.getEndpointOrThrow(source.endpoint ?? 0);
@@ -6514,6 +6521,7 @@ export class ZWaveController
 			endpoint,
 			group,
 			destinations,
+			options,
 		);
 
 		if (isLongRangeNodeId(source.nodeId)) return;
