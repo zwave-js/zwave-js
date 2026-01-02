@@ -105,7 +105,6 @@
 		},
 		{
 			"#": "8",
-			"$if": "firmwareVersion >= 10.40 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
 			"$import": "templates/zooz_template.json#led_indicator_color_extended",
 			"label": "LED Indicator Color (Button 2)",
 			"defaultValue": 0
