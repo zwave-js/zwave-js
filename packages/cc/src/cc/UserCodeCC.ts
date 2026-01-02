@@ -940,9 +940,10 @@ export class UserCodeCC extends CommandClass {
 		}
 
 		// Synchronize user codes and settings
-		if (ctx.getInterviewOptions()?.queryAllUserCodes) {
-			await this.refreshValues(ctx);
-		}
+		await this.refreshValues(
+			ctx,
+			ctx.getInterviewOptions()?.queryAllUserCodes ?? false,
+		);
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -950,6 +951,17 @@ export class UserCodeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+	): Promise<void>;
+
+	/** @internal */
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+		queryAllUserCodes: boolean,
+	): Promise<void>;
+
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+		queryAllUserCodes: boolean = false,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -979,6 +991,17 @@ export class UserCodeCC extends CommandClass {
 			UserCodeCCValues.supportsMultipleUserCodeReport,
 		);
 
+		// CL:0063.01.22.01.1:
+		// A controlling node SHOULD NOT automatically delete any user code unless it is the initial interview
+		// right after having included the supporting node in the network.
+		//
+		// We assume that the user wants to query all codes if they call this method directly
+		// During the initial interview (node.bootstrapped === false), we either delete
+		// all codes, or query them depending on the driver option.
+		const userCodeAction = (!node.bootstrapped && !queryAllUserCodes)
+			? "delete"
+			: "query";
+
 		// Check for changed values and codes
 		if (api.version >= 2) {
 			if (supportsAdminCode) {
@@ -1006,48 +1029,82 @@ export class UserCodeCC extends CommandClass {
 				});
 				currentUserCodeChecksum = await api.getUserCodeChecksum();
 			}
-			if (
-				!supportsUserCodeChecksum
-				|| currentUserCodeChecksum !== storedUserCodeChecksum
-			) {
+
+			// For a node controlling version 2 or newer:
+			// • It is OPTIONAL to send an Extended User Code Get Command for every User Identifier to a
+			//   node supporting version 2 or newer if:
+			//     – The controlling node requested the checksum and it is set to 0, or
+			//     – The controlling node issues an Extended User Code Set Command (User ID = 0, User ID
+			//       Status = 0) to delete all user codes, or
+			//     – The supporting node reports that no more User Identifiers are set in the Extended User
+			//       Code Report Command with the Next User Identifier field.
+
+			if (userCodeAction === "delete") {
 				ctx.logNode(node.id, {
-					message:
-						"checksum changed or is not supported, querying all user codes...",
+					message: "Initial interview, clearing all user codes...",
 					direction: "outbound",
 				});
+				await api.clear();
+			} else if (userCodeAction === "query") {
+				if (
+					!supportsUserCodeChecksum
+					|| currentUserCodeChecksum !== storedUserCodeChecksum
+				) {
+					ctx.logNode(node.id, {
+						message:
+							"checksum changed or is not supported, querying all user codes...",
+						direction: "outbound",
+					});
 
-				if (supportsMultipleUserCodeReport) {
-					// Query the user codes in bulk
-					let nextUserId = 1;
-					while (nextUserId > 0 && nextUserId <= supportedUsers) {
-						const response = await api.get(nextUserId, true);
-						if (response) {
-							nextUserId = response.nextUserId;
-						} else {
-							ctx.logNode(node.id, {
-								endpoint: this.endpointIndex,
-								message:
-									`Querying user code #${nextUserId} timed out, skipping the remaining interview...`,
-								level: "warn",
-							});
-							break;
+					if (supportsMultipleUserCodeReport) {
+						// Query the user codes in bulk
+						let nextUserId = 1;
+						while (nextUserId > 0 && nextUserId <= supportedUsers) {
+							const response = await api.get(nextUserId, true);
+							if (response) {
+								nextUserId = response.nextUserId;
+							} else {
+								ctx.logNode(node.id, {
+									endpoint: this.endpointIndex,
+									message:
+										`Querying user code #${nextUserId} timed out, skipping the remaining interview...`,
+									level: "warn",
+								});
+								break;
+							}
 						}
-					}
-				} else {
-					// Query one user code at a time
-					for (let userId = 1; userId <= supportedUsers; userId++) {
-						await api.get(userId);
+					} else {
+						// Query one user code at a time
+						for (
+							let userId = 1;
+							userId <= supportedUsers;
+							userId++
+						) {
+							await api.get(userId);
+						}
 					}
 				}
 			}
 		} else {
 			// V1
-			ctx.logNode(node.id, {
-				message: "querying all user codes...",
-				direction: "outbound",
-			});
-			for (let userId = 1; userId <= supportedUsers; userId++) {
-				await api.get(userId);
+
+			// • It is OPTIONAL to send a User Code Get Command for every User Identifier to a node sup-
+			//   porting version 1 if the controlling node issues a User Code Set Command (User ID = 0, User
+			//   ID Status = 0) to delete all user codes.
+			if (userCodeAction === "delete") {
+				ctx.logNode(node.id, {
+					message: "Initial interview, clearing all user codes...",
+					direction: "outbound",
+				});
+				await api.clear();
+			} else if (userCodeAction === "query") {
+				ctx.logNode(node.id, {
+					message: "querying all user codes...",
+					direction: "outbound",
+				});
+				for (let userId = 1; userId <= supportedUsers; userId++) {
+					await api.get(userId);
+				}
 			}
 		}
 	}

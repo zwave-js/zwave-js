@@ -19,6 +19,7 @@ import {
 	NOT_KNOWN,
 	type NodeId,
 	type PhysicalNodes,
+	type QueryNodeInterviewStage,
 	type QueryNodeStatus,
 	type SecurityManagers,
 	type SendCommandOptions,
@@ -181,7 +182,11 @@ export type CCAPIHost<TNode extends CCAPINode = CCAPINode> =
 	& LogNode;
 
 // Defines the necessary traits a node passed to a CC API must have
-export type CCAPINode = NodeId & ListenBehavior & QueryNodeStatus;
+export type CCAPINode =
+	& NodeId
+	& ListenBehavior
+	& QueryNodeStatus
+	& QueryNodeInterviewStage;
 
 // Defines the necessary traits an endpoint passed to a CC API must have
 export type CCAPIEndpoint =
