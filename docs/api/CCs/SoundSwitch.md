@@ -21,6 +21,11 @@ async getToneInfo(toneId: number): Promise<Pick<SoundSwitchCCToneInfoReport, "du
 ```ts
 async setConfiguration(
 	defaultToneId: number,
+	defaultVolume?: number,
+): Promise<SupervisionResult | undefined>;
+
+async setConfiguration(
+	defaultToneId: number | undefined,
 	defaultVolume: number,
 ): Promise<SupervisionResult | undefined>;
 ```

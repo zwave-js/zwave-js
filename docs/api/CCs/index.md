@@ -11,6 +11,7 @@ The **Command Classes API** provides a high-to-mid level entrypoint which allows
 <!-- AUTO-GENERATE: CC List -->
 
 - [Alarm Sensor CC](api/CCs/AlarmSensor.md) · `0x9c`
+- [Application Status CC](api/CCs/ApplicationStatus.md) · `0x22`
 - [Association CC](api/CCs/Association.md) · `0x85`
 - [Association Group Information CC](api/CCs/AssociationGroupInfo.md) · `0x59`
 - [Barrier Operator CC](api/CCs/BarrierOperator.md) · `0x66`
