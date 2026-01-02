@@ -57,7 +57,9 @@ import {
 	LevelChangeDirection,
 	MultilevelSwitchCommand,
 	SwitchType,
+	WindowCoveringParameter,
 } from "../lib/_Types.js";
+import { WindowCoveringCCValues } from "./WindowCoveringCC.js";
 
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],
@@ -735,6 +737,106 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public duration: Duration | undefined;
 
 	public currentValue: MaybeUnknown<number> | undefined;
+
+	/**
+	 * Manually persists the MultilevelSwitch values to the value database.
+	 * This should be called when Window Covering CC is not supported.
+	 */
+	public persistMultilevelSwitchValues(ctx: PersistValuesContext): void {
+		if (this.currentValue !== undefined) {
+			this.setValue(ctx, MultilevelSwitchCCValues.currentValue, this.currentValue);
+		}
+		if (this.targetValue !== undefined) {
+			this.setValue(ctx, MultilevelSwitchCCValues.targetValue, this.targetValue);
+		}
+		if (this.duration !== undefined) {
+			this.setValue(ctx, MultilevelSwitchCCValues.duration, this.duration);
+		}
+	}
+
+	/**
+	 * Override persistValues to check for Window Covering CC support and map values accordingly
+	 */
+	public persistValues(ctx: PersistValuesContext): boolean {
+		// Get the node and endpoint to check for Window Covering support
+		const node = this.getNode(ctx);
+		if (!node) return false;
+
+		const endpoint = node.getEndpoint(this.endpointIndex ?? 0);
+		if (!endpoint) return false;
+
+		// Check if Window Covering CC is supported
+		const supportsWindowCovering = endpoint.supportsCC(CommandClasses["Window Covering"]);
+
+		if (supportsWindowCovering) {
+			// Look up supported Window Covering parameters from the value database
+			const valueDB = this.getValueDB(ctx);
+			const supportedParameters = valueDB.getValue<readonly WindowCoveringParameter[]>(
+				WindowCoveringCCValues.supportedParameters.endpoint(this.endpointIndex),
+			);
+
+			if (!supportedParameters || supportedParameters.length === 0) {
+				// If no supported parameters are known yet, fall back to normal persistence
+				// This can happen if the Window Covering CC hasn't been interviewed yet
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message: "Window Covering CC supported but parameters not yet known, persisting MultilevelSwitchCCReport values normally",
+				});
+				return super.persistValues(ctx);
+			}
+
+			// Find the first odd parameter (has position support)
+			let windowCoveringParameter = supportedParameters.find(p => p % 2 === 1);
+
+			// If no odd parameter is found, use the first supported parameter
+			if (windowCoveringParameter === undefined) {
+				windowCoveringParameter = supportedParameters[0];
+			}
+
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: `mapping MultilevelSwitchCCReport to Window Covering CC parameter ${windowCoveringParameter} (${
+					getEnumMemberName(WindowCoveringParameter, windowCoveringParameter)
+				})`,
+			});
+
+			if (this.currentValue !== undefined) {
+				valueDB.setValue(
+					WindowCoveringCCValues.currentValue(windowCoveringParameter).endpoint(
+						this.endpointIndex,
+					),
+					this.currentValue,
+				);
+			}
+
+			if (this.targetValue !== undefined) {
+				valueDB.setValue(
+					WindowCoveringCCValues.targetValue(windowCoveringParameter).endpoint(
+						this.endpointIndex,
+					),
+					this.targetValue,
+				);
+			}
+
+			if (this.duration !== undefined) {
+				valueDB.setValue(
+					WindowCoveringCCValues.duration(windowCoveringParameter).endpoint(
+						this.endpointIndex,
+					),
+					this.duration,
+				);
+			}
+
+			return true;
+		} else {
+			// No Window Covering CC support - use default persistence
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: "persisting MultilevelSwitchCCReport values normally",
+			});
+			return super.persistValues(ctx);
+		}
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
