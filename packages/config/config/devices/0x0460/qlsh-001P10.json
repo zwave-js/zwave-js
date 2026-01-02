@@ -13,6 +13,15 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": {
+			"label": "Position"
+		},
+		"2": {
+			"label": "Tilt"
+			// Only active when in Venetian Blind mode
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "5",
