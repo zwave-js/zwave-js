@@ -6,7 +6,7 @@ runs:
   using: 'composite'
   steps:
     - name: Download turbo cache artifact
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: turbo-cache
         path: ${{ runner.temp }}
