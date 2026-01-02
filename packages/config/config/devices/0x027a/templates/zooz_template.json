@@ -732,6 +732,64 @@
 			}
 		]
 	},
+	"external_switch_type_0-12": {
+		"$import": "#external_switch_type_0-3",
+		"maxValue": 12,
+		"options": [
+			{
+				"label": "Automatic detection",
+				"value": 0
+			},
+			{
+				"label": "Toggle switch",
+				"value": 1
+			},
+			{
+				"label": "Momentary switch",
+				"value": 2
+			},
+			{
+				"label": "Toggle switch (reversed)",
+				"value": 3
+			},
+			{
+				"label": "Leak alarm (water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "Input type / Report type",
+				"value": 10
+			},
+			{
+				"label": "Garage door mode (momentary)",
+				"value": 11
+			},
+			{
+				"label": "Garage door opener (relay) / door sensor (input)",
+				"value": 12
+			}
+		]
+	},
 	"impulse_duration": {
 		"label": "Impulse Duration",
 		"description": "Expected duration of the impulse in Split 3-Way mode",
@@ -771,6 +829,42 @@
 		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 		"label": "Local Programming",
 		"description": "Controls programming (eg. including/excluding) device through physical inputs, allowing the according input sequence to be used for scene control instead. Factory reset remains available."
+	},
+	"local_programming_inverted": {
+		"label": "Local Programming",
+		"description": "Controls programming (eg. including/excluding) device through physical inputs, allowing the according input sequence to be used for scene control instead. Factory reset remains available.",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			},
+			{
+				"label": "Enable",
+				"value": 1
+			}
+		]
+	},
+	"input_trigger": {
+		"label": "Input Trigger",
+		"description": "Choose if you’d like the connected input (wall switch or other type of input) to trigger the load connected to the relay or if you want to use the input reports for monitoring only and separate the output from the input.",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Enable",
+				"value": 0
+			},
+			{
+				"label": "Disable",
+				"value": 1
+			}
+		]
 	},
 	"local_zwave_control": {
 		"label": "Local/Z-Wave Control",
