@@ -62,6 +62,7 @@ export const cacheKeys = {
 			_securityClassBaseKey: `${nodeBaseKey}securityClasses`,
 			_priorityReturnRouteBaseKey: `${nodeBaseKey}priorityReturnRoute`,
 			interviewStage: `${nodeBaseKey}interviewStage`,
+			bootstrapped: `${nodeBaseKey}bootstrapped`,
 			deviceClass: `${nodeBaseKey}deviceClass`,
 			isListening: `${nodeBaseKey}isListening`,
 			isFrequentListening: `${nodeBaseKey}isFrequentListening`,

@@ -2646,6 +2646,8 @@ protocol version:      ${this.protocolVersion}`;
 		// Mark already-interviewed nodes as potentially ready
 		if (this.interviewStage === InterviewStage.Complete) {
 			this.updateReadyMachine({ value: "RESTART_FROM_CACHE" });
+			// If the `bootstrapped` flag is missing, set it now
+			this.bootstrapped = true;
 		}
 	}
 
