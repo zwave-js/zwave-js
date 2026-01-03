@@ -1145,5 +1145,57 @@
 		"inclusion": "Tap up 3 times quickly. The LED indicator will blink green. It will turn green for 2 seconds if inclusion is successful or turn red for 2 seconds if the pairing attempt fails.",
 		"exclusion": "Click the Z-Wave button 3 times quickly. The LED indicator will start blinking green. It will turn green for 2 seconds when exclusion is successful.",
 		"reset": "Click the Z-Wave button twice and hold it for 15 seconds. The LED indicator will flash during the process and turn red for 3 seconds to confirm successful reset."
+	},
+	"custom_brightness_zwave": {
+		"$import": "#custom_brightness",
+		"label": "Custom Brightness Level (Z-Wave Control)",
+		"description": "Set the custom brightness level (or leave the last brightness level) for Basic Set ON commands when the device is triggered by another device in direct association."
+	},
+	"scene_control_multi_tap": {
+		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+		"label": "Scene Control: Multi-Tap",
+		"description": "Disable multi-tap scene control so that only single taps report via central scene. Once this functionality is disabled, double taps, held, released, 3-tap, 4-tap, and 5-tap scene events will be ignored and won't be reported to the hub.",
+		"defaultValue": 0
+	},
+	"gamma_factor": {
+		"label": "Gamma Factor",
+		"description": "Adjusts the gamma factor to improve dimming performance. A higher gamma results in more gradual dimming at low levels, while a lower gamma leads to a more linear or abrupt transition in perceived light intensity. Values 10-50 correspond to gamma 1.0-5.0.",
+		"valueSize": 1,
+		"minValue": 10,
+		"maxValue": 50,
+		"defaultValue": 20,
+		"unsigned": true
+	},
+	"led_indicator_color_opposite": {
+		"label": "LED Indicator Color (Opposite State)",
+		"description": "Choose the color of the LED indicator in opposite switch state (instead of off) when the LED indicator mode (parameter 2) is set to values 0 or 1. The color chosen in this setting will apply instead of the default 'off' value (LED doesn't light up).",
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 4,
+		"defaultValue": 0,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "White",
+				"value": 1
+			},
+			{
+				"label": "Blue",
+				"value": 2
+			},
+			{
+				"label": "Green",
+				"value": 3
+			},
+			{
+				"label": "Red",
+				"value": 4
+			}
+		]
 	}
 }
