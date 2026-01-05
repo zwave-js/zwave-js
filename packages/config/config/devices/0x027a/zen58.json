@@ -5,7 +5,6 @@
 	"description": "Low Voltage XS Relay",
 	"devices": [
 		{
-			// 800LR Long Range capable version
 			"productType": "0x0004",
 			"productId": "0x0322"
 		}
@@ -17,8 +16,20 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$import": "~/templates/master_template.json#enable_led_indicator",
-			"defaultValue": 1
+			"label": "LED Indicator",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 0
+				},
+				{
+					"label": "On when load is on",
+					"value": 1
+				}
+			]
 		},
 		{
 			"#": "2",
@@ -35,7 +46,9 @@
 		},
 		{
 			"#": "5",
-			"$import": "templates/zooz_template.json#external_switch_type_0-12"
+			"$import": "templates/zooz_template.json#external_switch_type_0-12",
+			"description": "Some of these values have special behavior. Check the official device manual for specifics.",
+			"defaultValue": 0
 		},
 		{
 			"#": "6",
@@ -43,11 +56,13 @@
 		},
 		{
 			"#": "7",
-			"$import": "templates/zooz_template.json#auto_off_timer_5x"
+			"$import": "templates/zooz_template.json#auto_off_timer_5x",
+			"maxValue": 2678400
 		},
 		{
 			"#": "8",
-			"$import": "templates/zooz_template.json#auto_on_timer_5x"
+			"$import": "templates/zooz_template.json#auto_on_timer_5x",
+			"maxValue": 2678400
 		},
 		{
 			"#": "9",
@@ -73,7 +88,9 @@
 		}
 	],
 	"metadata": {
-		"$import": "templates/zooz_template.json#zen5x_metadata",
+		"inclusion": "Click the Z-Wave button 3 times quickly. The LED indicator will blink green while processing. It will turn solid green for 2 seconds if inclusion is successful or turn solid red for 2 seconds if the pairing attempt fails.",
+		"exclusion": "Click the Z-Wave button 3 times quickly. The LED indicator will blink green while processing. It will turn solid green for 2 seconds when exclusion is successful or turn solid red for 2 seconds if exclusion fails.",
+		"reset": "Click the Z-Wave button once and immediately after, press and hold the button for 15 seconds. The LED indicator will flash during the process and turn red for 3 seconds to confirm successful reset.",
 		"manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-z-wave-long-range-lv-xs-relay-zen58-800lr-manual.pdf"
 	}
 }
