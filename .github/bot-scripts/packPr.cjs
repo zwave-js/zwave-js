@@ -20,10 +20,13 @@ async function main(param) {
 	const npmToken = /** @type {string} */ (process.env.NPM_TOKEN);
 	const pr = context.issue.number;
 
-	const { data: pull } = await github.rest.pulls.get({
-		...options,
-		pull_number: pr,
-	});
+	// Only use the sanitized env variable for the merge commit sha
+	const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
+	if (!mergeCommitSha) {
+		throw new Error(
+			"Missing env variable MERGE_COMMIT_SHA",
+		);
+	}
 
 	let success = false;
 	let newVersion;
@@ -44,7 +47,7 @@ async function main(param) {
 				require(`${process.env.GITHUB_WORKSPACE}/package.json`).version,
 				"prerelease",
 			)
-		}-pr-${pr}-${pull.merge_commit_sha.slice(0, 7)}`;
+		}-pr-${pr}-${mergeCommitSha.slice(0, 7)}`;
 
 		// Bump versions
 		await exec.exec(

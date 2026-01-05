@@ -21,7 +21,15 @@ jobs:
         node-version: [22] # This should be LTS
 
     steps:
-    - uses: actions/github-script@v8
+    # Checkout master branch first to get trusted bot scripts for security checks
+    - name: Checkout master branch (trusted)
+      uses: actions/checkout@v6
+      with:
+        path: trusted
+
+    - name: Check PR information
+      id: pr-info
+      uses: actions/github-script@v8
       with:
         github-token: ${{secrets.BOT_TOKEN}}
         script: |
@@ -43,6 +51,41 @@ jobs:
             process.exit(1);
           }
 
+          // Security check: Ensure no commits were pushed or force-pushed after the approval comment
+          // IMPORTANT: Load from trusted master checkout, not the PR code
+          const { wasPRModifiedAfterComment } = require(`${process.env.GITHUB_WORKSPACE}/trusted/.github/bot-scripts/utils.cjs`);
+          let wasModified;
+          try {
+            wasModified = await wasPRModifiedAfterComment(
+              github,
+              options.owner,
+              options.repo,
+              context.payload.issue.number,
+              context.payload.comment.id,
+            );
+          } catch (e) {
+            console.error(e);
+            await github.rest.issues.createComment({
+              ...options,
+              issue_number: context.payload.issue.number,
+              body: `❌ I tried my best, but something went wrong.`,
+            });
+            process.exit(1);
+          }
+
+          if (wasModified) {
+            await github.rest.issues.createComment({
+              ...options,
+              issue_number: context.payload.issue.number,
+              body: `😥 This PR was updated after your comment. Please review the new changes and comment again to publish.`,
+            });
+            process.exit(1);
+          }
+
+          // From now on, only work with the SHA at comment time
+          const pinnedSha = pull.merge_commit_sha;
+          core.setOutput('merge_commit_sha', pinnedSha);
+
           await github.rest.issues.createComment({
             ...options,
             issue_number: context.issue.number,
@@ -56,7 +99,7 @@ jobs:
       with:
         token: ${{secrets.BOT_TOKEN}}
         fetch-depth: 0 # We need the history for versioning with yarn
-        ref: 'refs/pull/${{ github.event.issue.number }}/merge'
+        ref: ${{ steps.pr-info.outputs.merge_commit_sha }}
 
     - name: Switch to a branch
       run: git switch -c temp
@@ -71,11 +114,13 @@ jobs:
       uses: actions/github-script@v8
       env:
         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        MERGE_COMMIT_SHA: ${{ steps.pr-info.outputs.merge_commit_sha }}
       with:
         github-token: ${{ secrets.BOT_TOKEN }}
         result-encoding: string
         script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          // Use trusted scripts from master, not from the PR
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/trusted/.github/bot-scripts/index.cjs`);
           return bot.packPr({github, context});
 
 
