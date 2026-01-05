@@ -80,6 +80,7 @@ export const cacheKeys = {
 					)
 				}`,
 			dsk: `${nodeBaseKey}dsk`,
+			failedS2Bootstrapping: `${nodeBaseKey}failedS2Bootstrapping`,
 			endpoint: (index: number) => {
 				const endpointBaseKey = `${nodeBaseKey}endpoint.${index}.`;
 				const ccBaseKey = `${endpointBaseKey}commandClass.`;
@@ -104,7 +105,6 @@ export const cacheKeys = {
 			defaultVolume: `${nodeBaseKey}defaultVolume`,
 			lastSeen: `${nodeBaseKey}lastSeen`,
 			deviceConfigHash: `${nodeBaseKey}deviceConfigHash`,
-			failedS2Bootstrapping: `${nodeBaseKey}failedS2Bootstrapping`,
 		};
 	},
 } as const;
@@ -453,6 +453,10 @@ export function deserializeNetworkCacheValue(
 			fail();
 		}
 
+		case "failedS2Bootstrapping": {
+			return ensureType(value, "boolean");
+		}
+
 		case "supportsSecurity":
 			return ensureType(value, "boolean");
 		case "supportsBeaming":
@@ -505,10 +509,6 @@ export function deserializeNetworkCacheValue(
 
 			if (value) return value;
 			fail();
-		}
-
-		case "failedS2Bootstrapping": {
-			return ensureType(value, "boolean");
 		}
 	}
 

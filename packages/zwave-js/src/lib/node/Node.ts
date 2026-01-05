@@ -4034,6 +4034,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 			dsk: this.dsk ? dskToString(this.dsk) : undefined,
 			securityClasses: {},
+			failedS2Bootstrapping: this.failedS2Bootstrapping,
 
 			isListening: this.isListening ?? "unknown",
 			isFrequentListening: this.isFrequentListening ?? "unknown",
@@ -4051,8 +4052,6 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			supportedDataRates: this.supportedDataRates
 				? [...this.supportedDataRates]
 				: "unknown",
-
-			failedS2Bootstrapping: this.failedS2Bootstrapping,
 
 			...endpointDump,
 		};

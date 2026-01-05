@@ -56,6 +56,7 @@ export interface NodeDump {
 
 	dsk?: string;
 	securityClasses: Record<string, boolean | "unknown">;
+	failedS2Bootstrapping?: boolean;
 
 	isListening: boolean | "unknown";
 	isFrequentListening: FLiRS | "unknown";
@@ -76,6 +77,4 @@ export interface NodeDump {
 
 	configFileName?: string;
 	compatFlags?: JSONObject;
-
-	failedS2Bootstrapping?: boolean;
 }
