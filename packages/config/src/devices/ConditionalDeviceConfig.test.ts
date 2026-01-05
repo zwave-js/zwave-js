@@ -300,6 +300,83 @@ test("parses a device config with conditional config parameter options", (t) => 
 		]);
 });
 
+test("supports sdkVersion in conditions", (t) => {
+	const json = {
+		manufacturer: [
+			{ $if: "sdkVersion >= 7.0", value: "Z-Wave Alliance" },
+			"Legacy Manufacturer",
+		],
+		manufacturerId: "0x0000",
+		label: "ZST10-700",
+		description: "700 Series-based Controller",
+		devices: [
+			{
+				productType: "0x0004",
+				productId: "0x0004",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		metadata: {
+			comments: [
+				{
+					$if: "sdkVersion >= 7.19.0",
+					level: "info",
+					text: "This SDK version has feature X",
+				},
+				{
+					$if: "sdkVersion < 7.19.0",
+					level: "warning",
+					text: "This SDK version lacks feature X",
+				},
+			],
+		},
+	};
+
+	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
+	// Ensure that evaluating the config works
+	const deviceId = {
+		manufacturerId: 0x0000,
+		productType: 0x0004,
+		productId: 0x0004,
+		firmwareVersion: "1.0",
+	};
+
+	const evaluatedWithOldSDK = condConfig.evaluate({
+		...deviceId,
+		sdkVersion: "7.18.0",
+	});
+	t.expect(evaluatedWithOldSDK.manufacturer).toBe("Z-Wave Alliance");
+	t.expect(evaluatedWithOldSDK.metadata?.comments).toStrictEqual([
+		{
+			level: "warning",
+			text: "This SDK version lacks feature X",
+		},
+	]);
+
+	const evaluatedWithNewSDK = condConfig.evaluate({
+		...deviceId,
+		sdkVersion: "7.19.0",
+	});
+	t.expect(evaluatedWithNewSDK.manufacturer).toBe("Z-Wave Alliance");
+	t.expect(evaluatedWithNewSDK.metadata?.comments).toStrictEqual([
+		{
+			level: "info",
+			text: "This SDK version has feature X",
+		},
+	]);
+
+	// Without sdkVersion, should fall back to default
+	const evaluatedWithoutSDK = condConfig.evaluate(deviceId);
+	t.expect(evaluatedWithoutSDK.manufacturer).toBe("Legacy Manufacturer");
+	t.expect(
+		isArray(evaluatedWithoutSDK.metadata?.comments)
+			&& evaluatedWithoutSDK.metadata?.comments.length,
+	).toBe(0);
+});
+
 test("supports x.y.z firmware versions", (t) => {
 	const json = {
 		manufacturer: "Silicon Labs",
