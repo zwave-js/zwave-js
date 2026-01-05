@@ -756,6 +756,13 @@
 			]
 		},
 		{
+			"#": "121",
+			"$if": "firmwareVersion >= 1.4",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Advanced Timer Mode",
+			"description": "Control timer with up taps, 1x = on, 2x = 5 min, 3x = 10 min, 4x = 15 min, 5x = 30 min. Overrides P12 and P53."
+		},
+		{
 			"#": "123",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Aux Switch Scenes",
@@ -904,6 +911,6 @@
 		"inclusion": "Triple-click config button",
 		"exclusion": "Triple-click config button",
 		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red. Release the buttons and the switch will reset to factory defaults.",
-		"manual": "https://community.inovelli.com/t/resources-red-series-smart-2-1-switch-on-off-dimmer-manual/13706"
+		"manual": "https://help.inovelli.com/en/articles/8194492-red-series-dimmer-switch-manual"
 	}
 }

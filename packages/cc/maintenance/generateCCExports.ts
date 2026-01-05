@@ -175,7 +175,7 @@ export async function generateCCExports(): Promise<void> {
 
 	// Generate type and value exports for all found symbols
 	for (
-		const [filename, fileExports] of [...findExports().entries()].sort(
+		const [filename, fileExports] of [...findExports().entries()].toSorted(
 			([fileA], [fileB]) => compareStrings(fileA, fileB),
 		)
 	) {
@@ -209,11 +209,9 @@ export async function generateCCExports(): Promise<void> {
 					.join(", ")
 			} };\n`;
 
-			registerFunctionContent += `void ${
-				valueExports
-					.map((e) => e.name)
-					.join(", ")
-			};\n`;
+			registerFunctionContent += valueExports
+				.map((e) => `void ${e.name};`)
+				.join("\n") + "\n";
 		}
 	}
 

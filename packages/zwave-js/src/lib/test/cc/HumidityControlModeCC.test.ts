@@ -17,7 +17,7 @@ import { test } from "vitest";
 const host = createTestingHost();
 const nodeId = 2;
 
-function buildCCBuffer(payload: Uint8Array): Uint8Array {
+function buildCCBuffer(payload: BytesView): BytesView {
 	return Bytes.concat([
 		Uint8Array.from([
 			CommandClasses["Humidity Control Mode"], // CC

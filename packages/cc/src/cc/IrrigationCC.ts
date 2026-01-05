@@ -552,7 +552,7 @@ export class IrrigationCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSystemInfo() {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -579,7 +579,7 @@ export class IrrigationCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSystemStatus() {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -617,7 +617,7 @@ export class IrrigationCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSystemConfig() {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -664,7 +664,7 @@ export class IrrigationCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getValveInfo(valveId: ValveId) {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -715,7 +715,7 @@ export class IrrigationCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getValveConfig(valveId: ValveId) {
 		this.assertSupportsCommand(
 			IrrigationCommand,

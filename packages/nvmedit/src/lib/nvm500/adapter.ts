@@ -3,7 +3,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
 import { SUC_MAX_UPDATES } from "../../consts.js";
 import type { NVM500, NVM500Info } from "../NVM500.js";
@@ -98,7 +98,7 @@ export class NVM500Adapter implements NVMAdapter {
 				return 500;
 
 			case "applicationData":
-				return this.getOnly<Uint8Array>(
+				return this.getOnly<BytesView>(
 					"EEOFFSET_HOST_OFFSET_START_far",
 				);
 
@@ -416,7 +416,8 @@ export class NVM500Adapter implements NVMAdapter {
 					"EEOFFSET_CMDCLASS_LEN_far",
 					value.length,
 				);
-				const CCs = new Array(APPL_NODEPARM_MAX).fill(0xff);
+				const CCs = Array.from<number>({ length: APPL_NODEPARM_MAX })
+					.fill(0xff);
 				for (let i = 0; i < value.length; i++) {
 					if (i < APPL_NODEPARM_MAX) {
 						CCs[i] = value[i];
@@ -464,9 +465,11 @@ export class NVM500Adapter implements NVMAdapter {
 
 			case "sucUpdateEntries": {
 				const entries = value as SUCUpdateEntry[];
-				const sucUpdateEntries = new Array(SUC_MAX_UPDATES).fill(
-					undefined,
-				);
+				const sucUpdateEntries = Array
+					.from<SUCUpdateEntry | undefined>({
+						length: SUC_MAX_UPDATES,
+					})
+					.fill(undefined);
 				for (let i = 0; i < entries.length; i++) {
 					if (i < SUC_MAX_UPDATES) {
 						sucUpdateEntries[i] = entries[i];

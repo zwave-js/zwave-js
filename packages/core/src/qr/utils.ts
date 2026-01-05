@@ -43,7 +43,7 @@ export function readUInt16(qr: string, offset: number): number {
 	return ret;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+// oxlint-disable-next-line typescript/explicit-module-boundary-types
 export function parseTLVData(type: ProvisioningInformationType, data: string) {
 	switch (type) {
 		case ProvisioningInformationType.ProductType: {

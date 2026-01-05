@@ -127,6 +127,4 @@ async setTimeout(
 - **writeable:** true
 - **stateful:** true
 - **secret:** false
-- **value type:** `"number"`
-- **min. value:** 0
-- **max. value:** 255
+- **value type:** `"timeout"`

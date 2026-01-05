@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/consistent-type-exports */
 export * from "./AsyncQueue.js";
-export { Bytes } from "./Bytes.js";
+export { Bytes, type BytesView } from "./Bytes.js";
 export * from "./EventTarget.js";
 export { ObjectKeyMap } from "./ObjectKeyMap.js";
 export type { ReadonlyObjectKeyMap } from "./ObjectKeyMap.js";

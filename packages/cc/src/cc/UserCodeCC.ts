@@ -21,6 +21,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	getEnumMemberName,
 	isPrintableASCII,
 	isPrintableASCIIWithWhitespace,
@@ -173,14 +174,14 @@ function parseExtendedUserCode(payload: Bytes): {
 
 function validateCode(code: string, supportedChars: string): boolean {
 	if (code.length < 4 || code.length > 10) return false;
-	return [...code].every((char) => supportedChars.includes(char));
+	return code.split("").every((char) => supportedChars.includes(char));
 }
 
 function setUserCodeMetadata(
 	this: UserCodeCC,
 	ctx: GetValueDB & GetSupportedCCVersion,
 	userId: number,
-	userCode?: string | Uint8Array,
+	userCode?: string | BytesView,
 ) {
 	const statusValue = UserCodeCCValues.userIdStatus(userId);
 	const codeValue = UserCodeCCValues.userCode(userId);
@@ -252,7 +253,7 @@ function persistUserCode(
 }
 
 /** Formats a user code in a way that's safe to print in public logs */
-export function userCodeToLogString(userCode: string | Uint8Array): string {
+export function userCodeToLogString(userCode: string | BytesView): string {
 	if (userCode.length === 0) return "(empty)";
 	return "*".repeat(userCode.length);
 }
@@ -465,7 +466,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	>;
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(userId: number, multiple: boolean = false) {
 		if (userId > 255 || multiple) {
 			this.assertSupportsCommand(
@@ -519,9 +520,10 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			UserIDStatus,
 			UserIDStatus.Available | UserIDStatus.StatusNotAvailable
 		>,
-		userCode: string | Uint8Array,
+		userCode: string | BytesView,
 	): Promise<SupervisionResult | undefined> {
-		if (userId > 255) {
+		// CL:0063.01.31.02.1: V2+ nodes must use Extended User Code Set
+		if (this.version >= 2 || userId > 255) {
 			return this.setMany([{ userId, userIdStatus, userCode }]);
 		}
 
@@ -668,7 +670,8 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	public async clear(
 		userId: number = 0,
 	): Promise<SupervisionResult | undefined> {
-		if (this.version > 1 || userId > 255) {
+		// CL:0063.01.31.02.1: V2+ nodes must use Extended User Code Set
+		if (this.version >= 2 || userId > 255) {
 			return this.setMany([
 				{ userId, userIdStatus: UserIDStatus.Available },
 			]);
@@ -696,7 +699,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCapabilities() {
 		this.assertSupportsCommand(
 			UserCodeCommand,
@@ -937,9 +940,10 @@ export class UserCodeCC extends CommandClass {
 		}
 
 		// Synchronize user codes and settings
-		if (ctx.getInterviewOptions()?.queryAllUserCodes) {
-			await this.refreshValues(ctx);
-		}
+		await this.refreshValues(
+			ctx,
+			ctx.getInterviewOptions()?.queryAllUserCodes ?? false,
+		);
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -947,6 +951,17 @@ export class UserCodeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+	): Promise<void>;
+
+	/** @internal */
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+		queryAllUserCodes: boolean,
+	): Promise<void>;
+
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+		queryAllUserCodes: boolean = false,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -976,6 +991,17 @@ export class UserCodeCC extends CommandClass {
 			UserCodeCCValues.supportsMultipleUserCodeReport,
 		);
 
+		// CL:0063.01.22.01.1:
+		// A controlling node SHOULD NOT automatically delete any user code unless it is the initial interview
+		// right after having included the supporting node in the network.
+		//
+		// We assume that the user wants to query all codes if they call this method directly
+		// During the initial interview (node.bootstrapped === false), we either delete
+		// all codes, or query them depending on the driver option.
+		const userCodeAction = (!node.bootstrapped && !queryAllUserCodes)
+			? "delete"
+			: "query";
+
 		// Check for changed values and codes
 		if (api.version >= 2) {
 			if (supportsAdminCode) {
@@ -1003,48 +1029,82 @@ export class UserCodeCC extends CommandClass {
 				});
 				currentUserCodeChecksum = await api.getUserCodeChecksum();
 			}
-			if (
-				!supportsUserCodeChecksum
-				|| currentUserCodeChecksum !== storedUserCodeChecksum
-			) {
+
+			// For a node controlling version 2 or newer:
+			// • It is OPTIONAL to send an Extended User Code Get Command for every User Identifier to a
+			//   node supporting version 2 or newer if:
+			//     – The controlling node requested the checksum and it is set to 0, or
+			//     – The controlling node issues an Extended User Code Set Command (User ID = 0, User ID
+			//       Status = 0) to delete all user codes, or
+			//     – The supporting node reports that no more User Identifiers are set in the Extended User
+			//       Code Report Command with the Next User Identifier field.
+
+			if (userCodeAction === "delete") {
 				ctx.logNode(node.id, {
-					message:
-						"checksum changed or is not supported, querying all user codes...",
+					message: "Initial interview, clearing all user codes...",
 					direction: "outbound",
 				});
+				await api.clear();
+			} else if (userCodeAction === "query") {
+				if (
+					!supportsUserCodeChecksum
+					|| currentUserCodeChecksum !== storedUserCodeChecksum
+				) {
+					ctx.logNode(node.id, {
+						message:
+							"checksum changed or is not supported, querying all user codes...",
+						direction: "outbound",
+					});
 
-				if (supportsMultipleUserCodeReport) {
-					// Query the user codes in bulk
-					let nextUserId = 1;
-					while (nextUserId > 0 && nextUserId <= supportedUsers) {
-						const response = await api.get(nextUserId, true);
-						if (response) {
-							nextUserId = response.nextUserId;
-						} else {
-							ctx.logNode(node.id, {
-								endpoint: this.endpointIndex,
-								message:
-									`Querying user code #${nextUserId} timed out, skipping the remaining interview...`,
-								level: "warn",
-							});
-							break;
+					if (supportsMultipleUserCodeReport) {
+						// Query the user codes in bulk
+						let nextUserId = 1;
+						while (nextUserId > 0 && nextUserId <= supportedUsers) {
+							const response = await api.get(nextUserId, true);
+							if (response) {
+								nextUserId = response.nextUserId;
+							} else {
+								ctx.logNode(node.id, {
+									endpoint: this.endpointIndex,
+									message:
+										`Querying user code #${nextUserId} timed out, skipping the remaining interview...`,
+									level: "warn",
+								});
+								break;
+							}
 						}
-					}
-				} else {
-					// Query one user code at a time
-					for (let userId = 1; userId <= supportedUsers; userId++) {
-						await api.get(userId);
+					} else {
+						// Query one user code at a time
+						for (
+							let userId = 1;
+							userId <= supportedUsers;
+							userId++
+						) {
+							await api.get(userId);
+						}
 					}
 				}
 			}
 		} else {
 			// V1
-			ctx.logNode(node.id, {
-				message: "querying all user codes...",
-				direction: "outbound",
-			});
-			for (let userId = 1; userId <= supportedUsers; userId++) {
-				await api.get(userId);
+
+			// • It is OPTIONAL to send a User Code Get Command for every User Identifier to a node sup-
+			//   porting version 1 if the controlling node issues a User Code Set Command (User ID = 0, User
+			//   ID Status = 0) to delete all user codes.
+			if (userCodeAction === "delete") {
+				ctx.logNode(node.id, {
+					message: "Initial interview, clearing all user codes...",
+					direction: "outbound",
+				});
+				await api.clear();
+			} else if (userCodeAction === "query") {
+				ctx.logNode(node.id, {
+					message: "querying all user codes...",
+					direction: "outbound",
+				});
+				for (let userId = 1; userId <= supportedUsers; userId++) {
+					await api.get(userId);
+				}
 			}
 		}
 	}
@@ -1193,11 +1253,45 @@ export class UserCodeCC extends CommandClass {
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 		userId: number,
-	): MaybeNotKnown<string | Uint8Array> {
+	): MaybeNotKnown<string | BytesView> {
 		return ctx
 			.getValueDB(endpoint.nodeId)
-			.getValue<string | Uint8Array>(
+			.getValue<string | BytesView>(
 				UserCodeCCValues.userCode(userId).endpoint(endpoint.index),
+			);
+	}
+
+	/**
+	 * Sets the status of a user ID in the cache.
+	 */
+	public static setUserIdStatusCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		userId: number,
+		status: UserIDStatus,
+	): void {
+		ctx
+			.getValueDB(endpoint.nodeId)
+			.setValue(
+				UserCodeCCValues.userIdStatus(userId).endpoint(endpoint.index),
+				status,
+			);
+	}
+
+	/**
+	 * Sets the code belonging to a user ID in the cache.
+	 */
+	public static setUserCodeCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		userId: number,
+		code: string | BytesView,
+	): void {
+		ctx
+			.getValueDB(endpoint.nodeId)
+			.setValue(
+				UserCodeCCValues.userCode(userId).endpoint(endpoint.index),
+				code,
 			);
 	}
 }
@@ -1220,7 +1314,7 @@ export type UserCodeCCSetOptions =
 			UserIDStatus,
 			UserIDStatus.Available | UserIDStatus.StatusNotAvailable
 		>;
-		userCode: string | Uint8Array;
+		userCode: string | BytesView;
 	};
 
 @CCCommand(UserCodeCommand.Set)
@@ -1293,7 +1387,7 @@ export class UserCodeCCSet extends UserCodeCC {
 
 	public userId: number;
 	public userIdStatus: UserIDStatus;
-	public userCode: string | Uint8Array;
+	public userCode: string | BytesView;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
@@ -1424,7 +1518,7 @@ export class UserCodeCCReport extends UserCodeCC
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public toNotificationEventParameters() {
 		return { userId: this.userId };
 	}
@@ -1692,7 +1786,7 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 			| (this.supportsMultipleUserCodeSet ? 0b001_00000 : 0)
 			| (supportedKeypadModesBitmask.length & 0b000_11111);
 
-		const keysAsNumbers = [...this.supportedASCIIChars].map((char) =>
+		const keysAsNumbers = this.supportedASCIIChars.split("").map((char) =>
 			char.charCodeAt(0)
 		);
 		const supportedKeysBitmask = encodeBitMask(keysAsNumbers, undefined, 0);
@@ -2027,18 +2121,52 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): UserCodeCCExtendedUserCodeSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		validatePayload(raw.payload.length >= 1);
+		const numCodes = raw.payload[0];
+		let offset = 1;
+		const userCodes: UserCodeCCSetOptions[] = [];
 
-		// return new UserCodeCCExtendedUserCodeSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		// Parse each user code
+		for (let i = 0; i < numCodes; i++) {
+			validatePayload(raw.payload.length >= offset + 4);
+			const userId = raw.payload.readUInt16BE(offset);
+			const userIdStatus: UserIDStatus = raw.payload[offset + 2];
+			const codeLength = raw.payload[offset + 3];
+			validatePayload(raw.payload.length >= offset + 4 + codeLength);
+
+			if (userIdStatus === UserIDStatus.Available) {
+				userCodes.push({
+					userId,
+					userIdStatus,
+				});
+			} else {
+				const userCodeBuffer = raw.payload.subarray(
+					offset + 4,
+					offset + 4 + codeLength,
+				);
+				// Try to convert to string if it's printable ASCII
+				const userCodeString = userCodeBuffer.toString("utf8");
+				const userCode = isPrintableASCII(userCodeString)
+					? userCodeString
+					: userCodeBuffer;
+
+				userCodes.push({
+					userId,
+					userIdStatus,
+					userCode,
+				} as UserCodeCCSetOptions);
+			}
+
+			offset += 4 + codeLength;
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			userCodes,
+		});
 	}
 
 	public userCodes: UserCodeCCSetOptions[];

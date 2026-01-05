@@ -96,7 +96,7 @@ export default function transformer(
 		const newImport = f.createImportDeclaration(
 			undefined,
 			f.createImportClause(
-				false,
+				undefined,
 				undefined,
 				f.createNamespaceImport(f.createIdentifier("__validateArgs")),
 			),

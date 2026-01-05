@@ -31,6 +31,7 @@ import {
 	supervisionResultToSetValueResult,
 	utils as ccUtils,
 } from "@zwave-js/cc";
+import { ApplicationStatusCCBusy } from "@zwave-js/cc/ApplicationStatusCC";
 import {
 	AssociationCCGet,
 	AssociationCCRemove,
@@ -83,6 +84,7 @@ import {
 	BasicDeviceClass,
 	CommandClasses,
 	Duration,
+	type DurationLike,
 	EncapsulationFlags,
 	type MaybeNotKnown,
 	MessagePriority,
@@ -140,6 +142,7 @@ import {
 	RequestNodeInfoResponse,
 } from "@zwave-js/serial/serialapi";
 import {
+	type BytesView,
 	Mixin,
 	TypedEventTarget,
 	cloneDeep,
@@ -159,6 +162,7 @@ import path from "pathe";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
+import { handleApplicationBusy } from "./CCHandlers/ApplicationStatusCC.js";
 import {
 	handleAssociationGet,
 	handleAssociationRemove,
@@ -323,11 +327,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * The device specific key (DSK) of this node in binary format.
 	 * This is only set if included with Security S2.
 	 */
-	public get dsk(): Uint8Array | undefined {
+	public get dsk(): BytesView | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).dsk);
 	}
 	/** @internal */
-	public set dsk(value: Uint8Array | undefined) {
+	public set dsk(value: BytesView | undefined) {
 		const cacheKey = cacheKeys.node(this.id).dsk;
 		this.driver.cacheSet(cacheKey, value);
 	}
@@ -426,10 +430,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		);
 	}
 
-	public set defaultTransitionDuration(value: string | Duration | undefined) {
+	public set defaultTransitionDuration(
+		value: string | Duration | DurationLike | undefined,
+	) {
 		// Normalize to strings
-		if (typeof value === "string") value = Duration.from(value);
-		if (Duration.isDuration(value)) value = value.toString();
+		value = Duration.from(value)?.toString();
 
 		this.driver.cacheSet(
 			cacheKeys.node(this.id).defaultTransitionDuration,
@@ -636,9 +641,13 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 				const shouldUpdateOptimistically =
 					api.isSetValueOptimistic(valueId)
+					// Check if the device class supports optimistic value updates
+					&& (endpointInstance.deviceClass?.specific
+						.supportsOptimisticValueUpdate
+						?? true)
 					// For successful supervised commands, we know that an optimistic update is ok
 					&& (supervisedAndSuccessful
-						// For unsupervised commands that did not fail, we let the applciation decide whether
+						// For unsupervised commands that did not fail, we let the application decide whether
 						// to update related value optimistically
 						|| (!this.driver.options.disableOptimisticValueUpdate
 							&& result == undefined));
@@ -650,11 +659,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 					);
 				}
 
+				const isSlowDeviceClass = endpointInstance.deviceClass?.specific
+					.supportsOptimisticValueUpdate === false;
+
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
+				//    ... and this is not a slow device class
 				// ...and the CC API decides not to verify anyways
 				if (
 					!supervisedCommandSucceeded(result)
+					|| isSlowDeviceClass
 					|| hooks.forceVerifyChanges?.()
 				) {
 					// Let the CC API implementation handle the verification.
@@ -2522,6 +2536,13 @@ protocol version:      ${this.protocolVersion}`;
 				this,
 				command,
 			);
+		} else if (command instanceof ApplicationStatusCCBusy) {
+			return handleApplicationBusy(
+				this.driver,
+				this.driver,
+				this,
+				command,
+			);
 		} else if (command instanceof MultiCommandCCCommandEncapsulation) {
 			// Handle each encapsulated command individually
 			for (const cmd of command.encapsulated) {
@@ -2625,6 +2646,8 @@ protocol version:      ${this.protocolVersion}`;
 		// Mark already-interviewed nodes as potentially ready
 		if (this.interviewStage === InterviewStage.Complete) {
 			this.updateReadyMachine({ value: "RESTART_FROM_CACHE" });
+			// If the `bootstrapped` flag is missing, set it now
+			this.bootstrapped = true;
 		}
 	}
 

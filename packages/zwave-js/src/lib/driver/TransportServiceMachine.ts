@@ -44,9 +44,11 @@ export function createTransportServiceRXMachine(
 
 	const receivedBytes: boolean[] = [
 		// When the machine is started, we've already received the first segment
-		...(new Array(firstSegmentSize).fill(true)),
+		...(Array.from<boolean>({ length: firstSegmentSize })
+			.fill(true)),
 		// The rest of the segments are still missing
-		...(new Array(datagramSize - firstSegmentSize).fill(false)),
+		...(Array.from<boolean>({ length: datagramSize - firstSegmentSize })
+			.fill(false)),
 	];
 
 	function markReceived(offset: number, length: number): void {

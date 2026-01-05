@@ -1,12 +1,15 @@
 import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetNode,
+	type NodeId,
+	type SupportsCC,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, type CCAPIEndpoint, type CCAPIHost } from "../lib/API.js";
 import {
@@ -65,7 +68,7 @@ export class ManufacturerProprietaryCCAPI extends CCAPI {
 	@validateArgs()
 	public async sendData(
 		manufacturerId: number,
-		data?: Uint8Array,
+		data?: BytesView,
 	): Promise<void> {
 		const cc = new ManufacturerProprietaryCC({
 			nodeId: this.endpoint.nodeId,
@@ -78,8 +81,8 @@ export class ManufacturerProprietaryCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	public async sendAndReceiveData(manufacturerId: number, data?: Uint8Array) {
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
+	public async sendAndReceiveData(manufacturerId: number, data?: BytesView) {
 		const cc = new ManufacturerProprietaryCC({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
@@ -108,10 +111,13 @@ export interface ManufacturerProprietaryCCOptions {
 	manufacturerId?: number;
 	unspecifiedExpectsResponse?: boolean;
 	// Needed to support unknown proprietary commands
-	payload?: Uint8Array;
+	payload?: BytesView;
 }
 
-function getReponseForManufacturerProprietary(cc: ManufacturerProprietaryCC) {
+function getReponseForManufacturerProprietary(
+	ctx: GetNode<NodeId & SupportsCC>,
+	cc: ManufacturerProprietaryCC,
+) {
 	return cc.unspecifiedExpectsResponse
 		? ManufacturerProprietaryCC
 		: undefined;

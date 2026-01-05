@@ -1,0 +1,43 @@
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0xdead",
+	"label": "Test Device",
+	"description": "Test device for hidden parameter",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Visible Parameter",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 50
+		},
+		{
+			"#": "2",
+			"label": "Hidden Parameter",
+			"hidden": true,
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "3",
+			"label": "Another Visible Parameter",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1000,
+			"defaultValue": 100
+		}
+	]
+}

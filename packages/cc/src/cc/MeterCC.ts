@@ -36,6 +36,7 @@ import {
 import {
 	type AllOrNone,
 	Bytes,
+	type BytesView,
 	getEnumMemberName,
 	num2hex,
 	pick,
@@ -178,7 +179,7 @@ function getValueLabel(
 	return ret;
 }
 
-function parseMeterValueAndInfo(data: Uint8Array, offset: number): {
+function parseMeterValueAndInfo(data: BytesView, offset: number): {
 	type: number;
 	rateType: RateType;
 	scale1: number;
@@ -241,7 +242,7 @@ function encodeMeterValueAndInfo(
 
 function parseScale(
 	scale1: number,
-	data: Uint8Array,
+	data: BytesView,
 	scale2Offset: number,
 ): number {
 	if (scale1 === 7) {
@@ -438,7 +439,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(MeterCommand, MeterCommand.SupportedGet);
 
@@ -1354,14 +1355,12 @@ export class MeterCCSupportedReport extends MeterCC {
 		const message: MessageRecord = {
 			"meter type": getMeterName(this.type),
 			"supports reset": this.supportsReset,
-			"supported scales": `${
-				this.supportedScales
-					.map(
-						(scale) => `
+			"supported scales": this.supportedScales
+				.map(
+					(scale) => `
 · ${(getMeterScale(this.type, scale) ?? getUnknownMeterScale(scale)).label}`,
-					)
-					.join("")
-			}`,
+				)
+				.join(""),
 			"supported rate types": this.supportedRateTypes
 				.map((rt) => getEnumMemberName(RateType, rt))
 				.join(", "),

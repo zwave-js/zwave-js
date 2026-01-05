@@ -33,11 +33,10 @@
 		{
 			"#": "6",
 			"label": "User Slot Bit Field",
-			"description": "Occupied slots for User Codes",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0
+			"maxValue": 536870912, // 30 codes
+			"readOnly": true
 		},
 		{
 			"#": "7",

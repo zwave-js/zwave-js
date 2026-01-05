@@ -1,7 +1,7 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
-export function dskToString(dsk: Uint8Array): string {
+export function dskToString(dsk: BytesView): string {
 	if (dsk.length !== 16) {
 		throw new ZWaveError(
 			`DSK length must be 16 bytes, got ${dsk.length}`,
@@ -16,7 +16,7 @@ export function dskToString(dsk: Uint8Array): string {
 	return ret;
 }
 
-export function dskFromString(dsk: string): Uint8Array {
+export function dskFromString(dsk: string): BytesView {
 	if (!isValidDSK(dsk)) {
 		throw new ZWaveError(
 			`The DSK must be in the form "aaaaa-bbbbb-ccccc-ddddd-eeeee-fffff-11111-22222"`,
@@ -34,7 +34,7 @@ export function dskFromString(dsk: string): Uint8Array {
 	return ret;
 }
 
-export function nwiHomeIdFromDSK(dsk: Uint8Array): Uint8Array {
+export function nwiHomeIdFromDSK(dsk: BytesView): BytesView {
 	// NWI HomeID 1..4 shall match byte 9..12 of the S2 DSK.
 	// Additionally:
 	// • Bits 7 and 6 of the NWI HomeID 1 shall be set to 1.
@@ -46,7 +46,7 @@ export function nwiHomeIdFromDSK(dsk: Uint8Array): Uint8Array {
 	return ret;
 }
 
-export function authHomeIdFromDSK(dsk: Uint8Array): Uint8Array {
+export function authHomeIdFromDSK(dsk: BytesView): BytesView {
 	// Auth HomeID 1..4 shall match byte 13..16 of the S2 DSK.
 	// • Bits 7 and 6 of the Auth HomeID 1 shall be set to 0. (Error in the specs, they say it should be 1)
 	// • Bit 0 of the Auth HomeID 4 byte shall be set to 1. (Error in the specs, they say it should be 0)

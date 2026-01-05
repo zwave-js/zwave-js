@@ -5,7 +5,7 @@ import type { ExpectStatic } from "vitest";
 import Transport from "winston-transport";
 import type { ZWaveLogInfo } from "../log/shared.js";
 
-const timestampRegex = /\d{2}\:\d{2}\:\d{2}\.\d{3}/g;
+const timestampRegex = /\d{2}:\d{2}:\d{2}\.\d{3}/g;
 const timestampPrefixRegex = new RegExp(
 	`^(${c.ansiRegex.source})?${timestampRegex.source}(${c.ansiRegex.source})? `,
 	"gm",

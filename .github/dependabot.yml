@@ -20,7 +20,13 @@ updates:
         update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
-    directory: '/'
+    directories:
+      - '/'
+      # Workaround for Dependabot not updating reusable composite actions
+      # https://github.com/dependabot/dependabot-core/issues/6704
+      - '/.github/actions/build-cache-download'
+      - '/.github/actions/build-cache-upload'
+      - '/.github/actions/prepare-env'
     schedule:
       interval: monthly
       time: '04:00'

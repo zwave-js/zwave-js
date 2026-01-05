@@ -34,7 +34,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
 import {
@@ -96,7 +96,7 @@ export const ConfigurationCCValues = V.defineCCValues(
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"paramInformation",
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			// oxlint-disable-next-line no-unused-vars
 			(parameter: number, bitMask?: number) => parameter,
 			(parameter: number, bitMask?: number) => bitMask,
 			({ property, propertyKey }) =>
@@ -331,6 +331,10 @@ export function refreshMetadataStringsFromConfigFile(
 		}
 		if (info.description !== existing.description) {
 			existing.description = info.description;
+			didChange = true;
+		}
+		if (info.recommendedValue !== existing.recommended) {
+			existing.recommended = info.recommendedValue;
 			didChange = true;
 		}
 		if (existing.states) {
@@ -945,7 +949,7 @@ export class ConfigurationCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getProperties(parameter: number) {
 		// Get-type commands are only possible in singlecast
 		this.assertPhysicalEndpoint(this.endpoint);
@@ -1252,8 +1256,91 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 
 		await this.refreshValues(ctx);
 
+		// Apply recommended values from device config
+		if (
+			paramInfo !== undefined
+			&& ctx.getInterviewOptions().applyRecommendedConfigParamValues
+				=== true
+		) {
+			await this.applyRecommendedValues(ctx, node, paramInfo, api);
+		}
+
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	/**
+	 * Applies all recommended values from the device config to this node
+	 * Applies only if the current value is still the default value and
+	 * the recommended value is different
+	 */
+	private async applyRecommendedValues(
+		ctx: InterviewContext,
+		node: NodeId,
+		paramInfo: ParamInfoMap,
+		api: ConfigurationCCAPI,
+	): Promise<void> {
+		const parametersNeededUpdate: ConfigurationCCAPISetOptions[] = [];
+
+		// Find parameters for which current value doesn't match the recommended value
+		for (const [paramKey, param] of paramInfo) {
+			if (
+				param.recommendedValue === undefined
+				|| param.defaultValue === param.recommendedValue
+			) continue;
+
+			// Get the current value of this parameter from the device
+			const currentValue = this.getValue(
+				ctx,
+				ConfigurationCCValues.paramInformation(
+					paramKey.parameter,
+					paramKey.valueBitMask,
+				),
+			);
+
+			// If the current value is the default value (i.e. it was never changed by the user)
+			// and the recommended value is different, we should update it
+			if (
+				currentValue === param.defaultValue
+				&& currentValue !== param.recommendedValue
+			) {
+				const baseParam = {
+					parameter: paramKey.parameter,
+					value: param.recommendedValue,
+				};
+
+				parametersNeededUpdate.push(
+					param.valueBitMask !== undefined
+						? { ...baseParam, bitMask: param.valueBitMask }
+						: baseParam,
+				);
+			}
+		}
+
+		if (parametersNeededUpdate.length === 0) return;
+
+		// Log what we're about to do
+		let message =
+			`Applying recommended config parameter values during interview:`;
+		for (const param of parametersNeededUpdate) {
+			const formatterBitMask = param.bitMask
+				? `[0x${num2hex(param.bitMask)}]`
+				: "";
+			const fullParamKey = `${param.parameter}${formatterBitMask}`;
+			message += `\n· #${fullParamKey} => ${param.value}`;
+		}
+
+		ctx.logNode(node.id, {
+			endpoint: this.endpointIndex,
+			message,
+			direction: "none",
+		});
+
+		await api.setBulk(parametersNeededUpdate);
+		await api.getBulk(parametersNeededUpdate.map((param) => ({
+			parameter: param.parameter,
+			bitMask: param.bitMask,
+		})));
 	}
 
 	public async refreshValues(
@@ -1564,6 +1651,11 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		);
 
 		for (const [param, info] of config.entries()) {
+			// Skip hidden parameters entirely - don't create metadata or persist values
+			if (info.hidden) {
+				continue;
+			}
+
 			// We need to make the config information compatible with the
 			// format that ConfigurationCC reports
 			const paramInfo: Partial<ConfigurationMetadata> = stripUndefined({
@@ -1573,6 +1665,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				min: info.minValue,
 				max: info.maxValue,
 				default: info.defaultValue,
+				recommended: info.recommendedValue,
 				unit: info.unit,
 				format: info.unsigned
 					? ConfigValueFormat.UnsignedInteger
@@ -1591,6 +1684,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				label: info.label,
 				description: info.description,
 				isFromConfig: true,
+				destructive: info.destructive,
 			});
 			this.extendParamInformation(
 				ctx,
@@ -1710,6 +1804,16 @@ export class ConfigurationCCReport extends ConfigurationCC {
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
+
+		// Skip hidden parameters entirely - don't persist values
+		const paramInfo = getParamInformationFromConfigFile(
+			ctx,
+			this.nodeId as number,
+			this.endpointIndex,
+		);
+		if (paramInfo?.get({ parameter: this.parameter })?.hidden) {
+			return true;
+		}
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 
@@ -2041,7 +2145,10 @@ export type ConfigurationCCBulkSetOptions =
 		}
 	);
 
-function getResponseForBulkSet(cc: ConfigurationCCBulkSet) {
+function getResponseForBulkSet(
+	ctx: GetNode<NodeId & SupportsCC>,
+	cc: ConfigurationCCBulkSet,
+) {
 	return cc.handshake ? ConfigurationCCBulkReport : undefined;
 }
 
@@ -2257,7 +2364,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 		if (!super.persistValues(ctx)) return false;
 
 		// Store every received parameter
-		// eslint-disable-next-line prefer-const
+
 		for (let [parameter, value] of this._values.entries()) {
 			// Check if the initial assumption of SignedInteger holds true
 			const oldParamInformation = this.getParamInformation(
@@ -2341,7 +2448,7 @@ export class ConfigurationCCBulkGet extends ConfigurationCC {
 		options: WithAddress<ConfigurationCCBulkGetOptions>,
 	) {
 		super(options);
-		this._parameters = options.parameters.sort();
+		this._parameters = options.parameters.toSorted((a, b) => a - b);
 		if (!isConsecutiveArray(this.parameters)) {
 			throw new ZWaveError(
 				`A ConfigurationCC.BulkGet can only be used for consecutive parameters`,
@@ -2604,7 +2711,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 		const partialParams = this.getPartialParamInfos(
 			ctx,
 			this.parameter,
-		).sort(
+		).toSorted(
 			(a, b) =>
 				((a.propertyKey as number) ?? 0)
 				- ((b.propertyKey as number) ?? 0),

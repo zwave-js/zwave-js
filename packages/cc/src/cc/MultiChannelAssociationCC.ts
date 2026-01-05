@@ -16,7 +16,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, pick } from "@zwave-js/shared";
+import { Bytes, type BytesView, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -132,7 +132,7 @@ function serializeMultiChannelAssociationDestination(
 	return payload;
 }
 
-function deserializeMultiChannelAssociationDestination(data: Uint8Array): {
+function deserializeMultiChannelAssociationDestination(data: BytesView): {
 	nodeIds: number[];
 	endpoints: EndpointAddress[];
 } {
@@ -222,7 +222,7 @@ export class MultiChannelAssociationCCAPI extends PhysicalCCAPI {
 	 * Returns information about an association group.
 	 */
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getGroup(groupId: number) {
 		this.assertSupportsCommand(
 			MultiChannelAssociationCommand,

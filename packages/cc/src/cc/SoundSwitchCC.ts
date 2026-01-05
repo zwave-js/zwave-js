@@ -128,7 +128,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getToneInfo(toneId: number) {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -149,10 +149,18 @@ export class SoundSwitchCCAPI extends CCAPI {
 		if (response) return pick(response, ["duration", "name"]);
 	}
 
-	@validateArgs()
 	public async setConfiguration(
 		defaultToneId: number,
+		defaultVolume?: number,
+	): Promise<SupervisionResult | undefined>;
+	public async setConfiguration(
+		defaultToneId: number | undefined,
 		defaultVolume: number,
+	): Promise<SupervisionResult | undefined>;
+	@validateArgs()
+	public async setConfiguration(
+		defaultToneId?: number,
+		defaultVolume?: number,
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -162,13 +170,13 @@ export class SoundSwitchCCAPI extends CCAPI {
 		const cc = new SoundSwitchCCConfigurationSet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
-			defaultToneId,
-			defaultVolume,
+			defaultToneId: defaultToneId ?? 0x00,
+			defaultVolume: defaultVolume ?? 0xff,
 		});
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getConfiguration() {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -231,7 +239,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getPlaying() {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -629,10 +637,13 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 }
 
 // @publicAPI
-export interface SoundSwitchCCConfigurationSetOptions {
+export type SoundSwitchCCConfigurationSetOptions = {
 	defaultVolume: number;
+	defaultToneId?: number;
+} | {
+	defaultVolume?: number;
 	defaultToneId: number;
-}
+};
 
 @CCCommand(SoundSwitchCommand.ConfigurationSet)
 @useSupervision()
@@ -641,8 +652,8 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 		options: WithAddress<SoundSwitchCCConfigurationSetOptions>,
 	) {
 		super(options);
-		this.defaultVolume = options.defaultVolume;
-		this.defaultToneId = options.defaultToneId;
+		this.defaultVolume = options.defaultVolume ?? 0xff;
+		this.defaultToneId = options.defaultToneId ?? 0x00;
 	}
 
 	public static from(

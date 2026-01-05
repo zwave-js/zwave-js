@@ -13,7 +13,7 @@ test("WakeUpCCNoMoreInformation should expect no response", (t) => {
 		nodeId: 2,
 		endpointIndex: 2,
 	});
-	t.expect(cc.expectsCCResponse()).toBe(false);
+	t.expect(cc.expectsCCResponse({} as any)).toBe(false);
 });
 
 test("MultiChannelCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
@@ -23,7 +23,7 @@ test("MultiChannelCC/WakeUpCCNoMoreInformation should expect NO response", (t) =
 			endpointIndex: 2,
 		}),
 	);
-	t.expect(ccRequest.expectsCCResponse()).toBe(false);
+	t.expect(ccRequest.expectsCCResponse({} as any)).toBe(false);
 });
 
 test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
@@ -46,5 +46,5 @@ test("SecurityCC/WakeUpCCNoMoreInformation should expect NO response", (t) => {
 			endpointIndex: 2,
 		}),
 	);
-	t.expect(ccRequest.expectsCCResponse()).toBe(false);
+	t.expect(ccRequest.expectsCCResponse({} as any)).toBe(false);
 });

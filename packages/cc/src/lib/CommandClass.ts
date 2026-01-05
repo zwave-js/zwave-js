@@ -43,6 +43,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	type JSONObject,
 	buffer2hex,
 	getEnumMemberName,
@@ -78,7 +79,7 @@ import type { GetInterviewOptions } from "./traits.js";
 export interface CommandClassOptions extends CCAddress {
 	ccId?: number; // Used to overwrite the declared CC ID
 	ccCommand?: number; // undefined = NoOp
-	payload?: Uint8Array;
+	payload?: BytesView;
 }
 
 // Defines the necessary traits an endpoint passed to a CC instance must have
@@ -156,7 +157,7 @@ export class CCRaw {
 		public payload: Bytes,
 	) {}
 
-	public static parse(data: Uint8Array): CCRaw {
+	public static parse(data: BytesView): CCRaw {
 		const { ccId, bytesRead: ccIdLength } = parseCCId(data);
 		// There are so few exceptions that we can handle them here manually
 		if (ccId === CommandClasses["No Operation"]) {
@@ -210,7 +211,7 @@ export class CommandClass implements CCId {
 	}
 
 	public static async parse(
-		data: Uint8Array,
+		data: BytesView,
 		ctx: CCParsingContext,
 	): Promise<CommandClass> {
 		const raw = CCRaw.parse(data);
@@ -350,7 +351,7 @@ export class CommandClass implements CCId {
 	/**
 	 * Serializes this CommandClass to be embedded in a message payload or another CC
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	// oxlint-disable-next-line no-unused-vars, @typescript-eslint/require-await
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// NoOp CCs have no command and no payload
 		if (this.ccId === CommandClasses["No Operation"]) {
@@ -960,7 +961,7 @@ export class CommandClass implements CCId {
 	}
 
 	/** Tests whether this CC expects at least one command in return */
-	public expectsCCResponse(): boolean {
+	public expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean {
 		let expected:
 			| DynamicCCResponse<this>
 			| ReturnType<DynamicCCResponse<this>> = getExpectedCCResponse(this);
@@ -970,7 +971,7 @@ export class CommandClass implements CCId {
 			typeof expected === "function"
 			&& !staticExtends(expected, CommandClass)
 		) {
-			expected = expected(this);
+			expected = expected(ctx, this);
 		}
 		if (expected === undefined) return false;
 		if (isArray(expected)) {
@@ -980,7 +981,10 @@ export class CommandClass implements CCId {
 		}
 	}
 
-	public isExpectedCCResponse(received: CommandClass): boolean {
+	public isExpectedCCResponse(
+		ctx: GetNode<NodeId & SupportsCC>,
+		received: CommandClass,
+	): boolean {
 		if (received.nodeId !== this.nodeId) return false;
 
 		let expected:
@@ -992,7 +996,7 @@ export class CommandClass implements CCId {
 			typeof expected === "function"
 			&& !staticExtends(expected, CommandClass)
 		) {
-			expected = expected(this);
+			expected = expected(ctx, this);
 		}
 
 		if (expected == undefined) {
@@ -1022,6 +1026,7 @@ export class CommandClass implements CCId {
 				&& isEncapsulatingCommandClass(received)
 			) {
 				return this.encapsulated.isExpectedCCResponse(
+					ctx,
 					received.encapsulated,
 				);
 			} else {
@@ -1188,6 +1193,7 @@ export type DynamicCCResponse<
 	TSent extends CommandClass,
 	TReceived extends CommandClass = CommandClass,
 > = (
+	ctx: GetNode<NodeId & SupportsCC>,
 	sentCC: TSent,
 ) => CCConstructor<TReceived> | CCConstructor<TReceived>[] | undefined;
 

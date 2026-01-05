@@ -4,7 +4,7 @@
  */
 
 import esMain from "es-main";
-import { execa } from "execa";
+import spawn from "nano-spawn";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -25,7 +25,7 @@ function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 			// import "bar"
 			return node.moduleSpecifier;
 		} else if (
-			!node.importClause.isTypeOnly
+			node.importClause.phaseModifier !== ts.SyntaxKind.TypeKeyword
 			// import foo from "bar"
 			&& (!node.importClause.namedBindings
 				// import * as foo from "bar"
@@ -176,7 +176,7 @@ async function getDiffOutput(diffBase?: string): Promise<string> {
 	const command = diffBase
 		? ["diff", diffBase, "--name-status"]
 		: ["status", "--porcelain"];
-	const gitDiffOutput = (await execa("git", command)).stdout;
+	const gitDiffOutput = (await spawn("git", command)).stdout;
 
 	return gitDiffOutput
 		.split("\n")
@@ -222,7 +222,7 @@ export async function resolveDirtyTests(
 	const dirtySourceFiles = new Set<string>(changedFiles);
 
 	// Scan all source files
-	files: for (const sourceFile of program.getSourceFiles()) {
+	for (const sourceFile of program.getSourceFiles()) {
 		const relativePath = relativeToProject(sourceFile.fileName);
 
 		// Only look at files inside the packages directory
@@ -334,7 +334,7 @@ async function runDirtyTests(diffBase?: string): Promise<void> {
 			projectFolder ? `in ${projectFolder}` : ""
 		}...`,
 	);
-	await execa("yarn", ["test", ...dirtyTests], {
+	await spawn("yarn", ["test", ...dirtyTests], {
 		stdio: "inherit",
 	});
 }

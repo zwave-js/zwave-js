@@ -49,7 +49,7 @@ export const fixedMultiWordNames = [
 	...ccAndCommandNames,
 	"Command Class",
 	"Central Scene Notification",
-].sort((a, b) => {
+].toSorted((a, b) => {
 	// These need to be ordered from maximum number of words to minimum number of words so the most specific ones match first
 	const numWordsA = a.split(" ").length;
 	const numWordsB = b.split(" ").length;

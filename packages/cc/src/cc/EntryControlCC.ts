@@ -16,7 +16,7 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, buffer2hex, pick } from "@zwave-js/shared";
+import { Bytes, type BytesView, buffer2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -104,7 +104,7 @@ export class EntryControlCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupportedKeys() {
 		this.assertSupportsCommand(
 			EntryControlCommand,
@@ -124,7 +124,7 @@ export class EntryControlCCAPI extends CCAPI {
 		return response?.supportedKeys;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getEventCapabilities() {
 		this.assertSupportsCommand(
 			EntryControlCommand,
@@ -153,7 +153,7 @@ export class EntryControlCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getConfiguration() {
 		this.assertSupportsCommand(
 			EntryControlCommand,
@@ -449,11 +449,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 				case EntryControlDataTypes.ASCII:
 					// ASCII 1 to 32 ASCII encoded characters. ASCII codes MUST be in the value range 0x00-0xF7.
 					// The string MUST be padded with the value 0xFF to fit 16 byte blocks when sent in a notification.
-					if (!noStrictValidation) {
-						validatePayload(
-							eventDataLength === 16 || eventDataLength === 32,
-						);
-					}
+					// However, some devices do not follow this requirement, so we accept unpadded strings as well.
 					// Trim 0xff padding bytes
 					let paddingStart = eventDataLength;
 					while (
@@ -493,7 +489,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 	public readonly sequenceNumber: number;
 	public readonly dataType: EntryControlDataTypes;
 	public readonly eventType: EntryControlEventTypes;
-	public readonly eventData?: Uint8Array | string;
+	public readonly eventData?: BytesView | string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {

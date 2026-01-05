@@ -1,15 +1,20 @@
-import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
+import { type CCEncodingContext, type CommandClass } from "@zwave-js/cc";
 import {
 	type CommandClassInfo,
 	type CommandClasses,
 	type MaybeNotKnown,
 	NOT_KNOWN,
 	SecurityClass,
+	SecurityManager,
+	SecurityManager2,
 	type SecurityManagers,
+	dskToString,
+	generateECDHKeyPair,
 	isCCInfoEqual,
 	securityClassOrder,
 } from "@zwave-js/core";
 import { TimedExpectation } from "@zwave-js/shared";
+import { type KeyPair } from "@zwave-js/shared/bindings";
 import type { CCIdToCapabilities } from "./CCSpecificCapabilities.js";
 import type { MockController } from "./MockController.js";
 import {
@@ -59,6 +64,11 @@ export interface MockEndpointOptions {
 	};
 }
 
+export type NodePendingInclusion = Omit<MockNodeOptions, "controller"> & {
+	/** Optional callback that is called when the node is created during inclusion */
+	setup?: (node: MockNode) => void;
+};
+
 export class MockEndpoint {
 	public constructor(options: MockEndpointOptions) {
 		this.index = options.index;
@@ -107,12 +117,27 @@ export class MockEndpoint {
 
 /** A mock node that can be used to test the driver as if it were speaking to an actual network */
 export class MockNode {
-	public constructor(options: MockNodeOptions) {
+	public static async create(options: MockNodeOptions): Promise<MockNode> {
+		const node = new MockNode(options);
+		await node.setupSecurity();
+		return node;
+	}
+
+	private constructor(options: MockNodeOptions) {
+		this._options = options;
 		this.id = options.id;
 		this.controller = options.controller;
 
+		// Storage for remembering which security classes are granted to which nodes
 		const securityClasses = new Map<number, Map<SecurityClass, boolean>>();
+		// We internally use this to keep track of our own granted security classes. Set that up here
+		const ownSecurityClasses = new Map<SecurityClass, boolean>();
+		securityClasses.set(this.id, ownSecurityClasses);
+		for (const secClass of options.capabilities?.securityClasses ?? []) {
+			ownSecurityClasses.set(secClass, true);
+		}
 
+		// Set up capabilities and endpoints
 		const {
 			commandClasses = [],
 			endpoints = [],
@@ -201,6 +226,8 @@ export class MockNode {
 		};
 	}
 
+	private _options: MockNodeOptions;
+
 	public readonly id: number;
 	public readonly controller: MockController;
 	public readonly capabilities: MockNodeCapabilities;
@@ -210,6 +237,97 @@ export class MockNode {
 		securityManager2: undefined,
 		securityManagerLR: undefined,
 	};
+
+	// These will be set during security setup
+	public ecdhKeyPair!: KeyPair;
+	public get dsk(): string {
+		// The DSK is the first 16 bytes of the public key
+		const dskBytes = this.ecdhKeyPair.publicKey.slice(1, 17);
+		return dskToString(dskBytes);
+	}
+	public get s2Pin(): string {
+		// The S2 PIN is the first group of 5 digits in the DSK
+		return this.dsk.slice(0, 5);
+	}
+
+	private async setupSecurity(): Promise<void> {
+		this.ecdhKeyPair = await generateECDHKeyPair();
+
+		const securityClasses = this._options.capabilities?.securityClasses;
+		if (!securityClasses) return;
+
+		// Set up security managers depending on the provided keys
+		let securityManager: SecurityManager | undefined;
+		if (
+			securityClasses.has(SecurityClass.S0_Legacy)
+			&& this._options.controller.securityManagers.securityManager
+		) {
+			securityManager = new SecurityManager({
+				ownNodeId: this.id,
+				networkKey:
+					this._options.controller.securityManagers.securityManager
+						.networkKey,
+				// Use a high nonce timeout to allow debugging tests more easily
+				nonceTimeout: 100000,
+			});
+			// Remember that the controller has the S0 key
+			this.encodingContext.setSecurityClass(
+				this.controller.ownNodeId,
+				SecurityClass.S0_Legacy,
+				true,
+			);
+		}
+
+		let securityManager2: SecurityManager2 | undefined = undefined;
+		if (
+			this._options.controller.securityManagers.securityManager2
+			&& [
+				SecurityClass.S2_AccessControl,
+				SecurityClass.S2_Authenticated,
+				SecurityClass.S2_Unauthenticated,
+			].some((secClass) => securityClasses.has(secClass))
+		) {
+			securityManager2 = await SecurityManager2.create();
+			const controllerSm2 =
+				this._options.controller.securityManagers.securityManager2;
+
+			// Copy keys from the controller
+			for (
+				const secClass of [
+					SecurityClass.S2_AccessControl,
+					SecurityClass.S2_Authenticated,
+					SecurityClass.S2_Unauthenticated,
+				]
+			) {
+				const key = controllerSm2.getKeysForSecurityClass(secClass)
+					?.pnk;
+				if (key) {
+					await securityManager2.setKey(secClass, key);
+					// Remember that the controller has this
+					this.encodingContext.setSecurityClass(
+						this.controller.ownNodeId,
+						secClass,
+						true,
+					);
+				}
+			}
+		}
+		if (securityManager && securityManager2) {
+			// Copy S0 key over
+			await securityManager2.setKey(
+				SecurityClass.S0_Legacy,
+				securityManager.networkKey,
+			);
+		}
+
+		const securityManagerLR: SecurityManager2 | undefined = undefined;
+
+		this.securityManagers = {
+			securityManager,
+			securityManager2,
+			securityManagerLR,
+		};
+	}
 
 	public encodingContext: CCEncodingContext;
 
@@ -241,21 +359,35 @@ export class MockNode {
 	/**
 	 * Waits until the controller sends a frame matching the given predicate or a timeout has elapsed.
 	 *
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param predicate A predicate function to test incoming frames
+	 * @param options Optional configuration
+	 * @param options.timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected. Default: 5000ms
+	 * @param options.preventDefault If true, the default behavior will not be executed after the expectation is fulfilled. Default: false
 	 */
 	public async expectControllerFrame<
 		T extends MockZWaveFrame = MockZWaveFrame,
 	>(
-		timeout: number,
 		predicate: (msg: MockZWaveFrame) => msg is T,
+		options?: {
+			timeout?: number;
+			preventDefault?: boolean;
+			errorMessage?: string;
+		},
 	): Promise<T> {
+		const {
+			timeout = 5000,
+			preventDefault = false,
+			errorMessage =
+				"The controller did not send the expected frame within the provided timeout!",
+		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
 		>(
 			timeout,
 			predicate,
-			"The controller did not send the expected frame within the provided timeout!",
+			errorMessage,
+			preventDefault,
 		);
 		try {
 			this.expectedControllerFrames.push(expectation);
@@ -273,11 +405,14 @@ export class MockNode {
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 */
-	public expectControllerACK(timeout: number): Promise<MockZWaveAckFrame> {
+	public expectControllerACK(
+		timeout: number,
+		errorMessage?: string,
+	): Promise<MockZWaveAckFrame> {
 		return this.expectControllerFrame(
-			timeout,
 			(msg): msg is MockZWaveAckFrame =>
 				msg.type === MockZWaveFrameType.ACK,
+			{ timeout, errorMessage },
 		);
 	}
 
@@ -289,7 +424,9 @@ export class MockNode {
 	): Promise<MockZWaveAckFrame | undefined> {
 		this.controller["air"].add({
 			source: this.id,
-			onTransmit: (frame) => this.sentControllerFrames.push(frame),
+			onTransmit: (frame) => {
+				this.sentControllerFrames.push(frame);
+			},
 			...frame,
 		});
 
@@ -311,12 +448,21 @@ export class MockNode {
 		}
 
 		// Handle message buffer. Check for pending expectations first.
-		const handler = this.expectedControllerFrames.find(
+		const handlers = this.expectedControllerFrames.filter(
 			(e) => !e.predicate || e.predicate(frame),
 		);
-		if (handler) {
+
+		// Resolve all matching expectations
+		for (const handler of handlers) {
 			handler.resolve(frame);
-		} else if (frame.type === MockZWaveFrameType.Request) {
+		}
+
+		// If any handler has preventDefault set, skip default behaviors
+		if (handlers.some((h) => h.preventDefault)) {
+			return;
+		}
+
+		if (frame.type === MockZWaveFrameType.Request) {
 			let cc = frame.payload;
 			let response: MockNodeResponse | undefined;
 

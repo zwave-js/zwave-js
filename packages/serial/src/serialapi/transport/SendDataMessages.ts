@@ -1,4 +1,5 @@
 import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
+import type { GetNode, NodeId, SupportsCC } from "@zwave-js/core";
 import {
 	MAX_NODES,
 	type MessageOrCCLogEntry,
@@ -30,7 +31,12 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+} from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
 import { ApplicationCommandRequest } from "../application/ApplicationCommandRequest.js";
 import { BridgeApplicationCommandRequest } from "../application/BridgeApplicationCommandRequest.js";
@@ -66,7 +72,7 @@ export type SendDataRequestOptions<
 		| { command: CCType }
 		| {
 			nodeId: number;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -158,8 +164,8 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 		return this.command?.nodeId ?? this._nodeId;
 	}
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(
@@ -205,25 +211,28 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 		};
 	}
 
-	public expectsNodeUpdate(): boolean {
+	public expectsNodeUpdate(ctx: GetNode<NodeId & SupportsCC>): boolean {
 		return (
 			// We can only answer this if the command is known
 			this.command != undefined
 			// Only true singlecast commands may expect a response
 			&& this.command.isSinglecast()
 			// ... and only if the command expects a response
-			&& this.command.expectsCCResponse()
+			&& this.command.expectsCCResponse(ctx)
 		);
 	}
 
-	public isExpectedNodeUpdate(msg: Message): boolean {
+	public isExpectedNodeUpdate(
+		ctx: GetNode<NodeId & SupportsCC>,
+		msg: Message,
+	): boolean {
 		return (
 			// We can only answer this if the command is known
 			this.command != undefined
 			&& (msg instanceof ApplicationCommandRequest
 				|| msg instanceof BridgeApplicationCommandRequest)
 			&& containsCC(msg)
-			&& this.command.isExpectedCCResponse(msg.command)
+			&& this.command.isExpectedCCResponse(ctx, msg.command)
 		);
 	}
 }
@@ -300,7 +309,9 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 					+ (this.txReport
 						? `, took ${this.txReport.txTicks * 10} ms`
 						: ""),
-				...(this.txReport
+				// Show TX report fields for OK and NoAck (NoAck still provides useful routing info)
+				...(this.txReport && (this.transmitStatus === TransmitStatus.OK
+						|| this.transmitStatus === TransmitStatus.NoAck)
 					? txReportToMessageRecord(this.txReport)
 					: {}),
 			},
@@ -371,7 +382,7 @@ export type SendDataMulticastRequestOptions<CCType extends CommandClass> =
 		| { command: CCType }
 		| {
 			nodeIds: MulticastDestination;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -478,8 +489,8 @@ export class SendDataMulticastRequest<
 		return undefined;
 	}
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(

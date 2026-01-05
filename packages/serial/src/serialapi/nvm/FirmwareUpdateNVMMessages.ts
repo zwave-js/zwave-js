@@ -18,7 +18,12 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+} from "@zwave-js/shared";
 
 export enum FirmwareUpdateNVMCommand {
 	Init = 0x00,
@@ -522,7 +527,7 @@ export class FirmwareUpdateNVM_IsValidCRC16Response
 
 export interface FirmwareUpdateNVM_WriteRequestOptions {
 	offset: number;
-	buffer: Uint8Array;
+	buffer: BytesView;
 }
 
 @subCommandRequest(FirmwareUpdateNVMCommand.Write)
@@ -551,7 +556,7 @@ export class FirmwareUpdateNVM_WriteRequest extends FirmwareUpdateNVMRequest {
 	}
 
 	public offset: number;
-	public buffer: Uint8Array;
+	public buffer: BytesView;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(5 + this.buffer.length);

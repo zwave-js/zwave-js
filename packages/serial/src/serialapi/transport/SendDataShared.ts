@@ -11,7 +11,7 @@ import {
 	rssiToString,
 	stripUndefined,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { AssignPriorityReturnRouteRequestTransmitReport } from "../network-mgmt/AssignPriorityReturnRouteMessages.js";
 import { AssignPrioritySUCReturnRouteRequestTransmitReport } from "../network-mgmt/AssignPrioritySUCReturnRouteMessages.js";
 import { AssignReturnRouteRequestTransmitReport } from "../network-mgmt/AssignReturnRouteMessages.js";
@@ -65,7 +65,7 @@ export type TransmitReport =
 
 // const RSSI_RESERVED_START = 11;
 
-export function parseRSSI(payload: Uint8Array, offset: number = 0): RSSI {
+export function parseRSSI(payload: BytesView, offset: number = 0): RSSI {
 	const ret = Bytes.view(payload).readInt8(offset);
 	// Filter out reserved values
 	// TODO: Figure out for which controllers this is relevant
@@ -79,7 +79,7 @@ export function parseRSSI(payload: Uint8Array, offset: number = 0): RSSI {
 }
 
 export function tryParseRSSI(
-	payload: Uint8Array,
+	payload: BytesView,
 	offset: number = 0,
 ): RSSI | undefined {
 	if (payload.length <= offset) return;
@@ -87,7 +87,7 @@ export function tryParseRSSI(
 }
 
 function parseTXPower(
-	payload: Uint8Array,
+	payload: BytesView,
 	offset: number = 0,
 ): number | undefined {
 	if (payload.length <= offset) return;
@@ -101,7 +101,7 @@ function parseTXPower(
  */
 export function parseTXReport(
 	includeACK: boolean,
-	payload: Uint8Array,
+	payload: BytesView,
 ): TXReport | undefined {
 	const buffer = Bytes.view(payload);
 	if (buffer.length < 17) return;
@@ -186,7 +186,7 @@ export function serializableTXReportToTXReport(
 	};
 }
 
-export function encodeTXReport(report: SerializableTXReport): Uint8Array {
+export function encodeTXReport(report: SerializableTXReport): BytesView {
 	const ret = new Bytes(24).fill(0);
 	ret.writeUInt16BE(report.txTicks, 0);
 	ret[2] = report.repeaterNodeIds?.length ?? 0;

@@ -26,7 +26,7 @@ export function createAndStartDriverWithMockPort(
 		& PartialZWaveOptions = {},
 ): Promise<CreateAndStartDriverWithMockPortResult> {
 	const { ...driverOptions } = options;
-	return new Promise(async (resolve, _reject) => {
+	return new Promise((resolve, reject) => {
 		// eslint-disable-next-line prefer-const
 		let driver: Driver;
 		const mockPort = new MockPort();
@@ -76,7 +76,7 @@ export function createAndStartDriverWithMockPort(
 			...driverOptions,
 			testingHooks,
 		});
-		await driver.start();
+		driver.start().catch(reject);
 	});
 }
 

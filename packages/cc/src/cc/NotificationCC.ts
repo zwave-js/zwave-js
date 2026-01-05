@@ -42,6 +42,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	buffer2hex,
 	isUint8Array,
 	num2hex,
@@ -80,6 +81,7 @@ import { isNotificationEventPayload } from "../lib/NotificationEventPayload.js";
 import { V } from "../lib/Values.js";
 import { NotificationCommand, UserCodeCommand } from "../lib/_Types.js";
 import * as ccUtils from "../lib/utils.js";
+import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 import { AssociationGroupInfoCC } from "./AssociationGroupInfoCC.js";
 
 export const NotificationCCValues = V.defineCCValues(
@@ -197,7 +199,7 @@ export const NotificationCCValues = V.defineCCValues(
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"notificationVariable",
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			// oxlint-disable-next-line no-unused-vars
 			(notificationName: string, variableName: string) =>
 				notificationName,
 			(notificationName: string, variableName: string) => variableName,
@@ -316,7 +318,7 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(options: NotificationCCGetOptions) {
 		const response = await this.getInternal(options);
 		if (response) {
@@ -349,7 +351,7 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(
 			NotificationCommand,
@@ -685,6 +687,9 @@ export class NotificationCC extends CommandClass {
 			if (notificationMode === "pull") {
 				await this.refreshValues(ctx);
 			} /* if (notificationMode === "push") */ else {
+				// First, query the current state of each supported notification
+				await this.refreshValues(ctx);
+
 				for (let i = 0; i < supportedNotificationTypes.length; i++) {
 					const type = supportedNotificationTypes[i];
 					const name = supportedNotificationNames[i];
@@ -827,54 +832,51 @@ export class NotificationCC extends CommandClass {
 		ctx: RefreshValuesContext,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
-		// Refreshing values only works on pull nodes
-		if (NotificationCC.getNotificationMode(ctx, node) === "pull") {
-			const endpoint = this.getEndpoint(ctx)!;
-			const api = CCAPI.create(
-				CommandClasses.Notification,
-				ctx,
-				endpoint,
-			).withOptions({
-				priority: MessagePriority.NodeQuery,
+		const endpoint = this.getEndpoint(ctx)!;
+		const api = CCAPI.create(
+			CommandClasses.Notification,
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+		});
+
+		// Load supported notification types and events from cache
+		const supportedNotificationTypes = this.getValue<readonly number[]>(
+			ctx,
+			NotificationCCValues.supportedNotificationTypes,
+		) ?? [];
+		const supportedNotificationNames = supportedNotificationTypes.map(
+			getNotificationName,
+		);
+
+		for (let i = 0; i < supportedNotificationTypes.length; i++) {
+			const type = supportedNotificationTypes[i];
+			const name = supportedNotificationNames[i];
+
+			// Always query each notification for its current status
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: `querying notification status for ${name}...`,
+				direction: "outbound",
 			});
+			const response = await api.getInternal({
+				notificationType: type,
+			});
+			// NotificationReports don't store their values themselves,
+			// because the behaviour is too complex and spans the lifetime
+			// of several reports. Thus we handle it in the Node instance
 
-			// Load supported notification types and events from cache
-			const supportedNotificationTypes = this.getValue<readonly number[]>(
-				ctx,
-				NotificationCCValues.supportedNotificationTypes,
-			) ?? [];
-			const supportedNotificationNames = supportedNotificationTypes.map(
-				getNotificationName,
-			);
-
-			for (let i = 0; i < supportedNotificationTypes.length; i++) {
-				const type = supportedNotificationTypes[i];
-				const name = supportedNotificationNames[i];
-
-				// Always query each notification for its current status
-				ctx.logNode(node.id, {
-					endpoint: this.endpointIndex,
-					message: `querying notification status for ${name}...`,
-					direction: "outbound",
-				});
-				const response = await api.getInternal({
-					notificationType: type,
-				});
-				// NotificationReports don't store their values themselves,
-				// because the behaviour is too complex and spans the lifetime
-				// of several reports. Thus we handle it in the Node instance
-
-				// @ts-expect-error
-				if (response) await node.handleCommand(response);
-			}
-
-			// Remember when we did this
-			this.setValue(
-				ctx,
-				NotificationCCValues.lastRefresh,
-				Date.now(),
-			);
+			// @ts-expect-error
+			if (response) await node.handleCommand(response);
 		}
+
+		// Remember when we did this
+		this.setValue(
+			ctx,
+			NotificationCCValues.lastRefresh,
+			Date.now(),
+		);
 	}
 
 	public shouldRefreshValues(
@@ -913,7 +915,28 @@ export interface NotificationCCSetOptions {
 	notificationStatus: boolean;
 }
 
+function getCCResponseForNotificationCCSet(
+	ctx: GetNode<NodeId & SupportsCC>,
+	sent: NotificationCCSet,
+) {
+	// CC:0071.03.06.11.008: A receiving node MAY deny the deactivation
+	// of a specific Notification Type. In that case, the receiving node
+	// MUST respond to this command with an Application Rejected Request
+	// Command.
+	if (
+		sent.isSinglecast()
+		&& !sent.notificationStatus
+		&& !sent.isEncapsulatedWith(CommandClasses.Supervision)
+		&& ctx.getNode(sent.nodeId)?.supportsCC(
+			CommandClasses["Application Status"],
+		)
+	) {
+		return ApplicationStatusCCRejectedRequest;
+	}
+}
+
 @CCCommand(NotificationCommand.Set)
+@expectedCCResponse(getCCResponseForNotificationCCSet)
 @useSupervision()
 export class NotificationCCSet extends NotificationCC {
 	public constructor(
@@ -965,7 +988,7 @@ export type NotificationCCReportOptions = {
 	notificationType?: number;
 	notificationEvent?: number;
 	notificationStatus?: number;
-	eventParameters?: Uint8Array;
+	eventParameters?: BytesView;
 	sequenceNumber?: number;
 };
 
@@ -1019,7 +1042,7 @@ export class NotificationCCReport extends NotificationCC {
 
 		const containsSeqNum = !!(raw.payload[6] & 0b1000_0000);
 		const numEventParams = raw.payload[6] & 0b11111;
-		let eventParameters: Uint8Array | undefined;
+		let eventParameters: BytesView | undefined;
 		if (numEventParams > 0) {
 			validatePayload(raw.payload.length >= 7 + numEventParams);
 			eventParameters = raw.payload.subarray(7, 7 + numEventParams);
@@ -1151,7 +1174,7 @@ export class NotificationCCReport extends NotificationCC {
 	public notificationEvent: number | undefined;
 
 	public eventParameters:
-		| Uint8Array
+		| BytesView
 		| Duration
 		| Record<string, number>
 		| number
@@ -1225,7 +1248,7 @@ export class NotificationCCReport extends NotificationCC {
 				}
 			} else if (isUint8Array(this.eventParameters)) {
 				message["event parameters"] = buffer2hex(this.eventParameters);
-			} else if (Duration.isDuration(this.eventParameters)) {
+			} else if (this.eventParameters instanceof Duration) {
 				message["event parameters"] = this.eventParameters.toString();
 			} else {
 				message["event parameters"] = Object.entries(

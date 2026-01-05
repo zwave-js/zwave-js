@@ -4,6 +4,136 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.18.0 (2025-12-17)
+### Features
+* Device configuration parameters can now be marked as hidden (#8449)
+* Allow setting either `defaultToneId` or `defaultVolume` in Sound Switch CC (#8484)
+
+### Bugfixes
+* Remove overly strict ASCII event data padding validation in Entry Control CC (#8488)
+* Fixed an issue where an (unexpected) "Node ID added" notification during an ongoing inclusion would cause security bootstrapping to be skipped (#8496)
+* The `lastSeen` field is now restored when initalizing node statistics (#8499)
+* Spec compliance: use `Extended User Code Set` to control V2+ devices (#8486)
+
+### Config file changes
+* Omit `dimmingDuration` field for TKBHome Dimmer (#8458)
+* Add Heatit Z-TRM6 DC Thermostat (#8476)
+
+## 15.17.1 (2025-11-24)
+### Bugfixes
+* Fixed an error that could happen when receiving an S0 Nonce Report before the request acknowledgement (#8447)
+
+## 15.17.0 (2025-11-20)
+### Features
+* Add rudimentary support for Application Status Command Class (#8390)
+* Implement `refreshValues` for Window Covering CC (#8436)
+
+### Bugfixes
+* Add missing "Panic alert" event to "Emergency Alarm" notification (#8415)
+* Fixed an issue where Basic CC values were incorrectly exposed after including a device (#8430)
+* Fixed an error that could happen when receiving an S2 Nonce Report before the request acknowledgement (#8437)
+* Cached user codes are now cleared when an "All user codes deleted" notification is received (#8389)
+* For notification sensors operating in push mode, the notification state is now queried during the interview (#8442)
+* Fixed a regression where value changes were not verified on slow devices after immediately successful supervised commands (#8385)
+
+### Config file changes
+* Add Shelly Wave Shutter, update Wave 1, Wave 1PM, Wave 2PM, Wave Plug S (#8393)
+* Add product id `0x03b9` to Kwikset 918 (#8432)
+* Update documentation link for Eurotronic Comet Z (#8426)
+* Add Philips DDL240X Touchscreen Deadbolt (#8352)
+* Add US variant to Shelly Wave 2PM (#8439)
+
+### Changes under the hood
+* Fixed an error in Zniffer when attempting to parse Long Range MPDUs on channel B (#8407)
+* Most of the linting tasks were migrated from ESLint to Oxlint, bringing the lint time from over a minute down to ~15-20 seconds total (#8425)
+* Mock based tests now support simulating inclusion of secure devices, working with S2 encryption in tests is much easier now (#8427)
+
+## 15.16.0 (2025-11-04)
+### Features
+* Config parameter values can now be marked as recommended and automatically be set during the interview (#8164, #8382)
+* Config parameters can now be marked as destructive, allowing applications to confirm before setting them (#8170)
+* Add API to enable more frequent background RSSI measurements (#8193)
+
+### Bugfixes
+* Battery CC reports with invalid levels are now discarded (#8404)
+
+### Config file changes
+* Add fingerprint to Kwikset HC-620 (#8371)
+* Add Zooz ZSE11 800LR (#8373)
+* Add version conditionals and correct parameters for Enbrighten 55258 (#8359)
+* Replace wrong troubleshooting link in 700 series firmware warning template (#8365)
+* Add Kwikset 918 (#8368)
+* Correct user code slot bit field for BE468ZP/BE469/BE469ZP (#8366)
+* Add parameters 3, 40 and 84 for Enbrighten 55258, firmware version 5.51 (#8357)
+
+### Changes under the hood
+* Updated several dependencies
+* The parser for conditional logic in configuration files has been rewritten from scratch instead of being generated (#8380)
+* Optimized some timed assertions in integration tests (#8349)
+
+## 15.15.3 (2025-10-15)
+### Changes under the hood
+* Fixes an issue with loading the DB library when Z-Wave JS was bundled as CommonJS (#8356)
+
+## 15.15.2 (2025-10-14)
+### Bugfixes
+* Fixes a rare issue with the cache serialization of certain values that could lead to out-of-memory crashes, often immediately or shortly after startup (#8353)
+
+### Config file changes
+* Add Namron 4512774 Remote Controller (#8335)
+
+## 15.15.1 (2025-10-08)
+### Bugfixes
+* Fixed a warning in bundlers about an unexpected `node:net` import (#8343)
+* Fixed an issue where the device class of newly joined devices would not be persisted, causing legacy secure devices not to be automatically included with encryption (#8344)
+
+### Config file changes
+* Update parameters for HomeSeer WS300 (#8338)
+* Add Zooz ZEN78 High Power Relay (#8337)
+
+### Changes under the hood
+* Update several dependencies
+* Z-Wave JS now uses npm's trusted publishing (#8332, #8334)
+* The mock-server and integration tests can now simulate inclusion of devices, both insecure and with Security S0 (#8344)
+
+## 15.15.0 (2025-09-30)
+### Features
+* Support creating mixed LR and non-LR "multicast" groups (#8143)
+* Add driver option to skip log formatting of Z-Wave commands (#8204)
+* Add driver option to skip rendering ASCII logo on startup (#8198)
+
+### Bugfixes
+* IP based connections no longer block the process for several minutes on connection failures/timeouts (#8203)
+* Disable optimistic value updates for slow device classes, like shades and gates (#8004)
+* Fixed an issue where replacing a node with S0 security was not possible (#8181)
+* Fixed an edge case where support for EU Long Range is not inferred correctly (#8176)
+* TX report fields are now hidden from logs when transmitting failed (#8155)
+* Route rebuilding now longer aborts/fails when the route to an association target other than the controller cannot be assigned (#8192)
+* During route rebuilds, invalid and non-existing association targets are now skipped instead of failing the whole process (#8191)
+* Fixed a crash that could happen when requesting missing Transport Service segments over a bad connection (#8154)
+* Ongoing transmissions are now aborted early when the expected response CC is received before the ACK for the SendData command (#8196)
+
+### Config file changes
+* Add fingerprint to Ultrapro 59350 / 59372 / 59373 / ZWA3016 (#8103)
+* Correct parameter size for factory reset of Shelly Wave devices (#8187)
+* Add Zooz ZSE50 Siren & Chime (#8182)
+* Add fingerprint for Kwikset HomeConnect 620 firmware revision 69.35 (#8057)
+* Add fingerprint `0x0811:0x23a9` to "Kwikset HC620" (#8199)
+
+## 15.14.0 (2025-09-17)
+### Features
+* Support proxying Z-Wave traffic over the ESPHome protocol (#8093)
+
+### Bugfixes
+* Fixed an issue where converting NVMs with unknown objects would fail due to unknown NVM section (#8095)
+* Zniffer: improve support for parsing ZLF files created by the official Zniffer application (#8165)
+
+### Config file changes
+* Add 800 series variant of Minoston MP22ZP (#8171)
+
+### Changes under the hood
+* Implement utility to convert Zniffer traces to CSV (#8166)
+
 ## 15.13.0 (2025-09-11)
 ### Features
 * Support checking for all firmware updates at once, and support detecting devices unknown to the firmware update service (#8157)

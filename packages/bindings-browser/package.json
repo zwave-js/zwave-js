@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/bindings-browser",
-  "version": "15.13.0",
+  "version": "15.18.0",
   "description": "zwave-js: Host bindings for the browser",
   "keywords": [],
   "publishConfig": {
@@ -53,8 +53,8 @@
     "@types/w3c-web-serial": "^1.0.8",
     "@zwave-js/serial": "workspace:*",
     "@zwave-js/shared": "workspace:*",
-    "del-cli": "^6.0.0",
-    "typescript": "5.8.3",
+    "del-cli": "^7.0.0",
+    "typescript": "5.9.3",
     "zwave-js": "workspace:*"
   }
 }

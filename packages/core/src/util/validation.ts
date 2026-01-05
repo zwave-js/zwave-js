@@ -162,7 +162,8 @@ function formatElaboration(e: ErrorElaboration, indent: number = 0): string {
 				`Expected ${what} to be of type ${e.objectType}, got ${e.actual}`;
 		}
 	} else if (e.type === "uint8array") {
-		ret += `Expected ${what} to be a Uint8Array, got ${e.actual}`;
+		ret +=
+			`Expected ${what} to be a Uint8Array or BytesView, got ${e.actual}`;
 	} else if (e.type === "missing") {
 		ret += `ERROR: Missing validation for ${what}`;
 	} else if (e.type === "class") {

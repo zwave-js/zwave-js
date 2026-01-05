@@ -1,12 +1,15 @@
 import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type GetNode,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type NodeId,
 	type SupervisionResult,
+	type SupportsCC,
 	UNKNOWN_STATE,
 	ValueMetadata,
 	type WithAddress,
@@ -62,6 +65,7 @@ import {
 	SubsystemState,
 	SubsystemType,
 } from "../lib/_Types.js";
+import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 
 export const BarrierOperatorCCValues = V.defineCCValues(
 	CommandClasses["Barrier Operator"],
@@ -138,7 +142,7 @@ export class BarrierOperatorCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(
 			BarrierOperatorCommand,
@@ -542,7 +546,26 @@ export interface BarrierOperatorCCSetOptions {
 	targetState: BarrierState.Open | BarrierState.Closed;
 }
 
+function getCCResponseForBarrierOperatorCCSet(
+	ctx: GetNode<NodeId & SupportsCC>,
+	sent: BarrierOperatorCCSet,
+) {
+	// CC:0066.01.01.11.009: If the requested operation is prohibited by
+	// the specific device class [...], the device MUST notify the requester
+	// by issuing an Application Rejected Request Command
+	if (
+		sent.isSinglecast()
+		&& !sent.isEncapsulatedWith(CommandClasses.Supervision)
+		&& ctx.getNode(sent.nodeId)?.supportsCC(
+			CommandClasses["Application Status"],
+		)
+	) {
+		return ApplicationStatusCCRejectedRequest;
+	}
+}
+
 @CCCommand(BarrierOperatorCommand.Set)
+@expectedCCResponse(getCCResponseForBarrierOperatorCCSet)
 @useSupervision()
 export class BarrierOperatorCCSet extends BarrierOperatorCC {
 	public constructor(

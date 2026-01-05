@@ -423,6 +423,10 @@
 					"type": "number",
 					"description": "The factory default value of this parameter."
 				},
+				"recommendedValue": {
+					"type": "number",
+					"description": "An optional recommended value for this parameter that may provide better device performance or behavior than the factory default."
+				},
 				"readOnly": {
 					"const": true,
 					"description": "Whether this parameter can only be read"
@@ -434,6 +438,10 @@
 				"allowManualEntry": {
 					"const": false,
 					"description": "Whether this parameter accepts any value between minValue and maxValue. If false, minValue and maxValue are optional, but options must be used to specify the allowed values."
+				},
+				"destructive": {
+					"type": "boolean",
+					"description": "Whether this parameter is destructive and should require confirmation before setting"
 				},
 				"options": {
 					"type": "array",
@@ -466,6 +474,10 @@
 						],
 						"additionalProperties": false
 					}
+				},
+				"hidden": {
+					"type": "boolean",
+					"description": "Whether this parameter should be hidden in UIs and outputs"
 				}
 			},
 			"additionalProperties": false,

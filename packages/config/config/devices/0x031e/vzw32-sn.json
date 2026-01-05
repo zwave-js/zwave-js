@@ -711,44 +711,44 @@
 			"unsigned": true
 		},
 		{
+			"hidden": true,
 			"#": "109[0xff]",
-			"label": "Future Use",
-			"description": "Do not use except for testing with Inovelli",
+			"label": "After Hours Time Range Start Hour",
+			"description": "The UTC hour where After Hours mode should start",
 			"valueSize": 4,
 			"minValue": -1,
 			"maxValue": 23,
-			"defaultValue": -1,
-			"readOnly": true
+			"defaultValue": -1
 		},
 		{
+			"hidden": true,
 			"#": "109[0xff00]",
-			"label": "Future Use",
-			"description": "Do not use except for testing with Inovelli",
+			"label": "After Hours Time Range Start Minute",
+			"description": "The minute where After Hours mode should start",
 			"valueSize": 4,
 			"minValue": -1,
 			"maxValue": 59,
-			"defaultValue": -1,
-			"readOnly": true
+			"defaultValue": -1
 		},
 		{
+			"hidden": true,
 			"#": "109[0xff0000]",
-			"label": "Future Use",
-			"description": "Do not use except for testing with Inovelli",
+			"label": "After Hours Time Range End Hour",
+			"description": "The UTC hour where After Hours mode should end",
 			"valueSize": 4,
 			"minValue": -1,
 			"maxValue": 23,
-			"defaultValue": -1,
-			"readOnly": true
+			"defaultValue": -1
 		},
 		{
+			"hidden": true,
 			"#": "109[0xff000000]",
-			"label": "Future Use",
-			"description": "Do not use except for testing with Inovelli",
+			"label": "After Hours Time Range End Minute",
+			"description": "The minute where After Hours mode should end",
 			"valueSize": 4,
 			"minValue": -1,
 			"maxValue": 59,
-			"defaultValue": -1,
-			"readOnly": true
+			"defaultValue": -1
 		},
 		{
 			"#": "110",
@@ -1105,6 +1105,6 @@
 		"inclusion": "Triple-click config button",
 		"exclusion": "Triple-click config button",
 		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red.  Release the buttons and the switch will reset to factory defaults.",
-		"manual": "https://community.inovelli.com/t/resources-red-series-smart-2-1-switch-on-off-dimmer-manual/13706"
+		"manual": "https://help.inovelli.com/en/articles/8808909-red-series-mmwave-presence-dimmer-switch-manual"
 	}
 }

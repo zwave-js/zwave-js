@@ -26,8 +26,8 @@ const test = baseTest.extend<LocalTestContext>({
 				// We don't need a real interview for this
 				skipControllerIdentification: true,
 				skipNodeInterview: true,
-				beforeStartup(mockPort, serial) {
-					context.controller = new MockController({
+				async beforeStartup(mockPort, serial) {
+					context.controller = await MockController.create({
 						mockPort,
 						serial,
 					});

@@ -26,6 +26,7 @@ import { parseRSSI } from "@zwave-js/serial/serialapi";
 import {
 	type AllOrNone,
 	Bytes,
+	type BytesView,
 	buffer2hex,
 	pick,
 	staticExtends,
@@ -142,7 +143,10 @@ export class LongRangeMPDU implements MPDU {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
-		if (options.frameInfo.channel !== 3) {
+		if (
+			options.frameInfo.channel !== 3 // LR Channel A
+			&& options.frameInfo.channel !== 4 // LR Channel B
+		) {
 			validatePayload.fail(
 				`Unsupported channel ${options.frameInfo.channel} for LongRangeMPDU`,
 			);
@@ -674,10 +678,6 @@ export class ExplorerZWaveMPDU extends ZWaveMPDU {
 }
 
 export class NormalExplorerZWaveMPDU extends ExplorerZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-	}
-
 	public toLogEntry(): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry();
 		tags[0] = formatRoute(
@@ -828,21 +828,21 @@ export class ZWaveBeamStart {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
-		const channelConfig = getChannelConfiguration(this.frameInfo.region);
-		switch (channelConfig) {
-			case "1/2":
-			case "3":
+		switch (options.frameInfo.channel) {
+			case 0:
+			case 1:
+			case 2:
 				// OK
 				break;
-			case "4": {
+			case 3:
+			case 4: {
 				validatePayload.fail(
-					`Channel configuration 4 (ZWLR) must be parsed as a LongRangeMPDU!`,
+					`Channel ${options.frameInfo.channel} (ZWLR) must be parsed as a LongRangeMPDU!`,
 				);
 			}
 			default: {
 				validatePayload.fail(
-					// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-					`Unsupported channel configuration ${channelConfig}. MPDU payload: ${
+					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
 						buffer2hex(data)
 					}`,
 				);
@@ -885,21 +885,22 @@ export class LongRangeBeamStart {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
-		const channelConfig = getChannelConfiguration(this.frameInfo.region);
-		switch (channelConfig) {
-			case "1/2":
-			case "3":
+		switch (options.frameInfo.channel) {
+			case 0:
+			case 1:
+			case 2:
+				validatePayload.fail(
+					`Channel ${options.frameInfo.channel} (Mesh) must be parsed as a ZWaveMPDU!`,
+				);
+
+			case 3:
+			case 4: {
 				// OK
 				break;
-			case "4": {
-				validatePayload.fail(
-					`Channel configuration 4 (ZWLR) must be parsed as a LongRangeMPDU!`,
-				);
 			}
 			default: {
 				validatePayload.fail(
-					// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-					`Unsupported channel configuration ${channelConfig}. MPDU payload: ${
+					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
 						buffer2hex(data)
 					}`,
 				);
@@ -988,7 +989,7 @@ export type ZWaveFrame =
 				type: ZWaveFrameType.Singlecast;
 				destinationNodeId: number;
 				ackRequested: boolean;
-				payload: Uint8Array | CommandClass;
+				payload: BytesView | CommandClass;
 			}
 			// Only present in routed frames:
 			& AllOrNone<
@@ -1027,13 +1028,13 @@ export type ZWaveFrame =
 			type: ZWaveFrameType.Broadcast;
 			destinationNodeId: typeof NODE_ID_BROADCAST;
 			ackRequested: boolean;
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Multicast frame, not routed
 			type: ZWaveFrameType.Multicast;
 			destinationNodeIds: number[];
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Ack frame, not routed
@@ -1044,7 +1045,7 @@ export type ZWaveFrame =
 			// Different kind of explorer frames
 			& ({
 				type: ZWaveFrameType.ExplorerNormal;
-				payload: Uint8Array | CommandClass;
+				payload: BytesView | CommandClass;
 			} | {
 				type: ZWaveFrameType.ExplorerSearchResult;
 				searchingNodeId: number;
@@ -1054,7 +1055,7 @@ export type ZWaveFrame =
 			} | {
 				type: ZWaveFrameType.ExplorerInclusionRequest;
 				networkHomeId: number;
-				payload: Uint8Array | CommandClass;
+				payload: BytesView | CommandClass;
 			})
 			// Common fields for all explorer frames
 			& {
@@ -1093,7 +1094,7 @@ export type LongRangeFrame =
 			// Singlecast frame
 			type: LongRangeFrameType.Singlecast;
 			ackRequested: boolean;
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Broadcast frame. This is technically a singlecast frame,
@@ -1101,13 +1102,13 @@ export type LongRangeFrame =
 			type: LongRangeFrameType.Broadcast;
 			destinationNodeId: typeof NODE_ID_BROADCAST_LR;
 			ackRequested: boolean;
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Acknowledgement frame
 			type: LongRangeFrameType.Ack;
 			incomingRSSI: RSSI;
-			payload: Uint8Array;
+			payload: BytesView;
 		}
 	);
 
@@ -1171,7 +1172,7 @@ export type CorruptedFrame = {
 
 	protocolDataRate: ZnifferProtocolDataRate;
 
-	payload: Uint8Array;
+	payload: BytesView;
 };
 
 export function mpduToFrame(mpdu: MPDU, payloadCC?: CommandClass): Frame {

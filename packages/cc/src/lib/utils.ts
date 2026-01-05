@@ -375,6 +375,13 @@ export async function addAssociations(
 	endpoint: EndpointId & SupportsCC & ControlsCC,
 	group: number,
 	destinations: AssociationAddress[],
+	options?: {
+		/**
+		 * Whether to force creating associations even if they are not allowed.
+		 * **Note:** Invalid associations will most likely not work
+		 */
+		force?: boolean;
+	},
 ): Promise<void> {
 	const nodeAndEndpointString = `${endpoint.nodeId}${
 		endpoint.index > 0 ? `, endpoint ${endpoint.index}` : ""
@@ -446,34 +453,36 @@ export async function addAssociations(
 
 	if (groupIsMultiChannel) {
 		// Check that all associations are allowed
-		const disallowedAssociations = destinations.map(
-			(a) => ({
-				...a,
-				checkResult: checkAssociation(ctx, endpoint, group, a),
-			}),
-		).filter(({ checkResult }) =>
-			checkResult !== AssociationCheckResult.OK
-		);
-		if (disallowedAssociations.length) {
-			let message = `The following associations are not allowed:`;
-			message += disallowedAssociations
-				.map(
-					(a) =>
-						`\n· Node ${a.nodeId}${
-							a.endpoint ? `, endpoint ${a.endpoint}` : ""
-						}: ${
-							getEnumMemberName(
-								AssociationCheckResult,
-								a.checkResult,
-							).replace("Forbidden_", "")
-						}`,
-				)
-				.join("");
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.AssociationCC_NotAllowed,
-				disallowedAssociations,
+		if (!options?.force) {
+			const disallowedAssociations = destinations.map(
+				(a) => ({
+					...a,
+					checkResult: checkAssociation(ctx, endpoint, group, a),
+				}),
+			).filter(({ checkResult }) =>
+				checkResult !== AssociationCheckResult.OK
 			);
+			if (disallowedAssociations.length) {
+				let message = `The following associations are not allowed:`;
+				message += disallowedAssociations
+					.map(
+						(a) =>
+							`\n· Node ${a.nodeId}${
+								a.endpoint ? `, endpoint ${a.endpoint}` : ""
+							}: ${
+								getEnumMemberName(
+									AssociationCheckResult,
+									a.checkResult,
+								).replace("Forbidden_", "")
+							}`,
+					)
+					.join("");
+				throw new ZWaveError(
+					message,
+					ZWaveErrorCodes.AssociationCC_NotAllowed,
+					disallowedAssociations,
+				);
+			}
 		}
 
 		// And add them
@@ -499,34 +508,36 @@ export async function addAssociations(
 		}
 
 		// Check that all associations are allowed
-		const disallowedAssociations = destinations.map(
-			(a) => ({
-				...a,
-				checkResult: checkAssociation(ctx, endpoint, group, a),
-			}),
-		).filter(({ checkResult }) =>
-			checkResult !== AssociationCheckResult.OK
-		);
-		if (disallowedAssociations.length) {
-			let message =
-				`The associations to the following nodes are not allowed`;
-			message += disallowedAssociations
-				.map(
-					(a) =>
-						`\n· Node ${a.nodeId}: ${
-							getEnumMemberName(
-								AssociationCheckResult,
-								a.checkResult,
-							).replace("Forbidden_", "")
-						}`,
-				)
-				.join("");
-
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.AssociationCC_NotAllowed,
-				disallowedAssociations,
+		if (!options?.force) {
+			const disallowedAssociations = destinations.map(
+				(a) => ({
+					...a,
+					checkResult: checkAssociation(ctx, endpoint, group, a),
+				}),
+			).filter(({ checkResult }) =>
+				checkResult !== AssociationCheckResult.OK
 			);
+			if (disallowedAssociations.length) {
+				let message =
+					`The associations to the following nodes are not allowed`;
+				message += disallowedAssociations
+					.map(
+						(a) =>
+							`\n· Node ${a.nodeId}: ${
+								getEnumMemberName(
+									AssociationCheckResult,
+									a.checkResult,
+								).replace("Forbidden_", "")
+							}`,
+					)
+					.join("");
+
+				throw new ZWaveError(
+					message,
+					ZWaveErrorCodes.AssociationCC_NotAllowed,
+					disallowedAssociations,
+				);
+			}
 		}
 
 		const api = CCAPI.create(
@@ -688,7 +699,7 @@ export function getLifelineGroupIds(
 		);
 	}
 
-	return distinct(lifelineGroups).sort();
+	return distinct(lifelineGroups).toSorted((a, b) => a - b);
 }
 
 export async function configureLifelineAssociations(

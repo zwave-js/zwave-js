@@ -3,12 +3,15 @@ import {
 	type ApplicationNodeInformation,
 	CommandClasses,
 	type GenericDeviceClass,
+	type GetNode,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
+	type NodeId,
 	type SpecificDeviceClass,
+	type SupportsCC,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -163,14 +166,14 @@ function areEndpointsUnnecessary(
 	}
 
 	// Endpoints are necessary if more than 1 of them has a switch-type device class
-	const switchTypeDeviceClasses = [
+	const switchTypeDeviceClasses = new Set([
 		0x10, // Binary Switch
 		0x11, // Multilevel Switch
 		0x12, // Remote Switch
 		0x13, // Toggle Switch
-	];
+	]);
 	const numSwitchEndpoints = [...deviceClasses.values()].filter(
-		({ generic }) => switchTypeDeviceClasses.includes(generic),
+		({ generic }) => switchTypeDeviceClasses.has(generic),
 	).length;
 	if (numSwitchEndpoints > 1) return false;
 
@@ -202,7 +205,7 @@ export class MultiChannelCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getEndpoints() {
 		this.assertSupportsCommand(
 			MultiChannelCommand,
@@ -1366,11 +1369,12 @@ export interface MultiChannelCCCommandEncapsulationOptions {
 // Destination End Point field specifies multiple End Points via bit mask addressing.
 
 function getCCResponseForCommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: MultiChannelCCCommandEncapsulation,
 ) {
 	if (
 		typeof sent.destination === "number"
-		&& sent.encapsulated.expectsCCResponse()
+		&& sent.encapsulated.expectsCCResponse(ctx)
 	) {
 		// Allow both versions of the encapsulation command
 		// Our implementation check is a bit too strict, so change the return type
@@ -1619,9 +1623,10 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
 }
 
 function getResponseForV1CommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: MultiChannelCCV1CommandEncapsulation,
 ) {
-	if (sent.encapsulated.expectsCCResponse()) {
+	if (sent.encapsulated.expectsCCResponse(ctx)) {
 		return MultiChannelCCV1CommandEncapsulation;
 	}
 }

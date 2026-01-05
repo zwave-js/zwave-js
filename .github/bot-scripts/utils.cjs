@@ -55,12 +55,10 @@ function extractLogfileUrl(logfileSection) {
 
 	// Validate URL format
 	try {
-		new URL(url);
+		return new URL(url).toString();
 	} catch (error) {
 		throw new Error(`Invalid URL format: ${url}`);
 	}
-
-	return url;
 }
 
 /**

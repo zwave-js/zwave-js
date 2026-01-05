@@ -2985,7 +2985,6 @@ export class Message {
     static parse(data: Uint8Array, ctx: MessageParsingContext): Message;
     // (undocumented)
     payload: Bytes;
-    prematureNodeUpdate: Message | undefined;
     get rtt(): number | undefined;
     serialize(ctx: MessageEncodingContext): Promise<Bytes>;
     toJSON(): JSONObject;
@@ -5874,7 +5873,10 @@ export class ZnifferMessage {
     // (undocumented)
     functionType?: ZnifferFunctionType;
     // (undocumented)
-    static parse(data: Uint8Array): ZnifferMessage;
+    static parse(data: Uint8Array): {
+        msg: ZnifferMessage;
+        bytesRead: number;
+    };
     // (undocumented)
     payload: Bytes;
     serialize(): Bytes;
@@ -5925,7 +5927,10 @@ export class ZnifferMessageRaw {
     // (undocumented)
     readonly functionType: ZnifferFunctionType | undefined;
     // (undocumented)
-    static parse(data: Uint8Array): ZnifferMessageRaw;
+    static parse(data: Uint8Array): {
+        raw: ZnifferMessageRaw;
+        bytesRead: number;
+    };
     // (undocumented)
     readonly payload: Bytes;
     // (undocumented)

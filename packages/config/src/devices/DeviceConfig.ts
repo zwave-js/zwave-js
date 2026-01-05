@@ -7,6 +7,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	type JSONObject,
 	cloneDeep,
 	enumFilesRecursive,
@@ -908,7 +909,7 @@ export class DeviceConfig {
 
 		const sortObject = (obj: Record<string, any>) => {
 			const ret: Record<string, any> = {};
-			for (const key of Object.keys(obj).sort()) {
+			for (const key of Object.keys(obj).toSorted()) {
 				ret[key] = obj[key];
 			}
 			return ret;
@@ -941,7 +942,9 @@ export class DeviceConfig {
 					param.valueBitMask ? `[${num2hex(param.valueBitMask)}]` : ""
 				}`;
 			target.paramInformation = [...map.values()]
-				.sort((a, b) => getParamKey(a).localeCompare(getParamKey(b)))
+				.toSorted((a, b) =>
+					getParamKey(a).localeCompare(getParamKey(b))
+				)
 				.map((p) => cloneDeep(p));
 		};
 
@@ -1018,7 +1021,8 @@ export class DeviceConfig {
 				c.removeCCs = Object.fromEntries(this.compat.removeCCs);
 			}
 			if (this.compat.treatSetAsReport) {
-				c.treatSetAsReport = [...this.compat.treatSetAsReport].sort();
+				c.treatSetAsReport = [...this.compat.treatSetAsReport]
+					.toSorted();
 			}
 
 			c = sortObject(c);
@@ -1053,13 +1057,13 @@ export class DeviceConfig {
 	 */
 	public async getHash(
 		version: 0 | 1 | 2 = DeviceConfig.maxHashVersion,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		// Figure out what to hash
 		const hashable = this.getHashable(version);
 
 		// And create a "hash" from it. Older versions used a non-cryptographic hash,
 		// newer versions compress a subset of the config file.
-		let hash: Uint8Array;
+		let hash: BytesView;
 		if (version === 0) {
 			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
 			return await digest("md5", buffer);
@@ -1083,7 +1087,7 @@ export class DeviceConfig {
 		return 2;
 	}
 
-	public static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean {
+	public static areHashesEqual(hash: BytesView, other: BytesView): boolean {
 		const parsedHash = parseHash(hash);
 		const parsedOther = parseHash(other);
 		// If one of the hashes could not be parsed, they are not equal
@@ -1113,9 +1117,9 @@ export class DeviceConfig {
 	}
 }
 
-function parseHash(hash: Uint8Array): {
+function parseHash(hash: BytesView): {
 	version: number;
-	hashData: Uint8Array;
+	hashData: BytesView;
 } | undefined {
 	const hashString = Bytes.view(hash).toString("utf8");
 	const versionMatch = hashString.match(/^\$v(\d+)\$/);

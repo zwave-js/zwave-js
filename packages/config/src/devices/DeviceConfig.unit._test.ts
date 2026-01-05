@@ -1,3 +1,4 @@
+// oxlint-disable no-empty-file
 // FIXME: These tests are incompatible with auto-generating the index file
 
 // import fsExtra from "fs-extra";

@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/mcp-server-dev",
-  "version": "15.13.0",
+  "version": "15.18.0",
   "private": true,
   "description": "MCP development server for Z-Wave JS tooling",
   "keywords": [
@@ -38,15 +38,16 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4",
-    "execa": "^9.6.0"
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "nano-spawn": "^2.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.19.9",
-    "typescript": "5.8.3"
+    "@types/node": "^20.19.23",
+    "typescript": "5.9.3"
   },
   "scripts": {
     "build": "tsc -b",
+    "bootstrap": "yarn build",
     "clean": "del-cli build/ *.tsbuildinfo",
     "lint:ts": "eslint --cache --cache-location .eslintcache/ -c ../../eslint.config.mjs src/**/*.ts",
     "lint:ts:fix": "yarn run lint:ts --fix"

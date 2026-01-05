@@ -1,6 +1,6 @@
 {
   "name": "zwave-js",
-  "version": "15.13.0",
+  "version": "15.18.0",
   "description": "Z-Wave driver written entirely in JavaScript/TypeScript",
   "keywords": [],
   "type": "module",
@@ -122,13 +122,11 @@
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:ts": "eslint --cache \"src/**/*.ts\"",
-    "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "dependencies": {
-    "@alcalzone/jsonl-db": "^3.1.1",
+    "@alcalzone/jsonl-db": "^4.0.2",
     "@andrewbranch/untar.js": "^1.0.3",
     "@homebridge/ciao": "^1.3.4",
     "@zwave-js/cc": "workspace:*",
@@ -147,25 +145,25 @@
     "p-queue": "^8.1.0",
     "pathe": "^2.0.3",
     "reflect-metadata": "^0.2.2",
-    "semver": "^7.6.3",
+    "semver": "^7.7.2",
     "serialport": "^13.0.0",
     "source-map-support": "^0.5.21",
-    "winston": "^3.17.0"
+    "winston": "^3.18.3"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
-    "@microsoft/api-extractor": "^7.52.11",
-    "@types/node": "^20.19.9",
-    "@types/semver": "^7.7.0",
+    "@alcalzone/esm2cjs": "^1.4.2",
+    "@microsoft/api-extractor": "^7.55.1",
+    "@types/node": "^20.19.23",
+    "@types/semver": "^7.7.1",
     "@types/sinon": "^17.0.4",
     "@types/source-map-support": "^0.5.10",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "mockdate": "^3.0.5",
     "sinon": "^21.0.0",
     "tsx": "^4.20.5",
-    "typescript": "5.8.3",
-    "vitest": "^2.1.9"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/shared",
-  "version": "15.13.0",
+  "version": "15.18.0",
   "description": "zwave-js: shared utilities",
   "keywords": [],
   "publishConfig": {
@@ -59,20 +59,18 @@
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
-    "lint:ts": "eslint --cache \"src/**/*.ts\"",
-    "lint:ts:fix": "yarn run lint:ts --fix",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
-    "@microsoft/api-extractor": "^7.52.11",
-    "@types/node": "^20.19.9",
+    "@alcalzone/esm2cjs": "^1.4.2",
+    "@microsoft/api-extractor": "^7.55.1",
+    "@types/node": "^20.19.23",
     "@types/sinon": "^17.0.4",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "sinon": "^21.0.0",
     "tsx": "^4.20.5",
-    "typescript": "5.8.3",
-    "vitest": "^2.1.9"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.0"
   }
 }

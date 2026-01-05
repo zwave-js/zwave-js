@@ -19,6 +19,7 @@ import {
 	NOT_KNOWN,
 	type NodeId,
 	type PhysicalNodes,
+	type QueryNodeInterviewStage,
 	type QueryNodeStatus,
 	type SecurityManagers,
 	type SendCommandOptions,
@@ -181,7 +182,11 @@ export type CCAPIHost<TNode extends CCAPINode = CCAPINode> =
 	& LogNode;
 
 // Defines the necessary traits a node passed to a CC API must have
-export type CCAPINode = NodeId & ListenBehavior & QueryNodeStatus;
+export type CCAPINode =
+	& NodeId
+	& ListenBehavior
+	& QueryNodeStatus
+	& QueryNodeInterviewStage;
 
 // Defines the necessary traits an endpoint passed to a CC API must have
 export type CCAPIEndpoint =
@@ -339,7 +344,7 @@ export class CCAPI {
 	}
 
 	/** Whether a successful setValue call should imply that the value was successfully updated */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// oxlint-disable-next-line no-unused-vars
 	public isSetValueOptimistic(valueId: ValueID): boolean {
 		return true;
 	}
@@ -446,7 +451,7 @@ export class CCAPI {
 	 * Determine whether the linked node supports a specific command of this command class.
 	 * {@link NOT_KNOWN} (`undefined`) means that the information has not been received yet
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// oxlint-disable-next-line no-unused-vars
 	public supportsCommand(command: number): MaybeNotKnown<boolean> {
 		// This needs to be overwritten per command class. In the default implementation, we don't know anything!
 		return NOT_KNOWN;
@@ -798,6 +803,7 @@ export type APIConstructor<T extends CCAPI = CCAPI> = new (
 // Do not edit it by hand or your changes will be lost
 type CCNameMap = {
 	"Alarm Sensor": typeof CommandClasses["Alarm Sensor"];
+	"Application Status": typeof CommandClasses["Application Status"];
 	Association: typeof CommandClasses["Association"];
 	"Association Group Information":
 		typeof CommandClasses["Association Group Information"];
@@ -956,6 +962,8 @@ export interface CCAPIs {
 
 	// AUTO GENERATION BELOW
 	"Alarm Sensor": import("../cc/AlarmSensorCC.js").AlarmSensorCCAPI;
+	"Application Status":
+		import("../cc/ApplicationStatusCC.js").ApplicationStatusCCAPI;
 	Association: import("../cc/AssociationCC.js").AssociationCCAPI;
 	"Association Group Information":
 		import("../cc/AssociationGroupInfoCC.js").AssociationGroupInfoCCAPI;

@@ -45,6 +45,7 @@ export function getDefaultSupportedFunctionTypes(): FunctionType[] {
 		FunctionType.GetNodeProtocolInfo,
 		FunctionType.RequestNodeInfo,
 		FunctionType.AssignSUCReturnRoute,
+		FunctionType.DeleteSUCReturnRoute,
 		FunctionType.AddNodeToNetwork,
 		FunctionType.RemoveNodeFromNetwork,
 	];

@@ -1,3 +1,4 @@
+import { type InterviewStage } from "../definitions/InterviewStage.js";
 import type { FLiRS } from "../definitions/NodeInfo.js";
 import type { NodeStatus } from "../definitions/NodeStatus.js";
 import type { MaybeNotKnown } from "../values/Primitive.js";
@@ -37,12 +38,25 @@ export interface ListenBehavior {
 	readonly canSleep: MaybeNotKnown<boolean>;
 }
 
-/** Allows querying whether a node's status */
+/** Allows querying a node's status */
 export interface QueryNodeStatus {
 	/**
 	 * Which status the node is believed to be in
 	 */
 	readonly status: NodeStatus;
+}
+
+/** Allows querying a node's interview stage */
+export interface QueryNodeInterviewStage {
+	/**
+	 * Which interview stage was last completed
+	 */
+	interviewStage: InterviewStage;
+
+	/**
+	 * Whether the node has been fully interviewed at least once
+	 */
+	bootstrapped: boolean;
 }
 
 export interface PhysicalNodes<T extends NodeId> {

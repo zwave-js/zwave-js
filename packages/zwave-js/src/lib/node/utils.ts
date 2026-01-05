@@ -360,9 +360,9 @@ export function getDefinedValueIDsInternal(
 	if (node.id === ctx.ownNodeId) return [];
 
 	let ret: ValueID[] = [];
-	const allowControlled: CommandClasses[] = [
+	const allowControlled = new Set([
 		CommandClasses["Scene Activation"],
-	];
+	]);
 	for (
 		const endpoint of getAllEndpoints<EndpointId & SupportsCC & ControlsCC>(
 			ctx,
@@ -374,7 +374,7 @@ export function getDefinedValueIDsInternal(
 				// Create values only for supported CCs
 				endpoint.supportsCC(cc)
 				// ...and some controlled CCs
-				|| (endpoint.controlsCC(cc) && allowControlled.includes(cc))
+				|| (endpoint.controlsCC(cc) && allowControlled.has(cc))
 				// ...and possibly Basic CC, which has some extra checks to know
 				// whether values should be exposed
 				|| cc === CommandClasses.Basic

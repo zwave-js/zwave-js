@@ -4,6 +4,7 @@
 	"editor.formatOnSave": false, // the default of true interferes with codeActionsOnSave
 	"editor.codeActionsOnSave": [
 		"source.fixAll.eslint",
+		"source.fixAll.oxc",
 		"source.formatDocument"
 	],
 	"eslint.codeActionsOnSave.mode": "problems",
@@ -107,5 +108,22 @@
 		"**/.yarn": true
 	},
 	"git.ignoredRepositories": ["specs", "vscode-config-editor"],
-	"search.followSymlinks": false
+	"search.followSymlinks": false,
+	"chat.tools.terminal.autoApprove": {
+		"git show": true,
+		"yarn fmt": true,
+		"yarn vitest run": true,
+		"rm": false,
+		"rmdir": false,
+		"del": false,
+		"kill": false,
+		"curl": false,
+		"wget": false,
+		"eval": false,
+		"chmod": false,
+		"chown": false,
+		"/^Remove-Item\\b/i": false
+	},
+	"oxc.typeAware": true,
+	"oxc.enable": true
 }

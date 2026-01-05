@@ -40,110 +40,23 @@ integrationTest(
 			"fixtures/s2CollisionsSupervised",
 		),
 
+		nodeCapabilities: {
+			securityClasses: new Set([SecurityClass.S2_Unauthenticated]),
+		},
+
 		customSetup: async (driver, controller, mockNode) => {
-			// Create a security manager for the node
-			const smNode = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smNode.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			mockNode.securityManagers.securityManager2 = smNode;
-			mockNode.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Create a security manager for the controller
-			const smCtrlr = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smCtrlr.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			controller.securityManagers.securityManager2 = smCtrlr;
-			controller.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Respond to Nonce Get
-			const respondToNonceGet: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof Security2CCNonceGet) {
-						const nonce = await smNode.generateNonce(
-							controller.ownNodeId,
-						);
-						const cc = new Security2CCNonceReport({
-							nodeId: controller.ownNodeId,
-							SOS: true,
-							MOS: false,
-							receiverEI: nonce,
-						});
-						return { action: "sendCC", cc };
-					}
-				},
-			};
-			mockNode.defineBehavior(respondToNonceGet);
-
-			// Handle decode errors
-			const handleInvalidCC: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof InvalidCC) {
-						if (
-							receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_CannotDecode
-							|| receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_NoSPAN
-						) {
-							const nonce = await smNode.generateNonce(
-								controller.ownNodeId,
-							);
-							const cc = new Security2CCNonceReport({
-								nodeId: controller.ownNodeId,
-								SOS: true,
-								MOS: false,
-								receiverEI: nonce,
-							});
-							return { action: "sendCC", cc };
-						}
-					}
-				},
-			};
-			mockNode.defineBehavior(handleInvalidCC);
-
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
-						&& receivedCC.encapsulated
-							instanceof SupervisionCCGet
+						receivedCC instanceof SupervisionCCGet
 					) {
 						let cc: CommandClass = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.encapsulated.sessionId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
-						cc = Security2CC.encapsulate(
-							cc,
-							self.id,
-							self.securityManagers,
-						);
 						return { action: "sendCC", cc };
 					}
 				},
@@ -207,89 +120,8 @@ integrationTest(
 			"fixtures/s2CollisionsUnsupervised",
 		),
 
-		customSetup: async (driver, controller, mockNode) => {
-			// Create a security manager for the node
-			const smNode = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smNode.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			mockNode.securityManagers.securityManager2 = smNode;
-			mockNode.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Create a security manager for the controller
-			const smCtrlr = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smCtrlr.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			controller.securityManagers.securityManager2 = smCtrlr;
-			controller.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Respond to Nonce Get
-			const respondToNonceGet: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof Security2CCNonceGet) {
-						const nonce = await smNode.generateNonce(
-							controller.ownNodeId,
-						);
-						const cc = new Security2CCNonceReport({
-							nodeId: controller.ownNodeId,
-							SOS: true,
-							MOS: false,
-							receiverEI: nonce,
-						});
-						return { action: "sendCC", cc };
-					}
-				},
-			};
-			mockNode.defineBehavior(respondToNonceGet);
-
-			// Handle decode errors
-			const handleInvalidCC: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof InvalidCC) {
-						if (
-							receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_CannotDecode
-							|| receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_NoSPAN
-						) {
-							const nonce = await smNode.generateNonce(
-								controller.ownNodeId,
-							);
-							const cc = new Security2CCNonceReport({
-								nodeId: controller.ownNodeId,
-								SOS: true,
-								MOS: false,
-								receiverEI: nonce,
-							});
-							return { action: "sendCC", cc };
-						}
-					}
-				},
-			};
-			mockNode.defineBehavior(handleInvalidCC);
+		nodeCapabilities: {
+			securityClasses: new Set([SecurityClass.S2_Unauthenticated]),
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
@@ -342,101 +174,20 @@ integrationTest(
 			"fixtures/s2CollisionsSupervised",
 		),
 
+		nodeCapabilities: {
+			securityClasses: new Set([SecurityClass.S2_Unauthenticated]),
+		},
+
 		customSetup: async (driver, controller, mockNode) => {
-			// Create a security manager for the node
-			const smNode = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smNode.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			mockNode.securityManagers.securityManager2 = smNode;
-			mockNode.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Create a security manager for the controller
-			const smCtrlr = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smCtrlr.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			controller.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Respond to Nonce Get
-			const respondToNonceGet: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof Security2CCNonceGet) {
-						const nonce = await smNode.generateNonce(
-							controller.ownNodeId,
-						);
-						const cc = new Security2CCNonceReport({
-							nodeId: controller.ownNodeId,
-							SOS: true,
-							MOS: false,
-							receiverEI: nonce,
-						});
-						return { action: "sendCC", cc };
-					}
-				},
-			};
-			mockNode.defineBehavior(respondToNonceGet);
-
-			// Handle decode errors
-			const handleInvalidCC: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof InvalidCC) {
-						if (
-							receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_CannotDecode
-							|| receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_NoSPAN
-						) {
-							const nonce = await smNode.generateNonce(
-								controller.ownNodeId,
-							);
-							const cc = new Security2CCNonceReport({
-								nodeId: controller.ownNodeId,
-								SOS: true,
-								MOS: false,
-								receiverEI: nonce,
-							});
-							return { action: "sendCC", cc };
-						}
-					}
-				},
-			};
-			mockNode.defineBehavior(handleInvalidCC);
-
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
-						&& receivedCC.encapsulated
-							instanceof SupervisionCCGet
+						receivedCC instanceof SupervisionCCGet
 					) {
 						let cc: CommandClass = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.encapsulated.sessionId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
@@ -491,13 +242,13 @@ integrationTest(
 				}),
 			);
 			const reportConfirmation = mockNode.expectControllerFrame(
-				500,
 				(f): f is MockZWaveRequestFrame =>
 					f.type === MockZWaveFrameType.Request
 					&& f.payload instanceof Security2CCMessageEncapsulation
 					&& f.payload.encapsulated instanceof SupervisionCCReport
 					&& f.payload.encapsulated.status
 						=== SupervisionStatus.Success,
+				{ timeout: 500 },
 			);
 
 			// We want both transactions to be completed successfully
@@ -508,34 +259,6 @@ integrationTest(
 				status: SupervisionStatus.Success,
 			});
 			t.expect(confirmationResult).toBeDefined();
-
-			// // Now create a collision by having both parties send at the same time
-			// const nodeToHost = Security2CC.encapsulate(
-			// 	new BasicCCReport({
-			// 		nodeId: mockController.ownNodeId,
-			// 		currentValue: 99,
-			// 	}),
-			// );
-			// const p1 = mockNode.sendToController(
-			// 	createMockZWaveRequestFrame(nodeToHost, {
-			// 		ackRequested: true,
-			// 	}),
-			// );
-			// const p2 = node.commandClasses.Basic.set(0);
-
-			// const [, p2result] = await Promise.all([p1, p2]);
-
-			// // Give the node a chance to respond
-			// await wait(250);
-
-			// // If the collision was handled gracefully, we should now have the value reported by the node
-			// const currentValue = node.getValue(BasicCCValues.currentValue.id);
-			// t.is(currentValue, 99);
-
-			// // Ensure the Basic Set causing a collision eventually gets resolved
-			// t.like(p2result, {
-			// 	status: SupervisionStatus.Success,
-			// });
 		},
 	},
 );
@@ -551,102 +274,20 @@ integrationTest(
 			"fixtures/s2CollisionsSupervised",
 		),
 
+		nodeCapabilities: {
+			securityClasses: new Set([SecurityClass.S2_Unauthenticated]),
+		},
+
 		customSetup: async (driver, controller, mockNode) => {
-			// Create a security manager for the node
-			const smNode = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smNode.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smNode.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			mockNode.securityManagers.securityManager2 = smNode;
-			mockNode.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Create a security manager for the controller
-			const smCtrlr = await SecurityManager2.create();
-			// Copy keys from the driver
-			await smCtrlr.setKey(
-				SecurityClass.S2_AccessControl,
-				driver.options.securityKeys!.S2_AccessControl!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Authenticated,
-				driver.options.securityKeys!.S2_Authenticated!,
-			);
-			await smCtrlr.setKey(
-				SecurityClass.S2_Unauthenticated,
-				driver.options.securityKeys!.S2_Unauthenticated!,
-			);
-			controller.securityManagers.securityManager2 = smCtrlr;
-			controller.encodingContext.getHighestSecurityClass = () =>
-				SecurityClass.S2_Unauthenticated;
-
-			// Respond to Nonce Get
-			const respondToNonceGet: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof Security2CCNonceGet) {
-						const nonce = await smNode.generateNonce(
-							controller.ownNodeId,
-						);
-						const cc = new Security2CCNonceReport({
-							nodeId: controller.ownNodeId,
-							SOS: true,
-							MOS: false,
-							receiverEI: nonce,
-						});
-						return { action: "sendCC", cc };
-					}
-				},
-			};
-			mockNode.defineBehavior(respondToNonceGet);
-
-			// Handle decode errors
-			const handleInvalidCC: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof InvalidCC) {
-						if (
-							receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_CannotDecode
-							|| receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_NoSPAN
-						) {
-							const nonce = await smNode.generateNonce(
-								controller.ownNodeId,
-							);
-							const cc = new Security2CCNonceReport({
-								nodeId: controller.ownNodeId,
-								SOS: true,
-								MOS: false,
-								receiverEI: nonce,
-							});
-							return { action: "sendCC", cc };
-						}
-					}
-				},
-			};
-			mockNode.defineBehavior(handleInvalidCC);
-
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
-						&& receivedCC.encapsulated
-							instanceof SupervisionCCGet
+						receivedCC instanceof SupervisionCCGet
 					) {
 						let cc: CommandClass = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.encapsulated.sessionId,
+							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
