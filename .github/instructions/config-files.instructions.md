@@ -259,6 +259,7 @@ The `scenes` property allows defining custom labels and descriptions for Central
 - Supports operators: `<`, `<=`, `>`, `>=`, `===`, `&&`, `||`, `(...)`
 - Version comparisons support patch numbers (1.2.3) with missing patch assumed as 0
 - Convert primitive values to objects with `value` property when making conditional
+- `sdkVersion` is rarely needed; avoid using it unless asked to do so
 
 Example:
 
