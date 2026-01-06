@@ -368,7 +368,11 @@ import type {
 	RebuildRoutesStatus,
 	SDKVersion,
 } from "./_Types.js";
-import { assertProvisioningEntry, isRebuildRoutesTask } from "./utils.js";
+import {
+	assertProvisioningEntry,
+	getInitial500SeriesNVMBackupChunkSize,
+	isRebuildRoutesTask,
+} from "./utils.js";
 
 // Strongly type the event emitter events
 interface ControllerEventCallbacks
@@ -8491,13 +8495,13 @@ export class ZWaveController
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
 		//
-		// However, the Aeotec Z-Stick 5 (at least some revisions) go haywire when doing so,
-		// so we start with a smaller chunk size for that device
-		const initialChunkSize = this._manufacturerId === 0x86
-				&& this._productType === 0x01
-				&& this._productId === 0x5a
-			? 48
-			: 0xffff;
+		// However, some sticks go haywire if we use a chunk size that is too large,
+		// so we figure out if we need to start small.
+		const initialChunkSize = getInitial500SeriesNVMBackupChunkSize(
+			this._manufacturerId,
+			this._productType,
+			this._productId,
+		);
 		let chunkSize: number = Math.min(initialChunkSize, ret.length);
 		while (offset < ret.length) {
 			const chunk = await this.externalNVMReadBuffer(
@@ -8784,11 +8788,19 @@ export class ZWaveController
 			}
 		}
 
-		// Figure out the maximum chunk size the Serial API supports
+		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
+		//
+		// However, some sticks go haywire if we use a chunk size that is too large,
+		// so we figure out if we need to start small.
+		const initialChunkSize = getInitial500SeriesNVMBackupChunkSize(
+			this._manufacturerId,
+			this._productType,
+			this._productId,
+		);
 		// The write requests need 5 bytes more than the read response, so subtract 5 from the returned length
-		const chunkSize = (await this.externalNVMReadBuffer(0, 0xffff)).length
-			- 5;
+		const chunkSize =
+			(await this.externalNVMReadBuffer(0, initialChunkSize)).length - 5;
 
 		for (let offset = 0; offset < nvmData.length; offset += chunkSize) {
 			await this.externalNVMWriteBuffer(
