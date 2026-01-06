@@ -4,6 +4,33 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Add option to force associations without checking if they are valid/allowed (#8490)
+* Devices that failed to include with Security S2 are no longer interviewed (#8162)
+
+### Bugfixes
+* During the initial interview after inclusion, user codes are now cleared unless `queryAllUserCodes` driver option is set (#8525)
+* The `ConfigurationCCDefaultReset` command now uses Supervision if supported (#8530)
+* Correct log messages for `SoundSwitchCCConfigurationSet` (#8531)
+* Fixed an issue where `setValue` calls with `disableOptimisticValueUpdate` would cause the next `value updated` event to have an incorrect previous value (#8532)
+* Fixed an issue where some 500 series controllers could hang during an NVM backup (#8534)
+
+### Config file changes
+* Add missing parameter for latest VZW31-SN firmware (#8513)
+* Correct manual link metadata for Inovelli VZW31-SN and VZW32-SN (#8492)
+* Label endpoints of Shelly Wave Shutter (#8521)
+* Remove unnecessary firmware version check from Zooz ZEN35 (#8472)
+* Add fingerprint for Kwikset HC620 (#8474)
+* Add Zooz Zen58 Low Voltage XS Relay (#8444)
+* Hide VZW32-SN test parameter from production use (#8512)
+* Add Aeotec ZWA050 SmokeShield for Ei Smoke Detectors (#8493)
+
+### Changes under the hood
+* Support `sdkVersion` in configuration file conditions (#8529)
+* Add support for "hidden" config property to linter (#8533)
+* Fix `lint:configjson` scripts (#8535)
+
 ## 15.18.0 (2025-12-17)
 ### Features
 * Device configuration parameters can now be marked as hidden (#8449)
