@@ -3194,6 +3194,7 @@ export class ConfigurationCCPropertiesGet extends ConfigurationCC {
 }
 
 @CCCommand(ConfigurationCommand.DefaultReset)
+@useSupervision()
 export class ConfigurationCCDefaultReset extends ConfigurationCC {}
 
 function isSafeValue(
