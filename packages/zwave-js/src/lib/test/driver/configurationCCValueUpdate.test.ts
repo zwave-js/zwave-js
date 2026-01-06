@@ -12,7 +12,7 @@ import {
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
-	"value updated event contains correct prevValue and newValue when disableOptimisticValueUpdate is true",
+	"disableOptimisticValueUpdate is respected when deciding to update the value DB after a successful setValue",
 	{
 		// Repro for #8059
 		// debug: true,
@@ -22,7 +22,7 @@ integrationTest(
 				ccCaps({
 					ccId: CommandClasses.Configuration,
 					isSupported: true,
-					version: 4,
+					version: 1,
 					parameters: [
 						{
 							"#": 2,
@@ -30,8 +30,8 @@ integrationTest(
 							name: "Auto Relock",
 							format: ConfigValueFormat.UnsignedInteger,
 							minValue: 0,
-							maxValue: 1,
-							defaultValue: 0,
+							maxValue: 255,
+							defaultValue: 255,
 						},
 					],
 				}),
@@ -40,7 +40,6 @@ integrationTest(
 
 		additionalDriverOptions: {
 			disableOptimisticValueUpdate: true,
-			emitValueUpdateAfterSetValue: false,
 		},
 
 		async customSetup(driver, mockController, mockNode) {
@@ -91,11 +90,9 @@ integrationTest(
 				});
 			});
 
-			// Set the config parameter to a different value (255)
-			await node.commandClasses.Configuration.setValue!(
-				{ property: 2 },
-				1,
-			);
+			// Set the config parameter to a different value
+			const configValue = ConfigurationCCValues.paramInformation(2).id;
+			await node.setValue(configValue, 0);
 
 			// Wait for the value updated event
 			const { prevValue, newValue } = await valueUpdatedPromise;
@@ -103,9 +100,9 @@ integrationTest(
 			// The prevValue should be the original value (0)
 			// and the newValue should be the newly set value (255)
 			t.expect(prevValue, "prevValue should be the original value").toBe(
-				0,
+				255,
 			);
-			t.expect(newValue, "newValue should be the new value").toBe(1);
+			t.expect(newValue, "newValue should be the new value").toBe(0);
 		},
 	},
 );
