@@ -680,12 +680,16 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
+		const message: MessageRecord = {};
+		if (this.defaultVolume !== 0xff) {
+			message["default volume"] = `${this.defaultVolume} %`;
+		}
+		if (this.defaultToneId !== 0x00) {
+			message["default tone id"] = this.defaultToneId;
+		}
 		return {
 			...super.toLogEntry(ctx),
-			message: {
-				"default volume": `${this.defaultVolume} %`,
-				"default tone id": this.defaultToneId,
-			},
+			message,
 		};
 	}
 }
