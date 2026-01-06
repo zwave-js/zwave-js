@@ -470,6 +470,7 @@ export const paramInfoPropertyOrder: string[] = [
 	"readOnly",
 	"writeOnly",
 	"destructive",
+	"hidden",
 	"allowManualEntry",
 	"options",
 ];
