@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.19.0 (2026-01-06)
 ### Features
 * Add option to force associations without checking if they are valid/allowed (#8490)
 * Devices that failed to include with Security S2 are no longer interviewed (#8162)

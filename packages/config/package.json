@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/config",
-  "version": "15.18.0",
+  "version": "15.19.0",
   "description": "zwave-js: configuration files",
   "keywords": [],
   "publishConfig": {
