@@ -159,6 +159,7 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 			this.productType,
 			this.productId,
 			this.firmwareVersion,
+			this.sdkVersion,
 		);
 
 		if (!this.deviceConfig) {

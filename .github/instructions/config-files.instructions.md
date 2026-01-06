@@ -255,10 +255,11 @@ The `scenes` property allows defining custom labels and descriptions for Central
 
 - Conditional settings typically apply when reviewing hand-edited config files, not when adding new ones
 - Use `$if` property to make parameters/settings conditional based on firmware version or device variants
-- Available variables: `manufacturerId`, `productType`, `productId`, `firmwareVersion`
+- Available variables: `manufacturerId`, `productType`, `productId`, `firmwareVersion`, `sdkVersion`
 - Supports operators: `<`, `<=`, `>`, `>=`, `===`, `&&`, `||`, `(...)`
 - Version comparisons support patch numbers (1.2.3) with missing patch assumed as 0
 - Convert primitive values to objects with `value` property when making conditional
+- `sdkVersion` is rarely needed; avoid using it unless asked to do so
 
 Example:
 

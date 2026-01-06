@@ -357,12 +357,14 @@ export class ConfigManager {
 	 * @param productId The product id of the device
 	 * @param firmwareVersion If known, configuration for a specific firmware version can be loaded.
 	 * If this is `undefined` or not given, the first matching file with a defined firmware range will be returned.
+	 * @param sdkVersion If known, the SDK version can be used in conditional settings.
 	 */
 	public async lookupDevice(
 		manufacturerId: number,
 		productType: number,
 		productId: number,
 		firmwareVersion?: string,
+		sdkVersion?: string,
 	): Promise<DeviceConfig | undefined> {
 		const ret = await this.lookupDevicePreserveConditions(
 			manufacturerId,
@@ -375,6 +377,7 @@ export class ConfigManager {
 			productType,
 			productId,
 			firmwareVersion,
+			sdkVersion,
 		});
 	}
 }
