@@ -7,7 +7,7 @@
 
 	"json": {},
 
-	"includes": ["*.json", "devices/**/*.json"],
+	"includes": ["packages/config/config/*.json", "packages/config/config/devices/**/*.json"],
 
 	"plugins": ["https://plugins.dprint.dev/json-0.19.3.wasm"]
 }
