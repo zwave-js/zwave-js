@@ -2479,6 +2479,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			return;
 		}
 
+		if (node.failedS2Bootstrapping) {
+			this.controllerLog.logNode(
+				node.id,
+				"has failed S2 bootstrapping and cannot be interviewed",
+				"warn",
+			);
+			return;
+		}
+
 		// Avoid having multiple restart timeouts active
 		if (this.retryNodeInterviewTimeouts.has(node.id)) {
 			this.retryNodeInterviewTimeouts.get(node.id)?.clear();

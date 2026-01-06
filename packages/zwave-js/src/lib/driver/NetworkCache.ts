@@ -80,6 +80,7 @@ export const cacheKeys = {
 					)
 				}`,
 			dsk: `${nodeBaseKey}dsk`,
+			failedS2Bootstrapping: `${nodeBaseKey}failedS2Bootstrapping`,
 			endpoint: (index: number) => {
 				const endpointBaseKey = `${nodeBaseKey}endpoint.${index}.`;
 				const ccBaseKey = `${endpointBaseKey}commandClass.`;
@@ -450,6 +451,10 @@ export function deserializeNetworkCacheValue(
 				return dskFromString(value);
 			}
 			fail();
+		}
+
+		case "failedS2Bootstrapping": {
+			return ensureType(value, "boolean");
 		}
 
 		case "supportsSecurity":
