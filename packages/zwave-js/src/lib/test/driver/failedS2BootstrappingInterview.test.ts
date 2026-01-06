@@ -6,10 +6,10 @@ import type { ZWaveNode } from "../../node/Node.js";
 import { integrationTest } from "../integrationTestSuite.js";
 import { integrationTest as integrationTestMulti } from "../integrationTestSuiteMulti.js";
 
-integrationTestMulti.only(
+integrationTestMulti(
 	"When S2 bootstrapping fails due to wrong PIN, the interview should not start",
 	{
-		debug: true,
+		// debug: true,
 
 		testBody: async (t, driver, nodes, mockController, mockNodes) => {
 			// Set up a promise to wait for the "node added" event
