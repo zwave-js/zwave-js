@@ -591,24 +591,38 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 
 			// Figure out if optimistic value updates, both for the actual value
-			// and related values, should be performed
-			const supervisedAndSuccessful = isSupervisionResult(result)
-				&& result.status === SupervisionStatus.Success;
-
-			const shouldUpdateOptimistically = api.isSetValueOptimistic(valueId)
+			// and related values, should be performed:
+			// Whether updating optimistically is even an option for this value/API/device
+			const canUpdateOptimistically = api.isSetValueOptimistic(valueId)
 				// Check if the device class supports optimistic value updates
 				&& (endpointInstance.deviceClass?.specific
 					.supportsOptimisticValueUpdate
-					?? true)
-				// For successful supervised commands, we know that an optimistic update is ok
-				&& (supervisedAndSuccessful
-					// For unsupervised commands that did not fail, we let the application decide whether
-					// to update related value optimistically
-					|| (!this.driver.options.disableOptimisticValueUpdate
-						&& result == undefined));
+					?? true);
+			// Whether the device has at least started executing the command
+			const supervisedAndAccepted = supervisedCommandSucceeded(result);
+			// Whether the device has completed the command successfully
+			const supervisedAndCompletedSuccessfully =
+				isSupervisionResult(result)
+				&& result.status === SupervisionStatus.Success;
+			// For unsupervised commands that did not fail, we let the application decide whether
+			// to update the (related) value optimistically
+			const unsupervisedAndOptimisticValueUpdateEnabled =
+				!this.driver.options.disableOptimisticValueUpdate
+				&& result == undefined;
+
+			// The actual value may be updated optimistically once the command has started
+			const shouldUpdateActualValueOptimistically =
+				canUpdateOptimistically
+				&& (supervisedAndAccepted
+					|| unsupervisedAndOptimisticValueUpdateEnabled);
+			// Related values may only be updated optimistically once the command has completed successfully
+			const shouldUpdateRelatedValuesOptimistically =
+				canUpdateOptimistically
+				&& (supervisedAndCompletedSuccessfully
+					|| unsupervisedAndOptimisticValueUpdateEnabled);
 
 			// If optimistic value updats are desired, update the value in the value DB now
-			if (shouldUpdateOptimistically) {
+			if (shouldUpdateActualValueOptimistically) {
 				const emitEvent = !!result
 					|| !!this.driver.options.emitValueUpdateAfterSetValue;
 
@@ -648,9 +662,9 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			// optimistically update a different value and/or verify the changes
 			if (hooks) {
 				// The actual API implementation handles additional optimistic updates
-				if (shouldUpdateOptimistically) {
+				if (shouldUpdateRelatedValuesOptimistically) {
 					hooks.optimisticallyUpdateRelatedValues?.(
-						supervisedAndSuccessful,
+						supervisedAndCompletedSuccessfully,
 					);
 				}
 
