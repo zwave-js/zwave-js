@@ -87,6 +87,9 @@ export function createESPHomeNoiseFactory(
 		// Buffer for incoming frame reassembly
 		let frameBuffer = new Bytes();
 
+		// Queue for sequential frame processing (prevents nonce desync)
+		let processingQueue: Promise<void> = Promise.resolve();
+
 		function removeListeners() {
 			socket.removeAllListeners("close");
 			socket.removeAllListeners("error");
@@ -129,7 +132,8 @@ export function createESPHomeNoiseFactory(
 				);
 			}
 
-			// Get the message type and payload
+			// Call serialize() to build the payload (side effect populates message.payload)
+			message.serialize();
 			const messageType = message.messageType;
 			const payload = message.payload;
 
@@ -272,10 +276,15 @@ export function createESPHomeNoiseFactory(
 							frameBuffer,
 						);
 
-						// Process based on connection state
-						processNoiseFrame(payload).catch((err) => {
-							console.error("Error processing Noise frame:", err);
-						});
+						// Process based on connection state (sequentially to prevent nonce desync)
+						processingQueue = processingQueue
+							.then(() => processNoiseFrame(payload))
+							.catch((err) => {
+								console.error(
+									"Error processing Noise frame:",
+									err,
+								);
+							});
 
 						// Remove processed frame from buffer
 						frameBuffer = frameBuffer.subarray(bytesConsumed);
