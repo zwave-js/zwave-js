@@ -121,7 +121,7 @@ export class ZLFAttachment {
 	/** Serializes this attachment into a Buffer */
 	public serialize(): Bytes {
 		return Bytes.concat([
-			Bytes.from([this.type, this.version]),
+			[this.type, this.version],
 			this.data,
 		]);
 	}

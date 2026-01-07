@@ -74,7 +74,7 @@ export async function computeCMAC(
 		&& message.length % blockSize === 0;
 	if (!lastBlockIsComplete) {
 		lastBlock = zeroPad(
-			Bytes.concat([lastBlock, Bytes.from([0x80])]),
+			Bytes.concat([lastBlock, [0x80]]),
 			blockSize,
 		).output;
 	}
