@@ -1909,7 +1909,7 @@ export class ConfigurationCCReport extends ConfigurationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.parameter, this.valueSize & 0b111]),
+			[this.parameter, this.valueSize & 0b111],
 			new Bytes(this.valueSize),
 		]);
 		serializeValue(

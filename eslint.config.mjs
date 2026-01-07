@@ -60,6 +60,9 @@ export default tseslint.config(
 			"@zwave-js": zjs,
 		},
 		languageOptions: tsparser,
+		rules: {
+			"@zwave-js/no-unnecessary-bytes-from": "error",
+		},
 	},
 	// Disable unnecessarily strict rules for test files
 	{

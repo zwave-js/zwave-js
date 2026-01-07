@@ -252,7 +252,7 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 			});
 		}
 		this.payload = Bytes.concat([
-			Bytes.from([this.weekday & 0b111]),
+			[this.weekday & 0b111],
 			...allSwitchPoints.map((sp) => encodeSwitchpoint(sp)),
 		]);
 		return super.serialize(ctx);

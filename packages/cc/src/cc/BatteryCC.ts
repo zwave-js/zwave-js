@@ -562,7 +562,7 @@ export class BatteryCCReport extends BatteryCC {
 		if (this.chargingStatus != undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([
+				[
 					(this.chargingStatus << 6)
 					+ (this.rechargeable ? 0b0010_0000 : 0)
 					+ (this.backup ? 0b0001_0000 : 0)
@@ -576,7 +576,7 @@ export class BatteryCCReport extends BatteryCC {
 						: 0),
 					(this.lowTemperatureStatus ? 0b10 : 0)
 					+ (this.disconnected ? 0b1 : 0),
-				]),
+				],
 			]);
 		}
 		return super.serialize(ctx);

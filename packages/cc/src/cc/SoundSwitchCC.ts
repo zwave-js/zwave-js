@@ -564,7 +564,7 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.toneId, 0, 0, this.name.length]),
+			[this.toneId, 0, 0, this.name.length],
 			Bytes.from(this.name, "utf8"),
 		]);
 		this.payload.writeUInt16BE(this.duration, 1);

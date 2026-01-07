@@ -1391,7 +1391,7 @@ export class UserCodeCCSet extends UserCodeCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.userId, this.userIdStatus]),
+			[this.userId, this.userIdStatus],
 			typeof this.userCode === "string"
 				? Bytes.from(this.userCode, "ascii")
 				: this.userCode,
@@ -1501,7 +1501,7 @@ export class UserCodeCCReport extends UserCodeCC
 		}
 
 		this.payload = Bytes.concat([
-			Bytes.from([this.userId, this.userIdStatus]),
+			[this.userId, this.userIdStatus],
 			userCodeBuffer,
 		]);
 		return super.serialize(ctx);
@@ -1793,11 +1793,11 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 		const controlByte3 = supportedKeysBitmask.length & 0b000_11111;
 
 		this.payload = Bytes.concat([
-			Bytes.from([controlByte1]),
+			[controlByte1],
 			supportedStatusesBitmask,
-			Bytes.from([controlByte2]),
+			[controlByte2],
 			supportedKeypadModesBitmask,
-			Bytes.from([controlByte3]),
+			[controlByte3],
 			supportedKeysBitmask,
 		]);
 		return super.serialize(ctx);
@@ -1983,7 +1983,7 @@ export class UserCodeCCAdminCodeSet extends UserCodeCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.adminCode.length & 0b1111]),
+			[this.adminCode.length & 0b1111],
 			Bytes.from(this.adminCode, "ascii"),
 		]);
 		return super.serialize(ctx);
@@ -2033,7 +2033,7 @@ export class UserCodeCCAdminCodeReport extends UserCodeCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.adminCode.length & 0b1111]),
+			[this.adminCode.length & 0b1111],
 			Bytes.from(this.adminCode, "ascii"),
 		]);
 		return super.serialize(ctx);
@@ -2174,12 +2174,12 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const userCodeBuffers = this.userCodes.map((code) => {
 			const ret = Bytes.concat([
-				Bytes.from([
+				[
 					0,
 					0,
 					code.userIdStatus,
 					code.userCode?.length ?? 0,
-				]),
+				],
 				isUint8Array(code.userCode)
 					? code.userCode
 					: Bytes.from(code.userCode ?? "", "ascii"),
@@ -2188,7 +2188,7 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 			return ret;
 		});
 		this.payload = Bytes.concat([
-			Bytes.from([this.userCodes.length]),
+			[this.userCodes.length],
 			...userCodeBuffers,
 		]);
 		return super.serialize(ctx);

@@ -404,14 +404,14 @@ export class TimeCCTimeOffsetSet extends TimeCC {
 				standardOffset: this.standardOffset,
 				dstOffset: this.dstOffset,
 			}),
-			Bytes.from([
+			[
 				this.dstStartDate.getUTCMonth() + 1,
 				this.dstStartDate.getUTCDate(),
 				this.dstStartDate.getUTCHours(),
 				this.dstEndDate.getUTCMonth() + 1,
 				this.dstEndDate.getUTCDate(),
 				this.dstEndDate.getUTCHours(),
-			]),
+			],
 		]);
 		return super.serialize(ctx);
 	}
@@ -493,14 +493,14 @@ export class TimeCCTimeOffsetReport extends TimeCC {
 				standardOffset: this.standardOffset,
 				dstOffset: this.dstOffset,
 			}),
-			Bytes.from([
+			[
 				this.dstStartDate.getUTCMonth() + 1,
 				this.dstStartDate.getUTCDate(),
 				this.dstStartDate.getUTCHours(),
 				this.dstEndDate.getUTCMonth() + 1,
 				this.dstEndDate.getUTCDate(),
 				this.dstEndDate.getUTCHours(),
-			]),
+			],
 		]);
 		return super.serialize(ctx);
 	}

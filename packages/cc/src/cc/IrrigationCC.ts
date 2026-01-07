@@ -1639,10 +1639,10 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 			polarity |= 0b1000_0000;
 		}
 		this.payload = Bytes.concat([
-			Bytes.from([this.masterValveDelay]),
+			[this.masterValveDelay],
 			encodeFloatWithScale(this.highPressureThreshold, 0 /* kPa */),
 			encodeFloatWithScale(this.lowPressureThreshold, 0 /* kPa */),
-			Bytes.from([polarity]),
+			[polarity],
 		]);
 		return super.serialize(ctx);
 	}
@@ -2091,19 +2091,19 @@ export class IrrigationCCValveConfigSet extends IrrigationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.valveId === "master" ? 1 : 0,
 				this.valveId === "master" ? 1 : this.valveId || 1,
 				Math.floor(this.nominalCurrentHighThreshold / 10),
 				Math.floor(this.nominalCurrentLowThreshold / 10),
-			]),
+			],
 			encodeFloatWithScale(this.maximumFlow, 0 /* l/h */),
 			encodeFloatWithScale(this.highFlowThreshold, 0 /* l/h */),
 			encodeFloatWithScale(this.lowFlowThreshold, 0 /* l/h */),
-			Bytes.from([
+			[
 				(this.useRainSensor ? 0b1 : 0)
 				| (this.useMoistureSensor ? 0b10 : 0),
-			]),
+			],
 		]);
 		return super.serialize(ctx);
 	}

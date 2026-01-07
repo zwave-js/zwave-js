@@ -372,9 +372,9 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 				: new Uint8Array();
 		const manufacturerDataLength = manufacturerData.length;
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				((manufacturerDataLength & 0b111) << 5) + (this.mode & 0b11111),
-			]),
+			],
 			manufacturerData,
 		]);
 		return super.serialize(ctx);

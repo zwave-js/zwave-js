@@ -245,7 +245,7 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.parameter]),
+			[this.parameter],
 			encodeFloatWithScale(this.value, this.scale.key),
 		]);
 		return super.serialize(ctx);

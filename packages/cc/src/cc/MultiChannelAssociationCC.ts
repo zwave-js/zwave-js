@@ -656,7 +656,7 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.groupId]),
+			[this.groupId],
 			serializeMultiChannelAssociationDestination(
 				this.nodeIds,
 				this.endpoints,
@@ -727,7 +727,7 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.groupId || 0]),
+			[this.groupId || 0],
 			serializeMultiChannelAssociationDestination(
 				this.nodeIds || [],
 				this.endpoints || [],
@@ -855,11 +855,11 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 			this.endpoints,
 		);
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.groupId,
 				this.maxNodes,
 				this.reportsToFollow,
-			]),
+			],
 			destinations,
 		]);
 		return super.serialize(ctx);

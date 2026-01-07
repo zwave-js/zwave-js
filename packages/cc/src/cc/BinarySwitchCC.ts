@@ -429,10 +429,10 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 		if (this.targetValue !== undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([
+				[
 					encodeMaybeBoolean(this.targetValue),
 					(this.duration ?? Duration.default()).serializeReport(),
-				]),
+				],
 			]);
 		}
 		return super.serialize(ctx);
