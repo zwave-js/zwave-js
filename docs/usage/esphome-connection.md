@@ -22,5 +22,4 @@ esphome://<hostname-or-ip>?key=<base64-key>
 esphome://<hostname-or-ip>:<port>?key=<base64-key>
 ```
 
-
 The encryption key is a Base64-encoded 32-byte key that matches the `encryption.key` configured in your ESPHome device's Native API.
