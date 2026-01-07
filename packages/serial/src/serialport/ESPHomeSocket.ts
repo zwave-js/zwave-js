@@ -7,16 +7,22 @@ import {
 	DeviceInfoRequest,
 	DeviceInfoResponse,
 } from "../esphome/DeviceInfoMessages.js";
-import {
-	ESPHomeMessage,
-	ESPHomeMessageRaw,
-} from "../esphome/ESPHomeMessage.js";
+import { type ESPHomeMessage } from "../esphome/ESPHomeMessage.js";
 import { HelloRequest, HelloResponse } from "../esphome/HelloMessages.js";
 import {
 	ESPHomeZWaveProxyRequestType,
 	ZWaveProxyFrame,
 	ZWaveProxyRequest,
 } from "../esphome/ZWaveProxyMessages.js";
+import {
+	type NoiseCipherState,
+	NoiseHandshakeState,
+	encodeNoiseFrame,
+	parseServerHello,
+} from "../esphome/noise/NoiseProtocol.js";
+import { ESPHomeMessageParser } from "../esphome/parsers/ESPHomeMessageParser.js";
+import { NoiseDecryptTransform } from "../esphome/parsers/NoiseDecryptTransform.js";
+import { NoiseFrameParser } from "../esphome/parsers/NoiseFrameParser.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export interface ESPHomeSocketOptions {
@@ -24,16 +30,8 @@ export interface ESPHomeSocketOptions {
 	host: string;
 	/** The port number (default: 6053) */
 	port?: number;
-}
-
-enum ConnectionState {
-	Disconnected = "disconnected",
-	Connecting = "connecting",
-	HelloSent = "hello_sent",
-	HelloReceived = "hello_received",
-	DeviceInfoSent = "device_info_sent",
-	DeviceInfoReceived = "device_info_received",
-	Ready = "ready",
+	/** Base64-encoded 32-byte encryption key. If provided, Noise encryption is used. */
+	encryptionKey?: string;
 }
 
 export function createESPHomeFactory(
@@ -45,14 +43,28 @@ export function createESPHomeFactory(
 		const port = options.port ?? 6053;
 		const timeout = 5000;
 
-		let connectionState = ConnectionState.Disconnected;
+		// Determine if we're using encryption
+		const useEncryption = !!options.encryptionKey;
+		let psk: Bytes | undefined;
+
+		if (useEncryption) {
+			psk = Bytes.from(options.encryptionKey!, "base64");
+			if (psk.length !== 32) {
+				throw new ZWaveError(
+					`Invalid encryption key length: expected 32 bytes, got ${psk.length}`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
+		}
+
 		let deviceInfo: DeviceInfoResponse | undefined;
 		let sourceController:
 			| ReadableStreamDefaultController<BytesView>
 			| undefined;
+		let isOpen = false;
 
-		// Buffer for incoming frame reassembly
-		let frameBuffer = new Bytes();
+		// Noise protocol state (only used when encryption is enabled)
+		let sendCipher: NoiseCipherState | undefined;
 
 		function removeListeners() {
 			socket.removeAllListeners("close");
@@ -62,14 +74,11 @@ export function createESPHomeFactory(
 			socket.removeAllListeners("data");
 		}
 
-		function sendMessage(
-			message:
-				| HelloRequest
-				| DeviceInfoRequest
-				| DisconnectRequest
-				| ZWaveProxyFrame,
-		): Promise<void> {
-			const frame = message.serialize();
+		/**
+		 * Send a raw Noise frame (during handshake)
+		 */
+		function sendNoiseFrame(payload: BytesView): Promise<void> {
+			const frame = encodeNoiseFrame(payload);
 			return new Promise((resolve, reject) => {
 				socket.write(frame, (err) => {
 					if (err) reject(err);
@@ -78,9 +87,148 @@ export function createESPHomeFactory(
 			});
 		}
 
-		async function performHandshake(): Promise<void> {
+		/**
+		 * Send an ESPHome message (encrypted or plaintext depending on mode)
+		 */
+		async function sendMessage(
+			message:
+				| HelloRequest
+				| DeviceInfoRequest
+				| DisconnectRequest
+				| ZWaveProxyFrame
+				| ZWaveProxyRequest,
+		): Promise<void> {
+			if (useEncryption) {
+				if (!sendCipher) {
+					throw new ZWaveError(
+						"Cannot send encrypted message: handshake not complete",
+						ZWaveErrorCodes.Driver_NotReady,
+					);
+				}
+
+				// Subclasses populate `this.payload` in their serialize() override,
+				// so we must call it before serializeForNoise() which reads `this.payload`.
+				message.serialize();
+
+				// Serialize for Noise transport and encrypt
+				const messageData = message.serializeForNoise();
+				const encrypted = await sendCipher.encryptWithAd(
+					new Bytes(0),
+					messageData,
+				);
+
+				await sendNoiseFrame(encrypted);
+			} else {
+				// Plaintext mode
+				const frame = message.serialize();
+				return new Promise((resolve, reject) => {
+					socket.write(frame, (err) => {
+						if (err) reject(err);
+						else resolve();
+					});
+				});
+			}
+		}
+
+		/**
+		 * Perform the Noise protocol handshake using the provided frame reader
+		 */
+		async function performNoiseHandshake(
+			frameReader: ReadableStreamDefaultReader<Bytes>,
+		): Promise<NoiseCipherState> {
+			// Helper to read a noise frame with timeout
+			const readNoiseFrame = (timeoutMs: number) =>
+				readWithTimeout(frameReader, timeoutMs);
+
+			// Send empty ClientHello
+			await sendNoiseFrame(new Bytes(0));
+
+			// Wait for ServerHello
+			const serverHelloPayload = await readNoiseFrame(timeout);
+			const serverHello = parseServerHello(serverHelloPayload);
+			if (serverHello.protocolVersion !== 0x01) {
+				throw new ZWaveError(
+					`Unsupported Noise protocol version: ${serverHello.protocolVersion}`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
+
+			// Send handshake message 1 (prefixed with 0x00 success byte)
+			const handshakeState = new NoiseHandshakeState(psk!);
+			const handshakeMsg1 = await handshakeState.writeMessage(
+				new Bytes(0),
+			);
+			await sendNoiseFrame(
+				Bytes.concat([Bytes.from([0x00]), handshakeMsg1]),
+			);
+
+			// Wait for handshake message 2
+			const handshakeMsg2Payload = await readNoiseFrame(timeout);
+
+			if (handshakeMsg2Payload.length === 0) {
+				throw new ZWaveError(
+					"Noise handshake failed: empty response",
+					ZWaveErrorCodes.Driver_SerialPortClosed,
+				);
+			}
+
+			// Check status byte: 0x00 = success, 0x01 = error
+			const statusByte = handshakeMsg2Payload[0];
+			if (statusByte === 0x01) {
+				const errorMessage = new TextDecoder().decode(
+					handshakeMsg2Payload.subarray(1),
+				);
+				throw new ZWaveError(
+					`Noise handshake failed: ${errorMessage}`,
+					ZWaveErrorCodes.Driver_SerialPortClosed,
+				);
+			} else if (statusByte !== 0x00) {
+				throw new ZWaveError(
+					`Noise handshake failed: unexpected status byte 0x${
+						statusByte.toString(16).padStart(2, "0")
+					}`,
+					ZWaveErrorCodes.Driver_SerialPortClosed,
+				);
+			}
+
+			// Process handshake message 2
+			await handshakeState.readMessage(handshakeMsg2Payload.subarray(1));
+
+			// Derive transport keys
+			const { sendCipher: sc, receiveCipher: rc } = await handshakeState
+				.split();
+			sendCipher = sc;
+			return rc;
+		}
+
+		async function performESPHomeHandshake(
+			reader: ReadableStreamDefaultReader<ESPHomeMessage>,
+		): Promise<void> {
+			// Helper to read until we get a message of the expected type,
+			// skipping any Z-Wave proxy messages that may arrive during handshake
+			async function readExpected<T extends ESPHomeMessage>(
+				expectedType: abstract new (...args: any[]) => T,
+			): Promise<T> {
+				while (true) {
+					const message = await readWithTimeout(reader, timeout);
+					if (message instanceof expectedType) {
+						return message;
+					}
+					// Skip Z-Wave proxy messages during handshake
+					if (
+						message instanceof ZWaveProxyFrame
+						|| message instanceof ZWaveProxyRequest
+					) {
+						continue;
+					}
+					throw new ZWaveError(
+						`Expected ${expectedType.name}, got ${message?.constructor.name}`,
+						ZWaveErrorCodes.Driver_SerialPortClosed,
+					);
+				}
+			}
+
 			// Send HelloRequest
-			connectionState = ConnectionState.HelloSent;
 			const helloRequest = new HelloRequest({
 				clientInfo: "zwave-js",
 				apiVersionMajor: 1,
@@ -88,19 +236,18 @@ export function createESPHomeFactory(
 			});
 			await sendMessage(helloRequest);
 
-			// Wait for HelloResponse (handled in data event)
-			await waitForState(ConnectionState.HelloReceived, timeout);
+			// Wait for HelloResponse
+			await readExpected(HelloResponse);
 
 			// Send DeviceInfoRequest to check Z-Wave support
-			connectionState = ConnectionState.DeviceInfoSent;
 			const deviceInfoRequest = new DeviceInfoRequest();
 			await sendMessage(deviceInfoRequest);
 
 			// Wait for DeviceInfoResponse
-			await waitForState(ConnectionState.DeviceInfoReceived, timeout);
+			deviceInfo = await readExpected(DeviceInfoResponse);
 
 			// Check if device supports Z-Wave proxy
-			if (!deviceInfo?.hasZWaveProxySupport) {
+			if (!deviceInfo.hasZWaveProxySupport) {
 				throw new ZWaveError(
 					"ESPHome device does not support Z-Wave proxy functionality",
 					ZWaveErrorCodes.Driver_SerialPortClosed,
@@ -112,189 +259,204 @@ export function createESPHomeFactory(
 				type: ESPHomeZWaveProxyRequestType.Subscribe,
 			});
 			await sendMessage(subscribeRequest);
-
-			// Connection is ready - no service discovery needed
-			connectionState = ConnectionState.Ready;
 		}
 
-		function waitForState(
-			targetState: ConnectionState,
+		async function readWithTimeout<T>(
+			reader: ReadableStreamDefaultReader<T>,
 			timeoutMs: number,
-		): Promise<void> {
-			return new Promise((resolve, reject) => {
-				if (connectionState === targetState) {
-					resolve();
-					return;
-				}
-
-				const startTime = Date.now();
-				const checkInterval = setInterval(() => {
-					if (connectionState === targetState) {
-						clearInterval(checkInterval);
-						resolve();
-					} else if (Date.now() - startTime > timeoutMs) {
-						clearInterval(checkInterval);
+		): Promise<T> {
+			const timeoutPromise = new Promise<never>((_, reject) => {
+				setTimeout(
+					() =>
 						reject(
 							new ZWaveError(
-								`Timeout waiting for connection state ${targetState}`,
+								`Timeout waiting for message`,
 								ZWaveErrorCodes.Driver_SerialPortClosed,
 							),
-						);
-					}
-				}, 10);
+						),
+					timeoutMs,
+				);
 			});
-		}
 
-		function processIncomingData(data: Buffer): void {
-			try {
-				frameBuffer = Bytes.concat([frameBuffer, data]);
-
-				// Try to extract complete frames
-				while (frameBuffer.length > 0) {
-					try {
-						// Check if we have enough data for the basic header
-						if (frameBuffer.length < 3) {
-							break; // Need more data
-						}
-
-						// Parse the raw message from buffer
-						const rawMessage = ESPHomeMessageRaw.parse(frameBuffer);
-
-						// Calculate frame length
-						const frameLength = 1 // indicator
-							+ getVarIntLength(rawMessage.payload.length) // payload size
-							+ getVarIntLength(rawMessage.messageType) // message type
-							+ rawMessage.payload.length; // payload
-
-						// Parse into specific message types and process
-						const message = ESPHomeMessage.parse(frameBuffer);
-						processIncomingMessage(message);
-
-						// Remove the processed frame from the buffer
-						frameBuffer = frameBuffer.subarray(frameLength);
-					} catch (error) {
-						// If we can't decode a complete frame yet, wait for more data
-						if (
-							error instanceof ZWaveError
-							&& error.code
-								=== ZWaveErrorCodes.PacketFormat_Truncated
-						) {
-							break;
-						}
-						// For other errors, reset the buffer and continue
-						frameBuffer = new Bytes();
-						break;
-					}
+			const readPromise = reader.read().then(({ value, done }) => {
+				if (done || value === undefined) {
+					throw new ZWaveError(
+						"Stream closed unexpectedly",
+						ZWaveErrorCodes.Driver_SerialPortClosed,
+					);
 				}
-			} catch {
-				// Reset buffer on any parsing error
-				frameBuffer = new Bytes();
-			}
+				return value;
+			});
+
+			return Promise.race([readPromise, timeoutPromise]);
 		}
 
-		function processIncomingMessage(
-			message: ESPHomeMessage,
+		function processMessages(
+			reader: ReadableStreamDefaultReader<ESPHomeMessage>,
 		): void {
-			if (message instanceof HelloResponse) {
-				if (connectionState === ConnectionState.HelloSent) {
-					connectionState = ConnectionState.HelloReceived;
-				}
-			} else if (message instanceof DeviceInfoResponse) {
-				if (connectionState === ConnectionState.DeviceInfoSent) {
-					deviceInfo = message;
-					connectionState = ConnectionState.DeviceInfoReceived;
-				}
-			} else if (message instanceof ZWaveProxyFrame) {
-				// Handle Z-Wave proxy frames returned from the device
-				// This message may include full payloads or simple ACK/NAK/CAN responses
+			// Start reading messages in the background
+			void (async () => {
+				try {
+					while (isOpen) {
+						const { value: message, done } = await reader.read();
+						if (done) break;
 
-				// If we have a source controller, enqueue any remaining data for Z-Wave processing
-				// (This would be for any data that's not ESPHome protocol messages)
-				if (
-					sourceController
-					&& connectionState === ConnectionState.Ready
-				) {
-					// Enqueue frame to handle Z-Wave data as needed
-					sourceController.enqueue(message.data);
+						if (message instanceof ZWaveProxyFrame) {
+							// Handle Z-Wave proxy frames returned from the device
+							// This message may include full payloads or simple ACK/NAK/CAN responses
+							if (sourceController) {
+								sourceController.enqueue(message.data);
+							}
+						}
+						// Other message types are ignored after handshake
+					}
+				} catch {
+					// Stream closed or error - handled by socket events
 				}
-			}
+			})();
 		}
 
-		function open(): Promise<void> {
-			return new Promise((resolve, reject) => {
-				const onClose = () => {
-					removeListeners();
-					socket.destroy();
-					reject(
-						new ZWaveError(
-							`ESPHome connection closed unexpectedly!`,
-							ZWaveErrorCodes.Driver_SerialPortClosed,
-						),
-					);
-				};
+		// Connect and perform handshake
+		await new Promise<void>((resolve, reject) => {
+			const onClose = () => {
+				removeListeners();
+				socket.destroy();
+				reject(
+					new ZWaveError(
+						`ESPHome connection closed unexpectedly!`,
+						ZWaveErrorCodes.Driver_SerialPortClosed,
+					),
+				);
+			};
 
-				const onError = (err: Error) => {
-					removeListeners();
-					socket.destroy();
-					reject(err);
-				};
+			const onError = (err: Error) => {
+				removeListeners();
+				socket.destroy();
+				reject(err);
+			};
 
-				const onTimeout = () => {
-					removeListeners();
-					socket.destroy();
-					reject(
-						new ZWaveError(
-							`Connection timed out after ${timeout}ms`,
-							ZWaveErrorCodes.Driver_SerialPortClosed,
-						),
-					);
-				};
+			const onTimeout = () => {
+				removeListeners();
+				socket.destroy();
+				reject(
+					new ZWaveError(
+						`Connection timed out after ${timeout}ms`,
+						ZWaveErrorCodes.Driver_SerialPortClosed,
+					),
+				);
+			};
 
-				const onConnect = async () => {
-					removeListeners();
-					connectionState = ConnectionState.Connecting;
+			const onConnect = async () => {
+				removeListeners();
 
-					// During testing, values below 1000 caused the keep alive functionality to silently fail
-					socket.setKeepAlive(true, 1000);
-					// Prevent communication delays
-					socket.setNoDelay();
+				// During testing, values below 1000 caused the keep alive functionality to silently fail
+				socket.setKeepAlive(true, 1000);
+				// Prevent communication delays
+				socket.setNoDelay();
 
-					// FIXME: We should set the SO_RCVBUF to 2 MB or so
-					// like aioesphome does, but Node.js does not expose
-					// a way to do that natively.
-					// https://github.com/derhuerst/node-sockopt might help.
+				// FIXME: We should set the SO_RCVBUF to 2 MB or so
+				// like aioesphome does, but Node.js does not expose
+				// a way to do that natively.
+				// https://github.com/derhuerst/node-sockopt might help.
 
-					// Set up data listener before performing handshake
-					socket.on("data", processIncomingData);
+				try {
+					// Create a ReadableStream from socket data
+					const socketReadable = new ReadableStream<BytesView>({
+						start(controller) {
+							socket.on("data", (data: Buffer) => {
+								controller.enqueue(new Bytes(data));
+							});
+							socket.on("close", () => {
+								try {
+									controller.close();
+								} catch {
+									// Controller may already be closed
+								}
+							});
+							socket.on("error", (e) => {
+								try {
+									controller.error(e);
+								} catch {
+									// Controller may already be errored
+								}
+							});
+						},
+					});
 
-					try {
-						await performHandshake();
-						resolve();
-					} catch (error) {
-						// Clean up the socket on handshake failure
-						socket.destroy();
-						reject(
-							error instanceof Error
-								? error
-								: new Error(String(error)),
+					// Build the appropriate pipeline based on encryption mode
+					let parserReadable: ReadableStream<ESPHomeMessage>;
+					let receiveCipher: NoiseCipherState | undefined;
+
+					if (useEncryption) {
+						// Encrypted: socket → NoiseFrameParser → [handshake] → NoiseDecryptTransform → ESPHomeMessageParser
+						const frameParser = new NoiseFrameParser();
+						const noiseFramesStream = socketReadable.pipeThrough(
+							frameParser,
+						);
+
+						// Get a reader for the Noise handshake
+						const frameReader = noiseFramesStream.getReader();
+
+						// Perform Noise handshake using the stream
+						receiveCipher = await performNoiseHandshake(
+							frameReader,
+						);
+
+						// Release the reader so we can continue piping
+						frameReader.releaseLock();
+
+						// Continue the pipeline with decryption and message parsing
+						const decryptTransform = new NoiseDecryptTransform(
+							receiveCipher,
+						);
+						const messageParser = new ESPHomeMessageParser({
+							noiseMode: true,
+						});
+
+						parserReadable = noiseFramesStream
+							.pipeThrough(decryptTransform)
+							.pipeThrough(messageParser);
+					} else {
+						// Plaintext: socket → ESPHomeMessageParser
+						const messageParser = new ESPHomeMessageParser();
+						parserReadable = socketReadable.pipeThrough(
+							messageParser,
 						);
 					}
-				};
 
-				socket.setTimeout(timeout);
-				socket.once("close", onClose);
-				socket.once("error", onError);
-				socket.once("timeout", onTimeout);
-				socket.once("connect", onConnect);
+					const reader = parserReadable.getReader();
 
-				socket.connect(port, host);
-			});
-		}
+					// Perform ESPHome handshake
+					await performESPHomeHandshake(reader);
+					isOpen = true;
+
+					// Start processing messages in the background
+					processMessages(reader);
+
+					resolve();
+				} catch (error) {
+					socket.destroy();
+					reject(
+						error instanceof Error
+							? error
+							: new Error(String(error)),
+					);
+				}
+			};
+
+			socket.setTimeout(timeout);
+			socket.once("close", onClose);
+			socket.once("error", onError);
+			socket.once("timeout", onTimeout);
+			socket.once("connect", onConnect);
+
+			socket.connect(port, host);
+		});
 
 		async function close(): Promise<void> {
 			try {
 				// Send disconnect request if connected
-				if (connectionState !== ConnectionState.Disconnected) {
+				if (isOpen) {
 					const disconnectRequest = new DisconnectRequest();
 					await sendMessage(disconnectRequest);
 				}
@@ -304,7 +466,7 @@ export function createESPHomeFactory(
 
 			return new Promise((resolve) => {
 				removeListeners();
-				connectionState = ConnectionState.Disconnected;
+				isOpen = false;
 				if (socket.destroyed) {
 					resolve();
 				} else {
@@ -313,12 +475,9 @@ export function createESPHomeFactory(
 			});
 		}
 
-		await open();
-		let isOpen = true;
-
 		const sink: UnderlyingSink<BytesView> = {
 			async write(data, controller) {
-				if (!isOpen || connectionState !== ConnectionState.Ready) {
+				if (!isOpen) {
 					controller.error(
 						new Error("ESPHome connection is not ready!"),
 					);
@@ -360,7 +519,6 @@ export function createESPHomeFactory(
 				// Handle ESPHome connection events
 				socket.on("close", () => {
 					isOpen = false;
-					connectionState = ConnectionState.Disconnected;
 					controller.error(
 						new ZWaveError(
 							`ESPHome connection closed unexpectedly!`,
@@ -371,7 +529,6 @@ export function createESPHomeFactory(
 
 				socket.on("error", (_e) => {
 					isOpen = false;
-					connectionState = ConnectionState.Disconnected;
 					controller.error(
 						new ZWaveError(
 							`ESPHome connection error!`,
@@ -388,16 +545,4 @@ export function createESPHomeFactory(
 
 		return { source, sink };
 	};
-}
-
-/**
- * Helper function to calculate VarInt length
- */
-function getVarIntLength(value: number): number {
-	let length = 1;
-	while (value >= 0x80) {
-		value >>>= 7;
-		length++;
-	}
-	return length;
 }

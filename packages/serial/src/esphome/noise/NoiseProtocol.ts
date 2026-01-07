@@ -92,7 +92,7 @@ export function encodeNoiseFrame(payload: BytesView): Bytes {
  */
 export function decodeNoiseFrame(
 	data: BytesView,
-): { payload: Bytes; bytesConsumed: number } {
+): { payload: Bytes; bytesRead: number } {
 	if (data.length < 3) {
 		throw new ZWaveError(
 			"Noise frame too short",
@@ -120,7 +120,7 @@ export function decodeNoiseFrame(
 	}
 
 	const payload = Bytes.view(data.subarray(3, totalSize));
-	return { payload, bytesConsumed: totalSize };
+	return { payload, bytesRead: totalSize };
 }
 
 // ============================================================================

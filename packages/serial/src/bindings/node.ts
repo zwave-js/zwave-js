@@ -3,7 +3,6 @@ import os from "node:os";
 import path from "node:path";
 import { SerialPort } from "serialport";
 import type { EnumeratedPort, Serial } from "../serialport/Bindings.js";
-import { createESPHomeNoiseFactory } from "../serialport/ESPHomeNoiseSocket.js";
 import { createESPHomeFactory } from "../serialport/ESPHomeSocket.js";
 import { createNodeSerialPortFactory } from "../serialport/NodeSerialPort.js";
 import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
@@ -22,20 +21,13 @@ export const serial: Serial = {
 			// ESPHome connection: esphome://host:port or esphome://host:port?key=base64key
 			// If key parameter is present, use encrypted (Noise) connection
 			const url = new URL(path);
-			const encryptionKey = url.searchParams.get("key");
+			const encryptionKey = url.searchParams.get("key") ?? undefined;
 
-			if (encryptionKey) {
-				return createESPHomeNoiseFactory({
-					host: url.hostname,
-					port: url.port ? parseInt(url.port) : undefined,
-					encryptionKey,
-				});
-			} else {
-				return createESPHomeFactory({
-					host: url.hostname,
-					port: url.port ? parseInt(url.port) : undefined,
-				});
-			}
+			return createESPHomeFactory({
+				host: url.hostname,
+				port: url.port ? parseInt(url.port) : undefined,
+				encryptionKey,
+			});
 		} else {
 			return createNodeSerialPortFactory(
 				path,
