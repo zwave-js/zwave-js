@@ -142,7 +142,7 @@ async function hkdf(
 	const output1 = await hmacSHA256(tempKey, Bytes.from([0x01]));
 	const output2 = await hmacSHA256(
 		tempKey,
-		Bytes.concat([output1, Bytes.from([0x02])]),
+		Bytes.concat([output1, [0x02]]),
 	);
 
 	if (numOutputs === 2) {
@@ -151,7 +151,7 @@ async function hkdf(
 
 	const output3 = await hmacSHA256(
 		tempKey,
-		Bytes.concat([output2, Bytes.from([0x03])]),
+		Bytes.concat([output2, [0x03]]),
 	);
 	return [output1, output2, output3];
 }
