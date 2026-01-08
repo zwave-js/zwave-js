@@ -1244,9 +1244,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@modelcontextprotocol/sdk@npm:^1.25.1":
-  version: 1.25.1
-  resolution: "@modelcontextprotocol/sdk@npm:1.25.1"
+"@modelcontextprotocol/sdk@npm:^1.25.2":
+  version: 1.25.2
+  resolution: "@modelcontextprotocol/sdk@npm:1.25.2"
   dependencies:
     "@hono/node-server": "npm:^1.19.7"
     ajv: "npm:^8.17.1"
@@ -1272,7 +1272,7 @@ __metadata:
       optional: true
     zod:
       optional: false
-  checksum: 10/21ab680412822f4bac16536fa444a251efdf288e4adcd42a048524beebb2715c278360bf57f45f7a51fb6e5a82c06c960f5c969460039a1f0cf6f9d9b47e4454
+  checksum: 10/32ce322664e03aa038986ee60a5d3b92ddbec45cf1a023d07f7d90fec3e2926ba40bb21fc6f723bf1d50979995ae76bc440001f4d5eec3f5b55aa824091c20ab
   languageName: node
   linkType: hard
 
@@ -2815,7 +2815,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/mcp-server-dev@workspace:packages/mcp-server-dev"
   dependencies:
-    "@modelcontextprotocol/sdk": "npm:^1.25.1"
+    "@modelcontextprotocol/sdk": "npm:^1.25.2"
     "@types/node": "npm:^20.19.23"
     nano-spawn: "npm:^2.0.0"
     typescript: "npm:5.9.3"

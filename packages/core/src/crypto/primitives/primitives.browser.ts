@@ -396,6 +396,48 @@ async function digest(
 	return new Uint8Array(output);
 }
 
+async function hmacSHA256(
+	key: BytesView,
+	data: BytesView,
+): Promise<BytesView> {
+	const cryptoKey = await crypto.subtle.importKey(
+		"raw",
+		key,
+		{ name: "HMAC", hash: "SHA-256" },
+		false,
+		["sign"],
+	);
+	const signature = await crypto.subtle.sign("HMAC", cryptoKey, data);
+	return new Uint8Array(signature);
+}
+
+// ChaCha20-Poly1305 is not supported in the browser environment.
+// Web Crypto API does not provide ChaCha20-Poly1305.
+// These functions will throw if called; a proper solution needs to be implemented.
+
+async function encryptChaCha20Poly1305(
+	_key: BytesView,
+	_nonce: BytesView,
+	_additionalData: BytesView,
+	_plaintext: BytesView,
+): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
+	throw new Error(
+		"ChaCha20-Poly1305 is not supported in the browser environment",
+	);
+}
+
+async function decryptChaCha20Poly1305(
+	_key: BytesView,
+	_nonce: BytesView,
+	_additionalData: BytesView,
+	_ciphertext: BytesView,
+	_authTag: BytesView,
+): Promise<{ plaintext: BytesView; authOK: boolean }> {
+	throw new Error(
+		"ChaCha20-Poly1305 is not supported in the browser environment",
+	);
+}
+
 async function generateECDHKeyPair(): Promise<KeyPair> {
 	const pair = await crypto.subtle.generateKey(
 		"X25519",
@@ -485,6 +527,9 @@ export const primitives = {
 	decryptAES128CCM,
 	decryptAES256CBC,
 	digest,
+	hmacSHA256,
+	encryptChaCha20Poly1305,
+	decryptChaCha20Poly1305,
 	generateECDHKeyPair,
 	keyPairFromRawECDHPrivateKey,
 	deriveSharedECDHSecret,
