@@ -210,6 +210,66 @@ function digest(
 	return Promise.resolve(hash.digest());
 }
 
+function hmacSHA256(
+	key: BytesView,
+	data: BytesView,
+): Promise<BytesView> {
+	const hmac = crypto.createHmac("sha256", key);
+	hmac.update(data);
+	return Promise.resolve(hmac.digest());
+}
+
+function encryptChaCha20Poly1305(
+	key: BytesView,
+	nonce: BytesView,
+	additionalData: BytesView,
+	plaintext: BytesView,
+): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
+	const cipher = crypto.createCipheriv(
+		"chacha20-poly1305",
+		key,
+		nonce,
+		{ authTagLength: 16 },
+	);
+	cipher.setAAD(additionalData, { plaintextLength: plaintext.length });
+
+	const ciphertext = Bytes.concat([cipher.update(plaintext), cipher.final()]);
+	const authTag = cipher.getAuthTag();
+
+	return Promise.resolve({ ciphertext, authTag });
+}
+
+function decryptChaCha20Poly1305(
+	key: BytesView,
+	nonce: BytesView,
+	additionalData: BytesView,
+	ciphertext: BytesView,
+	authTag: BytesView,
+): Promise<{ plaintext: BytesView; authOK: boolean }> {
+	const decipher = crypto.createDecipheriv(
+		"chacha20-poly1305",
+		key,
+		nonce,
+		{ authTagLength: 16 },
+	);
+	decipher.setAAD(additionalData, { plaintextLength: ciphertext.length });
+	decipher.setAuthTag(authTag);
+
+	let authOK = false;
+	let plaintext: BytesView;
+	try {
+		plaintext = Bytes.concat([
+			decipher.update(ciphertext),
+			decipher.final(),
+		]);
+		authOK = true;
+	} catch {
+		plaintext = new Uint8Array();
+	}
+
+	return Promise.resolve({ plaintext, authOK });
+}
+
 /** Takes an ECDH public KeyObject and returns the raw key as a buffer */
 function extractRawECDHPublicKey(
 	publicKey: crypto.KeyObject,
@@ -296,6 +356,9 @@ export const primitives = {
 	decryptAES128CCM,
 	decryptAES256CBC,
 	digest,
+	hmacSHA256,
+	encryptChaCha20Poly1305,
+	decryptChaCha20Poly1305,
 	generateECDHKeyPair,
 	keyPairFromRawECDHPrivateKey,
 	deriveSharedECDHSecret,

@@ -56,6 +56,29 @@ export interface CryptoPrimitives {
 		data: BytesView,
 	): Promise<BytesView>;
 
+	/** Computes HMAC-SHA256 */
+	hmacSHA256(
+		key: BytesView,
+		data: BytesView,
+	): Promise<BytesView>;
+
+	/** Encrypts and authenticates a payload using ChaCha20-Poly1305 */
+	encryptChaCha20Poly1305(
+		key: BytesView,
+		nonce: BytesView,
+		additionalData: BytesView,
+		plaintext: BytesView,
+	): Promise<{ ciphertext: BytesView; authTag: BytesView }>;
+
+	/** Decrypts and verifies a payload using ChaCha20-Poly1305 */
+	decryptChaCha20Poly1305(
+		key: BytesView,
+		nonce: BytesView,
+		additionalData: BytesView,
+		ciphertext: BytesView,
+		authTag: BytesView,
+	): Promise<{ plaintext: BytesView; authOK: boolean }>;
+
 	/** Generates an x25519 / ECDH key pair */
 	generateECDHKeyPair(): Promise<KeyPair>;
 	/** Expand an x25519 / ECDH private key into the full key pair */

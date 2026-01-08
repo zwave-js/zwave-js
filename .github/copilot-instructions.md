@@ -44,6 +44,7 @@ This repository holds the Z-Wave JS driver library, a TypeScript implementation 
 Comments should explain the WHY, not the WHAT. The code itself shows what happens; comments should explain why that approach was chosen or what it achieves in context.
 
 **When to write comments:**
+
 - Non-obvious algorithmic decisions or workarounds
 - Protocol-specific behavior or constraints (e.g., "These fields are only available for Z-Wave LR")
 - References to specifications (e.g., "Implementation based on SDS13782")
@@ -51,12 +52,14 @@ Comments should explain the WHY, not the WHAT. The code itself shows what happen
 - Complex conditional logic where the reasoning matters
 
 **When NOT to write comments:**
+
 - Self-explanatory code (prefer clear naming over comments)
 - Describing what the next line does
 - Documenting parameters or types (use JSDoc for public APIs instead)
 - Basic control flow or straightforward operations
 
 **Good comment examples:**
+
 ```typescript
 // When requesting a non-existing parameter, a node SHOULD respond with the
 // first available parameter. We use this for the first param only,
@@ -69,6 +72,7 @@ if (typeof cc.nodeId !== "number") {
 ```
 
 **Avoid comments like:**
+
 ```typescript
 // Set the value to 5
 const timeout = 5;
