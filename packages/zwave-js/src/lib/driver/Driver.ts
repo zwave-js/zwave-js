@@ -1533,7 +1533,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			serial: this._options.host?.serial
 				?? (await import("#default_bindings/serial")).serial,
 			db: this._options.host?.db
-			// oxlint-disable-next-line typescript/ban-ts-comment
+				// oxlint-disable-next-line typescript/ban-ts-comment
 				// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
 				?? (await import("#default_bindings/db")).db,
 			log: this._options.host?.log
