@@ -26,7 +26,6 @@ export function loadTSConfig(
 } {
 	const configFileName = ts.findConfigFile(
 		packageName ? path.join(repoRoot, `packages/${packageName}`) : repoRoot,
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		ts.sys.fileExists,
 		variant ? `tsconfig.${variant}.json` : "tsconfig.json",
 	);

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated */
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import type { BytesView } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";

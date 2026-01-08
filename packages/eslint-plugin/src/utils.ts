@@ -104,7 +104,6 @@ export function getCCIdFromDecorator(
 
 export type Rule = TSESLint.RuleModule<any, never[], TSESLint.RuleListener>;
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace JSONCRule {
 	// Special ESLint rule type for JSONC files
 	// AST viewer at https://ota-meshi.github.io/jsonc-eslint-parser/

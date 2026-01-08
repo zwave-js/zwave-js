@@ -776,7 +776,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public constructor(
 		private port:
 			| string
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			| ZWaveSerialPortImplementation
 			| ZWaveSerialBindingFactory,
 		...optionsAndPresets: (PartialZWaveOptions | undefined)[]
@@ -1098,7 +1097,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public get configVersion(): string {
 		return (
 			this.configManager?.configVersion
-				// eslint-disable-next-line @typescript-eslint/no-require-imports
 				?? require("zwave-js/package.json")?.dependencies
 					?.["@zwave-js/config"]
 				?? libVersion
@@ -1421,7 +1419,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Ideally we'd use the host bindings used by the driver, but we can't access them in a static method
 
 		const bindings =
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// oxlint-disable-next-line typescript/ban-ts-comment
 			// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
 			(await import("#default_bindings/serial")).serial;
 		if (local && typeof bindings.list === "function") {
@@ -1535,7 +1533,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			serial: this._options.host?.serial
 				?? (await import("#default_bindings/serial")).serial,
 			db: this._options.host?.db
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// oxlint-disable-next-line typescript/ban-ts-comment
 				// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
 				?? (await import("#default_bindings/db")).db,
 			log: this._options.host?.log
@@ -1692,9 +1690,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 			// Try to create the cache directory. This can fail, in which case we should expose a good error message
 			try {
-				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				if (this._options.storage.driver) {
-					// eslint-disable-next-line @typescript-eslint/no-deprecated
 					await this._options.storage.driver.ensureDir(this.cacheDir);
 				} else {
 					await this.bindings.fs.ensureDir(this.cacheDir);
@@ -1947,10 +1943,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					this.controller.homeId,
 					this._networkCache,
 					this._valueDB,
-					// eslint-disable-next-line @typescript-eslint/no-deprecated
 					this._options.storage.driver
 						? wrapLegacyFSDriverForCacheMigrationOnly(
-							// eslint-disable-next-line @typescript-eslint/no-deprecated
 							this._options.storage.driver,
 						)
 						: this.bindings.fs,
@@ -2873,7 +2867,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	/** @internal */
-	// eslint-disable-next-line @typescript-eslint/require-await
 	public async getUUID(): Promise<string> {
 		// To anonymously identify a network, we create a unique ID and use it to salt the Home ID
 		if (!this._valueDB!.has("uuid")) {
@@ -3256,7 +3249,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		predicate: (t: Transaction) => boolean,
 	): boolean {
 		// Queue is not an array
-		// eslint-disable-next-line unicorn/prefer-array-some
+		// oxlint-disable-next-line unicorn/prefer-array-some
 		if (!!this.queue.find((t) => predicate(t))) return true;
 		return this.queues.some(
 			(q) => q.currentTransaction && predicate(q.currentTransaction),
@@ -3531,7 +3524,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// This is a bit hacky, but what the heck...
 		if (!this._enteringBootloader) {
 			// Start the watchdog again, unless disabled
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			if (this.options.features.watchdog) {
 				void this._controller?.startWatchdog();
 			}
@@ -5318,7 +5310,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				}
 
 				// Restart the watchdog unless disabled
-				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				if (this.options.features.watchdog) {
 					await this._controller?.startWatchdog();
 				}

@@ -27,7 +27,7 @@ export function encodeApplicationNodeInformation(
 ): Bytes {
 	const ccList = encodeCCList(nif.supportedCCs, []);
 	return Bytes.concat([
-		Bytes.from([nif.genericDeviceClass, nif.specificDeviceClass]),
+		[nif.genericDeviceClass, nif.specificDeviceClass],
 		ccList,
 	]);
 }
@@ -67,12 +67,12 @@ export function encodeNodeUpdatePayload(
 	const nodeId = encodeNodeID(nif.nodeId, nodeIdType);
 	return Bytes.concat([
 		nodeId,
-		Bytes.from([
+		[
 			3 + ccList.length,
 			nif.basicDeviceClass,
 			nif.genericDeviceClass,
 			nif.specificDeviceClass,
-		]),
+		],
 		ccList,
 	]);
 }
@@ -366,11 +366,11 @@ export function encodeNodeProtocolInfoAndDeviceClass(
 			{ ...info, hasSpecificDeviceClass: true },
 			isLongRange,
 		),
-		Bytes.from([
+		[
 			info.basicDeviceClass,
 			info.genericDeviceClass,
 			info.specificDeviceClass,
-		]),
+		],
 	]);
 }
 
@@ -414,7 +414,7 @@ export function encodeNodeInformationFrame(
 
 	let ccList = encodeCCList(info.supportedCCs, []);
 	if (isLongRange) {
-		ccList = Bytes.concat([Bytes.from([ccList.length]), ccList]);
+		ccList = Bytes.concat([[ccList.length], ccList]);
 	}
 
 	return Bytes.concat([protocolInfo, ccList]);

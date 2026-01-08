@@ -595,7 +595,6 @@ export class NVM500Adapter implements NVMAdapter {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	public async delete(_property: NVMProperty): Promise<void> {
 		throw new Error("Method not implemented.");
 	}

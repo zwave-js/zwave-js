@@ -15,7 +15,6 @@ export type ZLFAttachmentConstructor<T extends ZLFAttachment> =
 		): T;
 	};
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ZLFAttachmentBaseOptions {
 	// Intentionally empty
 }

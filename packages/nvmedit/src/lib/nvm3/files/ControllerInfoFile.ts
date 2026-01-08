@@ -137,7 +137,7 @@ export class ControllerInfoFile extends NVMFile {
 			// V0
 			this.payload = Bytes.concat([
 				this.homeId,
-				Bytes.from([
+				[
 					this.nodeId,
 					this.lastNodeId,
 					this.staticControllerNodeId,
@@ -147,7 +147,7 @@ export class ControllerInfoFile extends NVMFile {
 					this.maxNodeId,
 					this.reservedId,
 					this.systemState,
-				]),
+				],
 			]);
 		}
 		return super.serialize();

@@ -176,12 +176,12 @@ export class Security2Extension {
 
 	public serialize(moreToFollow: boolean): Bytes {
 		return Bytes.concat([
-			Bytes.from([
+			[
 				2 + this.payload.length,
 				(moreToFollow ? 0b1000_0000 : 0)
 				| (this.critical ? 0b0100_0000 : 0)
 				| (this.type & 0b11_1111),
-			]),
+			],
 			this.payload,
 		]);
 	}

@@ -280,7 +280,7 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 		}
 
 		this.payload = Bytes.concat([
-			Bytes.from([control, this.callbackId]),
+			[control, this.callbackId],
 			this.nwiHomeId,
 			this.authHomeId,
 		]);

@@ -152,7 +152,6 @@ export class IndexedDBFileSystem implements FileSystem {
 		await writeFile(db, dest, data);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	async open(
 		_path: string,
 		_flags: {
@@ -170,7 +169,6 @@ export class IndexedDBFileSystem implements FileSystem {
 		return listKeysWithPrefix(db, path);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	async stat(_path: string): Promise<FSStats> {
 		throw new Error("Method not implemented.");
 	}
@@ -184,7 +182,6 @@ export class IndexedDBFileSystem implements FileSystem {
 		return deleteKeysWithPrefix(db, path);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	async makeTempDir(_prefix: string): Promise<string> {
 		throw new Error("Function not implemented.");
 	}

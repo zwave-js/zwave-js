@@ -205,9 +205,9 @@ export class SendDataBridgeRequest<CCType extends CommandClass = CommandClass>
 		this.payload = Bytes.concat([
 			sourceNodeId,
 			destinationNodeId,
-			Bytes.from([serializedCC.length]),
+			[serializedCC.length],
 			serializedCC,
-			Bytes.from([this.transmitOptions, 0, 0, 0, 0, this.callbackId]),
+			[this.transmitOptions, 0, 0, 0, 0, this.callbackId],
 		]);
 
 		return super.serialize(ctx);
@@ -545,12 +545,12 @@ export class SendDataMulticastBridgeRequest<
 		this.payload = Bytes.concat([
 			sourceNodeId,
 			// # of target nodes, not # of bytes
-			Bytes.from([destinationNodeIDs.length]),
+			[destinationNodeIDs.length],
 			...destinationNodeIDs,
-			Bytes.from([serializedCC.length]),
+			[serializedCC.length],
 			// payload
 			serializedCC,
-			Bytes.from([this.transmitOptions, this.callbackId]),
+			[this.transmitOptions, this.callbackId],
 		]);
 
 		return super.serialize(ctx);

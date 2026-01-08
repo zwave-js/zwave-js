@@ -23,7 +23,6 @@ export type ZnifferMessageConstructor<T extends ZnifferMessage> =
 		): T;
 	};
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ZnifferMessageBaseOptions {
 	// Intentionally empty
 }
@@ -208,11 +207,11 @@ export class ZnifferMessage {
 	public serialize(): Bytes {
 		if (this.type === ZnifferMessageType.Command) {
 			return Bytes.concat([
-				Bytes.from([
+				[
 					this.type,
 					this.functionType!,
 					this.payload.length,
-				]),
+				],
 				this.payload,
 			]);
 		} else if (this.type === ZnifferMessageType.Data) {

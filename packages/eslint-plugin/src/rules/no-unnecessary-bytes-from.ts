@@ -15,7 +15,8 @@ export const noUnnecessaryBytesFrom = ESLintUtils.RuleCreator.withoutDocs({
 					// Check the first argument (should be an array)
 					if (
 						node.arguments.length > 0
-						&& node.arguments[0].type === AST_NODE_TYPES.ArrayExpression
+						&& node.arguments[0].type
+							=== AST_NODE_TYPES.ArrayExpression
 					) {
 						const arrayArg = node.arguments[0];
 
@@ -26,24 +27,34 @@ export const noUnnecessaryBytesFrom = ESLintUtils.RuleCreator.withoutDocs({
 							// Check if element is a Bytes.from call
 							if (
 								element.type === AST_NODE_TYPES.CallExpression
-								&& element.callee.type === AST_NODE_TYPES.MemberExpression
-								&& element.callee.object.type === AST_NODE_TYPES.Identifier
+								&& element.callee.type
+									=== AST_NODE_TYPES.MemberExpression
+								&& element.callee.object.type
+									=== AST_NODE_TYPES.Identifier
 								&& element.callee.object.name === "Bytes"
-								&& element.callee.property.type === AST_NODE_TYPES.Identifier
+								&& element.callee.property.type
+									=== AST_NODE_TYPES.Identifier
 								&& element.callee.property.name === "from"
 							) {
 								// Check if the argument to Bytes.from is an array literal
 								if (
 									element.arguments.length > 0
-									&& element.arguments[0].type === AST_NODE_TYPES.ArrayExpression
+									&& element.arguments[0].type
+										=== AST_NODE_TYPES.ArrayExpression
 								) {
 									context.report({
 										node: element,
 										messageId: "no-unnecessary-bytes-from",
 										fix(fixer) {
 											// Get the source text of the array argument
-											const arraySource = context.sourceCode.getText(element.arguments[0]);
-											return fixer.replaceText(element, arraySource);
+											const arraySource = context
+												.sourceCode.getText(
+													element.arguments[0],
+												);
+											return fixer.replaceText(
+												element,
+												arraySource,
+											);
 										},
 									});
 								}
@@ -63,8 +74,7 @@ export const noUnnecessaryBytesFrom = ESLintUtils.RuleCreator.withoutDocs({
 		fixable: "code",
 		schema: [],
 		messages: {
-			"no-unnecessary-bytes-from":
-				"Unnecessary Bytes.from() call. Bytes.concat accepts plain arrays.",
+			"no-unnecessary-bytes-from": "Unnecessary Bytes.from() call.",
 		},
 	},
 	defaultOptions: [],

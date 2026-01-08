@@ -83,10 +83,10 @@ export class SendTestFrameRequest extends SendTestFrameRequestBase {
 		const nodeId = encodeNodeID(this.testNodeId, ctx.nodeIdType);
 		this.payload = Bytes.concat([
 			nodeId,
-			Bytes.from([
+			[
 				this.powerlevel,
 				this.callbackId,
-			]),
+			],
 		]);
 
 		return super.serialize(ctx);

@@ -193,9 +193,9 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass>
 		const serializedCC = await this.serializeCC(ctx);
 		this.payload = Bytes.concat([
 			nodeId,
-			Bytes.from([serializedCC.length]),
+			[serializedCC.length],
 			serializedCC,
-			Bytes.from([this.transmitOptions, this.callbackId]),
+			[this.transmitOptions, this.callbackId],
 		]);
 
 		return super.serialize(ctx);
@@ -516,12 +516,12 @@ export class SendDataMulticastRequest<
 			.map((id) => encodeNodeID(id, ctx.nodeIdType));
 		this.payload = Bytes.concat([
 			// # of target nodes, not # of bytes
-			Bytes.from([destinationNodeIDs.length]),
+			[destinationNodeIDs.length],
 			...destinationNodeIDs,
-			Bytes.from([serializedCC.length]),
+			[serializedCC.length],
 			// payload
 			serializedCC,
-			Bytes.from([this.transmitOptions, this.callbackId]),
+			[this.transmitOptions, this.callbackId],
 		]);
 
 		return super.serialize(ctx);

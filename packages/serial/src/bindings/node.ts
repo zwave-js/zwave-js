@@ -9,7 +9,6 @@ import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
 
 /** An implementation of the Serial bindings for Node.js */
 export const serial: Serial = {
-	// eslint-disable-next-line @typescript-eslint/require-await
 	async createFactoryByPath(path) {
 		if (path.startsWith("tcp://")) {
 			const url = new URL(path);

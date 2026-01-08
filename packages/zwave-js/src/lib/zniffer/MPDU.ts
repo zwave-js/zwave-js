@@ -815,7 +815,7 @@ export function parseBeamFrame(
 		}
 		default:
 			validatePayload.fail(
-				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+				// oxlint-disable-next-line typescript/restrict-template-expressions
 				`Unsupported channel configuration ${channelConfig}. MPDU payload: ${
 					buffer2hex(frame.payload)
 				}`,
