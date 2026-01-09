@@ -128,7 +128,9 @@ export interface ZWaveNotificationCallbackArgs_NotificationCC {
 	/** The human-readable label for the notification event */
 	eventLabel: string;
 	/** Additional information related to the event */
-	parameters?: NotificationCCReport["eventParameters"];
+	parameters?:
+		| NotificationCCReport["eventParameters"]
+		| Record<string, number | string | BytesView>;
 }
 
 /**

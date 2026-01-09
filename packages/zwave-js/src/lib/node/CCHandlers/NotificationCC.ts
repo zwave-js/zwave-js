@@ -31,12 +31,16 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import {
+	type BytesView,
 	type Timer,
 	isUint8Array,
 	setTimer,
 	stringify,
 } from "@zwave-js/shared";
 import type { ZWaveNode } from "../Node.js";
+import type {
+	ZWaveNotificationCallbackArgs_NotificationCC,
+} from "../_Types.js";
 import type { NodeValues } from "../mixins/40_Values.js";
 
 export interface NotificationHandlerStore {
@@ -184,13 +188,7 @@ export function handleNotificationReport(
 				?? node;
 
 			// Build the notification event args
-			const eventArgs: {
-				type: number;
-				event: number;
-				label: string;
-				eventLabel: string;
-				parameters?: NotificationCCReport["eventParameters"];
-			} = {
+			const eventArgs: ZWaveNotificationCallbackArgs_NotificationCC = {
 				type: command.notificationType,
 				event: value,
 				label: notification.name,
@@ -217,7 +215,10 @@ export function handleNotificationReport(
 				};
 
 				// Create a new parameters object with the additional fields
-				const enhancedParameters: Record<string, unknown> = {
+				const enhancedParameters: Record<
+					string,
+					number | string | BytesView
+				> = {
 					...command.eventParameters,
 				};
 
@@ -239,9 +240,7 @@ export function handleNotificationReport(
 					enhancedParameters.userCode = userCode;
 				}
 
-				// Type assertion is safe because we're extending the original parameters
-				// with additional fields that are consumed by the application
-				eventArgs.parameters = enhancedParameters as typeof eventArgs.parameters;
+				eventArgs.parameters = enhancedParameters;
 			}
 
 			node.emit(

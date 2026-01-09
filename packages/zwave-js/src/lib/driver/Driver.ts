@@ -3200,12 +3200,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					msg.duration = ccArgs.parameters.toString();
 				} else if (isObject(ccArgs.parameters)) {
 					// Copy parameters but censor the userCode field if present
-					for (const [key, value] of Object.entries(ccArgs.parameters)) {
+					for (
+						const [key, value] of Object.entries(ccArgs.parameters)
+					) {
 						if (key === "userCode") {
 							// Censor the user code for logging
-							msg[key] = typeof value === "string" || isUint8Array(value)
-								? userCodeToLogString(value)
-								: String(value);
+							msg[key] =
+								typeof value === "string" || isUint8Array(value)
+									? userCodeToLogString(value)
+									: String(value);
 						} else {
 							msg[key] = value;
 						}
