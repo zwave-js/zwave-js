@@ -360,6 +360,7 @@ const defaultOptions: ZWaveOptions = {
 	},
 	preferences: {
 		scales: {},
+		lookupUserIdInEvents: false,
 	},
 };
 

@@ -206,7 +206,7 @@ export function handleNotificationReport(
 			// look up the user code and status
 			const prefs = ctx.getUserPreferences();
 			if (
-				prefs.lookupUserIdInEvents
+				prefs.lookupUserIdInEvents === true
 				&& command.eventParameters != null
 				&& typeof command.eventParameters === "object"
 				&& !isUint8Array(command.eventParameters)
