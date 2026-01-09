@@ -574,17 +574,17 @@ jobs:
         node-version: [22] # This should be LTS
 
     steps:
-    # Checkout master branch first to get trusted bot scripts
-    - name: Checkout master branch (trusted)
-      uses: actions/checkout@v6
-      with:
-        path: trusted
-
     - name: Checkout PR code
       uses: actions/checkout@v6
       with:
         fetch-depth: 0
         ref: ${{ inputs.ref }}
+
+    # Checkout master branch to get trusted bot scripts
+    - name: Checkout master branch (trusted)
+      uses: actions/checkout@v6
+      with:
+        path: trusted
 
     - name: Switch to a branch
       run: git switch -c temp
