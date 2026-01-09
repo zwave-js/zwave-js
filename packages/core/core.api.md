@@ -5,6 +5,7 @@
 ```ts
 
 import { Bytes } from '@zwave-js/shared';
+import { BytesView } from '@zwave-js/shared';
 import type { Database } from '@zwave-js/shared/bindings';
 import { DeflateOptions } from 'fflate';
 import type { ExpectStatic } from 'vitest';
@@ -69,7 +70,7 @@ export interface AssertZWaveErrorOptions {
 // Warning: (ae-missing-release-tag) "authHomeIdFromDSK" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function authHomeIdFromDSK(dsk: Uint8Array): Uint8Array;
+export function authHomeIdFromDSK(dsk: BytesView): BytesView;
 
 // Warning: (ae-missing-release-tag) "averageRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -469,22 +470,22 @@ export interface CommandClassInfo {
 // Warning: (ae-missing-release-tag) "computeCMAC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function computeCMAC(message: Uint8Array, key: Uint8Array): Promise<Uint8Array>;
+export function computeCMAC(message: BytesView, key: BytesView): Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "computeMAC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function computeMAC(authData: Uint8Array, key: Uint8Array, iv?: Uint8Array): Promise<Uint8Array>;
+export function computeMAC(authData: BytesView, key: BytesView, iv?: BytesView): Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "computeNoncePRK" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function computeNoncePRK(senderEI: Uint8Array, receiverEI: Uint8Array): Promise<Uint8Array>;
+export function computeNoncePRK(senderEI: BytesView, receiverEI: BytesView): Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "computePRK" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function computePRK(ecdhSharedSecret: Uint8Array, pubKeyA: Uint8Array, pubKeyB: Uint8Array): Promise<Uint8Array>;
+export function computePRK(ecdhSharedSecret: BytesView, pubKeyA: BytesView, pubKeyB: BytesView): Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "ConfigurationMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -497,6 +498,8 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
     // (undocumented)
     description?: string;
     // (undocumented)
+    destructive?: boolean;
+    // (undocumented)
     format?: ConfigValueFormat;
     // (undocumented)
     isAdvanced?: boolean;
@@ -508,6 +511,8 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
     max?: ConfigValue;
     // (undocumented)
     min?: ConfigValue;
+    // (undocumented)
+    recommended?: ConfigValue;
     // (undocumented)
     requiresReInclusion?: boolean;
     // (undocumented)
@@ -679,7 +684,7 @@ export interface ControlsCC {
 // Warning: (ae-missing-release-tag) "CRC16_CCITT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function CRC16_CCITT(data: Uint8Array, startValue?: number): number;
+export function CRC16_CCITT(data: BytesView, startValue?: number): number;
 
 // Warning: (ae-forgotten-export) The symbol "Constructor" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "createReflectionDecorator" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -738,23 +743,23 @@ export interface CreateValuelessReflectionDecoratorOptions {
 // @public (undocumented)
 export class CtrDRBG {
     // (undocumented)
-    generate(len: number): Promise<Uint8Array>;
+    generate(len: number): Promise<BytesView>;
     // (undocumented)
-    init(entropy: Uint8Array, personalizationString?: Uint8Array): Promise<void>;
+    init(entropy: BytesView, personalizationString?: BytesView): Promise<void>;
     // (undocumented)
-    protected reseed(entropy: Uint8Array): Promise<void>;
+    protected reseed(entropy: BytesView): Promise<void>;
     // (undocumented)
     restoreState(state: {
-        key: Uint8Array;
-        v: Uint8Array;
+        key: BytesView;
+        v: BytesView;
     }): void;
     // (undocumented)
     saveState(): {
-        key: Uint8Array;
-        v: Uint8Array;
+        key: BytesView;
+        v: BytesView;
     };
     // (undocumented)
-    update(providedData: Uint8Array | undefined): Promise<void>;
+    update(providedData: BytesView | undefined): Promise<void>;
 }
 
 // Warning: (ae-missing-release-tag) "DataDirection" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -779,51 +784,59 @@ export function dbKeyToValueIdFast(key: string): {
 // Warning: (ae-missing-release-tag) "decryptAES128CCM" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const decryptAES128CCM: (ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, additionalData: Uint8Array, authTag: Uint8Array) => Promise<{
-    plaintext: Uint8Array;
+export const decryptAES128CCM: (ciphertext: BytesView, key: BytesView, iv: BytesView, additionalData: BytesView, authTag: BytesView) => Promise<{
+    plaintext: BytesView;
     authOK: boolean;
 }>;
 
 // Warning: (ae-missing-release-tag) "decryptAES128OFB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const decryptAES128OFB: (ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array) => Promise<Uint8Array>;
+export const decryptAES128OFB: (ciphertext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "decryptAES256CBC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const decryptAES256CBC: (ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array) => Promise<Uint8Array>;
+export const decryptAES256CBC: (ciphertext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
+
+// Warning: (ae-missing-release-tag) "decryptChaCha20Poly1305" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const decryptChaCha20Poly1305: (key: BytesView, nonce: BytesView, additionalData: BytesView, ciphertext: BytesView, authTag: BytesView) => Promise<{
+    plaintext: BytesView;
+    authOK: boolean;
+}>;
 
 // Warning: (ae-missing-release-tag) "deflateSync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function deflateSync(data: Uint8Array, opts?: DeflateOptions): Uint8Array;
+export function deflateSync(data: BytesView, opts?: DeflateOptions): BytesView;
 
 // Warning: (ae-missing-release-tag) "deriveMEI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function deriveMEI(noncePRK: Uint8Array): Promise<Uint8Array>;
+export function deriveMEI(noncePRK: BytesView): Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "deriveNetworkKeys" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function deriveNetworkKeys(PNK: Uint8Array): Promise<{
-    keyCCM: Uint8Array;
-    keyMPAN: Uint8Array;
-    personalizationString: Uint8Array;
+export function deriveNetworkKeys(PNK: BytesView): Promise<{
+    keyCCM: BytesView;
+    keyMPAN: BytesView;
+    personalizationString: BytesView;
 }>;
 
 // Warning: (ae-missing-release-tag) "deriveSharedECDHSecret" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const deriveSharedECDHSecret: (keyPair: KeyPair) => Promise<Uint8Array>;
+export const deriveSharedECDHSecret: (keyPair: KeyPair) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "deriveTempKeys" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function deriveTempKeys(PRK: Uint8Array): Promise<{
-    tempKeyCCM: Uint8Array;
-    tempPersonalizationString: Uint8Array;
+export function deriveTempKeys(PRK: BytesView): Promise<{
+    tempKeyCCM: BytesView;
+    tempPersonalizationString: BytesView;
 }>;
 
 // Warning: (ae-missing-release-tag) "deserializeCacheValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -834,7 +847,7 @@ export function deserializeCacheValue(value: SerializedValue): unknown;
 // Warning: (ae-missing-release-tag) "digest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const digest: (algorithm: "md5" | "sha-1" | "sha-256", data: Uint8Array) => Promise<Uint8Array>;
+export const digest: (algorithm: "md5" | "sha-1" | "sha-256", data: BytesView) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "directionPrefixPadding" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -844,12 +857,12 @@ export const directionPrefixPadding: string;
 // Warning: (ae-missing-release-tag) "dskFromString" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function dskFromString(dsk: string): Uint8Array;
+export function dskFromString(dsk: string): BytesView;
 
 // Warning: (ae-missing-release-tag) "dskToString" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function dskToString(dsk: Uint8Array): string;
+export function dskToString(dsk: BytesView): string;
 
 // Warning: (ae-missing-release-tag) "DSTInfo" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1027,25 +1040,33 @@ export function encodePartial(fullValue: number, partialValue: number, bitMask: 
 // Warning: (ae-missing-release-tag) "encryptAES128CBC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const encryptAES128CBC: (plaintext: Uint8Array, key: Uint8Array, iv: Uint8Array) => Promise<Uint8Array>;
+export const encryptAES128CBC: (plaintext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "encryptAES128CCM" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const encryptAES128CCM: (plaintext: Uint8Array, key: Uint8Array, iv: Uint8Array, additionalData: Uint8Array, authTagLength: number) => Promise<{
-    ciphertext: Uint8Array;
-    authTag: Uint8Array;
+export const encryptAES128CCM: (plaintext: BytesView, key: BytesView, iv: BytesView, additionalData: BytesView, authTagLength: number) => Promise<{
+    ciphertext: BytesView;
+    authTag: BytesView;
 }>;
 
 // Warning: (ae-missing-release-tag) "encryptAES128ECB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const encryptAES128ECB: (plaintext: Uint8Array, key: Uint8Array) => Promise<Uint8Array>;
+export const encryptAES128ECB: (plaintext: BytesView, key: BytesView) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "encryptAES128OFB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const encryptAES128OFB: (plaintext: Uint8Array, key: Uint8Array, iv: Uint8Array) => Promise<Uint8Array>;
+export const encryptAES128OFB: (plaintext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
+
+// Warning: (ae-missing-release-tag) "encryptChaCha20Poly1305" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const encryptChaCha20Poly1305: (key: BytesView, nonce: BytesView, additionalData: BytesView, plaintext: BytesView) => Promise<{
+    ciphertext: BytesView;
+    authTag: BytesView;
+}>;
 
 // Warning: (ae-missing-release-tag) "EndpointId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1067,7 +1088,7 @@ export function enumValuesToMetadataStates<T extends Record<string, any>>(enumer
 // Warning: (ae-missing-release-tag) "extractFirmware" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function extractFirmware(rawData: Uint8Array, format: FirmwareFileFormat): Promise<Firmware>;
+export function extractFirmware(rawData: BytesView, format: FirmwareFileFormat): Promise<Firmware>;
 
 // Warning: (ae-missing-release-tag) "fail" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1085,7 +1106,7 @@ export interface FileSystem {
     // (undocumented)
     readFile(file: string, encoding: BufferEncoding): Promise<string>;
     // (undocumented)
-    writeFile(file: string, data: string | Uint8Array, options?: {
+    writeFile(file: string, data: string | BytesView, options?: {
         encoding: BufferEncoding;
     } | BufferEncoding): Promise<void>;
 }
@@ -1095,7 +1116,7 @@ export interface FileSystem {
 // @public (undocumented)
 export interface Firmware {
     // (undocumented)
-    data: Uint8Array;
+    data: BytesView;
     // (undocumented)
     firmwareId?: number;
     // (undocumented)
@@ -1142,8 +1163,8 @@ export type FrameType = "singlecast" | "broadcast" | "multicast";
 
 // Warning: (ae-missing-release-tag) "generateAuthKey" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public
-export function generateAuthKey(networkKey: Uint8Array): Promise<Uint8Array>;
+// @public (undocumented)
+export function generateAuthKey(networkKey: BytesView): Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "generateECDHKeyPair" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1153,7 +1174,7 @@ export const generateECDHKeyPair: () => Promise<KeyPair>;
 // Warning: (ae-missing-release-tag) "generateEncryptionKey" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function generateEncryptionKey(networkKey: Uint8Array): Promise<Uint8Array>;
+export function generateEncryptionKey(networkKey: BytesView): Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "GenericDeviceClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1507,17 +1528,22 @@ export class GraphNode<T> {
 // Warning: (ae-missing-release-tag) "guessFirmwareFileFormat" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function guessFirmwareFileFormat(filename: string, rawData: Uint8Array): FirmwareFileFormat;
+export function guessFirmwareFileFormat(filename: string, rawData: BytesView): FirmwareFileFormat;
 
 // Warning: (ae-missing-release-tag) "gunzipSync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function gunzipSync(data: Uint8Array): Uint8Array;
+export function gunzipSync(data: BytesView): BytesView;
 
 // Warning: (ae-missing-release-tag) "highResTimestamp" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
 export function highResTimestamp(): number;
+
+// Warning: (ae-missing-release-tag) "hmacSHA256" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const hmacSHA256: (key: BytesView, data: BytesView) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "HOMEID_BYTES" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1978,7 +2004,7 @@ export function isZWaveError(e: unknown): e is ZWaveError;
 // Warning: (ae-missing-release-tag) "keyPairFromRawECDHPrivateKey" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const keyPairFromRawECDHPrivateKey: (privateKey: Uint8Array) => Promise<KeyPair>;
+export const keyPairFromRawECDHPrivateKey: (privateKey: BytesView) => Promise<KeyPair>;
 
 // Warning: (ae-missing-release-tag) "ListenBehavior" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2299,7 +2325,7 @@ export type MPANTableEntry = {
     type: MPANState.OutOfSync;
 } | {
     type: MPANState.MPAN;
-    currentMPAN: Uint8Array;
+    currentMPAN: BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "MPDUHeaderType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2363,13 +2389,13 @@ export type NamedScales = typeof namedScales;
 // @public (undocumented)
 export interface NetworkKeys {
     // (undocumented)
-    keyCCM: Uint8Array;
+    keyCCM: BytesView;
     // (undocumented)
-    keyMPAN: Uint8Array;
+    keyMPAN: BytesView;
     // (undocumented)
-    personalizationString: Uint8Array;
+    personalizationString: BytesView;
     // (undocumented)
-    pnk: Uint8Array;
+    pnk: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "NODE_ID_BROADCAST" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2636,17 +2662,17 @@ export const NUM_NODEMASK_BYTES: number;
 // Warning: (ae-missing-release-tag) "nwiHomeIdFromDSK" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function nwiHomeIdFromDSK(dsk: Uint8Array): Uint8Array;
+export function nwiHomeIdFromDSK(dsk: BytesView): BytesView;
 
 // Warning: (ae-missing-release-tag) "parseApplicationNodeInformation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseApplicationNodeInformation(nif: Uint8Array): ApplicationNodeInformation;
+export function parseApplicationNodeInformation(nif: BytesView): ApplicationNodeInformation;
 
 // Warning: (ae-missing-release-tag) "parseBitMask" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function parseBitMask(mask: Uint8Array | ArrayLike<number>, startValue?: number, numBits?: number): number[];
+export function parseBitMask(mask: BytesView | ArrayLike<number>, startValue?: number, numBits?: number): number[];
 
 // Warning: (ae-missing-release-tag) "parseBoolean" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2657,7 +2683,7 @@ export function parseBoolean(val: number): boolean | undefined;
 // Warning: (ae-missing-release-tag) "parseCCId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function parseCCId(payload: Uint8Array, offset?: number): {
+export function parseCCId(payload: BytesView, offset?: number): {
     ccId: CommandClasses;
     bytesRead: number;
 };
@@ -2665,7 +2691,7 @@ export function parseCCId(payload: Uint8Array, offset?: number): {
 // Warning: (ae-missing-release-tag) "parseCCList" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseCCList(payload: Uint8Array): {
+export function parseCCList(payload: BytesView): {
     supportedCCs: CommandClasses[];
     controlledCCs: CommandClasses[];
 };
@@ -2674,7 +2700,7 @@ export function parseCCList(payload: Uint8Array): {
 // Warning: (ae-missing-release-tag) "parseFloatWithScale" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function parseFloatWithScale(payload: Uint8Array, allowEmpty?: false): {
+export function parseFloatWithScale(payload: BytesView, allowEmpty?: false): {
     value: number;
     scale: number;
     bytesRead: number;
@@ -2683,7 +2709,7 @@ export function parseFloatWithScale(payload: Uint8Array, allowEmpty?: false): {
 // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 //
 // @public
-export function parseFloatWithScale(payload: Uint8Array, allowEmpty: true): {
+export function parseFloatWithScale(payload: BytesView, allowEmpty: true): {
     value?: number;
     scale?: number;
     bytesRead: number;
@@ -2692,7 +2718,7 @@ export function parseFloatWithScale(payload: Uint8Array, allowEmpty: true): {
 // Warning: (ae-missing-release-tag) "parseLongRangeNodeBitMask" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseLongRangeNodeBitMask(mask: Uint8Array | ArrayLike<number>, startValue: number): number[];
+export function parseLongRangeNodeBitMask(mask: BytesView | ArrayLike<number>, startValue: number): number[];
 
 // Warning: (ae-missing-release-tag) "parseMaybeBoolean" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 // Warning: (ae-unresolved-link) The @link reference could not be resolved: The reference is ambiguous because "UNKNOWN_STATE" has more than one declaration; you need to add a TSDoc member reference selector
@@ -2709,12 +2735,12 @@ export function parseMaybeNumber(val: number): MaybeUnknown<number> | undefined;
 // Warning: (ae-missing-release-tag) "parseNodeBitMask" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseNodeBitMask(mask: Uint8Array): number[];
+export function parseNodeBitMask(mask: BytesView): number[];
 
 // Warning: (ae-missing-release-tag) "parseNodeID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseNodeID(buffer: Uint8Array, type?: NodeIDType, offset?: number): {
+export function parseNodeID(buffer: BytesView, type?: NodeIDType, offset?: number): {
     nodeId: number;
     bytesRead: number;
 };
@@ -2722,17 +2748,17 @@ export function parseNodeID(buffer: Uint8Array, type?: NodeIDType, offset?: numb
 // Warning: (ae-missing-release-tag) "parseNodeInformationFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseNodeInformationFrame(buffer: Uint8Array, isLongRange?: boolean): NodeInformationFrame;
+export function parseNodeInformationFrame(buffer: BytesView, isLongRange?: boolean): NodeInformationFrame;
 
 // Warning: (ae-missing-release-tag) "parseNodeProtocolInfo" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseNodeProtocolInfo(buffer: Uint8Array, offset: number, isLongRange?: boolean): NodeProtocolInfo;
+export function parseNodeProtocolInfo(buffer: BytesView, offset: number, isLongRange?: boolean): NodeProtocolInfo;
 
 // Warning: (ae-missing-release-tag) "parseNodeProtocolInfoAndDeviceClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseNodeProtocolInfoAndDeviceClass(buffer: Uint8Array, isLongRange?: boolean): {
+export function parseNodeProtocolInfoAndDeviceClass(buffer: BytesView, isLongRange?: boolean): {
     info: NodeProtocolInfoAndDeviceClass;
     bytesRead: number;
 };
@@ -2740,7 +2766,7 @@ export function parseNodeProtocolInfoAndDeviceClass(buffer: Uint8Array, isLongRa
 // Warning: (ae-missing-release-tag) "parseNodeUpdatePayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseNodeUpdatePayload(nif: Uint8Array, nodeIdType?: NodeIDType): NodeUpdatePayload;
+export function parseNodeUpdatePayload(nif: BytesView, nodeIdType?: NodeIDType): NodeUpdatePayload;
 
 // Warning: (ae-missing-release-tag) "parseNumber" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2941,6 +2967,14 @@ export type QRProvisioningInformation = {
     dsk: string;
 } & ProvisioningInformation_ProductType & ProvisioningInformation_ProductId & Partial<ProvisioningInformation_MaxInclusionRequestInterval> & Partial<ProvisioningInformation_UUID16> & Partial<ProvisioningInformation_SupportedProtocols>;
 
+// Warning: (ae-missing-release-tag) "QueryNodeInterviewStage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface QueryNodeInterviewStage {
+    bootstrapped: boolean;
+    interviewStage: InterviewStage;
+}
+
 // Warning: (ae-missing-release-tag) "QueryNodeStatus" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -2960,7 +2994,7 @@ export interface QuerySecurityClasses {
 // Warning: (ae-missing-release-tag) "randomBytes" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const randomBytes: (length: number) => Uint8Array;
+export const randomBytes: (length: number) => BytesView;
 
 // Warning: (ae-missing-release-tag) "readLevel" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3226,22 +3260,22 @@ export class SecurityManager {
     deleteAllNoncesForReceiver(receiver: number): void;
     // (undocumented)
     deleteNonce(id: number | NonceKey): void;
-    generateNonce(receiver: number, length: number): Uint8Array;
+    generateNonce(receiver: number, length: number): BytesView;
     // (undocumented)
-    getAuthKey(): Promise<Uint8Array>;
+    getAuthKey(): Promise<BytesView>;
     // (undocumented)
-    getEncryptionKey(): Promise<Uint8Array>;
+    getEncryptionKey(): Promise<BytesView>;
     // (undocumented)
-    getFreeNonce(nodeId: number): Uint8Array | undefined;
+    getFreeNonce(nodeId: number): BytesView | undefined;
     // (undocumented)
-    getNonce(id: number | NonceKey): Uint8Array | undefined;
+    getNonce(id: number | NonceKey): BytesView | undefined;
     // (undocumented)
-    getNonceId(nonce: Uint8Array): number;
+    getNonceId(nonce: BytesView): number;
     // (undocumented)
     hasNonce(id: number | NonceKey): boolean;
     // (undocumented)
-    get networkKey(): Uint8Array;
-    set networkKey(v: Uint8Array);
+    get networkKey(): BytesView;
+    set networkKey(v: BytesView);
     // Warning: (ae-forgotten-export) The symbol "NonceKey" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "NonceEntry" needs to be exported by the entry point index.d.ts
     //
@@ -3258,9 +3292,9 @@ export class SecurityManager2 {
     createMulticastGroup(nodeIDs: number[], s2SecurityClass: S2SecurityClass): number;
     deleteNonce(receiver: number): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    generateNonce(receiver: number | undefined): Promise<Uint8Array>;
+    generateNonce(receiver: number | undefined): Promise<BytesView>;
     // (undocumented)
-    getInnerMPANState(groupId: number): Uint8Array | undefined;
+    getInnerMPANState(groupId: number): BytesView | undefined;
     // (undocumented)
     getKeysForNode(peerNodeID: number): NetworkKeys | TempNetworkKeys;
     // (undocumented)
@@ -3269,8 +3303,8 @@ export class SecurityManager2 {
     getMulticastGroup(group: number): Readonly<MulticastGroup> | undefined;
     // (undocumented)
     getMulticastKeyAndIV(groupId: number): Promise<{
-        key: Uint8Array;
-        iv: Uint8Array;
+        key: BytesView;
+        iv: BytesView;
     }>;
     getPeerMPAN(peerNodeId: number, groupId: number): MPANTableEntry | {
         type: MPANState.None;
@@ -3282,22 +3316,22 @@ export class SecurityManager2 {
     // (undocumented)
     hasKeysForSecurityClass(securityClass: SecurityClass): boolean;
     hasUsedSecurityClass(peerNodeID: number, securityClass: SecurityClass): boolean;
-    initializeSPAN(peerNodeId: number, securityClass: SecurityClass, senderEI: Uint8Array, receiverEI: Uint8Array): Promise<void>;
-    initializeTempSPAN(peerNodeId: number, senderEI: Uint8Array, receiverEI: Uint8Array): Promise<void>;
+    initializeSPAN(peerNodeId: number, securityClass: SecurityClass, senderEI: BytesView, receiverEI: BytesView): Promise<void>;
+    initializeTempSPAN(peerNodeId: number, senderEI: BytesView, receiverEI: BytesView): Promise<void>;
     isDuplicateSinglecast(peerNodeId: number, sequenceNumber: number): boolean;
     nextMulticastSequenceNumber(groupId: number): number;
-    nextNonce(peerNodeId: number, store?: boolean): Promise<Uint8Array>;
-    nextPeerMPAN(peerNodeId: number, groupId: number): Promise<Uint8Array>;
+    nextNonce(peerNodeId: number, store?: boolean): Promise<BytesView>;
+    nextPeerMPAN(peerNodeId: number, groupId: number): Promise<BytesView>;
     nextSequenceNumber(peerNodeId: number): number;
     resetOutOfSyncMPANs(peerNodeId: number): void;
-    setKey(securityClass: SecurityClass, key: Uint8Array): Promise<void>;
+    setKey(securityClass: SecurityClass, key: BytesView): Promise<void>;
     setSPANState(peerNodeID: number, state: SPANTableEntry | {
         type: SPANState.None;
     }): void;
     // (undocumented)
     storePeerMPAN(peerNodeId: number, groupId: number, mpanState: MPANTableEntry): void;
     // (undocumented)
-    storeRemoteEI(peerNodeId: number, remoteEI: Uint8Array): void;
+    storeRemoteEI(peerNodeId: number, remoteEI: BytesView): void;
     storeSequenceNumber(peerNodeId: number, sequenceNumber: number): number | undefined;
     readonly tempKeys: Map<number, TempNetworkKeys>;
     tryIncrementMPAN(groupId: number): void;
@@ -3309,7 +3343,7 @@ export class SecurityManager2 {
 // @public (undocumented)
 export interface SecurityManagerOptions {
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
     // (undocumented)
     nonceTimeout: number;
     // (undocumented)
@@ -3496,16 +3530,16 @@ export enum SPANState {
 // @public (undocumented)
 export type SPANTableEntry = {
     type: SPANState.RemoteEI;
-    receiverEI: Uint8Array;
+    receiverEI: BytesView;
 } | {
     type: SPANState.LocalEI;
-    receiverEI: Uint8Array;
+    receiverEI: BytesView;
 } | {
     type: SPANState.SPAN;
     securityClass: SecurityClass;
     rng: CtrDRBG;
     currentSPAN?: {
-        nonce: Uint8Array;
+        nonce: BytesView;
         expires: number;
     };
 };
@@ -3650,9 +3684,9 @@ export function tagify(tags: string[]): string;
 // @public (undocumented)
 export interface TempNetworkKeys {
     // (undocumented)
-    keyCCM: Uint8Array;
+    keyCCM: BytesView;
     // (undocumented)
-    personalizationString: Uint8Array;
+    personalizationString: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "Timeout" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3820,10 +3854,10 @@ export function tryParseParamNumber(str: string): {
 // Warning: (ae-missing-release-tag) "tryUnzipFirmwareFile" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function tryUnzipFirmwareFile(zipData: Uint8Array): {
+export function tryUnzipFirmwareFile(zipData: BytesView): {
     filename: string;
     format: FirmwareFileFormat;
-    rawData: Uint8Array;
+    rawData: BytesView;
 } | undefined;
 
 // Warning: (ae-missing-release-tag) "TXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4806,8 +4840,8 @@ export interface ZWaveLogInfo<TContext extends LogContext = LogContext> extends 
 // Warnings were encountered during analysis:
 //
 // src/qr/definitions.ts:63:3 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
-// src/security/Manager2.ts:64:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/security/Manager2.ts:64:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/security/Manager2.ts:65:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/security/Manager2.ts:65:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/util/misc.ts:21:4 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
