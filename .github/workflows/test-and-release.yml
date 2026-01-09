@@ -589,45 +589,13 @@ jobs:
         node-version: ${{ matrix.node-version }}
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Run a fresh build
-      run: yarn build
-
-    - name: Apply version to all packages
-      run: |
-        yarn workspaces foreach --all version "${{ inputs.version }}" --deferred
-        yarn version apply --all
-
-    - name: Publish packages to npm
-      id: publish
-      run: |
-        yarn workspaces foreach --all -vti --no-private npm publish --tolerate-republish --tag next
-
-    - name: Comment on PR (success)
-      if: success()
+    - name: Publish PR build to npm
       uses: actions/github-script@v8
+      env:
+        PR_NUMBER: ${{ inputs.pr }}
+        VERSION: ${{ inputs.version }}
       with:
         github-token: ${{ secrets.BOT_TOKEN }}
         script: |
-          await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: ${{ inputs.pr }},
-            body: `🎉 The packages have been published.
-          You can now install the test version with
-          \`\`\`
-          yarn add zwave-js@${{ inputs.version }}
-          \`\`\``
-          });
-
-    - name: Comment on PR (failure)
-      if: failure()
-      uses: actions/github-script@v8
-      with:
-        github-token: ${{ secrets.BOT_TOKEN }}
-        script: |
-          await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: ${{ inputs.pr }},
-            body: `😥 Unfortunately I could not publish the new packages. Check out the logs to see what went wrong.`
-          });
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          return bot.packPr({github, context});
