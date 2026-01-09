@@ -1466,6 +1466,7 @@ import {
 	UserCodeCCUsersNumberGet,
 	UserCodeCCUsersNumberReport,
 	UserCodeCCValues,
+	userCodeToLogString,
 } from "./UserCodeCC.js";
 export {
 	UserCodeCC,
@@ -1488,6 +1489,7 @@ export {
 	UserCodeCCUsersNumberGet,
 	UserCodeCCUsersNumberReport,
 	UserCodeCCValues,
+	userCodeToLogString,
 };
 export type {
 	VersionCCCapabilitiesReportOptions,

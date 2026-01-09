@@ -1,6 +1,7 @@
 import {
 	DoorLockCCValues,
 	DoorLockMode,
+	type GetUserPreferences,
 	LockCCValues,
 	type NotificationCCReport,
 	NotificationCCValues,
@@ -8,6 +9,7 @@ import {
 	UserCodeCC,
 	UserIDStatus,
 	getEffectiveCCVersion,
+	userCodeToLogString,
 } from "@zwave-js/cc";
 import {
 	getNotificationEnumBehavior,
@@ -30,6 +32,7 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import {
+	type BytesView,
 	type Timer,
 	isUint8Array,
 	setTimer,
@@ -50,7 +53,7 @@ export function getDefaultNotificationHandlerStore(): NotificationHandlerStore {
 
 /** Handles the receipt of a Notification Report */
 export function handleNotificationReport(
-	ctx: PersistValuesContext & LogNode,
+	ctx: PersistValuesContext & LogNode & GetUserPreferences,
 	node: ZWaveNode,
 	command: NotificationCCReport,
 	store: NotificationHandlerStore,
@@ -181,17 +184,72 @@ export function handleNotificationReport(
 			// This is an event
 			const endpoint = node.getEndpoint(command.endpointIndex)
 				?? node;
+
+			// Build the notification event args
+			const eventArgs: {
+				type: number;
+				event: number;
+				label: string;
+				eventLabel: string;
+				parameters?: NotificationCCReport["eventParameters"];
+				userCode?: string | BytesView;
+				userIdStatus?: UserIDStatus;
+			} = {
+				type: command.notificationType,
+				event: value,
+				label: notification.name,
+				eventLabel: valueConfig.label,
+				parameters: command.eventParameters,
+			};
+
+			// If the lookupUserIdInEvents preference is enabled and the event contains a userId,
+			// look up the user code and status
+			const prefs = ctx.getUserPreferences();
+			if (
+				prefs.lookupUserIdInEvents
+				&& command.eventParameters != null
+				&& typeof command.eventParameters === "object"
+				&& !isUint8Array(command.eventParameters)
+				&& "userId" in command.eventParameters
+				&& typeof command.eventParameters.userId === "number"
+			) {
+				const userId = command.eventParameters.userId;
+				const nodeEndpoint: EndpointId = {
+					nodeId: node.id,
+					index: command.endpointIndex,
+					virtual: false,
+				};
+
+				const userIdStatus = UserCodeCC.getUserIdStatusCached(
+					ctx,
+					nodeEndpoint,
+					userId,
+				);
+				if (userIdStatus != null) {
+					eventArgs.userIdStatus = userIdStatus;
+				}
+
+				const userCode = UserCodeCC.getUserCodeCached(
+					ctx,
+					nodeEndpoint,
+					userId,
+				);
+				if (userCode != null) {
+					eventArgs.userCode = userCode;
+					// Log a censored version of the user code
+					ctx.logNode(node.id, {
+						message:
+							`[handleNotificationReport] looked up user code for userId ${userId}: ${userCodeToLogString(userCode)}`,
+						level: "silly",
+					});
+				}
+			}
+
 			node.emit(
 				"notification",
 				endpoint,
 				CommandClasses.Notification,
-				{
-					type: command.notificationType,
-					event: value,
-					label: notification.name,
-					eventLabel: valueConfig.label,
-					parameters: command.eventParameters,
-				},
+				eventArgs,
 			);
 
 			// We may need to reset some linked states to idle

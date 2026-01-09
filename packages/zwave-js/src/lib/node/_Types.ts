@@ -7,6 +7,7 @@ import type {
 	MultilevelSwitchCommand,
 	Powerlevel,
 	PowerlevelTestStatus,
+	UserIDStatus,
 	Weekday,
 } from "@zwave-js/cc";
 import type { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
@@ -129,6 +130,16 @@ export interface ZWaveNotificationCallbackArgs_NotificationCC {
 	eventLabel: string;
 	/** Additional information related to the event */
 	parameters?: NotificationCCReport["eventParameters"];
+	/**
+	 * The user code belonging to the user ID in the event parameters, if available.
+	 * Only included when the `preferences.lookupUserIdInEvents` option is enabled.
+	 */
+	userCode?: string | BytesView;
+	/**
+	 * The status of the user ID in the event parameters, if available.
+	 * Only included when the `preferences.lookupUserIdInEvents` option is enabled.
+	 */
+	userIdStatus?: UserIDStatus;
 }
 
 /**

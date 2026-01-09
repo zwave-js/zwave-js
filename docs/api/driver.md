@@ -1118,6 +1118,18 @@ interface ZWaveOptions {
 		 * ```
 		 */
 		scales: Partial<Record<string | number, string | number>>;
+
+		/**
+		 * When enabled, notification events that include a `userId` (like `Keypad unlock operation`)
+		 * will be enhanced with additional `userCode` and `userIdStatus` fields containing the code
+		 * and status for that user ID.
+		 *
+		 * **WARNING:** Enabling this option may pose a security risk if the event data is logged or
+		 * transmitted without proper sanitization, as the user codes are sensitive information.
+		 *
+		 * Default: `false`
+		 */
+		lookupUserIdInEvents?: boolean;
 	};
 
 	/**
