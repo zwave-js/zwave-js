@@ -303,21 +303,10 @@
 		{
 			"#": "12",
 			"$if": "firmwareVersion >= 3.0",
-			"label": "Switch 1: Input Trigger",
-			"description": "Choose whether the input (switch) on Sw1 triggers R1 or just sends input reports for monitoring.",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Input trigger disabled",
-					"value": 0
-				},
-				{
-					"label": "Input trigger enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Relay 1 with S1 Input",
+			"description": "If disabled, only a Z-Wave report will be sent",
+			"defaultValue": 1
 		},
 		{
 			"#": "13",
@@ -335,21 +324,10 @@
 		{
 			"#": "13",
 			"$if": "firmwareVersion >= 3.0",
-			"label": "Switch 2: Input Trigger",
-			"description": "Choose whether the input (switch) on Sw2 triggers R2 or just sends input reports for monitoring.",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Input trigger disabled",
-					"value": 0
-				},
-				{
-					"label": "Input trigger enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Relay 2 with S2 Input",
+			"description": "If disabled, only a Z-Wave report will be sent",
+			"defaultValue": 1
 		},
 		{
 			"#": "14",
@@ -367,21 +345,10 @@
 		{
 			"#": "14",
 			"$if": "firmwareVersion >= 3.0",
-			"label": "Switch 3: Input Trigger",
-			"description": "Choose whether the input (switch) on Sw3 triggers R3 or just sends input reports for monitoring.",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Input trigger disabled",
-					"value": 0
-				},
-				{
-					"label": "Input trigger enabled",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Relay 3 with S3 Input",
+			"description": "If disabled, only a Z-Wave report will be sent",
+			"defaultValue": 1
 		},
 		{
 			"#": "21",
