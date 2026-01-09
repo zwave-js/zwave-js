@@ -124,6 +124,16 @@
 			"$import": "templates/zooz_template.json#led_confirm_config_change"
 		},
 		{
+			"#": "20",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#scene_control_multi_tap"
+		},
+		{
+			"#": "21",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_color_opposite"
+		},
+		{
 			"#": "16",
 			"$import": "templates/zooz_template.json#association_reports_binary"
 		},
