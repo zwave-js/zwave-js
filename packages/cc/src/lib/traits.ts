@@ -85,7 +85,7 @@ export interface UserPreferences {
 	 *
 	 * Default: `false`
 	 */
-	lookupUserIdInEvents?: boolean;
+	lookupUserIdInNotificationEvents?: boolean;
 }
 
 /** Allows reading user preferences */

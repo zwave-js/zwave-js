@@ -56,8 +56,8 @@ import {
 	isMultiEncapsulatingCommandClass,
 	isTransportServiceEncapsulation,
 	registerCCs,
-	userCodeToLogString,
 } from "@zwave-js/cc";
+import { userCodeToLogString } from "@zwave-js/cc/UserCodeCC";
 import { ConfigManager, type DeviceConfig } from "@zwave-js/config";
 import {
 	type CCId,
@@ -361,7 +361,7 @@ const defaultOptions: ZWaveOptions = {
 	},
 	preferences: {
 		scales: {},
-		lookupUserIdInEvents: false,
+		lookupUserIdInNotificationEvents: false,
 	},
 };
 
@@ -3210,7 +3210,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 									? userCodeToLogString(value)
 									: String(value);
 						} else {
-							msg[key] = value;
+							msg[key] = isUint8Array(value)
+								? buffer2hex(value)
+								: value;
 						}
 					}
 				}

@@ -1127,7 +1127,7 @@ interface ZWaveOptions {
 		 *
 		 * Default: `false`
 		 */
-		lookupUserIdInEvents?: boolean;
+		lookupUserIdInNotificationEvents?: boolean;
 	};
 
 	/**

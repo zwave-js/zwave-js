@@ -196,11 +196,11 @@ export function handleNotificationReport(
 				parameters: command.eventParameters,
 			};
 
-			// If the lookupUserIdInEvents preference is enabled and the event contains a userId,
+			// If the lookupUserIdInNotificationEvents preference is enabled and the event contains a userId,
 			// look up the user code and status and add them to the parameters
 			const prefs = ctx.getUserPreferences();
 			if (
-				prefs.lookupUserIdInEvents === true
+				prefs.lookupUserIdInNotificationEvents
 				&& command.eventParameters != null
 				&& typeof command.eventParameters === "object"
 				&& !isUint8Array(command.eventParameters)
