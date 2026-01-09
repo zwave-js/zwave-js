@@ -66,7 +66,7 @@ export class ConfigManager {
 	private async getLogger(): Promise<ConfigLogger> {
 		if (!this._logContainer) {
 			this._logContainer =
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// oxlint-disable-next-line typescript/ban-ts-comment
 				// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
 				(await import("#default_bindings/log")).log({
 					enabled: false,

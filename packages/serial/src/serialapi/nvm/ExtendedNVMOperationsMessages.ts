@@ -51,7 +51,7 @@ export class ExtendedNVMOperationsRequest extends Message {
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.command]),
+			[this.command],
 			this.payload,
 		]);
 

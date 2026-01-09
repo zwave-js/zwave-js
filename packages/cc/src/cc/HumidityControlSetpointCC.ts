@@ -547,7 +547,7 @@ export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.setpointType & 0b1111]),
+			[this.setpointType & 0b1111],
 			encodeFloatWithScale(this.value, this.scale),
 		]);
 		return super.serialize(ctx);

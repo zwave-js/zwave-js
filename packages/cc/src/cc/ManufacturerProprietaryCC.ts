@@ -204,10 +204,10 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		(this.ccCommand as unknown as number) = (manufacturerId >>> 8) & 0xff;
 		// The 2nd byte is in the payload
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				// 2nd byte of manufacturerId
 				manufacturerId & 0xff,
-			]),
+			],
 			this.payload,
 		]);
 		return super.serialize(ctx);

@@ -405,7 +405,6 @@ interface ControllerEventCallbacks
 
 export type ControllerEvents = Extract<keyof ControllerEventCallbacks, string>;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ZWaveController extends ControllerStatisticsHost {}
 
 @Mixin([ControllerStatisticsHost])
@@ -2215,7 +2214,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();
@@ -2323,7 +2321,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();
@@ -3272,7 +3269,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();
@@ -3947,7 +3943,6 @@ export class ZWaveController
 				newNode.updateNodeInfo(requestedNodeInfo);
 
 				// TODO: Check if this stuff works for a normal replace too
-				// eslint-disable-next-line @typescript-eslint/dot-notation
 				newNode["deviceClass"] = new DeviceClass(
 					requestedNodeInfo.basicDeviceClass,
 					requestedNodeInfo.genericDeviceClass,
@@ -6790,7 +6785,6 @@ export class ZWaveController
 					}
 				}
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			cleanup: async () => {
 				// When SmartStart failed, this is called from inside the inclusion handler
 				// so we do not want to set the inclusion state back to idle. In all other
@@ -6858,7 +6852,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();

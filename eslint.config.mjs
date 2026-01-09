@@ -61,6 +61,13 @@ export default tseslint.config(
 		},
 		languageOptions: tsparser,
 	},
+	// Make sure we're not misusing Bytes.from
+	{
+		files: ["packages/**/*.ts"],
+		rules: {
+			"@zwave-js/no-unnecessary-bytes-from": "error",
+		},
+	},
 	// Disable unnecessarily strict rules for test files
 	{
 		files: ["**/*.test.ts"],

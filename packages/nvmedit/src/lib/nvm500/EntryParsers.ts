@@ -117,9 +117,9 @@ export function encodeNVM500NodeInfo(nodeInfo: NVM500NodeInfo): Bytes {
 			...nodeInfo,
 			hasSpecificDeviceClass: !!nodeInfo.specificDeviceClass,
 		}),
-		Bytes.from([
+		[
 			nodeInfo.genericDeviceClass,
 			nodeInfo.specificDeviceClass ?? 0,
-		]),
+		],
 	]);
 }

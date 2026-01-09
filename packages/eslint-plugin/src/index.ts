@@ -11,6 +11,7 @@ import { noForbiddenImports } from "./rules/no-forbidden-imports.js";
 import { noInternalCCTypes } from "./rules/no-internal-cc-types.js";
 import { noMisspelledNames } from "./rules/no-misspelled-names.js";
 import { noSurroundingWhitespace } from "./rules/no-surrounding-whitespace.js";
+import { noUnnecessaryBytesFrom } from "./rules/no-unnecessary-bytes-from.js";
 import { noUnnecessaryMinMaxValue } from "./rules/no-unnecessary-min-max-value.js";
 import { noUselessDescription } from "./rules/no-useless-description.js";
 import { noValueInOptionLabel } from "./rules/no-value-in-option-label.js";
@@ -32,6 +33,7 @@ export default {
 		"no-internal-cc-types": noInternalCCTypes,
 		"no-misspelled-names": noMisspelledNames,
 		"no-surrounding-whitespace": noSurroundingWhitespace,
+		"no-unnecessary-bytes-from": noUnnecessaryBytesFrom,
 		"no-unnecessary-min-max-value": noUnnecessaryMinMaxValue,
 		"no-useless-description": noUselessDescription,
 		"no-value-in-option-label": noValueInOptionLabel,

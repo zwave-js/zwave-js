@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* oxlint-disable typescript/no-unused-vars */
 import type { BytesView } from "@zwave-js/shared";
 import type {
 	FSStats,

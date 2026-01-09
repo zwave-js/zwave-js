@@ -697,7 +697,7 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 		const numBitmaskBytes = bitmask.length & 0b1111;
 
 		this.payload = Bytes.concat([
-			Bytes.from([numBitmaskBytes]),
+			[numBitmaskBytes],
 			bitmask.subarray(0, numBitmaskBytes),
 		]);
 

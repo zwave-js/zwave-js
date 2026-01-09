@@ -75,11 +75,11 @@ export class Bootloader {
 		data: BytesView,
 	): Promise<void> {
 		const command = Bytes.concat([
-			Bytes.from([
+			[
 				XModemMessageHeaders.SOF,
 				fragmentNumber & 0xff,
 				0xff - (fragmentNumber & 0xff),
-			]),
+			],
 			data,
 			new Bytes(2),
 		]);

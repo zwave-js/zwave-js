@@ -98,7 +98,7 @@ export class ApplicationUpdateRequest extends Message {
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.updateType]),
+			[this.updateType],
 			this.payload,
 		]);
 		return super.serialize(ctx);

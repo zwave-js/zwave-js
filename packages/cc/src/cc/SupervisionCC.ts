@@ -337,18 +337,18 @@ export class SupervisionCCReport extends SupervisionCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				(this.moreUpdatesFollow ? 0b1_0_000000 : 0)
 				| (this.requestWakeUpOnDemand ? 0b0_1_000000 : 0)
 				| (this.sessionId & 0b111111),
 				this.status,
-			]),
+			],
 		]);
 
 		if (this.duration) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([this.duration.serializeReport()]),
+				[this.duration.serializeReport()],
 			]);
 		}
 		return super.serialize(ctx);
@@ -439,11 +439,11 @@ export class SupervisionCCGet extends SupervisionCC {
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encapCC = await this.encapsulated.serialize(ctx);
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				(this.requestStatusUpdates ? 0b10_000000 : 0)
 				| (this.sessionId & 0b111111),
 				encapCC.length,
-			]),
+			],
 			encapCC,
 		]);
 		return super.serialize(ctx);

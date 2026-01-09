@@ -2060,12 +2060,12 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Bytes.from([
+				[
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
 					this.durationMinute!,
-				]),
+				],
 			]);
 		} else {
 			// Not sure if this is correct
@@ -2212,12 +2212,12 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Bytes.from([
+				[
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
 					this.durationMinute!,
-				]),
+				],
 			]);
 		} else {
 			// Not sure if this is correct, but at least we won't parse it incorrectly ourselves when setting everything to 0

@@ -55,7 +55,7 @@ export class GetControllerVersionResponse extends Message {
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			Bytes.from(`${this.libraryVersion}\0`, "ascii"),
-			Bytes.from([this.controllerType]),
+			[this.controllerType],
 		]);
 
 		return super.serialize(ctx);

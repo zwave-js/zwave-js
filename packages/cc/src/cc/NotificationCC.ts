@@ -1488,7 +1488,7 @@ export class NotificationCCReport extends NotificationCC {
 			if (this.sequenceNumber != undefined) {
 				this.payload = Bytes.concat([
 					this.payload,
-					Bytes.from([this.sequenceNumber]),
+					[this.sequenceNumber],
 				]);
 			}
 		} else {
@@ -1652,9 +1652,9 @@ export class NotificationCCSupportedReport extends NotificationCC {
 			0,
 		);
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				(this.supportsV1Alarm ? 0b1000_0000 : 0) | bitMask.length,
-			]),
+			],
 			bitMask,
 		]);
 		return super.serialize(ctx);

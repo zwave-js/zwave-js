@@ -287,7 +287,7 @@ function importRawECDHPublicKey(
 	publicKey: BytesView,
 ): crypto.KeyObject {
 	return crypto.createPublicKey({
-		// eslint-disable-next-line no-restricted-globals -- crypto API requires Buffer instances
+		// oxlint-disable-next-line eslint/no-restricted-globals -- crypto API requires Buffer instances
 		key: Buffer.from(encodeX25519KeyDERSPKI(publicKey).buffer),
 		format: "der",
 		type: "spki",
@@ -311,7 +311,7 @@ function importRawECDHPrivateKey(
 	privateKey: BytesView,
 ): crypto.KeyObject {
 	return crypto.createPrivateKey({
-		// eslint-disable-next-line no-restricted-globals -- crypto API requires Buffer instances
+		// oxlint-disable-next-line eslint/no-restricted-globals -- crypto API requires Buffer instances
 		key: Buffer.from(encodeX25519KeyDERPKCS8(privateKey).buffer),
 		format: "der",
 		type: "pkcs8",

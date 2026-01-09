@@ -1471,11 +1471,11 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 			? encodeBitMask(this.supportedProperties, undefined, 0)
 			: new Bytes();
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.indicatorId,
 				this.nextIndicatorId,
 				bitmask.length,
-			]),
+			],
 			bitmask,
 		]);
 
@@ -1611,7 +1611,7 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const description = Bytes.from(this.description, "utf8");
 		this.payload = Bytes.concat([
-			Bytes.from([this.indicatorId, description.length]),
+			[this.indicatorId, description.length],
 			description,
 		]);
 		return super.serialize(ctx);

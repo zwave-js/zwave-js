@@ -18,10 +18,10 @@ import { CCValues } from "../cc/_CCValues.generated.js";
 function defineCCValues<T extends CommandClasses>(
 	commandClass: T,
 	_: Record<string, CCValueBlueprint | DynamicCCValueBlueprint<any[]>>,
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// oxlint-disable-next-line typescript/ban-ts-comment
 	// @ts-ignore I know what I'm doing!
 ): typeof import("../cc/_CCValues.generated.js").CCValues[T] {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// oxlint-disable-next-line typescript/ban-ts-comment
 	// @ts-ignore I know what I'm doing!
 	return CCValues[commandClass];
 }

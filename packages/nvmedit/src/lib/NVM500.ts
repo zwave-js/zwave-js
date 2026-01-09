@@ -523,7 +523,6 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 		await this.writeEntry(entry, data);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	public async delete(_property: NVMEntryName): Promise<void> {
 		throw new Error(
 			"Deleting entries is not supported for 500 series NVMs",

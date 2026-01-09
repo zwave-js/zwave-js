@@ -1893,11 +1893,11 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		);
 
 		const unencryptedPayload = Bytes.concat([
-			Bytes.from([
+			[
 				this.sequenceNumber,
 				(encryptedExtensions.length > 0 ? 0b10 : 0)
 				| (unencryptedExtensions.length > 0 ? 1 : 0),
-			]),
+			],
 			...unencryptedExtensions.map((e, index) =>
 				e.serialize(index < unencryptedExtensions.length - 1)
 			),
@@ -2304,11 +2304,11 @@ export class Security2CCKEXReport extends Security2CC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this._reserved
 				+ (this.requestCSA ? 0b10 : 0)
 				+ (this.echo ? 0b1 : 0),
-			]),
+			],
 			// The bit mask starts at 0, but bit 0 is not used
 			encodeBitMask(this.supportedKEXSchemes, 7, 0),
 			encodeBitMask(
@@ -2443,11 +2443,11 @@ export class Security2CCKEXSet extends Security2CC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this._reserved
 				+ (this.permitCSA ? 0b10 : 0)
 				+ (this.echo ? 0b1 : 0),
-			]),
+			],
 			// The bit mask starts at 0, but bit 0 is not used
 			encodeBitMask([this.selectedKEXScheme], 7, 0),
 			encodeBitMask(
@@ -2561,7 +2561,7 @@ export class Security2CCPublicKeyReport extends Security2CC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.includingNode ? 1 : 0]),
+			[this.includingNode ? 1 : 0],
 			this.publicKey,
 		]);
 		return super.serialize(ctx);

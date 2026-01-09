@@ -512,7 +512,7 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.groupId, this.name.length]),
+			[this.groupId, this.name.length],
 			Bytes.from(this.name, "utf8"),
 		]);
 		return super.serialize(ctx);

@@ -864,10 +864,10 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 		if (this.targetValue != undefined && this.duration != undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([
+				[
 					this.targetValue ?? 0xfe,
 					(this.duration ?? Duration.default()).serializeReport(),
-				]),
+				],
 			]);
 		}
 		return super.serialize(ctx);

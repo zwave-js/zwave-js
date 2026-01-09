@@ -1012,10 +1012,10 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				(this.endpointIndex & 0b01111111)
 				| (this.isDynamic ? 0b10000000 : 0),
-			]),
+			],
 			encodeApplicationNodeInformation(this),
 		]);
 		return super.serialize(ctx);
@@ -1147,11 +1147,11 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.reportsToFollow,
 				this.genericClass,
 				this.specificClass,
-			]),
+			],
 			Bytes.from(this.foundEndpoints.map((e) => e & 0b01111111)),
 		]);
 		return super.serialize(ctx);
@@ -1491,7 +1491,7 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 			// The destination is a bit mask
 			: encodeBitMask(this.destination, 7)[0] | 0b1000_0000;
 		this.payload = Bytes.concat([
-			Bytes.from([this.endpointIndex & 0b0111_1111, destination]),
+			[this.endpointIndex & 0b0111_1111, destination],
 			await this.encapsulated.serialize(ctx),
 		]);
 		return super.serialize(ctx);
@@ -1704,7 +1704,7 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.endpointIndex]),
+			[this.endpointIndex],
 			await this.encapsulated.serialize(ctx),
 		]);
 		return super.serialize(ctx);

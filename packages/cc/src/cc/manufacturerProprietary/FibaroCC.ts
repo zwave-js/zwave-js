@@ -293,7 +293,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 			);
 		}
 		this.payload = Bytes.concat([
-			Bytes.from([this.fibaroCCId, this.fibaroCCCommand]),
+			[this.fibaroCCId, this.fibaroCCCommand],
 			this.payload,
 		]);
 		return super.serialize(ctx);

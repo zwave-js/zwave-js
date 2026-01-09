@@ -200,7 +200,6 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 
 		if (isTransmitReport(result) && !result.isOK()) {
 			// Throw the message in order to short-circuit all possible generators
-			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			throw result;
 		}
 

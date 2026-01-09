@@ -155,7 +155,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 		if (ext) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([this.headerExtension!.length]),
+				[this.headerExtension!.length],
 				this.headerExtension!,
 			]);
 		}
@@ -372,7 +372,7 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 		if (ext) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([this.headerExtension!.length]),
+				[this.headerExtension!.length],
 				this.headerExtension!,
 			]);
 		}

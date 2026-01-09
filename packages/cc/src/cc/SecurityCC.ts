@@ -67,12 +67,12 @@ function getAuthenticationData(
 	return Bytes.concat([
 		senderNonce,
 		receiverNonce,
-		Bytes.from([
+		[
 			ccCommand,
 			sendingNodeId,
 			receivingNodeId,
 			encryptedPayload.length,
-		]),
+		],
 		encryptedPayload,
 	]);
 }
@@ -807,7 +807,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 
 		const serializedCC = await this.encapsulated.serialize(ctx);
 		const plaintext = Bytes.concat([
-			Bytes.from([0]), // TODO: frame control
+			[0], // TODO: frame control
 			serializedCC,
 		]);
 		// Encrypt the payload
@@ -838,7 +838,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		this.payload = Bytes.concat([
 			senderNonce,
 			ciphertext,
-			Bytes.from([this.nonceId!]),
+			[this.nonceId!],
 			authCode,
 		]);
 		return super.serialize(ctx);
@@ -1101,7 +1101,7 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.reportsToFollow]),
+			[this.reportsToFollow],
 			encodeCCList(this.supportedCCs, this.controlledCCs),
 		]);
 		return super.serialize(ctx);

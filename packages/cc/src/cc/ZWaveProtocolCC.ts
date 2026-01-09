@@ -243,9 +243,9 @@ export class ZWaveProtocolCCFindNodesInRange extends ZWaveProtocolCC {
 		const nodesBitmask = encodeBitMask(this.candidateNodeIds, MAX_NODES);
 		const speedAndLength = 0b1000_0000 | nodesBitmask.length;
 		this.payload = Bytes.concat([
-			Bytes.from([speedAndLength]),
+			[speedAndLength],
 			nodesBitmask,
-			Bytes.from([this.wakeUpTime, this.dataRate]),
+			[this.wakeUpTime, this.dataRate],
 		]);
 		return super.serialize(ctx);
 	}
@@ -299,7 +299,7 @@ export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.neighborNodeIds, MAX_NODES);
 		this.payload = Bytes.concat([
-			Bytes.from([nodesBitmask.length]),
+			[nodesBitmask.length],
 			nodesBitmask,
 			this.wakeUpTime != undefined
 				? Bytes.from([this.wakeUpTime])
@@ -475,7 +475,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.sequenceNumber, this.sourceNodeId]),
+			[this.sequenceNumber, this.sourceNodeId],
 			encodeNodeProtocolInfoAndDeviceClass(this),
 		]);
 		return super.serialize(ctx);
@@ -529,11 +529,11 @@ export class ZWaveProtocolCCTransferRangeInformation extends ZWaveProtocolCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.neighborNodeIds, MAX_NODES);
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.sequenceNumber,
 				this.testedNodeId,
 				nodesBitmask.length,
-			]),
+			],
 			nodesBitmask,
 		]);
 		return super.serialize(ctx);
@@ -714,7 +714,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.newNodeId]),
+			[this.newNodeId],
 			encodeNodeInformationFrame(this),
 		]);
 		return super.serialize(ctx);
@@ -761,7 +761,7 @@ export class ZWaveProtocolCCNewRangeRegistered extends ZWaveProtocolCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.neighborNodeIds, MAX_NODES);
 		this.payload = Bytes.concat([
-			Bytes.from([this.testedNodeId, nodesBitmask.length]),
+			[this.testedNodeId, nodesBitmask.length],
 			nodesBitmask,
 		]);
 		return super.serialize(ctx);

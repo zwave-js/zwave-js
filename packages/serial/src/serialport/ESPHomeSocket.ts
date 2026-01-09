@@ -159,7 +159,7 @@ export function createESPHomeFactory(
 				new Bytes(0),
 			);
 			await sendNoiseFrame(
-				Bytes.concat([Bytes.from([0x00]), handshakeMsg1]),
+				Bytes.concat([[0x00], handshakeMsg1]),
 			);
 
 			// Wait for handshake message 2

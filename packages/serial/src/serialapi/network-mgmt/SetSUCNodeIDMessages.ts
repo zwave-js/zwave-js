@@ -90,12 +90,12 @@ export class SetSUCNodeIdRequest extends SetSUCNodeIdRequestBase {
 		const nodeId = encodeNodeID(this.sucNodeId, ctx.nodeIdType);
 		this.payload = Bytes.concat([
 			nodeId,
-			Bytes.from([
+			[
 				this.enableSUC ? 0x01 : 0x00,
 				this.transmitOptions,
 				this.enableSIS ? 0x01 : 0x00,
 				this.callbackId,
-			]),
+			],
 		]);
 
 		return super.serialize(ctx);

@@ -169,7 +169,7 @@ export class CCRaw {
 			// Transport Service only uses the higher 5 bits for the command
 			// and re-uses the lower 3 bits of the ccCommand as payload
 			payload = Bytes.concat([
-				Bytes.from([ccCommand & 0b111]),
+				[ccCommand & 0b111],
 				payload,
 			]);
 			ccCommand = ccCommand & 0b11111_000;
@@ -177,7 +177,7 @@ export class CCRaw {
 			// ManufacturerProprietaryCC has no CC command, so the first
 			// payload byte is stored in ccCommand.
 			payload = Bytes.concat([
-				Bytes.from([ccCommand]),
+				[ccCommand],
 				payload,
 			]);
 			ccCommand = undefined;

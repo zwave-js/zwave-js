@@ -183,7 +183,7 @@ export class ESPHomeMessage {
 	 */
 	public serialize(): Bytes {
 		return Bytes.concat([
-			Bytes.from([0x00]), // Indicator byte
+			[0x00], // Indicator byte
 			encodeVarInt(this.payload.length),
 			encodeVarInt(this.messageType),
 			this.payload,

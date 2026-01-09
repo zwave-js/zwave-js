@@ -744,7 +744,7 @@ export class MultilevelSensorCCReport extends MultilevelSensorCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.type]),
+			[this.type],
 			encodeFloatWithScale(this.value, this.scale),
 		]);
 		return super.serialize(ctx);
@@ -957,7 +957,7 @@ export class MultilevelSensorCCSupportedScaleReport extends MultilevelSensorCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.sensorType]),
+			[this.sensorType],
 			encodeBitMask(this.supportedScales, 4, 0),
 		]);
 		return super.serialize(ctx);
