@@ -280,7 +280,7 @@
 		},
 		{
 			"#": "12",
-			"$if": "firmwareVersion >= 1.2",
+			"$if": "firmwareVersion >= 1.2 && firmwareVersion < 3.0",
 			"label": "Switch 1: Manual Control",
 			"valueSize": 1,
 			"defaultValue": 1,
@@ -301,6 +301,25 @@
 			]
 		},
 		{
+			"#": "12",
+			"$if": "firmwareVersion >= 3.0",
+			"label": "Switch 1: Input Trigger",
+			"description": "Choose whether the input (switch) on Sw1 triggers R1 or just sends input reports for monitoring.",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Input trigger disabled",
+					"value": 0
+				},
+				{
+					"label": "Input trigger enabled",
+					"value": 1
+				}
+			]
+		},
+		{
 			"#": "13",
 			"$if": "firmwareVersion < 1.2",
 			"$import": "~/templates/master_template.json#base_enable_disable",
@@ -309,9 +328,28 @@
 		},
 		{
 			"#": "13",
-			"$if": "firmwareVersion >= 1.2",
+			"$if": "firmwareVersion >= 1.2 && firmwareVersion < 3.0",
 			"$import": "templates/zooz_template.json#zen16_manual_control",
 			"label": "Switch 2: Manual Control"
+		},
+		{
+			"#": "13",
+			"$if": "firmwareVersion >= 3.0",
+			"label": "Switch 2: Input Trigger",
+			"description": "Choose whether the input (switch) on Sw2 triggers R2 or just sends input reports for monitoring.",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Input trigger disabled",
+					"value": 0
+				},
+				{
+					"label": "Input trigger enabled",
+					"value": 1
+				}
+			]
 		},
 		{
 			"#": "14",
@@ -322,9 +360,28 @@
 		},
 		{
 			"#": "14",
-			"$if": "firmwareVersion >= 1.2",
+			"$if": "firmwareVersion >= 1.2 && firmwareVersion < 3.0",
 			"$import": "templates/zooz_template.json#zen16_manual_control",
 			"label": "Switch 3: Manual Control"
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion >= 3.0",
+			"label": "Switch 3: Input Trigger",
+			"description": "Choose whether the input (switch) on Sw3 triggers R3 or just sends input reports for monitoring.",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Input trigger disabled",
+					"value": 0
+				},
+				{
+					"label": "Input trigger enabled",
+					"value": 1
+				}
+			]
 		},
 		{
 			"#": "21",
