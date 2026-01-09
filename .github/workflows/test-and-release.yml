@@ -574,7 +574,13 @@ jobs:
         node-version: [22] # This should be LTS
 
     steps:
-    - name: Checkout code
+    # Checkout master branch first to get trusted bot scripts
+    - name: Checkout master branch (trusted)
+      uses: actions/checkout@v6
+      with:
+        path: trusted
+
+    - name: Checkout PR code
       uses: actions/checkout@v6
       with:
         fetch-depth: 0
@@ -597,5 +603,6 @@ jobs:
       with:
         github-token: ${{ secrets.BOT_TOKEN }}
         script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          // Use trusted scripts from master, not from the PR
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/trusted/.github/bot-scripts/index.cjs`);
           return bot.packPr({github, context});
