@@ -540,7 +540,7 @@ interface FileSystem {
 	ensureDir(path: string): Promise<void>;
 	writeFile(
 		file: string,
-		data: string | Uint8Array,
+		data: string | BytesView,
 		options?:
 			| { encoding: BufferEncoding }
 			| BufferEncoding,
@@ -939,6 +939,19 @@ interface ZWaveOptions {
 		 * Default: `false` (automatic interviews enabled)
 		 */
 		disableOnNodeAdded?: boolean;
+
+		/**
+		 * Automatically apply recommended parameter values from device configuration files during node interview.
+		 *
+		 * When enabled, Z-Wave JS will check if any parameters have recommended values defined in the device config
+		 * and automatically set them only if the current value equals the default value AND the current value differs
+		 * from the recommended value. This ensures that user-modified parameters are not overwritten.
+		 *
+		 * This feature is opt-in to avoid unexpected parameter changes.
+		 *
+		 * Default: `false`
+		 */
+		applyRecommendedConfigParamValues?: boolean;
 	};
 
 	/** Host abstractions allowing Z-Wave JS to run on different platforms */
@@ -1003,18 +1016,18 @@ interface ZWaveOptions {
 	 * Specify the security keys to use for encryption (Z-Wave Classic). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeys?: {
-		S2_AccessControl?: Uint8Array;
-		S2_Authenticated?: Uint8Array;
-		S2_Unauthenticated?: Uint8Array;
-		S0_Legacy?: Uint8Array;
+		S2_AccessControl?: BytesView;
+		S2_Authenticated?: BytesView;
+		S2_Unauthenticated?: BytesView;
+		S0_Legacy?: BytesView;
 	};
 
 	/**
 	 * Specify the security keys to use for encryption (Z-Wave Long Range). Each one must be a Buffer of exactly 16 bytes.
 	 */
 	securityKeysLongRange?: {
-		S2_AccessControl?: Uint8Array;
-		S2_Authenticated?: Uint8Array;
+		S2_AccessControl?: BytesView;
+		S2_Authenticated?: BytesView;
 	};
 
 	/**
