@@ -1,6 +1,7 @@
 import {
 	DoorLockCCValues,
 	DoorLockMode,
+	type GetUserPreferences,
 	LockCCValues,
 	type NotificationCCReport,
 	NotificationCCValues,
@@ -30,12 +31,16 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import {
+	type BytesView,
 	type Timer,
 	isUint8Array,
 	setTimer,
 	stringify,
 } from "@zwave-js/shared";
 import type { ZWaveNode } from "../Node.js";
+import type {
+	ZWaveNotificationCallbackArgs_NotificationCC,
+} from "../_Types.js";
 import type { NodeValues } from "../mixins/40_Values.js";
 
 export interface NotificationHandlerStore {
@@ -50,7 +55,7 @@ export function getDefaultNotificationHandlerStore(): NotificationHandlerStore {
 
 /** Handles the receipt of a Notification Report */
 export function handleNotificationReport(
-	ctx: PersistValuesContext & LogNode,
+	ctx: PersistValuesContext & LogNode & GetUserPreferences,
 	node: ZWaveNode,
 	command: NotificationCCReport,
 	store: NotificationHandlerStore,
@@ -181,17 +186,68 @@ export function handleNotificationReport(
 			// This is an event
 			const endpoint = node.getEndpoint(command.endpointIndex)
 				?? node;
+
+			// Build the notification event args
+			const eventArgs: ZWaveNotificationCallbackArgs_NotificationCC = {
+				type: command.notificationType,
+				event: value,
+				label: notification.name,
+				eventLabel: valueConfig.label,
+				parameters: command.eventParameters,
+			};
+
+			// If the lookupUserIdInNotificationEvents preference is enabled and the event contains a userId,
+			// look up the user code and status and add them to the parameters
+			const prefs = ctx.getUserPreferences();
+			if (
+				prefs.lookupUserIdInNotificationEvents
+				&& command.eventParameters != null
+				&& typeof command.eventParameters === "object"
+				&& !isUint8Array(command.eventParameters)
+				&& "userId" in command.eventParameters
+				&& typeof command.eventParameters.userId === "number"
+			) {
+				const userId = command.eventParameters.userId;
+				const nodeEndpoint: EndpointId = {
+					nodeId: node.id,
+					index: command.endpointIndex,
+					virtual: false,
+				};
+
+				// Create a new parameters object with the additional fields
+				const enhancedParameters: Record<
+					string,
+					number | string | BytesView
+				> = {
+					...command.eventParameters,
+				};
+
+				const userIdStatus = UserCodeCC.getUserIdStatusCached(
+					ctx,
+					nodeEndpoint,
+					userId,
+				);
+				if (userIdStatus != null) {
+					enhancedParameters.userIdStatus = userIdStatus;
+				}
+
+				const userCode = UserCodeCC.getUserCodeCached(
+					ctx,
+					nodeEndpoint,
+					userId,
+				);
+				if (userCode != null) {
+					enhancedParameters.userCode = userCode;
+				}
+
+				eventArgs.parameters = enhancedParameters;
+			}
+
 			node.emit(
 				"notification",
 				endpoint,
 				CommandClasses.Notification,
-				{
-					type: command.notificationType,
-					event: value,
-					label: notification.name,
-					eventLabel: valueConfig.label,
-					parameters: command.eventParameters,
-				},
+				eventArgs,
 			);
 
 			// We may need to reset some linked states to idle

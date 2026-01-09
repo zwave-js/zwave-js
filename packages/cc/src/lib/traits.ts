@@ -76,6 +76,16 @@ export interface UserPreferences {
 	 * ```
 	 */
 	scales: Partial<Record<string | number, string | number>>;
+
+	/**
+	 * When enabled, notification events that include a user ID (like `Keypad unlock operation`)
+	 * will be enriched with the corresponding user code status and user code (if available).
+	 *
+	 * **WARNING:** User codes are sensitive information. Take care not to log or expose them unintentionally.
+	 *
+	 * Default: `false`
+	 */
+	lookupUserIdInNotificationEvents?: boolean;
 }
 
 /** Allows reading user preferences */

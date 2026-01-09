@@ -57,6 +57,7 @@ import {
 	isTransportServiceEncapsulation,
 	registerCCs,
 } from "@zwave-js/cc";
+import { userCodeToLogString } from "@zwave-js/cc/UserCodeCC";
 import { ConfigManager, type DeviceConfig } from "@zwave-js/config";
 import {
 	type CCId,
@@ -360,6 +361,7 @@ const defaultOptions: ZWaveOptions = {
 	},
 	preferences: {
 		scales: {},
+		lookupUserIdInNotificationEvents: false,
 	},
 };
 
@@ -3197,7 +3199,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				} else if (ccArgs.parameters instanceof Duration) {
 					msg.duration = ccArgs.parameters.toString();
 				} else if (isObject(ccArgs.parameters)) {
-					Object.assign(msg, ccArgs.parameters);
+					// Copy parameters but censor the userCode field if present
+					for (
+						const [key, value] of Object.entries(ccArgs.parameters)
+					) {
+						if (key === "userCode") {
+							// Censor the user code for logging
+							msg[key] =
+								typeof value === "string" || isUint8Array(value)
+									? userCodeToLogString(value)
+									: String(value);
+						} else {
+							msg[key] = isUint8Array(value)
+								? buffer2hex(value)
+								: value;
+						}
+					}
 				}
 			}
 			prefix = "[Notification]";
