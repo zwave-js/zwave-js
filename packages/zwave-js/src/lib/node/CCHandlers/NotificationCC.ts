@@ -9,7 +9,6 @@ import {
 	UserCodeCC,
 	UserIDStatus,
 	getEffectiveCCVersion,
-	userCodeToLogString,
 } from "@zwave-js/cc";
 import {
 	getNotificationEnumBehavior,
@@ -32,7 +31,6 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import {
-	type BytesView,
 	type Timer,
 	isUint8Array,
 	setTimer,
@@ -192,8 +190,6 @@ export function handleNotificationReport(
 				label: string;
 				eventLabel: string;
 				parameters?: NotificationCCReport["eventParameters"];
-				userCode?: string | BytesView;
-				userIdStatus?: UserIDStatus;
 			} = {
 				type: command.notificationType,
 				event: value,
@@ -203,7 +199,7 @@ export function handleNotificationReport(
 			};
 
 			// If the lookupUserIdInEvents preference is enabled and the event contains a userId,
-			// look up the user code and status
+			// look up the user code and status and add them to the parameters
 			const prefs = ctx.getUserPreferences();
 			if (
 				prefs.lookupUserIdInEvents === true
@@ -220,13 +216,18 @@ export function handleNotificationReport(
 					virtual: false,
 				};
 
+				// Create a new parameters object with the additional fields
+				const enhancedParameters: Record<string, unknown> = {
+					...command.eventParameters,
+				};
+
 				const userIdStatus = UserCodeCC.getUserIdStatusCached(
 					ctx,
 					nodeEndpoint,
 					userId,
 				);
 				if (userIdStatus != null) {
-					eventArgs.userIdStatus = userIdStatus;
+					enhancedParameters.userIdStatus = userIdStatus;
 				}
 
 				const userCode = UserCodeCC.getUserCodeCached(
@@ -235,14 +236,12 @@ export function handleNotificationReport(
 					userId,
 				);
 				if (userCode != null) {
-					eventArgs.userCode = userCode;
-					// Log a censored version of the user code
-					ctx.logNode(node.id, {
-						message:
-							`[handleNotificationReport] looked up user code for userId ${userId}: ${userCodeToLogString(userCode)}`,
-						level: "silly",
-					});
+					enhancedParameters.userCode = userCode;
 				}
+
+				// Type assertion is safe because we're extending the original parameters
+				// with additional fields that are consumed by the application
+				eventArgs.parameters = enhancedParameters as typeof eventArgs.parameters;
 			}
 
 			node.emit(

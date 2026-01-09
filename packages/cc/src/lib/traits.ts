@@ -79,8 +79,8 @@ export interface UserPreferences {
 
 	/**
 	 * When enabled, notification events that include a `userId` (like `Keypad unlock operation`)
-	 * will be enhanced with additional `userCode` and `userIdStatus` fields containing the code
-	 * and status for that user ID.
+	 * will have their `parameters` object enhanced with additional `userCode` and `userIdStatus`
+	 * fields containing the code and status for that user ID.
 	 *
 	 * Default: `false`
 	 */
