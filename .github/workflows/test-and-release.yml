@@ -16,16 +16,24 @@ on:
   merge_group:
     types: [checks_requested]
 
-  # Allows other workflows to publish packages with OICD
+  # Allows other workflows to publish packages with OIDC
   workflow_call:
     inputs:
       action:
-        description: 'Action to perform (e.g. publish-config)'
+        description: 'Action to perform (e.g. publish-config, publish-pr)'
         required: true
         type: string
       version:
         description: 'Version to publish the packages with'
         required: true
+        type: string
+      pr:
+        description: 'PR number (only for publish-pr action)'
+        required: false
+        type: number
+      ref:
+        description: 'Git ref to checkout (only for publish-pr action)'
+        required: false
         type: string
 
 permissions:
@@ -552,3 +560,74 @@ jobs:
 
     - name: Publish @zwave-js/config to npm
       run: yarn workspace "@zwave-js/config" -vi npm publish --tag nightly
+
+  # ===================
+
+  # Publishes PR builds triggered by the zwave-js-bot_comment workflow
+  publish-pr:
+    # Only run when called from another workflow with action=publish-pr
+    if: github.event_name == 'workflow_call' && inputs.action == 'publish-pr'
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22] # This should be LTS
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.ref }}
+
+    - name: Switch to a branch
+      run: git switch -c temp
+
+    - name: Prepare testing environment
+      uses: ./.github/actions/prepare-env
+      with:
+        node-version: ${{ matrix.node-version }}
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Run a fresh build
+      run: yarn build
+
+    - name: Apply version to all packages
+      run: |
+        yarn workspaces foreach --all version "${{ inputs.version }}" --deferred
+        yarn version apply --all
+
+    - name: Publish packages to npm
+      id: publish
+      run: |
+        yarn workspaces foreach --all -vti --no-private npm publish --tolerate-republish --tag next
+
+    - name: Comment on PR (success)
+      if: success()
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ secrets.BOT_TOKEN }}
+        script: |
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: ${{ inputs.pr }},
+            body: `🎉 The packages have been published.
+          You can now install the test version with
+          \`\`\`
+          yarn add zwave-js@${{ inputs.version }}
+          \`\`\``
+          });
+
+    - name: Comment on PR (failure)
+      if: failure()
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ secrets.BOT_TOKEN }}
+        script: |
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: ${{ inputs.pr }},
+            body: `😥 Unfortunately I could not publish the new packages. Check out the logs to see what went wrong.`
+          });

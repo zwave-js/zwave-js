@@ -28,7 +28,6 @@ module.exports = {
 	importConfigCreatePR: (...args) =>
 		require("./importConfigCreatePR.cjs")(...args),
 	shouldAutomerge: (...args) => require("./shouldAutomerge.cjs")(...args),
-	packPr: (...args) => require("./packPr.cjs")(...args),
 	analyzeLogfileParseCommand: (...args) =>
 		require("./analyzeLogfileParseCommand.cjs")(...args),
 	analyzeLogfile: (...args) => require("./analyzeLogfile.cjs")(...args),

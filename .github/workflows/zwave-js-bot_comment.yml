@@ -6,9 +6,13 @@ on:
   discussion_comment:
     types: [created] # edited, deleted
 
+permissions:
+  id-token: write # Required for publishing with OIDC
+  contents: read
+
 jobs:
-  # Publish a PR build when an authorized person comments "@zwave-js-bot pack this"
-  publish-pr:
+  # Check PR information and prepare for publishing when an authorized person comments "@zwave-js-bot pack this"
+  publish-pr-check:
     if: |
       github.event_name == 'issue_comment' &&
       contains(github.event.issue.html_url, '/pull/') &&
@@ -16,16 +20,15 @@ jobs:
       (github.event.comment.user.login == 'AlCalzone')
 
     runs-on: [ubuntu-latest]
-    strategy:
-      matrix:
-        node-version: [22] # This should be LTS
+    outputs:
+      merge_commit_sha: ${{ steps.pr-info.outputs.merge_commit_sha }}
+      version: ${{ steps.version.outputs.version }}
+      pr: ${{ github.event.issue.number }}
 
     steps:
     # Checkout master branch first to get trusted bot scripts for security checks
     - name: Checkout master branch (trusted)
       uses: actions/checkout@v6
-      with:
-        path: trusted
 
     - name: Check PR information
       id: pr-info
@@ -53,7 +56,7 @@ jobs:
 
           // Security check: Ensure no commits were pushed or force-pushed after the approval comment
           // IMPORTANT: Load from trusted master checkout, not the PR code
-          const { wasPRModifiedAfterComment } = require(`${process.env.GITHUB_WORKSPACE}/trusted/.github/bot-scripts/utils.cjs`);
+          const { wasPRModifiedAfterComment } = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/utils.cjs`);
           let wasModified;
           try {
             wasModified = await wasPRModifiedAfterComment(
@@ -94,34 +97,28 @@ jobs:
                    You can monitor the progress [here](${context.payload.repository.html_url}/actions/runs/${context.runId}).`
           })
 
-    - name: Checkout merged code
-      uses: actions/checkout@v6
-      with:
-        token: ${{secrets.BOT_TOKEN}}
-        fetch-depth: 0 # We need the history for versioning with yarn
-        ref: ${{ steps.pr-info.outputs.merge_commit_sha }}
+    - name: Calculate version
+      id: version
+      run: |
+        VERSION=$(node -e "
+          const semver = require('semver');
+          const pkg = require('./package.json');
+          const pr = ${{ github.event.issue.number }};
+          const sha = '${{ steps.pr-info.outputs.merge_commit_sha }}'.slice(0, 7);
+          console.log(semver.inc(pkg.version, 'prerelease') + '-pr-' + pr + '-' + sha);
+        ")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    - name: Switch to a branch
-      run: git switch -c temp
-
-    - name: Prepare environment
-      uses: ./.github/actions/prepare-env
-      with:
-        node-version: ${{ matrix.node-version }}
-        githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Publish PR build to npm
-      uses: actions/github-script@v8
-      env:
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        MERGE_COMMIT_SHA: ${{ steps.pr-info.outputs.merge_commit_sha }}
-      with:
-        github-token: ${{ secrets.BOT_TOKEN }}
-        result-encoding: string
-        script: |
-          // Use trusted scripts from master, not from the PR
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/trusted/.github/bot-scripts/index.cjs`);
-          return bot.packPr({github, context});
+  # Publish PR build using the trusted test-and-release workflow (with OIDC)
+  publish-pr:
+    needs: publish-pr-check
+    uses: ./.github/workflows/test-and-release.yml
+    with:
+      action: publish-pr
+      version: ${{ needs.publish-pr-check.outputs.version }}
+      pr: ${{ fromJSON(needs.publish-pr-check.outputs.pr) }}
+      ref: ${{ needs.publish-pr-check.outputs.merge_commit_sha }}
+    secrets: inherit
 
 
   # #########################################################################
