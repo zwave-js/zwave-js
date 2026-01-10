@@ -2,7 +2,11 @@ import { test } from "vitest";
 import { SecurityClass } from "../definitions/SecurityClass.js";
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
-import { QRCodeVersion, parseQRCodeString } from "./index.js";
+import {
+	QRCodeVersion,
+	parseQRCodeString,
+	tryExtractQRCodeString,
+} from "./index.js";
 
 function createDummyQR(firstDigits: string): string {
 	return firstDigits + "0".repeat(52 - firstDigits.length);
@@ -137,4 +141,82 @@ test("QR code parsing -> ignore surrounding whitespace", async (t) => {
 		productType: 0x0064,
 		productId: 0x0003,
 	});
+});
+
+// Tests for tryExtractQRCodeString
+
+const validQRCode =
+	"900132782003515253545541424344453132333435212223242500100435301537022065520001000000300578";
+const expectedResult = {
+	version: QRCodeVersion.SmartStart,
+	securityClasses: [
+		SecurityClass.S2_Unauthenticated,
+		SecurityClass.S2_Authenticated,
+	],
+	requestedSecurityClasses: [
+		SecurityClass.S2_Unauthenticated,
+		SecurityClass.S2_Authenticated,
+	],
+	dsk: "51525-35455-41424-34445-31323-33435-21222-32425",
+	applicationVersion: "2.66",
+	genericDeviceClass: 0x11,
+	specificDeviceClass: 0x01,
+	installerIconType: 0x0601,
+	manufacturerId: 0xfff0,
+	productType: 0x0064,
+	productId: 0x0003,
+};
+
+test("tryExtractQRCodeString -> extracts QR code with garbage before", async (t) => {
+	const result = await tryExtractQRCodeString(
+		`some garbage text before ${validQRCode}`,
+	);
+	t.expect(result).toStrictEqual(expectedResult);
+});
+
+test("tryExtractQRCodeString -> extracts QR code with garbage after", async (t) => {
+	const result = await tryExtractQRCodeString(
+		`${validQRCode} some garbage after`,
+	);
+	t.expect(result).toStrictEqual(expectedResult);
+});
+
+test("tryExtractQRCodeString -> extracts QR code with garbage before and after", async (t) => {
+	const result = await tryExtractQRCodeString(
+		`garbage before ${validQRCode} garbage after`,
+	);
+	t.expect(result).toStrictEqual(expectedResult);
+});
+
+test("tryExtractQRCodeString -> extracts QR code with extra digits after", async (t) => {
+	const result = await tryExtractQRCodeString(
+		`${validQRCode}123456789`,
+	);
+	t.expect(result).toStrictEqual(expectedResult);
+});
+
+test("tryExtractQRCodeString -> returns undefined when no valid QR code found", async (t) => {
+	const result = await tryExtractQRCodeString(
+		"this string contains no valid QR code 90123",
+	);
+	t.expect(result).toBeUndefined();
+});
+
+test("tryExtractQRCodeString -> returns undefined for empty string", async (t) => {
+	const result = await tryExtractQRCodeString("");
+	t.expect(result).toBeUndefined();
+});
+
+test("tryExtractQRCodeString -> skips invalid 90 sequences and finds valid one", async (t) => {
+	const result = await tryExtractQRCodeString(
+		`90123456 not a valid QR ${validQRCode}`,
+	);
+	t.expect(result).toStrictEqual(expectedResult);
+});
+
+test("tryExtractQRCodeString -> works with newlines in surrounding text", async (t) => {
+	const result = await tryExtractQRCodeString(
+		`some text\n${validQRCode}\nmore text`,
+	);
+	t.expect(result).toStrictEqual(expectedResult);
 });
