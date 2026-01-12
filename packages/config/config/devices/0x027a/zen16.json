@@ -280,7 +280,7 @@
 		},
 		{
 			"#": "12",
-			"$if": "firmwareVersion >= 1.2",
+			"$if": "firmwareVersion >= 1.2 && firmwareVersion < 3.0",
 			"label": "Switch 1: Manual Control",
 			"valueSize": 1,
 			"defaultValue": 1,
@@ -301,6 +301,14 @@
 			]
 		},
 		{
+			"#": "12",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Relay 1 with S1 Input",
+			"description": "If disabled, only a Z-Wave report will be sent",
+			"defaultValue": 1
+		},
+		{
 			"#": "13",
 			"$if": "firmwareVersion < 1.2",
 			"$import": "~/templates/master_template.json#base_enable_disable",
@@ -309,9 +317,17 @@
 		},
 		{
 			"#": "13",
-			"$if": "firmwareVersion >= 1.2",
+			"$if": "firmwareVersion >= 1.2 && firmwareVersion < 3.0",
 			"$import": "templates/zooz_template.json#zen16_manual_control",
 			"label": "Switch 2: Manual Control"
+		},
+		{
+			"#": "13",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Relay 2 with S2 Input",
+			"description": "If disabled, only a Z-Wave report will be sent",
+			"defaultValue": 1
 		},
 		{
 			"#": "14",
@@ -322,9 +338,17 @@
 		},
 		{
 			"#": "14",
-			"$if": "firmwareVersion >= 1.2",
+			"$if": "firmwareVersion >= 1.2 && firmwareVersion < 3.0",
 			"$import": "templates/zooz_template.json#zen16_manual_control",
 			"label": "Switch 3: Manual Control"
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Control Relay 3 with S3 Input",
+			"description": "If disabled, only a Z-Wave report will be sent",
+			"defaultValue": 1
 		},
 		{
 			"#": "21",
