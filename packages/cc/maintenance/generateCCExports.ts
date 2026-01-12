@@ -216,7 +216,6 @@ export async function generateCCExports(): Promise<void> {
 	}
 
 	fileContent += `
-/* eslint-disable */
 export function registerCCs(): void {
 ${registerFunctionContent}
 }

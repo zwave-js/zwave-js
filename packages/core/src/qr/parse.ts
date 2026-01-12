@@ -16,9 +16,22 @@ import { fail, parseTLV, readLevel, readUInt16, readUInt8 } from "./utils.js";
 // Regex to find "90" followed by at least (minQRCodeLength - 2) digits
 const qrCodeCandidateRegex = new RegExp(`90\\d{${minQRCodeLength - 2},}`, "g");
 
+/**
+ * Computes the checksum for a Z-Wave QR code, or a subset of it.
+ */
+async function computeChecksum(
+	qr: string,
+	endOffset: number = qr.length,
+): Promise<number> {
+	const checksumInput = new TextEncoder().encode(qr.slice(9, endOffset));
+	const hashResult = await digest("sha-1", checksumInput);
+	return Bytes.view(hashResult).readUInt16BE(0);
+}
+
 /** Internal parsing function that expects a clean QR code string */
 async function parseQRCodeStringInternal(
 	qr: string,
+	parseSubsets: boolean,
 ): Promise<QRProvisioningInformation> {
 	if (!qr.startsWith("90")) fail("must start with 90");
 	if (qr.length < minQRCodeLength) fail("too short");
@@ -28,6 +41,12 @@ async function parseQRCodeStringInternal(
 	if (version > QRCodeVersion.SmartStart) fail("invalid version");
 
 	const expectedChecksum = readUInt16(qr, 4);
+	if (!parseSubsets) {
+		// If we are not parsing subsets, just validate the checksum for the entire QR code
+		if (await computeChecksum(qr, qr.length) !== expectedChecksum) {
+			fail("invalid checksum");
+		}
+	}
 
 	const requestedKeysBitmask = readUInt8(qr, 9);
 	const requestedSecurityClasses = parseBitMask(
@@ -57,13 +76,6 @@ async function parseQRCodeStringInternal(
 	let hasProductID = false;
 	let hasProductType = false;
 
-	// Helper to compute checksum for content up to current offset
-	async function checksumMatches(): Promise<boolean> {
-		const checksumInput = new TextEncoder().encode(qr.slice(9, offset));
-		const hashResult = await digest("sha-1", checksumInput);
-		return Bytes.view(hashResult).readUInt16BE(0) === expectedChecksum;
-	}
-
 	// Parse TLV blocks until checksum matches (indicating end of QR code)
 	while (offset + 4 <= qr.length) {
 		const tlvLength = parseInt(qr.slice(offset + 2, offset + 4), 10);
@@ -82,8 +94,14 @@ async function parseQRCodeStringInternal(
 		}
 		Object.assign(ret, data);
 
-		// Check if we've found the end of the QR code
-		if (hasProductID && hasProductType && await checksumMatches()) {
+		// If we are parsing subsets, we need to validate the checksum at the end of each TLV
+		// to see if we've reached the end of the QR code
+		if (
+			parseSubsets
+			&& hasProductID
+			&& hasProductType
+			&& await computeChecksum(qr, offset) === expectedChecksum
+		) {
 			return ret;
 		}
 	}
@@ -94,7 +112,7 @@ async function parseQRCodeStringInternal(
 	}
 
 	// Final checksum validation
-	if (!await checksumMatches()) {
+	if (await computeChecksum(qr, offset) !== expectedChecksum) {
 		fail("invalid checksum");
 	}
 
@@ -110,11 +128,11 @@ export async function parseQRCodeString(
 	qr: string,
 ): Promise<QRProvisioningInformation> {
 	// Remove all whitespace to handle QR codes with spaces/newlines in the middle
-	const normalized = qr.replace(/\s/g, "");
+	const normalized = qr.replaceAll(/\s/g, "");
 
 	// Optimize for the common case: the entire string is the complete QR code
 	try {
-		return await parseQRCodeStringInternal(normalized);
+		return await parseQRCodeStringInternal(normalized, false);
 	} catch (e) {
 		if (
 			!(e instanceof ZWaveError)
@@ -129,7 +147,7 @@ export async function parseQRCodeString(
 	let match: RegExpExecArray | null;
 	while ((match = regex.exec(normalized)) !== null) {
 		try {
-			return await parseQRCodeStringInternal(match[0]);
+			return await parseQRCodeStringInternal(match[0], true);
 		} catch (e) {
 			if (
 				!(e instanceof ZWaveError)
@@ -137,6 +155,9 @@ export async function parseQRCodeString(
 			) {
 				throw e;
 			}
+			// Continue searching after the "90" prefix of this failed match,
+			// in case a valid QR code starts within the matched string
+			regex.lastIndex = match.index + 2;
 		}
 	}
 

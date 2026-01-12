@@ -114,62 +114,91 @@ test("QR code parsing -> Example case: Acme Light Dimmer w/o SmartStart", async 
 	});
 });
 
-const validQRCode =
-	"900132782003515253545541424344453132333435212223242500100435301537022065520001000000300578";
-const expectedResult = {
-	version: QRCodeVersion.SmartStart,
-	securityClasses: [
-		SecurityClass.S2_Unauthenticated,
-		SecurityClass.S2_Authenticated,
-	],
-	requestedSecurityClasses: [
-		SecurityClass.S2_Unauthenticated,
-		SecurityClass.S2_Authenticated,
-	],
-	dsk: "51525-35455-41424-34445-31323-33435-21222-32425",
-	applicationVersion: "2.66",
-	genericDeviceClass: 0x11,
-	specificDeviceClass: 0x01,
-	installerIconType: 0x0601,
-	manufacturerId: 0xfff0,
-	productType: 0x0064,
-	productId: 0x0003,
-};
+{
+	const validQRCode =
+		"900132782003515253545541424344453132333435212223242500100435301537022065520001000000300578";
+	const expectedResult = {
+		version: QRCodeVersion.SmartStart,
+		securityClasses: [
+			SecurityClass.S2_Unauthenticated,
+			SecurityClass.S2_Authenticated,
+		],
+		requestedSecurityClasses: [
+			SecurityClass.S2_Unauthenticated,
+			SecurityClass.S2_Authenticated,
+		],
+		dsk: "51525-35455-41424-34445-31323-33435-21222-32425",
+		applicationVersion: "2.66",
+		genericDeviceClass: 0x11,
+		specificDeviceClass: 0x01,
+		installerIconType: 0x0601,
+		manufacturerId: 0xfff0,
+		productType: 0x0064,
+		productId: 0x0003,
+	};
 
-test("QR code parsing -> handles surrounding whitespace", async (t) => {
-	const result = await parseQRCodeString(`	${validQRCode}  `);
-	t.expect(result).toStrictEqual(expectedResult);
-});
+	test("QR code parsing -> handles surrounding whitespace", async (t) => {
+		const result = await parseQRCodeString(`	${validQRCode}  `);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
 
-test("QR code parsing -> handles garbage text before", async (t) => {
-	const result = await parseQRCodeString(`some garbage text before ${validQRCode}`);
-	t.expect(result).toStrictEqual(expectedResult);
-});
+	test("QR code parsing -> handles garbage text before", async (t) => {
+		const result = await parseQRCodeString(
+			`some garbage text before ${validQRCode}`,
+		);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
 
-test("QR code parsing -> handles garbage text after", async (t) => {
-	const result = await parseQRCodeString(`${validQRCode} some garbage after`);
-	t.expect(result).toStrictEqual(expectedResult);
-});
+	test("QR code parsing -> handles garbage text after", async (t) => {
+		const result = await parseQRCodeString(
+			`${validQRCode} some garbage after`,
+		);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
 
-test("QR code parsing -> handles extra digits after", async (t) => {
-	const result = await parseQRCodeString(`${validQRCode}123456789`);
-	t.expect(result).toStrictEqual(expectedResult);
-});
+	test("QR code parsing -> handles extra digits after", async (t) => {
+		const result = await parseQRCodeString(`${validQRCode}123456789`);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
 
-test("QR code parsing -> handles whitespace in the middle", async (t) => {
-	const qrWithSpaces = validQRCode.slice(0, 20) + " " + validQRCode.slice(20, 40) + " " + validQRCode.slice(40);
-	const result = await parseQRCodeString(qrWithSpaces);
-	t.expect(result).toStrictEqual(expectedResult);
-});
+	test("QR code parsing -> handles whitespace in the middle", async (t) => {
+		const qrWithSpaces = validQRCode.slice(0, 20)
+			+ " "
+			+ validQRCode.slice(20, 40)
+			+ " "
+			+ validQRCode.slice(40);
+		const result = await parseQRCodeString(qrWithSpaces);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
 
-test("QR code parsing -> handles newlines in the middle", async (t) => {
-	const qrWithNewlines = validQRCode.slice(0, 30) + "\n" + validQRCode.slice(30, 60) + "\n" + validQRCode.slice(60);
-	const result = await parseQRCodeString(qrWithNewlines);
-	t.expect(result).toStrictEqual(expectedResult);
-});
+	test("QR code parsing -> handles newlines in the middle", async (t) => {
+		const qrWithNewlines = validQRCode.slice(0, 30)
+			+ "\n"
+			+ validQRCode.slice(30, 60)
+			+ "\n"
+			+ validQRCode.slice(60);
+		const result = await parseQRCodeString(qrWithNewlines);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
 
-test("QR code parsing -> handles mixed whitespace in the middle", async (t) => {
-	const qrWithMixedWhitespace = validQRCode.slice(0, 10) + " " + validQRCode.slice(10, 30) + "\n" + validQRCode.slice(30, 50) + "\t" + validQRCode.slice(50);
-	const result = await parseQRCodeString(qrWithMixedWhitespace);
-	t.expect(result).toStrictEqual(expectedResult);
-});
+	test("QR code parsing -> handles mixed whitespace in the middle", async (t) => {
+		const qrWithMixedWhitespace = validQRCode.slice(0, 10)
+			+ " "
+			+ validQRCode.slice(10, 30)
+			+ "\n"
+			+ validQRCode.slice(30, 50)
+			+ "\t"
+			+ validQRCode.slice(50);
+		const result = await parseQRCodeString(qrWithMixedWhitespace);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
+
+	test("QR code parsing -> handles multiple candidates", async (t) => {
+		const result = await parseQRCodeString(
+			`${validQRCode.slice(0, 14)}${validQRCode}${
+				validQRCode.slice(5)
+			}90`,
+		);
+		t.expect(result).toStrictEqual(expectedResult);
+	});
+}
