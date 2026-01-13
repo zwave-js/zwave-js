@@ -16,6 +16,7 @@ import { noUnnecessaryMinMaxValue } from "./rules/no-unnecessary-min-max-value.j
 import { noUselessDescription } from "./rules/no-useless-description.js";
 import { noValueInOptionLabel } from "./rules/no-value-in-option-label.js";
 import { preferDefaultValue } from "./rules/prefer-defaultvalue.js";
+import { validAllowedValues } from "./rules/valid-allowed-values.js";
 
 export default {
 	rules: {
@@ -38,5 +39,6 @@ export default {
 		"no-useless-description": noUselessDescription,
 		"no-value-in-option-label": noValueInOptionLabel,
 		"prefer-defaultvalue": preferDefaultValue,
+		"valid-allowed-values": validAllowedValues,
 	},
 };

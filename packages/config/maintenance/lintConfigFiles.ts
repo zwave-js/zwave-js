@@ -30,6 +30,7 @@ import {
 import type {
 	ConditionalParamInfoMap,
 	ParamInfoMap,
+	ParamInformation,
 } from "../src/devices/ParamInformation.js";
 import type { DeviceID } from "../src/devices/shared.js";
 import { getDeviceEntryPredicate, versionInRange } from "../src/utils.js";
@@ -660,6 +661,90 @@ If this is intended, consider marking one of the config files as preferred or sp
 	}
 }
 
+function validateAllowedValuesDefinition(
+	allowedDefs: ParamInformation["allowed"],
+	valueSize: number,
+	unsigned: boolean,
+	parameter: number,
+	valueBitMask: number | undefined,
+	file: string,
+	addError: (file: string, error: string, variant?: DeviceID) => void,
+	variant?: DeviceID,
+): { min: number; max: number; allowed: Set<number> } {
+	const allowed = new Set<number>();
+	let globalMin = Infinity;
+	let globalMax = -Infinity;
+
+	for (const def of allowedDefs) {
+		if ("value" in def) {
+			// Single value
+			allowed.add(def.value);
+			globalMin = Math.min(globalMin, def.value);
+			globalMax = Math.max(globalMax, def.value);
+		} else {
+			// Range validation
+			const { from, to, step = 1 } = def;
+
+			if (step <= 0) {
+				addError(
+					file,
+					`${
+						paramNoToString(parameter, valueBitMask)
+					}: step must be positive (got ${step})`,
+					variant,
+				);
+				continue;
+			}
+
+			if (from > to) {
+				addError(
+					file,
+					`${
+						paramNoToString(parameter, valueBitMask)
+					}: range 'from' (${from}) must be <= 'to' (${to})`,
+					variant,
+				);
+				continue;
+			}
+
+			if ((to - from) % step !== 0) {
+				addError(
+					file,
+					`${
+						paramNoToString(parameter, valueBitMask)
+					}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
+					variant,
+				);
+				continue;
+			}
+
+			// Add all values in range
+			for (let v = from; v <= to; v += step) {
+				allowed.add(v);
+			}
+
+			globalMin = Math.min(globalMin, from);
+			globalMax = Math.max(globalMax, to);
+		}
+	}
+
+	// Validate envelope fits in valueSize
+	const limits = getIntegerLimits(valueSize as any, unsigned);
+	if (globalMin < limits.min || globalMax > limits.max) {
+		addError(
+			file,
+			`${
+				paramNoToString(parameter, valueBitMask)
+			}: allowed envelope (${globalMin} to ${globalMax}) does not fit in valueSize ${valueSize} (${
+				unsigned ? "unsigned" : "signed"
+			}, range: ${limits.min} to ${limits.max})`,
+			variant,
+		);
+	}
+
+	return { min: globalMin, max: globalMax, allowed };
+}
+
 function lintUnconditionalParamInformation(
 	paramInformation: ParamInfoMap,
 	{ file, variant, addError, addWarning }: LintDevicesContext,
@@ -963,6 +1048,61 @@ Consider converting this parameter to unsigned using ${
 							variant,
 						);
 					}
+				}
+			}
+		}
+	}
+
+	// Validate the values field if present
+	for (
+		const [
+			{ parameter, valueBitMask },
+			value,
+		] of paramInformation.entries()
+	) {
+		if (value.allowed) {
+			// Validate the definitions themselves
+			const { allowed } = validateAllowedValuesDefinition(
+				value.allowed,
+				value.valueSize,
+				!!value.unsigned,
+				parameter,
+				valueBitMask,
+				file,
+				addError,
+				variant,
+			);
+
+			// Validate defaultValue is in the allowed set
+			if (
+				value.defaultValue !== undefined
+				&& !allowed.has(value.defaultValue)
+			) {
+				addError(
+					file,
+					`${
+						paramNoToString(
+							parameter,
+							valueBitMask,
+						)
+					} is invalid: defaultValue ${value.defaultValue} is not in the allowed values!`,
+					variant,
+				);
+			}
+
+			// Validate all options are in the allowed set
+			for (const option of value.options) {
+				if (!allowed.has(option.value)) {
+					addError(
+						file,
+						`${
+							paramNoToString(
+								parameter,
+								valueBitMask,
+							)
+						} is invalid: option value ${option.value} ("${option.label}") is not in the allowed values!`,
+						variant,
+					);
 				}
 			}
 		}

@@ -47,6 +47,7 @@ export default [
 			"@zwave-js/no-useless-description": "error",
 			"@zwave-js/no-value-in-option-label": "error",
 			"@zwave-js/prefer-defaultvalue": "error",
+			"@zwave-js/valid-allowed-values": "error",
 		},
 	},
 ];

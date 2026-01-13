@@ -173,8 +173,21 @@ export enum ConfigValueFormat {
 /** @publicAPI */
 export type ConfigValue = number;
 
+export type ConfigValueSingle = {
+	value: number;
+};
+
+export type ConfigValueRange = {
+	from: number;
+	to: number;
+	step?: number;
+};
+
+export type AllowedConfigValue = ConfigValueSingle | ConfigValueRange;
+
 export interface ConfigurationMetadata extends ValueMetadataAny {
 	// readable and writeable are inherited from ValueMetadataAny
+	allowed?: readonly AllowedConfigValue[];
 	min?: ConfigValue;
 	max?: ConfigValue;
 	default?: ConfigValue;
