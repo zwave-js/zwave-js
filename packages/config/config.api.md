@@ -4,6 +4,7 @@
 
 ```ts
 
+import { BytesView } from '@zwave-js/shared';
 import { CommandClasses } from '@zwave-js/core';
 import { CommandClassInfo } from '@zwave-js/core';
 import type { FileSystem } from '@zwave-js/shared/bindings';
@@ -332,7 +333,11 @@ export class ConditionalParamInformation implements ConditionalItem<ParamInforma
     // (undocumented)
     readonly description?: string;
     // (undocumented)
+    readonly destructive?: boolean;
+    // (undocumented)
     evaluateCondition(deviceId?: DeviceID): ParamInformation | undefined;
+    // (undocumented)
+    readonly hidden?: boolean;
     // (undocumented)
     readonly label: string;
     // (undocumented)
@@ -345,6 +350,8 @@ export class ConditionalParamInformation implements ConditionalItem<ParamInforma
     readonly parameterNumber: number;
     // (undocumented)
     readonly readOnly?: true;
+    // (undocumented)
+    readonly recommendedValue?: number;
     // (undocumented)
     readonly unit?: string;
     // (undocumented)
@@ -414,7 +421,8 @@ export class ConfigManager {
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    lookupDevice(manufacturerId: number, productType: number, productId: number, firmwareVersion?: string): Promise<DeviceConfig | undefined>;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    lookupDevice(manufacturerId: number, productType: number, productId: number, firmwareVersion?: string, sdkVersion?: string): Promise<DeviceConfig | undefined>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
@@ -476,7 +484,7 @@ export class DeviceConfig {
         productId: number;
     }[], firmwareVersion: FirmwareVersionRange, preferred: boolean, endpoints?: ReadonlyMap<number, EndpointConfig>, associations?: ReadonlyMap<number, AssociationConfig>, scenes?: ReadonlyMap<number, SceneConfig>, paramInformation?: ParamInfoMap, proprietary?: Record<string, unknown>, compat?: CompatConfig, metadata?: DeviceMetadata);
     // (undocumented)
-    static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean;
+    static areHashesEqual(hash: BytesView, other: BytesView): boolean;
     // (undocumented)
     readonly associations?: ReadonlyMap<number, AssociationConfig>;
     readonly compat?: CompatConfig;
@@ -501,7 +509,7 @@ export class DeviceConfig {
         deviceId?: DeviceID;
     }): Promise<DeviceConfig>;
     getAssociationConfigForEndpoint(endpointIndex: number, group: number): AssociationConfig | undefined;
-    getHash(version?: 0 | 1 | 2): Promise<Uint8Array>;
+    getHash(version?: 0 | 1 | 2): Promise<BytesView>;
     readonly isEmbedded: boolean;
     // (undocumented)
     readonly label: string;
@@ -557,6 +565,8 @@ export interface DeviceID {
     productId: number;
     // (undocumented)
     productType: number;
+    // (undocumented)
+    sdkVersion?: string;
 }
 
 // Warning: (ae-missing-release-tag) "DeviceMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -662,7 +672,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.15.3";
+export const PACKAGE_VERSION = "15.19.0";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

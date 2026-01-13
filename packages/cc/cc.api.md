@@ -4,47 +4,29 @@
 
 ```ts
 
-import { AlarmSensorCCAPI } from '../cc/AlarmSensorCC.js';
 import { AllOrNone } from '@zwave-js/shared';
 import { ApplicationNodeInformation } from '@zwave-js/core';
-import { AssociationCCAPI } from '../cc/AssociationCC.js';
-import { AssociationGroupInfoCCAPI } from '../cc/AssociationGroupInfoCC.js';
-import { BarrierOperatorCCAPI } from '../cc/BarrierOperatorCC.js';
-import { BasicCCAPI } from '../cc/BasicCC.js';
 import { BasicDeviceClass } from '@zwave-js/core';
-import { BasicWindowCoveringCCAPI } from '../cc/BasicWindowCoveringCC.js';
-import { BatteryCCAPI } from '../cc/BatteryCC.js';
-import { BinarySensorCCAPI } from '../cc/BinarySensorCC.js';
-import { BinarySwitchCCAPI } from '../cc/BinarySwitchCC.js';
 import { BroadcastCC } from '@zwave-js/core';
 import { Bytes } from '@zwave-js/shared';
+import { BytesView } from '@zwave-js/shared';
 import { CCAddress } from '@zwave-js/core';
 import type { CCEncodingContext as CCEncodingContext_2 } from '@zwave-js/cc';
 import { CCId } from '@zwave-js/core';
 import type { CCParsingContext as CCParsingContext_2 } from '@zwave-js/cc';
-import { CentralSceneCCAPI } from '../cc/CentralSceneCC.js';
-import { ClimateControlScheduleCCAPI } from '../cc/ClimateControlScheduleCC.js';
-import { ClockCCAPI } from '../cc/ClockCC.js';
-import { ColorSwitchCCAPI } from '../cc/ColorSwitchCC.js';
 import { CommandClasses } from '@zwave-js/core';
-import { ConfigurationCCAPI } from '../cc/ConfigurationCC.js';
 import { ConfigurationMetadata } from '@zwave-js/core';
 import { ConfigValue } from '@zwave-js/core';
 import { ConfigValueFormat } from '@zwave-js/core';
 import { ControlsCC } from '@zwave-js/core';
-import { CRC16CCAPI } from '../cc/CRC16CC.js';
 import { DataRate } from '@zwave-js/core';
-import { DeviceResetLocallyCCAPI } from '../cc/DeviceResetLocallyCC.js';
-import { DoorLockCCAPI } from '../cc/DoorLockCC.js';
-import { DoorLockLoggingCCAPI } from '../cc/DoorLockLoggingCC.js';
+import { DSTInfo } from '@zwave-js/core';
 import { Duration } from '@zwave-js/core';
 import { EncapsulationFlags } from '@zwave-js/core';
 import { EndpointId } from '@zwave-js/core';
-import { EnergyProductionCCAPI } from '../cc/EnergyProductionCC.js';
-import { EntryControlCCAPI } from '../cc/EntryControlCC.js';
-import { FirmwareUpdateMetaDataCCAPI } from '../cc/FirmwareUpdateMetaDataCC.js';
 import { FLiRS } from '@zwave-js/core';
 import { FrameType } from '@zwave-js/core';
+import { GenericDeviceClass } from '@zwave-js/core';
 import { GetAllEndpoints } from '@zwave-js/core';
 import { GetCCs } from '@zwave-js/core';
 import { GetDeviceConfig } from '@zwave-js/config';
@@ -54,58 +36,32 @@ import { GetSafeCCVersion } from '@zwave-js/core';
 import { GetSupportedCCVersion } from '@zwave-js/core';
 import { GetValueDB } from '@zwave-js/core';
 import { HostIDs } from '@zwave-js/core';
-import { HumidityControlModeCCAPI } from '../cc/HumidityControlModeCC.js';
-import { HumidityControlOperatingStateCCAPI } from '../cc/HumidityControlOperatingStateCC.js';
-import { HumidityControlSetpointCCAPI } from '../cc/HumidityControlSetpointCC.js';
-import { InclusionControllerCCAPI } from '../cc/InclusionControllerCC.js';
-import { IndicatorCCAPI } from '../cc/IndicatorCC.js';
-import { IrrigationCCAPI } from '../cc/IrrigationCC.js';
 import { JSONObject } from '@zwave-js/shared';
-import { LanguageCCAPI } from '../cc/LanguageCC.js';
 import { ListenBehavior } from '@zwave-js/core';
-import { LockCCAPI } from '../cc/LockCC.js';
 import { LogNode } from '@zwave-js/core';
 import type { LookupManufacturer } from '@zwave-js/config';
-import { ManufacturerProprietaryCCAPI } from '../cc/ManufacturerProprietaryCC.js';
-import { ManufacturerSpecificCCAPI } from '../cc/ManufacturerSpecificCC.js';
 import { MaybeNotKnown } from '@zwave-js/core';
 import { MaybeUnknown } from '@zwave-js/core';
 import { MessageOrCCLogEntry } from '@zwave-js/core';
-import { MeterCCAPI } from '../cc/MeterCC.js';
 import { MeterScale } from '@zwave-js/core';
 import { ModifyCCs } from '@zwave-js/core';
 import { MulticastCC } from '@zwave-js/core';
 import { MulticastDestination } from '@zwave-js/core';
-import { MultiChannelAssociationCCAPI } from '../cc/MultiChannelAssociationCC.js';
-import { MultiChannelCCAPI } from '../cc/MultiChannelCC.js';
-import { MultiCommandCCAPI } from '../cc/MultiCommandCC.js';
-import { MultilevelSensorCCAPI } from '../cc/MultilevelSensorCC.js';
-import { MultilevelSwitchCCAPI } from '../cc/MultilevelSwitchCC.js';
 import { NODE_ID_BROADCAST } from '@zwave-js/core';
 import { NODE_ID_BROADCAST_LR } from '@zwave-js/core';
 import { NodeId } from '@zwave-js/core';
 import { NodeInformationFrame } from '@zwave-js/core';
-import { NodeNamingAndLocationCCAPI } from '../cc/NodeNamingCC.js';
 import { NodeProtocolInfoAndDeviceClass } from '@zwave-js/core';
 import { NodeType } from '@zwave-js/core';
-import { NoOperationCCAPI } from '../cc/NoOperationCC.js';
-import { NotificationCCAPI } from '../cc/NotificationCC.js';
 import { OnlyMethods } from '@zwave-js/shared';
 import type { ParamInfoMap } from '@zwave-js/config';
 import { PhysicalNodes } from '@zwave-js/core';
-import { PowerlevelCCAPI } from '../cc/PowerlevelCC.js';
-import { ProtectionCCAPI } from '../cc/ProtectionCC.js';
 import { ProtocolVersion } from '@zwave-js/core';
+import { QueryNodeInterviewStage } from '@zwave-js/core';
 import { QueryNodeStatus } from '@zwave-js/core';
 import { QuerySecurityClasses } from '@zwave-js/core';
 import { ReadonlyObjectKeyMap } from '@zwave-js/shared';
 import { Scale } from '@zwave-js/core';
-import { SceneActivationCCAPI } from '../cc/SceneActivationCC.js';
-import { SceneActuatorConfigurationCCAPI } from '../cc/SceneActuatorConfigurationCC.js';
-import { SceneControllerConfigurationCCAPI } from '../cc/SceneControllerConfigurationCC.js';
-import { ScheduleEntryLockCCAPI } from '../cc/ScheduleEntryLockCC.js';
-import { Security2CCAPI } from '../cc/Security2CC.js';
-import { SecurityCCAPI } from '../cc/SecurityCC.js';
 import { SecurityClass } from '@zwave-js/core';
 import { SecurityManager } from '@zwave-js/core';
 import { SecurityManagers } from '@zwave-js/core';
@@ -114,41 +70,29 @@ import { SendCommandOptions } from '@zwave-js/core';
 import type { SendCommandReturnType } from '@zwave-js/core';
 import { SetSecurityClass } from '@zwave-js/core';
 import { SinglecastCC } from '@zwave-js/core';
-import { SoundSwitchCCAPI } from '../cc/SoundSwitchCC.js';
-import { SupervisionCCAPI } from '../cc/SupervisionCC.js';
+import { SpecificDeviceClass } from '@zwave-js/core';
 import { SupervisionResult } from '@zwave-js/core';
 import { SupervisionStatus } from '@zwave-js/core';
 import { SupportsCC } from '@zwave-js/core';
-import { ThermostatFanModeCCAPI } from '../cc/ThermostatFanModeCC.js';
-import { ThermostatFanStateCCAPI } from '../cc/ThermostatFanStateCC.js';
-import { ThermostatModeCCAPI } from '../cc/ThermostatModeCC.js';
-import { ThermostatOperatingStateCCAPI } from '../cc/ThermostatOperatingStateCC.js';
-import { ThermostatSetbackCCAPI } from '../cc/ThermostatSetbackCC.js';
-import { ThermostatSetpointCCAPI } from '../cc/ThermostatSetpointCC.js';
-import { TimeCCAPI } from '../cc/TimeCC.js';
 import { Timeout } from '@zwave-js/core';
-import { TimeParametersCCAPI } from '../cc/TimeParametersCC.js';
 import { TXReport } from '@zwave-js/core';
 import { TypedClassDecorator } from '@zwave-js/shared';
-import { UserCodeCCAPI } from '../cc/UserCodeCC.js';
 import { ValueChangeOptions } from '@zwave-js/core';
 import { ValueDB } from '@zwave-js/core';
 import { ValueID } from '@zwave-js/core';
 import { ValueMetadata } from '@zwave-js/core';
-import { VersionCCAPI } from '../cc/VersionCC.js';
 import { VirtualEndpointId } from '@zwave-js/core';
-import { WakeUpCCAPI } from '../cc/WakeUpCC.js';
-import { WindowCoveringCCAPI } from '../cc/WindowCoveringCC.js';
 import { WithAddress } from '@zwave-js/core';
 import { ZWaveDataRate } from '@zwave-js/core';
 import { ZWaveErrorCodes } from '@zwave-js/core';
 import { ZWaveLibraryTypes } from '@zwave-js/core';
-import { ZWavePlusCCAPI } from '../cc/ZWavePlusCC.js';
 
 // Warning: (ae-missing-release-tag) "addAssociations" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-function addAssociations(ctx: CCAPIHost<CCAPINode & SupportsCC & GetEndpoint<EndpointId & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId & SupportsCC & ControlsCC, group: number, destinations: AssociationAddress[]): Promise<void>;
+function addAssociations(ctx: CCAPIHost<CCAPINode & SupportsCC & GetEndpoint<EndpointId & SupportsCC> & QuerySecurityClasses>, endpoint: EndpointId & SupportsCC & ControlsCC, group: number, destinations: AssociationAddress[], options?: {
+    force?: boolean;
+}): Promise<void>;
 
 // Warning: (ae-missing-release-tag) "AlarmSensorCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -443,6 +387,83 @@ export type APIConstructor<T extends CCAPI = CCAPI> = new (host: CCAPIHost, endp
 //
 // @public (undocumented)
 export type APIMethodsOf<CC extends CCNameOrId> = Omit<OnlyMethods<CCToAPI<CC>>, "ccId" | "getNode" | "tryGetNode" | "isSetValueOptimistic" | "isSupported" | "pollValue" | "setValue" | "version" | "supportsCommand" | "withOptions" | "withTXReport">;
+
+// Warning: (ae-missing-release-tag) "ApplicationStatus" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ApplicationStatus {
+    // (undocumented)
+    RequestQueued = 2,
+    // (undocumented)
+    TryAgainInWaitTimeSeconds = 1,
+    // (undocumented)
+    TryAgainLater = 0
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ApplicationStatusCC extends CommandClass implements SinglecastCC<ApplicationStatusCC> {
+    // (undocumented)
+    ccCommand: ApplicationStatusCommand;
+    // (undocumented)
+    nodeId: number;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCBusy" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ApplicationStatusCCBusy extends ApplicationStatusCC {
+    constructor(options: WithAddress<ApplicationStatusCCBusyOptions>);
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ApplicationStatusCCBusy;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
+    readonly status: ApplicationStatus;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+    // (undocumented)
+    readonly waitTime: number | undefined;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCBusyOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ApplicationStatusCCBusyOptions {
+    // (undocumented)
+    status: ApplicationStatus;
+    // (undocumented)
+    waitTime?: number;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCRejectedRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ApplicationStatusCCRejectedRequest extends ApplicationStatusCC {
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext_2): ApplicationStatusCCRejectedRequest;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCCRejectedRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ApplicationStatusCCRejectedRequestOptions {
+    // (undocumented)
+    status: number;
+}
+
+// Warning: (ae-missing-release-tag) "ApplicationStatusCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ApplicationStatusCommand {
+    // (undocumented)
+    Busy = 1,
+    // (undocumented)
+    RejectedRequest = 2
+}
 
 // Warning: (ae-missing-release-tag) "assignLifelineIssueingCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3098,138 +3119,268 @@ export type CCAPIHost<TNode extends CCAPINode = CCAPINode> = HostIDs & GetNode<T
 // Warning: (ae-missing-release-tag) "CCAPINode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type CCAPINode = NodeId & ListenBehavior & QueryNodeStatus;
+export type CCAPINode = NodeId & ListenBehavior & QueryNodeStatus & QueryNodeInterviewStage;
 
 // Warning: (ae-missing-release-tag) "CCAPIs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export interface CCAPIs {
+    // Warning: (ae-forgotten-export) The symbol "AlarmSensorCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Alarm Sensor": AlarmSensorCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ApplicationStatusCCAPI" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    "Application Status": ApplicationStatusCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "AssociationGroupInfoCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Association Group Information": AssociationGroupInfoCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "BarrierOperatorCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Barrier Operator": BarrierOperatorCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "BasicWindowCoveringCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Basic Window Covering": BasicWindowCoveringCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "BinarySensorCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Binary Sensor": BinarySensorCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "BinarySwitchCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Binary Switch": BinarySwitchCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "CentralSceneCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Central Scene": CentralSceneCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ClimateControlScheduleCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Climate Control Schedule": ClimateControlScheduleCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ColorSwitchCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Color Switch": ColorSwitchCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "CRC16CCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "CRC-16 Encapsulation": CRC16CCAPI;
+    // Warning: (ae-forgotten-export) The symbol "DeviceResetLocallyCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Device Reset Locally": DeviceResetLocallyCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "DoorLockLoggingCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Door Lock Logging": DoorLockLoggingCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "DoorLockCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Door Lock": DoorLockCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "EnergyProductionCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Energy Production": EnergyProductionCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "EntryControlCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Entry Control": EntryControlCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "FirmwareUpdateMetaDataCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Firmware Update Meta Data": FirmwareUpdateMetaDataCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "HumidityControlModeCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Humidity Control Mode": HumidityControlModeCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "HumidityControlOperatingStateCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Humidity Control Operating State": HumidityControlOperatingStateCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "HumidityControlSetpointCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Humidity Control Setpoint": HumidityControlSetpointCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "InclusionControllerCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Inclusion Controller": InclusionControllerCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ManufacturerProprietaryCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Manufacturer Proprietary": ManufacturerProprietaryCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ManufacturerSpecificCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Manufacturer Specific": ManufacturerSpecificCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "MultiChannelAssociationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Multi Channel Association": MultiChannelAssociationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "MultiChannelCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Multi Channel": MultiChannelCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "MultiCommandCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Multi Command": MultiCommandCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "MultilevelSensorCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Multilevel Sensor": MultilevelSensorCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "MultilevelSwitchCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Multilevel Switch": MultilevelSwitchCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "NoOperationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "No Operation": NoOperationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "NodeNamingAndLocationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Node Naming and Location": NodeNamingAndLocationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "SceneActivationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Scene Activation": SceneActivationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "SceneActuatorConfigurationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Scene Actuator Configuration": SceneActuatorConfigurationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "SceneControllerConfigurationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Scene Controller Configuration": SceneControllerConfigurationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ScheduleEntryLockCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Schedule Entry Lock": ScheduleEntryLockCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "Security2CCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Security 2": Security2CCAPI;
+    // Warning: (ae-forgotten-export) The symbol "SoundSwitchCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Sound Switch": SoundSwitchCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ThermostatFanModeCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Thermostat Fan Mode": ThermostatFanModeCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ThermostatFanStateCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Thermostat Fan State": ThermostatFanStateCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ThermostatModeCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Thermostat Mode": ThermostatModeCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ThermostatOperatingStateCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Thermostat Operating State": ThermostatOperatingStateCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ThermostatSetbackCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Thermostat Setback": ThermostatSetbackCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ThermostatSetpointCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Thermostat Setpoint": ThermostatSetpointCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "TimeParametersCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Time Parameters": TimeParametersCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "UserCodeCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "User Code": UserCodeCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "WakeUpCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Wake Up": WakeUpCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "WindowCoveringCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Window Covering": WindowCoveringCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ZWavePlusCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     "Z-Wave Plus Info": ZWavePlusCCAPI;
     // (undocumented)
     [Symbol.iterator](): Iterator<CCAPI>;
+    // Warning: (ae-forgotten-export) The symbol "AssociationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Association: AssociationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "BasicCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Basic: BasicCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "BatteryCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Battery: BatteryCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ClockCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Clock: ClockCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ConfigurationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Configuration: ConfigurationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "IndicatorCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Indicator: IndicatorCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "IrrigationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Irrigation: IrrigationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "LanguageCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Language: LanguageCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "LockCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Lock: LockCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "MeterCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Meter: MeterCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "NotificationCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Notification: NotificationCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "PowerlevelCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Powerlevel: PowerlevelCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "ProtectionCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Protection: ProtectionCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "SecurityCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Security: SecurityCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "SupervisionCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Supervision: SupervisionCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "TimeCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Time: TimeCCAPI;
+    // Warning: (ae-forgotten-export) The symbol "VersionCCAPI" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     Version: VersionCCAPI;
 }
@@ -3311,7 +3462,7 @@ export class CCRaw {
     // (undocumented)
     ccId: CommandClasses;
     // (undocumented)
-    static parse(data: Uint8Array): CCRaw;
+    static parse(data: BytesView): CCRaw;
     // (undocumented)
     payload: Bytes;
     // (undocumented)
@@ -4576,7 +4727,7 @@ export class CommandClass implements CCId {
     protected ensureMetadata(ctx: GetValueDB, ccValue: CCValue, meta?: ValueMetadata): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     expectMoreMessages(_session: CommandClass[]): boolean;
-    expectsCCResponse(): boolean;
+    expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean;
     readonly frameType?: FrameType;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): CommandClass | Promise<CommandClass>;
@@ -4598,7 +4749,7 @@ export class CommandClass implements CCId {
     isBroadcast(): this is BroadcastCC<this>;
     isEncapsulatedWith(ccId: CommandClasses, ccCommand?: number): boolean;
     // (undocumented)
-    isExpectedCCResponse(received: CommandClass): boolean;
+    isExpectedCCResponse(ctx: GetNode<NodeId & SupportsCC>, received: CommandClass): boolean;
     isExtended(): boolean;
     isInternalValue(properties: ValueIDProperties): boolean;
     isInterviewComplete(host: GetValueDB): boolean;
@@ -4611,7 +4762,7 @@ export class CommandClass implements CCId {
     mergePartialCCs(_partials: CommandClass[], _ctx: CCParsingContext_2): Promise<void>;
     nodeId: number | MulticastDestination;
     // (undocumented)
-    static parse(data: Uint8Array, ctx: CCParsingContext_2): Promise<CommandClass>;
+    static parse(data: BytesView, ctx: CCParsingContext_2): Promise<CommandClass>;
     // (undocumented)
     payload: Bytes;
     // Warning: (tsdoc-characters-after-block-tag) The token "@ccValue" looks like a TSDoc tag but contains an invalid character "."; if it is not a tag, use a backslash to escape the "@"
@@ -4658,7 +4809,7 @@ export interface CommandClassOptions extends CCAddress {
     // (undocumented)
     ccId?: number;
     // (undocumented)
-    payload?: Uint8Array;
+    payload?: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5262,11 +5413,11 @@ export interface DecryptionResult {
     // (undocumented)
     authOK: boolean;
     // (undocumented)
-    iv?: Uint8Array;
+    iv?: BytesView;
     // (undocumented)
-    key?: Uint8Array;
+    key?: BytesView;
     // (undocumented)
-    plaintext: Uint8Array;
+    plaintext: BytesView;
     // (undocumented)
     securityClass: SecurityClass | undefined;
 }
@@ -6529,7 +6680,7 @@ export interface DoorLockLoggingRecord {
     // (undocumented)
     timestamp: string;
     // (undocumented)
-    userCode?: string | Uint8Array;
+    userCode?: string | BytesView;
     // (undocumented)
     userId?: number;
 }
@@ -6580,7 +6731,7 @@ export enum DoorLockOperationType {
 // Warning: (ae-missing-release-tag) "DynamicCCResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export type DynamicCCResponse<TSent extends CommandClass, TReceived extends CommandClass = CommandClass> = (sentCC: TSent) => CCConstructor<TReceived> | CCConstructor<TReceived>[] | undefined;
+export type DynamicCCResponse<TSent extends CommandClass, TReceived extends CommandClass = CommandClass> = (ctx: GetNode<NodeId & SupportsCC>, sentCC: TSent) => CCConstructor<TReceived> | CCConstructor<TReceived>[] | undefined;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "ECDHProfiles" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6908,7 +7059,7 @@ export class EntryControlCCNotification extends EntryControlCC {
     // (undocumented)
     readonly dataType: EntryControlDataTypes;
     // (undocumented)
-    readonly eventData?: Uint8Array | string;
+    readonly eventData?: BytesView | string;
     // (undocumented)
     readonly eventType: EntryControlEventTypes;
     // (undocumented)
@@ -7643,7 +7794,7 @@ export interface FirmwareUpdateMetaDataCCPrepareReportOptions {
 export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
     constructor(options: WithAddress<FirmwareUpdateMetaDataCCReportOptions>);
     // (undocumented)
-    firmwareData: Uint8Array;
+    firmwareData: BytesView;
     // (undocumented)
     static from(_raw: CCRaw, _ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCReport;
     // (undocumented)
@@ -7661,7 +7812,7 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 // @public (undocumented)
 export interface FirmwareUpdateMetaDataCCReportOptions {
     // (undocumented)
-    firmwareData: Uint8Array;
+    firmwareData: BytesView;
     // (undocumented)
     isLast: boolean;
     // (undocumented)
@@ -8207,11 +8358,10 @@ export const getManufacturerId: (target: ManufacturerProprietaryCC) => number | 
 export function getManufacturerIdStatic<T extends ManufacturerProprietaryCCConstructor>(classConstructor: T): number;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
-// Warning: (ae-forgotten-export) The symbol "ManufacturerProprietaryCCAPI_2" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "getManufacturerProprietaryAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export const getManufacturerProprietaryAPI: (manufacturerId: number) => APIConstructor<ManufacturerProprietaryCCAPI_2> | undefined;
+export const getManufacturerProprietaryAPI: (manufacturerId: number) => APIConstructor<ManufacturerProprietaryCCAPI> | undefined;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getManufacturerProprietaryCCConstructor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9531,6 +9681,7 @@ export type InterviewContext = CCAPIHost<CCAPINode & GetCCs & SupportsCC & Contr
 //
 // @public (undocumented)
 export interface InterviewOptions {
+    applyRecommendedConfigParamValues?: boolean;
     queryAllUserCodes?: boolean;
 }
 
@@ -11732,7 +11883,7 @@ export interface ManufacturerProprietaryCCOptions {
     // (undocumented)
     manufacturerId?: number;
     // (undocumented)
-    payload?: Uint8Array;
+    payload?: BytesView;
     // (undocumented)
     unspecifiedExpectsResponse?: boolean;
 }
@@ -12426,7 +12577,7 @@ export class MPANExtension extends Security2Extension {
     // (undocumented)
     groupId: number;
     // (undocumented)
-    innerMPANState: Uint8Array;
+    innerMPANState: BytesView;
     // (undocumented)
     isEncrypted(): boolean;
     // (undocumented)
@@ -14441,7 +14592,7 @@ export class NotificationCCReport extends NotificationCC {
     // (undocumented)
     alarmType: number | undefined;
     // (undocumented)
-    eventParameters: Uint8Array | Duration | Record<string, number> | number | undefined;
+    eventParameters: BytesView | Duration | Record<string, number> | number | undefined;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCReport;
     // (undocumented)
@@ -14469,7 +14620,7 @@ export type NotificationCCReportOptions = {
     notificationType?: number;
     notificationEvent?: number;
     notificationStatus?: number;
-    eventParameters?: Uint8Array;
+    eventParameters?: BytesView;
     sequenceNumber?: number;
 };
 
@@ -17111,7 +17262,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<Security2CCMessageEncapsulation>;
     getMulticastGroupId(): number | undefined;
-    getSenderEI(): Uint8Array | undefined;
+    getSenderEI(): BytesView | undefined;
     // (undocumented)
     hasMOSExtension(): boolean;
     // (undocumented)
@@ -17176,7 +17327,7 @@ export class Security2CCNetworkKeyReport extends Security2CC {
     // (undocumented)
     grantedKey: SecurityClass;
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -17190,7 +17341,7 @@ export interface Security2CCNetworkKeyReportOptions {
     // (undocumented)
     grantedKey: SecurityClass;
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCNetworkKeyVerify" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17232,7 +17383,7 @@ export class Security2CCNonceReport extends Security2CC {
     // (undocumented)
     readonly MOS: boolean;
     // (undocumented)
-    readonly receiverEI?: Uint8Array;
+    readonly receiverEI?: BytesView;
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
@@ -17251,7 +17402,7 @@ export type Security2CCNonceReportOptions = {
 } & ({
     MOS: boolean;
     SOS: true;
-    receiverEI: Uint8Array;
+    receiverEI: BytesView;
 } | {
     MOS: true;
     SOS: false;
@@ -17268,7 +17419,7 @@ export class Security2CCPublicKeyReport extends Security2CC {
     // (undocumented)
     includingNode: boolean;
     // (undocumented)
-    publicKey: Uint8Array;
+    publicKey: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -17282,7 +17433,7 @@ export interface Security2CCPublicKeyReportOptions {
     // (undocumented)
     includingNode: boolean;
     // (undocumented)
-    publicKey: Uint8Array;
+    publicKey: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "Security2CCTransferEnd" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17356,7 +17507,7 @@ export class Security2Extension {
     // (undocumented)
     critical: boolean;
     static from(raw: Security2ExtensionRaw): Security2Extension;
-    static getExtensionLength(data: Uint8Array): {
+    static getExtensionLength(data: BytesView): {
         expected?: number;
         actual: number;
     };
@@ -17365,9 +17516,9 @@ export class Security2Extension {
     // (undocumented)
     readonly moreToFollow?: boolean;
     // (undocumented)
-    static parse(data: Uint8Array): Security2Extension;
+    static parse(data: BytesView): Security2Extension;
     // (undocumented)
-    payload: Uint8Array;
+    payload: BytesView;
     // (undocumented)
     serialize(moreToFollow: boolean): Bytes;
     // (undocumented)
@@ -17408,7 +17559,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     // (undocumented)
     mergePartialCCs(partials: SecurityCCCommandEncapsulation[], ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
-    nonce: Uint8Array | undefined;
+    nonce: BytesView | undefined;
     // (undocumented)
     get nonceId(): number | undefined;
     // (undocumented)
@@ -17427,11 +17578,11 @@ export class SecurityCCCommandEncapsulationNonceGet extends SecurityCCCommandEnc
 //
 // @public (undocumented)
 export type SecurityCCCommandEncapsulationOptions = {
-    alternativeNetworkKey?: Uint8Array;
+    alternativeNetworkKey?: BytesView;
 } & ({
     encapsulated: CommandClass;
 } | {
-    decryptedCCBytes: Uint8Array;
+    decryptedCCBytes: BytesView;
     sequenced: boolean;
     secondFrame: boolean;
     sequenceCounter: number;
@@ -17488,7 +17639,7 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCNetworkKeySet;
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -17500,7 +17651,7 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
 // @public (undocumented)
 export interface SecurityCCNetworkKeySetOptions {
     // (undocumented)
-    networkKey: Uint8Array;
+    networkKey: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityCCNetworkKeyVerify" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -17524,7 +17675,7 @@ export class SecurityCCNonceReport extends SecurityCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCNonceReport;
     // (undocumented)
-    nonce: Uint8Array;
+    nonce: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -17732,6 +17883,8 @@ export const shouldUseSupervision: (target: CommandClass) => boolean;
 export class SoundSwitchCC extends CommandClass {
     // (undocumented)
     ccCommand: SoundSwitchCommand;
+    static getToneDurationCached(ctx: GetValueDB, endpoint: EndpointId, toneId: number): MaybeNotKnown<number>;
+    static getToneNameCached(ctx: GetValueDB, endpoint: EndpointId, toneId: number): MaybeNotKnown<string>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
 }
@@ -17789,12 +17942,13 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 // Warning: (ae-missing-release-tag) "SoundSwitchCCConfigurationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export interface SoundSwitchCCConfigurationSetOptions {
-    // (undocumented)
-    defaultToneId: number;
-    // (undocumented)
+export type SoundSwitchCCConfigurationSetOptions = {
     defaultVolume: number;
-}
+    defaultToneId?: number;
+} | {
+    defaultVolume?: number;
+    defaultToneId: number;
+};
 
 // Warning: (ae-missing-release-tag) "SoundSwitchCCToneInfoGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -18101,7 +18255,7 @@ export class SPANExtension extends Security2Extension {
     // (undocumented)
     static from(raw: Security2ExtensionRaw): Security2Extension;
     // (undocumented)
-    senderEI: Uint8Array;
+    senderEI: BytesView;
     // (undocumented)
     serialize(moreToFollow: boolean): Bytes;
     // (undocumented)
@@ -18702,7 +18856,7 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatModeCCReport;
     // (undocumented)
-    readonly manufacturerData: Uint8Array | undefined;
+    readonly manufacturerData: BytesView | undefined;
     // (undocumented)
     readonly mode: ThermostatMode;
     // (undocumented)
@@ -18721,7 +18875,7 @@ export type ThermostatModeCCReportOptions = {
     manufacturerData?: undefined;
 } | {
     mode: (typeof ThermostatMode)["Manufacturer specific"];
-    manufacturerData?: Uint8Array;
+    manufacturerData?: BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "ThermostatModeCCSet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -18732,7 +18886,7 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatModeCCSet;
     // (undocumented)
-    manufacturerData?: Uint8Array;
+    manufacturerData?: BytesView;
     // (undocumented)
     mode: ThermostatMode;
     // (undocumented)
@@ -18748,7 +18902,7 @@ export type ThermostatModeCCSetOptions = {
     mode: Exclude<ThermostatMode, (typeof ThermostatMode)["Manufacturer specific"]>;
 } | {
     mode: (typeof ThermostatMode)["Manufacturer specific"];
-    manufacturerData: Uint8Array;
+    manufacturerData: BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "ThermostatModeCCSupportedGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -19806,9 +19960,9 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    headerExtension: Uint8Array | undefined;
+    headerExtension: BytesView | undefined;
     // (undocumented)
-    partialDatagram: Uint8Array;
+    partialDatagram: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -19824,9 +19978,9 @@ export interface TransportServiceCCFirstSegmentOptions {
     // (undocumented)
     datagramSize: number;
     // (undocumented)
-    headerExtension?: Uint8Array | undefined;
+    headerExtension?: BytesView | undefined;
     // (undocumented)
-    partialDatagram: Uint8Array;
+    partialDatagram: BytesView;
     // (undocumented)
     sessionId: number;
 }
@@ -19927,14 +20081,14 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    headerExtension: Uint8Array | undefined;
+    headerExtension: BytesView | undefined;
     // (undocumented)
     mergePartialCCs(partials: [
     TransportServiceCCFirstSegment,
     ...TransportServiceCCSubsequentSegment[]
     ], ctx: CCParsingContext_2): Promise<void>;
     // (undocumented)
-    partialDatagram: Uint8Array;
+    partialDatagram: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -19990,12 +20144,14 @@ export class UserCodeCC extends CommandClass {
     static getSupportedKeypadModesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<KeypadMode[]>;
     static getSupportedUserIDStatusesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<UserIDStatus[]>;
     static getSupportedUsersCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<number>;
-    static getUserCodeCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<string | Uint8Array>;
+    static getUserCodeCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<string | BytesView>;
     static getUserIdStatusCached(ctx: GetValueDB, endpoint: EndpointId, userId: number): MaybeNotKnown<UserIDStatus>;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
+    static setUserCodeCached(ctx: GetValueDB, endpoint: EndpointId, userId: number, code: string | BytesView): void;
+    static setUserIdStatusCached(ctx: GetValueDB, endpoint: EndpointId, userId: number, status: UserIDStatus): void;
     static supportsAdminCodeCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
     static supportsAdminCodeDeactivationCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
     static supportsMultipleUserCodeSetCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
@@ -20172,7 +20328,7 @@ export interface UserCodeCCExtendedUserCodeReportOptions {
 export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCExtendedUserCodeSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): UserCodeCCExtendedUserCodeSet;
+    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCExtendedUserCodeSet;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -20316,7 +20472,7 @@ export class UserCodeCCSet extends UserCodeCC {
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
-    userCode: string | Uint8Array;
+    userCode: string | BytesView;
     // (undocumented)
     userId: number;
     // (undocumented)
@@ -20337,7 +20493,7 @@ export type UserCodeCCSetOptions = {
 } | {
     userId: number;
     userIdStatus: Exclude<UserIDStatus, UserIDStatus.Available | UserIDStatus.StatusNotAvailable>;
-    userCode: string | Uint8Array;
+    userCode: string | BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "UserCodeCCUserCodeChecksumGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -20879,6 +21035,7 @@ export enum UserIDStatus {
 //
 // @public (undocumented)
 export interface UserPreferences {
+    lookupUserIdInNotificationEvents?: boolean;
     scales: Partial<Record<string | number, string | number>>;
 }
 
@@ -21801,6 +21958,8 @@ export class WindowCoveringCC extends CommandClass {
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
+    refreshValues(ctx: RefreshValuesContext): Promise<void>;
+    // (undocumented)
     translatePropertyKey(ctx: GetValueDB, property: string | number, propertyKey: string | number): string | undefined;
 }
 
@@ -21840,6 +21999,8 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
     static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCReport;
     // (undocumented)
     readonly parameter: WindowCoveringParameter;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: number;
     // (undocumented)
@@ -23072,7 +23233,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation extends ZWaveProto
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSmartStartIncludedNodeInformation;
     // (undocumented)
-    nwiHomeId: Uint8Array;
+    nwiHomeId: BytesView;
     // (undocumented)
     serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
 }
@@ -23082,7 +23243,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation extends ZWaveProto
 // @public (undocumented)
 export interface ZWaveProtocolCCSmartStartIncludedNodeInformationOptions {
     // (undocumented)
-    nwiHomeId: Uint8Array;
+    nwiHomeId: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSmartStartInclusionRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
