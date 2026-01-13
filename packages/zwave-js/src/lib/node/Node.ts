@@ -20,6 +20,7 @@ import {
 	type SetValueAPIOptions,
 	type SetValueResult,
 	SetValueStatus,
+	SoundSwitchCCValues,
 	TimeCCDateGet,
 	TimeCCTimeGet,
 	TimeCCTimeOffsetGet,
@@ -118,6 +119,7 @@ import {
 	isRssiError,
 	isSupervisionResult,
 	isTransmissionError,
+	isUnsupervisedOrSucceeded,
 	isZWaveError,
 	nonApplicationCCs,
 	normalizeValueID,
@@ -217,6 +219,10 @@ import {
 	handlePowerlevelTestNodeReport,
 	handlePowerlevelTestNodeSet,
 } from "./CCHandlers/PowerlevelCC.js";
+import {
+	getDefaultSoundSwitchHandlerStore,
+	handleSoundSwitchSetValue,
+} from "./CCHandlers/SoundSwitchCC.js";
 import { handleThermostatModeCommand } from "./CCHandlers/ThermostatModeCC.js";
 import {
 	handleDateGet,
@@ -310,6 +316,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			const timeout of [
 				this.centralSceneHandlerStore.keyHeldDownContext?.timeout,
 				...this.notificationHandlerStore.idleTimeouts.values(),
+				...this.soundSwitchHandlerStore.autoResetTimers.values(),
 			]
 		) {
 			timeout?.clear();
@@ -686,6 +693,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				}
 			}
 
+			// Handle CC-specific side effects after setValue completes
+			if (isUnsupervisedOrSucceeded(result)) {
+				this.handleSetValueSideEffects(valueId, value);
+			}
+
 			return supervisionResultToSetValueResult(result);
 		} catch (e) {
 			// Define which errors during setValue are expected and won't throw an error
@@ -727,6 +739,24 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				if (result) return result;
 			}
 			throw e;
+		}
+	}
+
+	/**
+	 * Handles CC-specific side effects after a value has been set successfully.
+	 */
+	private handleSetValueSideEffects(valueId: ValueID, value: unknown): void {
+		if (
+			SoundSwitchCCValues.toneId.is(valueId)
+			&& typeof value === "number"
+		) {
+			handleSoundSwitchSetValue(
+				this.driver,
+				this,
+				this.soundSwitchHandlerStore,
+				valueId.endpoint ?? 0,
+				value,
+			);
 		}
 	}
 
@@ -2268,6 +2298,7 @@ protocol version:      ${this.protocolVersion}`;
 	private clockHandlerStore = getDefaultClockHandlerStore();
 	private hailHandlerStore = getDefaultHailHandlerStore();
 	private notificationHandlerStore = getDefaultNotificationHandlerStore();
+	private soundSwitchHandlerStore = getDefaultSoundSwitchHandlerStore();
 	private wakeUpHandlerStore = getDefaultWakeUpHandlerStore();
 	private entryControlHandlerStore = getDefaultEntryControlHandlerStore();
 
