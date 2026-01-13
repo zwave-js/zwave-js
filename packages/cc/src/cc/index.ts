@@ -1739,6 +1739,7 @@ export {
 	FibaroVenetianBlindCCSet,
 };
 
+/* eslint-disable */
 export function registerCCs(): void {
 	void AlarmSensorCCValues;
 	void AlarmSensorCC;

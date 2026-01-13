@@ -1,6 +1,7 @@
 import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type EndpointId,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
@@ -430,6 +431,7 @@ default volume: ${config.defaultVolume}`;
 		}
 
 		const metadataStates: Record<number, string> = {};
+		const toneInfo: Record<number, { duration: number; name: string }> = {};
 		for (let toneId = 1; toneId <= toneCount; toneId++) {
 			ctx.logNode(node.id, {
 				message: `requesting info for tone #${toneId}`,
@@ -445,6 +447,7 @@ duration: ${info.duration} seconds`;
 				direction: "inbound",
 			});
 			metadataStates[toneId] = `${info.name} (${info.duration} sec)`;
+			toneInfo[toneId] = { duration: info.duration, name: info.name };
 		}
 
 		// Remember tone count and info on the default tone ID metadata
@@ -465,10 +468,47 @@ duration: ${info.duration} seconds`;
 				...metadataStates,
 				[0xff]: "default",
 			},
+			ccSpecific: {
+				toneInfo,
+			},
 		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	/**
+	 * Retrieves the duration in seconds for a given toneId from metadata.
+	 * Returns undefined if duration cannot be determined.
+	 */
+	public static getToneDurationCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		toneId: number,
+	): MaybeNotKnown<number> {
+		const valueDb = ctx.getValueDB(endpoint.nodeId);
+		const toneIdValueId = SoundSwitchCCValues.toneId.endpoint(
+			endpoint.index,
+		);
+		const metadata = valueDb.getMetadata(toneIdValueId);
+		return metadata?.ccSpecific?.toneInfo?.[toneId]?.duration;
+	}
+
+	/**
+	 * Retrieves the name for a given toneId from metadata.
+	 * Returns undefined if name cannot be determined.
+	 */
+	public static getToneNameCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		toneId: number,
+	): MaybeNotKnown<string> {
+		const valueDb = ctx.getValueDB(endpoint.nodeId);
+		const toneIdValueId = SoundSwitchCCValues.toneId.endpoint(
+			endpoint.index,
+		);
+		const metadata = valueDb.getMetadata(toneIdValueId);
+		return metadata?.ccSpecific?.toneInfo?.[toneId]?.name;
 	}
 }
 
