@@ -7,6 +7,7 @@
 import { AllOrNone } from '@zwave-js/shared';
 import { BasicDeviceClass } from '@zwave-js/core';
 import { Bytes } from '@zwave-js/shared';
+import { BytesView } from '@zwave-js/shared';
 import type { CCEncodingContext } from '@zwave-js/cc';
 import { CommandClass } from '@zwave-js/cc';
 import { CommandClasses } from '@zwave-js/core';
@@ -59,6 +60,7 @@ import { SerialApiInitData } from '@zwave-js/core';
 import { SerializableTXReport } from '@zwave-js/core';
 import { SinglecastCC } from '@zwave-js/core';
 import { SuccessIndicator as SuccessIndicator_2 } from '@zwave-js/serial';
+import { SupportsCC } from '@zwave-js/core';
 import { TransmitOptions } from '@zwave-js/core';
 import { TransmitStatus } from '@zwave-js/core';
 import { TXReport } from '@zwave-js/core';
@@ -78,10 +80,10 @@ import { ZWaveLoggerBase } from '@zwave-js/core';
 export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
     constructor(options: AddNodeDSKToNetworkRequestOptions & MessageBaseOptions_2);
     // (undocumented)
-    authHomeId: Uint8Array;
+    authHomeId: BytesView;
     highPower: boolean;
     networkWide: boolean;
-    nwiHomeId: Uint8Array;
+    nwiHomeId: BytesView;
     protocol: Protocols;
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
@@ -94,13 +96,13 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 // @public (undocumented)
 export interface AddNodeDSKToNetworkRequestOptions {
     // (undocumented)
-    authHomeId: Uint8Array;
+    authHomeId: BytesView;
     // (undocumented)
     highPower?: boolean;
     // (undocumented)
     networkWide?: boolean;
     // (undocumented)
-    nwiHomeId: Uint8Array;
+    nwiHomeId: BytesView;
     // (undocumented)
     protocol?: Protocols;
 }
@@ -262,9 +264,9 @@ export class ApplicationCommandRequest extends Message_2 implements MessageWithC
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
+    serializeCC(ctx: CCEncodingContext): Promise<BytesView>;
     // (undocumented)
-    serializedCC: Uint8Array | undefined;
+    serializedCC: BytesView | undefined;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -276,7 +278,7 @@ export type ApplicationCommandRequestOptions = ({
     command: CommandClass;
 } | {
     nodeId: number;
-    serializedCC: Uint8Array;
+    serializedCC: BytesView;
 }) & {
     frameType?: ApplicationCommandRequest["frameType"];
     routedBusy?: boolean;
@@ -385,7 +387,7 @@ export interface ApplicationUpdateRequestSmartStartHomeIDReceivedBaseOptions {
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
-    nwiHomeId: Uint8Array;
+    nwiHomeId: BytesView;
     // (undocumented)
     remoteNodeId: number;
     // (undocumented)
@@ -861,7 +863,7 @@ export class BootloaderParser extends TransformStream<number | string, ZWaveSeri
 // Warning: (ae-missing-release-tag) "BootloaderScreenParser" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export class BootloaderScreenParser extends TransformStream<Uint8Array, number | string> {
+export class BootloaderScreenParser extends TransformStream<BytesView, number | string> {
     constructor(logger?: SerialLogger);
 }
 
@@ -893,9 +895,9 @@ export class BridgeApplicationCommandRequest extends Message_2 implements Messag
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
+    serializeCC(ctx: CCEncodingContext): Promise<BytesView>;
     // (undocumented)
-    serializedCC: Uint8Array | undefined;
+    serializedCC: BytesView | undefined;
     // (undocumented)
     readonly targetNodeId: number | number[];
     // (undocumented)
@@ -909,7 +911,7 @@ export type BridgeApplicationCommandRequestOptions = ({
     command: CommandClass;
 } | {
     nodeId: number;
-    serializedCC: Uint8Array;
+    serializedCC: BytesView;
 }) & {
     routedBusy: boolean;
     frameType: FrameType;
@@ -974,7 +976,7 @@ export function containsCC<T extends object>(container: T | undefined): containe
 // @public (undocumented)
 export interface ContainsSerializedCC {
     // (undocumented)
-    serializedCC: Uint8Array;
+    serializedCC: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "containsSerializedCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1153,7 +1155,7 @@ export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
 // Warning: (ae-missing-release-tag) "encodeTXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function encodeTXReport(report: SerializableTXReport): Uint8Array;
+export function encodeTXReport(report: SerializableTXReport): BytesView;
 
 // Warning: (ae-missing-release-tag) "EnterBootloaderRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1263,7 +1265,7 @@ export class ExtendedNVMOperationsRequest extends Message_2 {
 export class ExtendedNVMOperationsResponse extends Message_2 implements SuccessIndicator_2 {
     constructor(options: ExtendedNVMOperationsResponseOptions & MessageBaseOptions_2);
     // (undocumented)
-    readonly bufferOrBitmask: Uint8Array;
+    readonly bufferOrBitmask: BytesView;
     // (undocumented)
     static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): ExtendedNVMOperationsResponse;
     // (undocumented)
@@ -1281,7 +1283,7 @@ export class ExtendedNVMOperationsResponse extends Message_2 implements SuccessI
 // @public (undocumented)
 export interface ExtendedNVMOperationsResponseOptions {
     // (undocumented)
-    bufferOrBitmask: Uint8Array;
+    bufferOrBitmask: BytesView;
     // (undocumented)
     offsetOrSize: number;
     // (undocumented)
@@ -1312,7 +1314,7 @@ export enum ExtendedNVMOperationStatus {
 export class ExtendedNVMOperationsWriteRequest extends ExtendedNVMOperationsRequest {
     constructor(options: ExtendedNVMOperationsWriteRequestOptions & MessageBaseOptions_2);
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): ExtendedNVMOperationsWriteRequest;
     // (undocumented)
@@ -1328,7 +1330,7 @@ export class ExtendedNVMOperationsWriteRequest extends ExtendedNVMOperationsRequ
 // @public (undocumented)
 export interface ExtendedNVMOperationsWriteRequestOptions {
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     offset: number;
 }
@@ -1366,7 +1368,7 @@ export interface ExtNVMReadLongBufferRequestOptions {
 export class ExtNVMReadLongBufferResponse extends Message_2 {
     constructor(options: ExtNVMReadLongBufferResponseOptions & MessageBaseOptions_2);
     // (undocumented)
-    readonly buffer: Uint8Array;
+    readonly buffer: BytesView;
     // (undocumented)
     static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): ExtNVMReadLongBufferResponse;
     // (undocumented)
@@ -1378,7 +1380,7 @@ export class ExtNVMReadLongBufferResponse extends Message_2 {
 // @public (undocumented)
 export interface ExtNVMReadLongBufferResponseOptions {
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "ExtNVMReadLongByteRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1431,7 +1433,7 @@ export interface ExtNVMReadLongByteResponseOptions {
 export class ExtNVMWriteLongBufferRequest extends Message_2 {
     constructor(options: ExtNVMWriteLongBufferRequestOptions & MessageBaseOptions_2);
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): ExtNVMWriteLongBufferRequest;
     // (undocumented)
@@ -1447,7 +1449,7 @@ export class ExtNVMWriteLongBufferRequest extends Message_2 {
 // @public (undocumented)
 export interface ExtNVMWriteLongBufferRequestOptions {
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     offset: number;
 }
@@ -1722,7 +1724,7 @@ export interface FirmwareUpdateNVM_UpdateCRC16ResponseOptions {
 export class FirmwareUpdateNVM_WriteRequest extends FirmwareUpdateNVMRequest {
     constructor(options: FirmwareUpdateNVM_WriteRequestOptions & MessageBaseOptions_2);
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): FirmwareUpdateNVM_WriteRequest;
     // (undocumented)
@@ -1738,7 +1740,7 @@ export class FirmwareUpdateNVM_WriteRequest extends FirmwareUpdateNVMRequest {
 // @public (undocumented)
 export interface FirmwareUpdateNVM_WriteRequestOptions {
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     offset: number;
 }
@@ -2963,7 +2965,7 @@ export class Message {
     expectedResponse: FunctionType | typeof Message | ResponsePredicate | undefined;
     expectsAck(): boolean;
     expectsCallback(): boolean;
-    expectsNodeUpdate(): boolean;
+    expectsNodeUpdate(ctx: GetNode<NodeId & SupportsCC>): boolean;
     expectsResponse(): boolean;
     static from(raw: MessageRaw, ctx: MessageParsingContext): Message;
     // (undocumented)
@@ -2975,16 +2977,17 @@ export class Message {
         callbackId: number;
     };
     isExpectedCallback(msg: Message): boolean;
-    isExpectedNodeUpdate(msg: Message): boolean;
+    isExpectedNodeUpdate(ctx: GetNode<NodeId & SupportsCC>, msg: Message): boolean;
     isExpectedResponse(msg: Message): boolean;
     markAsCompleted(): void;
     markAsSent(): void;
     needsCallbackId(): boolean;
     nodeUpdateTimeout: number | undefined;
     // (undocumented)
-    static parse(data: Uint8Array, ctx: MessageParsingContext): Message;
+    static parse(data: BytesView, ctx: MessageParsingContext): Message;
     // (undocumented)
     payload: Bytes;
+    prematureNodeUpdate: Message | undefined;
     get rtt(): number | undefined;
     serialize(ctx: MessageEncodingContext): Promise<Bytes>;
     toJSON(): JSONObject;
@@ -3084,7 +3087,7 @@ export class MessageRaw {
     // (undocumented)
     readonly functionType: FunctionType;
     // (undocumented)
-    static parse(data: Uint8Array): MessageRaw;
+    static parse(data: BytesView): MessageRaw;
     // (undocumented)
     readonly payload: Bytes;
     // (undocumented)
@@ -3115,7 +3118,7 @@ export interface MessageWithCC {
     // (undocumented)
     command: CommandClass | undefined;
     // (undocumented)
-    serializedCC: Uint8Array | undefined;
+    serializedCC: BytesView | undefined;
 }
 
 // Warning: (ae-missing-release-tag) "MultiStageCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3215,7 +3218,7 @@ export class NVMOperationsRequest extends Message_2 {
 export class NVMOperationsResponse extends Message_2 implements SuccessIndicator_2 {
     constructor(options: NVMOperationsResponseOptions & MessageBaseOptions_2);
     // (undocumented)
-    readonly buffer: Uint8Array;
+    readonly buffer: BytesView;
     // (undocumented)
     static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): NVMOperationsResponse;
     // (undocumented)
@@ -3233,7 +3236,7 @@ export class NVMOperationsResponse extends Message_2 implements SuccessIndicator
 // @public (undocumented)
 export interface NVMOperationsResponseOptions {
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     offsetOrSize: number;
     // (undocumented)
@@ -3262,7 +3265,7 @@ export enum NVMOperationStatus {
 export class NVMOperationsWriteRequest extends NVMOperationsRequest {
     constructor(options: NVMOperationsWriteRequestOptions & MessageBaseOptions_2);
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     static from(_raw: MessageRaw_2, _ctx: MessageParsingContext_2): NVMOperationsWriteRequest;
     // (undocumented)
@@ -3278,7 +3281,7 @@ export class NVMOperationsWriteRequest extends NVMOperationsRequest {
 // @public (undocumented)
 export interface NVMOperationsWriteRequestOptions {
     // (undocumented)
-    buffer: Uint8Array;
+    buffer: BytesView;
     // (undocumented)
     offset: number;
 }
@@ -3333,13 +3336,13 @@ export enum NVMType {
 // Warning: (ae-missing-release-tag) "parseRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseRSSI(payload: Uint8Array, offset?: number): RSSI;
+export function parseRSSI(payload: BytesView, offset?: number): RSSI;
 
 // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // Warning: (ae-missing-release-tag) "parseTXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function parseTXReport(includeACK: boolean, payload: Uint8Array): TXReport | undefined;
+export function parseTXReport(includeACK: boolean, payload: BytesView): TXReport | undefined;
 
 // Warning: (ae-missing-release-tag) "priority" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3759,13 +3762,13 @@ export class SendDataBridgeRequest<CCType extends CommandClass = CommandClass> e
     constructor(options: SendDataBridgeRequestOptions<CCType> & MessageBaseOptions_2);
     command: SinglecastCC<CCType> | undefined;
     // (undocumented)
-    expectsNodeUpdate(): boolean;
+    expectsNodeUpdate(ctx: GetNode<NodeId & SupportsCC>): boolean;
     // (undocumented)
     static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): SendDataBridgeRequestBase;
     // (undocumented)
     getNodeId(): number | undefined;
     // (undocumented)
-    isExpectedNodeUpdate(msg: Message_2): boolean;
+    isExpectedNodeUpdate(ctx: GetNode<NodeId & SupportsCC>, msg: Message_2): boolean;
     get maxSendAttempts(): number;
     set maxSendAttempts(value: number);
     // (undocumented)
@@ -3773,9 +3776,9 @@ export class SendDataBridgeRequest<CCType extends CommandClass = CommandClass> e
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
+    serializeCC(ctx: CCEncodingContext): Promise<BytesView>;
     // (undocumented)
-    serializedCC: Uint8Array | undefined;
+    serializedCC: BytesView | undefined;
     sourceNodeId: number;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
@@ -3797,7 +3800,7 @@ export type SendDataBridgeRequestOptions<CCType extends CommandClass = CommandCl
     command: CCType;
 } | {
     nodeId: number;
-    serializedCC: Uint8Array;
+    serializedCC: BytesView;
 }) & {
     sourceNodeId: number;
     transmitOptions?: TransmitOptions;
@@ -3880,9 +3883,9 @@ export class SendDataMulticastBridgeRequest<CCType extends CommandClass = Comman
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
+    serializeCC(ctx: CCEncodingContext): Promise<BytesView>;
     // (undocumented)
-    serializedCC: Uint8Array | undefined;
+    serializedCC: BytesView | undefined;
     sourceNodeId: number;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
@@ -3904,7 +3907,7 @@ export type SendDataMulticastBridgeRequestOptions<CCType extends CommandClass> =
     command: CCType;
 } | {
     nodeIds: MulticastDestination;
-    serializedCC: Uint8Array;
+    serializedCC: BytesView;
 }) & {
     sourceNodeId: number;
     transmitOptions?: TransmitOptions;
@@ -3976,9 +3979,9 @@ export class SendDataMulticastRequest<CCType extends CommandClass = CommandClass
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
+    serializeCC(ctx: CCEncodingContext): Promise<BytesView>;
     // (undocumented)
-    serializedCC: Uint8Array | undefined;
+    serializedCC: BytesView | undefined;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     transmitOptions: TransmitOptions;
@@ -3999,7 +4002,7 @@ export type SendDataMulticastRequestOptions<CCType extends CommandClass> = ({
     command: CCType;
 } | {
     nodeIds: MulticastDestination;
-    serializedCC: Uint8Array;
+    serializedCC: BytesView;
 }) & {
     transmitOptions?: TransmitOptions;
     maxSendAttempts?: number;
@@ -4062,13 +4065,13 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass> extends
     constructor(options: SendDataRequestOptions<CCType> & MessageBaseOptions_2);
     command: SinglecastCC<CCType> | undefined;
     // (undocumented)
-    expectsNodeUpdate(): boolean;
+    expectsNodeUpdate(ctx: GetNode<NodeId & SupportsCC>): boolean;
     // (undocumented)
     static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): SendDataRequest;
     // (undocumented)
     getNodeId(): number | undefined;
     // (undocumented)
-    isExpectedNodeUpdate(msg: Message_2): boolean;
+    isExpectedNodeUpdate(ctx: GetNode<NodeId & SupportsCC>, msg: Message_2): boolean;
     get maxSendAttempts(): number;
     set maxSendAttempts(value: number);
     // (undocumented)
@@ -4076,9 +4079,9 @@ export class SendDataRequest<CCType extends CommandClass = CommandClass> extends
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
-    serializeCC(ctx: CCEncodingContext): Promise<Uint8Array>;
+    serializeCC(ctx: CCEncodingContext): Promise<BytesView>;
     // (undocumented)
-    serializedCC: Uint8Array | undefined;
+    serializedCC: BytesView | undefined;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     transmitOptions: TransmitOptions;
@@ -4099,7 +4102,7 @@ export type SendDataRequestOptions<CCType extends CommandClass = CommandClass> =
     command: CCType;
 } | {
     nodeId: number;
-    serializedCC: Uint8Array;
+    serializedCC: BytesView;
 }) & {
     transmitOptions?: TransmitOptions;
     maxSendAttempts?: number;
@@ -5016,8 +5019,8 @@ export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
     CAN(direction: DataDirection): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    data(direction: DataDirection, data: Uint8Array): void;
-    discarded(data: Uint8Array): void;
+    data(direction: DataDirection, data: BytesView): void;
+    discarded(data: BytesView): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     message(message: string, direction?: DataDirection): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
@@ -5075,7 +5078,7 @@ export class SetLearnModeCallback extends SetLearnModeRequestBase implements Suc
     // (undocumented)
     readonly status: LearnModeStatus;
     // (undocumented)
-    readonly statusMessage?: Uint8Array;
+    readonly statusMessage?: BytesView;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -5089,7 +5092,7 @@ export interface SetLearnModeCallbackOptions {
     // (undocumented)
     status: LearnModeStatus;
     // (undocumented)
-    statusMessage?: Uint8Array;
+    statusMessage?: BytesView;
 }
 
 // Warning: (ae-missing-release-tag) "SetLearnModeRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5519,7 +5522,7 @@ export type TransmitReport = SendDataTransmitReport | AssignReturnRouteRequestTr
 // Warning: (ae-missing-release-tag) "tryParseRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function tryParseRSSI(payload: Uint8Array, offset?: number): RSSI | undefined;
+export function tryParseRSSI(payload: BytesView, offset?: number): RSSI | undefined;
 
 // Warning: (ae-missing-release-tag) "txReportToMessageRecord" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5873,7 +5876,7 @@ export class ZnifferMessage {
     // (undocumented)
     functionType?: ZnifferFunctionType;
     // (undocumented)
-    static parse(data: Uint8Array): {
+    static parse(data: BytesView): {
         msg: ZnifferMessage;
         bytesRead: number;
     };
@@ -5927,7 +5930,7 @@ export class ZnifferMessageRaw {
     // (undocumented)
     readonly functionType: ZnifferFunctionType | undefined;
     // (undocumented)
-    static parse(data: Uint8Array): {
+    static parse(data: BytesView): {
         raw: ZnifferMessageRaw;
         bytesRead: number;
     };
@@ -5957,7 +5960,7 @@ export type ZnifferSerialFrame = {
     data: Bytes;
 } | {
     type: ZnifferSerialFrameType.Discarded;
-    data: Uint8Array;
+    data: BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "ZnifferSerialFrameType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5973,8 +5976,8 @@ export enum ZnifferSerialFrameType {
 // Warning: (ae-missing-release-tag) "ZnifferSerialStream" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export class ZnifferSerialStream implements ReadableWritablePair<ZnifferSerialFrame, Uint8Array> {
-    constructor(source: UnderlyingSource<Uint8Array>, sink: UnderlyingSink<Uint8Array>, logger: SerialLogger);
+export class ZnifferSerialStream implements ReadableWritablePair<ZnifferSerialFrame, BytesView> {
+    constructor(source: UnderlyingSource<BytesView>, sink: UnderlyingSink<BytesView>, logger: SerialLogger);
     // (undocumented)
     close(): Promise<void>;
     // (undocumented)
@@ -5984,9 +5987,9 @@ export class ZnifferSerialStream implements ReadableWritablePair<ZnifferSerialFr
     // (undocumented)
     readonly readable: ReadableStream<ZnifferSerialFrame>;
     // (undocumented)
-    readonly writable: WritableStream<Uint8Array>;
+    readonly writable: WritableStream<BytesView>;
     // (undocumented)
-    writeAsync(data: Uint8Array): Promise<void>;
+    writeAsync(data: BytesView): Promise<void>;
 }
 
 // Warning: (ae-missing-release-tag) "ZnifferSerialStreamFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6106,9 +6109,9 @@ export class ZnifferStopResponse extends ZnifferMessage {
 // @public
 export interface ZWaveSerialBinding {
     // (undocumented)
-    sink: UnderlyingSink<Uint8Array>;
+    sink: UnderlyingSink<BytesView>;
     // (undocumented)
-    source: UnderlyingSource<Uint8Array>;
+    source: UnderlyingSource<BytesView>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveSerialBindingFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6119,7 +6122,7 @@ export type ZWaveSerialBindingFactory = () => Promise<ZWaveSerialBinding>;
 // Warning: (ae-missing-release-tag) "ZWaveSerialChunk" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ZWaveSerialChunk = MessageHeaders.ACK | MessageHeaders.NAK | MessageHeaders.CAN | Uint8Array;
+export type ZWaveSerialChunk = MessageHeaders.ACK | MessageHeaders.NAK | MessageHeaders.CAN | BytesView;
 
 // Warning: (ae-missing-release-tag) "ZWaveSerialFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -6135,7 +6138,7 @@ export type ZWaveSerialFrame = {
     data: CLIChunk;
 } | {
     type: ZWaveSerialFrameType.Discarded;
-    data: Uint8Array;
+    data: BytesView;
 };
 
 // Warning: (ae-missing-release-tag) "ZWaveSerialFrameType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6179,8 +6182,8 @@ export interface ZWaveSerialPortImplementation {
 // Warning: (ae-missing-release-tag) "ZWaveSerialStream" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export class ZWaveSerialStream implements ReadableWritablePair<ZWaveSerialFrame, Uint8Array> {
-    constructor(source: UnderlyingSource<Uint8Array>, sink: UnderlyingSink<Uint8Array>, logger: SerialLogger);
+export class ZWaveSerialStream implements ReadableWritablePair<ZWaveSerialFrame, BytesView> {
+    constructor(source: UnderlyingSource<BytesView>, sink: UnderlyingSink<BytesView>, logger: SerialLogger);
     // (undocumented)
     close(): Promise<void>;
     // (undocumented)
@@ -6195,9 +6198,9 @@ export class ZWaveSerialStream implements ReadableWritablePair<ZWaveSerialFrame,
     // (undocumented)
     readonly readable: ReadableStream<ZWaveSerialFrame>;
     // (undocumented)
-    readonly writable: WritableStream<Uint8Array>;
+    readonly writable: WritableStream<BytesView>;
     // (undocumented)
-    writeAsync(data: Uint8Array): Promise<void>;
+    writeAsync(data: BytesView): Promise<void>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveSerialStreamFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

@@ -179,11 +179,14 @@ interface ConditionalParamInformation {
 	readonly maxValue?: number;
 	readonly unsigned?: boolean;
 	readonly defaultValue: number;
+	readonly recommendedValue?: number;
 	readonly unit?: string;
 	readonly readOnly?: true;
 	readonly writeOnly?: true;
 	readonly allowManualEntry: boolean;
+	readonly destructive?: boolean;
 	readonly options: readonly ConditionalConfigOption[];
+	readonly hidden?: boolean;
 	readonly condition?: string;
 }
 ```

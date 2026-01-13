@@ -32,7 +32,7 @@ export function areUint8ArraysEqual(a: Uint8Array, b: Uint8Array): boolean;
 // Warning: (ae-missing-release-tag) "assertUint8Array" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function assertUint8Array(value: unknown): asserts value is Uint8Array;
+export function assertUint8Array(value: unknown): asserts value is Uint8Array<ArrayBuffer>;
 
 // Warning: (ae-missing-release-tag) "AsyncQueue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -53,7 +53,7 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 // Warning: (ae-missing-release-tag) "buffer2hex" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function buffer2hex(buffer: Uint8Array, uppercase?: boolean): string;
+export function buffer2hex(buffer: BytesView, uppercase?: boolean): string;
 
 // Warning: (ae-missing-release-tag) "Bytes" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -169,7 +169,7 @@ export class Bytes extends Uint8Array {
     // (undocumented)
     toString(encoding?: BufferEncoding): string;
     // Warning: (ae-forgotten-export) The symbol "TypedArray" needs to be exported by the entry point index.d.ts
-    static view(value: TypedArray | ArrayBuffer | DataView): Bytes;
+    static view(value: TypedArray | ArrayBuffer | ArrayBufferLike | DataView): Bytes;
     // Warning: (tsdoc-undefined-tag) The TSDoc tag "@since" is not defined in this configuration
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
@@ -280,6 +280,11 @@ export class Bytes extends Uint8Array {
     writeUIntLE(value: number, offset: number, byteLength: number): number;
 }
 
+// Warning: (ae-missing-release-tag) "BytesView" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export type BytesView = Uint8Array<ArrayBuffer>;
+
 // Warning: (ae-missing-release-tag) "cloneDeep" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -364,17 +369,17 @@ export type Expand<T> = T extends object ? T extends infer O ? {
 // Warning: (ae-missing-release-tag) "fileHandleToReadableStream" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function fileHandleToReadableStream(handle: Omit<FileHandle, "readable" | "writable">): ReadableStream<Uint8Array>;
+export function fileHandleToReadableStream(handle: Omit<FileHandle, "readable" | "writable">): ReadableStream<BytesView>;
 
 // Warning: (ae-missing-release-tag) "fileHandleToStreams" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function fileHandleToStreams(handle: Omit<FileHandle, "readable" | "writable">): ReadableWritablePair<Uint8Array, Uint8Array>;
+export function fileHandleToStreams(handle: Omit<FileHandle, "readable" | "writable">): ReadableWritablePair<BytesView, BytesView>;
 
 // Warning: (ae-missing-release-tag) "fileHandleToWritableStream" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function fileHandleToWritableStream(handle: Omit<FileHandle, "readable" | "writable">): WritableStream<Uint8Array>;
+export function fileHandleToWritableStream(handle: Omit<FileHandle, "readable" | "writable">): WritableStream<BytesView>;
 
 // Warning: (ae-missing-release-tag) "FnOrStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -416,7 +421,7 @@ export function getErrorMessage(e: unknown, includeStack?: boolean): string;
 // Warning: (ae-missing-release-tag) "hexToUint8Array" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function hexToUint8Array(hexString: string): Uint8Array;
+export function hexToUint8Array(hexString: string): Uint8Array<ArrayBuffer>;
 
 // Warning: (ae-missing-release-tag) "Interval" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -457,7 +462,7 @@ export function isPrintableASCIIWithWhitespace(text: string): boolean;
 // Warning: (ae-missing-release-tag) "isUint8Array" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function isUint8Array(value: unknown): value is Uint8Array;
+export function isUint8Array(value: unknown): value is Uint8Array<ArrayBuffer>;
 
 // Warning: (ae-missing-release-tag) "JSONObject" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -605,7 +610,7 @@ export function stringify(arg: unknown, space?: 4 | "\t"): string;
 // Warning: (ae-missing-release-tag) "stringToUint8ArrayUTF16BE" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function stringToUint8ArrayUTF16BE(str: string): Uint8Array;
+export function stringToUint8ArrayUTF16BE(str: string): BytesView;
 
 // Warning: (ae-missing-release-tag) "sum" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -628,9 +633,11 @@ export type ThrowingMap<K, V> = Map<K, V> & {
 //
 // @public
 export class TimedExpectation<TResult = void, TPredicate = never> implements PromiseLike<TResult> {
-    constructor(timeoutMs: number, predicate?: ((input: TPredicate) => boolean) | undefined, timeoutErrorMessage?: string);
+    constructor(timeoutMs: number, predicate?: (input: TPredicate) => boolean, timeoutErrorMessage?: string, preventDefault?: boolean);
     // (undocumented)
-    readonly predicate?: ((input: TPredicate) => boolean) | undefined;
+    readonly predicate?: (input: TPredicate) => boolean;
+    // (undocumented)
+    readonly preventDefault: boolean;
     // (undocumented)
     resolve(result: TResult): void;
     readonly stack: string;
@@ -690,7 +697,7 @@ export function uint8ArrayToString(array: Uint8Array | ArrayBuffer, encoding?: s
 // Warning: (ae-missing-release-tag) "uint8ArrayToStringUTF16BE" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function uint8ArrayToStringUTF16BE(arr: Uint8Array): string;
+export function uint8ArrayToStringUTF16BE(arr: BytesView): string;
 
 // Warning: (ae-missing-release-tag) "UnionToIntersection" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
