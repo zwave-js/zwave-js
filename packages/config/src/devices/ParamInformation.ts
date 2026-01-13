@@ -1,7 +1,5 @@
-import {
-	type AllowedConfigValue,
-	tryParseParamNumber,
-} from "@zwave-js/core";
+/* oxlint-disable typescript/no-unnecessary-type-assertion */
+import { type AllowedConfigValue, tryParseParamNumber } from "@zwave-js/core";
 import {
 	type JSONObject,
 	ObjectKeyMap,

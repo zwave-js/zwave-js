@@ -326,7 +326,11 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 
 				const isValueInRange = (
 					value: number,
-					range: { from: number; to: number; step: number | undefined },
+					range: {
+						from: number;
+						to: number;
+						step: number | undefined;
+					},
 				): boolean => {
 					if (value < range.from || value > range.to) return false;
 					const step = range.step ?? 1;
@@ -369,21 +373,29 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 				// Check if entries are sorted
 				let isSorted = true;
 				for (let i = 1; i < entries.length; i++) {
-					if (getStart(entries[i - 1].parsed) >= getStart(entries[i].parsed)) {
+					if (
+						getStart(entries[i - 1].parsed)
+							>= getStart(entries[i].parsed)
+					) {
 						isSorted = false;
 						break;
 					}
 				}
 
 				// Sort entries by start value to check for overlaps
-				const sortedEntries = [...entries].sort(
+				const sortedEntries = [...entries].toSorted(
 					(a, b) => getStart(a.parsed) - getStart(b.parsed),
 				);
 
 				// Check for overlaps in the sorted order
 				let hasOverlaps = false;
 				for (let i = 1; i < sortedEntries.length; i++) {
-					if (entriesOverlap(sortedEntries[i - 1].parsed, sortedEntries[i].parsed)) {
+					if (
+						entriesOverlap(
+							sortedEntries[i - 1].parsed,
+							sortedEntries[i].parsed,
+						)
+					) {
 						hasOverlaps = true;
 						break;
 					}
@@ -400,22 +412,30 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 							const fullText = sourceCode.getText();
 							// Get the text of each element using range
 							const sortedTexts = sortedEntries.map(
-								(e) => fullText.slice(e.element.range![0], e.element.range![1]),
+								(e) =>
+									fullText.slice(
+										e.element.range![0],
+										e.element.range![1],
+									),
 							);
 							// Find indentation from first element
-							const firstElemStart = allowedArray.elements[0]!.loc.start;
+							const firstElemStart =
+								allowedArray.elements[0]!.loc.start;
 							const lineStart = sourceCode.getIndexFromLoc({
 								line: firstElemStart.line,
 								column: 0,
 							});
-							const elemStart = sourceCode.getIndexFromLoc(firstElemStart);
+							const elemStart = sourceCode.getIndexFromLoc(
+								firstElemStart,
+							);
 							const indent = fullText.slice(lineStart, elemStart);
 
 							const newContent = sortedTexts.join(",\n" + indent);
 							return fixer.replaceTextRange(
 								[
 									allowedArray.elements[0]!.range![0],
-									allowedArray.elements[allowedArray.elements.length - 1]!.range![1],
+									allowedArray
+										.elements.at(-1)!.range![1],
 								],
 								newContent,
 							);
@@ -492,8 +512,7 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 				`Entries in "allowed" must be sorted. {{prev}} must come after {{curr}}.`,
 			"allowed-entries-not-sorted-fixable":
 				`Entries in "allowed" must be sorted.`,
-			"allowed-entries-overlap":
-				`{{curr}} overlaps with {{prev}}.`,
+			"allowed-entries-overlap": `{{curr}} overlaps with {{prev}}.`,
 		},
 		type: "problem",
 	},

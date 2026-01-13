@@ -104,10 +104,10 @@ For devices which do not allow auto-discovering associations, the associations m
 
 Before defining `associations` in a config file, please make sure that **at least one** of the following points applies:
 
--   The device **does not** support `Z-Wave Plus CC` and `Association Group Info CC`
--   The auto-discovered labels are **bad** (content or formatting wise), like `GROUP_1` instead of something useful like `Multilevel Sensor Reports`
--   Additional lifelines besides the primary one are **necessary** to get all desired reports
--   `zwave-js` auto-assigns an endpoint association (node 1, endpoint 0) to the lifeline, but the device needs a node association (node 1, no endpoint) to report properly
+- The device **does not** support `Z-Wave Plus CC` and `Association Group Info CC`
+- The auto-discovered labels are **bad** (content or formatting wise), like `GROUP_1` instead of something useful like `Multilevel Sensor Reports`
+- Additional lifelines besides the primary one are **necessary** to get all desired reports
+- `zwave-js` auto-assigns an endpoint association (node 1, endpoint 0) to the lifeline, but the device needs a node association (node 1, no endpoint) to report properly
 
 The property looks as follows:
 
@@ -280,8 +280,8 @@ Some parameters accept values in multiple disconnected ranges, or ranges with sp
 
 The `allowed` field is an array of objects, where each object defines either:
 
--   A single allowed value: `{"value": number}`
--   A range of values: `{"range": [from, to], "step"?: number}`
+- A single allowed value: `{"value": number}`
+- A range of values: `{"range": [from, to], "step"?: number}`
 
 #### Examples
 
@@ -370,8 +370,8 @@ Each scene is identified by a numeric key (which must be a positive integer betw
 
 Each scene entry consists of:
 
--   A **label** (required) - A user-friendly name for the scene
--   An optional **description** - Additional information about the scene
+- A **label** (required) - A user-friendly name for the scene
+- An optional **description** - Additional information about the scene
 
 Scene definitions can also use `$import` syntax and conditional logic (`$if`) just like other parts of device configuration.
 
@@ -504,18 +504,18 @@ Some legacy devices emit an NIF when a local event occurs (e.g. a button press) 
 
 `Basic CC::Report` commands are like their name implies, Basic. They contain no information about **what** they are reporting. By default, Z-Wave JS uses the device type to map these commands to a more appropriate CC. The `mapBasicReport` can influence this behavior. It has the following options:
 
--   `false`: treat the report verbatim without mapping
--   `"auto"` **(default)**: Depending on the device type (Binary Switch, Multilevel Switch, or Binary Sensor), the command is mapped to the corresponding report for that device type. If no matching mapping is found, the command is treated verbatim without mapping.
--   `"Binary Sensor"`: Regardless of the device type, the command is treated like a `Binary Sensor CC::Report`.
+- `false`: treat the report verbatim without mapping
+- `"auto"` **(default)**: Depending on the device type (Binary Switch, Multilevel Switch, or Binary Sensor), the command is mapped to the corresponding report for that device type. If no matching mapping is found, the command is treated verbatim without mapping.
+- `"Binary Sensor"`: Regardless of the device type, the command is treated like a `Binary Sensor CC::Report`.
 
 ### `mapBasicSet`
 
 `Basic CC::Set` commands are meant to control other devices, yet some devices use them to "report" their status or expose secondary functionality. The `mapBasicSet` flag defines how Z-Wave JS should handle these commands:
 
--   `"report"` **(default)**: The command is treated like a `Basic CC::Report`, but the **target value** is used as the **current value**.
--   `"auto"`: Depending on the device type (Binary Switch, Multilevel Switch, or Binary Sensor), the command is mapped to the corresponding report for that device type. If no matching mapping is found, the command is treated like a `Basic CC::Report`, but the **target value** is used as the **current value**.
--   `"event"`: Emit a `value event` for the Basic `"event"` property.
--   `"Binary Sensor"`: Regardless of the device type, the command is treated like a `Binary Sensor CC::Report`.
+- `"report"` **(default)**: The command is treated like a `Basic CC::Report`, but the **target value** is used as the **current value**.
+- `"auto"`: Depending on the device type (Binary Switch, Multilevel Switch, or Binary Sensor), the command is mapped to the corresponding report for that device type. If no matching mapping is found, the command is treated like a `Basic CC::Report`, but the **target value** is used as the **current value**.
+- `"event"`: Emit a `value event` for the Basic `"event"` property.
+- `"Binary Sensor"`: Regardless of the device type, the command is treated like a `Binary Sensor CC::Report`.
 
 ### `mapRootReportsToEndpoint`
 
