@@ -1,5 +1,6 @@
 import { configDir } from "#config_dir";
 import {
+	AllowedConfigValue,
 	getBitMaskWidth,
 	getIntegerLimits,
 	getLegalRangeForBitMask,
@@ -661,6 +662,25 @@ If this is intended, consider marking one of the config files as preferred or sp
 	}
 }
 
+/** Checks if a value is allowed by the given definitions (ranges and individual values) */
+function isValueAllowed(
+	value: number,
+	allowedDefs: readonly AllowedConfigValue[],
+): boolean {
+	for (const def of allowedDefs) {
+		if ("value" in def) {
+			if (def.value === value) return true;
+		} else {
+			const { from, to, step = 1 } = def;
+			if (value >= from && value <= to) {
+				// Check if value falls on a valid step
+				if ((value - from) % step === 0) return true;
+			}
+		}
+	}
+	return false;
+}
+
 function validateAllowedValuesDefinition(
 	allowedDefs: ParamInformation["allowed"],
 	valueSize: number,
@@ -670,15 +690,12 @@ function validateAllowedValuesDefinition(
 	file: string,
 	addError: (file: string, error: string, variant?: DeviceID) => void,
 	variant?: DeviceID,
-): { min: number; max: number; allowed: Set<number> } {
-	const allowed = new Set<number>();
+): void {
 	let globalMin = Infinity;
 	let globalMax = -Infinity;
 
 	for (const def of allowedDefs) {
 		if ("value" in def) {
-			// Single value
-			allowed.add(def.value);
 			globalMin = Math.min(globalMin, def.value);
 			globalMax = Math.max(globalMax, def.value);
 		} else {
@@ -718,11 +735,6 @@ function validateAllowedValuesDefinition(
 				continue;
 			}
 
-			// Add all values in range
-			for (let v = from; v <= to; v += step) {
-				allowed.add(v);
-			}
-
 			globalMin = Math.min(globalMin, from);
 			globalMax = Math.max(globalMax, to);
 		}
@@ -741,8 +753,6 @@ function validateAllowedValuesDefinition(
 			variant,
 		);
 	}
-
-	return { min: globalMin, max: globalMax, allowed };
 }
 
 function lintUnconditionalParamInformation(
@@ -1062,7 +1072,7 @@ Consider converting this parameter to unsigned using ${
 	) {
 		if (value.allowed) {
 			// Validate the definitions themselves
-			const { allowed } = validateAllowedValuesDefinition(
+			validateAllowedValuesDefinition(
 				value.allowed,
 				value.valueSize,
 				!!value.unsigned,
@@ -1076,7 +1086,7 @@ Consider converting this parameter to unsigned using ${
 			// Validate defaultValue is in the allowed set
 			if (
 				value.defaultValue !== undefined
-				&& !allowed.has(value.defaultValue)
+				&& !isValueAllowed(value.defaultValue, value.allowed)
 			) {
 				addError(
 					file,
@@ -1092,7 +1102,7 @@ Consider converting this parameter to unsigned using ${
 
 			// Validate all options are in the allowed set
 			for (const option of value.options) {
-				if (!allowed.has(option.value)) {
+				if (!isValueAllowed(option.value, value.allowed)) {
 					addError(
 						file,
 						`${

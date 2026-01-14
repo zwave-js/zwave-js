@@ -1739,7 +1739,6 @@ export {
 	FibaroVenetianBlindCCSet,
 };
 
- 
 export function registerCCs(): void {
 	void AlarmSensorCCValues;
 	void AlarmSensorCC;
