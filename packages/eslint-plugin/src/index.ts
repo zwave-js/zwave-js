@@ -7,7 +7,10 @@ import { consistentImportDeclarations } from "./rules/consistent-import-declarat
 import { consistentMockNodeBehaviors } from "./rules/consistent-mock-node-behaviors.js";
 import { consistentParamUnits } from "./rules/consistent-param-units.js";
 import { noDebugInTests } from "./rules/no-debug-in-tests.js";
-import { noDisallowedValues } from "./rules/no-disallowed-values.js";
+import {
+	noDisallowedDefaultValue,
+	noDisallowedOptionValues,
+} from "./rules/no-disallowed-values.js";
 import { noForbiddenImports } from "./rules/no-forbidden-imports.js";
 import { noInternalCCTypes } from "./rules/no-internal-cc-types.js";
 import { noMisspelledNames } from "./rules/no-misspelled-names.js";
@@ -31,7 +34,8 @@ export default {
 		"consistent-mock-node-behaviors": consistentMockNodeBehaviors,
 		"consistent-param-units": consistentParamUnits,
 		"no-debug-in-tests": noDebugInTests,
-		"no-disallowed-values": noDisallowedValues,
+		"no-disallowed-default-value": noDisallowedDefaultValue,
+		"no-disallowed-option-values": noDisallowedOptionValues,
 		"no-forbidden-imports": noForbiddenImports,
 		"no-internal-cc-types": noInternalCCTypes,
 		"no-misspelled-names": noMisspelledNames,

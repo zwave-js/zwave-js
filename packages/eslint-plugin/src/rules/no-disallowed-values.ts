@@ -78,88 +78,88 @@ function isValueAllowed(value: number, entries: ParsedEntry[]): boolean {
 	return false;
 }
 
-export const noDisallowedValues: JSONCRule.RuleModule = {
+function getAllowedEntriesAndRange(node: AST.JSONObjectExpression): {
+	allowedEntries: ParsedEntry[];
+	hasExplicitAllowed: boolean;
+	minValue: number | undefined;
+	maxValue: number | undefined;
+} {
+	let allowedEntries: ParsedEntry[] = [];
+
+	const allowedProp = node.properties.find(
+		(p) => p.key.type === "JSONLiteral" && p.key.value === "allowed",
+	);
+	if (allowedProp && allowedProp.value.type === "JSONArrayExpression") {
+		allowedEntries = parseAllowedEntries(allowedProp.value);
+	} else {
+		// Fall back to minValue/maxValue
+		const minValueProp = node.properties.find(
+			(p) => p.key.type === "JSONLiteral" && p.key.value === "minValue",
+		);
+		const maxValueProp = node.properties.find(
+			(p) => p.key.type === "JSONLiteral" && p.key.value === "maxValue",
+		);
+		if (
+			minValueProp
+			&& minValueProp.value.type === "JSONLiteral"
+			&& typeof minValueProp.value.value === "number"
+			&& maxValueProp
+			&& maxValueProp.value.type === "JSONLiteral"
+			&& typeof maxValueProp.value.value === "number"
+		) {
+			allowedEntries = [
+				{
+					type: "range",
+					from: minValueProp.value.value,
+					to: maxValueProp.value.value,
+					step: 1,
+				},
+			];
+		}
+	}
+
+	const hasExplicitAllowed = allowedProp !== undefined;
+	let minValue: number | undefined;
+	let maxValue: number | undefined;
+	if (!hasExplicitAllowed) {
+		const minProp = node.properties.find(
+			(p) => p.key.type === "JSONLiteral" && p.key.value === "minValue",
+		);
+		const maxProp = node.properties.find(
+			(p) => p.key.type === "JSONLiteral" && p.key.value === "maxValue",
+		);
+		if (
+			minProp?.value.type === "JSONLiteral"
+			&& typeof minProp.value.value === "number"
+		) {
+			minValue = minProp.value.value;
+		}
+		if (
+			maxProp?.value.type === "JSONLiteral"
+			&& typeof maxProp.value.value === "number"
+		) {
+			maxValue = maxProp.value.value;
+		}
+	}
+
+	return { allowedEntries, hasExplicitAllowed, minValue, maxValue };
+}
+
+export const noDisallowedDefaultValue: JSONCRule.RuleModule = {
 	create(context) {
 		return {
 			"JSONProperty[key.value='paramInformation'] > JSONArrayExpression > JSONObjectExpression"(
 				node: AST.JSONObjectExpression,
 			) {
-				// Build the allowed entries from either explicit 'allowed' or minValue/maxValue
-				let allowedEntries: ParsedEntry[] = [];
-
-				const allowedProp = node.properties.find(
-					(p) =>
-						p.key.type === "JSONLiteral"
-						&& p.key.value === "allowed",
-				);
-				if (
-					allowedProp
-					&& allowedProp.value.type === "JSONArrayExpression"
-				) {
-					allowedEntries = parseAllowedEntries(allowedProp.value);
-				} else {
-					// Fall back to minValue/maxValue
-					const minValueProp = node.properties.find(
-						(p) =>
-							p.key.type === "JSONLiteral"
-							&& p.key.value === "minValue",
-					);
-					const maxValueProp = node.properties.find(
-						(p) =>
-							p.key.type === "JSONLiteral"
-							&& p.key.value === "maxValue",
-					);
-					if (
-						minValueProp
-						&& minValueProp.value.type === "JSONLiteral"
-						&& typeof minValueProp.value.value === "number"
-						&& maxValueProp
-						&& maxValueProp.value.type === "JSONLiteral"
-						&& typeof maxValueProp.value.value === "number"
-					) {
-						allowedEntries = [
-							{
-								type: "range",
-								from: minValueProp.value.value,
-								to: maxValueProp.value.value,
-								step: 1,
-							},
-						];
-					}
-				}
+				const {
+					allowedEntries,
+					hasExplicitAllowed,
+					minValue,
+					maxValue,
+				} = getAllowedEntriesAndRange(node);
 
 				if (allowedEntries.length === 0) return;
 
-				// Track whether we're using explicit 'allowed' or minValue/maxValue
-				const hasExplicitAllowed = allowedProp !== undefined;
-				let minValue: number | undefined;
-				let maxValue: number | undefined;
-				if (!hasExplicitAllowed) {
-					const minProp = node.properties.find(
-						(p) =>
-							p.key.type === "JSONLiteral"
-							&& p.key.value === "minValue",
-					);
-					const maxProp = node.properties.find(
-						(p) =>
-							p.key.type === "JSONLiteral"
-							&& p.key.value === "maxValue",
-					);
-					if (
-						minProp?.value.type === "JSONLiteral"
-						&& typeof minProp.value.value === "number"
-					) {
-						minValue = minProp.value.value;
-					}
-					if (
-						maxProp?.value.type === "JSONLiteral"
-						&& typeof maxProp.value.value === "number"
-					) {
-						maxValue = maxProp.value.value;
-					}
-				}
-
-				// Check defaultValue
 				const defaultValueProp = node.properties.find(
 					(p) =>
 						p.key.type === "JSONLiteral"
@@ -191,8 +191,41 @@ export const noDisallowedValues: JSONCRule.RuleModule = {
 						}
 					}
 				}
+			},
+		};
+	},
+	meta: {
+		// @ts-expect-error Something is off about the rule types
+		docs: {
+			description:
+				"Ensures that defaultValue is within the allowed range",
+		},
+		schema: false,
+		messages: {
+			"default-value-not-allowed":
+				`Default value {{value}} is not in the allowed values.`,
+			"default-value-outside-range":
+				`Default value {{value}} is outside of the min/max value range {{min}}...{{max}}.`,
+		},
+		type: "problem",
+	},
+};
 
-				// Check option values
+export const noDisallowedOptionValues: JSONCRule.RuleModule = {
+	create(context) {
+		return {
+			"JSONProperty[key.value='paramInformation'] > JSONArrayExpression > JSONObjectExpression"(
+				node: AST.JSONObjectExpression,
+			) {
+				const {
+					allowedEntries,
+					hasExplicitAllowed,
+					minValue,
+					maxValue,
+				} = getAllowedEntriesAndRange(node);
+
+				if (allowedEntries.length === 0) return;
+
 				const optionsProp = node.properties.find(
 					(p) =>
 						p.key.type === "JSONLiteral"
@@ -265,14 +298,10 @@ export const noDisallowedValues: JSONCRule.RuleModule = {
 		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
-				"Ensures that defaultValue and option values are within the allowed range",
+				"Ensures that option values are within the allowed range",
 		},
 		schema: false,
 		messages: {
-			"default-value-not-allowed":
-				`Default value {{value}} is not in the allowed values.`,
-			"default-value-outside-range":
-				`Default value {{value}} is outside of the min/max value range {{min}}...{{max}}.`,
 			"option-value-not-allowed":
 				`Option value {{value}}{{label}} is not in the allowed values.`,
 			"option-value-outside-range":
