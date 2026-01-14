@@ -1,3 +1,5 @@
+/* oxlint-disable typescript/no-unnecessary-type-assertion */
+
 import type { AST } from "jsonc-eslint-parser";
 import { type JSONCRule, removeJSONProperty } from "../utils.js";
 

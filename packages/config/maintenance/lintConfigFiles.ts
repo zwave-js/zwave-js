@@ -1,6 +1,6 @@
 import { configDir } from "#config_dir";
 import {
-	AllowedConfigValue,
+	type AllowedConfigValue,
 	getBitMaskWidth,
 	getIntegerLimits,
 	getLegalRangeForBitMask,
