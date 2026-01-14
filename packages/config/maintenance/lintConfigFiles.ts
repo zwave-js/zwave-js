@@ -741,7 +741,7 @@ function validateAllowedValuesDefinition(
 	}
 
 	// Validate envelope fits in valueSize
-	const limits = getIntegerLimits(valueSize as any, unsigned);
+	const limits = getIntegerLimits(valueSize as any, !unsigned);
 	if (globalMin < limits.min || globalMax > limits.max) {
 		addError(
 			file,
