@@ -27,7 +27,8 @@
 				{ "range": [1, 99] },
 				{ "value": 255 }
 			],
-			"defaultValue": 255
+			"defaultValue": 255,
+			"unsigned": true
 		},
 		{
 			"#": "2",
