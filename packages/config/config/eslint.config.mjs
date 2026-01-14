@@ -39,6 +39,7 @@ export default [
 		rules: {
 			"@zwave-js/auto-unsigned": "error",
 			"@zwave-js/consistent-config-string-case": "error",
+			"@zwave-js/no-disallowed-values": "error",
 			"@zwave-js/consistent-device-config-property-order": "error",
 			"@zwave-js/consistent-param-units": "error",
 			"@zwave-js/no-misspelled-names": "error",

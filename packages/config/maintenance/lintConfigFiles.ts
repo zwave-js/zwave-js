@@ -1,6 +1,5 @@
 import { configDir } from "#config_dir";
 import {
-	type AllowedConfigValue,
 	getBitMaskWidth,
 	getIntegerLimits,
 	getLegalRangeForBitMask,
@@ -662,25 +661,6 @@ If this is intended, consider marking one of the config files as preferred or sp
 	}
 }
 
-/** Checks if a value is allowed by the given definitions (ranges and individual values) */
-function isValueAllowed(
-	value: number,
-	allowedDefs: readonly AllowedConfigValue[],
-): boolean {
-	for (const def of allowedDefs) {
-		if ("value" in def) {
-			if (def.value === value) return true;
-		} else {
-			const { from, to, step = 1 } = def;
-			if (value >= from && value <= to) {
-				// Check if value falls on a valid step
-				if ((value - from) % step === 0) return true;
-			}
-		}
-	}
-	return false;
-}
-
 function validateAllowedValuesDefinition(
 	allowedDefs: ParamInformation["allowed"],
 	valueSize: number,
@@ -1063,7 +1043,7 @@ Consider converting this parameter to unsigned using ${
 		}
 	}
 
-	// Validate the values field if present
+	// Validate the allowed field definitions if present
 	for (
 		const [
 			{ parameter, valueBitMask },
@@ -1071,7 +1051,6 @@ Consider converting this parameter to unsigned using ${
 		] of paramInformation.entries()
 	) {
 		if (value.allowed) {
-			// Validate the definitions themselves
 			validateAllowedValuesDefinition(
 				value.allowed,
 				value.valueSize,
@@ -1082,39 +1061,6 @@ Consider converting this parameter to unsigned using ${
 				addError,
 				variant,
 			);
-
-			// Validate defaultValue is in the allowed set
-			if (
-				value.defaultValue !== undefined
-				&& !isValueAllowed(value.defaultValue, value.allowed)
-			) {
-				addError(
-					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} is invalid: defaultValue ${value.defaultValue} is not in the allowed values!`,
-					variant,
-				);
-			}
-
-			// Validate all options are in the allowed set
-			for (const option of value.options) {
-				if (!isValueAllowed(option.value, value.allowed)) {
-					addError(
-						file,
-						`${
-							paramNoToString(
-								parameter,
-								valueBitMask,
-							)
-						} is invalid: option value ${option.value} ("${option.label}") is not in the allowed values!`,
-						variant,
-					);
-				}
-			}
 		}
 	}
 
