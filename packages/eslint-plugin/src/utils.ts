@@ -287,9 +287,9 @@ export function removeJSONArrayElement(
 		// - If there's a previous element, remove from end of previous to end of current
 		// - If it's the only element, just remove the element itself
 		if (nextElem) {
-			return fixer.removeRange([element.range![0], nextElem.range![0]]);
+			return fixer.removeRange([element.range[0], nextElem.range[0]]);
 		} else if (prevElem) {
-			return fixer.removeRange([prevElem.range![1], element.range![1]]);
+			return fixer.removeRange([prevElem.range[1], element.range[1]]);
 		} else {
 			return fixer.remove(element as any);
 		}
