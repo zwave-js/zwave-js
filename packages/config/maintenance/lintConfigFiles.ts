@@ -663,75 +663,49 @@ If this is intended, consider marking one of the config files as preferred or sp
 
 function validateAllowedValuesDefinition(
 	allowedDefs: ParamInformation["allowed"],
-	valueSize: number,
-	unsigned: boolean,
 	parameter: number,
 	valueBitMask: number | undefined,
 	file: string,
 	addError: (file: string, error: string, variant?: DeviceID) => void,
 	variant?: DeviceID,
 ): void {
-	let globalMin = Infinity;
-	let globalMax = -Infinity;
-
 	for (const def of allowedDefs) {
-		if ("value" in def) {
-			globalMin = Math.min(globalMin, def.value);
-			globalMax = Math.max(globalMax, def.value);
-		} else {
-			// Range validation
-			const { from, to, step = 1 } = def;
+		if ("value" in def) continue;
 
-			if (step <= 0) {
-				addError(
-					file,
-					`${
-						paramNoToString(parameter, valueBitMask)
-					}: step must be positive (got ${step})`,
-					variant,
-				);
-				continue;
-			}
+		// Range validation
+		const { from, to, step = 1 } = def;
 
-			if (from > to) {
-				addError(
-					file,
-					`${
-						paramNoToString(parameter, valueBitMask)
-					}: range 'from' (${from}) must be <= 'to' (${to})`,
-					variant,
-				);
-				continue;
-			}
-
-			if ((to - from) % step !== 0) {
-				addError(
-					file,
-					`${
-						paramNoToString(parameter, valueBitMask)
-					}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
-					variant,
-				);
-				continue;
-			}
-
-			globalMin = Math.min(globalMin, from);
-			globalMax = Math.max(globalMax, to);
+		if (step <= 0) {
+			addError(
+				file,
+				`${
+					paramNoToString(parameter, valueBitMask)
+				}: step must be positive (got ${step})`,
+				variant,
+			);
+			continue;
 		}
-	}
 
-	// Validate envelope fits in valueSize
-	const limits = getIntegerLimits(valueSize as any, !unsigned);
-	if (globalMin < limits.min || globalMax > limits.max) {
-		addError(
-			file,
-			`${
-				paramNoToString(parameter, valueBitMask)
-			}: allowed envelope (${globalMin} to ${globalMax}) does not fit in valueSize ${valueSize} (${
-				unsigned ? "unsigned" : "signed"
-			}, range: ${limits.min} to ${limits.max})`,
-			variant,
-		);
+		if (from > to) {
+			addError(
+				file,
+				`${
+					paramNoToString(parameter, valueBitMask)
+				}: range 'from' (${from}) must be <= 'to' (${to})`,
+				variant,
+			);
+			continue;
+		}
+
+		if ((to - from) % step !== 0) {
+			addError(
+				file,
+				`${
+					paramNoToString(parameter, valueBitMask)
+				}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
+				variant,
+			);
+		}
 	}
 }
 
@@ -979,7 +953,7 @@ description: ${description}`,
 									parameter,
 									valueBitMask,
 								)
-							} is invalid: min/maxValue is incompatible with valueSize ${value.valueSize} (min = ${limits.min}, max = ${limits.max}).
+							} is invalid: Value range ${value.minValue}...${value.maxValue} is incompatible with valueSize ${value.valueSize} (min = ${limits.min}, max = ${limits.max}).
 Consider converting this parameter to unsigned using ${
 								c.white(
 									`"unsigned": true`,
@@ -1053,8 +1027,6 @@ Consider converting this parameter to unsigned using ${
 		if (value.allowed) {
 			validateAllowedValuesDefinition(
 				value.allowed,
-				value.valueSize,
-				!!value.unsigned,
 				parameter,
 				valueBitMask,
 				file,

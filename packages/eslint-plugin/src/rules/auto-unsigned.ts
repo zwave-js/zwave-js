@@ -1,13 +1,15 @@
 import { getIntegerLimits, tryParseParamNumber } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
 import {
-	type JSONCRule,
+	inferMinMaxValueFromAllowed,
 	getJSONBoolean,
 	getJSONNumber,
 	getJSONString,
 	insertAfterJSONProperty,
 	insertBeforeJSONProperty,
+	type JSONCRule,
 	paramInfoPropertyOrder,
+	parseAllowedField,
 	removeJSONProperty,
 } from "../utils.js";
 
@@ -107,79 +109,15 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 						&& p.value.type === "JSONArrayExpression",
 				);
 
-				if (
-					allowedProp
-					&& allowedProp.value.type === "JSONArrayExpression"
-				) {
-					// Compute min/max from allowed entries
-					let computedMin = Infinity;
-					let computedMax = -Infinity;
-
-					for (const element of allowedProp.value.elements) {
-						if (
-							!element || element.type !== "JSONObjectExpression"
-						) continue;
-
-						// Check for single value
-						const valueProp = element.properties.find(
-							(p) =>
-								p.key.type === "JSONLiteral"
-								&& p.key.value === "value",
-						);
-						if (
-							valueProp
-							&& valueProp.value.type === "JSONLiteral"
-							&& typeof valueProp.value.value === "number"
-						) {
-							computedMin = Math.min(
-								computedMin,
-								valueProp.value.value,
-							);
-							computedMax = Math.max(
-								computedMax,
-								valueProp.value.value,
-							);
-							continue;
-						}
-
-						// Check for range
-						const rangeProp = element.properties.find(
-							(p) =>
-								p.key.type === "JSONLiteral"
-								&& p.key.value === "range",
-						);
-						if (
-							rangeProp
-							&& rangeProp.value.type === "JSONArrayExpression"
-							&& rangeProp.value.elements.length === 2
-						) {
-							const [fromElem, toElem] = rangeProp.value.elements;
-							if (
-								fromElem?.type === "JSONLiteral"
-								&& typeof fromElem.value === "number"
-							) {
-								computedMin = Math.min(
-									computedMin,
-									fromElem.value,
-								);
-							}
-							if (
-								toElem?.type === "JSONLiteral"
-								&& typeof toElem.value === "number"
-							) {
-								computedMax = Math.max(
-									computedMax,
-									toElem.value,
-								);
-							}
-						}
-					}
-
-					if (computedMin !== Infinity && computedMax !== -Infinity) {
-						minValueNode = allowedProp;
-						maxValueNode = allowedProp;
-						minValue = computedMin;
-						maxValue = computedMax;
+				const parsedAllowed = parseAllowedField(node);
+				if (parsedAllowed) {
+					const minMax = inferMinMaxValueFromAllowed(parsedAllowed);
+					if (minMax) {
+						// allowedProp must exist if parseAllowedField returned data
+						minValueNode = allowedProp!;
+						maxValueNode = allowedProp!;
+						minValue = minMax.min;
+						maxValue = minMax.max;
 						isUsingOptions = false;
 						isUsingAllowed = true;
 					} else {

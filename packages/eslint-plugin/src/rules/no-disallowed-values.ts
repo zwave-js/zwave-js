@@ -1,148 +1,61 @@
+import type { AllowedConfigValue } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
-import type { JSONCRule } from "../utils.js";
-
-type ParsedEntry =
-	| { type: "value"; value: number }
-	| { type: "range"; from: number; to: number; step: number };
-
-function parseAllowedEntries(
-	allowedArray: AST.JSONArrayExpression,
-): ParsedEntry[] {
-	const entries: ParsedEntry[] = [];
-
-	for (const element of allowedArray.elements) {
-		if (!element || element.type !== "JSONObjectExpression") continue;
-
-		const valueProp = element.properties.find(
-			(p) => p.key.type === "JSONLiteral" && p.key.value === "value",
-		);
-		if (
-			valueProp
-			&& valueProp.value.type === "JSONLiteral"
-			&& typeof valueProp.value.value === "number"
-		) {
-			entries.push({ type: "value", value: valueProp.value.value });
-			continue;
-		}
-
-		const rangeProp = element.properties.find(
-			(p) => p.key.type === "JSONLiteral" && p.key.value === "range",
-		);
-		if (
-			rangeProp
-			&& rangeProp.value.type === "JSONArrayExpression"
-			&& rangeProp.value.elements.length === 2
-		) {
-			const [fromElem, toElem] = rangeProp.value.elements;
-			if (
-				fromElem?.type === "JSONLiteral"
-				&& typeof fromElem.value === "number"
-				&& toElem?.type === "JSONLiteral"
-				&& typeof toElem.value === "number"
-			) {
-				const stepProp = element.properties.find(
-					(p) =>
-						p.key.type === "JSONLiteral" && p.key.value === "step",
-				);
-				let step = 1;
-				if (
-					stepProp
-					&& stepProp.value.type === "JSONLiteral"
-					&& typeof stepProp.value.value === "number"
-				) {
-					step = stepProp.value.value;
-				}
-				entries.push({
-					type: "range",
-					from: fromElem.value,
-					to: toElem.value,
-					step,
-				});
-			}
-		}
-	}
-
-	return entries;
-}
-
-function isValueAllowed(value: number, entries: ParsedEntry[]): boolean {
-	for (const entry of entries) {
-		if (entry.type === "value") {
-			if (entry.value === value) return true;
-		} else {
-			if (value >= entry.from && value <= entry.to) {
-				if ((value - entry.from) % entry.step === 0) return true;
-			}
-		}
-	}
-	return false;
-}
+import {
+	isValueAllowed,
+	type JSONCRule,
+	parseAllowedField,
+} from "../utils.js";
 
 function getAllowedEntriesAndRange(node: AST.JSONObjectExpression): {
-	allowedEntries: ParsedEntry[];
+	allowedEntries: AllowedConfigValue[];
 	hasExplicitAllowed: boolean;
 	minValue: number | undefined;
 	maxValue: number | undefined;
 } {
-	let allowedEntries: ParsedEntry[] = [];
+	const parsedAllowed = parseAllowedField(node);
+	if (parsedAllowed) {
+		return {
+			allowedEntries: parsedAllowed,
+			hasExplicitAllowed: true,
+			minValue: undefined,
+			maxValue: undefined,
+		};
+	}
 
-	const allowedProp = node.properties.find(
-		(p) => p.key.type === "JSONLiteral" && p.key.value === "allowed",
+	// Fall back to minValue/maxValue
+	const minValueProp = node.properties.find(
+		(p) => p.key.type === "JSONLiteral" && p.key.value === "minValue",
 	);
-	if (allowedProp && allowedProp.value.type === "JSONArrayExpression") {
-		allowedEntries = parseAllowedEntries(allowedProp.value);
-	} else {
-		// Fall back to minValue/maxValue
-		const minValueProp = node.properties.find(
-			(p) => p.key.type === "JSONLiteral" && p.key.value === "minValue",
-		);
-		const maxValueProp = node.properties.find(
-			(p) => p.key.type === "JSONLiteral" && p.key.value === "maxValue",
-		);
-		if (
-			minValueProp
-			&& minValueProp.value.type === "JSONLiteral"
-			&& typeof minValueProp.value.value === "number"
-			&& maxValueProp
-			&& maxValueProp.value.type === "JSONLiteral"
-			&& typeof maxValueProp.value.value === "number"
-		) {
-			allowedEntries = [
+	const maxValueProp = node.properties.find(
+		(p) => p.key.type === "JSONLiteral" && p.key.value === "maxValue",
+	);
+	if (
+		minValueProp
+		&& minValueProp.value.type === "JSONLiteral"
+		&& typeof minValueProp.value.value === "number"
+		&& maxValueProp
+		&& maxValueProp.value.type === "JSONLiteral"
+		&& typeof maxValueProp.value.value === "number"
+	) {
+		return {
+			allowedEntries: [
 				{
-					type: "range",
 					from: minValueProp.value.value,
 					to: maxValueProp.value.value,
-					step: 1,
 				},
-			];
-		}
+			],
+			hasExplicitAllowed: false,
+			minValue: minValueProp.value.value,
+			maxValue: maxValueProp.value.value,
+		};
 	}
 
-	const hasExplicitAllowed = allowedProp !== undefined;
-	let minValue: number | undefined;
-	let maxValue: number | undefined;
-	if (!hasExplicitAllowed) {
-		const minProp = node.properties.find(
-			(p) => p.key.type === "JSONLiteral" && p.key.value === "minValue",
-		);
-		const maxProp = node.properties.find(
-			(p) => p.key.type === "JSONLiteral" && p.key.value === "maxValue",
-		);
-		if (
-			minProp?.value.type === "JSONLiteral"
-			&& typeof minProp.value.value === "number"
-		) {
-			minValue = minProp.value.value;
-		}
-		if (
-			maxProp?.value.type === "JSONLiteral"
-			&& typeof maxProp.value.value === "number"
-		) {
-			maxValue = maxProp.value.value;
-		}
-	}
-
-	return { allowedEntries, hasExplicitAllowed, minValue, maxValue };
+	return {
+		allowedEntries: [],
+		hasExplicitAllowed: false,
+		minValue: undefined,
+		maxValue: undefined,
+	};
 }
 
 export const noDisallowedDefaultValue: JSONCRule.RuleModule = {
