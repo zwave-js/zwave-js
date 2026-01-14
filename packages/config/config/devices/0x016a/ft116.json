@@ -145,8 +145,9 @@
 			"description": "Set the ON/OFF time of the LED when it is in Night light mode",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 0,
-			"defaultValue": 301991936
+			"maxValue": 4294967295,
+			"defaultValue": 301991936,
+			"unsigned": true
 		},
 		{
 			"#": "86",
@@ -154,8 +155,9 @@
 			"description": "Set the ON time of output load.",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 0,
-			"defaultValue": 8327680
+			"maxValue": 4294967295,
+			"defaultValue": 8327680,
+			"unsigned": true
 		},
 		{
 			"#": "87",

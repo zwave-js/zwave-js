@@ -23,8 +23,10 @@
 			"label": "Basic Set",
 			"description": "send BASIC Set = Value command",
 			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 100,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255
 		},
 		{
