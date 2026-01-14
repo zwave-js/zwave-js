@@ -1,13 +1,13 @@
 import { getIntegerLimits, tryParseParamNumber } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
 import {
-	inferMinMaxValueFromAllowed,
+	type JSONCRule,
 	getJSONBoolean,
 	getJSONNumber,
 	getJSONString,
+	inferMinMaxValueFromAllowed,
 	insertAfterJSONProperty,
 	insertBeforeJSONProperty,
-	type JSONCRule,
 	paramInfoPropertyOrder,
 	parseAllowedField,
 	removeJSONProperty,
@@ -99,7 +99,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 				let minValue: number;
 				let maxValue: number;
 				let isUsingOptions: boolean;
-				let isUsingAllowed: boolean = false;
+				let isUsingAllowed = false;
 
 				// Check for 'allowed' field first
 				const allowedProp = node.properties.find(
