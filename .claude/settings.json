@@ -1,0 +1,33 @@
+{
+	"permissions": {
+		"allow": [
+			"Bash(yarn workspace @zwave-js/bindings-browser run build:*)",
+			"Bash(yarn workspace @zwave-js/cc run build:*)",
+			"Bash(yarn workspace @zwave-js/config run build:*)",
+			"Bash(yarn workspace @zwave-js/core run build:*)",
+			"Bash(yarn workspace @zwave-js/eslint-plugin run build:*)",
+			"Bash(yarn workspace @zwave-js/flash run build:*)",
+			"Bash(yarn workspace @zwave-js/host run build:*)",
+			"Bash(yarn workspace @zwave-js/maintenance run build:*)",
+			"Bash(yarn workspace @zwave-js/mcp-server-dev run build:*)",
+			"Bash(yarn workspace @zwave-js/nvmedit run build:*)",
+			"Bash(yarn workspace @zwave-js/serial run build:*)",
+			"Bash(yarn workspace @zwave-js/shared run build:*)",
+			"Bash(yarn workspace @zwave-js/testing run build:*)",
+			"Bash(yarn workspace @zwave-js/transformers run build:*)",
+			"Bash(yarn workspace @zwave-js/web run build:*)",
+			"Bash(yarn workspace zwave-js run build:*)",
+			"Bash(yarn build:*)",
+			"Bash(yarn vitest run:*)",
+			"Bash(yarn test:ts:*)",
+			"Bash(yarn fmt:*)",
+			"Bash(yarn lint:*)",
+			"Bash(yarn lint:ts:*)",
+			"Bash(yarn lint:zwave:*)",
+			"Bash(yarn eslint:*)",
+			"Bash(yarn oxlint:*)",
+			"Bash(git log:*)",
+			"Bash(git show:*)"
+		]
+	}
+}
