@@ -1,7 +1,11 @@
 /* oxlint-disable typescript/no-unnecessary-type-assertion */
 
 import type { AST } from "jsonc-eslint-parser";
-import { type JSONCRule, removeJSONProperty } from "../utils.js";
+import {
+	type JSONCRule,
+	removeJSONArrayElement,
+	removeJSONProperty,
+} from "../utils.js";
 
 export const validAllowedValues: JSONCRule.RuleModule = {
 	create(context) {
@@ -350,6 +354,9 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						} else {
 							return prev.to >= curr.from;
 						}
+					} else if (curr.type === "value") {
+						// Two single values overlap if they're equal
+						return prev.value === curr.value;
 					}
 					return false;
 				};
@@ -371,6 +378,43 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 				}
 
 				if (entries.length < 2) return;
+
+				// First check for duplicate single values across all entries
+				const seenValues = new Map<
+					number,
+					{ element: AST.JSONObjectExpression; index: number }
+				>();
+				let hasDuplicates = false;
+
+				for (let i = 0; i < entries.length; i++) {
+					const entry = entries[i];
+					if (entry.parsed.type === "value") {
+						const existing = seenValues.get(entry.parsed.value);
+						if (existing) {
+							hasDuplicates = true;
+							context.report({
+								loc: entry.element.loc,
+								messageId: "allowed-entries-duplicate",
+								data: {
+									value: entry.parsed.value.toString(),
+								},
+								fix: removeJSONArrayElement(
+									context,
+									allowedArray,
+									entry.element,
+								),
+							});
+						} else {
+							seenValues.set(entry.parsed.value, {
+								element: entry.element,
+								index: i,
+							});
+						}
+					}
+				}
+
+				// If there are duplicates, don't check sorting/overlaps yet
+				if (hasDuplicates) return;
 
 				// Check if entries are sorted
 				let isSorted = true;
@@ -452,19 +496,20 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						const prevStart = getStart(prev.parsed);
 						const currStart = getStart(curr.parsed);
 
-						if (prevStart >= currStart) {
+						if (entriesOverlap(prev.parsed, curr.parsed)) {
 							context.report({
 								loc: curr.element.loc,
-								messageId: "allowed-entries-not-sorted",
+								messageId: "allowed-entries-overlap",
 								data: {
 									prev: formatEntry(prev.parsed),
 									curr: formatEntry(curr.parsed),
 								},
 							});
-						} else if (entriesOverlap(prev.parsed, curr.parsed)) {
+						} else if (prevStart >= currStart) {
+							// Not sorted and not overlapping
 							context.report({
 								loc: curr.element.loc,
-								messageId: "allowed-entries-overlap",
+								messageId: "allowed-entries-not-sorted",
 								data: {
 									prev: formatEntry(prev.parsed),
 									curr: formatEntry(curr.parsed),
@@ -515,6 +560,7 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 			"allowed-entries-not-sorted-fixable":
 				`Entries in "allowed" must be sorted.`,
 			"allowed-entries-overlap": `{{curr}} overlaps with {{prev}}.`,
+			"allowed-entries-duplicate": `Duplicate value {{value}}.`,
 		},
 		type: "problem",
 	},

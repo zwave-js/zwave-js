@@ -264,6 +264,38 @@ export function removeJSONProperty(
 		);
 }
 
+export function removeJSONArrayElement(
+	context: ESLintRule.RuleContext,
+	array: JSONC_AST.JSONArrayExpression,
+	element: JSONC_AST.JSONExpression,
+): ESLintRule.ReportFixer {
+	return (fixer) => {
+		const elemIndex = array.elements.indexOf(element);
+		if (elemIndex === -1) {
+			// Element not found, return no-op fix
+			return fixer.replaceText(
+				element as any,
+				context.sourceCode.getText(element as any),
+			);
+		}
+
+		const prevElem = array.elements[elemIndex - 1];
+		const nextElem = array.elements[elemIndex + 1];
+
+		// Determine the range to remove:
+		// - If there's a next element, remove from start of current to start of next
+		// - If there's a previous element, remove from end of previous to end of current
+		// - If it's the only element, just remove the element itself
+		if (nextElem) {
+			return fixer.removeRange([element.range![0], nextElem.range![0]]);
+		} else if (prevElem) {
+			return fixer.removeRange([prevElem.range![1], element.range![1]]);
+		} else {
+			return fixer.remove(element as any);
+		}
+	};
+}
+
 export function insertBeforeJSONProperty(
 	context: ESLintRule.RuleContext,
 	property: JSONC_AST.JSONProperty,
