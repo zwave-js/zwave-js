@@ -39,6 +39,8 @@ export default [
 		rules: {
 			"@zwave-js/auto-unsigned": "error",
 			"@zwave-js/consistent-config-string-case": "error",
+			"@zwave-js/no-disallowed-default-value": "warn",
+			"@zwave-js/no-disallowed-option-values": "error",
 			"@zwave-js/consistent-device-config-property-order": "error",
 			"@zwave-js/consistent-param-units": "error",
 			"@zwave-js/no-misspelled-names": "error",
@@ -47,6 +49,7 @@ export default [
 			"@zwave-js/no-useless-description": "error",
 			"@zwave-js/no-value-in-option-label": "error",
 			"@zwave-js/prefer-defaultvalue": "error",
+			"@zwave-js/valid-allowed-values": "error",
 		},
 	},
 ];

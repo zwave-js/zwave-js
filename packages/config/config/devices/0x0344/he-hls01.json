@@ -87,18 +87,32 @@
 			"label": "High Load Timeout Protection: Power Threshold",
 			"valueSize": 2,
 			"unit": "W",
-			"minValue": 100,
-			"maxValue": 3500,
-			"defaultValue": 0
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [100, 3500] }
+			],
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "27",
 			"label": "High Load Timeout Protection: Time Threshold",
 			"valueSize": 2,
 			"unit": "minutes",
-			"minValue": 1,
+			"minValue": 0,
 			"maxValue": 1440,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "41",

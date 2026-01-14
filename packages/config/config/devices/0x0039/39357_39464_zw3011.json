@@ -120,7 +120,7 @@
 			"description": "Set the default brightness level that the dimmer will turn on when being turned on manually",
 			"valueSize": 1,
 			"unit": "%",
-			"minValue": 1,
+			"minValue": 0,
 			"maxValue": 99,
 			"defaultValue": 0
 		}

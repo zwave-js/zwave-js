@@ -443,6 +443,45 @@
 					"type": "boolean",
 					"description": "Whether this parameter is destructive and should require confirmation before setting"
 				},
+				"allowed": {
+					"type": "array",
+					"description": "Defines the allowed values for this parameter as a combination of single values and ranges. Cannot be used together with minValue/maxValue or allowManualEntry: false.",
+					"minItems": 1,
+					"items": {
+						"oneOf": [
+							{
+								"type": "object",
+								"properties": {
+									"value": {
+										"type": "number",
+										"description": "A single allowed value"
+									}
+								},
+								"required": ["value"],
+								"additionalProperties": false
+							},
+							{
+								"type": "object",
+								"properties": {
+									"range": {
+										"type": "array",
+										"description": "A range of allowed values [from, to]",
+										"items": { "type": "number" },
+										"minItems": 2,
+										"maxItems": 2
+									},
+									"step": {
+										"type": "number",
+										"description": "Optional step size within the range (default: 1)",
+										"minimum": 1
+									}
+								},
+								"required": ["range"],
+								"additionalProperties": false
+							}
+						]
+					}
+				},
 				"options": {
 					"type": "array",
 					"minItems": 1,

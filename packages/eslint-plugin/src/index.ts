@@ -7,6 +7,10 @@ import { consistentImportDeclarations } from "./rules/consistent-import-declarat
 import { consistentMockNodeBehaviors } from "./rules/consistent-mock-node-behaviors.js";
 import { consistentParamUnits } from "./rules/consistent-param-units.js";
 import { noDebugInTests } from "./rules/no-debug-in-tests.js";
+import {
+	noDisallowedDefaultValue,
+	noDisallowedOptionValues,
+} from "./rules/no-disallowed-values.js";
 import { noForbiddenImports } from "./rules/no-forbidden-imports.js";
 import { noInternalCCTypes } from "./rules/no-internal-cc-types.js";
 import { noMisspelledNames } from "./rules/no-misspelled-names.js";
@@ -16,6 +20,7 @@ import { noUnnecessaryMinMaxValue } from "./rules/no-unnecessary-min-max-value.j
 import { noUselessDescription } from "./rules/no-useless-description.js";
 import { noValueInOptionLabel } from "./rules/no-value-in-option-label.js";
 import { preferDefaultValue } from "./rules/prefer-defaultvalue.js";
+import { validAllowedValues } from "./rules/valid-allowed-values.js";
 
 export default {
 	rules: {
@@ -29,6 +34,8 @@ export default {
 		"consistent-mock-node-behaviors": consistentMockNodeBehaviors,
 		"consistent-param-units": consistentParamUnits,
 		"no-debug-in-tests": noDebugInTests,
+		"no-disallowed-default-value": noDisallowedDefaultValue,
+		"no-disallowed-option-values": noDisallowedOptionValues,
 		"no-forbidden-imports": noForbiddenImports,
 		"no-internal-cc-types": noInternalCCTypes,
 		"no-misspelled-names": noMisspelledNames,
@@ -38,5 +45,6 @@ export default {
 		"no-useless-description": noUselessDescription,
 		"no-value-in-option-label": noValueInOptionLabel,
 		"prefer-defaultvalue": preferDefaultValue,
+		"valid-allowed-values": validAllowedValues,
 	},
 };

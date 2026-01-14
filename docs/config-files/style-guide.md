@@ -260,9 +260,19 @@ Whenever a parameter only allows two options, formulate the label and/or descrip
 
 ### Min/Max Values
 
-A parameter must define the range of min/max values, however, that range should only be as large as is necessary. Frequently, imported config files have a range of 0-255 when the only possible range is 0-1. Please check the manual.
+A parameter must define the range of allowed values, however, that range should only be as large as is necessary. Frequently, imported config files have a range of 0-255 when the only possible range is 0-1. Please check the manual to be sure.
 
-An exception is parameters that accept a single special value outside the normal range, e.g. `10-255` and `0 (disable)`. There isn't a simple way to represent these gaps, so the value range should be `0-255` in that case.
+### Ranges with gaps
+
+Some parameters have gaps in their allowed values, e.g. a single special value outside the normal range, or ranges with a certain step size. In these cases, the `minValue` and `maxValue` fields are insufficient to describe the allowed values.
+
+For these parameters, use the `allowed` field instead. See [Ranges with Gaps](config-files/file-format.md#ranges-with-gaps) for more details.
+
+For example:
+
+- A parameter accepting 1-10, 20-30, and 100 should use `allowed` instead of `minValue: 1, maxValue: 100`
+- A parameter accepting a special value outside the normal range (e.g., `0` for disable and `10-255` for actual values) should use `allowed`: `[{"value": 0}, {"range": [10, 255]}]`
+- A parameter accepting only multiples of 5 from 0-60 should use `allowed`: `[{"range": [0, 60], "step": 5}]`
 
 ### Units
 

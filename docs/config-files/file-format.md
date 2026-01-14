@@ -211,24 +211,25 @@ This property defines all the existing configuration parameters. It looks like t
 
 where each parameter definition has the following properties:
 
-| Parameter property | Type    | Required? | Description                                                                                                                                                                                                                                                                                      |
-| ------------------ | ------- | :-------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `#`                | string  |    yes    | The parameter number (e.g. `"1"`, `"2"`, ...). <br />For partial parameters, this includes the bitmask (e.g. `"5[0xff00]"`)                                                                                                                                                                      |
-| `label`            | string  |    yes    | A short name for the parameter. <br />This **must not** include unnecessary white-space, such as newlines or tabs.                                                                                                                                                                               |
-| `description`      | string  |    no     | An **optional** longer description of what the parameter does.<br />If a description does not add **significant** value (for example if it just repeats the allowed values), it should be removed instead.<br />This **must not** include unnecessary white-space, such as newlines or tabs.     |
-| `valueSize`        | number  |    yes    | How many bytes the device uses for this value                                                                                                                                                                                                                                                    |
-| `minValue`         | number  |    yes    | The minimum allowed value for this parameter                                                                                                                                                                                                                                                     |
-| `maxValue`         | number  |    yes    | The maximum allowed value for this parameter                                                                                                                                                                                                                                                     |
-| `defaultValue`     | number  |   maybe   | The factory default value of this parameter. This is required unless the parameter is `readOnly`.                                                                                                                                                                                                |
-| `recommendedValue` | number  |    no     | An optional recommended value for this parameter, which may provide better device performance or behavior than the default value and benefit most users. This value is only automatically applied during device interview when the `applyRecommendedConfigParamValues` driver option is enabled. |
-| `unit`             | string  |    no     | The unit for this parameter's values, e.g. `minutes`, `seconds`, `%`, `kWh`, `0.1 °C`, etc...                                                                                                                                                                                                    |
-| `unsigned`         | boolean |    no     | Whether this parameter is interpreted as an unsigned value by the device (default: `false`). This simplifies usage for the end user.                                                                                                                                                             |
-| `readOnly`         | boolean |    no     | Whether this parameter can only be read                                                                                                                                                                                                                                                          |
-| `writeOnly`        | boolean |    no     | Whether this parameter can only be written                                                                                                                                                                                                                                                       |
-| `destructive`      | boolean |    no     | Whether changing this parameter can have destructive consequences (e.g., factory reset, clearing settings). Applications should show a confirmation before setting such parameters.                                                                                                              |
-| `hidden`           | boolean |    no     | Whether this parameter should be hidden from UIs and normal API outputs. Use this for factory debug parameters, calibration data, or other settings that should not be exposed to end users. See [Hidden Parameters](config-files/hidden-parameters.md) for details.                             |
-| `allowManualEntry` | boolean |    no     | Whether this parameter accepts any value between `minValue` and `maxValue`. Defaults to `true` for writable parameters and `false` for `readOnly` parameters. If this is `false`, `options` must be used to specify the allowed values.                                                          |
-| `options`          | array   |    no     | If `allowManualEntry` is omitted or `false` and the value is writable, this property must contain an array of objects of the form `{"label": string, "value": number}`. Each entry defines one allowed value.                                                                                    |
+| Parameter property | Type    | Required? | Description                                                                                                                                                                                                                                                                                                                                         |
+| ------------------ | ------- | :-------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `#`                | string  |    yes    | The parameter number (e.g. `"1"`, `"2"`, ...). <br />For partial parameters, this includes the bitmask (e.g. `"5[0xff00]"`)                                                                                                                                                                                                                         |
+| `label`            | string  |    yes    | A short name for the parameter. <br />This **must not** include unnecessary white-space, such as newlines or tabs.                                                                                                                                                                                                                                  |
+| `description`      | string  |    no     | An **optional** longer description of what the parameter does.<br />If a description does not add **significant** value (for example if it just repeats the allowed values), it should be removed instead.<br />This **must not** include unnecessary white-space, such as newlines or tabs.                                                        |
+| `valueSize`        | number  |    yes    | How many bytes the device uses for this value                                                                                                                                                                                                                                                                                                       |
+| `minValue`         | number  |    yes    | The minimum allowed value for this parameter. **Not used** when `allowed` is specified.                                                                                                                                                                                                                                                             |
+| `maxValue`         | number  |    yes    | The maximum allowed value for this parameter. **Not used** when `allowed` is specified.                                                                                                                                                                                                                                                             |
+| `allowed`          | array   |    no     | Defines allowed values with support for ranges and gaps. Must contain at least one entry. Each entry must have either `{"value": number}` for a single value or `{"range": [from, to], "step"?: number}` for a range. Mutually exclusive with `minValue`/`maxValue` and `allowManualEntry: false`. See [Ranges with Gaps](#ranges-with-gaps) below. |
+| `defaultValue`     | number  |   maybe   | The factory default value of this parameter. This is required unless the parameter is `readOnly`.                                                                                                                                                                                                                                                   |
+| `recommendedValue` | number  |    no     | An optional recommended value for this parameter, which may provide better device performance or behavior than the default value and benefit most users. This value is only automatically applied during device interview when the `applyRecommendedConfigParamValues` driver option is enabled.                                                    |
+| `unit`             | string  |    no     | The unit for this parameter's values, e.g. `minutes`, `seconds`, `%`, `kWh`, `0.1 °C`, etc...                                                                                                                                                                                                                                                       |
+| `unsigned`         | boolean |    no     | Whether this parameter is interpreted as an unsigned value by the device (default: `false`). This simplifies usage for the end user.                                                                                                                                                                                                                |
+| `readOnly`         | boolean |    no     | Whether this parameter can only be read                                                                                                                                                                                                                                                                                                             |
+| `writeOnly`        | boolean |    no     | Whether this parameter can only be written                                                                                                                                                                                                                                                                                                          |
+| `destructive`      | boolean |    no     | Whether changing this parameter can have destructive consequences (e.g., factory reset, clearing settings). Applications should show a confirmation before setting such parameters.                                                                                                                                                                 |
+| `hidden`           | boolean |    no     | Whether this parameter should be hidden from UIs and normal API outputs. Use this for factory debug parameters, calibration data, or other settings that should not be exposed to end users. See [Hidden Parameters](config-files/hidden-parameters.md) for details.                                                                                |
+| `allowManualEntry` | boolean |    no     | Whether this parameter accepts any value between `minValue` and `maxValue`. Defaults to `true` for writable parameters and `false` for `readOnly` parameters. If this is `false`, `options` must be used to specify the allowed values.                                                                                                             |
+| `options`          | array   |    no     | If `allowManualEntry` is omitted or `false` and the value is writable, this property must contain an array of objects of the form `{"label": string, "value": number}`. Each entry defines one allowed value.                                                                                                                                       |
 
 ### Partial parameters
 
@@ -270,6 +271,81 @@ Partial parameters must follow these rules:
 ### Bitmask calculator
 
 <iframe height="270" width="400" src="config-files/bitmask-calculator.html" style="min-width: 0; width: 400px; height: 270px; border: 0; margin: 0 auto"></iframe>
+
+### Ranges with Gaps
+
+Some parameters accept values in multiple disconnected ranges, or ranges with specific step sizes. For these cases, use the `allowed` field instead of `minValue`/`maxValue`.
+
+#### Structure
+
+The `allowed` field is an array of objects, where each object defines either:
+
+- A single allowed value: `{"value": number}`
+- A range of values: `{"range": [from, to], "step"?: number}`
+
+#### Examples
+
+**Example 1: Multiple disconnected ranges**
+
+```json
+{
+	"#": "5",
+	"label": "Sensitivity",
+	"description": "1-10: Low sensitivity, 20-30: Medium sensitivity, 100: Maximum",
+	"valueSize": 1,
+	"defaultValue": 5,
+	"unsigned": true,
+	"allowed": [{ "range": [1, 10] }, { "range": [20, 30] }, { "value": 100 }]
+}
+```
+
+**Example 2: Range with step size**
+
+```json
+{
+	"#": "6",
+	"label": "Report Interval",
+	"valueSize": 1,
+	"defaultValue": 10,
+	"unsigned": true,
+	"unit": "seconds",
+	"allowed": [{ "range": [0, 60], "step": 5 }]
+}
+```
+
+This defines a parameter that accepts 0, 5, 10, 15, 20, ..., 60.
+
+**Example 3: Special value plus continuous range**
+
+```json
+{
+	"#": "7",
+	"label": "Auto-off Timer",
+	"valueSize": 1,
+	"defaultValue": 30,
+	"unsigned": true,
+	"unit": "seconds",
+	"allowed": [{ "value": 0 }, { "range": [10, 255] }],
+	"options": [{ "label": "Disabled", "value": 0 }]
+}
+```
+
+#### Validation Rules
+
+When using the `allowed` field:
+
+1. The array must contain at least one entry
+2. `allowed` and `minValue`/`maxValue` are mutually exclusive
+3. `allowed` and `allowManualEntry: false` are mutually exclusive
+4. Step size must be positive
+5. For ranges with step: `(to - from)` must be evenly divisible by `step`
+6. The envelope of all values (minimum to maximum) must fit within the parameter's `valueSize` and `unsigned` constraints
+7. The `defaultValue` must be one of the allowed values
+8. All `options` values must be in the allowed set
+
+#### Backwards Compatibility
+
+For backwards compatibility with applications that don't support `allowed`, Z-Wave JS automatically computes `minValue` and `maxValue` from the set of allowed values. Applications can use this envelope for basic validation, while applications that support `allowed` can perform more precise validation.
 
 ## `scenes`
 

@@ -5,9 +5,11 @@ import {
 	getJSONBoolean,
 	getJSONNumber,
 	getJSONString,
+	inferMinMaxValueFromAllowed,
 	insertAfterJSONProperty,
 	insertBeforeJSONProperty,
 	paramInfoPropertyOrder,
+	parseAllowedField,
 	removeJSONProperty,
 } from "../utils.js";
 
@@ -88,61 +90,99 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 				// TODO: Properly support partial parameters
 				if (valueBitMask) return;
 
-				// To determine the min or max value, we look at options if allowManualEntry is false
+				// To determine the effective min or max value, we look at:
+				// 1. The 'allowed' field if present
+				// 2. Options if allowManualEntry is false
+				// 3. minValue/maxValue otherwise
 				let minValueNode: AST.JSONProperty | undefined;
 				let maxValueNode: AST.JSONProperty | undefined;
 				let minValue: number;
 				let maxValue: number;
 				let isUsingOptions: boolean;
+				let isUsingAllowed = false;
 
-				const allowManualEntry =
-					getJSONBoolean(node, "allowManualEntry")?.value !== false;
-				const options =
-					(node.properties.find((p) =>
+				// Check for 'allowed' field first
+				const allowedProp = node.properties.find(
+					(p) =>
+						p.key.type === "JSONLiteral"
+						&& p.key.value === "allowed"
+						&& p.value.type === "JSONArrayExpression",
+				);
+
+				const parsedAllowed = parseAllowedField(node);
+				if (parsedAllowed) {
+					const minMax = inferMinMaxValueFromAllowed(parsedAllowed);
+					if (minMax) {
+						// allowedProp must exist if parseAllowedField returned data
+						minValueNode = allowedProp!;
+						maxValueNode = allowedProp!;
+						minValue = minMax.min;
+						maxValue = minMax.max;
+						isUsingOptions = false;
+						isUsingAllowed = true;
+					} else {
+						return;
+					}
+				} else {
+					const allowManualEntry =
+						getJSONBoolean(node, "allowManualEntry")?.value
+							!== false;
+					const options = (node.properties.find((p) =>
 						p.key.type === "JSONLiteral"
 						&& p.key.value === "options"
 						&& p.value.type === "JSONArrayExpression"
 						&& p.value.elements.length > 0
 					)?.value as AST.JSONArrayExpression | undefined)
 						?.elements
-						?.filter((e): e is AST.JSONObjectExpression => !!e);
+						?.filter((e): e is AST.JSONObjectExpression =>
+							!!e
+						);
 
-				if (!allowManualEntry && !!options) {
-					// Deduce min/max value from options
-					const sortedOptions = options
-						.map((o) => {
-							const valueProp = getJSONNumber(o, "value");
-							const label = getJSONString(o, "label")?.value;
-							if (label == undefined || valueProp == undefined) {
-								return;
-							}
-							return {
-								valueNode: valueProp.node,
-								value: valueProp.value,
-								label,
-							};
-						}).filter(Boolean)
-						.toSorted((a, b) => a!.value - b!.value);
+					if (!allowManualEntry && !!options) {
+						// Deduce min/max value from options
+						const sortedOptions = options
+							.map((o) => {
+								const valueProp = getJSONNumber(o, "value");
+								const label = getJSONString(o, "label")?.value;
+								if (
+									label == undefined || valueProp == undefined
+								) {
+									return;
+								}
+								return {
+									valueNode: valueProp.node,
+									value: valueProp.value,
+									label,
+								};
+							}).filter(Boolean)
+							.toSorted((a, b) => a!.value - b!.value);
 
-					if (sortedOptions.length === 0) return;
+						if (sortedOptions.length === 0) return;
 
-					minValueNode = sortedOptions[0]!.valueNode;
-					minValue = sortedOptions[0]!.value;
-					maxValueNode = sortedOptions.at(-1)!.valueNode;
-					maxValue = sortedOptions.at(-1)!.value;
-					isUsingOptions = true;
-				} else {
-					// Otherwise consider min/max value
-					const minValueProperty = getJSONNumber(node, "minValue");
-					if (!minValueProperty) return;
-					minValueNode = minValueProperty.node;
-					minValue = minValueProperty.value;
+						minValueNode = sortedOptions[0]!.valueNode;
+						minValue = sortedOptions[0]!.value;
+						maxValueNode = sortedOptions.at(-1)!.valueNode;
+						maxValue = sortedOptions.at(-1)!.value;
+						isUsingOptions = true;
+					} else {
+						// Otherwise consider min/max value
+						const minValueProperty = getJSONNumber(
+							node,
+							"minValue",
+						);
+						if (!minValueProperty) return;
+						minValueNode = minValueProperty.node;
+						minValue = minValueProperty.value;
 
-					const maxValueProperty = getJSONNumber(node, "maxValue");
-					if (!maxValueProperty) return;
-					maxValueNode = maxValueProperty.node;
-					maxValue = maxValueProperty.value;
-					isUsingOptions = false;
+						const maxValueProperty = getJSONNumber(
+							node,
+							"maxValue",
+						);
+						if (!maxValueProperty) return;
+						maxValueNode = maxValueProperty.node;
+						maxValue = maxValueProperty.value;
+						isUsingOptions = false;
+					}
 				}
 
 				const valueSizeProperty = getJSONNumber(node, "valueSize");
@@ -176,6 +216,18 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 					&& maxValue >= unsignedLimits.min
 					&& maxValue <= unsignedLimits.max;
 
+				// Helper to get the right message ID based on source
+				const getMinMessageId = () => {
+					if (isUsingAllowed) return "incompatible-allowed-min-value";
+					if (isUsingOptions) return "incompatible-min-option-value";
+					return "incompatible-min-value";
+				};
+				const getMaxMessageId = () => {
+					if (isUsingAllowed) return "incompatible-allowed-max-value";
+					if (isUsingOptions) return "incompatible-max-option-value";
+					return "incompatible-max-value";
+				};
+
 				if (!isUnsigned && !fitsSignedLimits) {
 					if (fitsUnsignedLimits) {
 						suggestUnsigned(
@@ -191,9 +243,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 						if (minValue < limits.min) {
 							context.report({
 								loc: minValueNode.loc,
-								messageId: isUsingOptions
-									? "incompatible-min-option-value"
-									: "incompatible-min-value",
+								messageId: getMinMessageId(),
 								data: {
 									minValue: minValue.toString(),
 									valueSize: valueSize.toString(),
@@ -204,9 +254,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 						if (maxValue > limits.max) {
 							context.report({
 								loc: maxValueNode.loc,
-								messageId: isUsingOptions
-									? "incompatible-max-option-value"
-									: "incompatible-max-value",
+								messageId: getMaxMessageId(),
 								data: {
 									maxValue: maxValue.toString(),
 									valueSize: valueSize.toString(),
@@ -219,9 +267,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 					if (minValue < unsignedLimits.min) {
 						context.report({
 							loc: minValueNode.loc,
-							messageId: isUsingOptions
-								? "incompatible-min-option-value"
-								: "incompatible-min-value",
+							messageId: getMinMessageId(),
 							data: {
 								minValue: minValue.toString(),
 								valueSize: valueSize.toString(),
@@ -232,9 +278,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 					if (maxValue > unsignedLimits.max) {
 						context.report({
 							loc: maxValueNode.loc,
-							messageId: isUsingOptions
-								? "incompatible-max-option-value"
-								: "incompatible-max-value",
+							messageId: getMaxMessageId(),
 							data: {
 								maxValue: maxValue.toString(),
 								valueSize: valueSize.toString(),
@@ -276,6 +320,10 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 				"minValue {{minValue}} is incompatible with valueSize {{valueSize}} (min = {{sizeMin}})",
 			"incompatible-max-value":
 				"maxValue {{maxValue}} is incompatible with valueSize {{valueSize}} (max = {{sizeMax}})",
+			"incompatible-allowed-min-value":
+				"Allowed value {{minValue}} is incompatible with valueSize {{valueSize}} (min = {{sizeMin}})",
+			"incompatible-allowed-max-value":
+				"Allowed value {{maxValue}} is incompatible with valueSize {{valueSize}} (max = {{sizeMax}})",
 			"convert-to-unsigned": "Convert this parameter to unsigned",
 			"unnecessary-unsigned":
 				"Defining this parameter as unsigned is unnecessary",

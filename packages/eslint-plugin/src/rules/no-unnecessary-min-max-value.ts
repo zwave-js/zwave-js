@@ -11,6 +11,39 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 			"JSONProperty[key.value='paramInformation'] > JSONArrayExpression > JSONObjectExpression"(
 				node: AST.JSONObjectExpression,
 			) {
+				// Check if allowed field exists
+				const hasAllowed = node.properties.some((p) =>
+					p.key.type === "JSONLiteral" && p.key.value === "allowed"
+				);
+
+				// If allowed exists, minValue and maxValue must not be present
+				if (hasAllowed) {
+					const minValue = node.properties.find((p) =>
+						p.key.type === "JSONLiteral"
+						&& p.key.value === "minValue"
+					);
+					if (minValue) {
+						context.report({
+							loc: minValue.loc,
+							messageId: "allowed-conflicts-with-min-max",
+							fix: removeJSONProperty(context, minValue),
+						});
+					}
+
+					const maxValue = node.properties.find((p) =>
+						p.key.type === "JSONLiteral"
+						&& p.key.value === "maxValue"
+					);
+					if (maxValue) {
+						context.report({
+							loc: maxValue.loc,
+							messageId: "allowed-conflicts-with-min-max",
+							fix: removeJSONProperty(context, maxValue),
+						});
+					}
+					return;
+				}
+
 				// Imports can make it necessary to override min/maxValue
 				const hasImport = node.properties.some((p) =>
 					p.key.type === "JSONLiteral"
@@ -72,6 +105,8 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 				`For parameters with "allowManualEntry = false" and predefined options, "minValue" is unnecessary and should not be specified.`,
 			"no-max-value":
 				`For parameters with "allowManualEntry = false" and predefined options, "maxValue" is unnecessary and should not be specified.`,
+			"allowed-conflicts-with-min-max":
+				`The "allowed" field cannot be used together with "minValue" or "maxValue".`,
 		},
 		type: "problem",
 	},

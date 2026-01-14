@@ -117,7 +117,7 @@
 			"unit": "minutes",
 			"minValue": 3,
 			"maxValue": 9,
-			"defaultValue": 0
+			"defaultValue": 3
 		},
 		{
 			"#": "10",

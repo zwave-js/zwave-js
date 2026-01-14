@@ -3,7 +3,7 @@ import {
 	type TSESLint,
 	type TSESTree,
 } from "@typescript-eslint/utils";
-import { CommandClasses } from "@zwave-js/core";
+import { type AllowedConfigValue, CommandClasses } from "@zwave-js/core";
 import type { Rule as ESLintRule } from "eslint";
 import type { AST as JSONC_AST, RuleListener } from "jsonc-eslint-parser";
 import path from "node:path";
@@ -264,6 +264,38 @@ export function removeJSONProperty(
 		);
 }
 
+export function removeJSONArrayElement(
+	context: ESLintRule.RuleContext,
+	array: JSONC_AST.JSONArrayExpression,
+	element: JSONC_AST.JSONExpression,
+): ESLintRule.ReportFixer {
+	return (fixer) => {
+		const elemIndex = array.elements.indexOf(element);
+		if (elemIndex === -1) {
+			// Element not found, return no-op fix
+			return fixer.replaceText(
+				element as any,
+				context.sourceCode.getText(element as any),
+			);
+		}
+
+		const prevElem = array.elements[elemIndex - 1];
+		const nextElem = array.elements[elemIndex + 1];
+
+		// Determine the range to remove:
+		// - If there's a next element, remove from start of current to start of next
+		// - If there's a previous element, remove from end of previous to end of current
+		// - If it's the only element, just remove the element itself
+		if (nextElem) {
+			return fixer.removeRange([element.range[0], nextElem.range[0]]);
+		} else if (prevElem) {
+			return fixer.removeRange([prevElem.range[1], element.range[1]]);
+		} else {
+			return fixer.remove(element as any);
+		}
+	};
+}
+
 export function insertBeforeJSONProperty(
 	context: ESLintRule.RuleContext,
 	property: JSONC_AST.JSONProperty,
@@ -461,6 +493,7 @@ export const paramInfoPropertyOrder: string[] = [
 	"description",
 	"valueSize",
 	"unit",
+	"allowed",
 	"minValue",
 	"maxValue",
 	"defaultValue",
@@ -473,3 +506,125 @@ export const paramInfoPropertyOrder: string[] = [
 	"allowManualEntry",
 	"options",
 ];
+
+/**
+ * Parses the `allowed` field from a config parameter node.
+ * Returns undefined if the field is not present.
+ */
+export function parseAllowedField(
+	node: JSONC_AST.JSONObjectExpression,
+): AllowedConfigValue[] | undefined {
+	const allowedProp = node.properties.find(
+		(p) =>
+			p.key.type === "JSONLiteral"
+			&& p.key.value === "allowed"
+			&& p.value.type === "JSONArrayExpression",
+	);
+
+	if (!allowedProp || allowedProp.value.type !== "JSONArrayExpression") {
+		return undefined;
+	}
+
+	const entries: AllowedConfigValue[] = [];
+
+	for (const element of allowedProp.value.elements) {
+		if (!element || element.type !== "JSONObjectExpression") continue;
+
+		// Check for single value
+		const valueProp = element.properties.find(
+			(p) => p.key.type === "JSONLiteral" && p.key.value === "value",
+		);
+		if (
+			valueProp
+			&& valueProp.value.type === "JSONLiteral"
+			&& typeof valueProp.value.value === "number"
+		) {
+			entries.push({ value: valueProp.value.value });
+			continue;
+		}
+
+		// Check for range
+		const rangeProp = element.properties.find(
+			(p) => p.key.type === "JSONLiteral" && p.key.value === "range",
+		);
+		if (
+			rangeProp
+			&& rangeProp.value.type === "JSONArrayExpression"
+			&& rangeProp.value.elements.length === 2
+		) {
+			const [fromElem, toElem] = rangeProp.value.elements;
+			if (
+				fromElem?.type === "JSONLiteral"
+				&& typeof fromElem.value === "number"
+				&& toElem?.type === "JSONLiteral"
+				&& typeof toElem.value === "number"
+			) {
+				const stepProp = element.properties.find(
+					(p) =>
+						p.key.type === "JSONLiteral" && p.key.value === "step",
+				);
+				let step: number | undefined;
+				if (
+					stepProp
+					&& stepProp.value.type === "JSONLiteral"
+					&& typeof stepProp.value.value === "number"
+				) {
+					step = stepProp.value.value;
+				}
+				entries.push({
+					from: fromElem.value,
+					to: toElem.value,
+					step,
+				});
+			}
+		}
+	}
+
+	return entries;
+}
+
+/**
+ * Checks if a value is allowed by the given entries.
+ */
+export function isValueAllowed(
+	value: number,
+	entries: AllowedConfigValue[],
+): boolean {
+	for (const entry of entries) {
+		if ("value" in entry) {
+			if (entry.value === value) return true;
+		} else {
+			if (value >= entry.from && value <= entry.to) {
+				const step = entry.step ?? 1;
+				if ((value - entry.from) % step === 0) return true;
+			}
+		}
+	}
+	return false;
+}
+
+/**
+ * Computes the min and max values from parsed allowed entries.
+ */
+export function inferMinMaxValueFromAllowed(
+	entries: AllowedConfigValue[],
+): { min: number; max: number } | undefined {
+	let min = Infinity;
+	let max = -Infinity;
+
+	for (const entry of entries) {
+		if ("value" in entry) {
+			min = Math.min(min, entry.value);
+			max = Math.max(max, entry.value);
+		} else {
+			min = Math.min(min, entry.from);
+			max = Math.max(max, entry.to);
+		}
+	}
+
+	if (min === Infinity || max === -Infinity) {
+		return undefined;
+	}
+
+	return { min, max };
+}

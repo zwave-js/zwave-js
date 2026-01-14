@@ -1664,6 +1664,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				valueSize: info.valueSize,
 				min: info.minValue,
 				max: info.maxValue,
+				allowed: info.allowed,
 				default: info.defaultValue,
 				recommended: info.recommendedValue,
 				unit: info.unit,

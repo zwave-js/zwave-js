@@ -30,6 +30,7 @@ import {
 import type {
 	ConditionalParamInfoMap,
 	ParamInfoMap,
+	ParamInformation,
 } from "../src/devices/ParamInformation.js";
 import type { DeviceID } from "../src/devices/shared.js";
 import { getDeviceEntryPredicate, versionInRange } from "../src/utils.js";
@@ -660,6 +661,54 @@ If this is intended, consider marking one of the config files as preferred or sp
 	}
 }
 
+function validateAllowedValuesDefinition(
+	allowedDefs: ParamInformation["allowed"],
+	parameter: number,
+	valueBitMask: number | undefined,
+	file: string,
+	addError: (file: string, error: string, variant?: DeviceID) => void,
+	variant?: DeviceID,
+): void {
+	for (const def of allowedDefs) {
+		if ("value" in def) continue;
+
+		// Range validation
+		const { from, to, step = 1 } = def;
+
+		if (step <= 0) {
+			addError(
+				file,
+				`${
+					paramNoToString(parameter, valueBitMask)
+				}: step must be positive (got ${step})`,
+				variant,
+			);
+			continue;
+		}
+
+		if (from > to) {
+			addError(
+				file,
+				`${
+					paramNoToString(parameter, valueBitMask)
+				}: range 'from' (${from}) must be <= 'to' (${to})`,
+				variant,
+			);
+			continue;
+		}
+
+		if ((to - from) % step !== 0) {
+			addError(
+				file,
+				`${
+					paramNoToString(parameter, valueBitMask)
+				}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
+				variant,
+			);
+		}
+	}
+}
+
 function lintUnconditionalParamInformation(
 	paramInformation: ParamInfoMap,
 	{ file, variant, addError, addWarning }: LintDevicesContext,
@@ -904,7 +953,7 @@ description: ${description}`,
 									parameter,
 									valueBitMask,
 								)
-							} is invalid: min/maxValue is incompatible with valueSize ${value.valueSize} (min = ${limits.min}, max = ${limits.max}).
+							} is invalid: Value range ${value.minValue}...${value.maxValue} is incompatible with valueSize ${value.valueSize} (min = ${limits.min}, max = ${limits.max}).
 Consider converting this parameter to unsigned using ${
 								c.white(
 									`"unsigned": true`,
@@ -965,6 +1014,25 @@ Consider converting this parameter to unsigned using ${
 					}
 				}
 			}
+		}
+	}
+
+	// Validate the allowed field definitions if present
+	for (
+		const [
+			{ parameter, valueBitMask },
+			value,
+		] of paramInformation.entries()
+	) {
+		if (value.allowed) {
+			validateAllowedValuesDefinition(
+				value.allowed,
+				parameter,
+				valueBitMask,
+				file,
+				addError,
+				variant,
+			);
 		}
 	}
 
