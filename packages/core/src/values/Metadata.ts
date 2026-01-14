@@ -173,6 +173,16 @@ export enum ConfigValueFormat {
 /** @publicAPI */
 export type ConfigValue = number;
 
+/** Configuration parameter to be set during SmartStart inclusion */
+export interface ProvisioningConfigParameter {
+	/** The parameter number to set */
+	parameter: number;
+	/** The bitmask for partial parameters (optional) */
+	bitMask?: number;
+	/** The value to set for this parameter */
+	value: ConfigValue;
+}
+
 export interface ConfigurationMetadata extends ValueMetadataAny {
 	// readable and writeable are inherited from ValueMetadataAny
 	min?: ConfigValue;
