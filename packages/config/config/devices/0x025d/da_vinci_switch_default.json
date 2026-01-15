@@ -2152,13 +2152,21 @@
       "label": "Long press time (100 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 44,
       "defaultValue": 20,
       "unsigned": true,
       "options": [
         {
+          "label": "0 (Always long)",
+          "value": 0
+        },
+        {
           "label": "11",
           "value": 11
+        },
+        {
+          "label": "20",
+          "value": 20
         },
         {
           "label": "22",
@@ -2180,10 +2188,18 @@
       "label": "Button 1 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2232,10 +2248,18 @@
       "label": "Button 2 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2284,10 +2308,18 @@
       "label": "Button 3 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2336,10 +2368,18 @@
       "label": "Button 4 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2388,10 +2428,18 @@
       "label": "Button 5 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2440,10 +2488,18 @@
       "label": "Button 6 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2492,10 +2548,18 @@
       "label": "Button 7 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2544,10 +2608,18 @@
       "label": "Button 8 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
@@ -2596,10 +2668,18 @@
       "label": "Button 9 short press time (10 ms units)",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 250,
+      "maxValue": 100,
       "defaultValue": 2,
       "unsigned": true,
       "options": [
+        {
+          "label": "0 (Disabled)",
+          "value": 0
+        },
+        {
+          "label": "2",
+          "value": 2
+        },
         {
           "label": "10",
           "value": 10
