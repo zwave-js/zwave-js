@@ -4,6 +4,7 @@
 
 ```ts
 
+import { AllowedConfigValue } from '@zwave-js/core';
 import { BytesView } from '@zwave-js/shared';
 import { CommandClasses } from '@zwave-js/core';
 import { CommandClassInfo } from '@zwave-js/core';
@@ -325,6 +326,8 @@ export type ConditionalParamInfoMap = ReadonlyObjectKeyMap<{
 export class ConditionalParamInformation implements ConditionalItem<ParamInformation> {
     constructor(parent: ConditionalDeviceConfig, parameterNumber: number, valueBitMask: number | undefined, definition: JSONObject);
     // (undocumented)
+    readonly allowed?: readonly AllowedConfigValue[];
+    // (undocumented)
     readonly allowManualEntry: boolean;
     // (undocumented)
     readonly condition?: string;
@@ -509,7 +512,7 @@ export class DeviceConfig {
         deviceId?: DeviceID;
     }): Promise<DeviceConfig>;
     getAssociationConfigForEndpoint(endpointIndex: number, group: number): AssociationConfig | undefined;
-    getHash(version?: 0 | 1 | 2): Promise<BytesView>;
+    getHash(version?: DeviceConfigHashVersion): Promise<BytesView>;
     readonly isEmbedded: boolean;
     // (undocumented)
     readonly label: string;
@@ -518,7 +521,7 @@ export class DeviceConfig {
     // (undocumented)
     readonly manufacturerId: number;
     // (undocumented)
-    static get maxHashVersion(): 2;
+    static get maxHashVersion(): 3;
     readonly metadata?: DeviceMetadata;
     // (undocumented)
     readonly paramInformation?: ParamInfoMap;
@@ -527,6 +530,11 @@ export class DeviceConfig {
     // (undocumented)
     readonly scenes?: ReadonlyMap<number, SceneConfig>;
 }
+
+// Warning: (ae-missing-release-tag) "DeviceConfigHashVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type DeviceConfigHashVersion = 0 | 1 | 2 | 3;
 
 // Warning: (ae-missing-release-tag) "DeviceConfigIndex" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -672,7 +680,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.19.0";
+export const PACKAGE_VERSION = "15.20.0";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -685,10 +693,11 @@ export type ParamInfoMap = ReadonlyObjectKeyMap<{
 // Warning: (ae-missing-release-tag) "ParamInformation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ParamInformation = Omit<ConditionalParamInformation, "condition" | "evaluateCondition" | "options" | "minValue" | "maxValue"> & {
+export type ParamInformation = Omit<ConditionalParamInformation, "condition" | "evaluateCondition" | "options" | "minValue" | "maxValue" | "allowed"> & {
     options: readonly ConfigOption[];
     minValue: NonNullable<ConditionalParamInformation["minValue"]>;
     maxValue: NonNullable<ConditionalParamInformation["maxValue"]>;
+    allowed: NonNullable<ConditionalParamInformation["allowed"]>;
 };
 
 // Warning: (ae-missing-release-tag) "parseConditionalParamInformationMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
