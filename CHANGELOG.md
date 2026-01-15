@@ -6,7 +6,7 @@
 -->
 ## __WORK IN PROGRESS__
 ### Features
-* Support ranges with gaps and step sizes in config parameter definitions (#8547)
+* Support ranges with gaps and step sizes in config parameter definitions (#8547, #8555)
 * Automatically reset `toneId` to 0 after tone duration elapses (#8546)
 * Support connecting ESPHome Z-Wave proxies with API encryption (#8526)
 * Try to find Z-Wave QR code strings in longer strings (#8545)
