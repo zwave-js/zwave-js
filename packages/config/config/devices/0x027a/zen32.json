@@ -241,11 +241,6 @@
 			"defaultValue": 0
 		},
 		{
-			"#": "26",
-			"$if": "firmwareVersion >= 10.40 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
-			"$import": "templates/zooz_template.json#enable_scene_control_3way"
-		},
-		{
 			"#": "25[0x01]",
 			"$if": "firmwareVersion >= 10.40 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
 			"$import": "~/templates/master_template.json#base_enable_disable",
@@ -276,6 +271,11 @@
 			"label": "Send Status Change Report: Timer",
 			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
 			"defaultValue": 1
+		},
+		{
+			"#": "26",
+			"$if": "firmwareVersion >= 10.40 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#enable_scene_control_3way"
 		},
 		{
 			"#": "27",
