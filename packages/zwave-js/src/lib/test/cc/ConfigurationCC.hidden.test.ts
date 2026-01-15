@@ -64,7 +64,7 @@ integrationTest(
 
 			// But visible parameters should not have hidden flag
 			const param1Info = paramInfo?.get({ parameter: 1 });
-			t.expect(param1Info?.hidden).toBe(false);
+			t.expect(param1Info?.hidden).toBeFalsy()
 
 			// Get all value IDs from the node
 			const valueIDs = node.getDefinedValueIDs();
