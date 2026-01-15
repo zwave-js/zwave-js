@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.20.0 (2026-01-15)
 ### Features
 * Support ranges with gaps and step sizes in config parameter definitions (#8547, #8555)
 * Automatically reset `toneId` to 0 after tone duration elapses (#8546)
