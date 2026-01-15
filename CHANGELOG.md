@@ -4,6 +4,20 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Support ranges with gaps and step sizes in config parameter definitions (#8547)
+* Automatically reset `toneId` to 0 after tone duration elapses (#8546)
+* Support connecting ESPHome Z-Wave proxies with API encryption (#8526)
+* Try to find Z-Wave QR code strings in longer strings (#8545)
+* Add option to include user code and status in notification events (#8541)
+
+### Bugfixes
+* Avoid false-positive in `hasDeviceConfigChanged` after upgrading from a version before `15.19.0` (#8554)
+
+### Config file changes
+* Update Zooz ZEN16 to support 800 series version (#8542)
+
 ## 15.19.0 (2026-01-06)
 ### Features
 * Add option to force associations without checking if they are valid/allowed (#8490)
