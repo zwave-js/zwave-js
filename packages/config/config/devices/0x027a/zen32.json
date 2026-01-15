@@ -284,6 +284,14 @@
 			"label": "LED Indicator (Scene Control)",
 			"description": "When enabled, LED indicator will flash to confirm scene activation.",
 			"defaultValue": 0
+		},
+		{
+			"#": "28",
+			"$if": "firmwareVersion >= 3.20 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "when disabled, only single taps report via central scene.",
+			"defaultValue": 0
 		}
 	],
 	"compat": {
