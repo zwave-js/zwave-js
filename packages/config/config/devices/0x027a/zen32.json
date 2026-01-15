@@ -290,7 +290,7 @@
 			"$if": "firmwareVersion >= 3.20 && firmwareVersion < 10.0",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "Scene Control Multi-Tap",
-			"description": "when disabled, only single taps report via central scene.",
+			"description": "When disabled, only single taps report via central scene.",
 			"defaultValue": 0
 		}
 	],
