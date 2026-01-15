@@ -2,7 +2,7 @@
   "manufacturer": "Contec / Da Vinci",
   "manufacturerId": "0x025d",
   "label": "Da Vinci Touch Panel (v10.10)",
-  "description": "Multi-channel touch panel: 9 touch buttons endpoints + 6 physical relay outputs.",
+  "description": "Multi-channel touch panel: 9 touch buttons endpoints + 6 physical relay outputs. Includes configuration parameters for endpoint behavior, LED/sound/dry-contact attributes, and global device behavior.",
   "devices": [
     {
       "productType": "0x0200",
@@ -400,7 +400,7 @@
       "label": "EP 1 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -588,7 +588,7 @@
       "label": "EP 2 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -776,7 +776,7 @@
       "label": "EP 3 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -964,7 +964,7 @@
       "label": "EP 4 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -1152,7 +1152,7 @@
       "label": "EP 5 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -1340,7 +1340,7 @@
       "label": "EP 6 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -1528,7 +1528,7 @@
       "label": "EP 7 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -1716,7 +1716,7 @@
       "label": "EP 8 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
@@ -1904,7 +1904,7 @@
       "label": "EP 9 Button attribute",
       "valueSize": 1,
       "minValue": 0,
-      "maxValue": 15,
+      "maxValue": 7,
       "defaultValue": 7,
       "options": [
         {
