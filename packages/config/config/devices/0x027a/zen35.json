@@ -312,6 +312,14 @@
 			"label": "Scene Control Multi-Tap",
 			"description": "When disabled, only single taps report via central scene.",
 			"defaultValue": 0
+		},
+		{
+			"#": "43",
+			"label": "Gamma Factor",
+			"description": "A higher gamma makes dimming more gradual at low levels, while a lower gamma results in a more linear or abrupt transition (10-50 = 1.0–5.0 gamma).",
+			"valueSize": 1,
+			"minValue": 10,
+			"maxValue": 50
 		}
 	],
 	"metadata": {
