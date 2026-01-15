@@ -1,2770 +1,2770 @@
 {
-  "manufacturer": "Contec / Da Vinci",
-  "manufacturerId": "0x025d",
-  "label": "Da Vinci Touch Panel (v10.10)",
-  "description": "Da Vinci Touch Panel",
-  "devices": [
-    {
-      "productType": "0x0200",
-      "productId": "0x0100"
-    }
-  ],
-  "firmwareVersion": {
-    "min": "0.0",
-    "max": "255.255"
-  },
-  "endpoints": {
-    "1": {
-      "label": "Endpoint 1 (Button 1)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 1 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "2": {
-      "label": "Endpoint 2 (Button 2)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 2 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "3": {
-      "label": "Endpoint 3 (Button 3)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 3 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "4": {
-      "label": "Endpoint 4 (Button 4)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 4 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "5": {
-      "label": "Endpoint 5 (Button 5)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 5 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "6": {
-      "label": "Endpoint 6 (Button 6)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 6 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "7": {
-      "label": "Endpoint 7 (Button 7)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 7 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "8": {
-      "label": "Endpoint 8 (Button 8)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 8 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    },
-    "9": {
-      "label": "Endpoint 9 (Button 9)",
-      "associationGroups": {
-        "1": {
-          "label": "Button 9 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
-          "maxNodes": 5,
-          "isLifeline": true
-        },
-        "2": {
-          "label": "On/Off control (SWITCH_BINARY_SET)",
-          "maxNodes": 5
-        },
-        "3": {
-          "label": "On/Off report (SWITCH_BINARY_REPORT)",
-          "maxNodes": 5
-        },
-        "4": {
-          "label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
-          "maxNodes": 5
-        },
-        "5": {
-          "label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
-          "maxNodes": 5
-        }
-      }
-    }
-  },
-  "paramInformation": [
-    {
-      "#": 1,
-      "label": "EP 1 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 2,
-      "label": "EP 1 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 3,
-      "label": "EP 1 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 4,
-      "label": "EP 1 Output",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 5,
-      "label": "EP 1 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 6,
-      "label": "EP 2 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 7,
-      "label": "EP 2 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 8,
-      "label": "EP 2 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 9,
-      "label": "EP 2 Output",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 10,
-      "label": "EP 2 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 11,
-      "label": "EP 3 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 12,
-      "label": "EP 3 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 13,
-      "label": "EP 3 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 14,
-      "label": "EP 3 Output",
-      "valueSize": 1,
-      "defaultValue": 3,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 15,
-      "label": "EP 3 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 16,
-      "label": "EP 4 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 17,
-      "label": "EP 4 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 18,
-      "label": "EP 4 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 19,
-      "label": "EP 4 Output",
-      "valueSize": 1,
-      "defaultValue": 4,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 20,
-      "label": "EP 4 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 21,
-      "label": "EP 5 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 22,
-      "label": "EP 5 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 23,
-      "label": "EP 5 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 24,
-      "label": "EP 5 Output",
-      "valueSize": 1,
-      "defaultValue": 5,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 25,
-      "label": "EP 5 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 26,
-      "label": "EP 6 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 27,
-      "label": "EP 6 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 28,
-      "label": "EP 6 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 29,
-      "label": "EP 6 Output",
-      "valueSize": 1,
-      "defaultValue": 6,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 30,
-      "label": "EP 6 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 31,
-      "label": "EP 7 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 32,
-      "label": "EP 7 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 33,
-      "label": "EP 7 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 34,
-      "label": "EP 7 Output",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 35,
-      "label": "EP 7 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 36,
-      "label": "EP 8 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 37,
-      "label": "EP 8 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 38,
-      "label": "EP 8 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 39,
-      "label": "EP 8 Output",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 40,
-      "label": "EP 8 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 41,
-      "label": "EP 9 Type",
-      "valueSize": 1,
-      "defaultValue": 1,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disable",
-          "value": 0
-        },
-        {
-          "label": "On or off switch",
-          "value": 1
-        },
-        {
-          "label": "Blind up",
-          "value": 2
-        },
-        {
-          "label": "Blind down",
-          "value": 3
-        },
-        {
-          "label": "Switch multiway",
-          "value": 4
-        },
-        {
-          "label": "Blind up multiway",
-          "value": 5
-        },
-        {
-          "label": "Blind down multiway",
-          "value": 6
-        },
-        {
-          "label": "Reserved",
-          "value": 7
-        },
-        {
-          "label": "Dimmer",
-          "value": 8
-        }
-      ]
-    },
-    {
-      "#": 42,
-      "label": "EP 9 Partner ID",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "None",
-          "value": 0
-        },
-        {
-          "label": "Partner 1",
-          "value": 1
-        },
-        {
-          "label": "Partner 2",
-          "value": 2
-        },
-        {
-          "label": "Partner 3",
-          "value": 3
-        },
-        {
-          "label": "Partner 4",
-          "value": 4
-        },
-        {
-          "label": "Partner 5",
-          "value": 5
-        },
-        {
-          "label": "Partner 6",
-          "value": 6
-        },
-        {
-          "label": "Partner 7",
-          "value": 7
-        },
-        {
-          "label": "Partner 8",
-          "value": 8
-        },
-        {
-          "label": "Partner 9",
-          "value": 9
-        }
-      ]
-    },
-    {
-      "#": 43,
-      "label": "EP 9 Blind Duration",
-      "valueSize": 1,
-      "minValue": 0,
-      "maxValue": 127,
-      "defaultValue": 0
-    },
-    {
-      "#": 44,
-      "label": "EP 9 Output",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Not used",
-          "value": 0
-        },
-        {
-          "label": "Output 1",
-          "value": 1
-        },
-        {
-          "label": "Output 2",
-          "value": 2
-        },
-        {
-          "label": "Output 3",
-          "value": 3
-        },
-        {
-          "label": "Output 4",
-          "value": 4
-        },
-        {
-          "label": "Output 5",
-          "value": 5
-        },
-        {
-          "label": "Output 6",
-          "value": 6
-        }
-      ]
-    },
-    {
-      "#": 45,
-      "label": "EP 9 Button Attribute",
-      "valueSize": 1,
-      "defaultValue": 7,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "LED",
-          "value": 1
-        },
-        {
-          "label": "Sound",
-          "value": 2
-        },
-        {
-          "label": "LED + sound",
-          "value": 3
-        },
-        {
-          "label": "Dry contact",
-          "value": 4
-        },
-        {
-          "label": "Dry contact + LED",
-          "value": 5
-        },
-        {
-          "label": "Dry contact + sound",
-          "value": 6
-        },
-        {
-          "label": "Dry contact + LED + sound",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 46,
-      "label": "Device LED ON Intensity",
-      "valueSize": 1,
-      "defaultValue": 3,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Min (0)",
-          "value": 0
-        },
-        {
-          "label": "",
-          "value": 1
-        },
-        {
-          "label": "",
-          "value": 2
-        },
-        {
-          "label": "",
-          "value": 3
-        },
-        {
-          "label": "",
-          "value": 4
-        },
-        {
-          "label": "",
-          "value": 5
-        },
-        {
-          "label": "",
-          "value": 6
-        },
-        {
-          "label": "Max (7)",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 47,
-      "label": "Device LED OFF Intensity",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Min (0)",
-          "value": 0
-        },
-        {
-          "label": "",
-          "value": 1
-        },
-        {
-          "label": "",
-          "value": 2
-        },
-        {
-          "label": "",
-          "value": 3
-        },
-        {
-          "label": "",
-          "value": 4
-        },
-        {
-          "label": "",
-          "value": 5
-        },
-        {
-          "label": "",
-          "value": 6
-        },
-        {
-          "label": "Max (7)",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 48,
-      "label": "Device Toggle or Pulse Output",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Toggle",
-          "value": 0
-        },
-        {
-          "label": "Pulse",
-          "value": 1
-        }
-      ]
-    },
-    {
-      "#": 49,
-      "label": "Device Round LEDs Timeout",
-      "valueSize": 1,
-      "defaultValue": 10,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Always off",
-          "value": 0
-        },
-        {
-          "label": "Seconds",
-          "value": 10
-        },
-        {
-          "label": "Seconds",
-          "value": 20
-        },
-        {
-          "label": "Seconds",
-          "value": 30
-        },
-        {
-          "label": "Seconds",
-          "value": 40
-        },
-        {
-          "label": "Always on",
-          "value": 255
-        }
-      ]
-    },
-    {
-      "#": 50,
-      "label": "Device Touch Sensitivity",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Most sensitive",
-          "value": 0
-        },
-        {
-          "label": "Level 1",
-          "value": 1
-        },
-        {
-          "label": "Level 2",
-          "value": 2
-        },
-        {
-          "label": "Level 3",
-          "value": 3
-        },
-        {
-          "label": "Level 4",
-          "value": 4
-        },
-        {
-          "label": "Level 5",
-          "value": 5
-        },
-        {
-          "label": "Level 6",
-          "value": 6
-        },
-        {
-          "label": "Least sensitive",
-          "value": 7
-        }
-      ]
-    },
-    {
-      "#": 51,
-      "label": "Save & Reset (Commit Changes)",
-      "valueSize": 1,
-      "defaultValue": 0,
-      "unsigned": true,
-      "writeOnly": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "No action",
-          "value": 0
-        },
-        {
-          "label": "Save & reset",
-          "value": 255
-        }
-      ]
-    },
-    {
-      "#": 52,
-      "label": "Long Press Time (100 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 20,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Always long",
-          "value": 0
-        },
-        {
-          "label": "1.1 s",
-          "value": 11
-        },
-        {
-          "label": "2.2 s",
-          "value": 22
-        },
-        {
-          "label": "3.3 s",
-          "value": 33
-        },
-        {
-          "label": "4.4 s",
-          "value": 44
-        }
-      ]
-    },
-    {
-      "#": 53,
-      "label": "Button 1 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 54,
-      "label": "Button 2 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 55,
-      "label": "Button 3 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 56,
-      "label": "Button 4 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 57,
-      "label": "Button 5 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 58,
-      "label": "Button 6 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 59,
-      "label": "Button 7 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 60,
-      "label": "Button 8 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "#": 61,
-      "label": "Button 9 Short Press Time (10 Ms Units)",
-      "valueSize": 1,
-      "defaultValue": 2,
-      "unsigned": true,
-      "allowManualEntry": false,
-      "options": [
-        {
-          "label": "Disabled",
-          "value": 0
-        },
-        {
-          "label": "20 ms",
-          "value": 2
-        },
-        {
-          "label": "100 ms",
-          "value": 10
-        },
-        {
-          "label": "200 ms",
-          "value": 20
-        },
-        {
-          "label": "300 ms",
-          "value": 30
-        },
-        {
-          "label": "400 ms",
-          "value": 40
-        },
-        {
-          "label": "500 ms",
-          "value": 50
-        },
-        {
-          "label": "600 ms",
-          "value": 60
-        },
-        {
-          "label": "700 ms",
-          "value": 70
-        },
-        {
-          "label": "800 ms",
-          "value": 80
-        },
-        {
-          "label": "900 ms",
-          "value": 90
-        },
-        {
-          "label": "1000 ms",
-          "value": 100
-        }
-      ]
-    }
-  ],
-  "associationGroups": {
-    "1": {
-      "label": "Lifeline",
-      "maxNodes": 5,
-      "isLifeline": true
-    },
-    "2": {
-      "label": "Button 1 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "3": {
-      "label": "Button 1 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "4": {
-      "label": "Button 1 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "5": {
-      "label": "Button 1 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "6": {
-      "label": "Button 2 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "7": {
-      "label": "Button 2 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "8": {
-      "label": "Button 2 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "9": {
-      "label": "Button 2 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "10": {
-      "label": "Button 3 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "11": {
-      "label": "Button 3 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "12": {
-      "label": "Button 3 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "13": {
-      "label": "Button 3 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "14": {
-      "label": "Button 4 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "15": {
-      "label": "Button 4 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "16": {
-      "label": "Button 4 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "17": {
-      "label": "Button 4 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "18": {
-      "label": "Button 5 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "19": {
-      "label": "Button 5 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "20": {
-      "label": "Button 5 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "21": {
-      "label": "Button 5 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "22": {
-      "label": "Button 6 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "23": {
-      "label": "Button 6 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "24": {
-      "label": "Button 6 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "25": {
-      "label": "Button 6 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "26": {
-      "label": "Button 7 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "27": {
-      "label": "Button 7 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "28": {
-      "label": "Button 7 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "29": {
-      "label": "Button 7 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "30": {
-      "label": "Button 8 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "31": {
-      "label": "Button 8 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "32": {
-      "label": "Button 8 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "33": {
-      "label": "Button 8 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    },
-    "34": {
-      "label": "Button 9 - SWITCH_BINARY_SET",
-      "maxNodes": 5
-    },
-    "35": {
-      "label": "Button 9 - SWITCH_BINARY_REPORT",
-      "maxNodes": 5
-    },
-    "36": {
-      "label": "Button 9 - SWITCH_MULTILEVEL_SET",
-      "maxNodes": 5
-    },
-    "37": {
-      "label": "Button 9 - SWITCH_MULTILEVEL_REPORT",
-      "maxNodes": 5
-    }
-  }
+	"manufacturer": "Contec / Da Vinci",
+	"manufacturerId": "0x025d",
+	"label": "Da Vinci Touch Panel (v10.10)",
+	"description": "Da Vinci Touch Panel",
+	"devices": [
+		{
+			"productType": "0x0200",
+			"productId": "0x0100"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"endpoints": {
+		"1": {
+			"label": "Endpoint 1 (Button 1)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 1 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"2": {
+			"label": "Endpoint 2 (Button 2)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 2 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"3": {
+			"label": "Endpoint 3 (Button 3)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 3 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"4": {
+			"label": "Endpoint 4 (Button 4)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 4 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"5": {
+			"label": "Endpoint 5 (Button 5)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 5 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"6": {
+			"label": "Endpoint 6 (Button 6)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 6 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"7": {
+			"label": "Endpoint 7 (Button 7)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 7 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"8": {
+			"label": "Endpoint 8 (Button 8)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 8 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		},
+		"9": {
+			"label": "Endpoint 9 (Button 9)",
+			"associationGroups": {
+				"1": {
+					"label": "Button 9 via lifeline (CENTRAL_SCENE_NOTIFICATION)",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (SWITCH_BINARY_SET)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off report (SWITCH_BINARY_REPORT)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel control (SWITCH_MULTILEVEL_SET)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Multilevel report (SWITCH_MULTILEVEL_REPORT)",
+					"maxNodes": 5
+				}
+			}
+		}
+	},
+	"paramInformation": [
+		{
+			"#": 1,
+			"label": "EP 1 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 2,
+			"label": "EP 1 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 3,
+			"label": "EP 1 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 4,
+			"label": "EP 1 Output",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 5,
+			"label": "EP 1 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 6,
+			"label": "EP 2 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 7,
+			"label": "EP 2 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 8,
+			"label": "EP 2 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 9,
+			"label": "EP 2 Output",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 10,
+			"label": "EP 2 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 11,
+			"label": "EP 3 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 12,
+			"label": "EP 3 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 13,
+			"label": "EP 3 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 14,
+			"label": "EP 3 Output",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 15,
+			"label": "EP 3 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 16,
+			"label": "EP 4 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 17,
+			"label": "EP 4 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 18,
+			"label": "EP 4 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 19,
+			"label": "EP 4 Output",
+			"valueSize": 1,
+			"defaultValue": 4,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 20,
+			"label": "EP 4 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 21,
+			"label": "EP 5 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 22,
+			"label": "EP 5 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 23,
+			"label": "EP 5 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 24,
+			"label": "EP 5 Output",
+			"valueSize": 1,
+			"defaultValue": 5,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 25,
+			"label": "EP 5 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 26,
+			"label": "EP 6 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 27,
+			"label": "EP 6 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 28,
+			"label": "EP 6 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 29,
+			"label": "EP 6 Output",
+			"valueSize": 1,
+			"defaultValue": 6,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 30,
+			"label": "EP 6 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 31,
+			"label": "EP 7 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 32,
+			"label": "EP 7 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 33,
+			"label": "EP 7 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 34,
+			"label": "EP 7 Output",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 35,
+			"label": "EP 7 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 36,
+			"label": "EP 8 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 37,
+			"label": "EP 8 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 38,
+			"label": "EP 8 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 39,
+			"label": "EP 8 Output",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 40,
+			"label": "EP 8 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 41,
+			"label": "EP 9 Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "On or off switch",
+					"value": 1
+				},
+				{
+					"label": "Blind up",
+					"value": 2
+				},
+				{
+					"label": "Blind down",
+					"value": 3
+				},
+				{
+					"label": "Switch multiway",
+					"value": 4
+				},
+				{
+					"label": "Blind up multiway",
+					"value": 5
+				},
+				{
+					"label": "Blind down multiway",
+					"value": 6
+				},
+				{
+					"label": "Reserved",
+					"value": 7
+				},
+				{
+					"label": "Dimmer",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": 42,
+			"label": "EP 9 Partner ID",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "None",
+					"value": 0
+				},
+				{
+					"label": "Partner 1",
+					"value": 1
+				},
+				{
+					"label": "Partner 2",
+					"value": 2
+				},
+				{
+					"label": "Partner 3",
+					"value": 3
+				},
+				{
+					"label": "Partner 4",
+					"value": 4
+				},
+				{
+					"label": "Partner 5",
+					"value": 5
+				},
+				{
+					"label": "Partner 6",
+					"value": 6
+				},
+				{
+					"label": "Partner 7",
+					"value": 7
+				},
+				{
+					"label": "Partner 8",
+					"value": 8
+				},
+				{
+					"label": "Partner 9",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": 43,
+			"label": "EP 9 Blind Duration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": 44,
+			"label": "EP 9 Output",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not used",
+					"value": 0
+				},
+				{
+					"label": "Output 1",
+					"value": 1
+				},
+				{
+					"label": "Output 2",
+					"value": 2
+				},
+				{
+					"label": "Output 3",
+					"value": 3
+				},
+				{
+					"label": "Output 4",
+					"value": 4
+				},
+				{
+					"label": "Output 5",
+					"value": 5
+				},
+				{
+					"label": "Output 6",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": 45,
+			"label": "EP 9 Button Attribute",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "LED",
+					"value": 1
+				},
+				{
+					"label": "Sound",
+					"value": 2
+				},
+				{
+					"label": "LED + sound",
+					"value": 3
+				},
+				{
+					"label": "Dry contact",
+					"value": 4
+				},
+				{
+					"label": "Dry contact + LED",
+					"value": 5
+				},
+				{
+					"label": "Dry contact + sound",
+					"value": 6
+				},
+				{
+					"label": "Dry contact + LED + sound",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 46,
+			"label": "Device LED ON Intensity",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Min (0)",
+					"value": 0
+				},
+				{
+					"label": "",
+					"value": 1
+				},
+				{
+					"label": "",
+					"value": 2
+				},
+				{
+					"label": "",
+					"value": 3
+				},
+				{
+					"label": "",
+					"value": 4
+				},
+				{
+					"label": "",
+					"value": 5
+				},
+				{
+					"label": "",
+					"value": 6
+				},
+				{
+					"label": "Max (7)",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 47,
+			"label": "Device LED OFF Intensity",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Min (0)",
+					"value": 0
+				},
+				{
+					"label": "",
+					"value": 1
+				},
+				{
+					"label": "",
+					"value": 2
+				},
+				{
+					"label": "",
+					"value": 3
+				},
+				{
+					"label": "",
+					"value": 4
+				},
+				{
+					"label": "",
+					"value": 5
+				},
+				{
+					"label": "",
+					"value": 6
+				},
+				{
+					"label": "Max (7)",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 48,
+			"label": "Device Toggle or Pulse Output",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Toggle",
+					"value": 0
+				},
+				{
+					"label": "Pulse",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": 49,
+			"label": "Device Round LEDs Timeout",
+			"valueSize": 1,
+			"defaultValue": 10,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 0
+				},
+				{
+					"label": "Seconds",
+					"value": 10
+				},
+				{
+					"label": "Seconds",
+					"value": 20
+				},
+				{
+					"label": "Seconds",
+					"value": 30
+				},
+				{
+					"label": "Seconds",
+					"value": 40
+				},
+				{
+					"label": "Always on",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": 50,
+			"label": "Device Touch Sensitivity",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Most sensitive",
+					"value": 0
+				},
+				{
+					"label": "Level 1",
+					"value": 1
+				},
+				{
+					"label": "Level 2",
+					"value": 2
+				},
+				{
+					"label": "Level 3",
+					"value": 3
+				},
+				{
+					"label": "Level 4",
+					"value": 4
+				},
+				{
+					"label": "Level 5",
+					"value": 5
+				},
+				{
+					"label": "Level 6",
+					"value": 6
+				},
+				{
+					"label": "Least sensitive",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": 51,
+			"label": "Save & Reset (Commit Changes)",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"writeOnly": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Save & reset",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": 52,
+			"label": "Long Press Time (100 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 20,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always long",
+					"value": 0
+				},
+				{
+					"label": "1.1 s",
+					"value": 11
+				},
+				{
+					"label": "2.2 s",
+					"value": 22
+				},
+				{
+					"label": "3.3 s",
+					"value": 33
+				},
+				{
+					"label": "4.4 s",
+					"value": 44
+				}
+			]
+		},
+		{
+			"#": 53,
+			"label": "Button 1 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 54,
+			"label": "Button 2 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 55,
+			"label": "Button 3 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 56,
+			"label": "Button 4 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 57,
+			"label": "Button 5 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 58,
+			"label": "Button 6 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 59,
+			"label": "Button 7 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 60,
+			"label": "Button 8 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		},
+		{
+			"#": 61,
+			"label": "Button 9 Short Press Time (10 Ms Units)",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "20 ms",
+					"value": 2
+				},
+				{
+					"label": "100 ms",
+					"value": 10
+				},
+				{
+					"label": "200 ms",
+					"value": 20
+				},
+				{
+					"label": "300 ms",
+					"value": 30
+				},
+				{
+					"label": "400 ms",
+					"value": 40
+				},
+				{
+					"label": "500 ms",
+					"value": 50
+				},
+				{
+					"label": "600 ms",
+					"value": 60
+				},
+				{
+					"label": "700 ms",
+					"value": 70
+				},
+				{
+					"label": "800 ms",
+					"value": 80
+				},
+				{
+					"label": "900 ms",
+					"value": 90
+				},
+				{
+					"label": "1000 ms",
+					"value": 100
+				}
+			]
+		}
+	],
+	"associationGroups": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Button 1 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Button 1 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Button 1 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Button 1 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Button 2 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "Button 2 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"8": {
+			"label": "Button 2 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"9": {
+			"label": "Button 2 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"10": {
+			"label": "Button 3 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"11": {
+			"label": "Button 3 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"12": {
+			"label": "Button 3 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"13": {
+			"label": "Button 3 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"14": {
+			"label": "Button 4 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"15": {
+			"label": "Button 4 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"16": {
+			"label": "Button 4 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"17": {
+			"label": "Button 4 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"18": {
+			"label": "Button 5 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"19": {
+			"label": "Button 5 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"20": {
+			"label": "Button 5 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"21": {
+			"label": "Button 5 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"22": {
+			"label": "Button 6 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"23": {
+			"label": "Button 6 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"24": {
+			"label": "Button 6 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"25": {
+			"label": "Button 6 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"26": {
+			"label": "Button 7 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"27": {
+			"label": "Button 7 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"28": {
+			"label": "Button 7 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"29": {
+			"label": "Button 7 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"30": {
+			"label": "Button 8 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"31": {
+			"label": "Button 8 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"32": {
+			"label": "Button 8 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"33": {
+			"label": "Button 8 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		},
+		"34": {
+			"label": "Button 9 - SWITCH_BINARY_SET",
+			"maxNodes": 5
+		},
+		"35": {
+			"label": "Button 9 - SWITCH_BINARY_REPORT",
+			"maxNodes": 5
+		},
+		"36": {
+			"label": "Button 9 - SWITCH_MULTILEVEL_SET",
+			"maxNodes": 5
+		},
+		"37": {
+			"label": "Button 9 - SWITCH_MULTILEVEL_REPORT",
+			"maxNodes": 5
+		}
+	}
 }
