@@ -279,7 +279,7 @@
 		},
 		{
 			"#": "27",
-			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$if": "firmwareVersion >= 10.50 || firmwareVersion >= 2.40 && firmwareVersion < 10.0",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "LED Indicator (Scene Control)",
 			"description": "When enabled, LED indicator will flash to confirm scene activation.",
