@@ -787,6 +787,8 @@ scene number ${keyNum} must be between 1 and 255`,
 	}
 }
 
+export type DeviceConfigHashVersion = 0 | 1 | 2 | 3;
+
 export class DeviceConfig {
 	public static async from(
 		fs: ReadFileSystemInfo & ReadFile,
@@ -892,7 +894,7 @@ export class DeviceConfig {
 		}
 	}
 
-	private getHashable(version: 0 | 1 | 2): Record<string, any> {
+	private getHashable(version: DeviceConfigHashVersion): Record<string, any> {
 		// We only need to compare the information that is persisted elsewhere:
 		// - config parameters
 		// - functional association settings
@@ -1031,7 +1033,7 @@ export class DeviceConfig {
 			}
 		}
 
-		if (version > 1) {
+		if (version >= 2) {
 			// From version 2 and on, we ignore labels and descriptions, and load them dynamically
 			for (
 				const ep of Object.values<Record<string, any>>(
@@ -1048,6 +1050,36 @@ export class DeviceConfig {
 			}
 		}
 
+		if (version < 3) {
+			// Version 3 added the `allowed` field. When targeting older versions
+			// and the allowed field only has a single range, replace it with
+			// minValue/maxValue for compatibility
+			for (
+				const ep of Object.values<Record<string, any>>(
+					hashable.endpoints ?? {},
+				)
+			) {
+				for (const param of ep.paramInformation ?? []) {
+					if (
+						isArray(param.allowed)
+						&& param.allowed.length === 1
+						&& isObject(param.allowed[0])
+					) {
+						const allowed = param.allowed[0] as Record<string, any>;
+						if (
+							typeof allowed.from === "number"
+							&& typeof allowed.to === "number"
+							&& (allowed.step == undefined || allowed.step === 1)
+						) {
+							param.minValue = allowed.from;
+							param.maxValue = allowed.to;
+							delete param.allowed;
+						}
+					}
+				}
+			}
+		}
+
 		hashable = sortObject(hashable);
 		return hashable;
 	}
@@ -1056,7 +1088,7 @@ export class DeviceConfig {
 	 * Returns a hash code that can be used to check whether a device config has changed enough to require a re-interview.
 	 */
 	public async getHash(
-		version: 0 | 1 | 2 = DeviceConfig.maxHashVersion,
+		version: DeviceConfigHashVersion = DeviceConfig.maxHashVersion,
 	): Promise<BytesView> {
 		// Figure out what to hash
 		const hashable = this.getHashable(version);
@@ -1083,8 +1115,8 @@ export class DeviceConfig {
 		return Bytes.concat([prefixBytes, hash]);
 	}
 
-	public static get maxHashVersion(): 2 {
-		return 2;
+	public static get maxHashVersion(): 3 {
+		return 3;
 	}
 
 	public static areHashesEqual(hash: BytesView, other: BytesView): boolean {

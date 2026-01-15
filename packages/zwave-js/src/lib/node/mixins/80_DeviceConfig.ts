@@ -207,9 +207,7 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 			this._currentDeviceConfigHash = await this.deviceConfig
 				.getHash(1);
 		} else {
-			// Variable length prefixed hash - simply use the latest version
-			this._currentDeviceConfigHash = await this.deviceConfig
-				.getHash();
+			// Variable length prefixed hash - determine the hash version from the cache
 			if (this.cachedDeviceConfigHash) {
 				const versionString = Bytes.view(
 					this.cachedDeviceConfigHash,
@@ -218,19 +216,26 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 					cachedHashVersion = parseInt(versionString, 10);
 				}
 			}
+			// Use that version for comparison purposes if possible
+			this._currentDeviceConfigHash = await this.deviceConfig.getHash(
+				cachedHashVersion as any,
+			);
 			// default to requiring an upgrade if the version cannot be parsed
 			cachedHashVersion ??= 0;
 		}
 
-		// Update the cached device config hash upon restoring, if the node was previously interviewed
-		// and the device config has not changed since then.
+		// Update the cached device config hash to the most recent version upon restoring,
+		// if the node was previously interviewed and the device config has not changed
+		// since then.
 		if (this.interviewStage === InterviewStage.Complete) {
 			if (
 				cachedHashVersion < DeviceConfig.maxHashVersion
 				&& this.hasDeviceConfigChanged() === false
 			) {
-				this.cachedDeviceConfigHash = await this.deviceConfig
-					.getHash();
+				this.cachedDeviceConfigHash = await this.deviceConfig.getHash();
+				// Also update the current hash to the new version, in case
+				// it was previously generated with an older version
+				this._currentDeviceConfigHash = this.cachedDeviceConfigHash;
 			}
 
 			// Starting from version 2, we apply labels and descriptions from the device config dynamically
