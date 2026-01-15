@@ -219,7 +219,7 @@ Parameter #${parameterNumber}: options is malformed!`,
 Parameter #${parameterNumber} has a non-boolean property hidden`,
 			);
 		}
-		this.hidden = definition.hidden === true;
+		this.hidden = definition.hidden;
 
 		// Parse and validate the allowed field
 		if (definition.allowed != undefined) {
@@ -336,6 +336,18 @@ Parameter #${parameterNumber}: allowed[${i}] must have either "value" or "range"
 			this.allowed = parsedValues;
 		}
 	}
+
+	// IMPORTANT: Changes to these properties can affect the device config hash,
+	// which may prompt users to re-interview their devices.
+	//
+	// Whenever adding, removing or changing properties of this class,
+	// make sure that these changes do not cause the hash to change unintentionally.
+	// For example, adding a new optional property with a default value of `undefined`
+	// is fine, unless the constructor always sets it to a concrete value.
+	//
+	// In all other case, make sure to increase the `maxHashVersion` in DeviceConfig.ts
+	// and add appropriate, backwards-compatible handling for the new version
+	// in `areHashesEqual`
 
 	private parent: ConditionalDeviceConfig;
 	public readonly parameterNumber: number;
