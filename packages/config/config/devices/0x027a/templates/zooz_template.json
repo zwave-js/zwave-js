@@ -732,6 +732,56 @@
 			}
 		]
 	},
+	"external_switch_type_0-10": {
+		"$import": "#external_switch_type_0-3",
+		"maxValue": 10,
+		"options": [
+			{
+				"label": "Automatic detection",
+				"value": 0
+			},
+			{
+				"label": "Toggle switch",
+				"value": 1
+			},
+			{
+				"label": "Momentary switch",
+				"value": 2
+			},
+			{
+				"label": "Toggle switch (reversed)",
+				"value": 3
+			},
+			{
+				"label": "Leak alarm (water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "On/Off Report Only",
+				"value": 10
+			}
+		]
+	},
 	"external_switch_type_0-12": {
 		"$import": "#external_switch_type_0-3",
 		"maxValue": 12,
