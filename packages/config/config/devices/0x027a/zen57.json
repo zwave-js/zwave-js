@@ -89,7 +89,7 @@
 	],
 	"metadata": {
 		"inclusion": "Click the Z-Wave button 3 times quickly. The LED indicator will blink green while processing. It will turn solid green for 2 seconds if inclusion is successful or turn solid red for 2 seconds if the pairing attempt fails.",
-		"exclusion": "Click the Z-Wave button 3 times quickly. The LED indicator will blink green while processing. It will turn solid green for 2 seconds when exclusion is successful or turn solid red for 2 seconds if exclusion fails.",
+		"exclusion": "Click the Z-Wave button 3 times quickly. The LED indicator will blink green while processing. It will turn solid green for 2 seconds if successful or solid red for 2 seconds if exclusion fails.",
 		"reset": "Click the Z-Wave button once and immediately after, press and hold the button for 15 seconds. The LED indicator will flash during the process and turn red for 3 seconds to confirm successful reset.",
 		"manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-z-wave-long-range-240v-xs-relay-zen57-manual.pdf"
 	}
