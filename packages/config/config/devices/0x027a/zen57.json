@@ -84,7 +84,7 @@
 			"#": "13",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Reversed Reports for Input",
-			"description": "Reverse the reported values for your selected input type (value 1). Expert users only. See manual for details."
+			"description": "Reverse the reported values for your selected input type. See manual for details."
 		}
 	],
 	"metadata": {
