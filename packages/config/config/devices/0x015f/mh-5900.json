@@ -1,16 +1,16 @@
 {
-  "manufacturer": "MCO Home",
-  "manufacturerId": "0x015f",
-  "label": "MH-5900 Thermostat",
-  "description": "Z-Wave thermostat",
-  "devices": [
-    {
-      "productType": "0x810a",
-      "productId": "0x5900",
-      "firmwareVersion": {
-        "min": "0.0",
-        "max": "255.255"
-      }
-    }
-  ]
+	"manufacturer": "MCO Home",
+	"manufacturerId": "0x015f",
+	"label": "MH-5900",
+	"description": "Thermostat",
+	"devices": [
+		{
+			"productType": "0x810a",
+			"productId": "0x5900"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	}
 }
