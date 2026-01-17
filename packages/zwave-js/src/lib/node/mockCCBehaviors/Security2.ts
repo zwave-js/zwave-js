@@ -87,6 +87,7 @@ const respondToS2KEXGet: MockNodeBehavior = {
 				supportedECDHProfiles: [ECDHProfiles.Curve25519],
 				requestCSA: false,
 				requestedKeys: [...self.capabilities.securityClasses],
+				supportsNLS: false,
 			});
 
 			return { action: "sendCC", cc };

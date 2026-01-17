@@ -1,6 +1,9 @@
 /** The priority of messages, sorted from high (0) to low (>0) */
 
 export enum MessagePriority {
+	// Protocol-level commands that run in a separate queue in parallel with Serial API commands.
+	// These are used by the Z-Wave module to request encryption from the host during ongoing transactions.
+	Protocol = -1,
 	// High-priority controller commands that must be handled before all other commands.
 	// We use this priority to decide which messages go onto the immediate queue.
 	ControllerImmediate = 0,
