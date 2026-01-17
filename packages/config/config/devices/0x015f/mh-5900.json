@@ -1,16 +1,527 @@
 {
-	"manufacturer": "MCO Home",
-	"manufacturerId": "0x015f",
-	"label": "MH-5900",
-	"description": "Thermostat",
-	"devices": [
-		{
-			"productType": "0x810a",
-			"productId": "0x5900"
-		}
-	],
-	"firmwareVersion": {
-		"min": "0.0",
-		"max": "255.255"
-	}
+  "manufacturer": "MCO Home",
+  "manufacturerId": "0x015f",
+  "label": "MH-5900",
+  "description": "Thermostat",
+  "devices": [
+    {
+      "productType": "0x810a",
+      "productId": "0x5900"
+    }
+  ],
+  "firmwareVersion": {
+    "min": "0.0",
+    "max": "255.255"
+  },
+  "paramInformation": [
+    {
+      "#": "1",
+      "label": "Temp. Unit",
+      "description": "Select temperature unit displayed/used by the thermostat.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 1,
+      "options": [
+        { "label": "Celsius", "value": 0 },
+        { "label": "Fahrenheit", "value": 1 }
+      ]
+    },
+    {
+      "#": "2",
+      "label": "Temp. Difference Reporting",
+      "description": "Automatically report temperature to the gateway when the temperature variation exceeds this threshold. 0 = disabled. (Manual indicates usable range starts at 3 when enabled.)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 255,
+      "defaultValue": 5
+    },
+    {
+      "#": "3",
+      "label": "Humidity Difference Reporting",
+      "description": "Automatically report humidity to the gateway when the humidity variation exceeds this threshold (%). 0 = disabled.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 4
+    },
+
+    {
+      "#": "12",
+      "label": "Power Failure Memory",
+      "description": "Restore previous status after power loss.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 1,
+      "options": [
+        { "label": "Do not restore", "value": 0 },
+        { "label": "Restore", "value": 1 }
+      ]
+    },
+    {
+      "#": "13",
+      "label": "SCREEN OFF",
+      "description": "Backlight/screen off delay (minutes). 0 = always on.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 90,
+      "defaultValue": 1
+    },
+    {
+      "#": "14",
+      "label": "Beep Set",
+      "description": "Enable/disable keypad beep.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 1,
+      "options": [
+        { "label": "Off", "value": 0 },
+        { "label": "On", "value": 1 }
+      ]
+    },
+    {
+      "#": "15",
+      "label": "Backlight Brightness",
+      "description": "Backlight brightness level.",
+      "valueSize": 1,
+      "minValue": 1,
+      "maxValue": 8,
+      "defaultValue": 7
+    },
+    {
+      "#": "16",
+      "label": "Temp. Upper Limit",
+      "description": "Upper setpoint limit (depends on unit setting).",
+      "valueSize": 1,
+      "minValue": 1,
+      "maxValue": 99,
+      "defaultValue": 99
+    },
+    {
+      "#": "17",
+      "label": "Temp. Lower Limit",
+      "description": "Lower setpoint limit (depends on unit setting).",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 98,
+      "defaultValue": 41
+    },
+    {
+      "#": "18",
+      "label": "Temp. Offset",
+      "description": "Temperature calibration offset. (Unit per manual; stored as signed value.)",
+      "valueSize": 1,
+      "minValue": -99,
+      "maxValue": 99,
+      "defaultValue": 0
+    },
+    {
+      "#": "19",
+      "label": "Humidity Offset",
+      "description": "Humidity calibration offset (%).",
+      "valueSize": 1,
+      "minValue": -20,
+      "maxValue": 20,
+      "defaultValue": 0
+    },
+    {
+      "#": "20",
+      "label": "Fan & Humidity Display Select",
+      "description": "0: Only display fan mode  1: Only display humidity  2: Only display fan mode and humidity  3: Display fan mode and humidity (when schedule is enabled, time/week and humidity share the same display).",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 0
+    },
+    {
+      "#": "21",
+      "label": "Panel Lock",
+      "description": "0: Disabled  1: (Secret menu invalid)  2: Only mode and setpoint can be changed  3: All keys locked (except user can enter/exit inclusion/exclusion).",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 0
+    },
+    {
+      "#": "22",
+      "label": "1st Temp. Hysteresis",
+      "description": "Stage 1 hysteresis. Manual shows Fahrenheit default as 2. Range shown as 3–90 depending on unit.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 90,
+      "defaultValue": 2
+    },
+    {
+      "#": "23",
+      "label": "2nd Temp. Hysteresis",
+      "description": "Additional minimum temperature difference after stage 1 turns on before stage 2 is activated. (Manual shows 10(C) / 20(F).)",
+      "valueSize": 1,
+      "minValue": 3,
+      "maxValue": 90,
+      "defaultValue": 20
+    },
+    {
+      "#": "24",
+      "label": "3rd Temp. Hysteresis",
+      "description": "Additional minimum temperature difference after stage 2 turns on before stage 3 is activated. (Manual shows 10(C) / 20(F).)",
+      "valueSize": 1,
+      "minValue": 3,
+      "maxValue": 90,
+      "defaultValue": 20
+    },
+    {
+      "#": "25",
+      "label": "System Control Type",
+      "description": "HVAC system type (see controlling type details in thermostat menu/manual).",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 12,
+      "defaultValue": 12
+    },
+    {
+      "#": "26",
+      "label": "Changeover Valve Logic",
+      "description": "Heat pump reversing valve logic.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0,
+      "options": [
+        { "label": "O/B outputs ON in heat pump start heating; OFF in cooling", "value": 0 },
+        { "label": "O/B outputs ON in heat pump start cooling; OFF in heating", "value": 1 }
+      ]
+    },
+    {
+      "#": "27",
+      "label": "Compressor Protection Time",
+      "description": "Compressor delay time from shutdown to startup (minutes).",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 120,
+      "defaultValue": 1
+    },
+    {
+      "#": "28",
+      "label": "EM(AUX) Emergency Heat Mode",
+      "description": "Emergency heat mode. 0: OFF  1: ON (Manual note: only valid for heat pump system with heating function.)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0
+    },
+    {
+      "#": "29",
+      "label": "Time Display Selection",
+      "description": "Time display when schedule is active: 0: Time, week, current time period  1: Only week and current time period  2: Time, week and current time period (manual lists these display modes).",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 2,
+      "defaultValue": 0
+    },
+    {
+      "#": "30",
+      "label": "Fan shutdown delay (min)",
+      "description": "Fan continues running after compressor shutdown. 0: When compressor shuts down, fan also shuts down. 1–127: fan shuts down after N minutes.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 127,
+      "defaultValue": 0
+    },
+    {
+      "#": "31",
+      "label": "Compressor delay countdown display",
+      "description": "0: No display  1: Display",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0
+    },
+    {
+      "#": "32",
+      "label": "Whether to enable electrical auxiliary heating",
+      "description": "0: Disable  1: Enable",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 1
+    },
+    {
+      "#": "33",
+      "label": "Button brightness when screen off",
+      "description": "0: Fully off  1–3: Brightness level",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 3
+    },
+
+    {
+      "#": "45",
+      "label": "Schedule Function Select",
+      "description": "Weekly schedule enable.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0,
+      "options": [
+        { "label": "Disabled", "value": 0 },
+        { "label": "Enabled", "value": 1 }
+      ]
+    },
+
+    {
+      "#": "46",
+      "label": "Set same value: 1st period time (MON–SUN)",
+      "description": "2-byte time encoding: Byte1 = hour (0–23), Byte2 = minute (0–59). Raw value = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 1536
+    },
+    {
+      "#": "47",
+      "label": "Set same value: 2nd period time (MON–SUN)",
+      "description": "2-byte time encoding: Byte1 = hour (0–23), Byte2 = minute (0–59). Raw value = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 2048
+    },
+    {
+      "#": "48",
+      "label": "Set same value: 3rd period time (MON–SUN)",
+      "description": "2-byte time encoding: Byte1 = hour (0–23), Byte2 = minute (0–59). Raw value = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 4608
+    },
+    {
+      "#": "49",
+      "label": "Set same value: 4th period time (MON–SUN)",
+      "description": "2-byte time encoding: Byte1 = hour (0–23), Byte2 = minute (0–59). Raw value = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 5632
+    },
+
+    {
+      "#": "50",
+      "label": "Heat setpoint: 1st period (MON–SUN)",
+      "description": "Heat setpoint (0.1° resolution). Default shown as 21.0°C / 70.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 700
+    },
+    {
+      "#": "51",
+      "label": "Heat setpoint: 2nd period (MON–SUN)",
+      "description": "Heat setpoint (0.1° resolution). Default shown as 16.5°C / 62.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 620
+    },
+    {
+      "#": "52",
+      "label": "Heat setpoint: 3rd period (MON–SUN)",
+      "description": "Heat setpoint (0.1° resolution). Default shown as 21.0°C / 70.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 700
+    },
+    {
+      "#": "53",
+      "label": "Heat setpoint: 4th period (MON–SUN)",
+      "description": "Heat setpoint (0.1° resolution). Default shown as 16.5°C / 62.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 620
+    },
+
+    {
+      "#": "54",
+      "label": "Cool setpoint: 1st period (MON–SUN)",
+      "description": "Cool setpoint (0.1° resolution). Default shown as 25.5°C / 78.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 780
+    },
+    {
+      "#": "55",
+      "label": "Cool setpoint: 2nd period (MON–SUN)",
+      "description": "Cool setpoint (0.1° resolution). Default shown as 29.5°C / 85.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 850
+    },
+    {
+      "#": "56",
+      "label": "Cool setpoint: 3rd period (MON–SUN)",
+      "description": "Cool setpoint (0.1° resolution). Default shown as 25.5°C / 78.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 780
+    },
+    {
+      "#": "57",
+      "label": "Cool setpoint: 4th period (MON–SUN)",
+      "description": "Cool setpoint (0.1° resolution). Default shown as 28.0°C / 82.0°F.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 1000,
+      "defaultValue": 820
+    },
+
+    {
+      "#": "58",
+      "label": "1st period time (Mon)",
+      "description": "Set 1st period time separately (Mon). Raw = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 1536
+    },
+    { "#": "59", "label": "1st period time (Tue)", "description": "Set 1st period time separately (Tue). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 1536 },
+    { "#": "60", "label": "1st period time (Wed)", "description": "Set 1st period time separately (Wed). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 1536 },
+    { "#": "61", "label": "1st period time (Thu)", "description": "Set 1st period time separately (Thu). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 1536 },
+    { "#": "62", "label": "1st period time (Fri)", "description": "Set 1st period time separately (Fri). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 1536 },
+    { "#": "63", "label": "1st period time (Sat)", "description": "Set 1st period time separately (Sat). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 1536 },
+    { "#": "64", "label": "1st period time (Sun)", "description": "Set 1st period time separately (Sun). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 1536 },
+
+    {
+      "#": "65",
+      "label": "2nd period time (Mon)",
+      "description": "Set 2nd period time separately (Mon). Raw = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 2048
+    },
+    { "#": "66", "label": "2nd period time (Tue)", "description": "Set 2nd period time separately (Tue). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 2048 },
+    { "#": "67", "label": "2nd period time (Wed)", "description": "Set 2nd period time separately (Wed). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 2048 },
+    { "#": "68", "label": "2nd period time (Thu)", "description": "Set 2nd period time separately (Thu). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 2048 },
+    { "#": "69", "label": "2nd period time (Fri)", "description": "Set 2nd period time separately (Fri). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 2048 },
+    { "#": "70", "label": "2nd period time (Sat)", "description": "Set 2nd period time separately (Sat). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 2048 },
+    { "#": "71", "label": "2nd period time (Sun)", "description": "Set 2nd period time separately (Sun). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 2048 },
+
+    {
+      "#": "72",
+      "label": "3rd period time (Mon)",
+      "description": "Set 3rd period time separately (Mon). Raw = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 4608
+    },
+    { "#": "73", "label": "3rd period time (Tue)", "description": "Set 3rd period time separately (Tue). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 4608 },
+    { "#": "74", "label": "3rd period time (Wed)", "description": "Set 3rd period time separately (Wed). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 4608 },
+    { "#": "75", "label": "3rd period time (Thu)", "description": "Set 3rd period time separately (Thu). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 4608 },
+    { "#": "76", "label": "3rd period time (Fri)", "description": "Set 3rd period time separately (Fri). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 4608 },
+    { "#": "77", "label": "3rd period time (Sat)", "description": "Set 3rd period time separately (Sat). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 4608 },
+    { "#": "78", "label": "3rd period time (Sun)", "description": "Set 3rd period time separately (Sun). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 4608 },
+
+    {
+      "#": "79",
+      "label": "4th period time (Mon)",
+      "description": "Set 4th period time separately (Mon). Raw = (hour<<8) + minute.",
+      "valueSize": 2,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 5632
+    },
+    { "#": "80", "label": "4th period time (Tue)", "description": "Set 4th period time separately (Tue). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 5632 },
+    { "#": "81", "label": "4th period time (Wed)", "description": "Set 4th period time separately (Wed). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 5632 },
+    { "#": "82", "label": "4th period time (Thu)", "description": "Set 4th period time separately (Thu). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 5632 },
+    { "#": "83", "label": "4th period time (Fri)", "description": "Set 4th period time separately (Fri). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 5632 },
+    { "#": "84", "label": "4th period time (Sat)", "description": "Set 4th period time separately (Sat). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 5632 },
+    { "#": "85", "label": "4th period time (Sun)", "description": "Set 4th period time separately (Sun). Raw = (hour<<8) + minute.", "valueSize": 2, "minValue": 0, "maxValue": 65535, "defaultValue": 5632 },
+
+    { "#": "86", "label": "Heat setpoint 1st period (Mon)", "description": "Heat setpoint 1st period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "87", "label": "Heat setpoint 1st period (Tue)", "description": "Heat setpoint 1st period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "88", "label": "Heat setpoint 1st period (Wed)", "description": "Heat setpoint 1st period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "89", "label": "Heat setpoint 1st period (Thu)", "description": "Heat setpoint 1st period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "90", "label": "Heat setpoint 1st period (Fri)", "description": "Heat setpoint 1st period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "91", "label": "Heat setpoint 1st period (Sat)", "description": "Heat setpoint 1st period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "92", "label": "Heat setpoint 1st period (Sun)", "description": "Heat setpoint 1st period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+
+    { "#": "93", "label": "Heat setpoint 2nd period (Mon)", "description": "Heat setpoint 2nd period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "94", "label": "Heat setpoint 2nd period (Tue)", "description": "Heat setpoint 2nd period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "95", "label": "Heat setpoint 2nd period (Wed)", "description": "Heat setpoint 2nd period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "96", "label": "Heat setpoint 2nd period (Thu)", "description": "Heat setpoint 2nd period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "97", "label": "Heat setpoint 2nd period (Fri)", "description": "Heat setpoint 2nd period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "98", "label": "Heat setpoint 2nd period (Sat)", "description": "Heat setpoint 2nd period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "99", "label": "Heat setpoint 2nd period (Sun)", "description": "Heat setpoint 2nd period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+
+    { "#": "100", "label": "Heat setpoint 3rd period (Mon)", "description": "Heat setpoint 3rd period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "101", "label": "Heat setpoint 3rd period (Tue)", "description": "Heat setpoint 3rd period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "102", "label": "Heat setpoint 3rd period (Wed)", "description": "Heat setpoint 3rd period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "103", "label": "Heat setpoint 3rd period (Thu)", "description": "Heat setpoint 3rd period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "104", "label": "Heat setpoint 3rd period (Fri)", "description": "Heat setpoint 3rd period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "105", "label": "Heat setpoint 3rd period (Sat)", "description": "Heat setpoint 3rd period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+    { "#": "106", "label": "Heat setpoint 3rd period (Sun)", "description": "Heat setpoint 3rd period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 700 },
+
+    { "#": "107", "label": "Heat setpoint 4th period (Mon)", "description": "Heat setpoint 4th period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "108", "label": "Heat setpoint 4th period (Tue)", "description": "Heat setpoint 4th period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "109", "label": "Heat setpoint 4th period (Wed)", "description": "Heat setpoint 4th period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "110", "label": "Heat setpoint 4th period (Thu)", "description": "Heat setpoint 4th period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "111", "label": "Heat setpoint 4th period (Fri)", "description": "Heat setpoint 4th period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "112", "label": "Heat setpoint 4th period (Sat)", "description": "Heat setpoint 4th period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+    { "#": "113", "label": "Heat setpoint 4th period (Sun)", "description": "Heat setpoint 4th period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 620 },
+
+    { "#": "114", "label": "Cool setpoint 1st period (Mon)", "description": "Cool setpoint 1st period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "115", "label": "Cool setpoint 1st period (Tue)", "description": "Cool setpoint 1st period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "116", "label": "Cool setpoint 1st period (Wed)", "description": "Cool setpoint 1st period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "117", "label": "Cool setpoint 1st period (Thu)", "description": "Cool setpoint 1st period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "118", "label": "Cool setpoint 1st period (Fri)", "description": "Cool setpoint 1st period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "119", "label": "Cool setpoint 1st period (Sat)", "description": "Cool setpoint 1st period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "120", "label": "Cool setpoint 1st period (Sun)", "description": "Cool setpoint 1st period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+
+    { "#": "121", "label": "Cool setpoint 2nd period (Mon)", "description": "Cool setpoint 2nd period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 850 },
+    { "#": "122", "label": "Cool setpoint 2nd period (Tue)", "description": "Cool setpoint 2nd period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 850 },
+    { "#": "123", "label": "Cool setpoint 2nd period (Wed)", "description": "Cool setpoint 2nd period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 850 },
+    { "#": "124", "label": "Cool setpoint 2nd period (Thu)", "description": "Cool setpoint 2nd period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 850 },
+    { "#": "125", "label": "Cool setpoint 2nd period (Fri)", "description": "Cool setpoint 2nd period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 850 },
+    { "#": "126", "label": "Cool setpoint 2nd period (Sat)", "description": "Cool setpoint 2nd period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 850 },
+    { "#": "127", "label": "Cool setpoint 2nd period (Sun)", "description": "Cool setpoint 2nd period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 850 },
+
+    { "#": "128", "label": "Cool setpoint 3rd period (Mon)", "description": "Cool setpoint 3rd period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "129", "label": "Cool setpoint 3rd period (Tue)", "description": "Cool setpoint 3rd period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "130", "label": "Cool setpoint 3rd period (Wed)", "description": "Cool setpoint 3rd period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "131", "label": "Cool setpoint 3rd period (Thu)", "description": "Cool setpoint 3rd period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "132", "label": "Cool setpoint 3rd period (Fri)", "description": "Cool setpoint 3rd period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "133", "label": "Cool setpoint 3rd period (Sat)", "description": "Cool setpoint 3rd period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+    { "#": "134", "label": "Cool setpoint 3rd period (Sun)", "description": "Cool setpoint 3rd period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 780 },
+
+    { "#": "135", "label": "Cool setpoint 4th period (Mon)", "description": "Cool setpoint 4th period separately (Mon). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 820 },
+    { "#": "136", "label": "Cool setpoint 4th period (Tue)", "description": "Cool setpoint 4th period separately (Tue). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 820 },
+    { "#": "137", "label": "Cool setpoint 4th period (Wed)", "description": "Cool setpoint 4th period separately (Wed). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 820 },
+    { "#": "138", "label": "Cool setpoint 4th period (Thu)", "description": "Cool setpoint 4th period separately (Thu). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 820 },
+    { "#": "139", "label": "Cool setpoint 4th period (Fri)", "description": "Cool setpoint 4th period separately (Fri). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 820 },
+    { "#": "140", "label": "Cool setpoint 4th period (Sat)", "description": "Cool setpoint 4th period separately (Sat). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 820 },
+    { "#": "141", "label": "Cool setpoint 4th period (Sun)", "description": "Cool setpoint 4th period separately (Sun). 0.1° resolution.", "valueSize": 2, "minValue": 0, "maxValue": 1000, "defaultValue": 820 },
+
+    {
+      "#": "255",
+      "label": "Factory Restore",
+      "description": "1: Restore factory setting  0: Invalid",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0,
+      "options": [
+        { "label": "Invalid", "value": 0 },
+        { "label": "Restore factory setting", "value": 1 }
+      ]
+    }
+  ]
 }
