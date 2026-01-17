@@ -9,6 +9,7 @@ import { BytesView } from '@zwave-js/shared';
 import type { Database } from '@zwave-js/shared/bindings';
 import { DeflateOptions } from 'fflate';
 import type { ExpectStatic } from 'vitest';
+import { InflateOptions } from 'fflate';
 import { JSONObject } from '@zwave-js/shared';
 import { KeyPair } from '@zwave-js/shared/bindings';
 import type { TransformableInfo } from 'logform';
@@ -25,6 +26,11 @@ export const actuatorCCs: readonly CommandClasses[];
 //
 // @public
 export const allCCs: readonly CommandClasses[];
+
+// Warning: (ae-missing-release-tag) "AllowedConfigValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type AllowedConfigValue = ConfigValueSingle | ConfigValueRange;
 
 // Warning: (ae-missing-release-tag) "applicationCCs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -492,6 +498,8 @@ export function computePRK(ecdhSharedSecret: BytesView, pubKeyA: BytesView, pubK
 // @public (undocumented)
 export interface ConfigurationMetadata extends ValueMetadataAny {
     // (undocumented)
+    allowed?: readonly AllowedConfigValue[];
+    // (undocumented)
     allowManualEntry?: boolean;
     // (undocumented)
     default?: ConfigValue;
@@ -542,6 +550,22 @@ export enum ConfigValueFormat {
     // (undocumented)
     UnsignedInteger = 1
 }
+
+// Warning: (ae-missing-release-tag) "ConfigValueRange" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ConfigValueRange = {
+    from: number;
+    to: number;
+    step?: number;
+};
+
+// Warning: (ae-missing-release-tag) "ConfigValueSingle" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ConfigValueSingle = {
+    value: number;
+};
 
 // Warning: (ae-missing-release-tag) "CONTROL_CHAR_WIDTH" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1812,6 +1836,11 @@ export interface IndicatorProperty extends IndicatorPropertyDefinition {
 //
 // @public (undocumented)
 export type InferStateMachineTransitions<T extends StateMachine<any, any, any>> = T extends StateMachine<infer S, infer I, infer E> ? StateMachineTransitionMap<S, I, E | undefined> : never;
+
+// Warning: (ae-missing-release-tag) "inflateSync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function inflateSync(data: BytesView, opts?: InflateOptions): BytesView;
 
 // Warning: (ae-missing-release-tag) "IntegerLimits" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
