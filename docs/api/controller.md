@@ -22,6 +22,56 @@ enum ZWaveFeature {
 }
 ```
 
+### SDK version comparison methods
+
+The following methods can be used to check if the controller's SDK version meets certain requirements:
+
+```ts
+sdkVersionGt(version: SDKVersion): boolean | undefined
+sdkVersionGte(version: SDKVersion): boolean | undefined
+sdkVersionLt(version: SDKVersion): boolean | undefined
+sdkVersionLte(version: SDKVersion): boolean | undefined
+```
+
+- `sdkVersionGt` - Checks if the SDK version is **greater than** the given one
+- `sdkVersionGte` - Checks if the SDK version is **greater than or equal** to the given one
+- `sdkVersionLt` - Checks if the SDK version is **lower than** the given one
+- `sdkVersionLte` - Checks if the SDK version is **lower than or equal** to the given one
+
+The `SDKVersion` parameter is a string in the format `"major.minor.patch"` (e.g., `"7.11.1"`). These methods return `undefined` if the SDK version isn't known yet.
+
+### `isFunctionSupported`
+
+```ts
+isFunctionSupported(functionType: FunctionType): boolean | undefined
+```
+
+Checks if a given Z-Wave Serial API function type is supported by this controller. Returns `undefined` if this information isn't known yet.
+
+### `isSerialAPISetupCommandSupported`
+
+```ts
+isSerialAPISetupCommandSupported(command: SerialAPISetupCommand): boolean | undefined
+```
+
+Checks if a given Serial API setup command is supported by this controller. Returns `undefined` if this information isn't known yet.
+
+### `getNodeByDSK`
+
+```ts
+getNodeByDSK(dsk: BytesView | string): ZWaveNode | undefined
+```
+
+Returns the node with the given DSK (Device Specific Key), or `undefined` if no node with that DSK is found. The DSK can be provided as a binary `BytesView` or as a string in the form `"aaaaa-bbbbb-ccccc-ddddd-eeeee-fffff-11111-22222"`.
+
+### `hasPlannedProvisioningEntries`
+
+```ts
+hasPlannedProvisioningEntries(): boolean
+```
+
+Returns whether the SmartStart provisioning list contains active entries that have not been included yet.
+
 ### Including and excluding nodes
 
 #### `beginInclusion`
@@ -343,6 +393,22 @@ To get around this:
 1. Turn the radio off with `controller.toggleRF(false)`
 2. Batch all `getNodeNeighbors` requests together
 3. Turn the radio back on with `controller.toggleRF(true`)
+
+### `discoverNodeNeighbors`
+
+```ts
+async discoverNodeNeighbors(nodeId: number): Promise<boolean>
+```
+
+Triggers a neighbor discovery for the given node, updating its neighbor list. This is more accurate than `getNodeNeighbors` but takes longer. Returns `true` if the discovery was successful, `false` otherwise.
+
+### `getBackgroundRSSI`
+
+```ts
+async getBackgroundRSSI(): Promise<{ channel0: RSSI; channel1: RSSI; channel2?: RSSI }>
+```
+
+Measures and returns the background RSSI (Received Signal Strength Indicator) levels on the different channels. This can be used to detect interference on the Z-Wave frequency. The returned object contains RSSI measurements for channels 0, 1, and optionally 2.
 
 ### `getKnownLifelineRoutes`
 
@@ -952,6 +1018,36 @@ enum LongRangeChannel {
 
 > [!NOTE] `supportsAutoChannelSelection` indicates whether the controller supports automatic channel selection. `LongRangeChannel.Auto` is only allowed if supported.
 
+#### Configure Node ID Type
+
+```ts
+setNodeIDType(nodeIdType: NodeIDType): Promise<boolean>
+```
+
+Sets the node ID type to use for the network. This determines whether 8-bit (short) or 16-bit (long) node IDs are used. Returns `true` if successful, `false` otherwise.
+
+```ts
+trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean>
+```
+
+Attempts to set the node ID type without throwing an error if the operation is not supported. Returns `true` if successful, `false` otherwise.
+
+> [!ATTENTION] Changing the node ID type can only be done when the network has no nodes included yet.
+
+#### Query Maximum Payload Sizes
+
+```ts
+getMaxPayloadSize(): Promise<number>
+```
+
+Queries and returns the maximum payload size that can be transmitted with a Z-Wave explorer frame.
+
+```ts
+getMaxPayloadSizeLongRange(): Promise<number>
+```
+
+Queries and returns the maximum payload size that can be transmitted with a Z-Wave Long Range frame.
+
 #### Turn Z-Wave Radio on/off
 
 ```ts
@@ -1050,11 +1146,29 @@ Before reading or writing to a 700 series NVM, it must be opened using this meth
 
 > [!NOTE] The first access determines whether the NVM can be written to or read from. To change the access method, close and re-open the NVM.
 
+```ts
+externalNVMOpenExt(): Promise<{ size: number }>
+```
+
+Extended version of `externalNVMOpen` that supports larger NVMs (>64 KiB). Returns an object with the accessible NVM size in bytes.
+
+> [!NOTE] Prefer this method over `externalNVMOpen` if supported, as it can handle NVMs larger than 64 KiB.
+
 #### Closing the NVM (700 series only)
 
 ```ts
 externalNVMClose(): Promise<void>
 ```
+
+Closes the NVM after reading or writing operations.
+
+```ts
+externalNVMCloseExt(): Promise<void>
+```
+
+Extended version of `externalNVMClose` that supports larger NVMs (>64 KiB).
+
+> [!NOTE] Prefer this method over `externalNVMClose` if supported, as it can handle NVMs larger than 64 KiB.
 
 #### Reading from the NVM (500 series only)
 
@@ -1078,6 +1192,14 @@ externalNVMReadBuffer700(offset: number, length: number): Promise<{ buffer: Buff
 
 Reads a buffer from the external NVM at the given offset. The returned `buffer` length is limited by the Serial API capabilities and not guaranteed to equal `length`.
 If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to [`externalNVMClose`](#externalNVMClose).
+
+```ts
+externalNVMReadBufferExt(offset: number, length: number): Promise<Buffer>
+```
+
+Extended version of `externalNVMReadBuffer700` that supports larger NVMs (>64 KiB). Reads a buffer from the external NVM at the given offset.
+
+> [!NOTE] Prefer this method over `externalNVMReadBuffer700` if supported, as it can handle NVMs larger than 64 KiB.
 
 #### Writing to the NVM (500 series only)
 
@@ -1104,6 +1226,16 @@ externalNVMWriteBuffer700(offset: number, buffer: Buffer): Promise<boolean>
 Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to [`externalNVMClose`](#externalNVMClose).
 
 > [!WARNING] This method can write in the full NVM address space and are not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
+
+```ts
+externalNVMWriteBufferExt(offset: number, buffer: Buffer): Promise<void>
+```
+
+Extended version of `externalNVMWriteBuffer700` that supports larger NVMs (>64 KiB). Writes a buffer to the external NVM at the given offset.
+
+> [!NOTE] Prefer this method over `externalNVMWriteBuffer700` if supported, as it can handle NVMs larger than 64 KiB.
+
+> [!WARNING] This method can write in the full NVM address space and is not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
 
 ### Updating the firmware of a node (OTA)
 
@@ -1376,6 +1508,29 @@ async stopLeavingNetwork(): Promise<boolean>
 
 Stops the process to leave the current network. The returned promise resolves to `true` if stopping was successful, `false` if it failed or if it was not active.
 
+### `configureSUC`
+
+```ts
+async configureSUC(
+	enableSUC: boolean,
+	enableSIS: boolean,
+): Promise<boolean>
+```
+
+Configures the controller's SUC (Static Update Controller) and SIS (SIS) functionality. When `enableSUC` is `true`, the controller becomes the SUC in the network. When `enableSIS` is also `true`, the controller becomes the SIS. Returns `true` if the configuration was successful, `false` otherwise.
+
+> [!NOTE] Only one controller in a network should be configured as SUC/SIS.
+
+### `destroy`
+
+```ts
+destroy(): void
+```
+
+Cleans up controller resources and destroys all node instances. This method should be called when the controller is no longer needed to free up resources.
+
+> [!WARNING] After calling this method, the controller instance should no longer be used.
+
 ## Controller properties
 
 ### `nodes`
@@ -1449,29 +1604,314 @@ Returns the ID of the controller in the current network.
 > [!WARNING]
 > This property is only defined after the controller interview!
 
-<!-- TODO: Document the other properties of the Controller class:
-* readonly isSecondary: boolean
-* readonly isUsingHomeIdFromOtherNetwork: boolean
-* readonly isSISPresent: boolean
-* readonly wasRealPrimary: boolean
-* readonly isStaticUpdateController: boolean
-* readonly isSlave: boolean
-* readonly firmwareVersion: string
-* readonly manufacturerId: number
-* readonly productType: number
-* readonly productId: number
-* readonly supportedFunctionTypes: FunctionType[]
-* readonly sucNodeId: number
-* readonly supportsTimers: boolean
--->
-
-#### `dsk`
+### `protocolVersion`
 
 ```ts
-dsk(): Buffer
+readonly protocolVersion: string
 ```
 
-Returns the controller's DSK in binary format.
+Returns the Z-Wave protocol version that is supported by the controller hardware.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `zwaveApiVersion`
+
+```ts
+readonly zwaveApiVersion: ZWaveApiVersion
+```
+
+Returns information about the Z-Wave API version supported by the controller. The value has the following shape:
+
+```ts
+interface ZWaveApiVersion {
+	kind: "official" | "legacy";
+	version: number;
+}
+```
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `zwaveChipType`
+
+```ts
+readonly zwaveChipType: string | UnknownZWaveChipType
+```
+
+Returns the Z-Wave chip type of the controller (e.g., `"ZW0301"`, `"ZGM130S"`).
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `manufacturerId`
+
+```ts
+readonly manufacturerId: number
+```
+
+Returns the manufacturer ID of the controller hardware.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `productType`
+
+```ts
+readonly productType: number
+```
+
+Returns the product type of the controller hardware.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `productId`
+
+```ts
+readonly productId: number
+```
+
+Returns the product ID of the controller hardware.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `firmwareVersion`
+
+```ts
+readonly firmwareVersion: string
+```
+
+Returns the firmware version of the controller.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `supportedFunctionTypes`
+
+```ts
+readonly supportedFunctionTypes: readonly FunctionType[]
+```
+
+Returns an array of Z-Wave Serial API function types that are supported by the controller.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `supportedSerialAPISetupCommands`
+
+```ts
+readonly supportedSerialAPISetupCommands: readonly SerialAPISetupCommand[] | undefined
+```
+
+Returns an array of Serial API setup commands that are supported by the controller, or `undefined` if this information isn't known yet.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `nodeType`
+
+```ts
+readonly nodeType: NodeType
+```
+
+Returns the node type of the controller. Possible values are defined in the `NodeType` enum:
+
+```ts
+enum NodeType {
+	Controller = 0x01,
+	End = 0x02,
+}
+```
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `sucNodeId`
+
+```ts
+readonly sucNodeId: number
+```
+
+Returns the node ID of the SUC (Static Update Controller) in the network, or `0` if there is no SUC.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `supportsTimers`
+
+```ts
+readonly supportsTimers: boolean
+```
+
+Returns whether the controller supports automatic Z-Wave timers.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `supportedRegions`
+
+```ts
+readonly supportedRegions: ReadonlyMap<RFRegion, Readonly<RFRegionInfo>>
+```
+
+Returns which RF regions are supported by the controller, including information about them.
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `txPower`
+
+```ts
+readonly txPower: number
+```
+
+Returns the transmit power used for Z-Wave mesh in dBm, or `undefined` if it could not be determined (yet). This value is cached and can be changed through [`setPowerlevel`](#configure-tx-powerlevel).
+
+### `powerlevelCalibration`
+
+```ts
+readonly powerlevelCalibration: number
+```
+
+Returns the calibration value for the transmit power in dBm, or `undefined` if it could not be determined (yet). This value is cached and can be changed through [`setPowerlevel`](#configure-tx-powerlevel).
+
+### `supportsLongRangeAutoChannelSelection`
+
+```ts
+readonly supportsLongRangeAutoChannelSelection: boolean
+```
+
+Returns whether automatic Z-Wave Long Range channel selection is supported, or `undefined` if it could not be determined (yet).
+
+### `maxPayloadSize`
+
+```ts
+readonly maxPayloadSize: number
+```
+
+Returns the maximum payload size that can be transmitted with a Z-Wave explorer frame, or `undefined` if it could not be determined (yet).
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `maxPayloadSizeLR`
+
+```ts
+readonly maxPayloadSizeLR: number
+```
+
+Returns the maximum payload size that can be transmitted with a Z-Wave Long Range frame, or `undefined` if it could not be determined (yet).
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `nodeIdType`
+
+```ts
+readonly nodeIdType: NodeIDType
+```
+
+Returns whether the controller is configured to use 8 or 16 bit node IDs. Possible values:
+
+```ts
+enum NodeIDType {
+	Short = 0x01, // 8-bit node IDs
+	Long = 0x02,  // 16-bit node IDs
+}
+```
+
+### `valueDB`
+
+```ts
+readonly valueDB: ValueDB
+```
+
+Returns the controller node's value database, which can be used to access the controller's own values.
+
+### `associations`
+
+```ts
+readonly associations: readonly AssociationAddress[]
+```
+
+Returns which associations are currently configured for the controller.
+
+### `powerlevel`
+
+```ts
+readonly powerlevel: { powerlevel: Powerlevel; until: Date }
+```
+
+Returns the powerlevel that was set by another node and when it expires. This is different from the `txPower` property and relates to the Powerlevel CC.
+
+### `role`
+
+```ts
+readonly role: ControllerRole
+```
+
+Returns the role of the controller on the network. Possible values:
+
+```ts
+enum ControllerRole {
+	Primary,
+	Secondary,
+	Inclusion,
+}
+```
+
+> [!WARNING]
+> This property is only defined after the controller interview!
+
+### `isLearnModePermitted`
+
+```ts
+readonly isLearnModePermitted: boolean
+```
+
+Returns whether learn mode may be enabled on this controller. The primary controller may only enter learn mode if it hasn't included nodes yet. Secondary controllers may only enter learn mode if they are not the SUC.
+
+### `indicatorValues`
+
+```ts
+readonly indicatorValues: ReadonlyMap<number, IndicatorObject[]>
+```
+
+Returns the indicator values set by another node (used by the Indicator CC).
+
+### `bootstrappingS2NodeId`
+
+```ts
+readonly bootstrappingS2NodeId: number | undefined
+```
+
+Returns the node ID that is currently being bootstrapped with Security S2, or `undefined` if no S2 bootstrapping is in progress.
+
+### `nvm`
+
+```ts
+readonly nvm: NVMAdapter
+```
+
+Returns an adapter for accessing the controller's NVM (non-volatile memory). This provides low-level access to the controller's memory structure.
+
+### `proprietary`
+
+```ts
+readonly proprietary: ControllerProprietary
+```
+
+Returns an object containing proprietary controller-specific functionality. The available methods depend on the controller hardware.
+
+### `getDSK`
+
+```ts
+getDSK(): Promise<BytesView>
+```
+
+Returns the controller's DSK (Device Specific Key) in binary format.
 
 ### `status`
 
