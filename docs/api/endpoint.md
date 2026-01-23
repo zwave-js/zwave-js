@@ -194,7 +194,7 @@ The device class of this endpoint. For the root endpoint (index 0), this is the 
 
 The device class provides information about the type of device and includes:
 - `basic` - The basic device class
-- `generic` - The generic device class  
+- `generic` - The generic device class
 - `specific` - The specific device class
 
 ### `endpointLabel`

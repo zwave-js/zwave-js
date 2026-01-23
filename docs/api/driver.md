@@ -256,9 +256,9 @@ async sendTestFrame(nodeId: number, powerlevel?: Powerlevel, numberOfFrames?: nu
 
 Sends test frames to a node for network diagnostics. This can be used to test the reliability of the connection to a specific node.
 
-- `nodeId` - The ID of the target node
-- `powerlevel` _(optional)_ - The power level to use for the test frames
-- `numberOfFrames` _(optional)_ - The number of test frames to send
+- `nodeId` _(number)_ - The ID of the target node
+- `powerlevel` _(Powerlevel, optional)_ - The power level to use for the test frames
+- `numberOfFrames` _(number, optional)_ - The number of test frames to send
 
 ### `getNode`
 

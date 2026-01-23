@@ -33,6 +33,8 @@ sdkVersionLt(version: SDKVersion): boolean | undefined
 sdkVersionLte(version: SDKVersion): boolean | undefined
 ```
 
+Each method takes a `version` parameter which is an SDK version string (e.g., `"7.19.1"`).
+
 - `sdkVersionGt` - Checks if the SDK version is **greater than** the given one
 - `sdkVersionGte` - Checks if the SDK version is **greater than or equal** to the given one
 - `sdkVersionLt` - Checks if the SDK version is **lower than** the given one

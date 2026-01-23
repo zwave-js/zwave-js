@@ -598,12 +598,13 @@ async checkLinkReliability(
 
 Performs a comprehensive link reliability check between the controller and this node. This test measures various aspects of the connection quality including packet loss, transmission times, and route stability.
 
-The `options` parameter allows configuring:
-- Number of test rounds
-- Frame transmission rates
-- Progress callbacks
+The `options` parameter configures the test:
+- `rounds` _(number)_ - Number of test rounds to perform
+- `failedRoundsThreshold` _(number, optional)_ - How many consecutive failed rounds trigger an abort
+- `frameCount` _(number, optional)_ - Number of frames per round
+- `onProgress` _(function, optional)_ - Callback invoked after each round completes
 
-Returns detailed statistics about the link quality.
+Returns detailed statistics about the link quality including success rate, latency measurements, and transmission reliability metrics.
 
 ### `isLinkReliabilityCheckInProgress`
 
