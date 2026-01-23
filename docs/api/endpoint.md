@@ -86,6 +86,78 @@ supportsCCAPI(cc: CommandClasses): boolean
 
 Allows checking whether a CC API is supported before calling it with [`invokeCCAPI`](#invokeCCAPI)
 
+### `getCCs`
+
+```ts
+getCCs(): Iterable<[ccId: CommandClasses, info: CommandClassInfo]>
+```
+
+Returns an iterable of all command classes implemented by this endpoint, along with their configuration information. This can be used to enumerate supported CCs without prior knowledge of which ones are available.
+
+### `addCC`
+
+```ts
+addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void
+```
+
+Adds or updates a command class for this endpoint. This is primarily used internally during the interview process.
+
+> [!NOTE]
+> This is an advanced method typically only needed for testing or very specific use cases.
+
+### `removeCC`
+
+```ts
+removeCC(cc: CommandClasses): void
+```
+
+Removes a command class from this endpoint. This is primarily used internally or for special configuration scenarios.
+
+> [!NOTE]
+> This is an advanced method typically only needed for testing or very specific use cases.
+
+### `maySupportBasicCC`
+
+```ts
+maySupportBasicCC(): boolean
+```
+
+Checks whether this endpoint is allowed to support Basic CC based on its device class. According to Z-Wave specifications, some device types should not support Basic CC.
+
+### `wasCCRemovedViaConfig`
+
+```ts
+wasCCRemovedViaConfig(cc: CommandClasses): boolean
+```
+
+Determines whether a command class was force-removed from this endpoint via device configuration file. This can be useful for troubleshooting why a CC that was expected is not available.
+
+### `getSupportedCCInstances`
+
+```ts
+getSupportedCCInstances(): readonly CommandClass[]
+```
+
+Returns instances for all supported command classes. This is primarily used internally during the interview process to determine which CCs need to be interviewed.
+
+> [!NOTE]
+> This is an advanced method typically only needed internally by the driver.
+
+### `buildCCInterviewGraph`
+
+```ts
+buildCCInterviewGraph(skipCCs: CommandClasses[]): GraphNode<CommandClasses>[]
+```
+
+Builds a dependency graph for determining the optimal order to interview command classes. Some CCs depend on information from others, and this method helps ensure they are interviewed in the correct sequence.
+
+- `skipCCs` - An array of command class IDs to exclude from the graph
+
+Returns an array of graph nodes that can be traversed to interview CCs in the optimal order.
+
+> [!NOTE]
+> This is an advanced method used internally by the interview process and is typically not needed by applications.
+
 ## Endpoint properties
 
 ### `nodeId`
@@ -103,6 +175,27 @@ readonly index: number
 ```
 
 The index of this endpoint. 0 for the root device, 1+ otherwise.
+
+### `virtual`
+
+```ts
+readonly virtual: boolean
+```
+
+Indicates whether this is a virtual endpoint. For regular endpoint instances, this is always `false`. This property is primarily used to distinguish regular endpoints from virtual nodes (multicast/broadcast).
+
+### `deviceClass`
+
+```ts
+deviceClass: MaybeNotKnown<DeviceClass>
+```
+
+The device class of this endpoint. For the root endpoint (index 0), this is the same as the node's device class. For other endpoints, it may differ based on the endpoint's specific capabilities.
+
+The device class provides information about the type of device and includes:
+- `basic` - The basic device class
+- `generic` - The generic device class  
+- `specific` - The specific device class
 
 ### `endpointLabel`
 
