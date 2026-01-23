@@ -580,6 +580,47 @@ Aborts an ongoing health check if one is currently in progress.
 
 Depending on the stage it is in, the health check may take a few seconds to actually be aborted. When it is, the promise returned by `checkLifelineHealth` or `checkRouteHealth` will be resolved with the results obtained so far.
 
+### `requestNodeInfo`
+
+```ts
+async requestNodeInfo(): Promise<NodeUpdatePayload>
+```
+
+Requests the node information from the node and returns the updated node information. This can be used to refresh the node's capabilities after a firmware update or to verify the node is still responsive.
+
+### `checkLinkReliability`
+
+```ts
+async checkLinkReliability(
+	options: LinkReliabilityCheckOptions
+): Promise<LinkReliabilityCheckResult>
+```
+
+Performs a comprehensive link reliability check between the controller and this node. This test measures various aspects of the connection quality including packet loss, transmission times, and route stability.
+
+The `options` parameter allows configuring:
+- Number of test rounds
+- Frame transmission rates
+- Progress callbacks
+
+Returns detailed statistics about the link quality.
+
+### `isLinkReliabilityCheckInProgress`
+
+```ts
+isLinkReliabilityCheckInProgress(): boolean
+```
+
+Returns whether a link reliability check is currently in progress for this node.
+
+### `abortLinkReliabilityCheck`
+
+```ts
+abortLinkReliabilityCheck(): void
+```
+
+Aborts an ongoing link reliability check if one is currently in progress.
+
 ### `checkLifelineHealth`
 
 ```ts
@@ -871,6 +912,42 @@ Z-Wave JS discovers a lot of device metadata by interviewing the device. However
 
 When a device config file is updated, this information may be stale and and the device must be re-interviewed using `refreshInfo()` to pick up the changes. This method can be used to determine whether a re-interview is necessary.
 
+### `destroy`
+
+```ts
+destroy(): void
+```
+
+Cleans up all resources associated with this node. This method is called automatically when the driver is destroyed and should not typically need to be called directly.
+
+### `sendResetLocallyNotification`
+
+```ts
+async sendResetLocallyNotification(): Promise<void>
+```
+
+Sends a "Device Reset Locally" notification to the controller, informing it that this node has been factory reset. This is typically used by devices to notify the controller that they should be removed from the network.
+
+> [!NOTE]
+> This is primarily used internally and in testing. Normal applications should not need to call this method.
+
+### `createDump`
+
+```ts
+createDump(): NodeDump
+```
+
+Creates a comprehensive dump of the node's state and configuration for debugging purposes. The returned object contains detailed information about the node including:
+
+- Basic node information (ID, status, device class)
+- Supported and controlled command classes
+- All stored values and their metadata
+- Configuration parameters
+- Association groups
+- Endpoint information
+
+This is useful for troubleshooting and reporting issues.
+
 ## ZWaveNode properties
 
 ### `id`
@@ -928,6 +1005,33 @@ readonly lastSeen: MaybeNotKnown<Date>
 ```
 
 This property tracks when the node was last seen, meaning a command was either received from the node or successfully sent to it.
+
+### `dsk`
+
+```ts
+readonly dsk: BytesView | undefined
+```
+
+The Device Specific Key (DSK) of this node in binary format. This is only available for nodes that support Security S2 and have been included with S2 security.
+
+### `hasSUCReturnRoute`
+
+```ts
+hasSUCReturnRoute: boolean
+```
+
+Indicates whether this node has a configured SUC (Static Update Controller) return route. SUC return routes allow sleeping nodes to communicate with the SUC when they wake up.
+
+> [!NOTE]
+> Setting this value only updates it locally. To configure SUC return routes, use the controller's `assignSUCReturnRoutes` method.
+
+### `interviewAttempts`
+
+```ts
+readonly interviewAttempts: number
+```
+
+Returns the number of times the driver has attempted to interview this node. This can be useful for identifying nodes that have persistent communication issues.
 
 ### `isControllerNode`
 
