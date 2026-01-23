@@ -1040,7 +1040,7 @@ Attempts to set the node ID type without throwing an error if the operation is n
 getMaxPayloadSize(): Promise<number>
 ```
 
-Queries and returns the maximum payload size that can be transmitted with a Z-Wave explorer frame.
+Queries and returns the maximum payload size that can be transmitted with a Z-Wave Explorer frame.
 
 ```ts
 getMaxPayloadSizeLongRange(): Promise<number>
@@ -1517,7 +1517,7 @@ async configureSUC(
 ): Promise<boolean>
 ```
 
-Configures the controller's SUC (Static Update Controller) and SIS (SIS) functionality. When `enableSUC` is `true`, the controller becomes the SUC in the network. When `enableSIS` is also `true`, the controller becomes the SIS. Returns `true` if the configuration was successful, `false` otherwise.
+Configures the controller's SUC (Static Update Controller) and SIS (Static ID Server) functionality. When `enableSUC` is `true`, the controller becomes the SUC in the network. When `enableSIS` is also `true`, the controller becomes the SIS. Returns `true` if the configuration was successful, `false` otherwise.
 
 > [!NOTE] Only one controller in a network should be configured as SUC/SIS.
 
@@ -1791,7 +1791,7 @@ Returns whether automatic Z-Wave Long Range channel selection is supported, or `
 readonly maxPayloadSize: number
 ```
 
-Returns the maximum payload size that can be transmitted with a Z-Wave explorer frame, or `undefined` if it could not be determined (yet).
+Returns the maximum payload size that can be transmitted with a Z-Wave Explorer frame, or `undefined` if it could not be determined (yet).
 
 > [!WARNING]
 > This property is only defined after the controller interview!
