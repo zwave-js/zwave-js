@@ -1225,7 +1225,7 @@ externalNVMWriteBuffer700(offset: number, buffer: Buffer): Promise<boolean>
 
 Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to [`externalNVMClose`](#externalNVMClose).
 
-> [!WARNING] This method can write in the full NVM address space and are not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
+> [!WARNING] This method can write in the full NVM address space and is not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
 
 ```ts
 externalNVMWriteBufferExt(offset: number, buffer: Buffer): Promise<void>
@@ -1764,7 +1764,7 @@ Returns which RF regions are supported by the controller, including information 
 ### `txPower`
 
 ```ts
-readonly txPower: number
+readonly txPower: number | undefined
 ```
 
 Returns the transmit power used for Z-Wave mesh in dBm, or `undefined` if it could not be determined (yet). This value is cached and can be changed through [`setPowerlevel`](#configure-tx-powerlevel).
@@ -1772,7 +1772,7 @@ Returns the transmit power used for Z-Wave mesh in dBm, or `undefined` if it cou
 ### `powerlevelCalibration`
 
 ```ts
-readonly powerlevelCalibration: number
+readonly powerlevelCalibration: number | undefined
 ```
 
 Returns the calibration value for the transmit power in dBm, or `undefined` if it could not be determined (yet). This value is cached and can be changed through [`setPowerlevel`](#configure-tx-powerlevel).
@@ -1780,7 +1780,7 @@ Returns the calibration value for the transmit power in dBm, or `undefined` if i
 ### `supportsLongRangeAutoChannelSelection`
 
 ```ts
-readonly supportsLongRangeAutoChannelSelection: boolean
+readonly supportsLongRangeAutoChannelSelection: boolean | undefined
 ```
 
 Returns whether automatic Z-Wave Long Range channel selection is supported, or `undefined` if it could not be determined (yet).
@@ -1788,7 +1788,7 @@ Returns whether automatic Z-Wave Long Range channel selection is supported, or `
 ### `maxPayloadSize`
 
 ```ts
-readonly maxPayloadSize: number
+readonly maxPayloadSize: number | undefined
 ```
 
 Returns the maximum payload size that can be transmitted with a Z-Wave Explorer frame, or `undefined` if it could not be determined (yet).
@@ -1799,7 +1799,7 @@ Returns the maximum payload size that can be transmitted with a Z-Wave Explorer 
 ### `maxPayloadSizeLR`
 
 ```ts
-readonly maxPayloadSizeLR: number
+readonly maxPayloadSizeLR: number | undefined
 ```
 
 Returns the maximum payload size that can be transmitted with a Z-Wave Long Range frame, or `undefined` if it could not be determined (yet).
