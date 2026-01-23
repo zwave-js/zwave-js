@@ -31,6 +31,24 @@ import { Driver, driverPresets } from "zwave-js"; // Or from "zwave-js/Utils"
 const driver = new Driver("/path/to/serial", driverPresets.BATTERY_SAVE);
 ```
 
+## Driver static methods
+
+### `enumerateSerialPorts`
+
+```ts
+static async enumerateSerialPorts(options?: {
+	local?: boolean;
+	remote?: boolean;
+}): Promise<string[]>
+```
+
+Enumerates all available serial ports. This is a static method that can be called without creating a driver instance. The `options` parameter can be used to filter the results:
+
+- `local` - Whether to include locally connected serial ports (default: `true`)
+- `remote` - Whether to include remote serial ports connected via TCP (default: `false`)
+
+Returns an array of serial port addresses (e.g., `"/dev/ttyUSB0"`, `"COM3"`, or `"tcp://192.168.1.100:8899"`).
+
 ## Driver methods
 
 ### `start`
@@ -219,6 +237,84 @@ Waits until an unsolicited command is received which matches the given predicate
 
 - `predicate` - A predicate function that will be called for every received command. If the function returns `true`, the returned promise will be resolved with the command.
 - `timeout` - The timeout in milliseconds after which the returned promise will be rejected if no matching command has been received.
+
+### `waitForIdle`
+
+```ts
+async waitForIdle(timeout?: number): Promise<void>
+```
+
+Waits until the driver's message queue becomes idle or a timeout has elapsed. This method is useful when you need to ensure that all queued operations have been processed before proceeding.
+
+- `timeout` _(optional)_ - The timeout in milliseconds after which the returned promise will be rejected if the queue hasn't become idle. If not specified, the method will wait indefinitely.
+
+### `sendTestFrame`
+
+```ts
+async sendTestFrame(nodeId: number, powerlevel?: Powerlevel, numberOfFrames?: number): Promise<void>
+```
+
+Sends test frames to a node for network diagnostics. This can be used to test the reliability of the connection to a specific node.
+
+- `nodeId` - The ID of the target node
+- `powerlevel` _(optional)_ - The power level to use for the test frames
+- `numberOfFrames` _(optional)_ - The number of test frames to send
+
+### `getNode`
+
+```ts
+getNode(nodeId: number): ZWaveNode | undefined
+```
+
+Returns the `ZWaveNode` instance for the given node ID, or `undefined` if the node doesn't exist.
+
+### `getNodeOrThrow`
+
+```ts
+getNodeOrThrow(nodeId: number): ZWaveNode
+```
+
+Returns the `ZWaveNode` instance for the given node ID. Throws an error if the node doesn't exist.
+
+### `getAllNodes`
+
+```ts
+getAllNodes(): ZWaveNode[]
+```
+
+Returns an array of all nodes in the Z-Wave network.
+
+### `getDeviceConfig`
+
+```ts
+getDeviceConfig(nodeId: number): DeviceConfig | undefined
+```
+
+Retrieves the device configuration for the given node ID. Returns `undefined` if no device configuration is available.
+
+### `lookupManufacturer`
+
+```ts
+lookupManufacturer(manufacturerId: number): string | undefined
+```
+
+Looks up the manufacturer name for the given manufacturer ID. Returns `undefined` if the manufacturer is not known.
+
+### `getHighestSecurityClass`
+
+```ts
+getHighestSecurityClass(nodeId: number): MaybeNotKnown<SecurityClass>
+```
+
+Returns the highest security class granted to the given node. Returns `undefined` if this information isn't known yet.
+
+### `hasSecurityClass`
+
+```ts
+hasSecurityClass(nodeId: number, securityClass: SecurityClass): MaybeNotKnown<boolean>
+```
+
+Checks whether the given node has been granted the specified security class. Returns `undefined` if this information isn't known yet.
 
 ### `saveNetworkToCache`
 
@@ -455,6 +551,53 @@ readonly userAgent: string
 ```
 
 Returns the user agent string used for service requests.
+
+### `scheduler`
+
+```ts
+readonly scheduler: TaskScheduler
+```
+
+Returns the internal task scheduler used by the driver for managing asynchronous operations.
+
+> [!NOTE]
+> This is an advanced property that is typically only needed for internal or debugging purposes.
+
+### `queueIdle`
+
+```ts
+readonly queueIdle: boolean
+```
+
+Returns `true` if the driver's message queue is currently idle (no pending messages).
+
+### `configVersion`
+
+```ts
+readonly configVersion: string
+```
+
+Returns the version of the currently loaded device configuration package.
+
+### `mode`
+
+```ts
+readonly mode: DriverMode
+```
+
+Returns the current driver mode. Possible values are:
+- `DriverMode.SerialAPI` - Normal operation mode
+- `DriverMode.Bootloader` - Controller is in bootloader/recovery mode
+- `DriverMode.CLI` - Controller is in command-line interface mode
+- `DriverMode.Unknown` - Mode hasn't been determined yet
+
+### `options`
+
+```ts
+readonly options: Readonly<ZWaveOptions>
+```
+
+Returns the complete driver options object. This is read-only to prevent accidental modifications. Use [`updateOptions`](#updateOptions) to change options at runtime.
 
 ## Driver events
 
