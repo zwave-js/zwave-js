@@ -4,6 +4,16 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Fixed an issue where devices whose device config was previously incorrectly marked as changed after updating to `15.18.0` or `15.19.0` would again be marked as changed after updating to `15.20.0` (#8571)
+
+### Config file changes
+* Add Zooz Zen57 240V XS Relay (#8561)
+* Add MCO Home MH-5900 thermostat (#8553)
+* Update Zooz ZEN35 config to firmware 1.10+ (#8560)
+* Update Zooz ZEN14 config for firmware 2.20 (#8562)
+
 ## 15.20.0 (2026-01-15)
 ### Features
 * Support ranges with gaps and step sizes in config parameter definitions (#8547, #8555)
