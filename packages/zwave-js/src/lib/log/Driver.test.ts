@@ -39,7 +39,12 @@ const test = baseTest.extend<LocalTestContext>({
 
 			// Replace all defined transports with a spy transport
 			const spyTransport = new SpyTransport();
-			spyTransport.format = createDefaultTransportFormat(true, true);
+			spyTransport.format = createDefaultTransportFormat(
+				true,
+				true,
+				"human-readable",
+				driver,
+			);
 			const driverLogger = new DriverLogger(
 				driver,
 				createZWaveLogContainer({
@@ -411,3 +416,106 @@ test.sequential("inline tags are printed in inverse colors", ({ context, expect 
 		ignoreColor: false,
 	});
 });
+
+test.sequential(
+	"logMessage() can format serial messages as JSON",
+	async ({ expect }) => {
+		// Create a new driver and logger with JSON formatting
+		const { driver } = await createAndStartTestingDriver({
+			loadConfiguration: false,
+			skipNodeInterview: true,
+			skipControllerIdentification: true,
+		});
+
+		const jsonSpyTransport = new SpyTransport();
+		jsonSpyTransport.format = createDefaultTransportFormat(
+			false,
+			false,
+			"json",
+			driver,
+		);
+
+		const driverLogger = new DriverLogger(
+			driver,
+			createZWaveLogContainer({
+				transports: [jsonSpyTransport],
+			}),
+		);
+
+		const msg = createMessage(driver, {
+			functionType: FunctionType.HardReset,
+			type: MessageType.Request,
+		});
+
+		driverLogger.logMessage(msg);
+
+		// The message should be in JSON format
+		const loggedMessage = jsonSpyTransport.spy.lastCall.args[0];
+		expect(loggedMessage.message).toContain('"tags"');
+		expect(loggedMessage.message).toContain("HardReset");
+
+		// Clean up
+		driver.removeAllListeners();
+		await driver.destroy();
+		driverLogger.container.updateConfiguration({ enabled: false });
+	},
+);
+
+test.sequential(
+	"multiple transports can use different formats simultaneously",
+	async ({ expect }) => {
+		// Create a new driver with both JSON and human-readable transports
+		const { driver } = await createAndStartTestingDriver({
+			loadConfiguration: false,
+			skipNodeInterview: true,
+			skipControllerIdentification: true,
+		});
+
+		const jsonSpyTransport = new SpyTransport();
+		jsonSpyTransport.format = createDefaultTransportFormat(
+			false,
+			false,
+			"json",
+			driver,
+		);
+
+		const humanSpyTransport = new SpyTransport();
+		humanSpyTransport.format = createDefaultTransportFormat(
+			false,
+			false,
+			"human-readable",
+			driver,
+		);
+
+		const driverLogger = new DriverLogger(
+			driver,
+			createZWaveLogContainer({
+				transports: [jsonSpyTransport, humanSpyTransport],
+			}),
+		);
+
+		const msg = createMessage(driver, {
+			functionType: FunctionType.HardReset,
+			type: MessageType.Request,
+		});
+
+		driverLogger.logMessage(msg);
+
+		// JSON transport should have JSON format
+		const jsonMessage = jsonSpyTransport.spy.lastCall.args[0];
+		expect(jsonMessage.message).toContain('"tags"');
+
+		// Human-readable transport should have formatted text
+		const humanMessage = humanSpyTransport.spy.lastCall.args[0];
+		const humanMessageText = Array.isArray(humanMessage.message)
+			? humanMessage.message.join("\n")
+			: humanMessage.message;
+		expect(humanMessageText).toContain("[REQ]");
+		expect(humanMessageText).toContain("[HardReset]");
+
+		// Clean up
+		driver.removeAllListeners();
+		await driver.destroy();
+		driverLogger.container.updateConfiguration({ enabled: false });
+	},
+);
