@@ -1,5 +1,9 @@
 import { refreshMetadataStringsFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
-import { DeviceConfig } from "@zwave-js/config";
+import {
+	DeviceConfig,
+	fixBrokenDeviceConfigHash,
+	parseDeviceConfigHash,
+} from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 import { cacheKeys } from "../../driver/NetworkCache.js";
@@ -209,11 +213,20 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 		} else {
 			// Variable length prefixed hash - determine the hash version from the cache
 			if (this.cachedDeviceConfigHash) {
-				const versionString = Bytes.view(
+				const parsed = parseDeviceConfigHash(
 					this.cachedDeviceConfigHash,
-				).toString("utf8").match(/^\$v(\d+)\$/)?.[1];
-				if (versionString) {
-					cachedHashVersion = parseInt(versionString, 10);
+				);
+				if (parsed) {
+					cachedHashVersion = parsed.version;
+				}
+
+				if (parsed?.version === 2) {
+					// Some Z-Wave JS versions had an issue where the optional "hidden"
+					// property was included in the hashable, causing incorrect hashes.
+					this.cachedDeviceConfigHash =
+						await fixBrokenDeviceConfigHash(
+							this.cachedDeviceConfigHash,
+						);
 				}
 			}
 			// Use that version for comparison purposes if possible
