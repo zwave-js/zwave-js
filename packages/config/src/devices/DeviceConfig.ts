@@ -4,6 +4,7 @@ import {
 	ZWaveErrorCodes,
 	deflateSync,
 	digest,
+	inflateSync,
 } from "@zwave-js/core";
 import {
 	Bytes,
@@ -1184,4 +1185,57 @@ function parseHash(hash: BytesView): {
 			// This is not a valid hash
 			return undefined;
 	}
+}
+
+export { parseHash as parseDeviceConfigHash };
+
+export async function fixBrokenDeviceConfigHash(
+	broken: BytesView,
+): Promise<BytesView> {
+	// Some versions incorrectly included the optional default for the hidden property in v2 hashes.
+	// To fix this, we need to parse the hash back to JSON, remove the property, and re-hash it.
+
+	const parsed = parseHash(broken);
+	if (!parsed) return broken;
+
+	if (parsed.version !== 2) {
+		// Only v2 hashes are affected
+		return broken;
+	}
+
+	let hashable: Record<string, any>;
+	try {
+		hashable = JSON.parse(
+			Bytes.view(inflateSync(
+				Bytes.view(parsed.hashData),
+				{ dictionary: deflateDict },
+			)).toString("utf8"),
+		);
+	} catch {
+		return broken;
+	}
+
+	// Remove the hidden default property from all paramInformation entries if set to default (false)
+	for (
+		const ep of Object.values<Record<string, any>>(
+			hashable.endpoints ?? {},
+		)
+	) {
+		for (const param of ep.paramInformation ?? []) {
+			if (param.hidden === false) {
+				delete param.hidden;
+			}
+		}
+	}
+
+	// Re-hash the fixed object
+	const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
+	const fixedHashData = deflateSync(
+		buffer,
+		// Try to make the hash as small as possible
+		{ level: 9, dictionary: deflateDict },
+	);
+
+	const prefixBytes = Bytes.from(`$v2$`, "utf8");
+	return Bytes.concat([prefixBytes, fixedHashData]);
 }
