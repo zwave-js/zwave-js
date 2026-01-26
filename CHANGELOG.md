@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.20.1 (2026-01-26)
 ### Bugfixes
 * Fixed an issue where devices whose device config was previously incorrectly marked as changed after updating to `15.18.0` or `15.19.0` would again be marked as changed after updating to `15.20.0` (#8571)
 
