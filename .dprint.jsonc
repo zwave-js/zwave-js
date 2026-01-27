@@ -54,6 +54,7 @@
 		"**/package.json",
 		"**/*-lock.json",
 		".github/workflows",
+		".github/prompts",
 		".yarn/plugins",
 		".yarn/releases",
 		".tmp/",
@@ -64,9 +65,9 @@
 		".yarnrc.yml",
 	],
 	"plugins": [
-		"https://plugins.dprint.dev/typescript-0.93.0.wasm",
-		"https://plugins.dprint.dev/json-0.19.3.wasm",
-		"https://plugins.dprint.dev/markdown-0.17.8.wasm",
-		"https://plugins.dprint.dev/prettier-0.46.1.json@e5bd083088a8dfc6e5ce2d3c9bee81489b065bd5345ef55b59f5d96627928b7a",
+		"https://plugins.dprint.dev/typescript-0.95.13.wasm",
+		"https://plugins.dprint.dev/json-0.21.1.wasm",
+		"https://plugins.dprint.dev/markdown-0.20.0.wasm",
+		"https://plugins.dprint.dev/prettier-0.62.0.json@80fefd1450bfd3f469590cc6a3f40f6ace26974f948b9602124f486036fbdfab",
 	],
 }
