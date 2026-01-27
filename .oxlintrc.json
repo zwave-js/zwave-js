@@ -35,7 +35,7 @@
 	// We don't need to specify them unless we want to disable or change them
 
 	"rules": {
-		// TODO: Go thorugh these "restriction" rules and check which ones to enable later
+		// TODO: Go through these "restriction" rules and check which ones to enable later
 		"eslint/class-methods-use-this": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/class-methods-use-this.html
 		"eslint/default-case": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/default-case.html
 		"eslint/no-alert": "off", // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-alert.html
@@ -110,6 +110,7 @@
 		"typescript/no-deprecated": "off", // Causes false-positives: https://github.com/oxc-project/oxc/issues/15594
 		// "perf"
 		"eslint/no-await-in-loop": "off", // This is a very typical pattern in our codebase
+		"oxc/no-map-spread": "off", // Too many false positives where we are trying to create modified copies
 
 		// ========= TypeScript ESLint Rules =========
 		// Rules that need custom configuration (different from default)
