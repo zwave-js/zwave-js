@@ -12,9 +12,16 @@ const packageInfoCache = new Map<string, PackageInfo | undefined>();
 function getPackageInfo(filename: string): PackageInfo | undefined {
 	// Find the package directory by looking for package.json
 	let dir = path.dirname(filename);
+	const checkedDirs: string[] = [];
+
 	while (dir !== path.dirname(dir)) {
 		if (packageInfoCache.has(dir)) {
-			return packageInfoCache.get(dir);
+			const cached = packageInfoCache.get(dir);
+			// Cache the result for all intermediate directories
+			for (const checkedDir of checkedDirs) {
+				packageInfoCache.set(checkedDir, cached);
+			}
+			return cached;
 		}
 
 		const packageJsonPath = path.join(dir, "package.json");
@@ -23,18 +30,38 @@ function getPackageInfo(filename: string): PackageInfo | undefined {
 				const packageJson = JSON.parse(
 					fs.readFileSync(packageJsonPath, "utf8"),
 				);
+				// Validate that name field exists and is a string
+				if (typeof packageJson.name !== "string") {
+					packageInfoCache.set(dir, undefined);
+					for (const checkedDir of checkedDirs) {
+						packageInfoCache.set(checkedDir, undefined);
+					}
+					return undefined;
+				}
 				const info: PackageInfo = {
 					packageName: packageJson.name,
 					packageDir: dir,
 				};
 				packageInfoCache.set(dir, info);
+				// Cache the result for all intermediate directories
+				for (const checkedDir of checkedDirs) {
+					packageInfoCache.set(checkedDir, info);
+				}
 				return info;
 			} catch {
 				packageInfoCache.set(dir, undefined);
+				for (const checkedDir of checkedDirs) {
+					packageInfoCache.set(checkedDir, undefined);
+				}
 				return undefined;
 			}
 		}
+		checkedDirs.push(dir);
 		dir = path.dirname(dir);
+	}
+	// Cache all checked directories as having no package info
+	for (const checkedDir of checkedDirs) {
+		packageInfoCache.set(checkedDir, undefined);
 	}
 	return undefined;
 }
