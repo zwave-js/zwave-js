@@ -66,6 +66,7 @@ export default tseslint.config(
 		files: ["packages/**/*.ts"],
 		rules: {
 			"@zwave-js/no-unnecessary-bytes-from": "error",
+			"@zwave-js/no-workspace-self-import": "error",
 		},
 	},
 	// Disable unnecessarily strict rules for test files
