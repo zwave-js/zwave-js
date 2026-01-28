@@ -1,18 +1,16 @@
 import { MessagePriority, type ZWaveLibraryTypes } from "@zwave-js/core";
 import {
 	FunctionType,
-	MessageType,
-} from "../../message/Constants.js";
-import {
 	Message,
 	type MessageBaseOptions,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
+	MessageType,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "../../message/Message.js";
+} from "@zwave-js/serial";
 import { Bytes, cpp2js } from "@zwave-js/shared";
 
 @messageTypes(MessageType.Request, FunctionType.GetControllerVersion)

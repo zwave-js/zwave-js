@@ -7,18 +7,16 @@ import {
 } from "@zwave-js/core";
 import {
 	FunctionType,
-	MessageType,
-} from "../../message/Constants.js";
-import {
 	Message,
 	type MessageBaseOptions,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
+	MessageType,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "../../message/Message.js";
+} from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 
 export interface GetRoutingInfoRequestOptions {

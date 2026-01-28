@@ -7,19 +7,17 @@ import {
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
-	MessageType,
-} from "../../message/Constants.js";
-import {
 	Message,
 	type MessageBaseOptions,
 	type MessageConstructor,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
+	MessageType,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "../../message/Message.js";
+} from "@zwave-js/serial";
 import {
 	Bytes,
 	type BytesView,

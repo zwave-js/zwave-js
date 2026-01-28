@@ -1,17 +1,15 @@
 import { MessagePriority, type ProtocolType } from "@zwave-js/core";
 import {
 	FunctionType,
-	MessageType,
-} from "../../message/Constants.js";
-import {
 	Message,
 	type MessageBaseOptions,
 	type MessageParsingContext,
 	type MessageRaw,
+	MessageType,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "../../message/Message.js";
+} from "@zwave-js/serial";
 
 @messageTypes(MessageType.Request, FunctionType.GetProtocolVersion)
 @priority(MessagePriority.Controller)

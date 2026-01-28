@@ -5,23 +5,19 @@ import {
 } from "@zwave-js/core";
 import {
 	FunctionType,
-	MessageType,
-} from "../../message/Constants.js";
-import {
 	Message,
 	type MessageBaseOptions,
 	type MessageEncodingContext,
 	MessageOrigin,
 	type MessageParsingContext,
 	type MessageRaw,
+	MessageType,
+	type MultiStageCallback,
+	type SuccessIndicator,
 	expectedCallback,
 	messageTypes,
 	priority,
-} from "../../message/Message.js";
-import type {
-	MultiStageCallback,
-	SuccessIndicator,
-} from "../../message/SuccessIndicator.js";
+} from "@zwave-js/serial";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 
 export enum NodeNeighborUpdateStatus {

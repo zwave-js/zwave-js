@@ -1,18 +1,16 @@
 import { type MessageOrCCLogEntry, MessagePriority } from "@zwave-js/core";
 import {
 	FunctionType,
-	MessageType,
-} from "../../message/Constants.js";
-import {
 	Message,
 	type MessageEncodingContext,
 	MessageOrigin,
 	type MessageParsingContext,
 	type MessageRaw,
+	MessageType,
 	expectedCallback,
 	messageTypes,
 	priority,
-} from "../../message/Message.js";
+} from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 
 @messageTypes(MessageType.Request, FunctionType.HardReset)

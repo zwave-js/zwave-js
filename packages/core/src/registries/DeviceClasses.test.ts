@@ -1,4 +1,4 @@
-import { getGenericDeviceClass, getSpecificDeviceClass } from "./DeviceClasses.js";
+import { getGenericDeviceClass, getSpecificDeviceClass } from "@zwave-js/core";
 import { test } from "vitest";
 
 test("device classes marked as slow should not support optimistic value updates", (t) => {

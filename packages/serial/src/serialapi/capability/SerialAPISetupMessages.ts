@@ -13,22 +13,18 @@ import {
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
-	MessageType,
-} from "../../message/Constants.js";
-import {
 	Message,
 	type MessageBaseOptions,
 	type MessageConstructor,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
+	MessageType,
+	type SuccessIndicator,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "../../message/Message.js";
-import type {
-	SuccessIndicator,
-} from "../../message/SuccessIndicator.js";
+} from "@zwave-js/serial";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 
 export enum SerialAPISetupCommand {
