@@ -7,15 +7,17 @@ import {
 } from "@zwave-js/core";
 import {
 	FunctionType,
+	MessageType,
+} from "../../message/Constants.js";
+import {
 	Message,
 	type MessageBaseOptions,
 	type MessageParsingContext,
 	type MessageRaw,
-	MessageType,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "@zwave-js/serial";
+} from "../../message/Message.js";
 import { parseRSSI, tryParseRSSI } from "../transport/SendDataShared.js";
 
 @messageTypes(MessageType.Request, FunctionType.GetBackgroundRSSI)

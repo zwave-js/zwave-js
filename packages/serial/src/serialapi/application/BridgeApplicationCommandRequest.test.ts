@@ -1,5 +1,7 @@
 // import "@zwave-js/cc";
-import { Message } from "@zwave-js/serial";
+import {
+	Message,
+} from "../../message/Message.js";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 

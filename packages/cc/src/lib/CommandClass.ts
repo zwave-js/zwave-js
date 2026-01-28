@@ -1,4 +1,4 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "./traits.js";
 import type { GetDeviceConfig, LookupManufacturer } from "@zwave-js/config";
 import {
 	type BroadcastCC,

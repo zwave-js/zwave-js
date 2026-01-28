@@ -17,15 +17,17 @@ import {
 } from "@zwave-js/core";
 import {
 	FunctionType,
+	MessageType,
+} from "../../message/Constants.js";
+import {
 	Message,
 	type MessageBaseOptions,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
-	MessageType,
 	messageTypes,
 	priority,
-} from "@zwave-js/serial";
+} from "../../message/Message.js";
 import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import { tryParseRSSI } from "../transport/SendDataShared.js";
 import type { MessageWithCC } from "../utils.js";

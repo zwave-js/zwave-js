@@ -1,7 +1,7 @@
 import {
 	createDefaultTransportFormat,
 	log as createZWaveLogContainer,
-} from "@zwave-js/core/bindings/log/node";
+} from "../bindings/log/node.js";
 import { beforeEach, test as baseTest } from "vitest";
 import { CommandClasses } from "../definitions/CommandClasses.js";
 import { InterviewStage } from "../definitions/InterviewStage.js";

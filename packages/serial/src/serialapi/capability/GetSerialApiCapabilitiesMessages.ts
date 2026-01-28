@@ -1,16 +1,18 @@
 import { MessagePriority, encodeBitMask, parseBitMask } from "@zwave-js/core";
 import {
 	FunctionType,
+	MessageType,
+} from "../../message/Constants.js";
+import {
 	Message,
 	type MessageBaseOptions,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
-	MessageType,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "@zwave-js/serial";
+} from "../../message/Message.js";
 import { Bytes } from "@zwave-js/shared";
 
 const NUM_FUNCTIONS = 256;

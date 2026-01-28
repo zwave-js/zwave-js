@@ -21,7 +21,7 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { Bytes } from "@zwave-js/shared";
 import { CRC16Command } from "../lib/_Types.js";
 

@@ -1,4 +1,4 @@
-import type { CCParsingContext } from "@zwave-js/cc";
+import type { CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type MaybeNotKnown,

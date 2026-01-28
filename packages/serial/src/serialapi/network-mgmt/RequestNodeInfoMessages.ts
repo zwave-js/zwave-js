@@ -6,18 +6,22 @@ import {
 } from "@zwave-js/core";
 import {
 	FunctionType,
+	MessageType,
+} from "../../message/Constants.js";
+import {
 	Message,
 	type MessageBaseOptions,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
-	MessageType,
-	type SuccessIndicator,
 	expectedCallback,
 	expectedResponse,
 	messageTypes,
 	priority,
-} from "@zwave-js/serial";
+} from "../../message/Message.js";
+import type {
+	SuccessIndicator,
+} from "../../message/SuccessIndicator.js";
 import { Bytes } from "@zwave-js/shared";
 import {
 	ApplicationUpdateRequestNodeInfoReceived,

@@ -7,13 +7,15 @@ import {
 } from "@zwave-js/core";
 import {
 	FunctionType,
+	MessageType,
+} from "../../message/Constants.js";
+import {
 	Message,
 	type MessageBaseOptions,
 	type MessageEncodingContext,
-	MessageType,
 	messageTypes,
 	priority,
-} from "@zwave-js/serial";
+} from "../../message/Message.js";
 import { Bytes, num2hex } from "@zwave-js/shared";
 
 export interface SetApplicationNodeInformationRequestOptions

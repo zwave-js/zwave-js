@@ -1,11 +1,13 @@
 import { MessagePriority } from "@zwave-js/core";
 import {
 	FunctionType,
-	Message,
 	MessageType,
+} from "../../message/Constants.js";
+import {
+	Message,
 	messageTypes,
 	priority,
-} from "@zwave-js/serial";
+} from "../../message/Message.js";
 
 @messageTypes(MessageType.Request, FunctionType.EnterBootloader)
 @priority(MessagePriority.Controller)
