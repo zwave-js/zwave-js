@@ -1,4 +1,4 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	Duration,
