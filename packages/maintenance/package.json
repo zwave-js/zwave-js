@@ -7,6 +7,10 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./runCodegen": "./src/runCodegen.ts"
+  },
   "files": [
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
     "build/**/package.json"

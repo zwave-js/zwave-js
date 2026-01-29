@@ -60,7 +60,7 @@
     "codegen": "yarn task codegen && yarn lint:codegen:fix",
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
-    "clean": "del-cli build/ \"*.tsbuildinfo\"",
+    "clean": "del-cli build/ src_gen/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "ts": "tsx --conditions=@@dev",
     "lint:codegen:fix": "oxlint --type-aware -c ../../.oxlintrc.json --fix \"src/cc/_CCValues.generated.ts\"",

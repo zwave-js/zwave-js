@@ -91,7 +91,6 @@
     "source-map-support": "^0.5.21",
     "tmp": "^0.2.5",
     "ts-morph": "^27.0.2",
-    "ts-patch": "3.3.0",
     "tsx": "^4.20.5",
     "turbo": "2.6.1",
     "typescript": "5.9.3",
