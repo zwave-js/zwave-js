@@ -1,147 +1,80 @@
-import path from "node:path";
-import { Project, type SourceFile, type Type, ts as tsm } from "ts-morph";
-import type { PluginConfig, ProgramTransformerExtras } from "ts-patch";
-import type {
-	CompilerHost,
-	CompilerOptions,
-	Program,
-	SourceFile as TSSourceFile,
-} from "typescript";
-import type ts from "typescript";
-import type { ValidateArgsOptions } from "..";
-// import "ts-expose-internals";
-
-/* ****************************************************************************************************************** */
-// region Helpers
-/* ****************************************************************************************************************** */
-
 /**
- * Patches existing Compiler Host (or creates new one) to allow feeding updated file content from cache
+ * Generates the content for ._validateArgs.ts files using ts-morph for type analysis.
+ * Extracted and adapted from validateArgs/transformProgram.ts
  */
-function getPatchedHost(
-	maybeHost: CompilerHost | undefined,
-	tsInstance: typeof ts,
-	compilerOptions: CompilerOptions,
-): CompilerHost & { fileCache: Map<string, TSSourceFile> } {
-	const fileCache = new Map();
-	const compilerHost = maybeHost
-		?? tsInstance.createCompilerHost(compilerOptions, true);
-	const originalGetSourceFile = compilerHost.getSourceFile.bind(compilerHost);
-	const originalFileExists = compilerHost.fileExists.bind(compilerHost);
 
-	return Object.assign(compilerHost, {
-		getSourceFile(
-			fileName: string,
-			languageVersion: ts.ScriptTarget,
-			...rest: any[]
-		) {
-			fileName = tsInstance.server.toNormalizedPath(fileName);
-			if (fileCache.has(fileName)) return fileCache.get(fileName);
+import path from "node:path";
+import { type SourceFile, type Type, ts as tsm } from "ts-morph";
+import type { ValidateArgsOptions } from "../index.js";
 
-			const sourceFile = originalGetSourceFile(
-				fileName,
-				languageVersion,
-				...rest,
-			);
-			fileCache.set(fileName, sourceFile);
-
-			return sourceFile;
-		},
-		fileExists(fileName: string) {
-			if (fileCache.has(fileName)) return true;
-			return originalFileExists(fileName);
-		},
-		// TODO: Possibly patch fileExists and writeFile
-		fileCache,
-	});
+interface ParameterInfo {
+	name: string;
+	isRest?: boolean;
+	hasInitializer?: boolean;
+	type: Type<tsm.Type>;
+	typeName: string | undefined;
 }
 
-/* ****************************************************************************************************************** */
-// region Program Transformer
-/* ****************************************************************************************************************** */
+interface TransformContext {
+	sourceFile: SourceFile;
+	options: ValidateArgsOptions;
+	additionalImports: Map<string, Set<string>>;
+	typeStack?: WeakSet<Type<tsm.Type>>;
+}
 
-export default function transformProgram(
-	program: Program,
-	host: CompilerHost | undefined,
-	config: PluginConfig,
-	{ ts: tsInstance }: ProgramTransformerExtras,
-): Program {
-	const compilerOptions = program.getCompilerOptions();
-	// Only enable the transforms if the custom condition is not set
-	// Not sure why, but otherwise the LSP has issues and moving the transforms
-	// to tsconfig.build.json results in some type references not working
-	if (
-		compilerOptions.customConditions?.includes("@@dev")
-		&& !compilerOptions.customConditions?.includes("@@test_transformers")
-	) {
-		return program;
+/**
+ * Generates all ._validateArgs.ts files for source files that use @validateArgs decorators.
+ * Returns a map of relative paths (from srcDir) to generated content.
+ */
+export async function generateValidateArgsFiles(
+	sourceFiles: SourceFile[],
+	srcDir: string,
+): Promise<Map<string, string>> {
+	const result = new Map<string, string>();
+
+	for (const sf of sourceFiles) {
+		const content = sf.getFullText();
+		if (!content.includes("from \"@zwave-js/transformers\"")) continue;
+
+		const validateArgsContent = generateValidateArgsFileContent(sf);
+		if (validateArgsContent) {
+			const filePath = sf.getFilePath();
+			const ext = path.extname(filePath);
+			const base = path.basename(filePath, ext);
+			const dir = path.dirname(filePath);
+			const relativePath = path.join(
+				path.relative(srcDir, dir),
+				`${base}._validateArgs${ext}`,
+			);
+			result.set(relativePath, validateArgsContent);
+		}
 	}
 
-	const compilerHost = getPatchedHost(host, tsInstance, compilerOptions);
-	const rootFileNames = program.getRootFileNames().map(
-		tsInstance.server.toNormalizedPath,
-	);
+	return result;
+}
 
-	// Create a "shadow" program for ts-morph. This needs the @@dev condition so it can find types
-	// without @zwave-js/core and /shared being built
-	const project = new Project({
-		compilerOptions: {
-			...compilerOptions,
-			customConditions: [
-				...(compilerOptions.customConditions ?? []),
-				"@@dev",
-			],
-		},
-	});
-
-	let filesToTransform = program.getSourceFiles().filter((sourceFile) =>
-		rootFileNames.includes(
-			tsInstance.server.toNormalizedPath(sourceFile.fileName),
-		)
-	);
-	// Quick check: Only transform files importing "@zwave-js/transformers"
-	// The cleaner way would be to use the AST to check for imports
-	filesToTransform = filesToTransform.filter((sourceFile) => {
-		return sourceFile.getText().includes(`from "@zwave-js/transformers"`);
-	});
-
-	// Load all files into the ts-morph project
-	const tsAndMorphFiles = filesToTransform.map((file) =>
-		[
-			file,
-			project.createSourceFile(
-				file.fileName,
-				file.getFullText(),
-				{ overwrite: true },
-			),
-		] as const
-	);
-	// As well as all of their dependencies
-	project.resolveSourceFileDependencies();
-
-	for (const [file, mfile] of tsAndMorphFiles) {
-		const extension = file.fileName.match(/\.[mc]?[jt]s$/)?.[0];
-		const fileNameOnly = path.basename(file.fileName, extension);
-		const newFileName = path.join(
-			path.dirname(file.fileName),
-			`${fileNameOnly}._validateArgs${extension || ".ts"}`,
+/**
+ * Generates the content for a ._validateArgs.ts file based on @validateArgs decorators
+ * found in the source file. Returns null if no decorators are found.
+ */
+function generateValidateArgsFileContent(
+	sourceFile: SourceFile,
+): string | null {
+	// Find validateArgs decorators
+	const validateArgsDecorators = sourceFile
+		.getDescendantsOfKind(tsm.SyntaxKind.Decorator)
+		.filter(
+			(d) =>
+				d.getFirstDescendantByKind(tsm.SyntaxKind.Identifier)?.getText()
+					=== "validateArgs",
 		);
 
-		// const mfile = project.createSourceFile(
-		// 	file.fileName,
-		// 	file.getFullText(),
-		// 	{ overwrite: true },
-		// );
+	if (validateArgsDecorators.length === 0) {
+		return null;
+	}
 
-		// Find validateArgs decorators
-		const validateArgsDecorators = mfile.getDescendantsOfKind(
-			tsm.SyntaxKind.Decorator,
-		)
-			.filter((d) =>
-				d.getFirstDescendantByKind(tsm.SyntaxKind.Identifier)?.getText()
-					=== "validateArgs"
-			);
-		const withMethodAndClassName = validateArgsDecorators.map((d) => {
+	const withMethodAndClassName = validateArgsDecorators
+		.map((d) => {
 			const method = d.getParentIfKind(tsm.SyntaxKind.MethodDeclaration);
 			if (!method) return;
 
@@ -161,129 +94,94 @@ export default function transformProgram(
 				})
 				.filter((p) => p.name !== "this");
 
-			const className = method?.getParentIfKind(
-				tsm.SyntaxKind.ClassDeclaration,
-			)?.getName();
+			const className = method
+				?.getParentIfKind(tsm.SyntaxKind.ClassDeclaration)
+				?.getName();
 			if (!className) return;
 
-			const optionsObject = d.getCallExpression()?.getArguments()[0]
+			const optionsObject = d
+				.getCallExpression()
+				?.getArguments()[0]
 				?.asKind(tsm.SyntaxKind.ObjectLiteralExpression);
 			const options: ValidateArgsOptions = {};
 			if (
-				optionsObject?.getProperty("strictEnums")?.asKind(
-					tsm.SyntaxKind.PropertyAssignment,
-				)?.getInitializer()?.getText() === "true"
+				optionsObject
+					?.getProperty("strictEnums")
+					?.asKind(tsm.SyntaxKind.PropertyAssignment)
+					?.getInitializer()
+					?.getText() === "true"
 			) {
 				options.strictEnums = true;
 			}
 			return { decorator: d, options, parameters, methodName, className };
 		})
-			.filter((x) => x != undefined);
+		.filter((x) => x != undefined);
 
-		let newSourceText = `import * as v from "@zwave-js/core/validation";`;
+	if (withMethodAndClassName.length === 0) {
+		return null;
+	}
 
-		// import specifier -> [exported name, renamed to?]
-		const additionalImports = new Map<string, Set<string>>();
+	let newSourceText = `import * as v from "@zwave-js/core/validation";`;
 
-		for (
-			const { methodName, className, parameters, options }
-				of withMethodAndClassName
-		) {
-			const paramSpreadWithUnknown = parameters.map((p) =>
-				`${p.isRest ? "..." : ""}${p.name}: unknown${
-					p.isRest ? "[]" : ""
-				}`
-			).join(", ");
-			const paramSpread = parameters.map((p) =>
-				`${p.isRest ? "..." : ""}${p.name}`
-			).join(", ");
+	// import specifier -> [exported name, renamed to?]
+	const additionalImports = new Map<string, Set<string>>();
 
-			const context: TransformContext = {
-				sourceFile: mfile,
-				options,
-				additionalImports,
-			};
+	for (
+		const { methodName, className, parameters, options }
+			of withMethodAndClassName
+	) {
+		const paramSpreadWithUnknown = parameters
+			.map(
+				(p) =>
+					`${p.isRest ? "..." : ""}${p.name}: unknown${
+						p.isRest ? "[]" : ""
+					}`,
+			)
+			.join(", ");
+		const paramSpread = parameters
+			.map((p) => `${p.isRest ? "..." : ""}${p.name}`)
+			.join(", ");
 
-			newSourceText += `
+		const context: TransformContext = {
+			sourceFile,
+			options,
+			additionalImports,
+		};
+
+		newSourceText += `
 
 export function validateArgs_${className}_${methodName}() {
 	return <T extends Function>(__decoratedMethod: T, { kind }: ClassMethodDecoratorContext): T | void => {
 		if (kind === "method") {
 			return function ${methodName}(this: any, ${paramSpreadWithUnknown}) {
 				v.assert(${
-				parameters.map((p) => `
+			parameters
+				.map((p) => `
 					${getValidationFunction(context, p)}(${p.name}),`)
-					.join(
-						"\n",
-					)
-			}
+				.join("\n")
+		}
 				);
 				return __decoratedMethod.call(this, ${paramSpread});
 			} as unknown as T;
 		}
 	};
 }`;
-		}
-
-		for (const [specifier, imports] of additionalImports) {
-			newSourceText =
-				`import { ${[...imports].join(", ")} } from "${specifier}";`
-				+ "\n"
-				+ newSourceText;
-		}
-
-		const newSourceFile = tsInstance.createSourceFile(
-			newFileName,
-			newSourceText,
-			{
-				languageVersion: file.languageVersion,
-				impliedNodeFormat: file.impliedNodeFormat,
-			},
-		);
-		// @ts-expect-error - These are TS internals
-		newSourceFile.version = tsInstance.getSourceFileVersionAsHashFromText(
-			compilerHost,
-			newSourceText,
-		);
-
-		compilerHost.fileCache.set(
-			newFileName,
-			newSourceFile,
-		);
-		rootFileNames.push(tsInstance.server.toNormalizedPath(newFileName));
 	}
 
-	/* Re-create Program instance */
-	const ret = tsInstance.createProgram(
-		rootFileNames,
-		compilerOptions,
-		compilerHost,
-		// TODO: check if we should reuse the old program or not. It probably speeds things up
-		// program,
-	);
+	for (const [specifier, imports] of additionalImports) {
+		newSourceText =
+			`import { ${[...imports].join(", ")} } from "${specifier}";`
+			+ "\n"
+			+ newSourceText;
+	}
 
-	return ret;
+	return newSourceText;
 }
 
 function getTypeName(t: Type<tsm.Type>): string {
 	const symbol = t.getSymbol();
 	if (symbol) return symbol.getEscapedName();
 	return t.getText();
-}
-
-interface ParameterInfo {
-	name: string;
-	isRest?: boolean;
-	hasInitializer?: boolean;
-	type: Type<tsm.Type>;
-	typeName: string | undefined;
-}
-
-interface TransformContext {
-	sourceFile: SourceFile;
-	options: ValidateArgsOptions;
-	additionalImports: Map<string, Set<string>>;
-	typeStack?: WeakSet<Type<tsm.Type>>;
 }
 
 function getValidationFunction(
@@ -305,7 +203,6 @@ Type ${param.typeName} recursively references itself`,
 	typeStack.add(param.type);
 
 	if (param.type.isAny() || param.type.isUnknown()) {
-		debugger;
 		// Technically there's no need to type the parameter, but this
 		// serves as documentation which type is being checked
 		return `((_: ${param.typeName}) => ({ success: true }))`;
@@ -362,9 +259,9 @@ Type ${param.typeName} recursively references itself`,
 	if (param.type.isEnum()) {
 		// Enums are unions of their members. If strictEnums is false, we just check if the argument is a number instead
 		if (context.options.strictEnums) {
-			const values = param.type.getUnionTypes().map((t) =>
-				t.getLiteralValue() as number
-			);
+			const values = param.type
+				.getUnionTypes()
+				.map((t) => t.getLiteralValue() as number);
 			return `v.enum(${ctx}, "${param.typeName}", [${
 				values.join(", ")
 			}])`;
@@ -375,11 +272,11 @@ Type ${param.typeName} recursively references itself`,
 	if (param.type.isUnion()) {
 		const types = param.type.getUnionTypes();
 		// boolean is actually union of true and false, but we want to treat it as a primitive
-		const typeIsBoolean = types.some((t) =>
-			t.isBooleanLiteral() && t.getText() === "true"
+		const typeIsBoolean = types.some(
+			(t) => t.isBooleanLiteral() && t.getText() === "true",
 		)
-			&& types.some((t) =>
-				t.isBooleanLiteral() && t.getText() === "false"
+			&& types.some(
+				(t) => t.isBooleanLiteral() && t.getText() === "false",
 			);
 		const typeIsOptional = types.some((t) => t.isUndefined());
 
@@ -481,10 +378,8 @@ Type ${param.typeName} recursively references itself`,
 
 	const symbol = param.type.getSymbol();
 	if (
-		symbol && (
-			param.type.isClassOrInterface()
-			|| param.type.isObject()
-		)
+		symbol
+		&& (param.type.isClassOrInterface() || param.type.isObject())
 	) {
 		const symbolName = symbol.getName();
 		const valueDeclaration = symbol.getValueDeclaration();
@@ -522,24 +417,17 @@ Class ${param.typeName} which is used as a parameter type for @validateArgs has 
 				.getImportDeclarations()
 				.map((d) => {
 					const specifier = d.getModuleSpecifierValue();
-					const namedImport = d.getNamedImports().find(
-						(imp) =>
-							imp.getSymbol()?.getEscapedName()
-								=== param.typeName,
-					);
+					const namedImport = d
+						.getNamedImports()
+						.find(
+							(imp) =>
+								imp.getSymbol()?.getEscapedName()
+									=== param.typeName,
+						);
 					if (!namedImport || !specifier) return;
 					return { namedImport, specifier };
 				})
 				.find((x) => x != undefined);
-
-			// const declarationSourceFile = valueDeclaration.getSourceFile();
-			// const importDeclaration = context.sourceFile.getImportDeclaration(
-			// 	(d) =>
-			// 		d.getModuleSpecifierSourceFile() === declarationSourceFile,
-			// );
-			// const namedImport = importDeclaration?.getNamedImports().find(
-			// 	(imp) => imp.getSymbol()?.getEscapedName() === param.typeName,
-			// );
 
 			if (!namedImportAndSpecifier) {
 				throw new Error(
@@ -564,10 +452,7 @@ Unable to find import specifier for class ${param.typeName}.`,
 			} else {
 				importsForFile.add(importedName);
 			}
-			context.additionalImports.set(
-				specifier,
-				importsForFile,
-			);
+			context.additionalImports.set(specifier, importsForFile);
 
 			// The validation function needs to know the original name of the class
 			// so it can try and find the built-in typeguard function
@@ -613,17 +498,17 @@ Unable to find import specifier for class ${param.typeName}.`,
 		// Those are not detected as ambient interfaces for some reason
 		if (
 			symbolName === "ReadonlyMap"
-			&& symbol.getDeclarations().every((d) =>
-				d.isKind(tsm.SyntaxKind.InterfaceDeclaration)
-			)
+			&& symbol
+				.getDeclarations()
+				.every((d) => d.isKind(tsm.SyntaxKind.InterfaceDeclaration))
 		) {
 			return `v.class(${ctx}, "Map", Map)`;
 		}
 		if (
 			symbolName === "ReadonlySet"
-			&& symbol.getDeclarations().every((d) =>
-				d.isKind(tsm.SyntaxKind.InterfaceDeclaration)
-			)
+			&& symbol
+				.getDeclarations()
+				.every((d) => d.isKind(tsm.SyntaxKind.InterfaceDeclaration))
 		) {
 			return `v.class(${ctx}, "Set", Set)`;
 		}
@@ -633,7 +518,8 @@ Unable to find import specifier for class ${param.typeName}.`,
 				? tsm.SyntaxKind.InterfaceDeclaration
 				: tsm.SyntaxKind.TypeLiteral;
 			// Collect all property definitions from all interface declarations
-			const properties = symbol.getDeclarations()
+			const properties = symbol
+				.getDeclarations()
 				.map((d) => d.asKind(expectedKind))
 				.filter((d) => d != undefined)
 				.flatMap((d) => d.getProperties())
@@ -643,21 +529,15 @@ Unable to find import specifier for class ${param.typeName}.`,
 						name: p.getName(),
 						type: propertyType,
 						typeName: getTypeName(propertyType),
-						// optional: p.hasQuestionToken(),
 					};
 				});
 
-			const recurse = properties.map((p) =>
-				`"${p.name}": ${
-					getValidationFunction(
-						context,
-						p,
-						"property",
-					)
-				}`
+			const recurse = properties.map(
+				(p) =>
+					`"${p.name}": ${
+						getValidationFunction(context, p, "property")
+					}`,
 			);
-
-			// if (isObject) debugger;
 
 			// In type definitions, the symbols may be anonymous object types
 			const objectTypeName = symbolName === "__type"
@@ -669,8 +549,6 @@ Unable to find import specifier for class ${param.typeName}.`,
 			} })`;
 		}
 	}
-
-	debugger;
 
 	throw new Error(
 		`Encountered unsupported type ${param.typeName} while transforming ${context.sourceFile.getFilePath()}`,

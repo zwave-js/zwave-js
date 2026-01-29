@@ -1,8 +1,8 @@
-// tsconfig for building - only applies to the src directory
+// tsconfig for building - compiles from preprocessed src_gen directory
 {
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"rootDir": "src",
+		"rootDir": "src_gen",
 		"outDir": "build/esm",
 		// Do not use the @@dev export for compiling
 		"customConditions": []
@@ -24,6 +24,6 @@
 			"path": "../transformers/tsconfig.build.json"
 		}
 	],
-	"include": ["src/**/*.ts"],
-	"exclude": ["src/**/*.test.ts"]
+	"include": ["src_gen/**/*.ts"],
+	"exclude": []
 }

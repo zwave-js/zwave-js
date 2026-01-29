@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -80,6 +79,7 @@ import {
 import { isNotificationEventPayload } from "../lib/NotificationEventPayload.js";
 import { V } from "../lib/Values.js";
 import { NotificationCommand, UserCodeCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 import { AssociationGroupInfoCC } from "./AssociationGroupInfoCC.js";
@@ -867,8 +867,10 @@ export class NotificationCC extends CommandClass {
 			// because the behaviour is too complex and spans the lifetime
 			// of several reports. Thus we handle it in the Node instance
 
-			// @ts-expect-error
-			if (response) await node.handleCommand(response);
+			if (response) {
+				// @ts-expect-error
+				await node.handleCommand(response);
+			}
 		}
 
 		// Remember when we did this

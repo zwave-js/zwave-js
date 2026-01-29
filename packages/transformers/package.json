@@ -8,9 +8,7 @@
   "types": "build/index.d.ts",
   "exports": {
     ".": "./build/index.js",
-    "./defineCCValues": "./build/defineCCValues/transformer.js",
-    "./validateArgs/program": "./build/validateArgs/transformProgram.js",
-    "./validateArgs/decorators": "./build/validateArgs/transformDecorators.js"
+    "./validateArgs": "./build/validateArgs/index.js"
   },
   "files": [
     "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
@@ -39,16 +37,15 @@
     "build": "tsc -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "bootstrap": "yarn build",
-    "pretest": "del-cli \"test/fixtures/*.{mjs,map}\" && tsc -p tsconfig.test.json && cpy \"test/build/test/fixtures/*.mjs\" test/fixtures && del-cli test/build",
+    "pretest": "tsx --conditions=@@dev test/pretest.ts",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "cpy-cli": "^6.0.0",
     "del-cli": "^7.0.0",
     "nano-spawn": "^2.0.0",
     "ts-morph": "^27.0.2",
-    "tsutils": "^3.21.0",
+    "tsx": "^4.20.5",
     "typescript": "5.9.3",
     "vitest": "^4.0.0"
   }

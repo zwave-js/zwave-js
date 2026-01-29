@@ -5,7 +5,6 @@ set -e
 echo "🏗️  Preparing repository..."
 echo ""
 yarn
-ts-patch install
 yarn node maintenance/patch-typescript.js
 yarn turbo run bootstrap
 echo "✅ Repository ready"
