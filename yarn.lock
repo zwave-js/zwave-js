@@ -9211,6 +9211,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"undici@npm:^7.16.0":
+  version: 7.16.0
+  resolution: "undici@npm:7.16.0"
+  checksum: 10/2bb71672b23d3dc0f56f1b7fb6c936e4487a350db46eaafc03f2f9107f99cdf8e51ecdd32e589e2381ef47a64b6369cfb31f328b2c3ea663023aa47bc5258b9e
+  languageName: node
+  linkType: hard
+
 "unicorn-magic@npm:^0.1.0":
   version: 0.1.0
   resolution: "unicorn-magic@npm:0.1.0"
@@ -9756,6 +9763,7 @@ __metadata:
     source-map-support: "npm:^0.5.21"
     tsx: "npm:^4.20.5"
     typescript: "npm:5.9.3"
+    undici: "npm:^7.16.0"
     vitest: "npm:^4.0.0"
     winston: "npm:^3.18.3"
   bin:

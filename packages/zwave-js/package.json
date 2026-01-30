@@ -148,6 +148,7 @@
     "semver": "^7.7.2",
     "serialport": "^13.0.0",
     "source-map-support": "^0.5.21",
+    "undici": "^7.16.0",
     "winston": "^3.18.3"
   },
   "devDependencies": {
