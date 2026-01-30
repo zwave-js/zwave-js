@@ -142,9 +142,9 @@
 	"auto_timer_duration_base": {
 		"valueSize": 4,
 		"unit": "minutes",
-		"minValue": 1,
+		"minValue": 0,
 		"maxValue": 65535,
-		"defaultValue": 60,
+		"defaultValue": 0,
 		"unsigned": true
 	},
 	"auto_off_timer_duration": {
