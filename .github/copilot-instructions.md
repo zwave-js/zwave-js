@@ -39,6 +39,7 @@ This repository holds the Z-Wave JS driver library, a TypeScript implementation 
 - Prefer `async`/`await` over callbacks and Promises wherever possible
 - After making code changes, always run `yarn fmt` to fix the formatting
 - Do not preserve backwards compatibility (e.g., keeping unused methods, re-exporting removed types, renaming to `_unused`) unless explicitly asked. When refactoring or iterating on new features, remove unused code completely.
+- In comments, never mention things you replaced or removed
 
 ## Commenting Style
 

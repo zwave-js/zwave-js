@@ -1,7 +1,5 @@
 /**
- * Pretest script that uses runCodegen to transform test fixtures.
- *
- * This replaces the old ts-patch approach with the new runCodegen infrastructure.
+ * Transforms test fixtures prior to running tests.
  */
 
 import { runCodegen } from "@zwave-js/maintenance/runCodegen";
