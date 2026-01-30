@@ -1001,8 +1001,10 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 			const component = raw.payload[offset];
 			const value = raw.payload[offset + 1];
 			const key = colorComponentToTableKey(component);
-			// @ts-expect-error
-			if (key) this.colorTable[key] = value;
+			if (key) {
+				// @ts-expect-error
+				this.colorTable[key] = value;
+			}
 			offset += 2;
 		}
 

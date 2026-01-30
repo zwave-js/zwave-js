@@ -1,0 +1,12 @@
+// tsconfig for compiling transformed test fixtures
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"composite": false,
+		"declaration": false,
+		"declarationMap": false,
+		"sourceMap": false,
+		"incremental": false
+	},
+	"include": ["test/build/**/*.mts"]
+}

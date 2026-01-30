@@ -158,7 +158,6 @@
     "@types/sinon": "^17.0.4",
     "@types/source-map-support": "^0.5.10",
     "@zwave-js/maintenance": "workspace:*",
-    "@zwave-js/transformers": "workspace:*",
     "del-cli": "^7.0.0",
     "mockdate": "^3.0.5",
     "sinon": "^21.0.0",

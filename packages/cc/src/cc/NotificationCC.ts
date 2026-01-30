@@ -867,8 +867,10 @@ export class NotificationCC extends CommandClass {
 			// because the behaviour is too complex and spans the lifetime
 			// of several reports. Thus we handle it in the Node instance
 
-			// @ts-expect-error
-			if (response) await node.handleCommand(response);
+			if (response) {
+				// @ts-expect-error
+				await node.handleCommand(response);
+			}
 		}
 
 		// Remember when we did this

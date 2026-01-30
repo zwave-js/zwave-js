@@ -1,9 +1,5 @@
 import { formatWithDprint } from "@zwave-js/maintenance";
 import { getErrorMessage } from "@zwave-js/shared";
-import esMain from "es-main";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
 	type ArrowFunction,
 	type CallExpression,
@@ -12,18 +8,13 @@ import {
 	type ImportSpecifier,
 	type Node,
 	type ObjectLiteralExpression,
-	Project,
 	type PropertyAccessExpression,
+	type SourceFile,
 	type Statement,
 	type StringLiteral,
 	SyntaxKind,
 	type ts,
 } from "ts-morph";
-
-// Define where the CC value definition file is located
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ccDir = path.join(__dirname, "..", "src/cc");
-const valuesFile = path.join(ccDir, "_CCValues.generated.ts");
 
 type CCEnum =
 	| PropertyAccessExpression<ts.PropertyAccessExpression>
@@ -40,12 +31,15 @@ const defaultCCValueOptions = {
 
 const ignoredImports = new Set(["V", "ValueMetadata"]);
 
-export async function generateCCValueDefinitions(): Promise<void> {
-	const project = new Project({
-		tsConfigFilePath: path.join(__dirname, "../tsconfig.json"),
-	});
-
-	const sourceFiles = project.getSourceFiles().filter((file) =>
+/**
+ * Auxiliary file generator for runCodegen.
+ * Generates cc/_CCValues.generated.ts from CC source files.
+ */
+export async function generateCCValueDefinitionsFile(
+	sourceFiles: SourceFile[],
+	_srcDir: string,
+): Promise<Map<string, string>> {
+	const ccSourceFiles = sourceFiles.filter((file) =>
 		file.getBaseNameWithoutExtension().endsWith("CC")
 	);
 
@@ -85,7 +79,7 @@ export async function generateCCValueDefinitions(): Promise<void> {
 		[...importsByModule.values()].flatMap((map) => [...map.entries()]),
 	);
 
-	for (const file of sourceFiles) {
+	for (const file of ccSourceFiles) {
 		// const filePath = path.relative(process.cwd(), file.getFilePath());
 
 		// function fail(reason: string) {
@@ -301,7 +295,7 @@ export const CCValues = {
 		process.exit(1);
 	}
 
-	await fs.writeFile(valuesFile, result);
+	return new Map([["cc/_CCValues.generated.ts", result]]);
 }
 
 function inferEndpointClosure(
@@ -867,5 +861,3 @@ function parseDynamicPropertyAndKeyWithName(
 	}
 ),`;
 }
-
-if (esMain(import.meta)) void generateCCValueDefinitions();
