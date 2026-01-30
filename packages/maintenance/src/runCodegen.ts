@@ -106,10 +106,14 @@ export async function runCodegen(config: CodegenConfig): Promise<void> {
 	// Track which files have been generated (auxiliary files)
 	const generatedFiles = new Set<string>();
 
-	// Run auxiliary file generators
-	if (config.generateAuxiliaryFiles) {
-		for (const generator of config.generateAuxiliaryFiles) {
-			const auxiliaryFiles = await generator(sourceFiles, srcDir);
+	// Run auxiliary file generators in parallel
+	if (config.generateAuxiliaryFiles?.length) {
+		const results = await Promise.all(
+			config.generateAuxiliaryFiles.map((generator) =>
+				generator(sourceFiles, srcDir)
+			),
+		);
+		for (const auxiliaryFiles of results) {
 			for (const [relativePath, content] of auxiliaryFiles) {
 				const outPath = path.join(outDir, relativePath);
 				const absolutePath = path.join(srcDir, relativePath);

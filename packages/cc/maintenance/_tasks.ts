@@ -7,17 +7,30 @@ import {
 } from "@zwave-js/transformers/validateArgs";
 import c from "ansi-colors";
 import type ts from "typescript";
-import { generateCCAPIInterface } from "./generateCCAPIInterface.js";
-import { generateCCExports } from "./generateCCExports.js";
-// import { generateCCValuesInterface } from "./generateCCValuesInterface.js";
-import { generateCCValueDefinitions } from "./generateCCValueDefinitions.js";
+import { generateCCAPIInterfaceFile } from "./generateCCAPIInterface.js";
+import { generateCCExportsFile } from "./generateCCExports.js";
+import { generateCCValueDefinitionsFile } from "./generateCCValueDefinitions.js";
 import { createDefineCCValuesTransformer } from "./transformers/defineCCValues.js";
-// import { lintCCConstructors } from "./lintCCConstructor";
 
 const argv = process.argv.slice(2);
 
-const transformSourceFiles = async () => {
-	console.log("Transforming source files...");
+const codegen = async () => {
+	// Phase 1: Generate auxiliary files in src/ from CC implementations
+	await runCodegen({
+		packageDir: projectRoot,
+		srcDir: "src",
+		outDir: "src",
+		tsConfigPath: "tsconfig.json",
+		cleanOutDir: false,
+		unchangedFileHandling: "ignore",
+		generateAuxiliaryFiles: [
+			generateCCAPIInterfaceFile,
+			generateCCExportsFile,
+			generateCCValueDefinitionsFile,
+		],
+	});
+
+	// Phase 2: Pre-process source files for compilation
 	await runCodegen({
 		packageDir: projectRoot,
 		srcDir: "src",
@@ -44,14 +57,6 @@ const transformSourceFiles = async () => {
 		unchangedFileHandling: "symlink",
 	});
 };
-
-const codegen = () =>
-	Promise.all([
-		generateCCAPIInterface(),
-		// generateCCValuesInterface(),
-		generateCCExports(),
-		generateCCValueDefinitions(),
-	]).then(() => transformSourceFiles());
 
 (async () => {
 	if (argv.includes("codegen")) {

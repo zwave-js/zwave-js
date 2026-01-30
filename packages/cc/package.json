@@ -63,7 +63,7 @@
     "clean": "del-cli build/ src_gen/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "ts": "tsx --conditions=@@dev",
-    "lint:codegen:fix": "oxlint --type-aware -c ../../.oxlintrc.json --fix \"src/cc/_CCValues.generated.ts\"",
+    "lint:codegen:fix": "oxlint --type-aware -c ../../.oxlintrc.json --fix \"src/cc/_CCValues.generated.ts\" \"src/lib/_CCAPI.generated.ts\"",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
