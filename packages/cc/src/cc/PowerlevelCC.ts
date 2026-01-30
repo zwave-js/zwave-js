@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -29,6 +28,7 @@ import {
 	PowerlevelCommand,
 	PowerlevelTestStatus,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 @API(CommandClasses.Powerlevel)
 export class PowerlevelCCAPI extends PhysicalCCAPI {

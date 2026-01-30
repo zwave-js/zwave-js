@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetNode,
@@ -55,6 +54,7 @@ import {
 	ProtectionCommand,
 	RFProtectionState,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 
 export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {

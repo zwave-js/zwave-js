@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -36,6 +35,7 @@ import {
 	type DoorLockLoggingRecord,
 	DoorLockLoggingRecordStatus,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { userCodeToLogString } from "./UserCodeCC.js";
 
 interface DateSegments {

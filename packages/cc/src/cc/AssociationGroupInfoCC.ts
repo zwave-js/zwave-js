@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -38,6 +37,7 @@ import {
 	AssociationGroupInfoCommand,
 	AssociationGroupInfoProfile,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { AssociationCC } from "./AssociationCC.js";
 import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC.js";
 

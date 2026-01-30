@@ -1,68 +1,51 @@
 import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-interface PackageInfo {
-	packageName: string;
-	packageDir: string;
-}
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const packageInfoCache = new Map<string, PackageInfo | undefined>();
+// Find the repo root by looking for the packages directory marker
+const repoRoot = path.normalize(
+	__dirname.slice(0, __dirname.lastIndexOf(`${path.sep}packages${path.sep}`)),
+);
 
-function getPackageInfo(filename: string): PackageInfo | undefined {
-	// Find the package directory by looking for package.json
-	let dir = path.dirname(filename);
-	const checkedDirs: string[] = [];
+const packageNameCache = new Map<string, string | undefined>();
 
-	while (dir !== path.dirname(dir)) {
-		if (packageInfoCache.has(dir)) {
-			const cached = packageInfoCache.get(dir);
-			// Cache the result for all intermediate directories
-			for (const checkedDir of checkedDirs) {
-				packageInfoCache.set(checkedDir, cached);
-			}
-			return cached;
-		}
-
-		const packageJsonPath = path.join(dir, "package.json");
-		if (fs.existsSync(packageJsonPath)) {
-			try {
-				const packageJson = JSON.parse(
-					fs.readFileSync(packageJsonPath, "utf8"),
-				);
-				// Validate that name field exists and is a string
-				if (typeof packageJson.name !== "string") {
-					packageInfoCache.set(dir, undefined);
-					for (const checkedDir of checkedDirs) {
-						packageInfoCache.set(checkedDir, undefined);
-					}
-					return undefined;
-				}
-				const info: PackageInfo = {
-					packageName: packageJson.name,
-					packageDir: dir,
-				};
-				packageInfoCache.set(dir, info);
-				// Cache the result for all intermediate directories
-				for (const checkedDir of checkedDirs) {
-					packageInfoCache.set(checkedDir, info);
-				}
-				return info;
-			} catch {
-				packageInfoCache.set(dir, undefined);
-				for (const checkedDir of checkedDirs) {
-					packageInfoCache.set(checkedDir, undefined);
-				}
-				return undefined;
-			}
-		}
-		checkedDirs.push(dir);
-		dir = path.dirname(dir);
+function getPackageName(filename: string): string | undefined {
+	// Check if the file is within the packages directory
+	const packagesDir = path.join(repoRoot, "packages");
+	if (!filename.startsWith(packagesDir + path.sep)) {
+		return undefined;
 	}
-	// Cache all checked directories as having no package info
-	for (const checkedDir of checkedDirs) {
-		packageInfoCache.set(checkedDir, undefined);
+
+	// Extract the package folder name from the path
+	const relativePath = filename.slice(packagesDir.length + 1);
+	const packageFolder = relativePath.split(path.sep)[0];
+
+	if (packageNameCache.has(packageFolder)) {
+		return packageNameCache.get(packageFolder);
 	}
+
+	// Read the package.json to get the actual package name
+	const packageJsonPath = path.join(
+		packagesDir,
+		packageFolder,
+		"package.json",
+	);
+	try {
+		const packageJson = JSON.parse(
+			fs.readFileSync(packageJsonPath, "utf8"),
+		);
+		if (typeof packageJson.name === "string") {
+			packageNameCache.set(packageFolder, packageJson.name);
+			return packageJson.name;
+		}
+	} catch {
+		// Ignore errors
+	}
+
+	packageNameCache.set(packageFolder, undefined);
 	return undefined;
 }
 
@@ -72,12 +55,10 @@ function isRelativeImport(source: string): boolean {
 
 export const noWorkspaceSelfImport = ESLintUtils.RuleCreator.withoutDocs({
 	create(context) {
-		const packageInfo = getPackageInfo(context.filename);
-		if (!packageInfo) {
+		const packageName = getPackageName(context.filename);
+		if (!packageName) {
 			return {};
 		}
-
-		const { packageName } = packageInfo;
 
 		function checkImportSource(
 			node:

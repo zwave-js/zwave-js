@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetNode,
@@ -24,6 +23,7 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { ManufacturerSpecificCCValues } from "./ManufacturerSpecificCC.js";
 import {
 	getManufacturerId,

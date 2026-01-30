@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../../lib/traits.js";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -35,6 +34,7 @@ import type {
 	RefreshValuesContext,
 } from "../../lib/CommandClass.js";
 import { expectedCCResponse } from "../../lib/CommandClassDecorators.js";
+import type { CCEncodingContext, CCParsingContext } from "../../lib/traits.js";
 import {
 	ManufacturerProprietaryCC,
 	ManufacturerProprietaryCCAPI,

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	EncapsulationFlags,
@@ -77,6 +76,7 @@ import {
 	KEXSchemes,
 } from "../lib/Security2/shared.js";
 import { Security2Command } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { CRC16CC } from "./CRC16CC.js";
 import { MultiChannelCC } from "./MultiChannelCC.js";
 import { SecurityCC } from "./SecurityCC.js";

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -54,6 +53,7 @@ import {
 	ThermostatSetpointCommand,
 	ThermostatSetpointType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // This array is used to map the advertised supported types (interpretation A)
 // to the actual enum values

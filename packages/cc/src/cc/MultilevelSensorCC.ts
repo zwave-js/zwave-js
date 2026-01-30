@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -65,6 +64,7 @@ import {
 	MultilevelSensorCommand,
 	type MultilevelSensorValue,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import type { GetUserPreferences } from "../lib/traits.js";
 
 export const MultilevelSensorCCValues = V.defineCCValues(

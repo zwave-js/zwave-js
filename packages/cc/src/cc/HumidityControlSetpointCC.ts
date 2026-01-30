@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -55,6 +54,7 @@ import {
 	HumidityControlSetpointType,
 	type HumidityControlSetpointValue,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const HumidityControlSetpointCCValues = V.defineCCValues(
 	CommandClasses["Humidity Control Setpoint"],

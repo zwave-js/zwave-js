@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	type BasicDeviceClass,
 	CommandClasses,
@@ -36,6 +35,7 @@ import {
 	ZWaveProtocolCommand,
 	parseWakeUpTime,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 enum DataRateBitmask {
 	"9k6" = 0b001,

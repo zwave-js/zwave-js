@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -80,6 +79,7 @@ import {
 import { isNotificationEventPayload } from "../lib/NotificationEventPayload.js";
 import { V } from "../lib/Values.js";
 import { NotificationCommand, UserCodeCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 import { AssociationGroupInfoCC } from "./AssociationGroupInfoCC.js";

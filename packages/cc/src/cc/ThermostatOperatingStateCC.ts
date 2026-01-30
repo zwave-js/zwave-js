@@ -1,4 +1,3 @@
-import type { CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -38,6 +37,7 @@ import {
 	ThermostatOperatingState,
 	ThermostatOperatingStateCommand,
 } from "../lib/_Types.js";
+import type { CCParsingContext } from "../lib/traits.js";
 
 export const ThermostatOperatingStateCCValues = V.defineCCValues(
 	CommandClasses["Thermostat Operating State"],

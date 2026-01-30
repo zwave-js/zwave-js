@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	Duration,
@@ -55,6 +54,7 @@ import {
 	WindowCoveringCommand,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const WindowCoveringCCValues = V.defineCCValues(
 	CommandClasses["Window Covering"],

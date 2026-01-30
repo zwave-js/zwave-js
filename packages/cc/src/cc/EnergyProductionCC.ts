@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -41,6 +40,7 @@ import {
 	type EnergyProductionScale,
 	getEnergyProductionScale,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const EnergyProductionCCValues = V.defineCCValues(
 	CommandClasses["Energy Production"],

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	Duration,
@@ -55,6 +54,7 @@ import {
 	DoorLockMode,
 	DoorLockOperationType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 	...V.staticProperty(

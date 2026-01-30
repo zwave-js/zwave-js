@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import type { GetDeviceConfig, ParamInfoMap } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -67,6 +66,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { type ConfigValue, ConfigurationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 function configValueToString(value: ConfigValue): string {
 	if (typeof value === "number") return value.toString();

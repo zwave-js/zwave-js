@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetNode,
@@ -65,6 +64,7 @@ import {
 	SubsystemState,
 	SubsystemType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 
 export const BarrierOperatorCCValues = V.defineCCValues(

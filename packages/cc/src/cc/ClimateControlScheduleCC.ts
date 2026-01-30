@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -40,6 +39,7 @@ import {
 	encodeSetbackState,
 	encodeSwitchpoint,
 } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ClimateControlScheduleCCValues = V.defineCCValues(
 	CommandClasses["Climate Control Schedule"],

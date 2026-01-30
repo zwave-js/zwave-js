@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CRC16_CCITT,
 	CommandClasses,
@@ -46,6 +45,7 @@ import {
 	FirmwareUpdateRequestStatus,
 	FirmwareUpdateStatus,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // @noSetValueAPI There are no values to set here
 

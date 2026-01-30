@@ -21,9 +21,9 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { Bytes } from "@zwave-js/shared";
 import { CRC16Command } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 const headerBuffer = Bytes.from([
 	CommandClasses["CRC-16 Encapsulation"],

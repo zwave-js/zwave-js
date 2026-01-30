@@ -1,4 +1,3 @@
-import type { CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type MaybeNotKnown,
@@ -14,6 +13,7 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { DeviceResetLocallyCommand } from "../lib/_Types.js";
+import type { CCParsingContext } from "../lib/traits.js";
 
 // @noInterview: There is no interview procedure
 

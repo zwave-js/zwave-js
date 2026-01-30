@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	Duration,
@@ -58,6 +57,7 @@ import {
 	MultilevelSwitchCommand,
 	SwitchType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],

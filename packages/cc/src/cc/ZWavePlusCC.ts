@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -31,6 +30,7 @@ import {
 	ZWavePlusNodeType,
 	ZWavePlusRoleType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // SDS13782 The advertised Z-Wave Plus Version, Role Type and Node Type information values
 // MUST be identical for the Root Device and all Multi Channel End Points
