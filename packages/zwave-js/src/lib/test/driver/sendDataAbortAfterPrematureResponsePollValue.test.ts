@@ -1,5 +1,5 @@
-import { BasicCCGet, BasicCCReport } from "@zwave-js/cc";
-import { TransmitStatus } from "@zwave-js/core";
+import { BasicCCGet, BasicCCReport, BasicCCValues } from "@zwave-js/cc";
+import { NodeStatus, SecurityClass, TransmitStatus } from "@zwave-js/core";
 import {
 	FunctionType,
 	SendDataAbort,
@@ -19,11 +19,18 @@ import {
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
-	"Abort SendData transaction when expected response is received prematurely",
+	"When aborting after the expected response to pollValue is received prematurely, the node should not be marked dead",
 	{
 		// debug: true,
 
-		provisioningDirectory: path.join(__dirname, "fixtures/base_2_nodes"),
+		provisioningDirectory: path.join(
+			__dirname,
+			"fixtures/s0AndS2Encapsulation",
+		),
+
+		nodeCapabilities: {
+			securityClasses: new Set([SecurityClass.S2_Unauthenticated]),
+		},
 
 		async customSetup(driver, mockController, mockNode) {
 			let lastCallbackId: number | undefined;
@@ -58,7 +65,7 @@ integrationTest(
 			mockController.defineBehavior(handleSendDataAbort);
 
 			const respondToBasicGet: MockNodeBehavior = {
-				async handleCC(controller, self, receivedCC) {
+				async handleCC(controller, _self, receivedCC) {
 					if (receivedCC instanceof BasicCCGet) {
 						const cc = new BasicCCReport({
 							nodeId: controller.ownNodeId,
@@ -72,16 +79,19 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
+			const currentValueId = BasicCCValues.currentValue.endpoint(0);
+
+			// Send a Basic CC Get to synchronize the SPAN state
+			await node.pollValue(currentValueId);
+
 			// Disable automatic ACKs to simulate poor connectivity
 			mockNode.autoAckControllerFrames = false;
 
-			// Send Basic CC Get - this should resolve due to premature response
-			const result = await node.commandClasses.Basic.get();
-			t.expect(result?.currentValue).toBe(42);
+			// Send a Basic CC Get by polling the value, this should resolve due to premature response
+			const result = await node.pollValue(currentValueId);
+			t.expect(result).toBe(42);
 
 			// Assert that the controller received a SendDataAbort
-			// This proves that the ongoing transaction was aborted when the
-			// premature response arrived
 			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
 				{ timeout: 500 },
@@ -96,6 +106,9 @@ integrationTest(
 				(msg) => msg instanceof SendDataBridgeRequest,
 			);
 			t.expect(retransmissions.length).toBe(0);
+
+			// The node should NOT be marked as dead after abortion
+			t.expect(node.status).not.toBe(NodeStatus.Dead);
 		},
 	},
 );
