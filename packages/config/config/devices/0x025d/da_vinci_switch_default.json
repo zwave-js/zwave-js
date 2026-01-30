@@ -558,42 +558,9 @@
 			"#": "46",
 			"label": "Device LED ON Intensity",
 			"valueSize": 1,
-			"defaultValue": 3,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Min (0)",
-					"value": 0
-				},
-				{
-					"label": "",
-					"value": 1
-				},
-				{
-					"label": "",
-					"value": 2
-				},
-				{
-					"label": "",
-					"value": 3
-				},
-				{
-					"label": "",
-					"value": 4
-				},
-				{
-					"label": "",
-					"value": 5
-				},
-				{
-					"label": "",
-					"value": 6
-				},
-				{
-					"label": "Max (7)",
-					"value": 7
-				}
-			]
+			"minValue": 0,
+			"maxValue": 7,
+			"defaultValue": 3
 		},
 		{
 			"#": "47",
@@ -688,7 +655,6 @@
 			"valueSize": 1,
 			"unit": "0.1s",
 			"defaultValue": 20,
-			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Always long",
