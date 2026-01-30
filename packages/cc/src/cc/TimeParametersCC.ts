@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -44,6 +43,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { TimeParametersCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const TimeParametersCCValues = V.defineCCValues(
 	CommandClasses["Time Parameters"],

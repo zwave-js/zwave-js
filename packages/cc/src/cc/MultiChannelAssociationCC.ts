@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -41,6 +40,7 @@ import {
 	type EndpointAddress,
 	MultiChannelAssociationCommand,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 import { AssociationCCValues } from "./AssociationCC.js";
 

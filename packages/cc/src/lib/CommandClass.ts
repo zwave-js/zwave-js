@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig, LookupManufacturer } from "@zwave-js/config";
 import {
 	type BroadcastCC,
@@ -74,6 +73,7 @@ import {
 	type StaticCCValue,
 	defaultCCValueOptions,
 } from "./Values.js";
+import type { CCEncodingContext, CCParsingContext } from "./traits.js";
 import type { GetInterviewOptions } from "./traits.js";
 
 export interface CommandClassOptions extends CCAddress {

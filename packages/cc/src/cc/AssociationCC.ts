@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -37,6 +36,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { type AssociationAddress, AssociationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 
 export const AssociationCCValues = V.defineCCValues(

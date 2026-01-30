@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -21,6 +20,7 @@ import {
 	InclusionControllerStatus,
 	InclusionControllerStep,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // This CC should not be used directly from user code
 /* eslint-disable @zwave-js/ccapi-validate-args */

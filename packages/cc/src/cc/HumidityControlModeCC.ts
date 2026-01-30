@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -48,6 +47,7 @@ import {
 	HumidityControlMode,
 	HumidityControlModeCommand,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const HumidityControlModeCCValues = V.defineCCValues(
 	CommandClasses["Humidity Control Mode"],

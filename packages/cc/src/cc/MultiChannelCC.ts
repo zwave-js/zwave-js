@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	type ApplicationNodeInformation,
 	CommandClasses,
@@ -50,6 +49,7 @@ import {
 } from "../lib/EncapsulatingCommandClass.js";
 import { V } from "../lib/Values.js";
 import { MultiChannelCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // TODO: Handle removal reports of dynamic endpoints
 

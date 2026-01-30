@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -47,6 +46,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { SceneControllerConfigurationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { AssociationCC } from "./AssociationCC.js";
 
 export const SceneControllerConfigurationCCValues = V.defineCCValues(

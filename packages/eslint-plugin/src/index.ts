@@ -19,6 +19,7 @@ import { noUnnecessaryBytesFrom } from "./rules/no-unnecessary-bytes-from.js";
 import { noUnnecessaryMinMaxValue } from "./rules/no-unnecessary-min-max-value.js";
 import { noUselessDescription } from "./rules/no-useless-description.js";
 import { noValueInOptionLabel } from "./rules/no-value-in-option-label.js";
+import { noWorkspaceSelfImport } from "./rules/no-workspace-self-import.js";
 import { preferDefaultValue } from "./rules/prefer-defaultvalue.js";
 import { validAllowedValues } from "./rules/valid-allowed-values.js";
 
@@ -44,6 +45,7 @@ export default {
 		"no-unnecessary-min-max-value": noUnnecessaryMinMaxValue,
 		"no-useless-description": noUselessDescription,
 		"no-value-in-option-label": noValueInOptionLabel,
+		"no-workspace-self-import": noWorkspaceSelfImport,
 		"prefer-defaultvalue": preferDefaultValue,
 		"valid-allowed-values": validAllowedValues,
 	},

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -37,6 +36,7 @@ import {
 	ThermostatSetbackCommand,
 } from "../lib/_Types.js";
 import { decodeSetbackState, encodeSetbackState } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // @noSetValueAPI
 // The setback state consist of two values that must be set together

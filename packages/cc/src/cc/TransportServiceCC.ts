@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CRC16_CCITT,
 	CommandClasses,
@@ -18,6 +17,7 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { TransportServiceCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const MAX_SEGMENT_SIZE = 39;
 

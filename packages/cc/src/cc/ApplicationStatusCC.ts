@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type MaybeNotKnown,
@@ -18,6 +17,7 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { ApplicationStatus, ApplicationStatusCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 @API(CommandClasses["Application Status"])
 export class ApplicationStatusCCAPI extends CCAPI {

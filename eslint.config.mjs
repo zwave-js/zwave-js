@@ -68,6 +68,13 @@ export default tseslint.config(
 			"@zwave-js/no-unnecessary-bytes-from": "error",
 		},
 	},
+	// Prevent self-imports in the CC package
+	{
+		files: ["packages/cc/src/**/*.ts"],
+		rules: {
+			"@zwave-js/no-workspace-self-import": "error",
+		},
+	},
 	// Disable unnecessarily strict rules for test files
 	{
 		files: ["**/*.test.ts"],

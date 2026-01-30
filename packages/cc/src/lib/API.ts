@@ -1,4 +1,3 @@
-import type { SendCommand } from "@zwave-js/cc";
 import type { CompatOverrideQueries, GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -50,6 +49,7 @@ import {
 	getImplementedVersion,
 } from "./CommandClassDecorators.js";
 import type { CCValue, StaticCCValue } from "./Values.js";
+import type { SendCommand } from "./traits.js";
 import type {
 	GetRefreshValueTimeouts,
 	GetUserPreferences,

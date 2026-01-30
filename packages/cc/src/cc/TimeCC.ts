@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type DSTInfo,
@@ -32,6 +31,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { TimeCommand } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // @noSetValueAPI
 // Only the timezone information can be set and that accepts a non-primitive value

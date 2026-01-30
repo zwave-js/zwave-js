@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -64,6 +63,7 @@ import {
 import type { NotificationEventPayload } from "../lib/NotificationEventPayload.js";
 import { V } from "../lib/Values.js";
 import { KeypadMode, UserCodeCommand, UserIDStatus } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 	...V.staticProperty("supportedUsers", undefined, { internal: true }),
