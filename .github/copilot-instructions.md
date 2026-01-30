@@ -94,4 +94,4 @@ Keep comments concise (1-3 sentences), use professional technical tone, and assu
 
 The rules to apply for reviewing pull requests depend on which files were changed:
 
-- If the PR changes device configuration files (`*.json` files in `packages/config/config/devices`), follow the [review-config-pr](prompts/review-config-pr.prompt.md) prompt to review the changes.
+- If the PR changes device configuration files (`*.json` files in `packages/config/config/devices`), follow the <a>review-config-pr</a> prompt to review the changes.
