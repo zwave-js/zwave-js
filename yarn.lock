@@ -3054,7 +3054,7 @@ __metadata:
     "@zwave-js/core": "workspace:*"
     "@zwave-js/shared": "workspace:*"
     esbuild: "npm:^0.25.11"
-    esbuild-plugins-node-modules-polyfill: "npm:^1.7.1"
+    esbuild-plugins-node-modules-polyfill: "npm:^1.8.1"
     zwave-js: "workspace:*"
   languageName: unknown
   linkType: soft
@@ -4571,16 +4571,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild-plugins-node-modules-polyfill@npm:^1.7.1":
-  version: 1.7.1
-  resolution: "esbuild-plugins-node-modules-polyfill@npm:1.7.1"
+"esbuild-plugins-node-modules-polyfill@npm:^1.8.1":
+  version: 1.8.1
+  resolution: "esbuild-plugins-node-modules-polyfill@npm:1.8.1"
   dependencies:
     "@jspm/core": "npm:^2.1.0"
-    local-pkg: "npm:^1.1.1"
+    local-pkg: "npm:^1.1.2"
     resolve.exports: "npm:^2.0.3"
   peerDependencies:
-    esbuild: ">=0.14.0 <=0.25.x"
-  checksum: 10/bcc44ea64e49e3f5dad2853416229b5e551aeb32ca98849a03ed68b1875369afb47114a09edc410517a024c561be8bc7e0013f6dc0f4d95888160aeb960c3cff
+    esbuild: ">=0.14.0 <=0.27.x"
+  checksum: 10/45d459b9132f76bcfb69b798ba5256d1c227a35babc2f0b937cbe63c58fc4dce3780bc0c72c1781df23a6600d68dbd266228b91551b7f3b0048cd8a0149087f5
   languageName: node
   linkType: hard
 
@@ -6530,14 +6530,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"local-pkg@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "local-pkg@npm:1.1.1"
+"local-pkg@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "local-pkg@npm:1.1.2"
   dependencies:
     mlly: "npm:^1.7.4"
-    pkg-types: "npm:^2.0.1"
-    quansync: "npm:^0.2.8"
-  checksum: 10/e04aedda8fe30b69d763100aa0485a32815d37478e76a97d2d792138607ebfdde20db3da9f301c260117e24340d4ab4731191bcae825dc94d3f6a4960ad11706
+    pkg-types: "npm:^2.3.0"
+    quansync: "npm:^0.2.11"
+  checksum: 10/761d82f40849e4721fa50d86782cf75bc2befb0696f32ac99869fb6f3033b904e4018f4bb8cdfde994d710816480dc1aba8e462c67ec20fe89d4700a245d17f8
   languageName: node
   linkType: hard
 
@@ -7694,14 +7694,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pkg-types@npm:^2.0.1":
-  version: 2.2.0
-  resolution: "pkg-types@npm:2.2.0"
+"pkg-types@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "pkg-types@npm:2.3.0"
   dependencies:
     confbox: "npm:^0.2.2"
     exsolve: "npm:^1.0.7"
     pathe: "npm:^2.0.3"
-  checksum: 10/54ffa530f443f0c55b7fad1475f619f4f70738b97dc8c65c783b54891b36663165cde02160c273c08ddb17efd29fb0fbcd929bed49bd06a96cec27a6ca4ed2f8
+  checksum: 10/4b36e4eb12693a1beb145573c564ec6fb74b1008d3b457eaa1f0072331edf05cb7c479c47fe0c4bfdec76c2caff5b68215ff270e5fe49634c07984a7a0197118
   languageName: node
   linkType: hard
 
@@ -7794,10 +7794,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"quansync@npm:^0.2.8":
-  version: 0.2.10
-  resolution: "quansync@npm:0.2.10"
-  checksum: 10/b54d955de867e104025f2666d52b2b67befe4e0f184a96acc9adcbdc572e46dce49c69d1e79f99413beae8a974a576383806a05f85f9a826865dc589ee1bcaf2
+"quansync@npm:^0.2.11":
+  version: 0.2.11
+  resolution: "quansync@npm:0.2.11"
+  checksum: 10/d4f0cc21a25052a8a6183f17752a6221829c4795b40641de67c06945b356841ff00296d3700d0332dfe8e86100fdcc02f4be7559f3f1774a753b05adb7800d01
   languageName: node
   linkType: hard
 
