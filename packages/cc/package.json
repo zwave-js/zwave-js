@@ -87,6 +87,6 @@
     "oxlint-tsgolint": "^0.11.2",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",
-    "vitest": "^4.0.0"
+    "vitest": "^4.0.18"
   }
 }
