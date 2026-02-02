@@ -1950,7 +1950,12 @@ protocol version:      ${this.protocolVersion}`;
 			!this.wasCCRemovedViaConfig(CommandClasses.Basic)
 			&& this.getCCVersion(CommandClasses.Basic) > 0
 		) {
-			if (this.maySupportBasicCC()) {
+			// Check if Basic CC was force-added via compat flag - this takes priority
+			const wasBasicCCForcedViaCompat = this.wasCCAddedViaConfig(
+				CommandClasses.Basic,
+			);
+
+			if (wasBasicCCForcedViaCompat || this.maySupportBasicCC()) {
 				// The device probably supports Basic CC and is allowed to.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(
@@ -1984,7 +1989,12 @@ protocol version:      ${this.protocolVersion}`;
 			if (endpoint.wasCCRemovedViaConfig(CommandClasses.Basic)) continue;
 			if (endpoint.getCCVersion(CommandClasses.Basic) === 0) continue;
 
-			if (endpoint.maySupportBasicCC()) {
+			// Check if Basic CC was force-added via compat flag - this takes priority
+			const wasBasicCCForcedViaCompat = endpoint.wasCCAddedViaConfig(
+				CommandClasses.Basic,
+			);
+
+			if (wasBasicCCForcedViaCompat || endpoint.maySupportBasicCC()) {
 				// The endpoint probably supports Basic CC and is allowed to.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(this.id, {

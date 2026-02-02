@@ -223,6 +223,21 @@ export class Endpoint
 		return removedEndpoints == "*" || removedEndpoints.includes(this.index);
 	}
 
+	/** Determines if support or control for a CC was force-added via config file */
+	public wasCCAddedViaConfig(cc: CommandClasses): boolean {
+		const compatConfig = this.tryGetNode()?.deviceConfig?.compat;
+		if (!compatConfig) return false;
+
+		const addedCC = compatConfig.addCCs?.get(cc);
+		if (!addedCC) return false;
+
+		const endpointInfo = addedCC.endpoints.get(this.index);
+		if (!endpointInfo) return false;
+
+		return endpointInfo.isSupported === true
+			|| endpointInfo.isControlled === true;
+	}
+
 	/**
 	 * Retrieves the version of the given CommandClass this endpoint implements.
 	 * Returns 0 if the CC is not supported.
