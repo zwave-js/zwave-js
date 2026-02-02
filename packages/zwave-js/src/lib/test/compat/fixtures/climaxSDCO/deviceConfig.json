@@ -1,0 +1,25 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "SDCO-1-ZW",
+	"description": "Smoke and Carbon Monoxide Detector",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x001a"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"commandClasses": {
+			"add": {
+				"0x20": {
+					"isSupported": true
+				}
+			}
+		}
+	}
+}
