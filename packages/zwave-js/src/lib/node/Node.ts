@@ -1988,13 +1988,12 @@ protocol version:      ${this.protocolVersion}`;
 			if (endpoint.wasCCRemovedViaConfig(CommandClasses.Basic)) continue;
 			if (endpoint.getCCVersion(CommandClasses.Basic) === 0) continue;
 
-			// Check if Basic CC was force-added via compat flag - this takes priority
-			const wasBasicCCForcedViaCompat = endpoint.wasCCSupportAddedViaConfig(
-				CommandClasses.Basic,
-			);
-
-			if (wasBasicCCForcedViaCompat || endpoint.maySupportBasicCC()) {
+			if (
+				endpoint.wasCCSupportAddedViaConfig(CommandClasses.Basic)
+				|| endpoint.maySupportBasicCC()
+			) {
 				// The endpoint probably supports Basic CC and is allowed to.
+				// Or we force-added support through a config file.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: endpoint.index,
