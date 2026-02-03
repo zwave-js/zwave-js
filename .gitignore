@@ -34,6 +34,7 @@ packages/*/cache
 
 # Compiled source files
 **/build
+**/src_gen
 **/*.tsbuildinfo
 *.map
 

@@ -1,0 +1,25 @@
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0xdead",
+	"label": "Test Device",
+	"description": "Device with Basic CC force-added via compat",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"commandClasses": {
+			"add": {
+				"0x20": {
+					"isSupported": true
+				}
+			}
+		}
+	}
+}
