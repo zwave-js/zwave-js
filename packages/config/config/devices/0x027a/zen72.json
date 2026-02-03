@@ -209,8 +209,22 @@
 		{
 			"#": "34",
 			"$if": "firmwareVersion >= 3.50 && firmwareVersion < 10.0",
-			"$import": "templates/zooz_template.json#custom_brightness",
-			"label": "Custom Brightness Level (Z-Wave Control)"
+			"$import": "templates/zooz_template.json#custom_brightness_zwave"
+		},
+		{
+			"#": "35",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#scene_control_multi_tap"
+		},
+		{
+			"#": "36",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_color_opposite"
+		},
+		{
+			"#": "37",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#gamma_factor"
 		}
 	],
 	"compat": {
