@@ -299,6 +299,35 @@
 		"description": "Disable this feature when using the LED indicators in automations.",
 		"defaultValue": 0
 	},
+	"led_indicator_multi_color": {
+		"label": "LED Indicator Multi-Color",
+		"description": "Selects the LED indicator color in the opposite switch state when parameter 2 is set to value 0 or 1.",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "White",
+				"value": 1
+			},
+			{
+				"label": "Blue",
+				"value": 2
+			},
+			{
+				"label": "Green",
+				"value": 3
+			},
+			{
+				"label": "Red",
+				"value": 4
+			}
+		]
+	},
 	"led_button_press": {
 		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 		"label": "LED Indicator: Button Press",
@@ -644,6 +673,14 @@
 				"value": 0
 			}
 		]
+	},
+	"gamma_factor": {
+		"label": "Gamma Factor",
+		"description": "A higher gamma makes dimming more gradual at low levels, while a lower gamma results in a more linear or abrupt transition (10-50 = 1.0–5.0 gamma).",
+		"valueSize": 1,
+		"minValue": 10,
+		"maxValue": 50,
+		"defaultValue": 10
 	},
 	"local_dimming_speed": {
 		"label": "Local Dimming Speed",
