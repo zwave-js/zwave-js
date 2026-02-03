@@ -597,8 +597,8 @@
 		},
 		{
 			"#": "47",
-			"$import": "#paramInformation/46",
 			"label": "Device LED OFF Intensity",
+			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
@@ -704,7 +704,6 @@
 		{
 			"#": "52",
 			"label": "Long Press Time",
-			"description": "0 = always long. Otherwise 1–250 in 0.1s units (max 25.0s).",
 			"valueSize": 1,
 			"unit": "0.1s",
 			"minValue": 0,
@@ -721,7 +720,6 @@
 		{
 			"#": "53",
 			"label": "Button 1 Short Press Time",
-			"description": "0 = disabled. Otherwise 1–250 in 0.01s units (max 2.5s).",
 			"valueSize": 1,
 			"unit": "0.01s",
 			"minValue": 0,
