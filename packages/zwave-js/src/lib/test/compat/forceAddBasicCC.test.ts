@@ -10,7 +10,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"Basic CC force-added via compat flag should be interviewed even when maySupportBasicCC returns false",
 	{
-		debug: true,
+		// debug: true,
 
 		nodeCapabilities: {
 			manufacturerId: 0xdead,
