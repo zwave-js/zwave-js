@@ -224,19 +224,8 @@ export class Endpoint
 	}
 
 	/**
-	 * Determines if support or control for a CC was force-added via config file.
-	 *
-	 * This checks if the device config's compat flag explicitly adds a CC to this endpoint
-	 * with either `isSupported: true` or `isControlled: true`.
-	 *
-	 * This is useful for devices that don't normally support a CC according to their device class,
-	 * but need it for legitimate functionality (e.g., notification sensors that need to receive
-	 * Basic Set commands to act as networked sirens).
-	 *
-	 * @param cc - The Command Class to check
-	 * @returns true if the CC was force-added with support or control status via compat config
-	 */
-	public wasCCAddedViaConfig(cc: CommandClasses): boolean {
+	 * Determines if support for a CC was force-added via config file. */
+	public wasCCSupportAddedViaConfig(cc: CommandClasses): boolean {
 		const compatConfig = this.tryGetNode()?.deviceConfig?.compat;
 		if (!compatConfig) return false;
 
@@ -246,11 +235,7 @@ export class Endpoint
 		const endpointInfo = addedCC.endpoints.get(this.index);
 		if (!endpointInfo) return false;
 
-		// Return true if the CC was force-added as either supported or controlled.
-		// Both cases indicate the device should handle this CC, which justifies
-		// interviewing it even if the device class normally forbids it.
-		return endpointInfo.isSupported === true
-			|| endpointInfo.isControlled === true;
+		return endpointInfo.isSupported === true;
 	}
 
 	/**
