@@ -66,9 +66,9 @@
     "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.55.1",
     "@types/node": "^20.19.23",
-    "@types/sinon": "^17.0.4",
+    "@types/sinon": "^21.0.0",
     "del-cli": "^7.0.0",
-    "sinon": "^21.0.0",
+    "sinon": "^21.0.1",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",
     "vitest": "^4.0.18"
