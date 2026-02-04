@@ -1,6 +1,6 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
+	type EndpointId,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
@@ -44,6 +44,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { SoundSwitchCommand, type ToneId } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const SoundSwitchCCValues = V.defineCCValues(
 	CommandClasses["Sound Switch"],
@@ -128,7 +129,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getToneInfo(toneId: number) {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -149,10 +150,18 @@ export class SoundSwitchCCAPI extends CCAPI {
 		if (response) return pick(response, ["duration", "name"]);
 	}
 
-	@validateArgs()
 	public async setConfiguration(
 		defaultToneId: number,
+		defaultVolume?: number,
+	): Promise<SupervisionResult | undefined>;
+	public async setConfiguration(
+		defaultToneId: number | undefined,
 		defaultVolume: number,
+	): Promise<SupervisionResult | undefined>;
+	@validateArgs()
+	public async setConfiguration(
+		defaultToneId?: number,
+		defaultVolume?: number,
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -162,13 +171,13 @@ export class SoundSwitchCCAPI extends CCAPI {
 		const cc = new SoundSwitchCCConfigurationSet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
-			defaultToneId,
-			defaultVolume,
+			defaultToneId: defaultToneId ?? 0x00,
+			defaultVolume: defaultVolume ?? 0xff,
 		});
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getConfiguration() {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -231,7 +240,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getPlaying() {
 		this.assertSupportsCommand(
 			SoundSwitchCommand,
@@ -422,6 +431,7 @@ default volume: ${config.defaultVolume}`;
 		}
 
 		const metadataStates: Record<number, string> = {};
+		const toneInfo: Record<number, { duration: number; name: string }> = {};
 		for (let toneId = 1; toneId <= toneCount; toneId++) {
 			ctx.logNode(node.id, {
 				message: `requesting info for tone #${toneId}`,
@@ -437,6 +447,7 @@ duration: ${info.duration} seconds`;
 				direction: "inbound",
 			});
 			metadataStates[toneId] = `${info.name} (${info.duration} sec)`;
+			toneInfo[toneId] = { duration: info.duration, name: info.name };
 		}
 
 		// Remember tone count and info on the default tone ID metadata
@@ -457,10 +468,47 @@ duration: ${info.duration} seconds`;
 				...metadataStates,
 				[0xff]: "default",
 			},
+			ccSpecific: {
+				toneInfo,
+			},
 		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	/**
+	 * Retrieves the duration in seconds for a given toneId from metadata.
+	 * Returns undefined if duration cannot be determined.
+	 */
+	public static getToneDurationCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		toneId: number,
+	): MaybeNotKnown<number> {
+		const valueDb = ctx.getValueDB(endpoint.nodeId);
+		const toneIdValueId = SoundSwitchCCValues.toneId.endpoint(
+			endpoint.index,
+		);
+		const metadata = valueDb.getMetadata(toneIdValueId);
+		return metadata?.ccSpecific?.toneInfo?.[toneId]?.duration;
+	}
+
+	/**
+	 * Retrieves the name for a given toneId from metadata.
+	 * Returns undefined if name cannot be determined.
+	 */
+	public static getToneNameCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		toneId: number,
+	): MaybeNotKnown<string> {
+		const valueDb = ctx.getValueDB(endpoint.nodeId);
+		const toneIdValueId = SoundSwitchCCValues.toneId.endpoint(
+			endpoint.index,
+		);
+		const metadata = valueDb.getMetadata(toneIdValueId);
+		return metadata?.ccSpecific?.toneInfo?.[toneId]?.name;
 	}
 }
 
@@ -556,7 +604,7 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.toneId, 0, 0, this.name.length]),
+			[this.toneId, 0, 0, this.name.length],
 			Bytes.from(this.name, "utf8"),
 		]);
 		this.payload.writeUInt16BE(this.duration, 1);
@@ -629,10 +677,13 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 }
 
 // @publicAPI
-export interface SoundSwitchCCConfigurationSetOptions {
+export type SoundSwitchCCConfigurationSetOptions = {
 	defaultVolume: number;
+	defaultToneId?: number;
+} | {
+	defaultVolume?: number;
 	defaultToneId: number;
-}
+};
 
 @CCCommand(SoundSwitchCommand.ConfigurationSet)
 @useSupervision()
@@ -641,8 +692,8 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 		options: WithAddress<SoundSwitchCCConfigurationSetOptions>,
 	) {
 		super(options);
-		this.defaultVolume = options.defaultVolume;
-		this.defaultToneId = options.defaultToneId;
+		this.defaultVolume = options.defaultVolume ?? 0xff;
+		this.defaultToneId = options.defaultToneId ?? 0x00;
 	}
 
 	public static from(
@@ -669,12 +720,16 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
+		const message: MessageRecord = {};
+		if (this.defaultVolume !== 0xff) {
+			message["default volume"] = `${this.defaultVolume} %`;
+		}
+		if (this.defaultToneId !== 0x00) {
+			message["default tone id"] = this.defaultToneId;
+		}
 		return {
 			...super.toLogEntry(ctx),
-			message: {
-				"default volume": `${this.defaultVolume} %`,
-				"default tone id": this.defaultToneId,
-			},
+			message,
 		};
 	}
 }

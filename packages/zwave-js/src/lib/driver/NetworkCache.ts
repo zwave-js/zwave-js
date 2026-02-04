@@ -10,7 +10,13 @@ import {
 	dskToString,
 	securityClassOrder,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, num2hex, pickDeep } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+	pickDeep,
+} from "@zwave-js/shared";
 import type {
 	Database,
 	ReadFile,
@@ -56,6 +62,7 @@ export const cacheKeys = {
 			_securityClassBaseKey: `${nodeBaseKey}securityClasses`,
 			_priorityReturnRouteBaseKey: `${nodeBaseKey}priorityReturnRoute`,
 			interviewStage: `${nodeBaseKey}interviewStage`,
+			bootstrapped: `${nodeBaseKey}bootstrapped`,
 			deviceClass: `${nodeBaseKey}deviceClass`,
 			isListening: `${nodeBaseKey}isListening`,
 			isFrequentListening: `${nodeBaseKey}isFrequentListening`,
@@ -73,6 +80,7 @@ export const cacheKeys = {
 					)
 				}`,
 			dsk: `${nodeBaseKey}dsk`,
+			failedS2Bootstrapping: `${nodeBaseKey}failedS2Bootstrapping`,
 			endpoint: (index: number) => {
 				const endpointBaseKey = `${nodeBaseKey}endpoint.${index}.`;
 				const ccBaseKey = `${endpointBaseKey}commandClass.`;
@@ -109,7 +117,7 @@ export const cacheKeyUtils = {
 		}
 	},
 	nodePropertyFromKey: (key: string): string | undefined => {
-		const match = /^node\.\d+\.(?<property>[^\.]+)$/.exec(key);
+		const match = /^node\.\d+\.(?<property>[^.]+)$/.exec(key);
 		return match?.groups?.property;
 	},
 	isEndpointKey: (key: string): boolean => {
@@ -365,7 +373,7 @@ function tryParseAssociationAddress(
 
 function tryParseBuffer(
 	value: unknown,
-): Uint8Array | undefined {
+): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "hex");
@@ -377,7 +385,7 @@ function tryParseBuffer(
 
 function tryParseBufferBase64(
 	value: unknown,
-): Uint8Array | undefined {
+): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "base64");
@@ -445,6 +453,10 @@ export function deserializeNetworkCacheValue(
 			fail();
 		}
 
+		case "failedS2Bootstrapping": {
+			return ensureType(value, "boolean");
+		}
+
 		case "supportsSecurity":
 			return ensureType(value, "boolean");
 		case "supportsBeaming":
@@ -487,7 +499,7 @@ export function deserializeNetworkCacheValue(
 				if (value) {
 					value = Bytes.concat([
 						Bytes.from(versionMatch, "utf8"),
-						value as Uint8Array,
+						value as BytesView,
 					]);
 				}
 			} else {
@@ -558,7 +570,7 @@ export function serializeNetworkCacheValue(
 			return ret;
 		}
 		case "dsk": {
-			return dskToString(value as Uint8Array);
+			return dskToString(value as BytesView);
 		}
 		case "lastSeen": {
 			// Dates are stored as timestamps
@@ -567,25 +579,25 @@ export function serializeNetworkCacheValue(
 
 		case "deviceConfigHash": {
 			// Preserve the version prefix if it exists
-			const valueAsString = Bytes.view(value as Uint8Array).toString(
+			const valueAsString = Bytes.view(value as BytesView).toString(
 				"utf8",
 			);
 			const versionMatch = valueAsString.match(/^\$v\d+\$/)?.[0];
 			if (versionMatch) {
 				return versionMatch
-					+ Bytes.view(value as Uint8Array).subarray(
+					+ Bytes.view(value as BytesView).subarray(
 						versionMatch.length,
 					).toString("base64");
 			} else {
 				// For lecacy hashes, just return the hex representation
-				return Bytes.view(value as Uint8Array).toString("hex");
+				return Bytes.view(value as BytesView).toString("hex");
 			}
 		}
 	}
 
 	// Other dynamic properties
 	if (key.startsWith("controller.securityKeys.")) {
-		return Bytes.view(value as Uint8Array).toString("hex");
+		return Bytes.view(value as BytesView).toString("hex");
 	}
 
 	// Other fixed properties
@@ -626,7 +638,7 @@ export function serializeNetworkCacheValue(
 			return ret;
 		}
 		case cacheKeys.controller.privateKey: {
-			return Bytes.view(value as Uint8Array).toString("hex");
+			return Bytes.view(value as BytesView).toString("hex");
 		}
 	}
 

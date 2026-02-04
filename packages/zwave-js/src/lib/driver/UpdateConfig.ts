@@ -1,6 +1,10 @@
 import { untar } from "@andrewbranch/untar.js";
 import { ZWaveError, ZWaveErrorCodes, gunzipSync } from "@zwave-js/core";
-import { getErrorMessage, writeTextFile } from "@zwave-js/shared";
+import {
+	type BytesView,
+	getErrorMessage,
+	writeTextFile,
+} from "@zwave-js/shared";
 import type {
 	CopyFile,
 	MakeTempDirectory,
@@ -47,7 +51,7 @@ export async function checkForConfigUpdates(
 	// Find the highest possible prepatch update (e.g. 7.2.4 -> 7.2.5-20200424)
 	const allVersions = Object.keys(registry.versions)
 		.filter((v) => !!semverValid(v))
-		.filter((v) => /\-\d{8}$/.test(v));
+		.filter((v) => /-\d{8}$/.test(v));
 	const updateRange = `>${currentVersion} <${
 		semverInc(
 			currentVersion,
@@ -99,7 +103,7 @@ export async function installConfigUpdate(
 		);
 	}
 
-	let tarballData: Uint8Array;
+	let tarballData: BytesView;
 	try {
 		tarballData = new Uint8Array(
 			await ky.get(url).arrayBuffer(),
@@ -118,7 +122,7 @@ export async function installConfigUpdate(
 	try {
 		// Extract json files from the tarball's config directory
 		// and overwrite the external config directory with them
-		const tarFiles = untar(gunzipSync(tarballData));
+		const tarFiles = untar(gunzipSync(tarballData).buffer);
 		await fs.deleteDir(external.configDir);
 		await fs.ensureDir(external.configDir);
 
@@ -135,7 +139,7 @@ export async function installConfigUpdate(
 			const targetDirName = path.dirname(targetFileName);
 
 			await fs.ensureDir(targetDirName);
-			await fs.writeFile(targetFileName, file.fileData);
+			await fs.writeFile(targetFileName, new Uint8Array(file.fileData));
 		}
 
 		const externalVersionFilename = path.join(

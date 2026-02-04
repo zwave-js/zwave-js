@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -36,6 +35,7 @@ import {
 import {
 	type AllOrNone,
 	Bytes,
+	type BytesView,
 	getEnumMemberName,
 	num2hex,
 	pick,
@@ -77,6 +77,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { MeterCommand, type MeterReading, RateType } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 	...V.staticProperty("type", undefined, { internal: true }),
@@ -178,7 +179,7 @@ function getValueLabel(
 	return ret;
 }
 
-function parseMeterValueAndInfo(data: Uint8Array, offset: number): {
+function parseMeterValueAndInfo(data: BytesView, offset: number): {
 	type: number;
 	rateType: RateType;
 	scale1: number;
@@ -233,7 +234,7 @@ function encodeMeterValueAndInfo(
 	);
 
 	return {
-		data: Bytes.concat([Bytes.from([typeByte]), valueBytes]),
+		data: Bytes.concat([[typeByte], valueBytes]),
 		floatParams: pick(floatParams, ["precision", "size"]),
 		scale2,
 	};
@@ -241,7 +242,7 @@ function encodeMeterValueAndInfo(
 
 function parseScale(
 	scale1: number,
-	data: Uint8Array,
+	data: BytesView,
 	scale2Offset: number,
 ): number {
 	if (scale1 === 7) {
@@ -438,7 +439,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupported() {
 		this.assertSupportsCommand(MeterCommand, MeterCommand.SupportedGet);
 
@@ -915,7 +916,7 @@ export class MeterCCReport extends MeterCC {
 				const { value: prevValue } = parseFloatWithScale(
 					// This float is split in the payload
 					Bytes.concat([
-						Bytes.from([raw.payload[1]]),
+						[raw.payload[1]],
 						raw.payload.subarray(offset),
 					]),
 				);
@@ -1062,7 +1063,7 @@ export class MeterCCReport extends MeterCC {
 		if (scale2 != undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([scale2]),
+				[scale2],
 			]);
 		}
 
@@ -1244,7 +1245,7 @@ export class MeterCCSupportedReport extends MeterCC {
 			// Since the first byte only has 7 bits, we need to reduce all following bits by 1
 			supportedScales = parseBitMask(
 				Bytes.concat([
-					Bytes.from([raw.payload[1] & 0b0_1111111]),
+					[raw.payload[1] & 0b0_1111111],
 					raw.payload.subarray(3, 3 + extraBytes),
 				]),
 				0,
@@ -1342,7 +1343,7 @@ export class MeterCCSupportedReport extends MeterCC {
 		if (supportedScales.length > 1) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([supportedScales.length - 1]),
+				[supportedScales.length - 1],
 				Bytes.from(supportedScales.subarray(1)),
 			]);
 		}
@@ -1354,14 +1355,12 @@ export class MeterCCSupportedReport extends MeterCC {
 		const message: MessageRecord = {
 			"meter type": getMeterName(this.type),
 			"supports reset": this.supportsReset,
-			"supported scales": `${
-				this.supportedScales
-					.map(
-						(scale) => `
+			"supported scales": this.supportedScales
+				.map(
+					(scale) => `
 · ${(getMeterScale(this.type, scale) ?? getUnknownMeterScale(scale)).label}`,
-					)
-					.join("")
-			}`,
+				)
+				.join(""),
 			"supported rate types": this.supportedRateTypes
 				.map((rt) => getEnumMemberName(RateType, rt))
 				.join(", "),
@@ -1447,7 +1446,7 @@ export class MeterCCReset extends MeterCC {
 			if (scale2 != undefined) {
 				this.payload = Bytes.concat([
 					this.payload,
-					Bytes.from([scale2]),
+					[scale2],
 				]);
 			}
 		}

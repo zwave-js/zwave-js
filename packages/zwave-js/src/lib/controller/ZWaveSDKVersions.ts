@@ -334,7 +334,7 @@ const versions = Object.freeze([
  * so they can be used to look up the SDK version.
  */
 function semverToLegacy(version: string): string {
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// oxlint-disable-next-line no-unused-vars
 	const [major, minor, _patch] = version.split(".", 3);
 	return `${major}.${minor.toString().padStart(2, "0")}`;
 }

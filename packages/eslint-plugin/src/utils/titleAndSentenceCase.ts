@@ -39,7 +39,7 @@ const sentenceCaseIgnored: (RegExp)[] = [
 	/^N[CO]$/,
 	/^CCW$/,
 	// Device labels
-	/^[\w\/-]+\d+/,
+	/^[\w/-]+\d+/,
 ];
 
 const titleCaseIgnored: RegExp[] = [

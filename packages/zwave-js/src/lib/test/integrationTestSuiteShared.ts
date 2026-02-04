@@ -63,26 +63,26 @@ export function prepareDriver(
 			),
 		},
 		storage: {
-			...(additionalOptions.storage ?? {}),
+			...additionalOptions.storage,
 			cacheDir: cacheDir,
 			lockDir: path.join(cacheDir, "locks"),
 		},
 	});
 }
 
-export function prepareMocks(
+export async function prepareMocks(
 	mockPort: MockPort,
 	serial: ZWaveSerialStream,
 	controller: Pick<
 		MockControllerOptions,
-		"ownNodeId" | "homeId" | "capabilities"
+		"ownNodeId" | "homeId" | "capabilities" | "securityKeys"
 	> = {},
 	nodes: Pick<MockNodeOptions, "id" | "capabilities">[] = [],
-): {
+): Promise<{
 	mockController: MockController;
 	mockNodes: MockNode[];
-} {
-	const mockController = new MockController({
+}> {
+	const mockController = await MockController.create({
 		homeId: 0x7e570001,
 		ownNodeId: 1,
 		...controller,
@@ -94,7 +94,7 @@ export function prepareMocks(
 
 	const mockNodes: MockNode[] = [];
 	for (const node of nodes) {
-		const mockNode = new MockNode({
+		const mockNode = await MockNode.create({
 			...node,
 			controller: mockController,
 		});

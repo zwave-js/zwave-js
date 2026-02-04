@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 
 /**
  * Protobuf wire types
@@ -20,7 +20,7 @@ export const enum WireType {
 /**
  * Encodes a protobuf field tag (field number and wire type)
  */
-export function encodeTag(fieldNumber: number, wireType: WireType): Uint8Array {
+export function encodeTag(fieldNumber: number, wireType: WireType): BytesView {
 	return encodeVarInt((fieldNumber << 3) | wireType);
 }
 
@@ -28,7 +28,7 @@ export function encodeTag(fieldNumber: number, wireType: WireType): Uint8Array {
  * Decodes a protobuf field tag
  */
 export function decodeTag(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number = 0,
 ): { fieldNumber: number; wireType: WireType; bytesRead: number } {
 	const tag = decodeVarInt(data, offset);
@@ -44,7 +44,7 @@ export function decodeTag(
 /**
  * Encodes a VarInt according to the Protocol Buffers specification
  */
-export function encodeVarInt(value: number): Uint8Array {
+export function encodeVarInt(value: number): BytesView {
 	const bytes: number[] = [];
 	while (value >= 0x80) {
 		bytes.push((value & 0x7f) | 0x80);
@@ -59,7 +59,7 @@ export function encodeVarInt(value: number): Uint8Array {
  * Returns the decoded value and the number of bytes consumed
  */
 export function decodeVarInt(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number = 0,
 ): { value: number; bytesRead: number } {
 	let value = 0;
@@ -95,21 +95,21 @@ export function decodeVarInt(
  */
 export function encodeStringField(
 	fieldNumber: number,
-	value: string | Uint8Array,
-): Uint8Array {
+	value: string | BytesView,
+): BytesView {
 	const stringBytes = typeof value === "string"
 		? new TextEncoder().encode(value)
 		: value;
 	const tag = encodeTag(fieldNumber, WireType.LengthDelimited);
 	const length = encodeVarInt(stringBytes.length);
-	return concatenateUint8Arrays([tag, length, stringBytes]);
+	return Bytes.concat([tag, length, stringBytes]);
 }
 
 /**
  * Decodes a string field at the current position
  */
 export function decodeStringField(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number,
 ): { value: string; bytesRead: number } {
 	const length = decodeVarInt(data, offset);
@@ -129,10 +129,10 @@ export function decodeStringField(
 export function encodeVarintField(
 	fieldNumber: number,
 	value: number,
-): Uint8Array {
+): BytesView {
 	const tag = encodeTag(fieldNumber, WireType.Varint);
 	const varint = encodeVarInt(value);
-	return concatenateUint8Arrays([tag, varint]);
+	return Bytes.concat([tag, varint]);
 }
 
 /**
@@ -141,7 +141,7 @@ export function encodeVarintField(
 export function encodeBoolField(
 	fieldNumber: number,
 	value: boolean,
-): Uint8Array {
+): BytesView {
 	return encodeVarintField(fieldNumber, value ? 1 : 0);
 }
 
@@ -151,21 +151,21 @@ export function encodeBoolField(
 export function encodeFixed32Field(
 	fieldNumber: number,
 	value: number,
-): Uint8Array {
+): BytesView {
 	const tag = encodeTag(fieldNumber, WireType.Fixed32);
 	const valueBytes = new Uint8Array(4);
 	valueBytes[0] = value & 0xff;
 	valueBytes[1] = (value >>> 8) & 0xff;
 	valueBytes[2] = (value >>> 16) & 0xff;
 	valueBytes[3] = (value >>> 24) & 0xff;
-	return concatenateUint8Arrays([tag, valueBytes]);
+	return Bytes.concat([tag, valueBytes]);
 }
 
 /**
  * Decodes a fixed32 field at the current position
  */
 export function decodeFixed32Field(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number,
 ): { value: number; bytesRead: number } {
 	const value = Bytes.view(data).readUInt32LE(offset);
@@ -177,20 +177,20 @@ export function decodeFixed32Field(
  */
 export function encodeLengthDelimitedField(
 	fieldNumber: number,
-	value: Uint8Array,
-): Uint8Array {
+	value: BytesView,
+): BytesView {
 	const tag = encodeTag(fieldNumber, WireType.LengthDelimited);
 	const length = encodeVarInt(value.length);
-	return concatenateUint8Arrays([tag, length, value]);
+	return Bytes.concat([tag, length, value]);
 }
 
 /**
  * Decodes a length-delimited field at the current position
  */
 export function decodeLengthDelimitedField(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number,
-): { value: Uint8Array; bytesRead: number } {
+): { value: BytesView; bytesRead: number } {
 	const length = decodeVarInt(data, offset);
 	const valueBytes = data.slice(
 		offset + length.bytesRead,
@@ -205,7 +205,7 @@ export function decodeLengthDelimitedField(
 /**
  * Encodes a signed integer using zigzag encoding
  */
-export function encodeSignedVarint(value: number): Uint8Array {
+export function encodeSignedVarint(value: number): BytesView {
 	const zigzag = (value << 1) ^ (value >> 31);
 	return encodeVarInt(zigzag);
 }
@@ -214,7 +214,7 @@ export function encodeSignedVarint(value: number): Uint8Array {
  * Decodes a signed integer using zigzag encoding
  */
 export function decodeSignedVarint(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number = 0,
 ): { value: number; bytesRead: number } {
 	const decoded = decodeVarInt(data, offset);
@@ -228,17 +228,17 @@ export function decodeSignedVarint(
 export function encodeSignedVarintField(
 	fieldNumber: number,
 	value: number,
-): Uint8Array {
+): BytesView {
 	const tag = encodeTag(fieldNumber, WireType.Varint);
 	const varint = encodeSignedVarint(value);
-	return concatenateUint8Arrays([tag, varint]);
+	return Bytes.concat([tag, varint]);
 }
 
 /**
  * Skips an unknown field based on its wire type
  */
 export function skipField(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number,
 	wireType: WireType,
 ): number {
@@ -262,28 +262,14 @@ export function skipField(
 }
 
 /**
- * Helper function to concatenate Uint8Arrays
- */
-export function concatenateUint8Arrays(arrays: Uint8Array[]): Uint8Array {
-	const totalLength = arrays.reduce((sum, arr) => sum + arr.length, 0);
-	const result = new Uint8Array(totalLength);
-	let offset = 0;
-	for (const arr of arrays) {
-		result.set(arr, offset);
-		offset += arr.length;
-	}
-	return result;
-}
-
-/**
  * Parses a protobuf message and calls a field handler for each field
  */
 export function parseProtobufMessage(
-	data: Uint8Array,
+	data: BytesView,
 	fieldHandler: (
 		fieldNumber: number,
 		wireType: WireType,
-		data: Uint8Array,
+		data: BytesView,
 		offset: number,
 	) => number,
 ): void {

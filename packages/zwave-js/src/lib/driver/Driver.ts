@@ -1,5 +1,6 @@
 import type { JsonlDBOptions } from "@alcalzone/jsonl-db";
 import {
+	ApplicationStatusCCRejectedRequest,
 	type CCAPIHost,
 	type CCEncodingContext,
 	type CCParsingContext,
@@ -56,6 +57,7 @@ import {
 	isTransportServiceEncapsulation,
 	registerCCs,
 } from "@zwave-js/cc";
+import { userCodeToLogString } from "@zwave-js/cc/UserCodeCC";
 import { ConfigManager, type DeviceConfig } from "@zwave-js/config";
 import {
 	type CCId,
@@ -179,6 +181,7 @@ import {
 import {
 	AsyncQueue,
 	Bytes,
+	type BytesView,
 	type Interval,
 	type Timer,
 	TypedEventTarget,
@@ -347,6 +350,7 @@ const defaultOptions: ZWaveOptions = {
 	bootloaderMode: "recover",
 	interview: {
 		queryAllUserCodes: false,
+		applyRecommendedConfigParamValues: false,
 	},
 	storage: {
 		cacheDir: typeof process !== "undefined"
@@ -357,6 +361,7 @@ const defaultOptions: ZWaveOptions = {
 	},
 	preferences: {
 		scales: {},
+		lookupUserIdInNotificationEvents: false,
 	},
 };
 
@@ -589,7 +594,7 @@ function checkOptions(options: ZWaveOptions): void {
 
 		if (options.features.disableCommandClasses?.length) {
 			// Ensure that all CCs may be disabled
-			const mandatory = [
+			const mandatory = new Set([
 				// Encapsulation CCs are always supported
 				...encapsulationCCs,
 				// All Root Devices or nodes MUST support
@@ -603,11 +608,11 @@ function checkOptions(options: ZWaveOptions): void {
 				CommandClasses.Powerlevel,
 				CommandClasses.Version,
 				CommandClasses["Z-Wave Plus Info"],
-			];
+			]);
 
 			const mandatoryDisabled = options.features.disableCommandClasses
 				.filter(
-					(cc) => mandatory.includes(cc),
+					(cc) => mandatory.has(cc),
 				);
 			if (mandatoryDisabled.length > 0) {
 				throw new ZWaveError(
@@ -645,6 +650,10 @@ type AwaitedMessageEntry = AwaitedThing<Message>;
 type AwaitedCommandEntry = AwaitedThing<CCId>;
 type AwaitedCLIChunkEntry = AwaitedThing<CLIChunk>;
 export type AwaitedBootloaderChunkEntry = AwaitedThing<BootloaderChunk>;
+type AwaitedIdleEntry = Omit<
+	AwaitedThing<void>,
+	"predicate" | "refreshPredicate"
+>;
 
 interface TransportServiceSession {
 	fragmentSize: number;
@@ -769,7 +778,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public constructor(
 		private port:
 			| string
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			| ZWaveSerialPortImplementation
 			| ZWaveSerialBindingFactory,
 		...optionsAndPresets: (PartialZWaveOptions | undefined)[]
@@ -896,6 +904,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private immediateQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
 	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
+	// Timers for delayed transaction re-queuing
+	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
 	/** Gives access to the transaction queues, ordered by priority */
 	private get queues(): TransactionQueue[] {
@@ -941,6 +951,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): Promise<void> {
+		// Clear all delayed requeue timers
+		for (const set of this.requeueTimers.values()) {
+			for (const timer of set) {
+				timer.clear();
+			}
+		}
+		this.requeueTimers.clear();
+
 		// The queues might not have been initialized yet
 		for (const queue of this.queues) {
 			if (!queue) return;
@@ -1023,6 +1041,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private awaitedBootloaderChunks: AwaitedBootloaderChunkEntry[] = [];
 	/** A list of awaited chunks from the end device CLI */
 	private awaitedCLIChunks: AwaitedCLIChunkEntry[] = [];
+	/** A list of promises waiting for the queues to become idle */
+	private awaitedIdle: AwaitedIdleEntry[] = [];
 
 	/** A map of Node ID -> ongoing sessions */
 	private nodeSessions = new Map<number, Sessions>();
@@ -1079,7 +1099,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public get configVersion(): string {
 		return (
 			this.configManager?.configVersion
-				// eslint-disable-next-line @typescript-eslint/no-require-imports
 				?? require("zwave-js/package.json")?.dependencies
 					?.["@zwave-js/config"]
 				?? libVersion
@@ -1204,7 +1223,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public async getLearnModeAuthenticatedKeyPair(): Promise<KeyPair> {
 		if (this._learnModeAuthenticatedKeyPair == undefined) {
 			// Try restoring from cache
-			const privateKey = this.cacheGet<Uint8Array>(
+			const privateKey = this.cacheGet<BytesView>(
 				cacheKeys.controller.privateKey,
 			);
 			if (privateKey) {
@@ -1402,7 +1421,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Ideally we'd use the host bindings used by the driver, but we can't access them in a static method
 
 		const bindings =
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// oxlint-disable-next-line typescript/ban-ts-comment
 			// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
 			(await import("#default_bindings/serial")).serial;
 		if (local && typeof bindings.list === "function") {
@@ -1516,7 +1535,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			serial: this._options.host?.serial
 				?? (await import("#default_bindings/serial")).serial,
 			db: this._options.host?.db
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// oxlint-disable-next-line typescript/ban-ts-comment
 				// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
 				?? (await import("#default_bindings/db")).db,
 			log: this._options.host?.log
@@ -1541,7 +1560,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		const spOpenPromise = createDeferredPromise();
 
 		// Log which version is running
-		this.driverLog.print(libNameString, "info");
+		if (this._options.logConfig?.showLogo !== false) {
+			this.driverLog.print(libNameString, "info");
+		}
 		this.driverLog.print(`version ${libVersion}`, "info");
 		this.driverLog.print("", "info");
 
@@ -1671,9 +1692,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 			// Try to create the cache directory. This can fail, in which case we should expose a good error message
 			try {
-				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				if (this._options.storage.driver) {
-					// eslint-disable-next-line @typescript-eslint/no-deprecated
 					await this._options.storage.driver.ensureDir(this.cacheDir);
 				} else {
 					await this.bindings.fs.ensureDir(this.cacheDir);
@@ -1926,10 +1945,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					this.controller.homeId,
 					this._networkCache,
 					this._valueDB,
-					// eslint-disable-next-line @typescript-eslint/no-deprecated
 					this._options.storage.driver
 						? wrapLegacyFSDriverForCacheMigrationOnly(
-							// eslint-disable-next-line @typescript-eslint/no-deprecated
 							this._options.storage.driver,
 						)
 						: this.bindings.fs,
@@ -2178,11 +2195,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				].map(
 					(sc) => ([
 						sc,
-						this.cacheGet<Uint8Array>(
+						this.cacheGet<BytesView>(
 							cacheKeys.controller.securityKeysLongRange(sc),
 						),
-					] as [SecurityClass, Uint8Array | undefined]),
-				).filter((v): v is [SecurityClass, Uint8Array] =>
+					] as [SecurityClass, BytesView | undefined]),
+				).filter((v): v is [SecurityClass, BytesView] =>
 					v[1] != undefined
 				);
 				if (securityKeysLongRange.length) {
@@ -2222,7 +2239,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					);
 				}
 			} else {
-				const s0Key = this.cacheGet<Uint8Array>(
+				const s0Key = this.cacheGet<BytesView>(
 					cacheKeys.controller.securityKeys(SecurityClass.S0_Legacy),
 				);
 				if (s0Key) {
@@ -2252,11 +2269,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				const securityKeys = securityClassOrder.map(
 					(sc) => ([
 						sc,
-						this.cacheGet<Uint8Array>(
+						this.cacheGet<BytesView>(
 							cacheKeys.controller.securityKeys(sc),
 						),
-					] as [SecurityClass, Uint8Array | undefined]),
-				).filter((v): v is [SecurityClass, Uint8Array] =>
+					] as [SecurityClass, BytesView | undefined]),
+				).filter((v): v is [SecurityClass, BytesView] =>
 					v[1] != undefined
 				);
 				if (securityKeys.length) {
@@ -2334,7 +2351,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// Then do all the nodes in parallel, but prioritize nodes that are more likely to be ready
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Fully-interviewed devices first (need the least amount of communication now)
 						(b.interviewStage - a.interviewStage)
 						// Always listening -> FLiRS -> sleeping
@@ -2409,7 +2426,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				const nodeInterviewOrder = [...this._controller.nodes.values()]
 					.filter((n) => n.id !== this._controller!.ownNodeId)
 					.filter((n) => n.isListening || n.isFrequentListening)
-					.sort((a, b) =>
+					.toSorted((a, b) =>
 						// Always listening -> FLiRS
 						(
 							(b.isListening ? 1 : 0)
@@ -2455,6 +2472,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 */
 	public async interviewNodeInternal(node: ZWaveNode): Promise<void> {
 		if (node.interviewStage === InterviewStage.Complete) {
+			return;
+		}
+
+		if (node.failedS2Bootstrapping) {
+			this.controllerLog.logNode(
+				node.id,
+				"has failed S2 bootstrapping and cannot be interviewed",
+				"warn",
+			);
 			return;
 		}
 
@@ -2843,7 +2869,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	/** @internal */
-	// eslint-disable-next-line @typescript-eslint/require-await
 	public async getUUID(): Promise<string> {
 		// To anonymously identify a network, we create a unique ID and use it to salt the Home ID
 		if (!this._valueDB!.has("uuid")) {
@@ -2928,7 +2953,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		}
 
-		this.cachePurge(cacheKeys.node(node.id)._baseKey);
+		this.cachePurge(
+			cacheKeys.node(node.id)._baseKey,
+			// Preserve the device class though - this is set during the initial inclusion
+			// https://github.com/zwave-js/zwave-js/issues/8346
+			(key) => key === cacheKeys.node(node.id).deviceClass,
+		);
 	}
 
 	/** This is called when a new node has been added to the network */
@@ -2959,6 +2989,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (this.autoRefreshNodeValueTimers.has(node.id)) {
 			this.autoRefreshNodeValueTimers.get(node.id)?.clear();
 			this.autoRefreshNodeValueTimers.delete(node.id);
+		}
+		if (this.requeueTimers.has(node.id)) {
+			for (const timer of this.requeueTimers.get(node.id)!) {
+				timer.clear();
+			}
+			this.requeueTimers.delete(node.id);
 		}
 
 		// purge node values from the DB
@@ -3160,10 +3196,25 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			if (ccArgs.parameters) {
 				if (isUint8Array(ccArgs.parameters)) {
 					msg.parameters = buffer2hex(ccArgs.parameters);
-				} else if (Duration.isDuration(ccArgs.parameters)) {
+				} else if (ccArgs.parameters instanceof Duration) {
 					msg.duration = ccArgs.parameters.toString();
 				} else if (isObject(ccArgs.parameters)) {
-					Object.assign(msg, ccArgs.parameters);
+					// Copy parameters but censor the userCode field if present
+					for (
+						const [key, value] of Object.entries(ccArgs.parameters)
+					) {
+						if (key === "userCode") {
+							// Censor the user code for logging
+							msg[key] =
+								typeof value === "string" || isUint8Array(value)
+									? userCodeToLogString(value)
+									: String(value);
+						} else {
+							msg[key] = isUint8Array(value)
+								? buffer2hex(value)
+								: value;
+						}
+					}
 				}
 			}
 			prefix = "[Notification]";
@@ -3215,7 +3266,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		predicate: (t: Transaction) => boolean,
 	): boolean {
 		// Queue is not an array
-		// eslint-disable-next-line unicorn/prefer-array-some
+		// oxlint-disable-next-line unicorn/prefer-array-some
 		if (!!this.queue.find((t) => predicate(t))) return true;
 		return this.queues.some(
 			(q) => q.currentTransaction && predicate(q.currentTransaction),
@@ -3490,7 +3541,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// This is a bit hacky, but what the heck...
 		if (!this._enteringBootloader) {
 			// Start the watchdog again, unless disabled
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			if (this.options.features.watchdog) {
 				void this._controller?.startWatchdog();
 			}
@@ -3690,7 +3740,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 
 		// Preserve the private key for the authenticated learn mode ECDH key pair
-		const oldPrivateKey = this.cacheGet<Uint8Array>(
+		const oldPrivateKey = this.cacheGet<BytesView>(
 			cacheKeys.controller.privateKey,
 		);
 
@@ -3741,6 +3791,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		try {
 			if (result) await this.destroy();
 		} finally {
+			// oxlint-disable-next-line no-unsafe-finally - We want to return this value in any case
 			return result;
 		}
 	}
@@ -3926,6 +3977,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...this.awaitedMessageHeaders.map((h) => h.timeout),
 				...this.awaitedBootloaderChunks.map((b) => b.timeout),
 				...this.awaitedCLIChunks.map((c) => c.timeout),
+				...[...this.requeueTimers.values()].flatMap(
+					(t) => [...t.values()],
+				),
 			]
 		) {
 			timeout?.clear();
@@ -3991,7 +4045,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 */
 	private async serialport_onData(
 		data:
-			| Uint8Array
+			| BytesView
 			| MessageHeaders.ACK
 			| MessageHeaders.CAN
 			| MessageHeaders.NAK,
@@ -4254,7 +4308,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	/** Handles a decoding error and returns the desired reply to the stick */
 	private handleDecodeError(
 		e: Error,
-		data: Uint8Array,
+		data: BytesView,
 		msg: Message | undefined,
 	): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
@@ -5273,7 +5327,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				}
 
 				// Restart the watchdog unless disabled
-				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				if (this.options.features.watchdog) {
 					await this._controller?.startWatchdog();
 				}
@@ -5593,22 +5646,55 @@ ${handlers.length} left`,
 			const nodeId = msg.getNodeId()!;
 
 			// It could also be that this is the node's response for a CC that we sent, but where the ACK is delayed
-			const currentMessage = this.queue.currentTransaction
-				?.getCurrentMessage();
+			const currentTransaction = this.queue.currentTransaction;
+			const currentMessage = currentTransaction?.getCurrentMessage();
+			const isS2NonceReportSOS =
+				msg.command instanceof Security2CCNonceReport
+				&& msg.command.SOS
+				&& !!msg.command.receiverEI;
+			const isS0NonceReport = msg.command
+				instanceof SecurityCCNonceReport;
+			const isNonceReport = isS0NonceReport || isS2NonceReportSOS;
 			if (
 				currentMessage
-				&& currentMessage.expectsNodeUpdate()
-				&& currentMessage.isExpectedNodeUpdate(msg)
+				&& currentMessage.expectsNodeUpdate(this)
+				&& currentMessage.isExpectedNodeUpdate(this, msg)
 			) {
-				// The message we're currently sending is still in progress but expects this message in response.
-				// Remember the message there.
-				this.controllerLog.logNode(msg.getNodeId()!, {
-					message:
-						`received expected response prematurely, remembering it...`,
-					level: "verbose",
-					direction: "inbound",
-				});
+				// The message we're currently sending is still in progress but expects this message in response,
+				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
+
+				// Due to how the message generators are architected, it is currently not possible to short-circuit
+				// waiting for the transmit report, so we remember the premature response for later processing.
 				currentMessage.prematureNodeUpdate = msg;
+
+				if (isSendData(currentMessage)) {
+					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
+					this.controllerLog.logNode(msg.getNodeId()!, {
+						message:
+							`received expected response prematurely, aborting ongoing transmission...`,
+						level: "verbose",
+						direction: "inbound",
+					});
+
+					void this.abortSendData();
+				}
+
+				// A S0/S2 nonce report is treated like an expected node update,
+				// but it is not considered a valid result of the ongoing transaction.
+				// Calling abortSendData will allow the message generator to continue normally,
+				// eventually resulting in a NoAck transmit report, at which point
+				// simpleMessageGenerator returns the premature nonce report as if it was received
+				// normally.
+
+				// If this is a valid result of the current transaction, abort the
+				// transaction with the received message as the result.
+				// This will short-circuit all the way to the catch block in
+				// Driver.executeTransaction, where prematureNodeUpdate is returned
+				// as the result.
+				if (!isNonceReport) {
+					currentTransaction!.abort(msg);
+				}
+
 				return;
 			}
 
@@ -6087,14 +6173,14 @@ ${handlers.length} left`,
 		) {
 			// The command was received using the highest security class. Return the list of supported CCs
 
-			const implementedCCs = allCCs.filter((cc) =>
-				getImplementedVersion(cc) > 0
+			const implementedCCs = new Set(
+				allCCs.filter((cc) => getImplementedVersion(cc) > 0),
 			);
 
 			// Encapsulation CCs are always supported
 			const implementedEncapsulationCCs = encapsulationCCs.filter(
 				(cc) =>
-					implementedCCs.includes(cc)
+					implementedCCs.has(cc)
 					// A node MUST advertise support for Multi Channel Command Class only if it implements End Points.
 					// A node able to communicate using the Multi Channel encapsulation but implementing no End Point
 					// MUST NOT advertise support for the Multi Channel Command Class.
@@ -6676,6 +6762,13 @@ ${handlers.length} left`,
 						) {
 							// We gave up on this command, so don't retry it
 							throw e;
+						}
+
+						// If we receive a premature node update, we abort the transaction
+						// so we should end up here with transmit status NoACK.
+						// This is expected and intended, so continue with the next message.
+						if (msg.prematureNodeUpdate) {
+							break attemptMessage;
 						}
 
 						if (
@@ -7419,6 +7512,15 @@ ${handlers.length} left`,
 		// Fall back to non-supervised commands
 		const result = await this.sendCommandInternal(command, options);
 
+		// ApplicationStatusCCRejectedRequest is treated like a SupervisionReport with Fail status
+		if (result instanceof ApplicationStatusCCRejectedRequest) {
+			// @ts-expect-error TS doesn't know we've narrowed the return type to match
+			return {
+				status: SupervisionStatus.Fail,
+				remainingDuration: undefined,
+			};
+		}
+
 		// When sending S2 multicast commands to supporting nodes, the singlecast followups
 		// may use supervision. In this case, the multicast message generator returns a
 		// synthetic SupervisionCCReport.
@@ -7483,7 +7585,7 @@ ${handlers.length} left`,
 	}
 
 	/** Sends a raw datagram to the serialport (if that is open) */
-	private async writeSerial(data: Uint8Array): Promise<void> {
+	private async writeSerial(data: BytesView): Promise<void> {
 		return this.serial?.writeAsync(data);
 	}
 
@@ -7670,6 +7772,56 @@ ${handlers.length} left`,
 	}
 
 	/**
+	 * Waits until the driver queues become idle or an optional timeout has elapsed.
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param abortSignal An optional abort signal to cancel the wait
+	 */
+	public waitForIdle(
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			// If the queues are already idle, resolve immediately
+			if (this.queueIdle) {
+				resolve();
+				return;
+			}
+
+			const promise = createDeferredPromise<void>();
+			const entry: AwaitedIdleEntry = {
+				handler: () => promise.resolve(),
+				timeout: undefined,
+			};
+			this.awaitedIdle.push(entry);
+			const removeEntry = () => {
+				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
+				const index = this.awaitedIdle.indexOf(entry);
+				if (index !== -1) this.awaitedIdle.splice(index, 1);
+			};
+			// When the timeout elapses, remove the wait entry and reject the returned Promise
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`The queues did not become idle within the provided timeout!`,
+							ZWaveErrorCodes.Controller_NodeTimeout,
+						),
+					);
+				}, timeout);
+			}
+			// When the promise is resolved, remove the wait entry and resolve the returned Promise
+			void promise.then(() => {
+				removeEntry();
+				resolve();
+			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
+		});
+	}
+
+	/**
 	 * Calls the given handler function every time a CommandClass is received that matches the given predicate.
 	 * @param predicate A predicate function to test all incoming command classes
 	 */
@@ -7838,6 +7990,47 @@ ${handlers.length} left`,
 			errorMsg,
 			errorCode,
 		);
+	}
+
+	/**
+	 * @internal
+	 * Re-queues all pending transactions for a node after a delay
+	 */
+	public async delayTransactionsForNode(
+		nodeId: number,
+		delaySeconds: number,
+	): Promise<void> {
+		const requeue: Transaction[] = [];
+
+		await this.reduceQueues((transaction, source) => {
+			// Only handle transactions for this node that are still queued (not currently active)
+			if (
+				transaction.message.getNodeId() === nodeId
+				&& source === "queue"
+			) {
+				requeue.push(transaction);
+				return { type: "drop" };
+			}
+			return { type: "keep" };
+		});
+
+		if (requeue.length > 0) {
+			if (!this.requeueTimers.has(nodeId)) {
+				this.requeueTimers.set(
+					nodeId,
+					new Set(),
+				);
+			}
+			const timerSet = this.requeueTimers.get(nodeId)!;
+			const timer = setTimer(() => {
+				timerSet.delete(timer);
+				const requeued = requeue.map((t) => t.clone());
+				for (const t of requeued) {
+					this.getQueueForTransaction(t).add(t);
+				}
+			}, delaySeconds * 1000).unref();
+			timerSet.add(timer);
+		}
 	}
 
 	/**
@@ -8041,9 +8234,12 @@ ${handlers.length} left`,
 		return ret;
 	}
 
-	private cachePurge(prefix: string): void {
+	private cachePurge(
+		prefix: string,
+		except?: (key: string) => boolean,
+	): void {
 		for (const key of this.networkCache.keys()) {
-			if (key.startsWith(prefix)) {
+			if (key.startsWith(prefix) && !(except?.(key))) {
 				this.networkCache.delete(key);
 			}
 		}
@@ -8379,7 +8575,7 @@ ${handlers.length} left`,
 	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
 	 */
 	public async firmwareUpdateOTW(
-		data: Uint8Array | FirmwareUpdateInfo,
+		data: BytesView | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
@@ -8444,7 +8640,7 @@ ${handlers.length} left`,
 	 */
 	private async extractOTWUpdateInfo(
 		updateInfo: FirmwareUpdateInfo,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		// Controller updates must have exactly one file
 		if (updateInfo.files?.length !== 1) {
 			throw new ZWaveError(
@@ -8525,7 +8721,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW500(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
 		let turnedRadioOff = false;
@@ -8614,7 +8810,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW700(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
 		let result!: OTWFirmwareUpdateResult;
@@ -8656,7 +8852,7 @@ integrity: ${update.integrity}`;
 	}
 
 	private async firmwareUpdateOTW700Internal(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
 		this._otwFirmwareUpdateInProgress = true;
 
@@ -9176,36 +9372,94 @@ integrity: ${update.integrity}`;
 
 	private pollBackgroundRSSITimer: Timer | undefined;
 	private lastBackgroundRSSITimestamp = 0;
+	private hfBackgroundRSSIEndTimestamp = 0;
 
 	private handleQueueIdleChange(idle: boolean): void {
+		// Resolve all awaited idle promises when the queue becomes idle
+		if (idle) {
+			for (const entry of this.awaitedIdle) {
+				entry.handler();
+			}
+		}
+
 		if (!this.ready) return;
 		if (
 			this.controller.isFunctionSupported(FunctionType.GetBackgroundRSSI)
 		) {
 			// When the send thread stays idle for 5 seconds, poll the background RSSI, but at most every 30s
 			if (idle) {
-				const timeout = Math.max(
-					// Wait at least 5s
-					5000,
-					// and up to 30s if we recently queried the RSSI
-					30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
-				);
-				this.pollBackgroundRSSITimer = setTimer(async () => {
-					// Due to the timeout, the driver might have been destroyed in the meantime
-					if (!this.ready) return;
-
-					this.lastBackgroundRSSITimestamp = Date.now();
-					try {
-						await this.controller.getBackgroundRSSI();
-					} catch {
-						// ignore errors
-					}
-				}, timeout).unref();
+				this.setBackgroundRSSITimer();
 			} else {
-				this.pollBackgroundRSSITimer?.clear();
-				this.pollBackgroundRSSITimer = undefined;
+				this.clearBackgroundRSSITimer();
 			}
 		}
+	}
+
+	private setBackgroundRSSITimer(): void {
+		let timeout: number;
+		if (Date.now() < this.hfBackgroundRSSIEndTimestamp) {
+			// During high-frequency measurement periods, poll every 2s
+			timeout = Math.max(
+				2000,
+				2000 - (Date.now() - this.lastBackgroundRSSITimestamp),
+			);
+		} else {
+			timeout = Math.max(
+				// Wait at least 5s
+				5000,
+				// and up to 30s if we recently queried the RSSI
+				30_000 - (Date.now() - this.lastBackgroundRSSITimestamp),
+			);
+		}
+		this.pollBackgroundRSSITimer = setTimer(async () => {
+			// Due to the timeout, the driver might have been destroyed in the meantime
+			if (!this.ready) return;
+
+			this.lastBackgroundRSSITimestamp = Date.now();
+			try {
+				await this.controller.getBackgroundRSSI();
+			} catch {
+				// ignore errors
+			}
+		}, timeout).unref();
+	}
+
+	private clearBackgroundRSSITimer(): void {
+		this.pollBackgroundRSSITimer?.clear();
+		this.pollBackgroundRSSITimer = undefined;
+	}
+
+	/** Enable frequent RSSI monitoring for the given amount of milliseconds. During this time, the background RSSI will be measured every 2 seconds. */
+	public enableFrequentRSSIMonitoring(
+		durationMs: number,
+	): void {
+		if (durationMs < 10000 || durationMs > 3600 * 1000) {
+			throw new ZWaveError(
+				`The duration must be between 10 seconds and one hour!`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		this.hfBackgroundRSSIEndTimestamp = Date.now() + durationMs;
+		// Restart a running timer to poll as soon as possible
+		if (this.pollBackgroundRSSITimer) {
+			this.clearBackgroundRSSITimer();
+			this.setBackgroundRSSITimer();
+		}
+	}
+
+	/** Disable frequent RSSI monitoring */
+	public disableFrequentRSSIMonitoring(): void {
+		this.hfBackgroundRSSIEndTimestamp = 0;
+		// Restart a running timer to lower the polling frequency
+		if (this.pollBackgroundRSSITimer) {
+			this.clearBackgroundRSSITimer();
+			this.setBackgroundRSSITimer();
+		}
+	}
+
+	public get isFrequentRSSIMonitoringEnabled(): boolean {
+		return Date.now() < this.hfBackgroundRSSIEndTimestamp;
 	}
 
 	private _powerlevelTestNodeContext: {

@@ -184,6 +184,40 @@
 			"#": "30",
 			"$if": "firmwareVersion >= 10.20 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
 			"$import": "templates/zooz_template.json#local_dimming_speed_group_3_and_4"
+		},
+		{
+			"#": "31",
+			"$if": "firmwareVersion >= 4.50 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#enable_scene_control_3way"
+		},
+		{
+			"#": "33",
+			"$if": "firmwareVersion >= 4.50 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#on_off_switch_mode"
+		},
+		{
+			"#": "34",
+			"$if": "firmwareVersion >= 4.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#custom_brightness",
+			"label": "Custom Brightness Level (Z-Wave Control)"
+		},
+		{
+			"#": "35",
+			"$if": "firmwareVersion >= 4.70 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
+		},
+		{
+			"#": "36",
+			"$if": "firmwareVersion >= 4.70 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#gamma_factor"
+		},
+		{
+			"#": "37",
+			"$if": "firmwareVersion >= 4.70 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_multi_color"
 		}
 	],
 	"compat": {

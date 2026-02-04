@@ -39,7 +39,7 @@
 			"label": "User Slot Bit Field",
 			"valueSize": 4,
 			"minValue": 0,
-			"maxValue": 0,
+			"maxValue": 536870912, // 30 codes
 			"readOnly": true
 		},
 		{

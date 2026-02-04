@@ -30,7 +30,6 @@ import { Bytes } from "@zwave-js/shared";
 @priority(MessagePriority.Controller)
 export class GetSerialApiInitDataRequest extends Message {}
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface GetSerialApiInitDataResponseOptions
 	extends SerialApiInitData
 {}

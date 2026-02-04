@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -50,6 +49,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { IndicatorCommand, type IndicatorTimeout } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 function isManufacturerDefinedIndicator(indicatorId: number): boolean {
 	return indicatorId >= 0x80 && indicatorId <= 0x9f;
@@ -170,7 +170,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"valueV2",
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		(indicatorId: number, propertyId: number) => indicatorId,
 		(indicatorId: number, propertyId: number) => propertyId,
 		({ property, propertyKey }) =>
@@ -189,7 +189,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	...V.dynamicPropertyAndKeyWithName(
 		"timeout",
 		(indicatorId: number) => indicatorId,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		(indicatorId: number) => "timeout",
 		({ property, propertyKey }) =>
 			typeof property === "number" && propertyKey === "timeout",
@@ -1080,16 +1080,14 @@ export class IndicatorCCSet extends IndicatorCC {
 			message["indicator 0 value"] = this.indicator0Value;
 		}
 		if (this.values != undefined) {
-			message.values = `${
-				this.values
-					.map(
-						(v) => `
+			message.values = this.values
+				.map(
+					(v) => `
 · indicatorId: ${v.indicatorId}
   propertyId:  ${v.propertyId}
   value:       ${v.value}`,
-					)
-					.join("")
-			}`;
+				)
+				.join("");
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -1339,16 +1337,14 @@ export class IndicatorCCReport extends IndicatorCC {
 			message["indicator 0 value"] = this.indicator0Value;
 		}
 		if (this.values != undefined) {
-			message.values = `${
-				this.values
-					.map(
-						(v) => `
+			message.values = this.values
+				.map(
+					(v) => `
 · indicatorId: ${v.indicatorId}
   propertyId:  ${v.propertyId}
   value:       ${v.value}`,
-					)
-					.join("")
-			}`;
+				)
+				.join("");
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -1475,11 +1471,11 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 			? encodeBitMask(this.supportedProperties, undefined, 0)
 			: new Bytes();
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.indicatorId,
 				this.nextIndicatorId,
 				bitmask.length,
-			]),
+			],
 			bitmask,
 		]);
 
@@ -1491,15 +1487,13 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 			...super.toLogEntry(ctx),
 			message: {
 				indicator: getIndicatorName(this.indicatorId),
-				"supported properties": `${
-					this.supportedProperties
-						.map(
-							(id) =>
-								getIndicatorProperty(id)?.label
-									?? `Unknown (${num2hex(id)})`,
-						)
-						.join(", ")
-				}`,
+				"supported properties": this.supportedProperties
+					.map(
+						(id) =>
+							getIndicatorProperty(id)?.label
+								?? `Unknown (${num2hex(id)})`,
+					)
+					.join(", "),
 				"next indicator": getIndicatorName(this.nextIndicatorId),
 			},
 		};
@@ -1617,7 +1611,7 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const description = Bytes.from(this.description, "utf8");
 		this.payload = Bytes.concat([
-			Bytes.from([this.indicatorId, description.length]),
+			[this.indicatorId, description.length],
 			description,
 		]);
 		return super.serialize(ctx);

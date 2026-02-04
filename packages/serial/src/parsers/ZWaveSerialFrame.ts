@@ -1,4 +1,4 @@
-import type { Bytes } from "@zwave-js/shared";
+import type { Bytes, BytesView } from "@zwave-js/shared";
 import type {
 	MessageHeaders,
 	XModemMessageHeaders,
@@ -22,7 +22,7 @@ export type ZWaveSerialFrame = {
 	data: CLIChunk;
 } | {
 	type: ZWaveSerialFrameType.Discarded;
-	data: Uint8Array;
+	data: BytesView;
 };
 
 export type SerialAPIChunk =

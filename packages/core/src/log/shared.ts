@@ -13,7 +13,7 @@ export const channelPadding = " ".repeat(7); // 6 chars channel name, 1 space
 
 export type DataDirection = "inbound" | "outbound" | "none";
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+// oxlint-disable-next-line typescript/explicit-module-boundary-types
 export function getDirectionPrefix(direction: DataDirection) {
 	return direction === "inbound"
 		? "« "
@@ -155,6 +155,8 @@ export interface LogConfig {
 	nodeFilter?: number[];
 	filename: string;
 	forceConsole: boolean;
+	showLogo?: boolean;
+	raw?: boolean;
 }
 
 /** @internal */

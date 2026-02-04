@@ -1,4 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import type { BytesView } from "@zwave-js/shared";
 import fs, { type FileHandle } from "node:fs/promises";
 import { NVMAccess, type NVMIO } from "../common/definitions.js";
 
@@ -58,7 +59,7 @@ export class NVMFileIO implements NVMIO {
 	async read(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		if (this._handle == undefined) {
 			throw new ZWaveError(
 				"The NVM file is not open",
@@ -79,7 +80,7 @@ export class NVMFileIO implements NVMIO {
 
 	async write(
 		offset: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<{ bytesWritten: number; endOfFile: boolean }> {
 		if (this._handle == undefined) {
 			throw new ZWaveError(

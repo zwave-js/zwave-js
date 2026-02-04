@@ -28,6 +28,7 @@
   - [Command Classes](api/CCs/index.md)
 
     - [Alarm Sensor CC](api/CCs/AlarmSensor.md)
+    - [Application Status CC](api/CCs/ApplicationStatus.md)
     - [Association CC](api/CCs/Association.md)
     - [Association Group Information CC](api/CCs/AssociationGroupInfo.md)
     - [Barrier Operator CC](api/CCs/BarrierOperator.md)
@@ -109,6 +110,7 @@
 
   - [Overview](config-files/overview.md)
   - [File format](config-files/file-format.md)
+  - [Hidden parameters](config-files/hidden-parameters.md)
   - [Contributing device files](config-files/contributing-files.md)
   - [Importing files from other sources](config-files/importing-from-others.md)
   <!-- - [Using telemetry data](config-files/using-telemetry-data.md) -->

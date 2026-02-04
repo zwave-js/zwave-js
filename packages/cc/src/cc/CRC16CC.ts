@@ -2,9 +2,12 @@ import {
 	CRC16_CCITT,
 	CommandClasses,
 	EncapsulationFlags,
+	type GetNode,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
+	type NodeId,
+	type SupportsCC,
 	type WithAddress,
 	validatePayload,
 } from "@zwave-js/core";
@@ -18,9 +21,9 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import { Bytes } from "@zwave-js/shared";
 import { CRC16Command } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 const headerBuffer = Bytes.from([
 	CommandClasses["CRC-16 Encapsulation"],
@@ -96,9 +99,10 @@ export interface CRC16CCCommandEncapsulationOptions {
 }
 
 function getCCResponseForCommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: CRC16CCCommandEncapsulation,
 ) {
-	if (sent.encapsulated?.expectsCCResponse()) {
+	if (sent.encapsulated?.expectsCCResponse(ctx)) {
 		return CRC16CCCommandEncapsulation;
 	}
 }

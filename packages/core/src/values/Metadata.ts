@@ -1,6 +1,7 @@
 import { getEnumMemberName } from "@zwave-js/shared";
 import type { Duration } from "./Duration.js";
 import { IntegerLimits } from "./Primitive.js";
+import type { Timeout } from "./Timeout.js";
 
 const isIntegerRegex = /^\d+$/;
 
@@ -34,6 +35,7 @@ export type ValueType =
 	| "boolean[]"
 	| "string[]"
 	| "duration"
+	| "timeout"
 	| "color"
 	| "buffer"
 	| "any";
@@ -151,6 +153,13 @@ export interface ValueMetadataDuration extends ValueMetadataAny {
 
 const defineDuration = define<ValueMetadataDuration>();
 
+export interface ValueMetadataTimeout extends ValueMetadataAny {
+	type: "timeout";
+	default?: Timeout;
+}
+
+const defineTimeout = define<ValueMetadataTimeout>();
+
 /**
  * Defines how a configuration value is encoded
  */
@@ -164,11 +173,25 @@ export enum ConfigValueFormat {
 /** @publicAPI */
 export type ConfigValue = number;
 
+export type ConfigValueSingle = {
+	value: number;
+};
+
+export type ConfigValueRange = {
+	from: number;
+	to: number;
+	step?: number;
+};
+
+export type AllowedConfigValue = ConfigValueSingle | ConfigValueRange;
+
 export interface ConfigurationMetadata extends ValueMetadataAny {
 	// readable and writeable are inherited from ValueMetadataAny
+	allowed?: readonly AllowedConfigValue[];
 	min?: ConfigValue;
 	max?: ConfigValue;
 	default?: ConfigValue;
+	recommended?: ConfigValue;
 	unit?: string;
 	valueSize?: number;
 	format?: ConfigValueFormat;
@@ -179,6 +202,7 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
 	states?: Record<number, string>;
 	allowManualEntry?: boolean;
 	isFromConfig?: boolean;
+	destructive?: boolean;
 }
 
 export type ValueMetadata =
@@ -578,6 +602,30 @@ const WriteOnlyDuration = defineDuration(
 	} as const,
 );
 
+/** A timeout value */
+const _Timeout = defineTimeout(
+	{
+		..._default,
+		type: "timeout",
+	} as const,
+);
+
+/** A timeout value (readonly) */
+const ReadOnlyTimeout = defineTimeout(
+	{
+		..._Timeout,
+		..._readonly,
+	} as const,
+);
+
+/** A timeout value (writeonly) */
+const WriteOnlyTimeout = defineTimeout(
+	{
+		..._Timeout,
+		..._writeonly,
+	} as const,
+);
+
 /** A buffer */
 const _Buffer = defineBuffer(
 	{
@@ -701,6 +749,13 @@ export const ValueMetadata = {
 	ReadOnlyDuration: Object.freeze(ReadOnlyDuration),
 	/** A duration value (writeonly) */
 	WriteOnlyDuration: Object.freeze(WriteOnlyDuration),
+
+	/** A timeout value */
+	Timeout: Object.freeze(_Timeout),
+	/** A timeout value (readonly) */
+	ReadOnlyTimeout: Object.freeze(ReadOnlyTimeout),
+	/** A timeout value (writeonly) */
+	WriteOnlyTimeout: Object.freeze(WriteOnlyTimeout),
 
 	/** A buffer */
 	Buffer: Object.freeze(_Buffer),

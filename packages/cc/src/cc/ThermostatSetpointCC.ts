@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -54,6 +53,7 @@ import {
 	ThermostatSetpointCommand,
 	ThermostatSetpointType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // This array is used to map the advertised supported types (interpretation A)
 // to the actual enum values
@@ -258,7 +258,7 @@ export class ThermostatSetpointCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCapabilities(setpointType: ThermostatSetpointType) {
 		this.assertSupportsCommand(
 			ThermostatSetpointCommand,
@@ -586,7 +586,7 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 		const override = ctx.getDeviceConfig?.(this.nodeId as number)
 			?.compat?.overrideFloatEncoding;
 		this.payload = Bytes.concat([
-			Bytes.from([this.setpointType & 0b1111]),
+			[this.setpointType & 0b1111],
 			encodeFloatWithScale(this.value, this.scale, override),
 		]);
 		return super.serialize(ctx);
@@ -691,7 +691,7 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.type & 0b1111]),
+			[this.type & 0b1111],
 			encodeFloatWithScale(this.value, this.scale),
 		]);
 		return super.serialize(ctx);
@@ -847,7 +847,7 @@ export class ThermostatSetpointCCCapabilitiesReport
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const min = encodeFloatWithScale(this.minValue, this.minValueScale);
 		const max = encodeFloatWithScale(this.maxValue, this.maxValueScale);
-		this.payload = Bytes.concat([Bytes.from([this.type]), min, max]);
+		this.payload = Bytes.concat([[this.type], min, max]);
 		return super.serialize(ctx);
 	}
 

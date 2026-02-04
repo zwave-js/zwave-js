@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -41,6 +40,7 @@ import {
 	type EnergyProductionScale,
 	getEnergyProductionScale,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const EnergyProductionCCValues = V.defineCCValues(
 	CommandClasses["Energy Production"],
@@ -245,7 +245,7 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.parameter]),
+			[this.parameter],
 			encodeFloatWithScale(this.value, this.scale.key),
 		]);
 		return super.serialize(ctx);

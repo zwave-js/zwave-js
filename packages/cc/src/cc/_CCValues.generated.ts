@@ -19,7 +19,7 @@ import {
 	windowCoveringParameterToLevelChangeLabel,
 	windowCoveringParameterToMetadataStates,
 } from "../lib/CCValueUtils.js";
-import type { CCValueOptions } from "../lib/Values.js";
+import { type CCValueOptions } from "../lib/Values.js";
 import {
 	AlarmSensorType,
 	BarrierState,
@@ -7303,7 +7303,7 @@ export const ProtectionCCValues = Object.freeze({
 		},
 		get meta() {
 			return {
-				...ValueMetadata.UInt8,
+				...ValueMetadata.Timeout,
 				label: "RF protection timeout",
 			} as const;
 		},

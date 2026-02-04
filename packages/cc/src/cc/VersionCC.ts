@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -18,7 +17,13 @@ import {
 	securityClassOrder,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	getEnumMemberName,
+	num2hex,
+	pick,
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -38,6 +43,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { VersionCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const VersionCCValues = V.defineCCValues(CommandClasses.Version, {
 	...V.staticProperty(
@@ -188,7 +194,7 @@ export const VersionCCValues = V.defineCCValues(CommandClasses.Version, {
 	),
 });
 
-function parseVersion(buffer: Uint8Array): string {
+function parseVersion(buffer: BytesView): string {
 	if (buffer[0] === 0 && buffer[1] === 0 && buffer[2] === 0) return "unused";
 	return `${buffer[0]}.${buffer[1]}.${buffer[2]}`;
 }
@@ -221,7 +227,7 @@ export class VersionCCAPI extends PhysicalCCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(VersionCommand, VersionCommand.Get);
 
@@ -320,7 +326,7 @@ export class VersionCCAPI extends PhysicalCCAPI {
 		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCapabilities() {
 		this.assertSupportsCommand(
 			VersionCommand,
@@ -357,7 +363,7 @@ export class VersionCCAPI extends PhysicalCCAPI {
 		await this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getZWaveSoftware() {
 		this.assertSupportsCommand(
 			VersionCommand,

@@ -73,6 +73,7 @@ import {
 } from "@zwave-js/serial";
 import {
 	Bytes,
+	type BytesView,
 	TypedEventTarget,
 	getEnumMemberName,
 	getErrorMessage,
@@ -124,8 +125,8 @@ const logo: string = `
 export interface ZnifferEventCallbacks {
 	ready: () => void;
 	error: (err: Error) => void;
-	frame: (frame: Frame, rawData: Uint8Array) => void;
-	"corrupted frame": (err: CorruptedFrame, rawData: Uint8Array) => void;
+	frame: (frame: Frame, rawData: BytesView) => void;
+	"corrupted frame": (err: CorruptedFrame, rawData: BytesView) => void;
 }
 
 export type ZnifferEvents = Extract<keyof ZnifferEventCallbacks, string>;
@@ -211,14 +212,14 @@ function tryConvertRSSI(
 
 export interface CapturedData {
 	timestamp: Date;
-	rawData: Uint8Array;
-	frameData: Uint8Array;
+	rawData: BytesView;
+	frameData: BytesView;
 	parsedFrame?: Frame | CorruptedFrame;
 }
 
 export interface CapturedFrame {
 	timestamp: Date;
-	frameData: Uint8Array;
+	frameData: BytesView;
 	parsedFrame: Frame | CorruptedFrame;
 }
 
@@ -226,7 +227,6 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 	public constructor(
 		private port:
 			| string
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			| ZWaveSerialPortImplementation
 			| ZWaveSerialBindingFactory,
 		options: ZnifferOptions = {},
@@ -635,7 +635,7 @@ supported frequencies: ${
 	 * Is called when the serial port has received a Zniffer frame
 	 */
 	private async serialport_onData(
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<void> {
 		let msg: ZnifferMessage | undefined;
 		let bytesRead: number;
@@ -1049,7 +1049,7 @@ supported frequencies: ${
 	 */
 	public getCaptureAsZLFBuffer(
 		frameFilter?: (frame: CapturedFrame) => boolean,
-	): Uint8Array {
+	): BytesView {
 		// Mimics the current Zniffer software, without using features like sessions and comments
 		const header = new Bytes(2048).fill(0);
 		header[0] = 0x68; // zniffer version
@@ -1127,7 +1127,7 @@ supported frequencies: ${
 	/**
 	 * Load captured frames from a buffer
 	 */
-	public async loadCaptureFromBuffer(buffer: Uint8Array): Promise<void> {
+	public async loadCaptureFromBuffer(buffer: BytesView): Promise<void> {
 		// Parse and validate header
 		let { bytesRead: offset } = parseZLFHeader(buffer);
 
@@ -1178,7 +1178,7 @@ supported frequencies: ${
 						`Failed to parse entry #${index} at offset ${
 							num2hex(offset - bytesRead)
 						}:`,
-						getErrorMessage(e),
+						getErrorMessage(e, true),
 					);
 				}
 				index++;

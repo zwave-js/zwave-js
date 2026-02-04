@@ -1,4 +1,5 @@
 import {
+	type MaybeNotKnown,
 	type NodeId,
 	ProtocolDataRate,
 	type RSSI,
@@ -27,6 +28,13 @@ export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
 				protocolDataRate: ProtocolDataRate.LongRange_100k,
 				repeaters: [],
 			};
+		}
+
+		// lastSeen may already be known from the cache
+		const lastSeen =
+			(this as unknown as { lastSeen: MaybeNotKnown<Date> }).lastSeen;
+		if (lastSeen) {
+			stats.lastSeen = lastSeen;
 		}
 
 		return stats;

@@ -75,6 +75,16 @@ export class Endpoint
 		// Add optional CCs
 		if (supportedCCs != undefined) {
 			for (const cc of supportedCCs) {
+				if (cc === CommandClasses.Basic) {
+					// This codepath is only taken when we construct
+					// a node instance with info from a NIF.
+					//
+					// Basic CC MUST not be in the NIF. If it is anyways, we ignore it.
+					// If we blindly add it here as supported, it will always be exposed.
+					//
+					// Whether or not it should be exposed is determined at a later stage.
+					continue;
+				}
 				this.addCC(cc, { isSupported: true });
 			}
 		}
@@ -211,6 +221,21 @@ export class Endpoint
 		if (!removedEndpoints) return false;
 
 		return removedEndpoints == "*" || removedEndpoints.includes(this.index);
+	}
+
+	/**
+	 * Determines if support for a CC was force-added via config file. */
+	public wasCCSupportAddedViaConfig(cc: CommandClasses): boolean {
+		const compatConfig = this.tryGetNode()?.deviceConfig?.compat;
+		if (!compatConfig) return false;
+
+		const addedCC = compatConfig.addCCs?.get(cc);
+		if (!addedCC) return false;
+
+		const endpointInfo = addedCC.endpoints.get(this.index);
+		if (!endpointInfo) return false;
+
+		return endpointInfo.isSupported === true;
 	}
 
 	/**

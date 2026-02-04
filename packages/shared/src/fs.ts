@@ -1,6 +1,6 @@
 import type { ReadableWritablePair } from "node:stream/web";
 import path from "pathe";
-import { Bytes } from "./Bytes.js";
+import { Bytes, type BytesView } from "./Bytes.js";
 import type {
 	CopyFile,
 	FileHandle,
@@ -95,8 +95,8 @@ export async function pathExists(
 
 export function fileHandleToWritableStream(
 	handle: Omit<FileHandle, "readable" | "writable">,
-): WritableStream<Uint8Array> {
-	return new WritableStream<Uint8Array>({
+): WritableStream<BytesView> {
+	return new WritableStream<BytesView>({
 		async write(chunk) {
 			while (chunk.length > 0) {
 				const { bytesWritten } = await handle.write(chunk);
@@ -108,8 +108,8 @@ export function fileHandleToWritableStream(
 
 export function fileHandleToReadableStream(
 	handle: Omit<FileHandle, "readable" | "writable">,
-): ReadableStream<Uint8Array> {
-	return new ReadableStream<Uint8Array>({
+): ReadableStream<BytesView> {
+	return new ReadableStream<BytesView>({
 		async pull(controller) {
 			const { data } = await handle.read(null, 16 * 1024);
 			controller.enqueue(data);
@@ -119,7 +119,7 @@ export function fileHandleToReadableStream(
 
 export function fileHandleToStreams(
 	handle: Omit<FileHandle, "readable" | "writable">,
-): ReadableWritablePair<Uint8Array, Uint8Array> {
+): ReadableWritablePair<BytesView, BytesView> {
 	return {
 		readable: fileHandleToReadableStream(handle),
 		writable: fileHandleToWritableStream(handle),

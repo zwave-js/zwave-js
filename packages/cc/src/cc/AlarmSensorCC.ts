@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -35,6 +34,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { AlarmSensorCommand, AlarmSensorType } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const AlarmSensorCCValues = V.defineCCValues(
 	CommandClasses["Alarm Sensor"],
@@ -123,7 +123,7 @@ export class AlarmSensorCCAPI extends PhysicalCCAPI {
 	 * @param sensorType The (optional) sensor type to retrieve the value for
 	 */
 	@validateArgs({ strictEnums: true })
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(sensorType?: AlarmSensorType) {
 		this.assertSupportsCommand(AlarmSensorCommand, AlarmSensorCommand.Get);
 
@@ -139,7 +139,7 @@ export class AlarmSensorCCAPI extends PhysicalCCAPI {
 		if (response) return pick(response, ["state", "severity", "duration"]);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSupportedSensorTypes() {
 		this.assertSupportsCommand(
 			AlarmSensorCommand,

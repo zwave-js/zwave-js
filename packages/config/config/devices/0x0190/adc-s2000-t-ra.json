@@ -21,8 +21,9 @@
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 10,
-			"maxValue": 32767,
-			"defaultValue": 32768
+			"maxValue": 32768,
+			"defaultValue": 32768,
+			"unsigned": true
 		},
 		{
 			"#": "2",

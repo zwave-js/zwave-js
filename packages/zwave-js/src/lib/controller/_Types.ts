@@ -23,7 +23,8 @@ export interface FirmwareUpdateFileInfo {
 
 /** The information sent to the firmware update service to identify which updates are available for a device. */
 export type FirmwareUpdateDeviceID = Expand<
-	DeviceID & {
+	// The firmware update service does not support SDK version
+	Omit<DeviceID, "sdkVersion"> & {
 		firmwareVersion: string;
 		rfRegion?: RFRegion;
 	}

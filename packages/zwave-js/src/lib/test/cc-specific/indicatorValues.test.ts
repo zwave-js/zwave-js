@@ -53,7 +53,7 @@ integrationTest(
 					"propertyName",
 					"propertyKeyName",
 				]);
-			}).sort((a, b) => {
+			}).toSorted((a, b) => {
 				let result = (a.propertyName ?? "").localeCompare(
 					b.propertyName ?? "",
 				);

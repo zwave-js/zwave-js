@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -37,6 +36,7 @@ import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
+	type RefreshValuesContext,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -54,6 +54,7 @@ import {
 	WindowCoveringCommand,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const WindowCoveringCCValues = V.defineCCValues(
 	CommandClasses["Window Covering"],
@@ -431,7 +432,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 	}
 
 	@validateArgs({ strictEnums: true })
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(parameter: WindowCoveringParameter) {
 		this.assertSupportsCommand(
 			WindowCoveringCommand,
@@ -589,26 +590,50 @@ ${
 					ctx,
 					WindowCoveringCCValues.levelChangeDown(param),
 				);
-
-				// And for the odd parameters (with position support), query the position
-				if (param % 2 === 1) {
-					ctx.logNode(node.id, {
-						endpoint: this.endpointIndex,
-						message: `querying position for parameter ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								param,
-							)
-						}...`,
-						direction: "outbound",
-					});
-					await api.get(param);
-				}
 			}
+
+			// Query current values for all supported parameters
+			await this.refreshValues(ctx);
 		}
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+	): Promise<void> {
+		const node = this.getNode(ctx)!;
+		const endpoint = this.getEndpoint(ctx)!;
+		const api = CCAPI.create(
+			CommandClasses["Window Covering"],
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+		});
+
+		const parameters: number[] = this.getValue(
+			ctx,
+			WindowCoveringCCValues.supportedParameters,
+		) ?? [];
+
+		for (const param of parameters) {
+			// Only query odd parameters (with position support)
+			if (param % 2 == 0) continue;
+
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message: `querying position for parameter ${
+					getEnumMemberName(
+						WindowCoveringParameter,
+						param,
+					)
+				}...`,
+				direction: "outbound",
+			});
+			await api.get(param);
+		}
 	}
 
 	public translatePropertyKey(
@@ -672,7 +697,7 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 		const numBitmaskBytes = bitmask.length & 0b1111;
 
 		this.payload = Bytes.concat([
-			Bytes.from([numBitmaskBytes]),
+			[numBitmaskBytes],
 			bitmask.subarray(0, numBitmaskBytes),
 		]);
 
@@ -761,12 +786,19 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 	}
 
 	public readonly parameter: WindowCoveringParameter;
-
 	public readonly currentValue: number;
-
 	public readonly targetValue: number;
-
 	public readonly duration: Duration;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.parameter,
+			this.currentValue,
+			this.targetValue,
+			this.duration.serializeReport(),
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {

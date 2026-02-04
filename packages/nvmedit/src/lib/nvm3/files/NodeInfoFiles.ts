@@ -11,7 +11,7 @@ import {
 	parseBitMask,
 	parseNodeProtocolInfo,
 } from "@zwave-js/core";
-import { Bytes, pick } from "@zwave-js/shared";
+import { Bytes, type BytesView, pick } from "@zwave-js/shared";
 import type { NVM3Object } from "../object.js";
 import {
 	NVMFile,
@@ -41,7 +41,7 @@ export interface NodeInfo
 
 function parseNodeInfo(
 	nodeId: number,
-	buffer: Uint8Array,
+	buffer: BytesView,
 	offset: number,
 ): NodeInfo {
 	const { hasSpecificDeviceClass, ...protocolInfo } = parseNodeProtocolInfo(
@@ -104,7 +104,7 @@ export interface LRNodeInfo
 
 function parseLRNodeInfo(
 	nodeId: number,
-	buffer: Uint8Array,
+	buffer: BytesView,
 	offset: number,
 ): LRNodeInfo {
 	// The node info in LR NVM files is packed:
@@ -162,7 +162,7 @@ function parseLRNodeInfo(
 	};
 }
 
-function encodeLRNodeInfo(nodeInfo: LRNodeInfo): Uint8Array {
+function encodeLRNodeInfo(nodeInfo: LRNodeInfo): BytesView {
 	const ret = new Bytes(LR_NODEINFO_SIZE);
 
 	let capability = 0;
@@ -221,7 +221,7 @@ export class NodeInfoFileV0 extends NVMFile {
 		return super.serialize();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public toJSON() {
 		return {
 			...super.toJSON(),
@@ -303,7 +303,7 @@ export class NodeInfoFileV1 extends NVMFile {
 		return super.serialize();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public toJSON() {
 		return {
 			...super.toJSON(),
@@ -387,7 +387,7 @@ export class LRNodeInfoFileV5 extends NVMFile {
 		return super.serialize();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public toJSON() {
 		return {
 			...super.toJSON(),

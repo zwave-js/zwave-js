@@ -14,6 +14,14 @@ import {
 	uint8ArrayToString,
 } from "./uint8array-extras.js";
 
+/**
+ * A non-shared Uint8Array. This type alias is used where Uint8Array is normally used,
+ * to avoid having to put `<ArrayBuffer>` everywhere in the codebase.
+ *
+ * This should mostly be considered readonly.
+ */
+export type BytesView = Uint8Array<ArrayBuffer>;
+
 /** An almost drop-in replacement for the Node.js Buffer class that's compatible with the native Uint8Array */
 // See https://sindresorhus.com/blog/goodbye-nodejs-buffer for background
 export class Bytes extends Uint8Array {
@@ -30,13 +38,13 @@ export class Bytes extends Uint8Array {
 	Tip: If you want a copy, just call `.slice()` on the return value.
 	*/
 	public static view(
-		value: TypedArray | ArrayBuffer | DataView,
+		value: TypedArray | ArrayBuffer | ArrayBufferLike | DataView,
 	): Bytes {
 		if (value instanceof ArrayBuffer) {
 			return new this(value);
 		}
 
-		if (ArrayBuffer.isView(value)) {
+		if (ArrayBuffer.isView(value) && value.buffer instanceof ArrayBuffer) {
 			return new this(value.buffer, value.byteOffset, value.byteLength);
 		}
 

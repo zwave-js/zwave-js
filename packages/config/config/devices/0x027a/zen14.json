@@ -57,7 +57,34 @@
 		},
 		{
 			"#": "6",
-			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+			"label": "State After Power Failure",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 0
+				},
+				{
+					"label": "Always on",
+					"value": 1
+				},
+				{
+					"label": "Previous state",
+					"value": 2
+				},
+				{
+					"$if": "firmwareVersion >= 2.20",
+					"label": "Outlet 1 always on, outlet 2 always off",
+					"value": 3
+				},
+				{
+					"$if": "firmwareVersion >= 2.20",
+					"label": "Outlet 1 always off, outlet 2 always on",
+					"value": 4
+				}
+			]
 		},
 
 		{

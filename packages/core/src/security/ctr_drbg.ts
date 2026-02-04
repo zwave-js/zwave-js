@@ -3,6 +3,7 @@
 
 // The used crypto primitives are async, so the methods in this implementation are async as well
 
+import type { BytesView } from "@zwave-js/shared";
 import { encryptAES128ECB } from "../crypto/index.js";
 import { increment, xor } from "../crypto/shared.js";
 
@@ -18,18 +19,18 @@ export class CtrDRBG {
 	private v = new Uint8Array(BLOCK_LEN);
 	// Reseed counter is not used
 
-	public saveState(): { key: Uint8Array; v: Uint8Array } {
+	public saveState(): { key: BytesView; v: BytesView } {
 		return { key: Uint8Array.from(this.key), v: Uint8Array.from(this.v) };
 	}
 
-	public restoreState(state: { key: Uint8Array; v: Uint8Array }): void {
+	public restoreState(state: { key: BytesView; v: BytesView }): void {
 		this.key = state.key;
 		this.v = state.v;
 	}
 
 	public async init(
-		entropy: Uint8Array,
-		personalizationString?: Uint8Array,
+		entropy: BytesView,
+		personalizationString?: BytesView,
 	): Promise<void> {
 		if (entropy.length !== SEED_LEN) {
 			throw new Error(`entropy must be ${SEED_LEN} bytes long`);
@@ -47,7 +48,7 @@ export class CtrDRBG {
 		await this.update(entropy);
 	}
 
-	public async update(providedData: Uint8Array | undefined): Promise<void> {
+	public async update(providedData: BytesView | undefined): Promise<void> {
 		if (providedData && providedData.length !== SEED_LEN) {
 			throw new Error(`providedData must be ${SEED_LEN} bytes long`);
 		}
@@ -71,7 +72,7 @@ export class CtrDRBG {
 		this.v = temp.subarray(KEY_LEN);
 	}
 
-	public async generate(len: number): Promise<Uint8Array> {
+	public async generate(len: number): Promise<BytesView> {
 		// Additional input is not used
 		const temp = new Uint8Array(Math.ceil(len / BLOCK_LEN) * BLOCK_LEN);
 		let tempOffset = 0;
@@ -88,7 +89,7 @@ export class CtrDRBG {
 		return temp.subarray(0, len);
 	}
 
-	protected async reseed(entropy: Uint8Array): Promise<void> {
+	protected async reseed(entropy: BytesView): Promise<void> {
 		// Reseeding isn't necessary for this implementation, but all test vectors use it
 		await this.update(entropy);
 	}

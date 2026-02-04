@@ -141,7 +141,7 @@ const respondToMultiChannelCCV1Get: MockNodeBehavior = {
 			const endpointCount = Math.max(0, ...supportedEndpointIndizes);
 
 			const cc = new MultiChannelCCV1Report({
-				nodeId: self.id,
+				nodeId: controller.ownNodeId,
 				requestedCC,
 				endpointCount,
 			});

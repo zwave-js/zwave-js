@@ -10,14 +10,14 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { test } from "vitest";
 import * as nodeUtils from "../../node/utils.js";
 import { type CreateTestNodeOptions, createTestNode } from "../mocks.js";
 
 const host = createTestingHost();
 
-function buildCCBuffer(payload: Uint8Array): Uint8Array {
+function buildCCBuffer(payload: BytesView): BytesView {
 	return Bytes.concat([
 		Uint8Array.from([
 			CommandClasses.Basic, // CC
@@ -155,7 +155,7 @@ test("BasicCCSet should expect no response", (t) => {
 		endpointIndex: 2,
 		targetValue: 7,
 	});
-	t.expect(cc.expectsCCResponse()).toBe(false);
+	t.expect(cc.expectsCCResponse({} as any)).toBe(false);
 });
 
 test("BasicCCSet => BasicCCReport = unexpected", (t) => {
@@ -169,14 +169,16 @@ test("BasicCCSet => BasicCCReport = unexpected", (t) => {
 		currentValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
+		false,
+	);
 });
 
 test("BasicCCGet should expect a response", (t) => {
 	const cc = new BasicCCGet({
 		nodeId: 2,
 	});
-	t.expect(cc.expectsCCResponse()).toBe(true);
+	t.expect(cc.expectsCCResponse({} as any)).toBe(true);
 });
 
 test("BasicCCGet => BasicCCReport = expected", (t) => {
@@ -188,7 +190,9 @@ test("BasicCCGet => BasicCCReport = expected", (t) => {
 		currentValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(true);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
+		true,
+	);
 });
 
 test("BasicCCGet => BasicCCReport (wrong node) = unexpected", (t) => {
@@ -200,7 +204,9 @@ test("BasicCCGet => BasicCCReport (wrong node) = unexpected", (t) => {
 		currentValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
+		false,
+	);
 });
 
 test("BasicCCGet => BasicCCSet = unexpected", (t) => {
@@ -212,7 +218,9 @@ test("BasicCCGet => BasicCCSet = unexpected", (t) => {
 		targetValue: 7,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse(ccResponse)).toBe(false);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
+		false,
+	);
 });
 
 test("Looking up CC values for a CC instance should work", (t) => {

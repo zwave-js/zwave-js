@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -56,6 +55,7 @@ import {
 	type Timezone,
 } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { UserCodeCC } from "./UserCodeCC.js";
 
 export const ScheduleEntryLockCCValues = V.defineCCValues(
@@ -254,7 +254,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 		return result;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getNumSlots() {
 		this.assertSupportsCommand(
 			ScheduleEntryLockCommand,
@@ -2060,12 +2060,12 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Bytes.from([
+				[
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
 					this.durationMinute!,
-				]),
+				],
 			]);
 		} else {
 			// Not sure if this is correct
@@ -2212,12 +2212,12 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 					ScheduleEntryLockWeekday.Saturday,
 					ScheduleEntryLockWeekday.Sunday,
 				),
-				Bytes.from([
+				[
 					this.startHour!,
 					this.startMinute!,
 					this.durationHour!,
 					this.durationMinute!,
-				]),
+				],
 			]);
 		} else {
 			// Not sure if this is correct, but at least we won't parse it incorrectly ourselves when setting everything to 0

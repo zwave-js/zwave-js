@@ -62,5 +62,10 @@
 			"maxValue": 1,
 			"defaultValue": 0
 		}
-	]
+	],
+	"compat": {
+		// The device does not understand Multilevel Switch Set commands
+		// with the dimmingDuration field included
+		"encodeCCsUsingTargetVersion": true
+	}
 }

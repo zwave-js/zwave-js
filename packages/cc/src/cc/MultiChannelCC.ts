@@ -1,14 +1,16 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	type ApplicationNodeInformation,
 	CommandClasses,
 	type GenericDeviceClass,
+	type GetNode,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
+	type NodeId,
 	type SpecificDeviceClass,
+	type SupportsCC,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -47,6 +49,7 @@ import {
 } from "../lib/EncapsulatingCommandClass.js";
 import { V } from "../lib/Values.js";
 import { MultiChannelCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // TODO: Handle removal reports of dynamic endpoints
 
@@ -163,14 +166,14 @@ function areEndpointsUnnecessary(
 	}
 
 	// Endpoints are necessary if more than 1 of them has a switch-type device class
-	const switchTypeDeviceClasses = [
+	const switchTypeDeviceClasses = new Set([
 		0x10, // Binary Switch
 		0x11, // Multilevel Switch
 		0x12, // Remote Switch
 		0x13, // Toggle Switch
-	];
+	]);
 	const numSwitchEndpoints = [...deviceClasses.values()].filter(
-		({ generic }) => switchTypeDeviceClasses.includes(generic),
+		({ generic }) => switchTypeDeviceClasses.has(generic),
 	).length;
 	if (numSwitchEndpoints > 1) return false;
 
@@ -202,7 +205,7 @@ export class MultiChannelCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getEndpoints() {
 		this.assertSupportsCommand(
 			MultiChannelCommand,
@@ -1009,10 +1012,10 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				(this.endpointIndex & 0b01111111)
 				| (this.isDynamic ? 0b10000000 : 0),
-			]),
+			],
 			encodeApplicationNodeInformation(this),
 		]);
 		return super.serialize(ctx);
@@ -1144,11 +1147,11 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.reportsToFollow,
 				this.genericClass,
 				this.specificClass,
-			]),
+			],
 			Bytes.from(this.foundEndpoints.map((e) => e & 0b01111111)),
 		]);
 		return super.serialize(ctx);
@@ -1366,11 +1369,12 @@ export interface MultiChannelCCCommandEncapsulationOptions {
 // Destination End Point field specifies multiple End Points via bit mask addressing.
 
 function getCCResponseForCommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: MultiChannelCCCommandEncapsulation,
 ) {
 	if (
 		typeof sent.destination === "number"
-		&& sent.encapsulated.expectsCCResponse()
+		&& sent.encapsulated.expectsCCResponse(ctx)
 	) {
 		// Allow both versions of the encapsulation command
 		// Our implementation check is a bit too strict, so change the return type
@@ -1487,7 +1491,7 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 			// The destination is a bit mask
 			: encodeBitMask(this.destination, 7)[0] | 0b1000_0000;
 		this.payload = Bytes.concat([
-			Bytes.from([this.endpointIndex & 0b0111_1111, destination]),
+			[this.endpointIndex & 0b0111_1111, destination],
 			await this.encapsulated.serialize(ctx),
 		]);
 		return super.serialize(ctx);
@@ -1619,9 +1623,10 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
 }
 
 function getResponseForV1CommandEncapsulation(
+	ctx: GetNode<NodeId & SupportsCC>,
 	sent: MultiChannelCCV1CommandEncapsulation,
 ) {
-	if (sent.encapsulated.expectsCCResponse()) {
+	if (sent.encapsulated.expectsCCResponse(ctx)) {
 		return MultiChannelCCV1CommandEncapsulation;
 	}
 }
@@ -1699,7 +1704,7 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.endpointIndex]),
+			[this.endpointIndex],
 			await this.encapsulated.serialize(ctx),
 		]);
 		return super.serialize(ctx);

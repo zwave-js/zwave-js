@@ -20,6 +20,7 @@ import {
 	type SetValueAPIOptions,
 	type SetValueResult,
 	SetValueStatus,
+	SoundSwitchCCValues,
 	TimeCCDateGet,
 	TimeCCTimeGet,
 	TimeCCTimeOffsetGet,
@@ -31,6 +32,7 @@ import {
 	supervisionResultToSetValueResult,
 	utils as ccUtils,
 } from "@zwave-js/cc";
+import { ApplicationStatusCCBusy } from "@zwave-js/cc/ApplicationStatusCC";
 import {
 	AssociationCCGet,
 	AssociationCCRemove,
@@ -83,6 +85,7 @@ import {
 	BasicDeviceClass,
 	CommandClasses,
 	Duration,
+	type DurationLike,
 	EncapsulationFlags,
 	type MaybeNotKnown,
 	MessagePriority,
@@ -140,6 +143,7 @@ import {
 	RequestNodeInfoResponse,
 } from "@zwave-js/serial/serialapi";
 import {
+	type BytesView,
 	Mixin,
 	TypedEventTarget,
 	cloneDeep,
@@ -159,6 +163,7 @@ import path from "pathe";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
+import { handleApplicationBusy } from "./CCHandlers/ApplicationStatusCC.js";
 import {
 	handleAssociationGet,
 	handleAssociationRemove,
@@ -214,6 +219,10 @@ import {
 	handlePowerlevelTestNodeReport,
 	handlePowerlevelTestNodeSet,
 } from "./CCHandlers/PowerlevelCC.js";
+import {
+	getDefaultSoundSwitchHandlerStore,
+	handleSoundSwitchSetValue,
+} from "./CCHandlers/SoundSwitchCC.js";
 import { handleThermostatModeCommand } from "./CCHandlers/ThermostatModeCC.js";
 import {
 	handleDateGet,
@@ -307,6 +316,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			const timeout of [
 				this.centralSceneHandlerStore.keyHeldDownContext?.timeout,
 				...this.notificationHandlerStore.idleTimeouts.values(),
+				...this.soundSwitchHandlerStore.autoResetTimers.values(),
 			]
 		) {
 			timeout?.clear();
@@ -323,11 +333,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * The device specific key (DSK) of this node in binary format.
 	 * This is only set if included with Security S2.
 	 */
-	public get dsk(): Uint8Array | undefined {
+	public get dsk(): BytesView | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).dsk);
 	}
 	/** @internal */
-	public set dsk(value: Uint8Array | undefined) {
+	public set dsk(value: BytesView | undefined) {
 		const cacheKey = cacheKeys.node(this.id).dsk;
 		this.driver.cacheSet(cacheKey, value);
 	}
@@ -426,10 +436,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		);
 	}
 
-	public set defaultTransitionDuration(value: string | Duration | undefined) {
+	public set defaultTransitionDuration(
+		value: string | Duration | DurationLike | undefined,
+	) {
 		// Normalize to strings
-		if (typeof value === "string") value = Duration.from(value);
-		if (Duration.isDuration(value)) value = value.toString();
+		value = Duration.from(value)?.toString();
 
 		this.driver.cacheSet(
 			cacheKeys.node(this.id).defaultTransitionDuration,
@@ -586,13 +597,39 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				});
 			}
 
-			// Remember the new value for the value we just set, if...
-			// ... the call did not throw (assume that the call was successful)
-			// ... the call was supervised and successful
-			if (
-				api.isSetValueOptimistic(valueId)
-				&& isUnsupervisedOrSucceeded(result)
-			) {
+			// Figure out if optimistic value updates, both for the actual value
+			// and related values, should be performed:
+			// Whether updating optimistically is even an option for this value/API/device
+			const canUpdateOptimistically = api.isSetValueOptimistic(valueId)
+				// Check if the device class supports optimistic value updates
+				&& (endpointInstance.deviceClass?.specific
+					.supportsOptimisticValueUpdate
+					?? true);
+			// Whether the device has at least started executing the command
+			const supervisedAndAccepted = supervisedCommandSucceeded(result);
+			// Whether the device has completed the command successfully
+			const supervisedAndCompletedSuccessfully =
+				isSupervisionResult(result)
+				&& result.status === SupervisionStatus.Success;
+			// For unsupervised commands that did not fail, we let the application decide whether
+			// to update the (related) value optimistically
+			const unsupervisedAndOptimisticValueUpdateEnabled =
+				!this.driver.options.disableOptimisticValueUpdate
+				&& result == undefined;
+
+			// The actual value may be updated optimistically once the command has started
+			const shouldUpdateActualValueOptimistically =
+				canUpdateOptimistically
+				&& (supervisedAndAccepted
+					|| unsupervisedAndOptimisticValueUpdateEnabled);
+			// Related values may only be updated optimistically once the command has completed successfully
+			const shouldUpdateRelatedValuesOptimistically =
+				canUpdateOptimistically
+				&& (supervisedAndCompletedSuccessfully
+					|| unsupervisedAndOptimisticValueUpdateEnabled);
+
+			// If optimistic value updats are desired, update the value in the value DB now
+			if (shouldUpdateActualValueOptimistically) {
 				const emitEvent = !!result
 					|| !!this.driver.options.emitValueUpdateAfterSetValue;
 
@@ -631,40 +668,34 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			// Depending on the settings of the SET_VALUE implementation, we may have to
 			// optimistically update a different value and/or verify the changes
 			if (hooks) {
-				const supervisedAndSuccessful = isSupervisionResult(result)
-					&& result.status === SupervisionStatus.Success;
-
-				const shouldUpdateOptimistically =
-					api.isSetValueOptimistic(valueId)
-					// Check if the device class supports optimistic value updates
-					&& (endpointInstance.deviceClass?.specific
-						.supportsOptimisticValueUpdate
-						?? true)
-					// For successful supervised commands, we know that an optimistic update is ok
-					&& (supervisedAndSuccessful
-						// For unsupervised commands that did not fail, we let the application decide whether
-						// to update related value optimistically
-						|| (!this.driver.options.disableOptimisticValueUpdate
-							&& result == undefined));
-
 				// The actual API implementation handles additional optimistic updates
-				if (shouldUpdateOptimistically) {
+				if (shouldUpdateRelatedValuesOptimistically) {
 					hooks.optimisticallyUpdateRelatedValues?.(
-						supervisedAndSuccessful,
+						supervisedAndCompletedSuccessfully,
 					);
 				}
 
+				const isSlowDeviceClass = endpointInstance.deviceClass?.specific
+					.supportsOptimisticValueUpdate === false;
+
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
+				//    ... and this is not a slow device class
 				// ...and the CC API decides not to verify anyways
 				if (
 					!supervisedCommandSucceeded(result)
+					|| isSlowDeviceClass
 					|| hooks.forceVerifyChanges?.()
 				) {
 					// Let the CC API implementation handle the verification.
 					// It may still decide not to do it.
 					await hooks.verifyChanges?.(result);
 				}
+			}
+
+			// Handle CC-specific side effects after setValue completes
+			if (isUnsupervisedOrSucceeded(result)) {
+				this.handleSetValueSideEffects(valueId, value);
 			}
 
 			return supervisionResultToSetValueResult(result);
@@ -708,6 +739,24 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				if (result) return result;
 			}
 			throw e;
+		}
+	}
+
+	/**
+	 * Handles CC-specific side effects after a value has been set successfully.
+	 */
+	private handleSetValueSideEffects(valueId: ValueID, value: unknown): void {
+		if (
+			SoundSwitchCCValues.toneId.is(valueId)
+			&& typeof value === "number"
+		) {
+			handleSoundSwitchSetValue(
+				this.driver,
+				this,
+				this.soundSwitchHandlerStore,
+				valueId.endpoint ?? 0,
+				value,
+			);
 		}
 	}
 
@@ -1901,8 +1950,12 @@ protocol version:      ${this.protocolVersion}`;
 			!this.wasCCRemovedViaConfig(CommandClasses.Basic)
 			&& this.getCCVersion(CommandClasses.Basic) > 0
 		) {
-			if (this.maySupportBasicCC()) {
-				// The device probably supports Basic CC and is allowed to.
+			if (
+				this.wasCCSupportAddedViaConfig(CommandClasses.Basic)
+				|| this.maySupportBasicCC()
+			) {
+				// Either the device probably supports Basic CC and is allowed to.
+				// Or we force-added support through a config file.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(
 					this.id,
@@ -1935,8 +1988,12 @@ protocol version:      ${this.protocolVersion}`;
 			if (endpoint.wasCCRemovedViaConfig(CommandClasses.Basic)) continue;
 			if (endpoint.getCCVersion(CommandClasses.Basic) === 0) continue;
 
-			if (endpoint.maySupportBasicCC()) {
+			if (
+				endpoint.wasCCSupportAddedViaConfig(CommandClasses.Basic)
+				|| endpoint.maySupportBasicCC()
+			) {
 				// The endpoint probably supports Basic CC and is allowed to.
+				// Or we force-added support through a config file.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: endpoint.index,
@@ -2249,6 +2306,7 @@ protocol version:      ${this.protocolVersion}`;
 	private clockHandlerStore = getDefaultClockHandlerStore();
 	private hailHandlerStore = getDefaultHailHandlerStore();
 	private notificationHandlerStore = getDefaultNotificationHandlerStore();
+	private soundSwitchHandlerStore = getDefaultSoundSwitchHandlerStore();
 	private wakeUpHandlerStore = getDefaultWakeUpHandlerStore();
 	private entryControlHandlerStore = getDefaultEntryControlHandlerStore();
 
@@ -2526,6 +2584,13 @@ protocol version:      ${this.protocolVersion}`;
 				this,
 				command,
 			);
+		} else if (command instanceof ApplicationStatusCCBusy) {
+			return handleApplicationBusy(
+				this.driver,
+				this.driver,
+				this,
+				command,
+			);
 		} else if (command instanceof MultiCommandCCCommandEncapsulation) {
 			// Handle each encapsulated command individually
 			for (const cmd of command.encapsulated) {
@@ -2629,6 +2694,8 @@ protocol version:      ${this.protocolVersion}`;
 		// Mark already-interviewed nodes as potentially ready
 		if (this.interviewStage === InterviewStage.Complete) {
 			this.updateReadyMachine({ value: "RESTART_FROM_CACHE" });
+			// If the `bootstrapped` flag is missing, set it now
+			this.bootstrapped = true;
 		}
 	}
 
@@ -4015,6 +4082,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 			dsk: this.dsk ? dskToString(this.dsk) : undefined,
 			securityClasses: {},
+			failedS2Bootstrapping: this.failedS2Bootstrapping,
 
 			isListening: this.isListening ?? "unknown",
 			isFrequentListening: this.isFrequentListening ?? "unknown",

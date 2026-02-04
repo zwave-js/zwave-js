@@ -56,7 +56,7 @@ export class MockResponseMessage extends Message {}
 
 export const mockDriverDummyCallbackId = 0xfe;
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+// oxlint-disable-next-line typescript/explicit-module-boundary-types
 export function createEmptyMockDriver() {
 	const ret = {
 		sendMessage: sinon.stub().callsFake(() => Promise.resolve()),

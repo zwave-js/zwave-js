@@ -300,6 +300,83 @@ test("parses a device config with conditional config parameter options", (t) => 
 		]);
 });
 
+test("supports sdkVersion in conditions", (t) => {
+	const json = {
+		manufacturer: [
+			{ $if: "sdkVersion >= 7.0", value: "Z-Wave Alliance" },
+			"Legacy Manufacturer",
+		],
+		manufacturerId: "0x0000",
+		label: "ZST10-700",
+		description: "700 Series-based Controller",
+		devices: [
+			{
+				productType: "0x0004",
+				productId: "0x0004",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		metadata: {
+			comments: [
+				{
+					$if: "sdkVersion >= 7.19.0",
+					level: "info",
+					text: "This SDK version has feature X",
+				},
+				{
+					$if: "sdkVersion < 7.19.0",
+					level: "warning",
+					text: "This SDK version lacks feature X",
+				},
+			],
+		},
+	};
+
+	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
+	// Ensure that evaluating the config works
+	const deviceId = {
+		manufacturerId: 0x0000,
+		productType: 0x0004,
+		productId: 0x0004,
+		firmwareVersion: "1.0",
+	};
+
+	const evaluatedWithOldSDK = condConfig.evaluate({
+		...deviceId,
+		sdkVersion: "7.18.0",
+	});
+	t.expect(evaluatedWithOldSDK.manufacturer).toBe("Z-Wave Alliance");
+	t.expect(evaluatedWithOldSDK.metadata?.comments).toStrictEqual([
+		{
+			level: "warning",
+			text: "This SDK version lacks feature X",
+		},
+	]);
+
+	const evaluatedWithNewSDK = condConfig.evaluate({
+		...deviceId,
+		sdkVersion: "7.19.0",
+	});
+	t.expect(evaluatedWithNewSDK.manufacturer).toBe("Z-Wave Alliance");
+	t.expect(evaluatedWithNewSDK.metadata?.comments).toStrictEqual([
+		{
+			level: "info",
+			text: "This SDK version has feature X",
+		},
+	]);
+
+	// Without sdkVersion, should fall back to default
+	const evaluatedWithoutSDK = condConfig.evaluate(deviceId);
+	t.expect(evaluatedWithoutSDK.manufacturer).toBe("Legacy Manufacturer");
+	t.expect(
+		isArray(evaluatedWithoutSDK.metadata?.comments)
+			&& evaluatedWithoutSDK.metadata?.comments.length,
+	).toBe(0);
+});
+
 test("supports x.y.z firmware versions", (t) => {
 	const json = {
 		manufacturer: "Silicon Labs",
@@ -370,4 +447,180 @@ test("supports x.y.z firmware versions", (t) => {
 		isArray(evaluatedXYZ_ok.metadata?.comments)
 			&& evaluatedXYZ_ok.metadata?.comments.length,
 	).toBe(0);
+});
+
+test("parses parameter with allowed field (ranges with gaps)", (t) => {
+	const json = {
+		manufacturer: "Test Manufacturer",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with allowed field",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				label: "Sensitivity",
+				description: "1-10: Low, 20-30: Medium, 100: Max",
+				valueSize: 1,
+				defaultValue: 5,
+				unsigned: true,
+				allowed: [
+					{ range: [1, 10] },
+					{ range: [20, 30] },
+					{ value: 100 },
+				],
+			},
+			{
+				"#": "2",
+				label: "Step Example",
+				description: "Parameter with step size",
+				valueSize: 1,
+				defaultValue: 10,
+				unsigned: true,
+				allowed: [{ range: [0, 60], step: 5 }],
+			},
+		],
+	};
+
+	const condConfig = new ConditionalDeviceConfig(
+		"test-allowed.json",
+		true,
+		json,
+	);
+	const deviceId = {
+		manufacturerId: 0x9999,
+		productType: 0x0001,
+		productId: 0x0001,
+	};
+
+	const evaluated = condConfig.evaluate({
+		...deviceId,
+		firmwareVersion: "1.0",
+	});
+
+	// Check that the parameter was parsed
+	const param = evaluated.paramInformation?.get({ parameter: 1 });
+	t.expect(param).toBeDefined();
+	t.expect(param?.label).toBe("Sensitivity");
+
+	// Check that allowed field is present
+	t.expect(param?.allowed).toBeDefined();
+	t.expect(param?.allowed?.length).toBe(3);
+
+	// Check envelope was computed correctly (1 to 100)
+	t.expect(param?.minValue).toBe(1);
+	t.expect(param?.maxValue).toBe(100);
+
+	// Check step parameter
+	const param2 = evaluated.paramInformation?.get({ parameter: 2 });
+	t.expect(param2).toBeDefined();
+	t.expect(param2?.allowed).toBeDefined();
+	t.expect(param2?.allowed?.length).toBe(1);
+	// Verify the step property is preserved
+	if (param2?.allowed?.[0] && "from" in param2.allowed[0]) {
+		t.expect(param2.allowed[0].step).toBe(5);
+	}
+});
+
+test("rejects parameter with both allowed and minValue/maxValue", (t) => {
+	const json = {
+		manufacturer: "Test Manufacturer",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with invalid config",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				label: "Invalid Parameter",
+				valueSize: 1,
+				minValue: 0,
+				maxValue: 255,
+				defaultValue: 5,
+				allowed: [{ range: [1, 10] }],
+			},
+		],
+	};
+
+	t.expect(() => new ConditionalDeviceConfig("test-invalid.json", true, json))
+		.toThrow(/cannot be used together with/);
+});
+
+test("legacy config with minValue/maxValue gets allowed set to single range", (t) => {
+	const json = {
+		manufacturer: "Test Manufacturer",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Legacy device with minValue/maxValue",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				label: "Legacy Parameter",
+				valueSize: 1,
+				minValue: 10,
+				maxValue: 50,
+				defaultValue: 25,
+			},
+		],
+	};
+
+	const condConfig = new ConditionalDeviceConfig(
+		"test-legacy.json",
+		true,
+		json,
+	);
+	const deviceId = {
+		manufacturerId: 0x9999,
+		productType: 0x0001,
+		productId: 0x0001,
+	};
+
+	const evaluated = condConfig.evaluate({
+		...deviceId,
+		firmwareVersion: "1.0",
+	});
+
+	const param = evaluated.paramInformation?.get({ parameter: 1 });
+	t.expect(param).toBeDefined();
+
+	// Check that allowed is populated with a single range matching minValue/maxValue
+	t.expect(param?.allowed).toBeDefined();
+	t.expect(param?.allowed?.length).toBe(1);
+
+	const valueDef = param?.allowed?.[0];
+	t.expect(valueDef).toBeDefined();
+	if (valueDef && "from" in valueDef) {
+		t.expect(valueDef.from).toBe(10);
+		t.expect(valueDef.to).toBe(50);
+	} else {
+		t.expect.fail("Expected a range value definition");
+	}
 });

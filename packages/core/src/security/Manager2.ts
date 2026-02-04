@@ -2,6 +2,7 @@
 
 import {
 	Bytes,
+	type BytesView,
 	createWrappingCounter,
 	getEnumMemberName,
 } from "@zwave-js/shared";
@@ -60,7 +61,7 @@ export class SecurityManager2 {
 	private ownSequenceNumbers = new Map<number, number>();
 	private peerSequenceNumbers = new Map<number, number[]>();
 	/** A map of the inner MPAN states for each multicast group we manage */
-	private mpanStates = new Map<number, Uint8Array>();
+	private mpanStates = new Map<number, BytesView>();
 	/** MPANs used to decrypt multicast messages from other nodes. Peer Node ID -> Multicast Group -> MPAN */
 	private peerMPANs = new Map<number, Map<number, MPANTableEntry>>();
 	/** A map of permanent network keys per security class */
@@ -75,7 +76,7 @@ export class SecurityManager2 {
 	/** Sets the PNK for a given security class and derives the encryption keys from it */
 	public async setKey(
 		securityClass: SecurityClass,
-		key: Uint8Array,
+		key: BytesView,
 	): Promise<void> {
 		if (key.length !== 16) {
 			throw new ZWaveError(
@@ -209,7 +210,7 @@ export class SecurityManager2 {
 	 */
 	public async generateNonce(
 		receiver: number | undefined,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		const receiverEI = await this.rng.generate(16);
 		if (receiver != undefined) {
 			this.spanTable.set(receiver, {
@@ -245,8 +246,8 @@ export class SecurityManager2 {
 	public async initializeSPAN(
 		peerNodeId: number,
 		securityClass: SecurityClass,
-		senderEI: Uint8Array,
-		receiverEI: Uint8Array,
+		senderEI: BytesView,
+		receiverEI: BytesView,
 	): Promise<void> {
 		if (senderEI.length !== 16 || receiverEI.length !== 16) {
 			throw new ZWaveError(
@@ -272,8 +273,8 @@ export class SecurityManager2 {
 	/** Initializes the singlecast PAN generator for a given node based on the given entropy inputs */
 	public async initializeTempSPAN(
 		peerNodeId: number,
-		senderEI: Uint8Array,
-		receiverEI: Uint8Array,
+		senderEI: BytesView,
+		receiverEI: BytesView,
 	): Promise<void> {
 		if (senderEI.length !== 16 || receiverEI.length !== 16) {
 			throw new ZWaveError(
@@ -325,7 +326,7 @@ export class SecurityManager2 {
 		}
 	}
 
-	public storeRemoteEI(peerNodeId: number, remoteEI: Uint8Array): void {
+	public storeRemoteEI(peerNodeId: number, remoteEI: BytesView): void {
 		if (remoteEI.length !== 16) {
 			throw new ZWaveError(
 				`The entropy input must consist of 16 bytes`,
@@ -345,7 +346,7 @@ export class SecurityManager2 {
 	public async nextNonce(
 		peerNodeId: number,
 		store?: boolean,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		const spanState = this.spanTable.get(peerNodeId);
 		if (spanState?.type !== SPANState.SPAN) {
 			throw new ZWaveError(
@@ -391,13 +392,13 @@ export class SecurityManager2 {
 		return seq;
 	}
 
-	public getInnerMPANState(groupId: number): Uint8Array | undefined {
+	public getInnerMPANState(groupId: number): BytesView | undefined {
 		return this.mpanStates.get(groupId);
 	}
 
 	public async getMulticastKeyAndIV(
 		groupId: number,
-	): Promise<{ key: Uint8Array; iv: Uint8Array }> {
+	): Promise<{ key: BytesView; iv: BytesView }> {
 		const group = this.getMulticastGroup(groupId);
 
 		if (!group) {
@@ -440,7 +441,7 @@ export class SecurityManager2 {
 	public async nextPeerMPAN(
 		peerNodeId: number,
 		groupId: number,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		const mpanState = this.getPeerMPAN(peerNodeId, groupId);
 		if (mpanState.type !== MPANState.MPAN) {
 			throw new ZWaveError(

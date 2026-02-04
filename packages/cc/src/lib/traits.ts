@@ -76,6 +76,16 @@ export interface UserPreferences {
 	 * ```
 	 */
 	scales: Partial<Record<string | number, string | number>>;
+
+	/**
+	 * When enabled, notification events that include a user ID (like `Keypad unlock operation`)
+	 * will be enriched with the corresponding user code status and user code (if available).
+	 *
+	 * **WARNING:** User codes are sensitive information. Take care not to log or expose them unintentionally.
+	 *
+	 * Default: `false`
+	 */
+	lookupUserIdInNotificationEvents?: boolean;
 }
 
 /** Allows reading user preferences */
@@ -89,6 +99,12 @@ export interface InterviewOptions {
 	 * Note that enabling this can cause a lot of traffic during the interview.
 	 */
 	queryAllUserCodes?: boolean;
+
+	/**
+	 * Whether configuration parameters should be set to their recommended values during the interview.
+	 * Parameters are updated only if their current value equals the default value.
+	 */
+	applyRecommendedConfigParamValues?: boolean;
 }
 
 /** Allows reading options to use for interviewing devices */

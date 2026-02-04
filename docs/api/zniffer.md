@@ -208,7 +208,7 @@ type CorruptedFrame = {
 
 	protocolDataRate: ZnifferProtocolDataRate;
 
-	payload: Uint8Array;
+	payload: BytesView;
 };
 ```
 
@@ -254,7 +254,7 @@ type ZWaveFrame =
 				type: ZWaveFrameType.Singlecast;
 				destinationNodeId: number;
 				ackRequested: boolean;
-				payload: Uint8Array | CommandClass;
+				payload: BytesView | CommandClass;
 			}
 			// Only present in routed frames:
 			& AllOrNone<
@@ -293,13 +293,13 @@ type ZWaveFrame =
 			type: ZWaveFrameType.Broadcast;
 			destinationNodeId: typeof NODE_ID_BROADCAST;
 			ackRequested: boolean;
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Multicast frame, not routed
 			type: ZWaveFrameType.Multicast;
 			destinationNodeIds: number[];
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Ack frame, not routed
@@ -310,7 +310,7 @@ type ZWaveFrame =
 			// Different kind of explorer frames
 			& ({
 				type: ZWaveFrameType.ExplorerNormal;
-				payload: Uint8Array | CommandClass;
+				payload: BytesView | CommandClass;
 			} | {
 				type: ZWaveFrameType.ExplorerSearchResult;
 				searchingNodeId: number;
@@ -320,7 +320,7 @@ type ZWaveFrame =
 			} | {
 				type: ZWaveFrameType.ExplorerInclusionRequest;
 				networkHomeId: number;
-				payload: Uint8Array | CommandClass;
+				payload: BytesView | CommandClass;
 			})
 			// Common fields for all explorer frames
 			& {
@@ -363,7 +363,7 @@ type LongRangeFrame =
 			// Singlecast frame
 			type: LongRangeFrameType.Singlecast;
 			ackRequested: boolean;
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Broadcast frame. This is technically a singlecast frame,
@@ -371,13 +371,13 @@ type LongRangeFrame =
 			type: LongRangeFrameType.Broadcast;
 			destinationNodeId: typeof NODE_ID_BROADCAST_LR;
 			ackRequested: boolean;
-			payload: Uint8Array | CommandClass;
+			payload: BytesView | CommandClass;
 		}
 		| {
 			// Acknowledgement frame
 			type: LongRangeFrameType.Ack;
 			incomingRSSI: RSSI;
-			payload: Uint8Array;
+			payload: BytesView;
 		}
 	);
 ```

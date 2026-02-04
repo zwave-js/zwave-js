@@ -31,7 +31,7 @@ integrationTest(
 				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof BasicCCGet) {
 						const cc = new BasicCCReport({
-							nodeId: self.id,
+							nodeId: controller.ownNodeId,
 							currentValue: 55,
 						});
 						await self.sendToController(

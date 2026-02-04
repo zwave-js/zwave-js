@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -38,6 +37,7 @@ import {
 	AssociationGroupInfoCommand,
 	AssociationGroupInfoProfile,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { AssociationCC } from "./AssociationCC.js";
 import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC.js";
 
@@ -134,7 +134,7 @@ export class AssociationGroupInfoCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getGroupInfo(groupId: number, refreshCache: boolean = false) {
 		this.assertSupportsCommand(
 			AssociationGroupInfoCommand,
@@ -512,7 +512,7 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.groupId, this.name.length]),
+			[this.groupId, this.name.length],
 			Bytes.from(this.name, "utf8"),
 		]);
 		return super.serialize(ctx);
@@ -676,17 +676,15 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 			message: {
 				"is list mode": this.isListMode,
 				"has dynamic info": this.hasDynamicInfo,
-				groups: `${
-					this.groups
-						.map(
-							(g) => `
+				groups: this.groups
+					.map(
+						(g) => `
 · Group #${g.groupId}
   mode:       ${g.mode}
   profile:    ${g.profile}
   event code: ${g.eventCode}`,
-						)
-						.join("")
-				}`,
+					)
+					.join(""),
 			},
 		};
 	}
@@ -849,17 +847,15 @@ export class AssociationGroupInfoCCCommandListReport
 			...super.toLogEntry(ctx),
 			message: {
 				"group id": this.groupId,
-				commands: `${
-					[...this.commands]
-						.map(([cc, cmds]) => {
-							return `\n· ${getCCName(cc)}: ${
-								cmds
-									.map((cmd) => num2hex(cmd))
-									.join(", ")
-							}`;
-						})
-						.join("")
-				}`,
+				commands: [...this.commands]
+					.map(([cc, cmds]) => {
+						return `\n· ${getCCName(cc)}: ${
+							cmds
+								.map((cmd) => num2hex(cmd))
+								.join(", ")
+						}`;
+					})
+					.join(""),
 			},
 		};
 	}

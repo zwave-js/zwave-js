@@ -1,11 +1,11 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
 import { computeCMAC, computeMAC } from "./operations.js";
 
 function assertBufferEquals(
 	expect: ExpectStatic,
-	actual: Uint8Array,
-	expected: Uint8Array,
+	actual: BytesView,
+	expected: BytesView,
 ) {
 	expect(Uint8Array.from(actual)).toStrictEqual(Uint8Array.from(expected));
 }

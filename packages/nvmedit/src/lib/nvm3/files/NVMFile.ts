@@ -2,6 +2,7 @@ import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	Bytes,
+	type BytesView,
 	type TypedClassDecorator,
 	isUint8Array,
 	num2hex,
@@ -28,7 +29,6 @@ export function gotDeserializationOptions(
 	return "data" in options && isUint8Array(options.data);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NVMFileCreationOptions extends NVMFileBaseOptions {}
 
 export type NVMFileOptions =
@@ -60,7 +60,7 @@ export class NVMFile {
 	 */
 	public static from(
 		fileId: number,
-		data: Uint8Array,
+		data: BytesView,
 		fileVersion: string,
 	): NVMFile {
 		const Constructor = getNVMFileConstructor(fileId)!;

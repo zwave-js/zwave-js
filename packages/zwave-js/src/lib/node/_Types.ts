@@ -20,7 +20,7 @@ import type {
 	ValueRemovedArgs,
 	ValueUpdatedArgs,
 } from "@zwave-js/core";
-import type { AllOrNone } from "@zwave-js/shared";
+import type { AllOrNone, BytesView } from "@zwave-js/shared";
 import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
@@ -128,7 +128,9 @@ export interface ZWaveNotificationCallbackArgs_NotificationCC {
 	/** The human-readable label for the notification event */
 	eventLabel: string;
 	/** Additional information related to the event */
-	parameters?: NotificationCCReport["eventParameters"];
+	parameters?:
+		| NotificationCCReport["eventParameters"]
+		| Record<string, number | string | BytesView>;
 }
 
 /**
@@ -177,7 +179,7 @@ export interface ZWaveNotificationCallbackArgs_EntryControlCC {
 	dataType: EntryControlDataTypes;
 	/** A human-readable label for the data type */
 	dataTypeLabel: string;
-	eventData?: Uint8Array | string;
+	eventData?: BytesView | string;
 }
 
 /**

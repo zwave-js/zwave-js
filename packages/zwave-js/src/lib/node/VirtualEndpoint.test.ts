@@ -36,7 +36,7 @@ interface LocalTestContext {
 		controller: MockController;
 		mockPort: MockPort;
 		serial: ZWaveSerialStream;
-		makePhysicalNode(nodeId: number): ZWaveNode;
+		makePhysicalNode(nodeId: number): Promise<ZWaveNode>;
 	};
 }
 
@@ -50,8 +50,8 @@ const test = baseTest.extend<LocalTestContext>({
 				await createAndStartTestingDriver({
 					loadConfiguration: false,
 					skipNodeInterview: true,
-					beforeStartup(mockPort, serial) {
-						context.controller = new MockController({
+					async beforeStartup(mockPort, serial) {
+						context.controller = await MockController.create({
 							mockPort,
 							serial,
 							capabilities: {
@@ -84,7 +84,7 @@ const test = baseTest.extend<LocalTestContext>({
 				});
 			Object.assign(context, { driver, mockPort, serial });
 
-			context.makePhysicalNode = (nodeId: number) => {
+			context.makePhysicalNode = async (nodeId: number) => {
 				// Make the driver know about the node
 				const node = new ZWaveNode(nodeId, driver);
 				(driver.controller.nodes as ThrowingMap<number, ZWaveNode>).set(
@@ -93,7 +93,7 @@ const test = baseTest.extend<LocalTestContext>({
 				);
 
 				// Make the mock controller know about the node
-				const mockNode = new MockNode({
+				const mockNode = await MockNode.create({
 					id: nodeId,
 					controller: context.controller,
 				});
@@ -132,8 +132,8 @@ test.sequential(
 	"the broadcast API throws when trying to access a non-supported CC",
 	async ({ context, expect }) => {
 		const { driver, makePhysicalNode } = context;
-		makePhysicalNode(2);
-		makePhysicalNode(3);
+		await makePhysicalNode(2);
+		await makePhysicalNode(3);
 		const broadcast = driver.controller.getBroadcastNode();
 
 		// We must not use Basic CC here, because that is assumed to be always supported
@@ -154,8 +154,8 @@ test.sequential(
 	"the broadcast API should know it is a broadcast API",
 	async ({ context, expect }) => {
 		const { driver, makePhysicalNode } = context;
-		makePhysicalNode(2);
-		makePhysicalNode(3);
+		await makePhysicalNode(2);
+		await makePhysicalNode(3);
 		const broadcast = driver.controller.getBroadcastNode();
 
 		expect(broadcast.createAPI(CommandClasses.Basic)["isBroadcast"]())
@@ -167,8 +167,8 @@ test.sequential(
 	"the multicast API should know it is a multicast API",
 	async ({ context, expect }) => {
 		const { driver, makePhysicalNode } = context;
-		makePhysicalNode(2);
-		makePhysicalNode(3);
+		await makePhysicalNode(2);
+		await makePhysicalNode(3);
 		const multicast = driver.controller.getMulticastGroup([2, 3]);
 
 		expect(multicast.createAPI(CommandClasses.Basic)["isMulticast"]())
@@ -177,21 +177,20 @@ test.sequential(
 );
 
 {
-	function prepareTest(context: LocalTestContext["context"]): {
-		node2: ZWaveNode;
-		node3: ZWaveNode;
-	} {
+	async function prepareTest(
+		context: LocalTestContext["context"],
+	): Promise<{ node2: ZWaveNode; node3: ZWaveNode }> {
 		return {
-			node2: context.makePhysicalNode(2),
-			node3: context.makePhysicalNode(3),
+			node2: await context.makePhysicalNode(2),
+			node3: await context.makePhysicalNode(3),
 		};
 	}
 
 	test.sequential(
 		"the commandClasses dictionary throws when trying to access a non-implemented CC",
-		({ context, expect }) => {
+		async ({ context, expect }) => {
 			const { driver } = context;
-			prepareTest(context);
+			await prepareTest(context);
 
 			const broadcast = driver.controller.getBroadcastNode();
 
@@ -229,9 +228,9 @@ test.sequential(
 
 	test.sequential(
 		"the commandClasses dictionary does not throw when checking support of a CC",
-		({ context, expect }) => {
+		async ({ context, expect }) => {
 			const { driver } = context;
-			prepareTest(context);
+			await prepareTest(context);
 
 			const broadcast = driver.controller.getBroadcastNode();
 			expect(broadcast.commandClasses["Binary Switch"].isSupported())
@@ -241,9 +240,9 @@ test.sequential(
 
 	test.sequential(
 		"the commandClasses dictionary does not throw when accessing the ID of a CC",
-		({ context, expect }) => {
+		async ({ context, expect }) => {
 			const { driver } = context;
-			prepareTest(context);
+			await prepareTest(context);
 
 			const broadcast = driver.controller.getBroadcastNode();
 			expect(
@@ -254,9 +253,9 @@ test.sequential(
 
 	test.sequential(
 		"the commandClasses dictionary does not throw when scoping the API options",
-		({ context, expect }) => {
+		async ({ context, expect }) => {
 			const { driver } = context;
-			prepareTest(context);
+			await prepareTest(context);
 
 			const broadcast = driver.controller.getBroadcastNode();
 			expect(() =>
@@ -267,9 +266,9 @@ test.sequential(
 
 	test.sequential(
 		"the commandClasses dictionary  returns all supported CCs when being enumerated",
-		({ context, expect }) => {
+		async ({ context, expect }) => {
 			const { driver } = context;
-			const { node2, node3 } = prepareTest(context);
+			const { node2, node3 } = await prepareTest(context);
 
 			// No supported CCs, empty array
 			let broadcast = driver.controller.getBroadcastNode();
@@ -297,9 +296,9 @@ test.sequential(
 
 	test.sequential(
 		"the commandClasses dictionary  returns [object Object] when turned into a string",
-		({ context, expect }) => {
+		async ({ context, expect }) => {
 			const { driver } = context;
-			prepareTest(context);
+			await prepareTest(context);
 
 			const broadcast = driver.controller.getBroadcastNode();
 			expect(
@@ -311,9 +310,9 @@ test.sequential(
 
 	test.sequential(
 		"the commandClasses dictionary  returns undefined for other symbol properties",
-		({ context, expect }) => {
+		async ({ context, expect }) => {
 			const { driver } = context;
-			prepareTest(context);
+			await prepareTest(context);
 
 			const broadcast = driver.controller.getBroadcastNode();
 			expect(
@@ -328,8 +327,8 @@ test.sequential(
 	"broadcast uses the correct commands behind the scenes",
 	async ({ context, expect }) => {
 		const { driver, controller, makePhysicalNode } = context;
-		makePhysicalNode(2);
-		makePhysicalNode(3);
+		await makePhysicalNode(2);
+		await makePhysicalNode(3);
 		const broadcast = driver.controller.getBroadcastNode();
 		broadcast.commandClasses.Basic.set(99).catch(noop);
 		await wait(1);
@@ -350,8 +349,8 @@ test.sequential(
 	"multicast uses the correct commands behind the scenes",
 	async ({ context, expect }) => {
 		const { driver, controller, makePhysicalNode } = context;
-		makePhysicalNode(2);
-		makePhysicalNode(3);
+		await makePhysicalNode(2);
+		await makePhysicalNode(3);
 		const multicast = driver.controller.getMulticastGroup([2, 3]);
 		multicast.commandClasses.Basic.set(99).catch(noop);
 		await wait(1);

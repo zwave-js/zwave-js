@@ -1,7 +1,9 @@
 import { BasicCCGet, BasicCCSet } from "@zwave-js/cc";
 import { NodeStatus, ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
-import { MockZWaveFrameType } from "@zwave-js/testing";
-import { wait } from "alcalzone-shared/async";
+import {
+	MockZWaveFrameType,
+	type MockZWaveRequestFrame,
+} from "@zwave-js/testing";
 import path from "node:path";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -46,13 +48,13 @@ integrationTest(
 			}); // Don't throw here, do it below
 
 			// The node should have received the first command
-			await wait(50);
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof BasicCCSet
 					&& frame.payload.targetValue === 99,
 				{
+					timeout: 50,
 					errorMessage: "The first command was not received",
 				},
 			);
@@ -114,13 +116,13 @@ integrationTest(
 			});
 
 			// The node should have received the first command
-			await wait(50);
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof BasicCCSet
 					&& frame.payload.targetValue === 99,
 				{
+					timeout: 50,
 					errorMessage: "The first command was not received",
 				},
 			);
@@ -170,13 +172,13 @@ integrationTest(
 			});
 
 			// The node should have received the first command
-			await wait(50);
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof BasicCCSet
 					&& frame.payload.targetValue === 99,
 				{
+					timeout: 50,
 					errorMessage: "The first command was not received",
 				},
 			);
@@ -218,13 +220,13 @@ integrationTest(
 			});
 
 			// The node should have received the first command
-			await wait(50);
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof BasicCCSet
 					&& frame.payload.targetValue === 99,
 				{
+					timeout: 50,
 					errorMessage: "The first command was not received",
 				},
 			);
@@ -243,12 +245,12 @@ integrationTest(
 			});
 
 			// The node should have received the second command
-			await wait(50);
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
+			await mockNode.expectControllerFrame(
+				(frame): frame is MockZWaveRequestFrame =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof BasicCCGet,
 				{
+					timeout: 50,
 					errorMessage: "The second command was not received",
 				},
 			);

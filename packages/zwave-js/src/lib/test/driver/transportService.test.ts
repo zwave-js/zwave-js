@@ -8,6 +8,7 @@ import {
 } from "@zwave-js/cc";
 import {
 	MockZWaveFrameType,
+	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
@@ -63,12 +64,14 @@ integrationTest("Receiving Transport Service commands works (happy path)", {
 		await wait(30);
 		await mockNode.sendToController(createMockZWaveRequestFrame(frame3));
 
-		await wait(100);
-
 		// The node should have received the confirmation
-		mockNode.assertReceivedControllerFrame((f) =>
-			f.type === MockZWaveFrameType.Request
-			&& f.payload instanceof TransportServiceCCSegmentComplete
+		await mockNode.expectControllerFrame(
+			(f): f is MockZWaveRequestFrame =>
+				f.type === MockZWaveFrameType.Request
+				&& f.payload instanceof TransportServiceCCSegmentComplete,
+			{
+				timeout: 100,
+			},
 		);
 
 		// And the ConfigurationCCInfoReport should have been assembled correctly
@@ -124,12 +127,14 @@ integrationTest(
 				createMockZWaveRequestFrame(frame2),
 			);
 
-			await wait(50);
-
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentWait
-				&& f.payload.pendingSegments === 0
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentWait
+					&& f.payload.pendingSegments === 0,
+				{
+					timeout: 50,
+				},
 			);
 
 			mockNode.assertReceivedControllerFrame(
@@ -200,25 +205,29 @@ integrationTest(
 				createMockZWaveRequestFrame(frame3),
 			);
 
-			await wait(50);
-
 			// The node should have received a request for the missing frame
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentRequest
-				&& f.payload.datagramOffset === part1.length
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentRequest
+					&& f.payload.datagramOffset === part1.length,
+				{
+					timeout: 50,
+				},
 			);
 
 			// Send the requested frame
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(frame2),
 			);
-			await wait(50);
-
 			// Now, the node should have received the confirmation
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentComplete
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentComplete,
+				{
+					timeout: 50,
+				},
 			);
 
 			// And the ConfigurationCCInfoReport should have been assembled correctly
@@ -284,26 +293,31 @@ integrationTest(
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(frame2),
 			);
-			await wait(1000);
 			// Last segment is missing
 
 			// The node should have received a request for the missing frame
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentRequest
-				&& f.payload.datagramOffset === frame3.datagramOffset
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentRequest
+					&& f.payload.datagramOffset === frame3.datagramOffset,
+				{
+					timeout: 1000,
+				},
 			);
 
 			// Send the requested frame
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(frame3),
 			);
-			await wait(50);
-
 			// Now, the node should have received the confirmation
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentComplete
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentComplete,
+				{
+					timeout: 50,
+				},
 			);
 
 			// And the ConfigurationCCInfoReport should have been assembled correctly
@@ -374,12 +388,14 @@ integrationTest(
 				createMockZWaveRequestFrame(frame3),
 			);
 
-			await wait(100);
-
 			// The node should have received the confirmation
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentComplete
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentComplete,
+				{
+					timeout: 100,
+				},
 			);
 			mockNode.clearReceivedControllerFrames();
 
@@ -396,12 +412,14 @@ integrationTest(
 				createMockZWaveRequestFrame(frame3),
 			);
 
-			await wait(100);
-
 			// The node should have received the confirmation again
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentComplete
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentComplete,
+				{
+					timeout: 100,
+				},
 			);
 			mockNode.clearReceivedControllerFrames();
 		},
@@ -460,13 +478,15 @@ integrationTest(
 			// We must not send the last frame here, or the issue won't happen
 
 			// The controller should request the missing frame after a while
-			await wait(1100);
-
 			// The controller should request the missing frame
-			mockNode.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof TransportServiceCCSegmentRequest
-				&& f.payload.datagramOffset === part1.length
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentRequest
+					&& f.payload.datagramOffset === part1.length,
+				{
+					timeout: 1100,
+				},
 			);
 
 			// Send it

@@ -10,7 +10,7 @@
 // 1 └─────────────────┘ └─────────────────┘ └──
 
 import type { LogContainer } from "@zwave-js/core";
-import { noop } from "@zwave-js/shared";
+import { type BytesView, noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
 	UnderlyingSink,
@@ -47,12 +47,12 @@ export class ZnifferSerialStream implements
 		// The serial binding emits ZniferSerialFrames
 		ZnifferSerialFrame,
 		// and accepts binary data
-		Uint8Array
+		BytesView
 	>
 {
 	constructor(
-		source: UnderlyingSource<Uint8Array>,
-		sink: UnderlyingSink<Uint8Array>,
+		source: UnderlyingSource<BytesView>,
+		sink: UnderlyingSink<BytesView>,
 		logger: SerialLogger,
 	) {
 		this.logger = logger;
@@ -62,8 +62,8 @@ export class ZnifferSerialStream implements
 		// We use an identity stream in the middle to pipe through, so we
 		// can properly abort the stream
 		const { readable: input, writable } = new TransformStream<
-			Uint8Array,
-			Uint8Array
+			BytesView,
+			BytesView
 		>();
 		this.writable = writable;
 		const sinkStream = new WritableStream(sink);
@@ -92,7 +92,7 @@ export class ZnifferSerialStream implements
 
 	// Public interface to let consumers read from and write to this stream
 	public readonly readable: ReadableStream<ZnifferSerialFrame>;
-	public readonly writable: WritableStream<Uint8Array>;
+	public readonly writable: WritableStream<BytesView>;
 
 	// Signal to close the underlying stream
 	#abort: AbortController;
@@ -122,9 +122,9 @@ export class ZnifferSerialStream implements
 		return this._isOpen;
 	}
 
-	private _writer: WritableStreamDefaultWriter<Uint8Array> | undefined;
+	private _writer: WritableStreamDefaultWriter<BytesView> | undefined;
 
-	public async writeAsync(data: Uint8Array): Promise<void> {
+	public async writeAsync(data: BytesView): Promise<void> {
 		if (!this.isOpen) {
 			throw new Error("The serial port is not open!");
 		}

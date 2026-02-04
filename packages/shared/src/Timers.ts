@@ -4,7 +4,6 @@ export class Timer {
 	readonly #args: any[];
 
 	readonly #inner: NodeJS.Timeout;
-	readonly #kind = "timeout";
 
 	/** @internal */
 	constructor(
@@ -44,7 +43,6 @@ export class Timer {
 
 export class Interval {
 	readonly #inner: NodeJS.Timeout;
-	readonly #kind = "interval";
 
 	/** @internal */
 	constructor(inner: NodeJS.Timeout) {

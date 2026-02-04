@@ -94,7 +94,7 @@ export class ObjectKeyMap<TKey extends Record<string | number, any>, TValue> {
 		const _key = Object.fromEntries(
 			Object.entries(filledKey)
 				.filter(([, value]) => value != undefined)
-				.sort(([keyA], [keyB]) =>
+				.toSorted(([keyA], [keyB]) =>
 					keyA > keyB ? 1 : keyA < keyB ? -1 : 0
 				),
 		);

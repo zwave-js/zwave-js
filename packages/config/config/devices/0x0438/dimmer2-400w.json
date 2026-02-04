@@ -191,8 +191,14 @@
 			"valueSize": 2,
 			"unit": "W",
 			"minValue": 0,
-			"maxValue": 1,
-			"defaultValue": 10
+			"maxValue": 32767,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "15",
@@ -201,8 +207,14 @@
 			"valueSize": 1,
 			"unit": "%",
 			"minValue": 0,
-			"maxValue": 1,
-			"defaultValue": 20
+			"maxValue": 100,
+			"defaultValue": 20,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "21",

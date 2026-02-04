@@ -5,8 +5,11 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { ApplicationUpdateRequestNodeInfoReceived } from "@zwave-js/serial/serialapi";
-import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
-import { wait } from "alcalzone-shared/async";
+import {
+	type MockNodeBehavior,
+	MockZWaveFrameType,
+	type MockZWaveRequestFrame,
+} from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -77,12 +80,11 @@ integrationTest(
 			});
 			await mockController.sendMessageToHost(nif);
 
-			await wait(100);
-
-			mockNode.assertReceivedControllerFrame(
-				(f) =>
+			await mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
 					f.type === MockZWaveFrameType.Request
 					&& f.payload instanceof MultilevelSwitchCCGet,
+				{ timeout: 100 },
 			);
 		},
 	},

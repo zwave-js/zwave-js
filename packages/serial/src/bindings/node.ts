@@ -9,7 +9,6 @@ import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
 
 /** An implementation of the Serial bindings for Node.js */
 export const serial: Serial = {
-	// eslint-disable-next-line @typescript-eslint/require-await
 	async createFactoryByPath(path) {
 		if (path.startsWith("tcp://")) {
 			const url = new URL(path);
@@ -18,10 +17,15 @@ export const serial: Serial = {
 				port: parseInt(url.port),
 			});
 		} else if (path.startsWith("esphome://")) {
+			// ESPHome connection: esphome://host:port or esphome://host:port?key=base64key
+			// If key parameter is present, use encrypted (Noise) connection
 			const url = new URL(path);
+			const encryptionKey = url.searchParams.get("key") ?? undefined;
+
 			return createESPHomeFactory({
 				host: url.hostname,
 				port: url.port ? parseInt(url.port) : undefined,
+				encryptionKey,
 			});
 		} else {
 			return createNodeSerialPortFactory(

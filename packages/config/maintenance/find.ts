@@ -1,5 +1,5 @@
-import path from "path";
-import { ConfigManager } from "../src/ConfigManager";
+import path from "node:path";
+import { ConfigManager } from "../src/ConfigManager.js";
 
 const configManager = new ConfigManager();
 const deviceIdRegex =

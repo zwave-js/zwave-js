@@ -21,7 +21,7 @@
 			]
 		},
 		"@zwave-js/config#codegen": {
-			"outputs": ["src/LogicParser.ts"]
+			"outputs": ["src/_version.ts"]
 		},
 
 		// We just define a single build script, as it turns out that
@@ -40,31 +40,6 @@
 				"!*/**/*.test.ts"
 			],
 			"outputs": ["packages/*/build/**", "packages/*/*.tsbuildinfo"]
-		},
-
-		// Specific linting tasks: ESLint
-		"lint:ts": {
-			"dependsOn": ["bootstrap"],
-			"inputs": [
-				// https://github.com/vercel/turborepo/issues/1407
-				":!:build/",
-				"**/*.{ts,cts,mts,json}",
-				// The style based linting tasks depend on the corresponding configuration in the repo root
-				"../../eslint.config.mjs",
-				"../../tsconfig.all.json"
-			]
-		},
-		"lint:ts:fix": {
-			"dependsOn": ["bootstrap"],
-			"inputs": [
-				// https://github.com/vercel/turborepo/issues/1407
-				":!:build/",
-				"**/*.{ts,cts,mts,json}",
-				// The style based linting tasks depend on the corresponding configuration in the repo root
-				"../../eslint.config.mjs",
-				"../../tsconfig.all.json"
-			],
-			"outputs": ["**/*.{ts,cts,mts,json}"]
 		},
 
 		"lint:zwave": {

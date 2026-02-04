@@ -631,7 +631,6 @@ export class ControllerProprietary_NabuCasa
 		return { status: SetValueStatus.NoDeviceSupport };
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	async handleUnsolicited(_msg: Message): Promise<boolean> {
 		// 	if (
 		// 		msg.functionType === FUNC_ID_NABUCASA

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -58,6 +57,7 @@ import {
 	MultilevelSwitchCommand,
 	SwitchType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],
@@ -200,7 +200,7 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(
 			MultilevelSwitchCommand,

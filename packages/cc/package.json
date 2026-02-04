@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/cc",
-  "version": "15.14.0",
+  "version": "15.20.1",
   "description": "zwave-js: Command Classes",
   "keywords": [],
   "publishConfig": {
@@ -60,12 +60,10 @@
     "codegen": "yarn task codegen && yarn lint:codegen:fix",
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
-    "clean": "del-cli build/ \"*.tsbuildinfo\"",
+    "clean": "del-cli build/ src_gen/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "ts": "tsx --conditions=@@dev",
-    "lint:ts": "eslint --cache \"src/**/*.ts\"",
-    "lint:ts:fix": "yarn run lint:ts --fix",
-    "lint:codegen:fix": "eslint --cache --fix \"src/cc/_CCValues.generated.ts\"",
+    "lint:codegen:fix": "oxlint --type-aware -c ../../.oxlintrc.json --fix \"src/cc/_CCValues.generated.ts\" \"src/lib/_CCAPI.generated.ts\"",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
@@ -78,16 +76,17 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.1",
-    "@microsoft/api-extractor": "^7.52.11",
-    "@types/node": "^20.19.9",
+    "@alcalzone/esm2cjs": "^1.4.2",
+    "@microsoft/api-extractor": "^7.55.1",
+    "@types/node": "^20.19.23",
     "@zwave-js/maintenance": "workspace:*",
     "@zwave-js/transformers": "workspace:*",
-    "del-cli": "^6.0.0",
+    "del-cli": "^7.0.0",
     "es-main": "^1.4.0",
-    "eslint": "^9.34.0",
+    "oxlint": "^1.42.0",
+    "oxlint-tsgolint": "^0.11.4",
     "tsx": "^4.20.5",
-    "typescript": "5.8.3",
-    "vitest": "^2.1.9"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.18"
   }
 }

@@ -1,3 +1,5 @@
+// oxlint-disable typescript/no-misused-spread
+
 import { type Message, MessageType } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 

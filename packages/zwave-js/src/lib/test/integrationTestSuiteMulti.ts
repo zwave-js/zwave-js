@@ -101,11 +101,12 @@ function suite(
 			debug,
 			additionalDriverOptions,
 		));
-		({ mockController, mockNodes } = prepareMocks(
+		({ mockController, mockNodes } = await prepareMocks(
 			mockPort,
 			serial,
 			{
 				capabilities: controllerCapabilities,
+				securityKeys: driver.options.securityKeys,
 			},
 			// TODO: This isn't ideal as it requires us to provide the
 			// node capabilities in addition to the provisioning directory

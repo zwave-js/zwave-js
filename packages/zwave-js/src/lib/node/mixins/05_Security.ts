@@ -77,4 +77,21 @@ export abstract class NodeSecurityMixin extends NetworkRoleMixin
 		// If we don't have the info for every security class, we don't know the highest one yet
 		return missingSome ? NOT_KNOWN : SecurityClass.None;
 	}
+
+	/**
+	 * Should be `true` when an S2-capable node fails to S2-bootstrap.
+	 * This will skip the interview process (see `Driver.interviewNodeInternal` method).
+	 */
+	public get failedS2Bootstrapping(): boolean {
+		return this.driver.cacheGet(
+			cacheKeys.node(this.id).failedS2Bootstrapping,
+		)
+			?? false;
+	}
+	public set failedS2Bootstrapping(value: boolean) {
+		this.driver.cacheSet(
+			cacheKeys.node(this.id).failedS2Bootstrapping,
+			value,
+		);
+	}
 }
