@@ -22,21 +22,21 @@ Abstract repeated byte sequences into local helpers:
  * @returns The date components and the number of bytes read.
  */
 function parseDate(
-    payload: BytesView,
-    offset: number = 0,
+	payload: BytesView,
+	offset: number = 0,
 ): { date: ScheduleDate; bytesRead: number } {
-    validatePayload(payload.length >= offset + 6);
-    const view = Bytes.view(payload);
-    return {
-        date: {
-            year: view.readUInt16BE(offset),
-            month: view.readUInt8(offset + 2),
-            day: view.readUInt8(offset + 3),
-            hour: view.readUInt8(offset + 4),
-            minute: view.readUInt8(offset + 5),
-        },
-        bytesRead: 6,
-    };
+	validatePayload(payload.length >= offset + 6);
+	const view = Bytes.view(payload);
+	return {
+		date: {
+			year: view.readUInt16BE(offset),
+			month: view.readUInt8(offset + 2),
+			day: view.readUInt8(offset + 3),
+			hour: view.readUInt8(offset + 4),
+			minute: view.readUInt8(offset + 5),
+		},
+		bytesRead: 6,
+	};
 }
 
 /**
@@ -44,20 +44,21 @@ function parseDate(
  * @returns The number of bytes written.
  */
 function encodeDate(
-    date: ScheduleDate,
-    payload: Bytes,
-    offset: number = 0,
+	date: ScheduleDate,
+	payload: Bytes,
+	offset: number = 0,
 ): number {
-    payload.writeUInt16BE(date.year, offset);
-    payload.writeUInt8(date.month, offset + 2);
-    payload.writeUInt8(date.day, offset + 3);
-    payload.writeUInt8(date.hour, offset + 4);
-    payload.writeUInt8(date.minute, offset + 5);
-    return 6;
+	payload.writeUInt16BE(date.year, offset);
+	payload.writeUInt8(date.month, offset + 2);
+	payload.writeUInt8(date.day, offset + 3);
+	payload.writeUInt8(date.hour, offset + 4);
+	payload.writeUInt8(date.minute, offset + 5);
+	return 6;
 }
 ```
 
 **Key principles:**
+
 - Parse functions return `{ value, bytesRead }` (following `parseCCId` convention)
 - Encode functions return bytes written
 - Move validation INTO parse functions - they validate payload length themselves
@@ -185,8 +186,8 @@ When a length field indicates N bytes follow, validate they exist:
 ```typescript
 const metadataLength = raw.payload[offset++] & 0b111;
 if (metadataLength > 0) {
-    validatePayload(raw.payload.length >= offset + metadataLength);
-    metadata = raw.payload.subarray(offset, offset + metadataLength);
-    offset += metadataLength;
+	validatePayload(raw.payload.length >= offset + metadataLength);
+	metadata = raw.payload.subarray(offset, offset + metadataLength);
+	offset += metadataLength;
 }
 ```
