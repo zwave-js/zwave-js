@@ -211,6 +211,24 @@
 			"$if": "firmwareVersion >= 3.50 && firmwareVersion < 10.0",
 			"$import": "templates/zooz_template.json#custom_brightness",
 			"label": "Custom Brightness Level (Z-Wave Control)"
+		},
+		{
+			"#": "35",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
+		},
+		{
+			"#": "36",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_multi_color"
+		},
+		{
+			"#": "37",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#gamma_factor"
 		}
 	],
 	"compat": {
