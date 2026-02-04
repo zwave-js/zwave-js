@@ -53,6 +53,8 @@ export default tseslint.config(
 			".vscode/extensions/**",
 			// Remove warning on this config file
 			"eslint.config.mjs",
+			// And on generated source files
+			"packages/*/src_gen/**",
 		],
 	},
 	{
