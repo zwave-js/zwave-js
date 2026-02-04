@@ -27,9 +27,7 @@ test("the Get command should serialize correctly", async (t) => {
 			HumidityControlOperatingStateCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command should be deserialized correctly", async (t) => {
@@ -39,10 +37,9 @@ test("the Report command should be deserialized correctly", async (t) => {
 			HumidityControlOperatingState.Humidifying, // state
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as HumidityControlOperatingStateCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as HumidityControlOperatingStateCCReport;
 	t.expect(cc.constructor).toBe(HumidityControlOperatingStateCCReport);
 
 	t.expect(cc.state).toBe(HumidityControlOperatingState.Humidifying);

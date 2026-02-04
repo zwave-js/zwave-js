@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import {
 	type NodeStatusMachineInput,
 	type NodeStatusState,
@@ -144,22 +145,25 @@ const transitions: {
 ];
 
 for (const testCase of transitions) {
-	const prefix = testCase.canSleep != undefined
-		? `Node ${testCase.canSleep ? "can sleep" : "can't sleep"} -> `
-		: "";
-	const name = testCase.start === testCase.target
-		? `${prefix}The ${testCase.event} event should not do anything in the "${testCase.start}" state`
-		: `${prefix}When the ${testCase.event} event is received, it should transition from "${testCase.start}" to "${testCase.target}"`;
+	const prefix =
+		testCase.canSleep != undefined
+			? `Node ${testCase.canSleep ? "can sleep" : "can't sleep"} -> `
+			: "";
+	const name =
+		testCase.start === testCase.target
+			? `${prefix}The ${testCase.event} event should not do anything in the "${testCase.start}" state`
+			: `${prefix}When the ${testCase.event} event is received, it should transition from "${testCase.start}" to "${testCase.target}"`;
 
 	test(name, (t) => {
 		// For these tests, assume that the node does or does not support Wakeup, whatever fits
-		const testNode = testCase.canSleep == undefined
-			? testCase.event === "ASLEEP" || testCase.event === "AWAKE"
-				? testNodeSleeping
-				: testNodeNonSleeping
-			: testCase.canSleep
-			? testNodeSleeping
-			: testNodeNonSleeping;
+		const testNode =
+			testCase.canSleep == undefined
+				? testCase.event === "ASLEEP" || testCase.event === "AWAKE"
+					? testNodeSleeping
+					: testNodeNonSleeping
+				: testCase.canSleep
+					? testNodeSleeping
+					: testNodeNonSleeping;
 
 		const machine = createNodeStatusMachine(testNode);
 		machine["_state"] = { value: testCase.start };

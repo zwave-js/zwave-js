@@ -22,6 +22,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	CCCommand,
@@ -47,16 +48,16 @@ function dataRate2Bitmask(dataRate: ZWaveDataRate): DataRateBitmask {
 	return dataRate === ZWaveDataRate["100k"]
 		? DataRateBitmask["100k"]
 		: dataRate === ZWaveDataRate["40k"]
-		? DataRateBitmask["40k"]
-		: DataRateBitmask["9k6"];
+			? DataRateBitmask["40k"]
+			: DataRateBitmask["9k6"];
 }
 
 function bitmask2DataRate(mask: DataRateBitmask): ZWaveDataRate {
 	return mask === DataRateBitmask["100k"]
 		? ZWaveDataRate["100k"]
 		: mask === DataRateBitmask["40k"]
-		? ZWaveDataRate["40k"]
-		: ZWaveDataRate["9k6"];
+			? ZWaveDataRate["40k"]
+			: ZWaveDataRate["9k6"];
 }
 
 @commandClass(CommandClasses["Z-Wave Protocol"])
@@ -66,12 +67,11 @@ export class ZWaveProtocolCC extends CommandClass {
 }
 
 // @publicAPI
-export interface ZWaveProtocolCCNodeInformationFrameOptions
-	extends NodeInformationFrame
-{}
+export interface ZWaveProtocolCCNodeInformationFrameOptions extends NodeInformationFrame {}
 
 @CCCommand(ZWaveProtocolCommand.NodeInformationFrame)
-export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC
+export class ZWaveProtocolCCNodeInformationFrame
+	extends ZWaveProtocolCC
 	implements NodeInformationFrame
 {
 	public constructor(
@@ -128,9 +128,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC
 
 @CCCommand(ZWaveProtocolCommand.RequestNodeInformationFrame)
 @expectedCCResponse(ZWaveProtocolCCNodeInformationFrame)
-export class ZWaveProtocolCCRequestNodeInformationFrame
-	extends ZWaveProtocolCC
-{}
+export class ZWaveProtocolCCRequestNodeInformationFrame extends ZWaveProtocolCC {}
 
 // @publicAPI
 export interface ZWaveProtocolCCAssignIDsOptions {
@@ -140,9 +138,7 @@ export interface ZWaveProtocolCCAssignIDsOptions {
 
 @CCCommand(ZWaveProtocolCommand.AssignIDs)
 export class ZWaveProtocolCCAssignIDs extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCAssignIDsOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCAssignIDsOptions>) {
 		super(options);
 		this.assignedNodeId = options.assignedNodeId;
 		this.homeId = options.homeId;
@@ -259,9 +255,7 @@ export interface ZWaveProtocolCCRangeInfoOptions {
 
 @CCCommand(ZWaveProtocolCommand.RangeInfo)
 export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCRangeInfoOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCRangeInfoOptions>) {
 		super(options);
 		this.neighborNodeIds = options.neighborNodeIds;
 		this.wakeUpTime = options.wakeUpTime;
@@ -281,9 +275,7 @@ export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
 
 		let wakeUpTime: WakeUpTime | undefined;
 		if (raw.payload.length >= 2 + bitmaskLength) {
-			wakeUpTime = parseWakeUpTime(
-				raw.payload[1 + bitmaskLength],
-			);
+			wakeUpTime = parseWakeUpTime(raw.payload[1 + bitmaskLength]);
 		}
 
 		return new this({
@@ -396,24 +388,23 @@ export class ZWaveProtocolCCTransferPresentation extends ZWaveProtocolCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
-			(this.supportsNWI ? 0b0001 : 0)
-			| (this.excludeNode ? 0b0010 : 0)
-			| (this.includeNode ? 0b0100 : 0),
+			(this.supportsNWI ? 0b0001 : 0) |
+				(this.excludeNode ? 0b0010 : 0) |
+				(this.includeNode ? 0b0100 : 0),
 		]);
 		return super.serialize(ctx);
 	}
 }
 
 // @publicAPI
-export interface ZWaveProtocolCCTransferNodeInformationOptions
-	extends NodeProtocolInfoAndDeviceClass
-{
+export interface ZWaveProtocolCCTransferNodeInformationOptions extends NodeProtocolInfoAndDeviceClass {
 	sequenceNumber: number;
 	sourceNodeId: number;
 }
 
 @CCCommand(ZWaveProtocolCommand.TransferNodeInformation)
-export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC
+export class ZWaveProtocolCCTransferNodeInformation
+	extends ZWaveProtocolCC
 	implements NodeProtocolInfoAndDeviceClass
 {
 	public constructor(
@@ -529,11 +520,7 @@ export class ZWaveProtocolCCTransferRangeInformation extends ZWaveProtocolCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const nodesBitmask = encodeBitMask(this.neighborNodeIds, MAX_NODES);
 		this.payload = Bytes.concat([
-			[
-				this.sequenceNumber,
-				this.testedNodeId,
-				nodesBitmask.length,
-			],
+			[this.sequenceNumber, this.testedNodeId, nodesBitmask.length],
 			nodesBitmask,
 		]);
 		return super.serialize(ctx);
@@ -650,14 +637,13 @@ export class ZWaveProtocolCCAssignReturnRoute extends ZWaveProtocolCC {
 }
 
 // @publicAPI
-export interface ZWaveProtocolCCNewNodeRegisteredOptions
-	extends NodeInformationFrame
-{
+export interface ZWaveProtocolCCNewNodeRegisteredOptions extends NodeInformationFrame {
 	newNodeId: number;
 }
 
 @CCCommand(ZWaveProtocolCommand.NewNodeRegistered)
-export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC
+export class ZWaveProtocolCCNewNodeRegistered
+	extends ZWaveProtocolCC
 	implements NodeInformationFrame
 {
 	public constructor(
@@ -744,9 +730,7 @@ export class ZWaveProtocolCCNewRangeRegistered extends ZWaveProtocolCC {
 		validatePayload(raw.payload.length >= 2);
 		const testedNodeId = raw.payload[0];
 		const numNeighbors = raw.payload[1];
-		const neighborNodeIds = [
-			...raw.payload.subarray(2, 2 + numNeighbors),
-		];
+		const neighborNodeIds = [...raw.payload.subarray(2, 2 + numNeighbors)];
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -774,13 +758,9 @@ export interface ZWaveProtocolCCTransferNewPrimaryControllerCompleteOptions {
 }
 
 @CCCommand(ZWaveProtocolCommand.TransferNewPrimaryControllerComplete)
-export class ZWaveProtocolCCTransferNewPrimaryControllerComplete
-	extends ZWaveProtocolCC
-{
+export class ZWaveProtocolCCTransferNewPrimaryControllerComplete extends ZWaveProtocolCC {
 	public constructor(
-		options: WithAddress<
-			ZWaveProtocolCCTransferNewPrimaryControllerCompleteOptions
-		>,
+		options: WithAddress<ZWaveProtocolCCTransferNewPrimaryControllerCompleteOptions>,
 	) {
 		super(options);
 		this.genericDeviceClass = options.genericDeviceClass;
@@ -808,9 +788,7 @@ export class ZWaveProtocolCCTransferNewPrimaryControllerComplete
 }
 
 @CCCommand(ZWaveProtocolCommand.AutomaticControllerUpdateStart)
-export class ZWaveProtocolCCAutomaticControllerUpdateStart
-	extends ZWaveProtocolCC
-{}
+export class ZWaveProtocolCCAutomaticControllerUpdateStart extends ZWaveProtocolCC {}
 
 // @publicAPI
 export interface ZWaveProtocolCCSUCNodeIDOptions {
@@ -820,9 +798,7 @@ export interface ZWaveProtocolCCSUCNodeIDOptions {
 
 @CCCommand(ZWaveProtocolCommand.SUCNodeID)
 export class ZWaveProtocolCCSUCNodeID extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCSUCNodeIDOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCSUCNodeIDOptions>) {
 		super(options);
 		this.sucNodeId = options.sucNodeId;
 		this.isSIS = options.isSIS;
@@ -860,9 +836,7 @@ export interface ZWaveProtocolCCSetSUCOptions {
 
 @CCCommand(ZWaveProtocolCommand.SetSUC)
 export class ZWaveProtocolCCSetSUC extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCSetSUCOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCSetSUCOptions>) {
 		super(options);
 		this.enableSIS = options.enableSIS;
 	}
@@ -898,9 +872,7 @@ export interface ZWaveProtocolCCSetSUCAckOptions {
 
 @CCCommand(ZWaveProtocolCommand.SetSUCAck)
 export class ZWaveProtocolCCSetSUCAck extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCSetSUCAckOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCSetSUCAckOptions>) {
 		super(options);
 		this.accepted = options.accepted;
 		this.isSIS = options.isSIS;
@@ -935,9 +907,7 @@ export class ZWaveProtocolCCSetSUCAck extends ZWaveProtocolCC {
 }
 
 @CCCommand(ZWaveProtocolCommand.AssignSUCReturnRoute)
-export class ZWaveProtocolCCAssignSUCReturnRoute
-	extends ZWaveProtocolCCAssignReturnRoute
-{}
+export class ZWaveProtocolCCAssignSUCReturnRoute extends ZWaveProtocolCCAssignReturnRoute {}
 
 // @publicAPI
 export interface ZWaveProtocolCCStaticRouteRequestOptions {
@@ -992,9 +962,7 @@ export interface ZWaveProtocolCCLostOptions {
 
 @CCCommand(ZWaveProtocolCommand.Lost)
 export class ZWaveProtocolCCLost extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCLostOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCLostOptions>) {
 		super(options);
 		this.lostNodeId = options.lostNodeId;
 	}
@@ -1024,9 +992,7 @@ export interface ZWaveProtocolCCAcceptLostOptions {
 
 @CCCommand(ZWaveProtocolCommand.AcceptLost)
 export class ZWaveProtocolCCAcceptLost extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCAcceptLostOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCAcceptLostOptions>) {
 		super(options);
 		this.accepted = options.accepted;
 	}
@@ -1036,9 +1002,7 @@ export class ZWaveProtocolCCAcceptLost extends ZWaveProtocolCC {
 		ctx: CCParsingContext,
 	): ZWaveProtocolCCAcceptLost {
 		validatePayload(raw.payload.length >= 1);
-		validatePayload(
-			raw.payload[0] === 0x04 || raw.payload[0] === 0x05,
-		);
+		validatePayload(raw.payload[0] === 0x04 || raw.payload[0] === 0x05);
 		const accepted = raw.payload[0] === 0x05;
 
 		return new this({
@@ -1062,9 +1026,7 @@ export interface ZWaveProtocolCCNOPPowerOptions {
 
 @CCCommand(ZWaveProtocolCommand.NOPPower)
 export class ZWaveProtocolCCNOPPower extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCNOPPowerOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCNOPPowerOptions>) {
 		super(options);
 		if (options.powerDampening < 0 || options.powerDampening > 14) {
 			throw new ZWaveError(
@@ -1086,21 +1048,8 @@ export class ZWaveProtocolCCNOPPower extends ZWaveProtocolCC {
 			powerDampening = raw.payload[1];
 		} else if (raw.payload.length === 1) {
 			powerDampening = [
-				0xf0,
-				0xc8,
-				0xa7,
-				0x91,
-				0x77,
-				0x67,
-				0x60,
-				0x46,
-				0x38,
-				0x35,
-				0x32,
-				0x30,
-				0x24,
-				0x22,
-				0x20,
+				0xf0, 0xc8, 0xa7, 0x91, 0x77, 0x67, 0x60, 0x46, 0x38, 0x35,
+				0x32, 0x30, 0x24, 0x22, 0x20,
 			].indexOf(raw.payload[0]);
 			if (powerDampening === -1) powerDampening = 0;
 		} else {
@@ -1143,9 +1092,7 @@ export class ZWaveProtocolCCReservedIDs extends ZWaveProtocolCC {
 		validatePayload(raw.payload.length >= 1);
 		const numNodeIDs = raw.payload[0];
 		validatePayload(raw.payload.length >= 1 + numNodeIDs);
-		const reservedNodeIDs = [
-			...raw.payload.subarray(1, 1 + numNodeIDs),
-		];
+		const reservedNodeIDs = [...raw.payload.subarray(1, 1 + numNodeIDs)];
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -1262,9 +1209,7 @@ export interface ZWaveProtocolCCNodesExistOptions {
 	testResponseForZWaveProtocolNodesExist,
 )
 export class ZWaveProtocolCCNodesExist extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCNodesExistOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCNodesExistOptions>) {
 		super(options);
 		this.nodeMaskType = options.nodeMaskType;
 		this.nodeIDs = options.nodeIDs;
@@ -1308,9 +1253,7 @@ export interface ZWaveProtocolCCSetNWIModeOptions {
 
 @CCCommand(ZWaveProtocolCommand.SetNWIMode)
 export class ZWaveProtocolCCSetNWIMode extends ZWaveProtocolCC {
-	public constructor(
-		options: WithAddress<ZWaveProtocolCCSetNWIModeOptions>,
-	) {
+	public constructor(options: WithAddress<ZWaveProtocolCCSetNWIModeOptions>) {
 		super(options);
 		this.enabled = options.enabled;
 		this.timeoutMinutes = options.timeoutMinutes;
@@ -1344,9 +1287,7 @@ export class ZWaveProtocolCCSetNWIMode extends ZWaveProtocolCC {
 }
 
 @CCCommand(ZWaveProtocolCommand.ExcludeRequest)
-export class ZWaveProtocolCCExcludeRequest
-	extends ZWaveProtocolCCNodeInformationFrame
-{}
+export class ZWaveProtocolCCExcludeRequest extends ZWaveProtocolCCNodeInformationFrame {}
 
 // @publicAPI
 export interface ZWaveProtocolCCAssignReturnRoutePriorityOptions {
@@ -1389,9 +1330,7 @@ export class ZWaveProtocolCCAssignReturnRoutePriority extends ZWaveProtocolCC {
 }
 
 @CCCommand(ZWaveProtocolCommand.AssignSUCReturnRoutePriority)
-export class ZWaveProtocolCCAssignSUCReturnRoutePriority
-	extends ZWaveProtocolCCAssignReturnRoutePriority
-{}
+export class ZWaveProtocolCCAssignSUCReturnRoutePriority extends ZWaveProtocolCCAssignReturnRoutePriority {}
 
 // @publicAPI
 export interface ZWaveProtocolCCSmartStartIncludedNodeInformationOptions {
@@ -1399,13 +1338,9 @@ export interface ZWaveProtocolCCSmartStartIncludedNodeInformationOptions {
 }
 
 @CCCommand(ZWaveProtocolCommand.SmartStartIncludedNodeInformation)
-export class ZWaveProtocolCCSmartStartIncludedNodeInformation
-	extends ZWaveProtocolCC
-{
+export class ZWaveProtocolCCSmartStartIncludedNodeInformation extends ZWaveProtocolCC {
 	public constructor(
-		options: WithAddress<
-			ZWaveProtocolCCSmartStartIncludedNodeInformationOptions
-		>,
+		options: WithAddress<ZWaveProtocolCCSmartStartIncludedNodeInformationOptions>,
 	) {
 		super(options);
 		if (options.nwiHomeId.length !== 4) {
@@ -1439,11 +1374,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation
 }
 
 @CCCommand(ZWaveProtocolCommand.SmartStartPrime)
-export class ZWaveProtocolCCSmartStartPrime
-	extends ZWaveProtocolCCNodeInformationFrame
-{}
+export class ZWaveProtocolCCSmartStartPrime extends ZWaveProtocolCCNodeInformationFrame {}
 
 @CCCommand(ZWaveProtocolCommand.SmartStartInclusionRequest)
-export class ZWaveProtocolCCSmartStartInclusionRequest
-	extends ZWaveProtocolCCNodeInformationFrame
-{}
+export class ZWaveProtocolCCSmartStartInclusionRequest extends ZWaveProtocolCCNodeInformationFrame {}

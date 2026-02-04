@@ -1,4 +1,5 @@
 import type { CCId } from "../traits/CommandClasses.js";
+
 import type { EncapsulationFlags } from "./EncapsulationFlags.js";
 import type { MessagePriority } from "./MessagePriority.js";
 import type { SecurityClass } from "./SecurityClass.js";
@@ -67,24 +68,21 @@ export interface SendMessageOptions {
 }
 
 export type SupervisionOptions =
-	| (
-		& {
+	| ({
 			/** Whether supervision may be used. `false` disables supervision. Default: `"auto"`. */
 			useSupervision?: "auto";
-		}
-		& (
+	  } & (
 			| {
-				requestStatusUpdates?: false;
-			}
+					requestStatusUpdates?: false;
+			  }
 			| {
-				requestStatusUpdates: true;
-				onUpdate: SupervisionUpdateHandler;
-			}
-		)
-	)
+					requestStatusUpdates: true;
+					onUpdate: SupervisionUpdateHandler;
+			  }
+	  ))
 	| {
-		useSupervision: false;
-	};
+			useSupervision: false;
+	  };
 
 export type SendCommandSecurityS2Options = {
 	/** Send the command using a different (lower) security class */
@@ -97,11 +95,9 @@ export type SendCommandSecurityS2Options = {
 	s2MulticastGroupId?: number;
 };
 
-export type SendCommandOptions =
-	& SendMessageOptions
-	& SupervisionOptions
-	& SendCommandSecurityS2Options
-	& {
+export type SendCommandOptions = SendMessageOptions &
+	SupervisionOptions &
+	SendCommandSecurityS2Options & {
 		/** How many times the driver should try to send the message. Defaults to the configured Driver option */
 		maxSendAttempts?: number;
 		/** Whether the driver should automatically handle the encapsulation. Default: true */
@@ -115,5 +111,6 @@ export type SendCommandOptions =
 	};
 
 export type SendCommandReturnType<TResponse extends CCId | undefined> =
-	undefined extends TResponse ? SupervisionResult | undefined
+	undefined extends TResponse
+		? SupervisionResult | undefined
 		: TResponse | undefined;

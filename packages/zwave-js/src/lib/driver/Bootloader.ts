@@ -57,8 +57,8 @@ export class Bootloader {
 	public findOption(
 		predicate: (option: string) => boolean,
 	): number | undefined {
-		return [...this.options.entries()].find(
-			([, option]) => predicate(option),
+		return [...this.options.entries()].find(([, option]) =>
+			predicate(option),
 		)?.[0];
 	}
 

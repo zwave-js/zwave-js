@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCValues,
 	ZWaveProtocolCCNodeInformationFrame,
@@ -5,7 +7,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { type MockNodeBehavior } from "@zwave-js/testing";
-import path from "node:path";
+
 import { InclusionStrategy } from "../../controller/Inclusion.js";
 import { type ZWaveNode } from "../../node/Node.js";
 import { integrationTest } from "../integrationTestSuite.js";
@@ -149,12 +151,12 @@ integrationTestMulti(
 
 				setup(node) {
 					// Override the node's behavior to include Basic CC in the NIF
-					const respondToRequestNodeInfoWithBasicCC:
-						MockNodeBehavior = {
+					const respondToRequestNodeInfoWithBasicCC: MockNodeBehavior =
+						{
 							handleCC(controller, self, receivedCC) {
 								if (
-									receivedCC
-										instanceof ZWaveProtocolCCRequestNodeInformationFrame
+									receivedCC instanceof
+									ZWaveProtocolCCRequestNodeInformationFrame
 								) {
 									const cc =
 										new ZWaveProtocolCCNodeInformationFrame(
@@ -166,8 +168,9 @@ integrationTestMulti(
 													...self.implementedCCs,
 												]
 													// Only include supported CCs
-													.filter(([, info]) =>
-														info.isSupported
+													.filter(
+														([, info]) =>
+															info.isSupported,
 													)
 													// FIXME: Filter out secure CCs if the node isn't secure
 													.map(([ccId]) => ccId),
@@ -177,9 +180,7 @@ integrationTestMulti(
 								}
 							},
 						};
-					node.defineBehavior(
-						respondToRequestNodeInfoWithBasicCC,
-					);
+					node.defineBehavior(respondToRequestNodeInfoWithBasicCC);
 				},
 			};
 

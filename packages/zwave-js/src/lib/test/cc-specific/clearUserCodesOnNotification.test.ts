@@ -3,6 +3,7 @@ import { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import { CommandClasses } from "@zwave-js/core";
 import { ccCaps, createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -22,11 +23,11 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// Set up some user codes in the cache
 			const userCode1ValueId = UserCodeCCValues.userCode(1).endpoint(0);
-			const userIdStatus1ValueId = UserCodeCCValues.userIdStatus(1)
-				.endpoint(0);
+			const userIdStatus1ValueId =
+				UserCodeCCValues.userIdStatus(1).endpoint(0);
 			const userCode2ValueId = UserCodeCCValues.userCode(2).endpoint(0);
-			const userIdStatus2ValueId = UserCodeCCValues.userIdStatus(2)
-				.endpoint(0);
+			const userIdStatus2ValueId =
+				UserCodeCCValues.userIdStatus(2).endpoint(0);
 
 			// Manually set user codes in the cache (simulating a previous state)
 			node.valueDB.setValue(userCode1ValueId, "1234");

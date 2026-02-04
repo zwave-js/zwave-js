@@ -77,15 +77,15 @@ function testCallbackForRemoveNodeRequest(
 		case RemoveNodeType.Controller:
 		case RemoveNodeType.Slave:
 			return (
-				received.status === RemoveNodeStatus.Ready
-				|| received.status === RemoveNodeStatus.Failed
+				received.status === RemoveNodeStatus.Ready ||
+				received.status === RemoveNodeStatus.Failed
 			);
 		case RemoveNodeType.Stop:
 			return (
-				received.status === RemoveNodeStatus.Done
+				received.status === RemoveNodeStatus.Done ||
 				// This status is sent by some controllers when stopping a failed exclusion
-				|| received.status === RemoveNodeStatus.Reserved_0x05
-				|| received.status === RemoveNodeStatus.Failed
+				received.status === RemoveNodeStatus.Reserved_0x05 ||
+				received.status === RemoveNodeStatus.Failed
 			);
 		default:
 			return false;
@@ -93,9 +93,7 @@ function testCallbackForRemoveNodeRequest(
 }
 
 @expectedCallback(testCallbackForRemoveNodeRequest)
-export class RemoveNodeFromNetworkRequest
-	extends RemoveNodeFromNetworkRequestBase
-{
+export class RemoveNodeFromNetworkRequest extends RemoveNodeFromNetworkRequestBase {
 	public constructor(
 		options: RemoveNodeFromNetworkRequestOptions & MessageBaseOptions,
 	) {
@@ -142,28 +140,29 @@ export class RemoveNodeFromNetworkRequest
 	}
 }
 
-export type RemoveNodeFromNetworkRequestStatusReportOptions = {
-	status:
-		| RemoveNodeStatus.Ready
-		| RemoveNodeStatus.NodeFound
-		| RemoveNodeStatus.Failed
-		| RemoveNodeStatus.Reserved_0x05
-		| RemoveNodeStatus.Done;
-} | {
-	status:
-		| RemoveNodeStatus.RemovingController
-		| RemoveNodeStatus.RemovingSlave;
-	nodeId: number;
-};
+export type RemoveNodeFromNetworkRequestStatusReportOptions =
+	| {
+			status:
+				| RemoveNodeStatus.Ready
+				| RemoveNodeStatus.NodeFound
+				| RemoveNodeStatus.Failed
+				| RemoveNodeStatus.Reserved_0x05
+				| RemoveNodeStatus.Done;
+	  }
+	| {
+			status:
+				| RemoveNodeStatus.RemovingController
+				| RemoveNodeStatus.RemovingSlave;
+			nodeId: number;
+	  };
 
 export class RemoveNodeFromNetworkRequestStatusReport
 	extends RemoveNodeFromNetworkRequestBase
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& RemoveNodeFromNetworkRequestStatusReportOptions
-			& MessageBaseOptions,
+		options: RemoveNodeFromNetworkRequestStatusReportOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 

@@ -1,4 +1,15 @@
+import {
+	NodeStatus,
+	TransmitStatus,
+	ZWaveErrorCodes,
+	assertZWaveError,
+} from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
+import {
+	SendDataAbort,
+	SendDataRequest,
+	SendDataRequestTransmitReport,
+} from "@zwave-js/serial/serialapi";
 import {
 	type MockControllerBehavior,
 	type MockControllerCapabilities,
@@ -6,23 +17,11 @@ import {
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
 } from "../../controller/MockControllerState.js";
-
-import {
-	NodeStatus,
-	TransmitStatus,
-	ZWaveErrorCodes,
-	assertZWaveError,
-} from "@zwave-js/core";
-
-import {
-	SendDataAbort,
-	SendDataRequest,
-	SendDataRequestTransmitReport,
-} from "@zwave-js/serial/serialapi";
 import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldTimeOut: boolean;
@@ -33,8 +32,8 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	...getDefaultMockControllerCapabilities(),
 	supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
 		(ft) =>
-			ft !== FunctionType.SendDataBridge
-			&& ft !== FunctionType.SendDataMulticastBridge,
+			ft !== FunctionType.SendDataBridge &&
+			ft !== FunctionType.SendDataMulticastBridge,
 	),
 };
 
@@ -64,8 +63,8 @@ integrationTest(
 							MockControllerStateKeys.CommunicationState,
 						) as MockControllerCommunicationState | undefined;
 						if (
-							state != undefined
-							&& state !== MockControllerCommunicationState.Idle
+							state != undefined &&
+							state !== MockControllerCommunicationState.Idle
 						) {
 							throw new Error(
 								"Received SendDataRequest while not idle",
@@ -106,8 +105,9 @@ integrationTest(
 			node.markAsAlive();
 			shouldTimeOut = true;
 
-			const basicSetPromise = node.commandClasses.Basic.set(99)
-				.catch((e) => e);
+			const basicSetPromise = node.commandClasses.Basic.set(99).catch(
+				(e) => e,
+			);
 
 			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
@@ -125,7 +125,7 @@ integrationTest(
 			t.expect(() =>
 				mockController.assertReceivedHostMessage(
 					(msg) => msg.functionType === FunctionType.SoftReset,
-				)
+				),
 			).toThrow();
 
 			// And the node should be marked dead
@@ -160,8 +160,8 @@ integrationTest(
 							MockControllerStateKeys.CommunicationState,
 						) as MockControllerCommunicationState | undefined;
 						if (
-							state != undefined
-							&& state !== MockControllerCommunicationState.Idle
+							state != undefined &&
+							state !== MockControllerCommunicationState.Idle
 						) {
 							throw new Error(
 								"Received SendDataRequest while not idle",

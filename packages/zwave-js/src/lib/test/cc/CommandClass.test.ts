@@ -37,17 +37,18 @@ test(`creating and serializing should work for unspecified commands`, async (t) 
 		command: cc,
 		callbackId: 0xfe,
 	});
-	await t.expect(
-		msg.serialize({} as any),
-	).resolves.toStrictEqual(Bytes.from("010c001302055d0201020325fe63", "hex"));
+	await t
+		.expect(msg.serialize({} as any))
+		.resolves.toStrictEqual(
+			Bytes.from("010c001302055d0201020325fe63", "hex"),
+		);
 });
 
 test("parse() returns an un-specialized instance when receiving a non-implemented CC", async (t) => {
 	// This is a Node Provisioning CC. Change it when that CC is implemented
-	const cc = await CommandClass.parse(
-		Bytes.from("78030100", "hex"),
-		{ sourceNodeId: 5 } as any,
-	);
+	const cc = await CommandClass.parse(Bytes.from("78030100", "hex"), {
+		sourceNodeId: 5,
+	} as any);
 	t.expect(cc.constructor).toBe(CommandClass);
 	t.expect(cc.nodeId).toBe(5);
 	t.expect(cc.ccId).toBe(0x78);
@@ -56,12 +57,12 @@ test("parse() returns an un-specialized instance when receiving a non-implemente
 });
 
 test("parse() does not throw when the CC is implemented", (t) => {
-	t.expect(async () =>
-		// CRC-16 with BasicCC
-		await CommandClass.parse(
-			Bytes.from("560120024d26", "hex"),
-			{ sourceNodeId: 5 } as any,
-		)
+	t.expect(
+		async () =>
+			// CRC-16 with BasicCC
+			await CommandClass.parse(Bytes.from("560120024d26", "hex"), {
+				sourceNodeId: 5,
+			} as any),
 	).not.toThrow();
 });
 

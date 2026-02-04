@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import {
 	type CallExpression,
 	type Identifier,
@@ -28,48 +29,61 @@ async function main() {
 	};
 
 	for (const file of sourceFiles) {
-		const avaImport = file.getImportDeclaration((decl) =>
-			decl.getModuleSpecifierValue() === "ava"
+		const avaImport = file.getImportDeclaration(
+			(decl) => decl.getModuleSpecifierValue() === "ava",
 		);
 		if (!avaImport) continue;
 
 		// debugger;
 
 		// Find setup and teardown
-		const setups = file.getDescendantsOfKind(SyntaxKind.CallExpression)
+		const setups = file
+			.getDescendantsOfKind(SyntaxKind.CallExpression)
 			.map((c) => {
 				const fn = c.getExpressionIfKind(
 					SyntaxKind.PropertyAccessExpression,
 				);
 				const fnName = fn?.getText();
 				if (
-					!fn
-					|| !fnName?.startsWith("test.")
-					|| !(fnName in setupReplacements)
-				) return;
+					!fn ||
+					!fnName?.startsWith("test.") ||
+					!(fnName in setupReplacements)
+				)
+					return;
 				return [
 					fn,
 					(setupReplacements as any)[fnName] as string,
 				] as const;
-			}).filter((f) => f != undefined);
+			})
+			.filter((f) => f != undefined);
 
 		// Find tests
-		const tests = file.getDescendantsOfKind(SyntaxKind.CallExpression)
-			.filter((c) =>
-				c.getExpressionIfKind(SyntaxKind.Identifier)?.getText()
-					=== "test"
-				|| c.getExpressionIfKind(SyntaxKind.PropertyAccessExpression)
-						?.getExpressionIfKind(SyntaxKind.Identifier)?.getText()
-					=== "test"
-			).filter((f) =>
-				f.getArguments().length >= 2
-				&& f.getArguments()[1].asKind(SyntaxKind.ArrowFunction)
-						?.getParameters().length === 1
+		const tests = file
+			.getDescendantsOfKind(SyntaxKind.CallExpression)
+			.filter(
+				(c) =>
+					c.getExpressionIfKind(SyntaxKind.Identifier)?.getText() ===
+						"test" ||
+					c
+						.getExpressionIfKind(
+							SyntaxKind.PropertyAccessExpression,
+						)
+						?.getExpressionIfKind(SyntaxKind.Identifier)
+						?.getText() === "test",
+			)
+			.filter(
+				(f) =>
+					f.getArguments().length >= 2 &&
+					f
+						.getArguments()[1]
+						.asKind(SyntaxKind.ArrowFunction)
+						?.getParameters().length === 1,
 			);
 
-		const testMethods = tests.map((t) =>
-			t.getExpressionIfKind(SyntaxKind.PropertyAccessExpression)
-		)
+		const testMethods = tests
+			.map((t) =>
+				t.getExpressionIfKind(SyntaxKind.PropertyAccessExpression),
+			)
 			.filter((p) => p != undefined)
 			.map((prop) => {
 				const replacement = (testReplacements as any)[prop.getText()] as
@@ -77,27 +91,31 @@ async function main() {
 					| undefined;
 				if (!replacement) return;
 				return [prop, replacement] as const;
-			}).filter((f) => f != undefined);
+			})
+			.filter((f) => f != undefined);
 
 		const testsAndContexts = tests.map((t) => {
-			const context =
-				t.getArguments()[1].asKind(SyntaxKind.ArrowFunction)!
-					.getParameters()[0];
+			const context = t
+				.getArguments()[1]
+				.asKind(SyntaxKind.ArrowFunction)!
+				.getParameters()[0];
 			return [t, context] as const;
 		});
-		const testsAndContextUsages = testsAndContexts.map((
-			[t, c],
-		) => [t, c.findReferencesAsNodes()]);
+		const testsAndContextUsages = testsAndContexts.map(([t, c]) => [
+			t,
+			c.findReferencesAsNodes(),
+		]);
 
-		const contextUsages = testsAndContextUsages.flatMap(([, usages]) =>
-			usages
+		const contextUsages = testsAndContextUsages.flatMap(
+			([, usages]) => usages,
 		);
 
 		if (
-			testMethods.length === 0
-			&& contextUsages.length === 0
-			&& setups.length === 0
-		) continue;
+			testMethods.length === 0 &&
+			contextUsages.length === 0 &&
+			setups.length === 0
+		)
+			continue;
 
 		for (const [propAccess, newName] of testMethods) {
 			propAccess.replaceWithText(newName);
@@ -194,14 +212,10 @@ function replaceAssertion_is(
 	if (arg1) callExpr.removeArgument(1);
 	switch (arg1) {
 		case "undefined":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.toBeUndefined()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.toBeUndefined()`);
 			break;
 		case "null":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.toBeNull()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.toBeNull()`);
 			break;
 		default:
 			callExpr.replaceWithText(
@@ -218,9 +232,7 @@ function replaceAssertion_staticValue(
 	value: string,
 ) {
 	propAccess.replaceWithText(`${ident.getText()}.expect`);
-	callExpr.replaceWithText(
-		`${callExpr.getText()}.toBe(${value})`,
-	);
+	callExpr.replaceWithText(`${callExpr.getText()}.toBe(${value})`);
 }
 
 function replaceAssertion_staticAssertion(

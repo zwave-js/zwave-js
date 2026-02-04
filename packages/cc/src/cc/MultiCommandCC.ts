@@ -9,6 +9,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -60,8 +61,8 @@ export class MultiCommandCC extends CommandClass {
 	/** Tests if a command targets a specific endpoint and thus requires encapsulation */
 	public static requiresEncapsulation(cc: CommandClass): boolean {
 		return (
-			cc.endpointIndex !== 0
-			&& !(cc instanceof MultiCommandCCCommandEncapsulation)
+			cc.endpointIndex !== 0 &&
+			!(cc instanceof MultiCommandCCCommandEncapsulation)
 		);
 	}
 
@@ -74,13 +75,11 @@ export class MultiCommandCC extends CommandClass {
 		});
 
 		// Copy the "sum" of the encapsulation flags from the encapsulated CCs
-		for (
-			const flag of [
-				EncapsulationFlags.Supervision,
-				EncapsulationFlags.Security,
-				EncapsulationFlags.CRC16,
-			] as const
-		) {
+		for (const flag of [
+			EncapsulationFlags.Supervision,
+			EncapsulationFlags.Security,
+			EncapsulationFlags.CRC16,
+		] as const) {
 			ret.toggleEncapsulationFlag(
 				flag,
 				CCs.some((cc) => cc.encapsulationFlags & flag),
@@ -125,10 +124,7 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
 			validatePayload(raw.payload.length >= offset + 1 + cmdLength);
 			encapsulated.push(
 				await CommandClass.parse(
-					raw.payload.subarray(
-						offset + 1,
-						offset + 1 + cmdLength,
-					),
+					raw.payload.subarray(offset + 1, offset + 1 + cmdLength),
 					ctx,
 				),
 			);

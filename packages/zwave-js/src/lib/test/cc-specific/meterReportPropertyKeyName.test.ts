@@ -1,7 +1,9 @@
 // repro from https://github.com/zwave-js/zwave-js-ui/issues/101#issuecomment-749007701
 
-import { Bytes } from "@zwave-js/shared";
 import path from "node:path";
+
+import { Bytes } from "@zwave-js/shared";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

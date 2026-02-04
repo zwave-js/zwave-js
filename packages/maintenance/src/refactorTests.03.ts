@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import {
 	type CallExpression,
 	type Identifier,
@@ -17,20 +18,18 @@ async function main() {
 
 	for (const file of sourceFiles) {
 		// Find integration tests
-		const testBodies = file.getDescendantsOfKind(
-			SyntaxKind.PropertyAssignment,
-		)
+		const testBodies = file
+			.getDescendantsOfKind(SyntaxKind.PropertyAssignment)
 			.filter((c) => c.getName() === "testBody")
 			.map((t) => t.getInitializerIfKind(SyntaxKind.ArrowFunction))
 			.filter((f) => f != undefined);
 
-		const testBodies2 = file.getDescendantsOfKind(
-			SyntaxKind.MethodDeclaration,
-		).filter((m) => m.getName() === "testBody");
+		const testBodies2 = file
+			.getDescendantsOfKind(SyntaxKind.MethodDeclaration)
+			.filter((m) => m.getName() === "testBody");
 
-		const contextUsages = [...testBodies, ...testBodies2].map((t) =>
-			t.getParameters()[0]
-		)
+		const contextUsages = [...testBodies, ...testBodies2]
+			.map((t) => t.getParameters()[0])
 			.filter((p) => p != undefined)
 			.flatMap((p) => p.findReferencesAsNodes());
 
@@ -141,14 +140,10 @@ function replaceAssertion_is(
 	if (arg1) callExpr.removeArgument(1);
 	switch (arg1) {
 		case "undefined":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.toBeUndefined()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.toBeUndefined()`);
 			break;
 		case "null":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.toBeNull()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.toBeNull()`);
 			break;
 		default:
 			callExpr.replaceWithText(
@@ -169,14 +164,10 @@ function replaceAssertion_not(
 	if (arg1) callExpr.removeArgument(1);
 	switch (arg1) {
 		case "undefined":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.toBeDefined()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.toBeDefined()`);
 			break;
 		case "null":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.not.toBeNull()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.not.toBeNull()`);
 			break;
 		default:
 			callExpr.replaceWithText(
@@ -193,9 +184,7 @@ function replaceAssertion_staticValue(
 	value: string,
 ) {
 	propAccess.replaceWithText(`${ident.getText()}.expect`);
-	callExpr.replaceWithText(
-		`${callExpr.getText()}.toBe(${value})`,
-	);
+	callExpr.replaceWithText(`${callExpr.getText()}.toBe(${value})`);
 }
 
 function replaceAssertion_staticAssertion(

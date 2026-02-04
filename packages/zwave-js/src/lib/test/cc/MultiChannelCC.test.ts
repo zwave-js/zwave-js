@@ -22,6 +22,7 @@ import { Bytes, type BytesView } from "@zwave-js/shared";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 function buildCCBuffer(payload: BytesView): BytesView {
@@ -49,9 +50,7 @@ test("the EndPointGet command should serialize correctly", async (t) => {
 			MultiChannelCommand.EndPointGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the CapabilityGet command should serialize correctly", async (t) => {
@@ -65,9 +64,7 @@ test("the CapabilityGet command should serialize correctly", async (t) => {
 			7, // EndPoint
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the EndPointFind command should serialize correctly", async (t) => {
@@ -83,9 +80,7 @@ test("the EndPointFind command should serialize correctly", async (t) => {
 			0x02, // specificClass
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the CommandEncapsulation command should serialize correctly", async (t) => {
@@ -105,9 +100,7 @@ test("the CommandEncapsulation command should serialize correctly", async (t) =>
 			5, // target value
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the AggregatedMembersGet command should serialize correctly", async (t) => {
@@ -121,9 +114,7 @@ test("the AggregatedMembersGet command should serialize correctly", async (t) =>
 			6, // EndPoint
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the CommandEncapsulation command should also accept V1CommandEncapsulation as a response", (t) => {
@@ -166,10 +157,9 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as MultiChannelCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as MultiChannelCC;
 	t.expect(cc.constructor).toBe(MultiChannelCC);
 });
 
@@ -247,9 +237,7 @@ test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCReport = expected", (t)
 	);
 	ccResponse.endpointIndex = 2;
 
-	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
-		true,
-	);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(true);
 });
 
 test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCGet = unexpected", (t) => {
@@ -267,9 +255,7 @@ test("MultiChannelCC/BasicCCGet => MultiChannelCC/BasicCCGet = unexpected", (t) 
 	);
 	ccResponse.endpointIndex = 2;
 
-	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
-		false,
-	);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(false);
 });
 
 test("MultiChannelCC/BasicCCGet => MultiCommandCC/BasicCCReport = unexpected", (t) => {
@@ -287,9 +273,7 @@ test("MultiChannelCC/BasicCCGet => MultiCommandCC/BasicCCReport = unexpected", (
 	]);
 	ccResponse.endpointIndex = 2;
 
-	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
-		false,
-	);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(false);
 });
 
 integrationTest(
@@ -309,15 +293,11 @@ integrationTest(
 			endpoints: [
 				{
 					// EP 1
-					commandClasses: [
-						CommandClasses["Binary Switch"],
-					],
+					commandClasses: [CommandClasses["Binary Switch"]],
 				},
 				{
 					// EP 2
-					commandClasses: [
-						CommandClasses["Binary Switch"],
-					],
+					commandClasses: [CommandClasses["Binary Switch"]],
 				},
 			],
 		},
@@ -325,15 +305,9 @@ integrationTest(
 		async testBody(t, driver, node, mockController, mockNode) {
 			// By default, all endpoint values are false
 			const currentValueValue = BinarySwitchCCValues.currentValue;
-			t.expect(
-				node.getValue(currentValueValue.endpoint(0)),
-			).toBe(false);
-			t.expect(
-				node.getValue(currentValueValue.endpoint(1)),
-			).toBe(false);
-			t.expect(
-				node.getValue(currentValueValue.endpoint(2)),
-			).toBe(false);
+			t.expect(node.getValue(currentValueValue.endpoint(0))).toBe(false);
+			t.expect(node.getValue(currentValueValue.endpoint(1))).toBe(false);
+			t.expect(node.getValue(currentValueValue.endpoint(2))).toBe(false);
 
 			// Send a report from endpoint 2
 			let cc: CommandClass = new BinarySwitchCCReport({
@@ -352,15 +326,9 @@ integrationTest(
 			await wait(100);
 
 			// Now only endpoint 2 should be true
-			t.expect(
-				node.getValue(currentValueValue.endpoint(0)),
-			).toBe(false);
-			t.expect(
-				node.getValue(currentValueValue.endpoint(1)),
-			).toBe(false);
-			t.expect(
-				node.getValue(currentValueValue.endpoint(2)),
-			).toBe(true);
+			t.expect(node.getValue(currentValueValue.endpoint(0))).toBe(false);
+			t.expect(node.getValue(currentValueValue.endpoint(1))).toBe(false);
+			t.expect(node.getValue(currentValueValue.endpoint(2))).toBe(true);
 		},
 	},
 );

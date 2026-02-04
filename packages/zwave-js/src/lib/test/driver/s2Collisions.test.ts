@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCReport,
 	BasicCCValues,
@@ -26,7 +28,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -48,9 +50,7 @@ integrationTest(
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (
-						receivedCC instanceof SupervisionCCGet
-					) {
+					if (receivedCC instanceof SupervisionCCGet) {
 						let cc: CommandClass = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
 							sessionId: receivedCC.sessionId,
@@ -182,9 +182,7 @@ integrationTest(
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (
-						receivedCC instanceof SupervisionCCGet
-					) {
+					if (receivedCC instanceof SupervisionCCGet) {
 						let cc: CommandClass = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
 							sessionId: receivedCC.sessionId,
@@ -225,9 +223,7 @@ integrationTest(
 			});
 			nodeToHost = SupervisionCC.encapsulate(
 				nodeToHost,
-				driver.getNextSupervisionSessionId(
-					mockController.ownNodeId,
-				),
+				driver.getNextSupervisionSessionId(mockController.ownNodeId),
 				false,
 			);
 			nodeToHost = Security2CC.encapsulate(
@@ -243,11 +239,10 @@ integrationTest(
 			);
 			const reportConfirmation = mockNode.expectControllerFrame(
 				(f): f is MockZWaveRequestFrame =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof Security2CCMessageEncapsulation
-					&& f.payload.encapsulated instanceof SupervisionCCReport
-					&& f.payload.encapsulated.status
-						=== SupervisionStatus.Success,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof Security2CCMessageEncapsulation &&
+					f.payload.encapsulated instanceof SupervisionCCReport &&
+					f.payload.encapsulated.status === SupervisionStatus.Success,
 				{ timeout: 500 },
 			);
 
@@ -282,9 +277,7 @@ integrationTest(
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (
-						receivedCC instanceof SupervisionCCGet
-					) {
+					if (receivedCC instanceof SupervisionCCGet) {
 						let cc: CommandClass = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
 							sessionId: receivedCC.sessionId,
@@ -329,9 +322,10 @@ integrationTest(
 			);
 			// Disable supervision for the controller command. This should cause a NonceReport to be received
 			// after the transaction is considered complete.
-			const p2 = node.commandClasses.Basic
-				.withOptions({ useSupervision: false, s2VerifyDelivery: true })
-				.set(0);
+			const p2 = node.commandClasses.Basic.withOptions({
+				useSupervision: false,
+				s2VerifyDelivery: true,
+			}).set(0);
 
 			const [, p2result] = await Promise.all([p1, p2]);
 

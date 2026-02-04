@@ -12,6 +12,7 @@ import {
 	EncapsulationFlags,
 	type LogNode,
 } from "@zwave-js/core";
+
 import type { ZWaveNode } from "../Node.js";
 
 export async function handleAGINameGet(
@@ -33,8 +34,8 @@ export async function handleAGINameGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	await api.reportGroupName(1, "Lifeline");
@@ -59,8 +60,8 @@ export async function handleAGIInfoGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	await api.reportGroupInfo({
@@ -96,8 +97,8 @@ export async function handleAGICommandListGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	await api.reportCommands(
@@ -125,8 +126,8 @@ export async function handleAssociationSupportedGroupingsGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	// We only "support" the lifeline group

@@ -19,6 +19,7 @@ import {
 	priority,
 } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
+
 import {
 	ApplicationUpdateRequestNodeInfoReceived,
 	ApplicationUpdateRequestNodeInfoRequestFailed,
@@ -29,7 +30,8 @@ export interface RequestNodeInfoResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.RequestNodeInfo)
-export class RequestNodeInfoResponse extends Message
+export class RequestNodeInfoResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -78,9 +80,9 @@ function testCallbackForRequestNodeInfoRequest(
 	received: Message,
 ) {
 	return (
-		(received instanceof ApplicationUpdateRequestNodeInfoReceived
-			&& received.nodeId === sent.nodeId)
-		|| received instanceof ApplicationUpdateRequestNodeInfoRequestFailed
+		(received instanceof ApplicationUpdateRequestNodeInfoReceived &&
+			received.nodeId === sent.nodeId) ||
+		received instanceof ApplicationUpdateRequestNodeInfoRequestFailed
 	);
 }
 
@@ -100,11 +102,7 @@ export class RequestNodeInfoRequest extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): RequestNodeInfoRequest {
-		const nodeId = parseNodeID(
-			raw.payload,
-			ctx.nodeIdType,
-			0,
-		).nodeId;
+		const nodeId = parseNodeID(raw.payload, ctx.nodeIdType, 0).nodeId;
 
 		return new this({
 			nodeId,

@@ -30,6 +30,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro for https://github.com/zwave-js/zwave-js/issues/6305
@@ -51,9 +52,8 @@ integrationTest(
 			const respondWithInvalidVersionReport: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof VersionCCCommandClassGet
-						&& receivedCC.requestedCC
-							=== CommandClasses["Security 2"]
+						receivedCC instanceof VersionCCCommandClassGet &&
+						receivedCC.requestedCC === CommandClasses["Security 2"]
 					) {
 						let cc: CommandClass = new VersionCCCommandClassReport({
 							nodeId: controller.ownNodeId,
@@ -93,9 +93,8 @@ integrationTest(
 			const respondWithInvalidVersionReport: MockNodeBehavior = {
 				async handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof VersionCCCommandClassGet
-						&& receivedCC.requestedCC
-							=== CommandClasses.Security
+						receivedCC instanceof VersionCCCommandClassGet &&
+						receivedCC.requestedCC === CommandClasses.Security
 					) {
 						await wait(100);
 

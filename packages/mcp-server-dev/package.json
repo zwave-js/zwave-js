@@ -1,58 +1,58 @@
 {
-  "name": "@zwave-js/mcp-server-dev",
-  "version": "15.20.0",
-  "private": true,
-  "description": "MCP development server for Z-Wave JS tooling",
-  "keywords": [
-    "zwave",
-    "development",
-    "mcp",
-    "model-context-protocol"
-  ],
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
-  "type": "module",
-  "bin": {
-    "zwave-dev-mcp": "./build/index.js"
-  },
-  "author": {
-    "name": "AlCalzone",
-    "email": "d.griesel@gmx.net"
-  },
-  "license": "MIT",
-  "homepage": "https://github.com/zwave-js/zwave-js#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zwave-js/zwave-js.git"
-  },
-  "bugs": {
-    "url": "https://github.com/zwave-js/zwave-js/issues"
-  },
-  "funding": {
-    "url": "https://github.com/sponsors/AlCalzone/"
-  },
-  "files": [
-    "build/**/*.{js,d.ts,map}"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.3",
-    "nano-spawn": "^2.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.19.23",
-    "typescript": "5.9.3"
-  },
-  "scripts": {
-    "build": "tsc -b",
-    "bootstrap": "yarn build",
-    "clean": "del-cli build/ *.tsbuildinfo",
-    "lint:ts": "eslint --cache --cache-location .eslintcache/ -c ../../eslint.config.mjs src/**/*.ts",
-    "lint:ts:fix": "yarn run lint:ts --fix"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+	"name": "@zwave-js/mcp-server-dev",
+	"version": "15.20.0",
+	"private": true,
+	"description": "MCP development server for Z-Wave JS tooling",
+	"keywords": [
+		"development",
+		"mcp",
+		"model-context-protocol",
+		"zwave"
+	],
+	"homepage": "https://github.com/zwave-js/zwave-js#readme",
+	"bugs": {
+		"url": "https://github.com/zwave-js/zwave-js/issues"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "AlCalzone",
+		"email": "d.griesel@gmx.net"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/zwave-js/zwave-js.git"
+	},
+	"funding": {
+		"url": "https://github.com/sponsors/AlCalzone/"
+	},
+	"bin": {
+		"zwave-dev-mcp": "./build/index.js"
+	},
+	"files": [
+		"build/**/*.{js,d.ts,map}"
+	],
+	"type": "module",
+	"main": "build/index.js",
+	"types": "build/index.d.ts",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc -b",
+		"bootstrap": "yarn build",
+		"clean": "del-cli build/ *.tsbuildinfo",
+		"lint:ts": "eslint --cache --cache-location .eslintcache/ -c ../../eslint.config.mjs src/**/*.ts",
+		"lint:ts:fix": "yarn run lint:ts --fix"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.25.3",
+		"nano-spawn": "^2.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.19.23",
+		"typescript": "5.9.3"
+	},
+	"engines": {
+		"node": ">=20"
+	}
 }

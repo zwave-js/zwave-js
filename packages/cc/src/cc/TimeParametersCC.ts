@@ -16,6 +16,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -48,13 +49,10 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 export const TimeParametersCCValues = V.defineCCValues(
 	CommandClasses["Time Parameters"],
 	{
-		...V.staticProperty(
-			"dateAndTime",
-			{
-				...ValueMetadata.Any,
-				label: "Date and Time",
-			} as const,
-		),
+		...V.staticProperty("dateAndTime", {
+			...ValueMetadata.Any,
+			label: "Date and Time",
+		} as const),
 	},
 );
 
@@ -146,7 +144,7 @@ export class TimeParametersCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: TimeParametersCCAPI, { property }, value) {
+		return async function (this: TimeParametersCCAPI, { property }, value) {
 			if (property !== "dateAndTime") {
 				throwUnsupportedProperty(this.ccId, property);
 			}
@@ -158,7 +156,7 @@ export class TimeParametersCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: TimeParametersCCAPI, { property }) {
+		return async function (this: TimeParametersCCAPI, { property }) {
 			switch (property) {
 				case "dateAndTime":
 					return this.get();
@@ -178,9 +176,7 @@ export class TimeParametersCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			TimeParametersCCReport
-		>(
+		const response = await this.host.sendCommand<TimeParametersCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -198,8 +194,8 @@ export class TimeParametersCCAPI extends CCAPI {
 
 		const endpointToCheck = this.endpoint.virtual
 			? this.endpoint.node.physicalNodes[0].getEndpoint(
-				this.endpoint.index,
-			)!
+					this.endpoint.index,
+				)!
 			: this.endpoint;
 
 		const useLocalTime = shouldUseLocalTime(this.host, endpointToCheck);
@@ -220,9 +216,7 @@ export class TimeParametersCCAPI extends CCAPI {
 export class TimeParametersCC extends CommandClass {
 	declare ccCommand: TimeParametersCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -260,9 +254,7 @@ export interface TimeParametersCCReportOptions {
 @CCCommand(TimeParametersCommand.Report)
 @ccValueProperty("dateAndTime", TimeParametersCCValues.dateAndTime)
 export class TimeParametersCCReport extends TimeParametersCC {
-	public constructor(
-		options: WithAddress<TimeParametersCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<TimeParametersCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -334,9 +326,7 @@ export interface TimeParametersCCSetOptions {
 @CCCommand(TimeParametersCommand.Set)
 @useSupervision()
 export class TimeParametersCCSet extends TimeParametersCC {
-	public constructor(
-		options: WithAddress<TimeParametersCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<TimeParametersCCSetOptions>) {
 		super(options);
 		this.dateAndTime = options.dateAndTime;
 		this.useLocalTime = options.useLocalTime;

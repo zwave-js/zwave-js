@@ -2,6 +2,7 @@ import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import { FunctionType, MessageType } from "./Constants.js";
 import { Message, messageTypes } from "./Message.js";
 
@@ -9,40 +10,20 @@ test("should deserialize and serialize correctly", async (t) => {
 	// actual messages from OZW
 	const okayMessages = [
 		Bytes.from([
-			0x01,
-			0x09,
-			0x00,
-			0x13,
-			0x03,
-			0x02,
-			0x00,
-			0x00,
-			0x25,
-			0x0b,
-			0xca,
+			0x01, 0x09, 0x00, 0x13, 0x03, 0x02, 0x00, 0x00, 0x25, 0x0b, 0xca,
 		]),
 		Bytes.from([0x01, 0x05, 0x00, 0x47, 0x04, 0x20, 0x99]),
 		Bytes.from([0x01, 0x06, 0x00, 0x46, 0x0c, 0x0d, 0x32, 0x8c]),
 		Bytes.from([
-			0x01,
-			0x0a,
-			0x00,
-			0x13,
-			0x03,
-			0x03,
-			0x8e,
-			0x02,
-			0x04,
-			0x25,
-			0x40,
+			0x01, 0x0a, 0x00, 0x13, 0x03, 0x03, 0x8e, 0x02, 0x04, 0x25, 0x40,
 			0x0b,
 		]),
 	];
 	for (const original of okayMessages) {
 		const parsed = Message.parse(original, {} as any);
-		await t.expect(parsed.serialize({} as any)).resolves.toStrictEqual(
-			original,
-		);
+		await t
+			.expect(parsed.serialize({} as any))
+			.resolves.toStrictEqual(original);
 	}
 });
 
@@ -53,9 +34,9 @@ test("should serialize correctly when the payload is null", async (t) => {
 		type: MessageType.Request,
 		functionType: 0xff as any,
 	});
-	await t.expect(message.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t
+		.expect(message.serialize({} as any))
+		.resolves.toStrictEqual(expected);
 });
 
 test("should throw the correct error when parsing a faulty message", async (t) => {
@@ -93,14 +74,10 @@ test("should throw the correct error when parsing a faulty message", async (t) =
 		],
 	];
 	for (const [message, msg, code] of brokenMessages) {
-		assertZWaveError(
-			t.expect,
-			() => Message.parse(message, {} as any),
-			{
-				messageMatches: msg,
-				errorCode: code,
-			},
-		);
+		assertZWaveError(t.expect, () => Message.parse(message, {} as any), {
+			messageMatches: msg,
+			errorCode: code,
+		});
 	}
 });
 

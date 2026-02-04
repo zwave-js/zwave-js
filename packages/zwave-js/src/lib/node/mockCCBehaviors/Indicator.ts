@@ -42,11 +42,11 @@ const respondToIndicatorGet: MockNodeBehavior = {
 				const supportedProperties =
 					capabilities.indicators[indicatorId]?.properties ?? [];
 
-				const indicatorObjects: IndicatorObject[] = supportedProperties
-					.map((propertyId) => {
+				const indicatorObjects: IndicatorObject[] =
+					supportedProperties.map((propertyId) => {
 						const value =
-							capabilities.getValue?.(indicatorId, propertyId)
-								?? 0;
+							capabilities.getValue?.(indicatorId, propertyId) ??
+							0;
 						return {
 							indicatorId,
 							propertyId,
@@ -126,18 +126,17 @@ const respondToIndicatorSupportedGet: MockNodeBehavior = {
 			function createReport(
 				indicatorId: number,
 			): IndicatorCCSupportedReport {
-				const supportedProperties = capabilities
-					.indicators[indicatorId]
-					?.properties ?? [];
+				const supportedProperties =
+					capabilities.indicators[indicatorId]?.properties ?? [];
 
-				const allSupportedIndicators = Object
-					.keys(capabilities.indicators)
+				const allSupportedIndicators = Object.keys(
+					capabilities.indicators,
+				)
 					.map((id) => parseInt(id, 10))
 					.filter((id) => !isNaN(id));
 
-				const indicatorIndex = allSupportedIndicators.indexOf(
-					indicatorId,
-				);
+				const indicatorIndex =
+					allSupportedIndicators.indexOf(indicatorId);
 				const nextIndicatorId =
 					allSupportedIndicators[indicatorIndex + 1];
 
@@ -152,11 +151,10 @@ const respondToIndicatorSupportedGet: MockNodeBehavior = {
 			let cc: IndicatorCCSupportedReport;
 			if (receivedCC.indicatorId === 0) {
 				// Return first supported indicator
-				const firstIndicatorId = Object
-					.keys(capabilities.indicators)
-					.map((id) => parseInt(id, 10))
-					.find((id) => !isNaN(id))
-					?? 0;
+				const firstIndicatorId =
+					Object.keys(capabilities.indicators)
+						.map((id) => parseInt(id, 10))
+						.find((id) => !isNaN(id)) ?? 0;
 
 				cc = createReport(firstIndicatorId);
 			} else {
@@ -183,9 +181,9 @@ const respondToIndicatorDescriptionGet: MockNodeBehavior = {
 				capabilities.indicators[receivedCC.indicatorId];
 			let cc: IndicatorCCDescriptionReport;
 			if (
-				!indicatorInfo
-				|| receivedCC.indicatorId < 0x80
-				|| receivedCC.indicatorId > 0x9f
+				!indicatorInfo ||
+				receivedCC.indicatorId < 0x80 ||
+				receivedCC.indicatorId > 0x9f
 			) {
 				// Unsupported indicator, or not a manufacturer-specific indicator
 				cc = new IndicatorCCDescriptionReport({
@@ -197,8 +195,8 @@ const respondToIndicatorDescriptionGet: MockNodeBehavior = {
 				cc = new IndicatorCCDescriptionReport({
 					nodeId: controller.ownNodeId,
 					indicatorId: receivedCC.indicatorId,
-					description: indicatorInfo.manufacturerSpecificDescription
-						?? "",
+					description:
+						indicatorInfo.manufacturerSpecificDescription ?? "",
 				});
 			}
 

@@ -3,6 +3,7 @@ import {
 	getDefaultMockControllerCapabilities,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -14,8 +15,8 @@ integrationTest(
 			...getDefaultMockControllerCapabilities(),
 			supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
 				(ft) =>
-					ft !== FunctionType.SendDataBridge
-					&& ft !== FunctionType.SendDataMulticastBridge,
+					ft !== FunctionType.SendDataBridge &&
+					ft !== FunctionType.SendDataMulticastBridge,
 			),
 		},
 
@@ -46,8 +47,8 @@ integrationTest(
 			...getDefaultMockControllerCapabilities(),
 			supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
 				(ft) =>
-					ft !== FunctionType.SendData
-					&& ft !== FunctionType.SendDataMulticast,
+					ft !== FunctionType.SendData &&
+					ft !== FunctionType.SendDataMulticast,
 			),
 		},
 

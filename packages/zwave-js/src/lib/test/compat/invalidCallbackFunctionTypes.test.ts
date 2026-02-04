@@ -13,6 +13,7 @@ import {
 	createMockZWaveRequestFrame,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
@@ -49,8 +50,8 @@ integrationTest(
 							MockControllerStateKeys.CommunicationState,
 						) as MockControllerCommunicationState | undefined;
 						if (
-							state != undefined
-							&& state !== MockControllerCommunicationState.Idle
+							state != undefined &&
+							state !== MockControllerCommunicationState.Idle
 						) {
 							throw new Error(
 								"Received AssignSUCReturnRouteRequest while not idle",
@@ -135,8 +136,8 @@ integrationTest(
 							MockControllerStateKeys.CommunicationState,
 						) as MockControllerCommunicationState | undefined;
 						if (
-							state != undefined
-							&& state !== MockControllerCommunicationState.Idle
+							state != undefined &&
+							state !== MockControllerCommunicationState.Idle
 						) {
 							throw new Error(
 								"Received DeleteSUCReturnRouteRequest while not idle",
@@ -217,14 +218,10 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			mockController.clearReceivedHostMessages();
 			driver.options.timeouts.sendDataCallback = 1000;
-			let result = await driver.controller.assignSUCReturnRoutes(
-				node.id,
-			);
+			let result = await driver.controller.assignSUCReturnRoutes(node.id);
 			t.expect(result).toBe(false);
 
-			result = await driver.controller.deleteSUCReturnRoutes(
-				node.id,
-			);
+			result = await driver.controller.deleteSUCReturnRoutes(node.id);
 			t.expect(result).toBe(false);
 		},
 	},

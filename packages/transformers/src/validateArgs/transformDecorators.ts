@@ -6,6 +6,7 @@
  */
 
 import path from "node:path";
+
 import ts from "typescript";
 
 /**
@@ -14,9 +15,7 @@ import ts from "typescript";
  * - Strips decorator arguments (options are baked into the generated validator)
  * - Replaces the @zwave-js/transformers import with the generated ._validateArgs.js import
  */
-export function createValidateArgsTransformer(): ts.TransformerFactory<
-	ts.SourceFile
-> {
+export function createValidateArgsTransformer(): ts.TransformerFactory<ts.SourceFile> {
 	return (context: ts.TransformationContext) => (file: ts.SourceFile) => {
 		// Bail early if there is no import for "@zwave-js/transformers"
 		if (!file.getFullText().includes("@zwave-js/transformers")) {
@@ -45,12 +44,12 @@ export function createValidateArgsTransformer(): ts.TransformerFactory<
 			}
 
 			if (
-				className
-				&& methodName
-				&& ts.isDecorator(node)
-				&& ts.isCallExpression(node.expression)
-				&& ts.isIdentifier(node.expression.expression)
-				&& node.expression.expression.text === "validateArgs"
+				className &&
+				methodName &&
+				ts.isDecorator(node) &&
+				ts.isCallExpression(node.expression) &&
+				ts.isIdentifier(node.expression.expression) &&
+				node.expression.expression.text === "validateArgs"
 			) {
 				const newName = f.createIdentifier(
 					`validateArgs_${className}_${methodName}`,
@@ -78,19 +77,20 @@ export function createValidateArgsTransformer(): ts.TransformerFactory<
 				(i) =>
 					i.moduleSpecifier
 						.getText(file)
-						.replaceAll(/^["']|["']$/g, "")
-						=== "@zwave-js/transformers",
+						.replaceAll(/^["']|["']$/g, "") ===
+					"@zwave-js/transformers",
 			);
 
 		// Create replacement import
 		const extension = file.fileName.match(/\.[mc]?[jt]s$/)?.[0];
 		const fileNameOnly = path.basename(file.fileName, extension);
 		// Use the appropriate JS extension based on the source file extension
-		const jsExtension = extension === ".mts"
-			? ".mjs"
-			: extension === ".cts"
-			? ".cjs"
-			: ".js";
+		const jsExtension =
+			extension === ".mts"
+				? ".mjs"
+				: extension === ".cts"
+					? ".cjs"
+					: ".js";
 		const newImport = f.createImportDeclaration(
 			undefined,
 			f.createImportClause(
@@ -117,7 +117,7 @@ export function createValidateArgsTransformer(): ts.TransformerFactory<
 									undefined,
 									d,
 									undefined,
-								)
+								),
 							),
 						),
 						undefined,

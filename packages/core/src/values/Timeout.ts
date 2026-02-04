@@ -11,7 +11,10 @@ export interface TimeoutLike {
 
 /** Represents a timeout that is used by some command classes */
 export class Timeout {
-	public constructor(value: number, public unit: TimeoutUnit) {
+	public constructor(
+		value: number,
+		public unit: TimeoutUnit,
+	) {
 		if (value === 0) this.unit = "none";
 		switch (unit) {
 			case "none":
@@ -31,12 +34,14 @@ export class Timeout {
 	}
 
 	public static isTimeout(value: any): value is TimeoutLike {
-		return typeof value === "object"
-			&& value != null
-			&& "value" in value
-			&& typeof value.value === "number"
-			&& "unit" in value
-			&& typeof value.unit === "string";
+		return (
+			typeof value === "object" &&
+			value != null &&
+			"value" in value &&
+			typeof value.value === "number" &&
+			"unit" in value &&
+			typeof value.unit === "string"
+		);
 	}
 
 	/** Parses a timeout as represented in Report commands */

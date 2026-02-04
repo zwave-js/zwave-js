@@ -16,6 +16,7 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { noop, pick } from "@zwave-js/shared";
+
 import type { Driver } from "../../driver/Driver.js";
 import type { ZWaveNode } from "../Node.js";
 
@@ -57,17 +58,17 @@ export async function handlePowerlevelGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	const { powerlevel, until } = driver.controller.powerlevel;
 
 	if (
 		// Setting elapsed
-		until.getTime() < Date.now()
+		until.getTime() < Date.now() ||
 		// or it is already set to normal power
-		|| powerlevel === Powerlevel["Normal Power"]
+		powerlevel === Powerlevel["Normal Power"]
 	) {
 		await api.reportPowerlevel({
 			powerlevel: Powerlevel["Normal Power"],
@@ -75,10 +76,7 @@ export async function handlePowerlevelGet(
 	} else {
 		const timeoutSeconds = Math.max(
 			0,
-			Math.min(
-				Math.round((until.getTime() - Date.now()) / 1000),
-				255,
-			),
+			Math.min(Math.round((until.getTime() - Date.now()) / 1000), 255),
 		);
 
 		await api.reportPowerlevel({
@@ -115,8 +113,8 @@ export async function handlePowerlevelTestNodeSet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	try {
@@ -126,20 +124,25 @@ export async function handlePowerlevelTestNodeSet(
 			command.testFrameCount,
 		);
 		// Test results are in, send report
-		void api.sendNodeTestReport({
-			status: acknowledgedFrames > 0
-				? PowerlevelTestStatus.Success
-				: PowerlevelTestStatus.Failed,
-			testNodeId: command.testNodeId,
-			acknowledgedFrames,
-		}).catch(noop);
+		void api
+			.sendNodeTestReport({
+				status:
+					acknowledgedFrames > 0
+						? PowerlevelTestStatus.Success
+						: PowerlevelTestStatus.Failed,
+				testNodeId: command.testNodeId,
+				acknowledgedFrames,
+			})
+			.catch(noop);
 	} catch {
 		// Test failed for some reason (e.g. invalid node)
-		void api.sendNodeTestReport({
-			status: PowerlevelTestStatus.Failed,
-			testNodeId: command.testNodeId,
-			acknowledgedFrames: 0,
-		}).catch(noop);
+		void api
+			.sendNodeTestReport({
+				status: PowerlevelTestStatus.Failed,
+				testNodeId: command.testNodeId,
+				acknowledgedFrames: 0,
+			})
+			.catch(noop);
 	}
 }
 
@@ -157,8 +160,8 @@ export async function handlePowerlevelTestNodeGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	const status = driver.getNOPPowerTestStatus();
@@ -168,8 +171,8 @@ export async function handlePowerlevelTestNodeGet(
 			status: status.inProgress
 				? PowerlevelTestStatus["In Progress"]
 				: status.acknowledgedFrames > 0
-				? PowerlevelTestStatus.Success
-				: PowerlevelTestStatus.Failed,
+					? PowerlevelTestStatus.Success
+					: PowerlevelTestStatus.Failed,
 			...status,
 		});
 	} else {

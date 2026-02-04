@@ -29,6 +29,7 @@ import {
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
 import { isObject } from "alcalzone-shared/typeguards";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -108,40 +109,26 @@ export const ColorSwitchCCValues = V.defineCCValues(
 		...V.staticProperty("supportsHexColor", undefined, {
 			internal: true,
 		}),
-		...V.staticPropertyWithName(
-			"currentColor",
-			"currentColor",
-			{
-				...ValueMetadata.ReadOnly,
-				label: `Current color`,
-			} as const,
-		),
-		...V.staticPropertyWithName(
-			"targetColor",
-			"targetColor",
-			{
-				...ValueMetadata.Any,
-				label: `Target color`,
-				valueChangeOptions: ["transitionDuration"],
-			} as const,
-		),
-		...V.staticProperty(
-			"duration",
-			{
-				...ValueMetadata.ReadOnlyDuration,
-				label: "Remaining duration",
-			} as const,
-		),
-		...V.staticProperty(
-			"hexColor",
-			{
-				...ValueMetadata.Color,
-				minLength: 6,
-				maxLength: 7, // to allow #rrggbb
-				label: `RGB Color`,
-				valueChangeOptions: ["transitionDuration"],
-			} as const,
-		),
+		...V.staticPropertyWithName("currentColor", "currentColor", {
+			...ValueMetadata.ReadOnly,
+			label: `Current color`,
+		} as const),
+		...V.staticPropertyWithName("targetColor", "targetColor", {
+			...ValueMetadata.Any,
+			label: `Target color`,
+			valueChangeOptions: ["transitionDuration"],
+		} as const),
+		...V.staticProperty("duration", {
+			...ValueMetadata.ReadOnlyDuration,
+			label: "Remaining duration",
+		} as const),
+		...V.staticProperty("hexColor", {
+			...ValueMetadata.Color,
+			minLength: 6,
+			maxLength: 7, // to allow #rrggbb
+			label: `RGB Color`,
+			valueChangeOptions: ["transitionDuration"],
+		} as const),
 		...V.dynamicPropertyAndKeyWithName(
 			"currentColorChannel",
 			"currentColor",
@@ -153,8 +140,7 @@ export const ColorSwitchCCValues = V.defineCCValues(
 				return {
 					...ValueMetadata.ReadOnlyUInt8,
 					label: `Current value (${colorName})`,
-					description:
-						`The current value of the ${colorName} channel.`,
+					description: `The current value of the ${colorName} channel.`,
 				} as const;
 			},
 		),
@@ -169,8 +155,7 @@ export const ColorSwitchCCValues = V.defineCCValues(
 				return {
 					...ValueMetadata.UInt8,
 					label: `Target value (${colorName})`,
-					description:
-						`The target value of the ${colorName} channel.`,
+					description: `The target value of the ${colorName} channel.`,
 					valueChangeOptions: ["transitionDuration"],
 				} as const;
 			},
@@ -205,12 +190,11 @@ export class ColorSwitchCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ColorSwitchCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ColorSwitchCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedColorComponents;
 	}
 
@@ -296,9 +280,9 @@ export class ColorSwitchCCAPI extends CCAPI {
 		for (const [key, value] of Object.entries(colorTable)) {
 			const component = colorTableKeyToComponent(key);
 			if (
-				component === ColorComponent.Red
-				|| component === ColorComponent.Green
-				|| component === ColorComponent.Blue
+				component === ColorComponent.Red ||
+				component === ColorComponent.Green ||
+				component === ColorComponent.Blue
 			) {
 				updatedRGB = true;
 			}
@@ -385,7 +369,7 @@ export class ColorSwitchCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: ColorSwitchCCAPI,
 			{ property, propertyKey },
 			value,
@@ -415,8 +399,8 @@ export class ColorSwitchCCAPI extends CCAPI {
 					});
 
 					if (
-						this.isSinglecast()
-						&& !supervisedCommandSucceeded(result)
+						this.isSinglecast() &&
+						!supervisedCommandSucceeded(result)
 					) {
 						// Verify the current value after a (short) delay, unless the command was supervised and successful
 						this.schedulePoll({ property, propertyKey }, value, {
@@ -431,8 +415,8 @@ export class ColorSwitchCCAPI extends CCAPI {
 
 					// Ensure the value is an object with only valid keys
 					if (
-						!isObject(value)
-						|| !Object.keys(value).every(
+						!isObject(value) ||
+						!Object.keys(value).every(
 							(key) => key in ColorComponentMap,
 						)
 					) {
@@ -461,10 +445,9 @@ export class ColorSwitchCCAPI extends CCAPI {
 						const supportedColors = this.tryGetValueDB()?.getValue<
 							readonly ColorComponent[]
 						>(
-							ColorSwitchCCValues.supportedColorComponents
-								.endpoint(
-									this.endpoint.index,
-								),
+							ColorSwitchCCValues.supportedColorComponents.endpoint(
+								this.endpoint.index,
+							),
 						);
 						if (supportedColors) {
 							value = pick(
@@ -507,7 +490,7 @@ export class ColorSwitchCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: ColorSwitchCCAPI,
 			{ property, propertyKey },
 		) {
@@ -537,9 +520,7 @@ export class ColorSwitchCCAPI extends CCAPI {
 export class ColorSwitchCC extends CommandClass {
 	declare ccCommand: ColorSwitchCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -574,22 +555,20 @@ export class ColorSwitchCC extends CommandClass {
 
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
-			message: `received supported colors:${
-				supportedColors
-					.map((c) => `\n· ${getEnumMemberName(ColorComponent, c)}`)
-					.join("")
-			}`,
+			message: `received supported colors:${supportedColors
+				.map((c) => `\n· ${getEnumMemberName(ColorComponent, c)}`)
+				.join("")}`,
 			direction: "outbound",
 		});
 
 		// Create metadata for the separate color channels
 		for (const color of supportedColors) {
-			const currentColorChannelValue = ColorSwitchCCValues
-				.currentColorChannel(color);
+			const currentColorChannelValue =
+				ColorSwitchCCValues.currentColorChannel(color);
 			this.setMetadata(ctx, currentColorChannelValue);
 
-			const targetColorChannelValue = ColorSwitchCCValues
-				.targetColorChannel(color);
+			const targetColorChannelValue =
+				ColorSwitchCCValues.targetColorChannel(color);
 			this.setMetadata(ctx, targetColorChannelValue);
 		}
 		// And the compound one
@@ -604,11 +583,7 @@ export class ColorSwitchCC extends CommandClass {
 			ColorComponent.Green,
 			ColorComponent.Blue,
 		].every((c) => supportedColors.includes(c));
-		this.setValue(
-			ctx,
-			ColorSwitchCCValues.supportsHexColor,
-			supportsHex,
-		);
+		this.setValue(ctx, ColorSwitchCCValues.supportsHexColor, supportsHex);
 		if (supportsHex) {
 			const hexColorValue = ColorSwitchCCValues.hexColor;
 			this.setMetadata(ctx, hexColorValue);
@@ -621,9 +596,7 @@ export class ColorSwitchCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -634,10 +607,9 @@ export class ColorSwitchCC extends CommandClass {
 			priority: MessagePriority.NodeQuery,
 		});
 
-		const supportedColors: readonly ColorComponent[] = this.getValue(
-			ctx,
-			ColorSwitchCCValues.supportedColorComponents,
-		) ?? [];
+		const supportedColors: readonly ColorComponent[] =
+			this.getValue(ctx, ColorSwitchCCValues.supportedColorComponents) ??
+			[];
 
 		for (const color of supportedColors) {
 			// Some devices report invalid colors, but the CC API checks
@@ -660,8 +632,8 @@ export class ColorSwitchCC extends CommandClass {
 		propertyKey: string | number,
 	): string | undefined {
 		if (
-			(property === "currentColor" || property === "targetColor")
-			&& typeof propertyKey === "number"
+			(property === "currentColor" || property === "targetColor") &&
+			typeof propertyKey === "number"
 		) {
 			const translated = ColorComponent[propertyKey];
 			if (translated) return translated;
@@ -754,9 +726,7 @@ export interface ColorSwitchCCReportOptions {
 )
 @ccValueProperty("duration", ColorSwitchCCValues.duration)
 export class ColorSwitchCCReport extends ColorSwitchCC {
-	public constructor(
-		options: WithAddress<ColorSwitchCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<ColorSwitchCCReportOptions>) {
 		super(options);
 
 		this.colorComponent = options.colorComponent;
@@ -797,11 +767,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 			const compoundCurrentColor: Partial<Record<ColorKey, number>> =
 				this.getValue(ctx, compoundCurrentColorValue) ?? {};
 			compoundCurrentColor[colorTableKey] = this.currentValue;
-			this.setValue(
-				ctx,
-				compoundCurrentColorValue,
-				compoundCurrentColor,
-			);
+			this.setValue(ctx, compoundCurrentColorValue, compoundCurrentColor);
 
 			// and target value
 			if (this.targetValue != undefined) {
@@ -824,20 +790,21 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 			ColorSwitchCCValues.supportsHexColor,
 		);
 		if (
-			supportsHex
-			&& (this.colorComponent === ColorComponent.Red
-				|| this.colorComponent === ColorComponent.Green
-				|| this.colorComponent === ColorComponent.Blue)
+			supportsHex &&
+			(this.colorComponent === ColorComponent.Red ||
+				this.colorComponent === ColorComponent.Green ||
+				this.colorComponent === ColorComponent.Blue)
 		) {
 			const hexColorValue = ColorSwitchCCValues.hexColor;
 
-			const hexValue: string = this.getValue(ctx, hexColorValue)
-				?? "000000";
+			const hexValue: string =
+				this.getValue(ctx, hexColorValue) ?? "000000";
 			const byteOffset = ColorComponent.Blue - this.colorComponent;
 			const byteMask = 0xff << (byteOffset * 8);
 			let hexValueNumeric = parseInt(hexValue, 16);
-			hexValueNumeric = (hexValueNumeric & ~byteMask)
-				| (this.currentValue << (byteOffset * 8));
+			hexValueNumeric =
+				(hexValueNumeric & ~byteMask) |
+				(this.currentValue << (byteOffset * 8));
 			this.setValue(
 				ctx,
 				hexColorValue,
@@ -857,10 +824,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 	public readonly duration: Duration | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([
-			this.colorComponent,
-			this.currentValue,
-		]);
+		this.payload = Bytes.from([this.colorComponent, this.currentValue]);
 		if (this.targetValue != undefined && this.duration != undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
@@ -909,9 +873,7 @@ function testResponseForColorSwitchGet(
 @CCCommand(ColorSwitchCommand.Get)
 @expectedCCResponse(ColorSwitchCCReport, testResponseForColorSwitchGet)
 export class ColorSwitchCCGet extends ColorSwitchCC {
-	public constructor(
-		options: WithAddress<ColorSwitchCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<ColorSwitchCCGetOptions>) {
 		super(options);
 		this._colorComponent = options.colorComponent;
 	}
@@ -966,9 +928,7 @@ export type ColorSwitchCCSetOptions = (ColorTable | { hexColor: string }) & {
 @CCCommand(ColorSwitchCommand.Set)
 @useSupervision()
 export class ColorSwitchCCSet extends ColorSwitchCC {
-	public constructor(
-		options: WithAddress<ColorSwitchCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<ColorSwitchCCSetOptions>) {
 		super(options);
 		// Populate properties from options object
 		if ("hexColor" in options) {
@@ -1025,9 +985,7 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const populatedColorCount = Object.keys(this.colorTable).length;
-		this.payload = new Bytes(
-			1 + populatedColorCount * 2 + 1,
-		);
+		this.payload = new Bytes(1 + populatedColorCount * 2 + 1);
 		this.payload[0] = populatedColorCount & 0b11111;
 		let i = 1;
 		for (const [key, value] of Object.entries(this.colorTable)) {
@@ -1036,15 +994,13 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 			this.payload[i + 1] = clamp(value, 0, 0xff);
 			i += 2;
 		}
-		this.payload[i] = (
-			this.duration ?? Duration.default()
-		).serializeSet();
+		this.payload[i] = (this.duration ?? Duration.default()).serializeSet();
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 		if (
-			ccVersion < 2 && ctx.getDeviceConfig?.(
-				this.nodeId as number,
-			)?.compat?.encodeCCsUsingTargetVersion
+			ccVersion < 2 &&
+			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
+				?.encodeCCsUsingTargetVersion
 		) {
 			// When forcing CC version 1, omit the duration byte
 			this.payload = this.payload.subarray(0, -1);
@@ -1056,9 +1012,10 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		for (const [key, value] of Object.entries(this.colorTable)) {
-			const realKey: string = key in ColorComponentMap
-				? (ColorComponent as any)[(ColorComponentMap as any)[key]]
-				: (ColorComponent as any)[key];
+			const realKey: string =
+				key in ColorComponentMap
+					? (ColorComponent as any)[(ColorComponentMap as any)[key]]
+					: (ColorComponent as any)[key];
 			message[realKey] = value;
 		}
 		if (this.duration != undefined) {
@@ -1072,22 +1029,19 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 }
 
 // @publicAPI
-export type ColorSwitchCCStartLevelChangeOptions =
-	& {
-		colorComponent: ColorComponent;
-		direction: keyof typeof LevelChangeDirection;
-	}
-	& (
-		| {
+export type ColorSwitchCCStartLevelChangeOptions = {
+	colorComponent: ColorComponent;
+	direction: keyof typeof LevelChangeDirection;
+} & (
+	| {
 			ignoreStartLevel: true;
 			startLevel?: number;
-		}
-		| {
+	  }
+	| {
 			ignoreStartLevel: false;
 			startLevel: number;
-		}
-	)
-	& {
+	  }
+) & {
 		// Version >= 3:
 		duration?: Duration | string;
 	};
@@ -1112,9 +1066,8 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 	): ColorSwitchCCStartLevelChange {
 		validatePayload(raw.payload.length >= 3);
 		const ignoreStartLevel = !!((raw.payload[0] & 0b0_0_1_00000) >>> 5);
-		const direction = ((raw.payload[0] & 0b0_1_0_00000) >>> 6)
-			? "down"
-			: "up";
+		const direction =
+			(raw.payload[0] & 0b0_1_0_00000) >>> 6 ? "down" : "up";
 		const colorComponent: ColorComponent = raw.payload[1];
 		const startLevel = raw.payload[2];
 		let duration: Duration | undefined;
@@ -1139,8 +1092,9 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 	public colorComponent: ColorComponent;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const controlByte = (LevelChangeDirection[this.direction] << 6)
-			| (this.ignoreStartLevel ? 0b0010_0000 : 0);
+		const controlByte =
+			(LevelChangeDirection[this.direction] << 6) |
+			(this.ignoreStartLevel ? 0b0010_0000 : 0);
 		this.payload = Bytes.from([
 			controlByte,
 			this.colorComponent,
@@ -1150,9 +1104,9 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 		if (
-			ccVersion < 3 && ctx.getDeviceConfig?.(
-				this.nodeId as number,
-			)?.compat?.encodeCCsUsingTargetVersion
+			ccVersion < 3 &&
+			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
+				?.encodeCCsUsingTargetVersion
 		) {
 			// When forcing CC version 1 or 2, omit the duration byte
 			this.payload = this.payload.subarray(0, -1);

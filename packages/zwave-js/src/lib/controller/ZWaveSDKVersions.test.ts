@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions.js";
 
 test("protocolVersionToSDKVersion() looks up the correct SDK version for a given protocol version", (t) => {

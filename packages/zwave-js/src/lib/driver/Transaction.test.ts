@@ -7,8 +7,10 @@ import {
 	SendDataRequest,
 } from "@zwave-js/serial/serialapi";
 import { test } from "vitest";
+
 import type { ZWaveNode } from "../node/Node.js";
 import { NodeStatus } from "../node/_Types.js";
+
 import type { Driver } from "./Driver.js";
 import {
 	type MessageGenerator,
@@ -18,7 +20,7 @@ import {
 
 function createDummyMessageGenerator(msg: Message): MessageGenerator {
 	return {
-		start: async function*() {
+		start: async function* () {
 			this.current = msg;
 			yield msg;
 		},
@@ -168,13 +170,14 @@ test("NodeQuery comparisons should prioritize listening nodes", (t) => {
 		priority: MessagePriority = MessagePriority.NodeQuery,
 	) {
 		const driver = driverMock as any as Driver;
-		const msg = nodeId != undefined
-			? new SendDataRequest({
-				command: new NoOperationCC({
-					nodeId,
-				}),
-			})
-			: new GetControllerVersionRequest();
+		const msg =
+			nodeId != undefined
+				? new SendDataRequest({
+						command: new NoOperationCC({
+							nodeId,
+						}),
+					})
+				: new GetControllerVersionRequest();
 		const ret = createDummyTransaction(driverMock, {
 			priority,
 			message: msg,

@@ -19,9 +19,9 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 			if (!typeAnnotation) return false;
 
 			if (
-				typeAnnotation.type === AST_NODE_TYPES.TSTypeReference
-				&& typeAnnotation.typeName.type === AST_NODE_TYPES.Identifier
-				&& typeAnnotation.typeName.name === typeName
+				typeAnnotation.type === AST_NODE_TYPES.TSTypeReference &&
+				typeAnnotation.typeName.type === AST_NODE_TYPES.Identifier &&
+				typeAnnotation.typeName.name === typeName
 			) {
 				return true;
 			}
@@ -53,10 +53,10 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 
 			// Promise<MockNodeResponse>
 			if (
-				returnType.type === AST_NODE_TYPES.TSTypeReference
-				&& returnType.typeName.type === AST_NODE_TYPES.Identifier
-				&& returnType.typeName.name === "Promise"
-				&& returnType.typeArguments?.params.length === 1
+				returnType.type === AST_NODE_TYPES.TSTypeReference &&
+				returnType.typeName.type === AST_NODE_TYPES.Identifier &&
+				returnType.typeName.name === "Promise" &&
+				returnType.typeArguments?.params.length === 1
 			) {
 				const typeArg = returnType.typeArguments.params[0];
 				if (hasTypeName(typeArg, "MockNodeResponse")) {
@@ -67,7 +67,7 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 			// Union types that include MockNodeResponse (e.g., MockNodeResponse | undefined)
 			if (returnType.type === AST_NODE_TYPES.TSUnionType) {
 				return returnType.types.some((t) =>
-					isMockNodeResponseReturnType(t)
+					isMockNodeResponseReturnType(t),
 				);
 			}
 
@@ -88,11 +88,8 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 
 				// Check explicit type annotation first
 				if (
-					param.typeAnnotation
-					&& hasTypeName(
-						param.typeAnnotation.typeAnnotation,
-						typeName,
-					)
+					param.typeAnnotation &&
+					hasTypeName(param.typeAnnotation.typeAnnotation, typeName)
 				) {
 					return param.name;
 				}
@@ -122,8 +119,8 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 			const parent = func.parent;
 			if (parent?.type === AST_NODE_TYPES.Property) {
 				if (
-					parent.key.type === AST_NODE_TYPES.Identifier
-					&& parent.key.name === "transformResponse"
+					parent.key.type === AST_NODE_TYPES.Identifier &&
+					parent.key.name === "transformResponse"
 				) {
 					return true;
 				}
@@ -142,28 +139,28 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 		): boolean {
 			// Check if function has a return type annotation for MockNodeResponse
 			if (
-				node.returnType
-				&& isMockNodeResponseReturnType(node.returnType.typeAnnotation)
+				node.returnType &&
+				isMockNodeResponseReturnType(node.returnType.typeAnnotation)
 			) {
 				return true;
 			}
 
 			// Check if function is a property of a MockNodeBehavior object
 			if (
-				parent?.type === AST_NODE_TYPES.Property
-				&& parent.value === node
+				parent?.type === AST_NODE_TYPES.Property &&
+				parent.value === node
 			) {
 				const objectParent = parent.parent;
 				if (objectParent?.type === AST_NODE_TYPES.ObjectExpression) {
 					// Check if object has MockNodeBehavior type
 					const objectGrandParent = objectParent.parent;
 					if (
-						objectGrandParent?.type
-							=== AST_NODE_TYPES.VariableDeclarator
-						&& objectGrandParent.id.type
-							=== AST_NODE_TYPES.Identifier
-						&& objectGrandParent.id.typeAnnotation
-						&& isMockNodeBehaviorType(
+						objectGrandParent?.type ===
+							AST_NODE_TYPES.VariableDeclarator &&
+						objectGrandParent.id.type ===
+							AST_NODE_TYPES.Identifier &&
+						objectGrandParent.id.typeAnnotation &&
+						isMockNodeBehaviorType(
 							objectGrandParent.id.typeAnnotation.typeAnnotation,
 						)
 					) {
@@ -201,9 +198,9 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 
 			const nodeIdProp = firstArg.properties.find(
 				(prop): prop is TSESTree.Property =>
-					prop.type === AST_NODE_TYPES.Property
-					&& prop.key.type === AST_NODE_TYPES.Identifier
-					&& prop.key.name === "nodeId",
+					prop.type === AST_NODE_TYPES.Property &&
+					prop.key.type === AST_NODE_TYPES.Identifier &&
+					prop.key.name === "nodeId",
 			);
 
 			if (!nodeIdProp) return;
@@ -226,15 +223,15 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 			if (inTransformResponse) {
 				// Check if the value is <responseParam>.cc.nodeId
 				if (
-					responseParamName
-					&& value.type === AST_NODE_TYPES.MemberExpression
-					&& value.object.type === AST_NODE_TYPES.MemberExpression
-					&& value.object.object.type === AST_NODE_TYPES.Identifier
-					&& value.object.object.name === responseParamName
-					&& value.object.property.type === AST_NODE_TYPES.Identifier
-					&& value.object.property.name === "cc"
-					&& value.property.type === AST_NODE_TYPES.Identifier
-					&& value.property.name === "nodeId"
+					responseParamName &&
+					value.type === AST_NODE_TYPES.MemberExpression &&
+					value.object.type === AST_NODE_TYPES.MemberExpression &&
+					value.object.object.type === AST_NODE_TYPES.Identifier &&
+					value.object.object.name === responseParamName &&
+					value.object.property.type === AST_NODE_TYPES.Identifier &&
+					value.object.property.name === "cc" &&
+					value.property.type === AST_NODE_TYPES.Identifier &&
+					value.property.name === "nodeId"
 				) {
 					// Correct usage in transformResponse
 					return;
@@ -260,12 +257,12 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 
 			// In other functions (handleCC, etc.), the correct pattern is <controllerParam>.ownNodeId
 			if (
-				controllerParamName
-				&& value.type === AST_NODE_TYPES.MemberExpression
-				&& value.object.type === AST_NODE_TYPES.Identifier
-				&& value.object.name === controllerParamName
-				&& value.property.type === AST_NODE_TYPES.Identifier
-				&& value.property.name === "ownNodeId"
+				controllerParamName &&
+				value.type === AST_NODE_TYPES.MemberExpression &&
+				value.object.type === AST_NODE_TYPES.Identifier &&
+				value.object.name === controllerParamName &&
+				value.property.type === AST_NODE_TYPES.Identifier &&
+				value.property.name === "ownNodeId"
 			) {
 				// Correct usage
 				return;
@@ -314,10 +311,10 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 
 				while (parent) {
 					if (
-						(parent.type === AST_NODE_TYPES.FunctionExpression
-							|| parent.type
-								=== AST_NODE_TYPES.ArrowFunctionExpression)
-						&& functionsToCheck.has(parent)
+						(parent.type === AST_NODE_TYPES.FunctionExpression ||
+							parent.type ===
+								AST_NODE_TYPES.ArrowFunctionExpression) &&
+						functionsToCheck.has(parent)
 					) {
 						containingFunction = parent;
 						break;

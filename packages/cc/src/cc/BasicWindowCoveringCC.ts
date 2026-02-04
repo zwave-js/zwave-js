@@ -10,6 +10,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	SET_VALUE,
@@ -36,28 +37,22 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 export const BasicWindowCoveringCCValues = V.defineCCValues(
 	CommandClasses["Basic Window Covering"],
 	{
-		...V.staticProperty(
-			"levelChangeUp",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: "Open",
-				states: {
-					true: "Start",
-					false: "Stop",
-				},
+		...V.staticProperty("levelChangeUp", {
+			...ValueMetadata.WriteOnlyBoolean,
+			label: "Open",
+			states: {
+				true: "Start",
+				false: "Stop",
 			},
-		),
-		...V.staticProperty(
-			"levelChangeDown",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: "Close",
-				states: {
-					true: "Start",
-					false: "Stop",
-				},
+		}),
+		...V.staticProperty("levelChangeDown", {
+			...ValueMetadata.WriteOnlyBoolean,
+			label: "Close",
+			states: {
+				true: "Start",
+				false: "Stop",
 			},
-		),
+		}),
 	},
 );
 
@@ -75,7 +70,7 @@ export class BasicWindowCoveringCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: BasicWindowCoveringCCAPI,
 			{ property },
 			value,
@@ -86,8 +81,8 @@ export class BasicWindowCoveringCCAPI extends CCAPI {
 			};
 
 			if (
-				BasicWindowCoveringCCValues.levelChangeUp.is(valueId)
-				|| BasicWindowCoveringCCValues.levelChangeDown.is(valueId)
+				BasicWindowCoveringCCValues.levelChangeUp.is(valueId) ||
+				BasicWindowCoveringCCValues.levelChangeDown.is(valueId)
 			) {
 				if (typeof value !== "boolean") {
 					throwWrongValueType(
@@ -99,10 +94,10 @@ export class BasicWindowCoveringCCAPI extends CCAPI {
 				}
 
 				if (value) {
-					const direction = BasicWindowCoveringCCValues.levelChangeUp
-							.is(valueId)
-						? "up"
-						: "down";
+					const direction =
+						BasicWindowCoveringCCValues.levelChangeUp.is(valueId)
+							? "up"
+							: "down";
 					return this.startLevelChange(direction);
 				} else {
 					return this.stopLevelChange();
@@ -161,9 +156,7 @@ export interface BasicWindowCoveringCCStartLevelChangeOptions {
 
 @CCCommand(BasicWindowCoveringCommand.StartLevelChange)
 @useSupervision()
-export class BasicWindowCoveringCCStartLevelChange
-	extends BasicWindowCoveringCC
-{
+export class BasicWindowCoveringCCStartLevelChange extends BasicWindowCoveringCC {
 	public constructor(
 		options: WithAddress<BasicWindowCoveringCCStartLevelChangeOptions>,
 	) {
@@ -177,9 +170,7 @@ export class BasicWindowCoveringCCStartLevelChange
 	): BasicWindowCoveringCCStartLevelChange {
 		// The CC is obsolete and will never be extended. Check for exact length
 		validatePayload(raw.payload.length === 1);
-		const direction = !!(raw.payload[0] & 0b0100_0000)
-			? "down"
-			: "up";
+		const direction = !!(raw.payload[0] & 0b0100_0000) ? "down" : "up";
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -208,6 +199,4 @@ export class BasicWindowCoveringCCStartLevelChange
 
 @CCCommand(BasicWindowCoveringCommand.StopLevelChange)
 @useSupervision()
-export class BasicWindowCoveringCCStopLevelChange
-	extends BasicWindowCoveringCC
-{}
+export class BasicWindowCoveringCCStopLevelChange extends BasicWindowCoveringCC {}

@@ -5,13 +5,14 @@ import {
 	isUint8Array,
 } from "@zwave-js/shared";
 import { unzipSync } from "fflate";
-import { decryptAES256CBC } from "../crypto/index.js";
-import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
-import type { Firmware, FirmwareFileFormat } from "./_Types.js";
-import { CRC16_CCITT } from "./crc.js";
-
 // This package has an incorrect type declaration
 import MemoryMap_ from "nrf-intel-hex";
+
+import { decryptAES256CBC } from "../crypto/index.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
+
+import type { Firmware, FirmwareFileFormat } from "./_Types.js";
+import { CRC16_CCITT } from "./crc.js";
 const MemoryMap =
 	MemoryMap_ as unknown as typeof import("nrf-intel-hex").default;
 
@@ -40,20 +41,20 @@ export function guessFirmwareFileFormat(
 	if (filename.endsWith(".bin")) {
 		return "bin";
 	} else if (
-		(filename.endsWith(".exe") || filename.endsWith(".ex_"))
-		&& rawBuffer.includes(firmwareIndicators.aeotec)
+		(filename.endsWith(".exe") || filename.endsWith(".ex_")) &&
+		rawBuffer.includes(firmwareIndicators.aeotec)
 	) {
 		return "aeotec";
 	} else if (/\.(hex|ota|otz)$/.test(filename)) {
 		return filename.slice(-3) as FirmwareFileFormat;
 	} else if (
-		filename.endsWith(".gbl")
-		&& rawBuffer.readUInt32BE(0) === firmwareIndicators.gecko
+		filename.endsWith(".gbl") &&
+		rawBuffer.readUInt32BE(0) === firmwareIndicators.gecko
 	) {
 		return "gecko";
 	} else if (
-		filename.endsWith(".hec")
-		&& rawBuffer
+		filename.endsWith(".hec") &&
+		rawBuffer
 			.subarray(0, firmwareIndicators.hec.length)
 			.equals(firmwareIndicators.hec)
 	) {
@@ -75,11 +76,13 @@ export function guessFirmwareFileFormat(
  * of the firmware file from the ZIP archive, or `undefined` if no compatible
  * firmware file could be extracted.
  */
-export function tryUnzipFirmwareFile(zipData: BytesView): {
-	filename: string;
-	format: FirmwareFileFormat;
-	rawData: BytesView;
-} | undefined {
+export function tryUnzipFirmwareFile(zipData: BytesView):
+	| {
+			filename: string;
+			format: FirmwareFileFormat;
+			rawData: BytesView;
+	  }
+	| undefined {
 	// Extract files we can work with
 	const unzipped = unzipSync(zipData, {
 		filter: (file) => {
@@ -126,8 +129,8 @@ export async function extractFirmware(
 					return extractFirmwareHEX(rawData);
 				} catch (e) {
 					if (
-						e instanceof ZWaveError
-						&& e.code === ZWaveErrorCodes.Argument_Invalid
+						e instanceof ZWaveError &&
+						e.code === ZWaveErrorCodes.Argument_Invalid
 					) {
 						// Fall back to binary data
 					} else {
@@ -176,8 +179,8 @@ function extractFirmwareAeotec(data: BytesView): Firmware {
 
 	// Some files don't have such a strict alignment - in that case fall back to ignoring the non-aligned control bytes
 	switch (true) {
-		case firmwareStart + firmwareLength
-			=== buffer.length - 256 - numControlBytes:
+		case firmwareStart + firmwareLength ===
+			buffer.length - 256 - numControlBytes:
 			// all good
 			break;
 		case firmwareStart + firmwareLength === buffer.length - 256 - 8:
@@ -216,9 +219,8 @@ function extractFirmwareAeotec(data: BytesView): Firmware {
 
 	// Some updaters contain the firmware target in the first byte of the name
 	// We can't test this, so we have to assume the value translates to a non-printable ASCII char (less than " ")
-	const firmwareTarget = firmwareNameBytes[0] < 0x20
-		? firmwareNameBytes[0]
-		: undefined;
+	const firmwareTarget =
+		firmwareNameBytes[0] < 0x20 ? firmwareNameBytes[0] : undefined;
 	const firmwareNameOffset = firmwareTarget == undefined ? 0 : 1;
 
 	const firmwareName = firmwareNameBytes

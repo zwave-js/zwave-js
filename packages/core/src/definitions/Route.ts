@@ -22,8 +22,8 @@ export const EMPTY_ROUTE: Route = {
 
 export function isEmptyRoute(route: Route): boolean {
 	return (
-		route.repeaters.length === 0
-		&& route.routeSpeed === ZWaveDataRate["9k6"]
+		route.repeaters.length === 0 &&
+		route.routeSpeed === ZWaveDataRate["9k6"]
 	);
 }
 

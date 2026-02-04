@@ -1,4 +1,5 @@
 import { type CommandClasses, InterviewStage } from "@zwave-js/core";
+
 import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
@@ -14,6 +15,7 @@ import {
 	nodeStatusMachineStateToNodeStatus,
 } from "../NodeStatusMachine.js";
 import { NodeStatus } from "../_Types.js";
+
 import { NodeEventsMixin } from "./10_Events.js";
 
 export interface NodeWithStatus {
@@ -63,7 +65,8 @@ export interface NodeWithStatus {
 	bootstrapped: boolean;
 }
 
-export abstract class NodeStatusMixin extends NodeEventsMixin
+export abstract class NodeStatusMixin
+	extends NodeEventsMixin
 	implements NodeWithStatus
 {
 	public constructor(
@@ -125,14 +128,13 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 		// To be marked ready, a node must be known to be not dead.
 		// This means that listening nodes must have communicated with us and
 		// sleeping nodes are assumed to be ready
-		this.updateReadyMachine(
-			{
-				value: this._status !== NodeStatus.Unknown
-						&& this._status !== NodeStatus.Dead
+		this.updateReadyMachine({
+			value:
+				this._status !== NodeStatus.Unknown &&
+				this._status !== NodeStatus.Dead
 					? "NOT_DEAD"
 					: "MAYBE_DEAD",
-			},
-		);
+		});
 	}
 
 	/**
@@ -206,8 +208,8 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 
 	public get interviewStage(): InterviewStage {
 		return (
-			this.driver.cacheGet(cacheKeys.node(this.id).interviewStage)
-				?? InterviewStage.None
+			this.driver.cacheGet(cacheKeys.node(this.id).interviewStage) ??
+			InterviewStage.None
 		);
 	}
 	public set interviewStage(value: InterviewStage) {
@@ -220,10 +222,10 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 
 	public get bootstrapped(): boolean {
 		return (
-			this.driver.cacheGet(cacheKeys.node(this.id).bootstrapped)
-				// When the cache entry is missing, we assume the node is bootstrapped
-				// only if the interview is complete
-				?? this.interviewStage === InterviewStage.Complete
+			this.driver.cacheGet(cacheKeys.node(this.id).bootstrapped) ??
+			// When the cache entry is missing, we assume the node is bootstrapped
+			// only if the interview is complete
+			this.interviewStage === InterviewStage.Complete
 		);
 	}
 	public set bootstrapped(value: boolean) {

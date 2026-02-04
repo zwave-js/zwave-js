@@ -2,10 +2,12 @@
  * This method returns the original source code for an interface or type so it can be put into documentation
  */
 
-import c from "ansi-colors";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { formatWithDprint } from "../dprint.js";
+
+import c from "ansi-colors";
+
+import { formatWithOxfmt } from "../oxfmt.js";
 import { projectRoot } from "../tsAPITools.js";
 
 const docsDir = path.join(projectRoot, "docs");
@@ -26,8 +28,9 @@ async function generateExamples(): Promise<boolean> {
 	}
 
 	// Find examples
-	const examples = (await fsp.readdir(examplesDocsDir))
-		.filter((f) => f.endsWith(".md") && f !== "index.md");
+	const examples = (await fsp.readdir(examplesDocsDir)).filter(
+		(f) => f.endsWith(".md") && f !== "index.md",
+	);
 
 	const processedExamples: {
 		position: number;
@@ -71,11 +74,12 @@ async function generateExamples(): Promise<boolean> {
 	}
 
 	// Write the generated index file and sidebar
-	indexFileContent = indexFileContent.slice(
-		0,
-		indexAutoGenStart + indexAutoGenToken.length,
-	) + generatedIndex;
-	indexFileContent = formatWithDprint("index.md", indexFileContent);
+	indexFileContent =
+		indexFileContent.slice(
+			0,
+			indexAutoGenStart + indexAutoGenToken.length,
+		) + generatedIndex;
+	indexFileContent = await formatWithOxfmt("index.md", indexFileContent);
 	await fsp.writeFile(indexFilename, indexFileContent, "utf8");
 
 	const sidebarInputFilename = path.join(docsDir, "_sidebar.md");
@@ -88,12 +92,16 @@ async function generateExamples(): Promise<boolean> {
 		);
 		return false;
 	}
-	sidebarFileContent = sidebarFileContent.slice(0, sidebarAutoGenStart)
-		+ generatedSidebar
-		+ sidebarFileContent.slice(
+	sidebarFileContent =
+		sidebarFileContent.slice(0, sidebarAutoGenStart) +
+		generatedSidebar +
+		sidebarFileContent.slice(
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
-	sidebarFileContent = formatWithDprint("_sidebar.md", sidebarFileContent);
+	sidebarFileContent = await formatWithOxfmt(
+		"_sidebar.md",
+		sidebarFileContent,
+	);
 	await fsp.writeFile(
 		path.join(examplesDocsDir, "_sidebar.md"),
 		sidebarFileContent,

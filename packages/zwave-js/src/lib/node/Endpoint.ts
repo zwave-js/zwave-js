@@ -30,8 +30,10 @@ import {
 	isCCInfoEqual,
 } from "@zwave-js/core";
 import { getEnumMemberName, num2hex } from "@zwave-js/shared";
+
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
+
 import type { DeviceClass } from "./DeviceClass.js";
 import type { EndpointDump } from "./Dump.js";
 import type { ZWaveNode } from "./Node.js";
@@ -59,8 +61,8 @@ export class Endpoint
 		this._implementedCommandClasses = new CacheBackedMap(
 			this.driver.networkCache,
 			{
-				prefix:
-					cacheKeys.node(this.nodeId).endpoint(this.index)._ccBaseKey,
+				prefix: cacheKeys.node(this.nodeId).endpoint(this.index)
+					._ccBaseKey,
 				suffixSerializer: (cc: CommandClasses) => num2hex(cc),
 				suffixDeserializer: (key: string) => {
 					const ccId = parseInt(key, 16);
@@ -205,9 +207,11 @@ export class Endpoint
 			return false;
 		}
 		// ...or the device class forbids it
-		return this.deviceClass?.specific.maySupportBasicCC
-			?? this.deviceClass?.generic.maySupportBasicCC
-			?? true;
+		return (
+			this.deviceClass?.specific.maySupportBasicCC ??
+			this.deviceClass?.generic.maySupportBasicCC ??
+			true
+		);
 	}
 
 	/** Determines if support for a CC was force-removed via config file */
@@ -330,9 +334,7 @@ export class Endpoint
 		// Create the dependencies
 		for (const node of ret) {
 			const instance = this.createCCInstance(node.value)!;
-			for (
-				const requiredCCId of instance.determineRequiredCCInterviews()
-			) {
+			for (const requiredCCId of instance.determineRequiredCCInterviews()) {
 				const requiredCC = ret.find(
 					(instance) => instance.value === requiredCCId,
 				);
@@ -361,11 +363,11 @@ export class Endpoint
 		get: (target, ccNameOrId: string | symbol) => {
 			// Avoid ultra-weird error messages during testing
 			if (
-				process.env.NODE_ENV === "test"
-				&& typeof ccNameOrId === "string"
-				&& (ccNameOrId === "$$typeof"
-					|| ccNameOrId === "constructor"
-					|| ccNameOrId.includes("@@__IMMUTABLE"))
+				process.env.NODE_ENV === "test" &&
+				typeof ccNameOrId === "string" &&
+				(ccNameOrId === "$$typeof" ||
+					ccNameOrId === "constructor" ||
+					ccNameOrId.includes("@@__IMMUTABLE"))
 			) {
 				return undefined;
 			}
@@ -402,7 +404,7 @@ export class Endpoint
 	/**
 	 * Used to iterate over the commandClasses API without throwing errors by accessing unsupported CCs
 	 */
-	private readonly commandClassesIterator: () => Iterator<CCAPI> = function*(
+	private readonly commandClassesIterator: () => Iterator<CCAPI> = function* (
 		this: Endpoint,
 	) {
 		for (const cc of this.implementedCommandClasses.keys()) {
@@ -432,12 +434,12 @@ export class Endpoint
 	public invokeCCAPI<
 		CC extends CCNameOrId,
 		TMethod extends keyof TAPI,
-		TAPI extends Record<
-			string,
-			(...args: any[]) => any
-		> = CommandClasses extends CC ? any
-			: Omit<CCNameOrId, CommandClasses> extends CC ? any
-			: APIMethodsOf<CC>,
+		TAPI extends Record<string, (...args: any[]) => any> =
+			CommandClasses extends CC
+				? any
+				: Omit<CCNameOrId, CommandClasses> extends CC
+					? any
+					: APIMethodsOf<CC>,
 	>(
 		cc: CC,
 		method: TMethod,

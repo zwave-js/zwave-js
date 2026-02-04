@@ -5,6 +5,7 @@ import {
 } from "@zwave-js/cc/NotificationCC";
 import { CommandClasses } from "@zwave-js/core";
 import { type MockNodeBehavior, ccCaps } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -33,14 +34,15 @@ integrationTest(
 			const respondToNotificationGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof NotificationCCGet) {
-						const notificationType = receivedCC.notificationType
-							|| 0x06;
+						const notificationType =
+							receivedCC.notificationType || 0x06;
 						const cc = new NotificationCCReport({
 							nodeId: controller.ownNodeId,
 							notificationType,
-							notificationEvent: notificationType === 0x06
-								? 0x06 /* Keypad unlock */
-								: 0xfe,
+							notificationEvent:
+								notificationType === 0x06
+									? 0x06 /* Keypad unlock */
+									: 0xfe,
 						});
 						return { action: "sendCC", cc };
 					}

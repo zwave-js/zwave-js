@@ -38,16 +38,16 @@ async function main(param) {
 		);
 		const hasLink = markdownLinkRegex.test(logfileSection);
 		hasZjsLog = zjsLogRegex.test(logfileSection);
-		const codeBlockContent = codeBlockRegex.exec(logfileSection)?.[1]
-			?.trim() ?? "";
+		const codeBlockContent =
+			codeBlockRegex.exec(logfileSection)?.[1]?.trim() ?? "";
 
 		console.log(`logfileSection: ${logfileSection}`);
 		console.log(`hasLink: ${hasLink}`);
 		console.log(`hasZjsLog: ${hasZjsLog}`);
 		console.log(
-			`codeBlockContent (matches = ${
-				codeBlockRegex.test(codeBlockContent)
-			}): ${codeBlockContent}`,
+			`codeBlockContent (matches = ${codeBlockRegex.test(
+				codeBlockContent,
+			)}): ${codeBlockContent}`,
 		);
 
 		if (!hasZjsLog) {
@@ -132,8 +132,8 @@ Please consider uploading a logfile that captures your problem. As a reminder, h
 
 		const existing = comments.find(
 			(c) =>
-				c.author.login === "zwave-js-bot"
-				&& c.body.includes(LOGFILE_COMMENT_TAG),
+				c.author.login === "zwave-js-bot" &&
+				c.body.includes(LOGFILE_COMMENT_TAG),
 		);
 		if (existing) {
 			// Already have a comment, no need for another one

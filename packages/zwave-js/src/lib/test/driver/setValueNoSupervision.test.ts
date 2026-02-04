@@ -7,6 +7,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("setValue without supervision: expect validation GET", {
@@ -44,8 +45,8 @@ integrationTest("setValue without supervision: expect validation GET", {
 
 		mockNode.assertReceivedControllerFrame(
 			(frame) =>
-				frame.type === MockZWaveFrameType.Request
-				&& frame.payload instanceof BinarySwitchCCSet,
+				frame.type === MockZWaveFrameType.Request &&
+				frame.payload instanceof BinarySwitchCCSet,
 			{
 				errorMessage:
 					"Node should have received a non-supervised BinarySwitchCCSet",
@@ -56,8 +57,8 @@ integrationTest("setValue without supervision: expect validation GET", {
 
 		mockNode.assertReceivedControllerFrame(
 			(frame) =>
-				frame.type === MockZWaveFrameType.Request
-				&& frame.payload instanceof BinarySwitchCCGet,
+				frame.type === MockZWaveFrameType.Request &&
+				frame.payload instanceof BinarySwitchCCGet,
 			{
 				errorMessage: "Node should have received a BinarySwitchCCGet",
 			},
@@ -65,9 +66,9 @@ integrationTest("setValue without supervision: expect validation GET", {
 
 		mockNode.assertSentControllerFrame(
 			(frame) =>
-				frame.type === MockZWaveFrameType.Request
-				&& frame.payload instanceof BinarySwitchCCReport
-				&& frame.payload.currentValue === false,
+				frame.type === MockZWaveFrameType.Request &&
+				frame.payload instanceof BinarySwitchCCReport &&
+				frame.payload.currentValue === false,
 			{
 				errorMessage:
 					"Node should have sent a BinarySwitchCCReport with currentValue false",

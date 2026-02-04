@@ -1,4 +1,5 @@
 import { CommandClasses } from "@zwave-js/core";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -9,9 +10,7 @@ integrationTest(
 			productType: 0xdead,
 			productId: 0xbeef,
 
-			commandClasses: [
-				CommandClasses["Manufacturer Specific"],
-			],
+			commandClasses: [CommandClasses["Manufacturer Specific"]],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {

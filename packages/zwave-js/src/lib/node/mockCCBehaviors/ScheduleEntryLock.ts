@@ -29,6 +29,7 @@ import type {
 	MockNodeBehavior,
 	ScheduleEntryLockCCCapabilities,
 } from "@zwave-js/testing";
+
 import { defaultCapabilities as defaultUserCodeCapabilities } from "./UserCode.js";
 
 const defaultCapabilities: ScheduleEntryLockCCCapabilities = {
@@ -70,10 +71,7 @@ const respondToScheduleEntryLockSupportedGet: MockNodeBehavior = {
 const respondToScheduleEntryLockTimeOffsetSet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof ScheduleEntryLockCCTimeOffsetSet) {
-			self.state.set(
-				StateKeys.standardOffset,
-				receivedCC.standardOffset,
-			);
+			self.state.set(StateKeys.standardOffset, receivedCC.standardOffset);
 			self.state.set(StateKeys.dstOffset, receivedCC.dstOffset);
 			return { action: "ok" };
 		}
@@ -85,8 +83,8 @@ const respondToScheduleEntryLockTimeOffsetGet: MockNodeBehavior = {
 		if (receivedCC instanceof ScheduleEntryLockCCTimeOffsetGet) {
 			const cc = new ScheduleEntryLockCCTimeOffsetReport({
 				nodeId: controller.ownNodeId,
-				standardOffset: (self.state.get(StateKeys.standardOffset)
-					?? 0) as number,
+				standardOffset: (self.state.get(StateKeys.standardOffset) ??
+					0) as number,
 				dstOffset: (self.state.get(StateKeys.dstOffset) ?? 0) as number,
 			});
 			return { action: "sendCC", cc };
@@ -146,12 +144,12 @@ const respondToScheduleEntryLockWeekDayScheduleSet: MockNodeBehavior = {
 			const schedule =
 				receivedCC.action === ScheduleEntryLockSetAction.Set
 					? {
-						weekday: receivedCC.weekday!,
-						startHour: receivedCC.startHour!,
-						startMinute: receivedCC.startMinute!,
-						stopHour: receivedCC.stopHour!,
-						stopMinute: receivedCC.stopMinute!,
-					}
+							weekday: receivedCC.weekday!,
+							startHour: receivedCC.startHour!,
+							startMinute: receivedCC.startMinute!,
+							stopHour: receivedCC.stopHour!,
+							stopMinute: receivedCC.stopMinute!,
+						}
 					: undefined;
 
 			self.state.set(StateKeys.schedule(userId, slotId, kind), schedule);
@@ -240,17 +238,17 @@ const respondToScheduleEntryLockYearDayScheduleSet: MockNodeBehavior = {
 			const schedule =
 				receivedCC.action === ScheduleEntryLockSetAction.Set
 					? {
-						startYear: receivedCC.startYear!,
-						startMonth: receivedCC.startMonth!,
-						startDay: receivedCC.startDay!,
-						startHour: receivedCC.startHour!,
-						startMinute: receivedCC.startMinute!,
-						stopYear: receivedCC.stopYear!,
-						stopMonth: receivedCC.stopMonth!,
-						stopDay: receivedCC.stopDay!,
-						stopHour: receivedCC.stopHour!,
-						stopMinute: receivedCC.stopMinute!,
-					}
+							startYear: receivedCC.startYear!,
+							startMonth: receivedCC.startMonth!,
+							startDay: receivedCC.startDay!,
+							startHour: receivedCC.startHour!,
+							startMinute: receivedCC.startMinute!,
+							stopYear: receivedCC.stopYear!,
+							stopMonth: receivedCC.stopMonth!,
+							stopDay: receivedCC.stopDay!,
+							stopHour: receivedCC.stopHour!,
+							stopMinute: receivedCC.stopMinute!,
+						}
 					: undefined;
 
 			self.state.set(StateKeys.schedule(userId, slotId, kind), schedule);
@@ -308,8 +306,7 @@ const respondToScheduleEntryLockYearDayScheduleGet: MockNodeBehavior = {
 const respondToScheduleEntryLockDailyRepeatingScheduleSet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (
-			receivedCC
-				instanceof ScheduleEntryLockCCDailyRepeatingScheduleSet
+			receivedCC instanceof ScheduleEntryLockCCDailyRepeatingScheduleSet
 		) {
 			const userCodeCapabilities = {
 				...defaultUserCodeCapabilities,
@@ -342,12 +339,12 @@ const respondToScheduleEntryLockDailyRepeatingScheduleSet: MockNodeBehavior = {
 			const schedule =
 				receivedCC.action === ScheduleEntryLockSetAction.Set
 					? {
-						weekdays: receivedCC.weekdays!,
-						startHour: receivedCC.startHour!,
-						startMinute: receivedCC.startMinute!,
-						durationHour: receivedCC.durationHour!,
-						durationMinute: receivedCC.durationMinute!,
-					}
+							weekdays: receivedCC.weekdays!,
+							startHour: receivedCC.startHour!,
+							startMinute: receivedCC.startMinute!,
+							durationHour: receivedCC.durationHour!,
+							durationMinute: receivedCC.durationMinute!,
+						}
 					: undefined;
 
 			self.state.set(StateKeys.schedule(userId, slotId, kind), schedule);
@@ -359,8 +356,7 @@ const respondToScheduleEntryLockDailyRepeatingScheduleSet: MockNodeBehavior = {
 const respondToScheduleEntryLockDailyRepeatingScheduleGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (
-			receivedCC
-				instanceof ScheduleEntryLockCCDailyRepeatingScheduleGet
+			receivedCC instanceof ScheduleEntryLockCCDailyRepeatingScheduleGet
 		) {
 			const userCodeCapabilities = {
 				...defaultUserCodeCapabilities,

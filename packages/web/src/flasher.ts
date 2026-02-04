@@ -277,12 +277,10 @@ async function flash() {
 		}
 
 		alert(
-			`Failed to flash firmware: ${
-				getEnumMemberName(
-					OTWFirmwareUpdateStatus,
-					result.status,
-				)
-			}`,
+			`Failed to flash firmware: ${getEnumMemberName(
+				OTWFirmwareUpdateStatus,
+				result.status,
+			)}`,
 		);
 	} catch (e) {
 		alert(`Failed to flash firmware: ${getErrorMessage(e)}`);
@@ -309,8 +307,8 @@ async function eraseNVM() {
 
 	const areYouSurePromise = driver.waitForBootloaderChunk(
 		(c) =>
-			c.type === BootloaderChunkType.Message
-			&& c.message.toLowerCase().includes("are you sure"),
+			c.type === BootloaderChunkType.Message &&
+			c.message.toLowerCase().includes("are you sure"),
 		1000,
 	);
 	await driver.bootloader.selectOption(option);
@@ -323,8 +321,8 @@ async function eraseNVM() {
 
 	const successPromise = driver.waitForBootloaderChunk(
 		(c) =>
-			c.type === BootloaderChunkType.Message
-			&& c.message.toLowerCase().includes("erased"),
+			c.type === BootloaderChunkType.Message &&
+			c.message.toLowerCase().includes("erased"),
 		1000,
 	);
 

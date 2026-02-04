@@ -1,9 +1,12 @@
-import { CommandClasses } from "@zwave-js/core";
-import { Bytes, isUint8Array } from "@zwave-js/shared";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { CommandClasses } from "@zwave-js/core";
+import { Bytes, isUint8Array } from "@zwave-js/shared";
 import { beforeAll, test } from "vitest";
+
 import { ConfigManager } from "../ConfigManager.js";
+
 import type { DeviceConfig } from "./DeviceConfig.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -32,103 +35,68 @@ beforeAll(async (t) => {
 	))!;
 });
 
-test(
-	"hash() works",
-	async (t) => {
-		t.expect(testConfig).toBeDefined();
+test("hash() works", async (t) => {
+	t.expect(testConfig).toBeDefined();
 
-		const hash = await testConfig.getHash();
-		t.expect(isUint8Array(hash)).toBe(true);
-	},
-	// This test might take a while
-	60000,
-);
+	const hash = await testConfig.getHash();
+	t.expect(isUint8Array(hash)).toBe(true);
+}, 60000); // This test might take a while
 
-test(
-	"hash() changes when changing a parameter info",
-	async (t) => {
-		t.expect(testConfig).toBeDefined();
+test("hash() changes when changing a parameter info", async (t) => {
+	t.expect(testConfig).toBeDefined();
 
-		const hash1 = await testConfig.getHash();
+	const hash1 = await testConfig.getHash();
 
-		// @ts-expect-error
-		testConfig.paramInformation!.get({ parameter: 2 })!.unit = "lightyears";
-		const hash2 = await testConfig.getHash();
+	// @ts-expect-error
+	testConfig.paramInformation!.get({ parameter: 2 })!.unit = "lightyears";
+	const hash2 = await testConfig.getHash();
 
-		t.expect(hash1).not.toStrictEqual(hash2);
-	},
-	// This test might take a while
-	60000,
-);
+	t.expect(hash1).not.toStrictEqual(hash2);
+}, 60000); // This test might take a while
 
-test(
-	"hash() changes when removing a CC",
-	async (t) => {
-		t.expect(testConfig).toBeDefined();
+test("hash() changes when removing a CC", async (t) => {
+	t.expect(testConfig).toBeDefined();
 
-		const hash1 = await testConfig.getHash();
+	const hash1 = await testConfig.getHash();
 
-		const removeCCs = new Map();
-		removeCCs.set(CommandClasses["All Switch"], "*");
-		// @ts-expect-error
-		testConfig.compat!.removeCCs = removeCCs;
+	const removeCCs = new Map();
+	removeCCs.set(CommandClasses["All Switch"], "*");
+	// @ts-expect-error
+	testConfig.compat!.removeCCs = removeCCs;
 
-		const hash2 = await testConfig.getHash();
+	const hash2 = await testConfig.getHash();
 
-		t.expect(hash1).not.toStrictEqual(hash2);
-	},
-	// This test might take a while
-	60000,
-);
+	t.expect(hash1).not.toStrictEqual(hash2);
+}, 60000); // This test might take a while
 
-test(
-	"hash() does not crash for devices with a proprietary field",
-	async (t) => {
-		t.expect(proprietaryConfig).toBeDefined();
+test("hash() does not crash for devices with a proprietary field", async (t) => {
+	t.expect(proprietaryConfig).toBeDefined();
 
-		proprietaryConfig.getHash();
-	},
-	// This test might take a while
-	60000,
-);
+	proprietaryConfig.getHash();
+}, 60000); // This test might take a while
 
-test(
-	"hash() includes no prefix for version 0",
-	async (t) => {
-		t.expect(testConfig).toBeDefined();
+test("hash() includes no prefix for version 0", async (t) => {
+	t.expect(testConfig).toBeDefined();
 
-		const hash = await testConfig.getHash(0);
-		const hashString = Bytes.view(hash).toString("utf8");
-		t.expect(hashString.startsWith("$v0$")).toBe(false);
-	},
-	// This test might take a while
-	60000,
-);
+	const hash = await testConfig.getHash(0);
+	const hashString = Bytes.view(hash).toString("utf8");
+	t.expect(hashString.startsWith("$v0$")).toBe(false);
+}, 60000); // This test might take a while
 
-test(
-	"hash() includes no prefix for version 1",
-	async (t) => {
-		t.expect(testConfig).toBeDefined();
+test("hash() includes no prefix for version 1", async (t) => {
+	t.expect(testConfig).toBeDefined();
 
-		const hash = await testConfig.getHash(1);
-		const hashString = Bytes.view(hash).toString("utf8");
-		t.expect(hashString.startsWith("$v1$")).toBe(false);
-	},
-	// This test might take a while
-	60000,
-);
+	const hash = await testConfig.getHash(1);
+	const hashString = Bytes.view(hash).toString("utf8");
+	t.expect(hashString.startsWith("$v1$")).toBe(false);
+}, 60000); // This test might take a while
 
-test(
-	"hash() produces different hashes for different algorithms",
-	async (t) => {
-		t.expect(testConfig).toBeDefined();
+test("hash() produces different hashes for different algorithms", async (t) => {
+	t.expect(testConfig).toBeDefined();
 
-		const md5Hash = await testConfig.getHash(0);
-		const sha256Hash = await testConfig.getHash(1);
+	const md5Hash = await testConfig.getHash(0);
+	const sha256Hash = await testConfig.getHash(1);
 
-		// Different algorithms should produce different hashes
-		t.expect(md5Hash).not.toStrictEqual(sha256Hash);
-	},
-	// This test might take a while
-	60000,
-);
+	// Different algorithms should produce different hashes
+	t.expect(md5Hash).not.toStrictEqual(sha256Hash);
+}, 60000); // This test might take a while

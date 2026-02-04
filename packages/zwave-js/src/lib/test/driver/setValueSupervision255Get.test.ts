@@ -13,6 +13,7 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -48,11 +49,10 @@ integrationTest(
 			const respondToSupervisionGetWithDuration: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
-						&& receivedCC.encapsulated
-							instanceof MultilevelSwitchCCSet
-						&& !!receivedCC.encapsulated.duration
-							?.toMilliseconds()
+						receivedCC instanceof SupervisionCCGet &&
+						receivedCC.encapsulated instanceof
+							MultilevelSwitchCCSet &&
+						!!receivedCC.encapsulated.duration?.toMilliseconds()
 					) {
 						const cc1 = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
@@ -75,17 +75,13 @@ integrationTest(
 							}),
 						);
 
-						setTimeout(
-							() => {
-								void self.sendToController(
-									createMockZWaveRequestFrame(cc2, {
-										ackRequested: false,
-									}),
-								);
-							},
-							receivedCC.encapsulated.duration
-								.toMilliseconds(),
-						);
+						setTimeout(() => {
+							void self.sendToController(
+								createMockZWaveRequestFrame(cc2, {
+									ackRequested: false,
+								}),
+							);
+						}, receivedCC.encapsulated.duration.toMilliseconds());
 
 						return { action: "stop" };
 					}
@@ -143,10 +139,9 @@ integrationTest(
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof SupervisionCCGet
-					&& frame.payload.encapsulated
-						instanceof MultilevelSwitchCCSet,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof SupervisionCCGet &&
+					frame.payload.encapsulated instanceof MultilevelSwitchCCSet,
 				{
 					errorMessage:
 						"Node should have received a supervised MultilevelSwitchCCSet",
@@ -155,8 +150,8 @@ integrationTest(
 
 			await mockNode.expectControllerFrame(
 				(frame): frame is MockZWaveRequestFrame =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof MultilevelSwitchCCGet,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof MultilevelSwitchCCGet,
 				{
 					timeout: 1500,
 					errorMessage:

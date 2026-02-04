@@ -5,6 +5,7 @@ import {
 } from "@zwave-js/shared";
 import type { Database } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import type { CommandClasses } from "../definitions/CommandClasses.js";
 import {
 	ZWaveError,
@@ -12,6 +13,7 @@ import {
 	isZWaveError,
 } from "../error/ZWaveError.js";
 import type { ValueMetadata } from "../values/Metadata.js";
+
 import type {
 	MetadataUpdatedArgs,
 	SetValueOptions,
@@ -43,16 +45,16 @@ export function isValueID(param: Record<any, any>): param is ValueID {
 	if (typeof param.commandClass !== "number") return false;
 	// property is mandatory and must be a number or string
 	if (
-		typeof param.property !== "number"
-		&& typeof param.property !== "string"
+		typeof param.property !== "number" &&
+		typeof param.property !== "string"
 	) {
 		return false;
 	}
 	// propertyKey is optional and must be a number or string
 	if (
-		param.propertyKey != undefined
-		&& typeof param.propertyKey !== "number"
-		&& typeof param.propertyKey !== "string"
+		param.propertyKey != undefined &&
+		typeof param.propertyKey !== "number" &&
+		typeof param.propertyKey !== "string"
 	) {
 		return false;
 	}
@@ -124,16 +126,18 @@ export function valueEquals(a: unknown, b: unknown): boolean {
 	}
 
 	if (isArray(a)) {
-		return isArray(b)
-			&& a.length === b.length
-			&& a.every((v, i) => valueEquals(v, b[i]));
+		return (
+			isArray(b) &&
+			a.length === b.length &&
+			a.every((v, i) => valueEquals(v, b[i]))
+		);
 	}
 
 	if (isObject(a)) {
 		if (!isObject(b)) return false;
 		const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
 		return [...allKeys].every((k) =>
-			valueEquals((a as any)[k], (b as any)[k])
+			valueEquals((a as any)[k], (b as any)[k]),
 		);
 	}
 
@@ -222,9 +226,9 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 			dbKey = this.valueIdToDBKey(valueId);
 		} catch (e) {
 			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Argument_Invalid
-				&& options.noThrow === true
+				isZWaveError(e) &&
+				e.code === ZWaveErrorCodes.Argument_Invalid &&
+				options.noThrow === true
 			) {
 				// ignore invalid value IDs
 				return;
@@ -332,8 +336,8 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 		const ret: ReturnType<ValueDB["getValues"]> = [];
 		for (const key of this._index) {
 			if (
-				compareDBKeyFast(key, this.nodeId, { commandClass: forCC })
-				&& this._db.has(key)
+				compareDBKeyFast(key, this.nodeId, { commandClass: forCC }) &&
+				this._db.has(key)
 			) {
 				const vid = this.dbKeyToValueId(key);
 				if (!vid) {
@@ -414,9 +418,9 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 			dbKey = this.valueIdToDBKey(valueId);
 		} catch (e) {
 			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Argument_Invalid
-				&& options.noThrow === true
+				isZWaveError(e) &&
+				e.code === ZWaveErrorCodes.Argument_Invalid &&
+				options.noThrow === true
 			) {
 				// ignore invalid value IDs
 				return;
@@ -466,8 +470,8 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 		const ret: ReturnType<ValueDB["getAllMetadata"]> = [];
 		for (const key of this._index) {
 			if (
-				compareDBKeyFast(key, this.nodeId, { commandClass: forCC })
-				&& this._metadata.has(key)
+				compareDBKeyFast(key, this.nodeId, { commandClass: forCC }) &&
+				this._metadata.has(key)
 			) {
 				const vid = this.dbKeyToValueId(key);
 				if (!vid) {
@@ -563,9 +567,9 @@ export function dbKeyToValueIdFast(key: string): { nodeId: number } & ValueID {
 	} else {
 		end = start + 1;
 		while (
-			end < len
-			&& key.charCodeAt(end) !== 44
-			&& key.charCodeAt(end) !== 125
+			end < len &&
+			key.charCodeAt(end) !== 44 &&
+			key.charCodeAt(end) !== 125
 		) {
 			end++;
 		}
@@ -587,9 +591,9 @@ export function dbKeyToValueIdFast(key: string): { nodeId: number } & ValueID {
 		} else {
 			end = start + 1;
 			while (
-				end < len
-				&& key.charCodeAt(end) !== 44
-				&& key.charCodeAt(end) !== 125
+				end < len &&
+				key.charCodeAt(end) !== 44 &&
+				key.charCodeAt(end) !== 125
 			) {
 				end++;
 			}

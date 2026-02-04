@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { enumValuesToMetadataStates } from "./Metadata.js";
 
 enum TestEnum {

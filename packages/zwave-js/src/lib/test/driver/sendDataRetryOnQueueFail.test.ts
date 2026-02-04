@@ -6,6 +6,7 @@ import {
 	getDefaultMockControllerCapabilities,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
@@ -19,8 +20,8 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	...getDefaultMockControllerCapabilities(),
 	supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
 		(ft) =>
-			ft !== FunctionType.SendDataBridge
-			&& ft !== FunctionType.SendDataMulticastBridge,
+			ft !== FunctionType.SendDataBridge &&
+			ft !== FunctionType.SendDataMulticastBridge,
 	),
 };
 
@@ -56,8 +57,8 @@ integrationTest(
 							MockControllerStateKeys.CommunicationState,
 						) as MockControllerCommunicationState | undefined;
 						if (
-							state != undefined
-							&& state !== MockControllerCommunicationState.Idle
+							state != undefined &&
+							state !== MockControllerCommunicationState.Idle
 						) {
 							throw new Error(
 								"Received SendDataRequest while not idle",
@@ -123,8 +124,8 @@ integrationTest(
 							MockControllerStateKeys.CommunicationState,
 						) as MockControllerCommunicationState | undefined;
 						if (
-							state != undefined
-							&& state !== MockControllerCommunicationState.Idle
+							state != undefined &&
+							state !== MockControllerCommunicationState.Idle
 						) {
 							throw new Error(
 								"Received SendDataRequest while not idle",

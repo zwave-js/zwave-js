@@ -4,6 +4,7 @@
  */
 
 import path from "node:path";
+
 import ts from "typescript";
 
 /**
@@ -12,9 +13,7 @@ import ts from "typescript";
  * - `import { FooCCValues } from "./_CCValues.generated.js";`
  * - `export { FooCCValues };`
  */
-export function createDefineCCValuesTransformer(): ts.TransformerFactory<
-	ts.SourceFile
-> {
+export function createDefineCCValuesTransformer(): ts.TransformerFactory<ts.SourceFile> {
 	return (context: ts.TransformationContext) => (file: ts.SourceFile) => {
 		// Bail early if the filename does not end with "CC.ts"
 		if (!file.fileName.endsWith("CC.ts")) {
@@ -22,28 +21,31 @@ export function createDefineCCValuesTransformer(): ts.TransformerFactory<
 		}
 
 		const ccValuesDeclaration = file.statements
-			.filter((s): s is ts.VariableStatement =>
-				s.kind === ts.SyntaxKind.VariableStatement
+			.filter(
+				(s): s is ts.VariableStatement =>
+					s.kind === ts.SyntaxKind.VariableStatement,
 			)
 			.filter((s) =>
-				s.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
+				s.modifiers?.some(
+					(m) => m.kind === ts.SyntaxKind.ExportKeyword,
+				),
 			)
 			.find((s) =>
 				s.declarationList.declarations.some(
 					(d) =>
-						d.name.getText(file).endsWith("CCValues")
-						&& d.initializer?.getText(file).startsWith(
-							"V.defineCCValues",
-						),
-				)
+						d.name.getText(file).endsWith("CCValues") &&
+						d.initializer
+							?.getText(file)
+							.startsWith("V.defineCCValues"),
+				),
 			);
 
 		if (!ccValuesDeclaration) return file;
 
-		const valueDeclarationName = ccValuesDeclaration.declarationList
-			.declarations
-			.find((d) => d.name.getText(file).endsWith("CCValues"))
-			?.name.getText(file);
+		const valueDeclarationName =
+			ccValuesDeclaration.declarationList.declarations
+				.find((d) => d.name.getText(file).endsWith("CCValues"))
+				?.name.getText(file);
 
 		if (!valueDeclarationName) return file;
 

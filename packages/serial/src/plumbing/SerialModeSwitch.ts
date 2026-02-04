@@ -1,4 +1,5 @@
 import { Bytes, type BytesView, getenv } from "@zwave-js/shared";
+
 import { bootloaderMenuPreamble } from "../parsers/BootloaderParsers.js";
 import { ZWaveSerialMode } from "../serialport/definitions.js";
 
@@ -42,7 +43,8 @@ export class SerialModeSwitch extends WritableStream<BytesView> {
 						const buffer = Bytes.view(chunk);
 						// If we haven't figured out the startup mode yet,
 						// inspect the chunk to see if it contains the bootloader preamble
-						const str = buffer.toString("ascii")
+						const str = buffer
+							.toString("ascii")
 							// like .trim(), but including null bytes
 							.replaceAll(/^[\s\0]+|[\s\0]+$/g, "");
 
@@ -50,20 +52,24 @@ export class SerialModeSwitch extends WritableStream<BytesView> {
 							// We're sure we're in bootloader mode
 							this.mode = ZWaveSerialMode.Bootloader;
 						} else if (
-							str.split("\n").some((line) =>
-								line === ">"
-								|| line.startsWith("> ")
-							)
+							str
+								.split("\n")
+								.some(
+									(line) =>
+										line === ">" || line.startsWith("> "),
+								)
 						) {
 							// We're sure we're in CLI mode
 							this.mode = ZWaveSerialMode.CLI;
 						} else if (
-							buffer.every((b) =>
-								b === 0x00
-								|| b === 0x0a
-								|| b === 0x0d
-								|| (b >= 0x20 && b <= 0x7e)
-							) && buffer.some((b) => b >= 0x20 && b <= 0x7e)
+							buffer.every(
+								(b) =>
+									b === 0x00 ||
+									b === 0x0a ||
+									b === 0x0d ||
+									(b >= 0x20 && b <= 0x7e),
+							) &&
+							buffer.some((b) => b >= 0x20 && b <= 0x7e)
 						) {
 							// Only printable line breaks, null bytes and at least one printable ASCII character
 

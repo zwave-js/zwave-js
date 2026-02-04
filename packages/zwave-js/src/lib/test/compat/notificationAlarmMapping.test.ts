@@ -6,6 +6,7 @@ import { CommandClasses } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import sinon from "sinon";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -58,12 +59,14 @@ integrationTest(
 			});
 
 			// And they should be known to be supported
-			const supportedNotificationTypes: number[] | undefined = node
-				.getValue(NotificationCCValues.supportedNotificationTypes.id);
+			const supportedNotificationTypes: number[] | undefined =
+				node.getValue(
+					NotificationCCValues.supportedNotificationTypes.id,
+				);
 			t.expect(supportedNotificationTypes?.includes(0x06)).toBe(true);
 
-			const supportedAccessControlEvents: number[] | undefined = node
-				.getValue(
+			const supportedAccessControlEvents: number[] | undefined =
+				node.getValue(
 					NotificationCCValues.supportedNotificationEvents(0x06).id,
 				);
 			t.expect(supportedAccessControlEvents?.includes(0x05)).toBe(true);

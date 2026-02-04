@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import { type JSONCRule, removeJSONProperty } from "../utils.js";
 
 export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
@@ -12,15 +13,18 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 				node: AST.JSONObjectExpression,
 			) {
 				// Check if allowed field exists
-				const hasAllowed = node.properties.some((p) =>
-					p.key.type === "JSONLiteral" && p.key.value === "allowed"
+				const hasAllowed = node.properties.some(
+					(p) =>
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "allowed",
 				);
 
 				// If allowed exists, minValue and maxValue must not be present
 				if (hasAllowed) {
-					const minValue = node.properties.find((p) =>
-						p.key.type === "JSONLiteral"
-						&& p.key.value === "minValue"
+					const minValue = node.properties.find(
+						(p) =>
+							p.key.type === "JSONLiteral" &&
+							p.key.value === "minValue",
 					);
 					if (minValue) {
 						context.report({
@@ -30,9 +34,10 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 						});
 					}
 
-					const maxValue = node.properties.find((p) =>
-						p.key.type === "JSONLiteral"
-						&& p.key.value === "maxValue"
+					const maxValue = node.properties.find(
+						(p) =>
+							p.key.type === "JSONLiteral" &&
+							p.key.value === "maxValue",
 					);
 					if (maxValue) {
 						context.report({
@@ -45,31 +50,35 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 				}
 
 				// Imports can make it necessary to override min/maxValue
-				const hasImport = node.properties.some((p) =>
-					p.key.type === "JSONLiteral"
-					&& p.key.value === "$import"
+				const hasImport = node.properties.some(
+					(p) =>
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "$import",
 				);
 				if (hasImport) return;
 
-				const allowManualEntryFalse = node.properties.some((p) =>
-					p.key.type === "JSONLiteral"
-					&& p.key.value === "allowManualEntry"
-					&& p.value.type === "JSONLiteral"
-					&& p.value.value === false
+				const allowManualEntryFalse = node.properties.some(
+					(p) =>
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "allowManualEntry" &&
+						p.value.type === "JSONLiteral" &&
+						p.value.value === false,
 				);
 				if (!allowManualEntryFalse) return;
 
-				const hasOptions = node.properties.some((p) =>
-					p.key.type === "JSONLiteral"
-					&& p.key.value === "options"
-					&& p.value.type === "JSONArrayExpression"
-					&& p.value.elements.length > 0
+				const hasOptions = node.properties.some(
+					(p) =>
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "options" &&
+						p.value.type === "JSONArrayExpression" &&
+						p.value.elements.length > 0,
 				);
 				if (!hasOptions) return;
 
-				const minValue = node.properties.find((p) =>
-					p.key.type === "JSONLiteral"
-					&& p.key.value === "minValue"
+				const minValue = node.properties.find(
+					(p) =>
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "minValue",
 				);
 				if (minValue) {
 					context.report({
@@ -79,9 +88,10 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 					});
 				}
 
-				const maxValue = node.properties.find((p) =>
-					p.key.type === "JSONLiteral"
-					&& p.key.value === "maxValue"
+				const maxValue = node.properties.find(
+					(p) =>
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "maxValue",
 				);
 				if (maxValue) {
 					context.report({
@@ -101,12 +111,9 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 		fixable: "code",
 		schema: false,
 		messages: {
-			"no-min-value":
-				`For parameters with "allowManualEntry = false" and predefined options, "minValue" is unnecessary and should not be specified.`,
-			"no-max-value":
-				`For parameters with "allowManualEntry = false" and predefined options, "maxValue" is unnecessary and should not be specified.`,
-			"allowed-conflicts-with-min-max":
-				`The "allowed" field cannot be used together with "minValue" or "maxValue".`,
+			"no-min-value": `For parameters with "allowManualEntry = false" and predefined options, "minValue" is unnecessary and should not be specified.`,
+			"no-max-value": `For parameters with "allowManualEntry = false" and predefined options, "maxValue" is unnecessary and should not be specified.`,
+			"allowed-conflicts-with-min-max": `The "allowed" field cannot be used together with "minValue" or "maxValue".`,
 		},
 		type: "problem",
 	},

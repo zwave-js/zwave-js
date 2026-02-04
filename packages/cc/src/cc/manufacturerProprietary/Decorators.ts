@@ -3,12 +3,14 @@ import {
 	createReflectionDecoratorPair,
 	createSimpleReflectionDecorator,
 } from "@zwave-js/core/reflection";
+
 import type { APIConstructor, CCAPI } from "../../lib/API.js";
 import type {
 	ManufacturerProprietaryCC,
 	ManufacturerProprietaryCCAPI,
 	ManufacturerProprietaryCCConstructor,
 } from "../ManufacturerProprietaryCC.js";
+
 import type { FibaroCC } from "./FibaroCC.js";
 
 // === Define the manufacturer ID for a given Manufacturer Proprietary CC subclass

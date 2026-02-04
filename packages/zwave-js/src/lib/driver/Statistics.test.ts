@@ -1,6 +1,8 @@
-import { Mixin } from "@zwave-js/shared";
 import EventEmitter from "node:events";
+
+import { Mixin } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import { StatisticsHost } from "./Statistics.js";
 
 interface TestStatistics {

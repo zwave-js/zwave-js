@@ -1,9 +1,8 @@
 import { cloneDeep } from "@zwave-js/shared";
+
 import { StatisticsHost } from "../driver/Statistics.js";
 
-export class ControllerStatisticsHost
-	extends StatisticsHost<ControllerStatistics>
-{
+export class ControllerStatisticsHost extends StatisticsHost<ControllerStatistics> {
 	createEmpty(): ControllerStatistics {
 		return {
 			messagesTX: 0,

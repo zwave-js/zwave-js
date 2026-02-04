@@ -1,16 +1,5 @@
-import { FunctionType } from "@zwave-js/serial";
-import {
-	type MockControllerBehavior,
-	type MockControllerCapabilities,
-	getDefaultMockControllerCapabilities,
-	getDefaultSupportedFunctionTypes,
-} from "@zwave-js/testing";
-import {
-	MockControllerCommunicationState,
-	MockControllerStateKeys,
-} from "../../controller/MockControllerState.js";
-
 import { TransmitStatus } from "@zwave-js/core";
+import { FunctionType } from "@zwave-js/serial";
 import {
 	SendDataAbort,
 	SendDataRequest,
@@ -18,7 +7,17 @@ import {
 	SendDataResponse,
 	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
+import {
+	type MockControllerBehavior,
+	type MockControllerCapabilities,
+	getDefaultMockControllerCapabilities,
+	getDefaultSupportedFunctionTypes,
+} from "@zwave-js/testing";
 
+import {
+	MockControllerCommunicationState,
+	MockControllerStateKeys,
+} from "../../controller/MockControllerState.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldTimeOut: boolean;
@@ -29,8 +28,8 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	...getDefaultMockControllerCapabilities(),
 	supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
 		(ft) =>
-			ft !== FunctionType.SendDataBridge
-			&& ft !== FunctionType.SendDataMulticastBridge,
+			ft !== FunctionType.SendDataBridge &&
+			ft !== FunctionType.SendDataMulticastBridge,
 	),
 };
 
@@ -65,8 +64,8 @@ integrationTest(
 							MockControllerStateKeys.CommunicationState,
 						) as MockControllerCommunicationState | undefined;
 						if (
-							state != undefined
-							&& state !== MockControllerCommunicationState.Idle
+							state != undefined &&
+							state !== MockControllerCommunicationState.Idle
 						) {
 							throw new Error(
 								"Received SendDataRequest while not idle",
@@ -142,7 +141,7 @@ integrationTest(
 			t.expect(() =>
 				mockController.assertReceivedHostMessage(
 					(msg) => msg.functionType === FunctionType.SoftReset,
-				)
+				),
 			).toThrow();
 
 			// mockController.clearReceivedHostMessages();

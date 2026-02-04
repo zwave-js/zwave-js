@@ -26,9 +26,7 @@ export interface ShutdownResponseOptions {
 
 @messageTypes(MessageType.Response, FunctionType.Shutdown)
 export class ShutdownResponse extends Message {
-	public constructor(
-		options: ShutdownResponseOptions & MessageBaseOptions,
-	) {
+	public constructor(options: ShutdownResponseOptions & MessageBaseOptions) {
 		super(options);
 
 		// TODO: Check implementation:

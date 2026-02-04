@@ -78,12 +78,12 @@ async function listKeysWithPrefix(
 		const request = store.openCursor();
 
 		request.onsuccess = (event) => {
-			const cursor =
-				(event.target as IDBRequest<IDBCursorWithValue>).result;
+			const cursor = (event.target as IDBRequest<IDBCursorWithValue>)
+				.result;
 			if (cursor) {
 				if (
-					typeof cursor.key === "string"
-					&& cursor.key.startsWith(prefix)
+					typeof cursor.key === "string" &&
+					cursor.key.startsWith(prefix)
 				) {
 					keys.push(cursor.key);
 				}
@@ -108,12 +108,12 @@ async function deleteKeysWithPrefix(
 		const request = store.openCursor();
 
 		request.onsuccess = (event) => {
-			const cursor =
-				(event.target as IDBRequest<IDBCursorWithValue>).result;
+			const cursor = (event.target as IDBRequest<IDBCursorWithValue>)
+				.result;
 			if (cursor) {
 				if (
-					typeof cursor.key === "string"
-					&& cursor.key.startsWith(prefix)
+					typeof cursor.key === "string" &&
+					cursor.key.startsWith(prefix)
 				) {
 					cursor.delete();
 				}

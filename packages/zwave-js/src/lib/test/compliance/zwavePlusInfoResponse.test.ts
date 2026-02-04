@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	ZWavePlusCCGet,
 	ZWavePlusCCReport,
@@ -9,7 +11,7 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Response to Z-Wave Plus Info Get", {
@@ -39,8 +41,9 @@ integrationTest("Response to Z-Wave Plus Info Get", {
 				msg,
 			): msg is MockZWaveRequestFrame & {
 				payload: ZWavePlusCCReport;
-			} => msg.type === MockZWaveFrameType.Request
-				&& msg.payload instanceof ZWavePlusCCReport,
+			} =>
+				msg.type === MockZWaveFrameType.Request &&
+				msg.payload instanceof ZWavePlusCCReport,
 			{ timeout: 1000 },
 		);
 

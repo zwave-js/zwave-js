@@ -1,4 +1,5 @@
 import { Bytes } from "@zwave-js/shared";
+
 import { SUC_MAX_UPDATES, SUC_UPDATE_ENTRY_SIZE } from "../../../consts.js";
 import {
 	type SUCUpdateEntry,
@@ -6,6 +7,7 @@ import {
 	parseSUCUpdateEntry,
 } from "../../common/sucUpdateEntry.js";
 import type { NVM3Object } from "../object.js";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -66,22 +68,22 @@ export class SUCUpdateEntriesFileV0 extends NVMFile {
 }
 
 export const SUCUpdateEntriesFileV5IDBase = 0x54000;
-export const SUCUpdateEntriesFileV5IDMax = SUCUpdateEntriesFileV5IDBase
-	+ SUC_MAX_UPDATES / SUC_UPDATES_PER_FILE_V5
-	- 1;
+export const SUCUpdateEntriesFileV5IDMax =
+	SUCUpdateEntriesFileV5IDBase +
+	SUC_MAX_UPDATES / SUC_UPDATES_PER_FILE_V5 -
+	1;
 export function sucUpdateIndexToSUCUpdateEntriesFileIDV5(
 	index: number,
 ): number {
 	return (
-		SUCUpdateEntriesFileV5IDBase
-		+ Math.floor(index / SUC_UPDATES_PER_FILE_V5)
+		SUCUpdateEntriesFileV5IDBase +
+		Math.floor(index / SUC_UPDATES_PER_FILE_V5)
 	);
 }
 
 @nvmFileID(
 	(id) =>
-		id >= SUCUpdateEntriesFileV5IDBase
-		&& id <= SUCUpdateEntriesFileV5IDMax,
+		id >= SUCUpdateEntriesFileV5IDBase && id <= SUCUpdateEntriesFileV5IDMax,
 )
 @nvmSection("protocol")
 export class SUCUpdateEntriesFileV5 extends NVMFile {

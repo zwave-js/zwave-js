@@ -17,6 +17,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, type BytesView, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -42,6 +43,7 @@ import {
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
+
 import { AssociationCCValues } from "./AssociationCC.js";
 
 export const MultiChannelAssociationCCValues = V.defineCCValues(
@@ -102,11 +104,11 @@ function serializeMultiChannelAssociationDestination(
 	const endpointAddressBytes = endpoints.length * 2;
 	const payload = new Bytes(
 		// node addresses
-		nodeAddressBytes
+		nodeAddressBytes +
 			// endpoint marker
-			+ (endpointAddressBytes > 0 ? 1 : 0)
+			(endpointAddressBytes > 0 ? 1 : 0) +
 			// endpoints
-			+ endpointAddressBytes,
+			endpointAddressBytes,
 	);
 	// write node addresses
 	for (let i = 0; i < nodeIds.length; i++) {
@@ -119,11 +121,12 @@ function serializeMultiChannelAssociationDestination(
 		offset += 1;
 		for (let i = 0; i < endpoints.length; i++) {
 			const endpoint = endpoints[i];
-			const destination = typeof endpoint.endpoint === "number"
-				// The destination is a single number
-				? endpoint.endpoint & 0b0111_1111
-				// The destination is a bit mask
-				: encodeBitMask(endpoint.endpoint, 7)[0] | 0b1000_0000;
+			const destination =
+				typeof endpoint.endpoint === "number"
+					? // The destination is a single number
+						endpoint.endpoint & 0b0111_1111
+					: // The destination is a bit mask
+						encodeBitMask(endpoint.endpoint, 7)[0] | 0b1000_0000;
 
 			payload[offset + 2 * i] = endpoint.nodeId;
 			payload[offset + 2 * i + 1] = destination;
@@ -194,12 +197,11 @@ export class MultiChannelAssociationCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			MultiChannelAssociationCCSupportedGroupingsReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<MultiChannelAssociationCCSupportedGroupingsReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.groupCount;
 	}
 
@@ -234,12 +236,11 @@ export class MultiChannelAssociationCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			groupId,
 		});
-		const response = await this.host.sendCommand<
-			MultiChannelAssociationCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<MultiChannelAssociationCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, ["maxNodes", "nodeIds", "endpoints"]);
 		}
@@ -297,8 +298,8 @@ export class MultiChannelAssociationCCAPI extends PhysicalCCAPI {
 		if (!options.groupId && this.version === 1) {
 			// V1 does not support omitting the group, manually remove the destination from all groups
 			// We don't want to do too much work, so find out which groups the destination is in
-			const currentDestinations = MultiChannelAssociationCC
-				.getAllDestinationsCached(
+			const currentDestinations =
+				MultiChannelAssociationCC.getAllDestinationsCached(
 					this.host,
 					this.endpoint,
 				);
@@ -360,13 +361,15 @@ export class MultiChannelAssociationCC extends CommandClass {
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 	): number {
-		return ctx
-			.getValueDB(endpoint.nodeId)
-			.getValue(
-				MultiChannelAssociationCCValues.groupCount.endpoint(
-					endpoint.index,
-				),
-			) || 0;
+		return (
+			ctx
+				.getValueDB(endpoint.nodeId)
+				.getValue(
+					MultiChannelAssociationCCValues.groupCount.endpoint(
+						endpoint.index,
+					),
+				) || 0
+		);
 	}
 
 	/**
@@ -378,13 +381,15 @@ export class MultiChannelAssociationCC extends CommandClass {
 		endpoint: EndpointId,
 		groupId: number,
 	): number {
-		return ctx
-			.getValueDB(endpoint.nodeId)
-			.getValue(
-				MultiChannelAssociationCCValues.maxNodes(groupId).endpoint(
-					endpoint.index,
-				),
-			) ?? 0;
+		return (
+			ctx
+				.getValueDB(endpoint.nodeId)
+				.getValue(
+					MultiChannelAssociationCCValues.maxNodes(groupId).endpoint(
+						endpoint.index,
+					),
+				) ?? 0
+		);
 	}
 
 	/**
@@ -401,18 +406,20 @@ export class MultiChannelAssociationCC extends CommandClass {
 		for (let i = 1; i <= groupCount; i++) {
 			const groupDestinations: AssociationAddress[] = [];
 			// Add all node destinations
-			const nodes = valueDB.getValue<number[]>(
-				MultiChannelAssociationCCValues.nodeIds(i).endpoint(
-					endpoint.index,
-				),
-			) ?? [];
+			const nodes =
+				valueDB.getValue<number[]>(
+					MultiChannelAssociationCCValues.nodeIds(i).endpoint(
+						endpoint.index,
+					),
+				) ?? [];
 			groupDestinations.push(...nodes.map((nodeId) => ({ nodeId })));
 			// And all endpoint destinations
-			const endpoints = valueDB.getValue<EndpointAddress[]>(
-				MultiChannelAssociationCCValues.endpoints(i).endpoint(
-					endpoint.index,
-				),
-			) ?? [];
+			const endpoints =
+				valueDB.getValue<EndpointAddress[]>(
+					MultiChannelAssociationCCValues.endpoints(i).endpoint(
+						endpoint.index,
+					),
+				) ?? [];
 			for (const ep of endpoints) {
 				if (typeof ep.endpoint === "number") {
 					groupDestinations.push({
@@ -433,21 +440,19 @@ export class MultiChannelAssociationCC extends CommandClass {
 				// Filter out duplicates
 				groupDestinations.filter(
 					(addr, index) =>
-						index
-							=== groupDestinations.findIndex(
-								({ nodeId, endpoint }) =>
-									nodeId === addr.nodeId
-									&& endpoint === addr.endpoint,
-							),
+						index ===
+						groupDestinations.findIndex(
+							({ nodeId, endpoint }) =>
+								nodeId === addr.nodeId &&
+								endpoint === addr.endpoint,
+						),
 				),
 			);
 		}
 		return ret;
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const mcAPI = CCAPI.create(
@@ -472,8 +477,7 @@ export class MultiChannelAssociationCC extends CommandClass {
 		if (mcGroupCount != undefined) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`supports ${mcGroupCount} multi channel association groups`,
+				message: `supports ${mcGroupCount} multi channel association groups`,
 				direction: "inbound",
 			});
 		} else {
@@ -496,9 +500,7 @@ export class MultiChannelAssociationCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const mcAPI = CCAPI.create(
@@ -516,43 +518,34 @@ export class MultiChannelAssociationCC extends CommandClass {
 			priority: MessagePriority.NodeQuery,
 		});
 
-		const mcGroupCount: number = this.getValue(
-			ctx,
-			MultiChannelAssociationCCValues.groupCount,
-		) ?? 0;
+		const mcGroupCount: number =
+			this.getValue(ctx, MultiChannelAssociationCCValues.groupCount) ?? 0;
 
 		// Some devices report more association groups than multi channel association groups, so we need this info here
 		const assocGroupCount: number =
-			this.getValue(ctx, AssociationCCValues.groupCount)
-			|| mcGroupCount;
+			this.getValue(ctx, AssociationCCValues.groupCount) || mcGroupCount;
 
 		// Then query each multi channel association group
 		for (let groupId = 1; groupId <= mcGroupCount; groupId++) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`querying multi channel association group #${groupId}...`,
+				message: `querying multi channel association group #${groupId}...`,
 				direction: "outbound",
 			});
 			const group = await mcAPI.getGroup(groupId);
 			if (!group) continue;
-			const logMessage =
-				`received information for multi channel association group #${groupId}:
+			const logMessage = `received information for multi channel association group #${groupId}:
 maximum # of nodes:           ${group.maxNodes}
 currently assigned nodes:     ${group.nodeIds.map(String).join(", ")}
-currently assigned endpoints: ${
-					group.endpoints
-						.map(({ nodeId, endpoint }) => {
-							if (typeof endpoint === "number") {
-								return `${nodeId}:${endpoint}`;
-							} else {
-								return `${nodeId}:[${
-									endpoint.map(String).join(", ")
-								}]`;
-							}
-						})
-						.join("")
-				}`;
+currently assigned endpoints: ${group.endpoints
+				.map(({ nodeId, endpoint }) => {
+					if (typeof endpoint === "number") {
+						return `${nodeId}:${endpoint}`;
+					} else {
+						return `${nodeId}:[${endpoint.map(String).join(", ")}]`;
+					}
+				})
+				.join("")}`;
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
@@ -564,8 +557,7 @@ currently assigned endpoints: ${
 		if (assocAPI.isSupported() && assocGroupCount > mcGroupCount) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`querying additional non-multi-channel association groups...`,
+				message: `querying additional non-multi-channel association groups...`,
 				direction: "outbound",
 			});
 			for (
@@ -580,8 +572,7 @@ currently assigned endpoints: ${
 				});
 				const group = await assocAPI.getGroup(groupId);
 				if (!group) continue;
-				const logMessage =
-					`received information for association group #${groupId}:
+				const logMessage = `received information for association group #${groupId}:
 maximum # of nodes:           ${group.maxNodes}
 currently assigned nodes:     ${group.nodeIds.map(String).join(", ")}`;
 				ctx.logNode(node.id, {
@@ -595,15 +586,13 @@ currently assigned nodes:     ${group.nodeIds.map(String).join(", ")}`;
 }
 
 // @publicAPI
-export type MultiChannelAssociationCCSetOptions =
-	& {
-		groupId: number;
-	}
-	& (
-		| { nodeIds: number[] }
-		| { endpoints: EndpointAddress[] }
-		| { nodeIds: number[]; endpoints: EndpointAddress[] }
-	);
+export type MultiChannelAssociationCCSetOptions = {
+	groupId: number;
+} & (
+	| { nodeIds: number[] }
+	| { endpoints: EndpointAddress[] }
+	| { nodeIds: number[]; endpoints: EndpointAddress[] }
+);
 
 @CCCommand(MultiChannelAssociationCommand.Set)
 @useSupervision()
@@ -626,8 +615,7 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		this.endpoints = ("endpoints" in options && options.endpoints)
-			|| [];
+		this.endpoints = ("endpoints" in options && options.endpoints) || [];
 	}
 
 	public static from(
@@ -768,11 +756,9 @@ export interface MultiChannelAssociationCCReportOptions {
 	MultiChannelAssociationCCValues.maxNodes,
 	(self) => [self.groupId],
 )
-@ccValueProperty(
-	"nodeIds",
-	MultiChannelAssociationCCValues.nodeIds,
-	(self) => [self.groupId],
-)
+@ccValueProperty("nodeIds", MultiChannelAssociationCCValues.nodeIds, (self) => [
+	self.groupId,
+])
 @ccValueProperty(
 	"endpoints",
 	MultiChannelAssociationCCValues.endpoints,
@@ -855,11 +841,7 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 			this.endpoints,
 		);
 		this.payload = Bytes.concat([
-			[
-				this.groupId,
-				this.maxNodes,
-				this.reportsToFollow,
-			],
+			[this.groupId, this.maxNodes, this.reportsToFollow],
 			destinations,
 		]);
 		return super.serialize(ctx);
@@ -934,13 +916,9 @@ export interface MultiChannelAssociationCCSupportedGroupingsReportOptions {
 
 @CCCommand(MultiChannelAssociationCommand.SupportedGroupingsReport)
 @ccValueProperty("groupCount", MultiChannelAssociationCCValues.groupCount)
-export class MultiChannelAssociationCCSupportedGroupingsReport
-	extends MultiChannelAssociationCC
-{
+export class MultiChannelAssociationCCSupportedGroupingsReport extends MultiChannelAssociationCC {
 	public constructor(
-		options: WithAddress<
-			MultiChannelAssociationCCSupportedGroupingsReportOptions
-		>,
+		options: WithAddress<MultiChannelAssociationCCSupportedGroupingsReportOptions>,
 	) {
 		super(options);
 
@@ -977,6 +955,4 @@ export class MultiChannelAssociationCCSupportedGroupingsReport
 
 @CCCommand(MultiChannelAssociationCommand.SupportedGroupingsGet)
 @expectedCCResponse(MultiChannelAssociationCCSupportedGroupingsReport)
-export class MultiChannelAssociationCCSupportedGroupingsGet
-	extends MultiChannelAssociationCC
-{}
+export class MultiChannelAssociationCCSupportedGroupingsGet extends MultiChannelAssociationCC {}

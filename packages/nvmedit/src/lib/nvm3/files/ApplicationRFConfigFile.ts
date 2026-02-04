@@ -7,7 +7,9 @@ import {
 import { type AllOrNone, Bytes, getEnumMemberName } from "@zwave-js/shared";
 import semverGte from "semver/functions/gte.js";
 import semverLt from "semver/functions/lt.js";
+
 import type { NVM3Object } from "../object.js";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -17,18 +19,14 @@ import {
 	nvmSection,
 } from "./NVMFile.js";
 
-export type ApplicationRFConfigFileOptions =
-	& NVMFileCreationOptions
-	& {
-		rfRegion: RFRegion;
-		txPower: number;
-		measured0dBm: number;
-	}
-	& AllOrNone<{
+export type ApplicationRFConfigFileOptions = NVMFileCreationOptions & {
+	rfRegion: RFRegion;
+	txPower: number;
+	measured0dBm: number;
+} & AllOrNone<{
 		enablePTI?: number;
 		maxTXPower?: number;
-	}>
-	& {
+	}> & {
 		nodeIdType?: number;
 	};
 

@@ -30,9 +30,7 @@ test("the Get command should serialize correctly", async (t) => {
 			0b0000_0001,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should serialize correctly", async (t) => {
@@ -50,9 +48,7 @@ test("the Set command should serialize correctly", async (t) => {
 			0x05, // dimming duration
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should serialize correctly with undefined duration", async (t) => {
@@ -70,9 +66,7 @@ test("the Set command should serialize correctly with undefined duration", async
 			0xff, // dimming duration
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command (v1) should be deserialized correctly", async (t) => {
@@ -84,10 +78,9 @@ test("the Report command (v1) should be deserialized correctly", async (t) => {
 			0x05, // dimming duration
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as SceneControllerConfigurationCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as SceneControllerConfigurationCCReport;
 	t.expect(cc.constructor).toBe(SceneControllerConfigurationCCReport);
 
 	t.expect(cc.groupId).toBe(3);
@@ -99,9 +92,8 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as SceneControllerConfigurationCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as SceneControllerConfigurationCC;
 	t.expect(cc.constructor).toBe(SceneControllerConfigurationCC);
 });

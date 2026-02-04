@@ -14,6 +14,7 @@ import {
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -87,7 +88,7 @@ export class WakeUpCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: WakeUpCCAPI, { property }, value) {
+		return async function (this: WakeUpCCAPI, { property }, value) {
 			if (property !== "wakeUpInterval") {
 				throwUnsupportedProperty(this.ccId, property);
 			}
@@ -114,7 +115,7 @@ export class WakeUpCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: WakeUpCCAPI, { property }) {
+		return async function (this: WakeUpCCAPI, { property }) {
 			switch (property) {
 				case "wakeUpInterval":
 					return (await this.getInterval())?.[property];
@@ -132,9 +133,7 @@ export class WakeUpCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			WakeUpCCIntervalReport
-		>(
+		const response = await this.host.sendCommand<WakeUpCCIntervalReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -154,12 +153,11 @@ export class WakeUpCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			WakeUpCCIntervalCapabilitiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<WakeUpCCIntervalCapabilitiesReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"defaultWakeUpInterval",
@@ -216,9 +214,7 @@ export class WakeUpCCAPI extends CCAPI {
 export class WakeUpCC extends CommandClass {
 	declare ccCommand: WakeUpCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -312,9 +308,9 @@ controller node: ${wakeupResp.controllerNodeId}`;
 				// Spec compliance: Limit the interval to the allowed range, but...
 				// ...try and preserve a "never wake up" configuration (#6367)
 				if (
-					desiredInterval !== 0
-					&& minInterval != undefined
-					&& maxInterval != undefined
+					desiredInterval !== 0 &&
+					minInterval != undefined &&
+					maxInterval != undefined
 				) {
 					desiredInterval = clamp(
 						desiredInterval,
@@ -329,15 +325,8 @@ controller node: ${wakeupResp.controllerNodeId}`;
 					direction: "outbound",
 				});
 				await api.setInterval(desiredInterval, ownNodeId);
-				this.setValue(
-					ctx,
-					WakeUpCCValues.controllerNodeId,
-					ownNodeId,
-				);
-				ctx.logNode(
-					node.id,
-					"wakeup destination node changed!",
-				);
+				this.setValue(ctx, WakeUpCCValues.controllerNodeId, ownNodeId);
+				ctx.logNode(node.id, "wakeup destination node changed!");
 			}
 		}
 
@@ -355,9 +344,7 @@ export interface WakeUpCCIntervalSetOptions {
 @CCCommand(WakeUpCommand.IntervalSet)
 @useSupervision()
 export class WakeUpCCIntervalSet extends WakeUpCC {
-	public constructor(
-		options: WithAddress<WakeUpCCIntervalSetOptions>,
-	) {
+	public constructor(options: WithAddress<WakeUpCCIntervalSetOptions>) {
 		super(options);
 		this.wakeUpInterval = options.wakeUpInterval;
 		this.controllerNodeId = options.controllerNodeId;
@@ -410,9 +397,7 @@ export interface WakeUpCCIntervalReportOptions {
 @ccValueProperty("wakeUpInterval", WakeUpCCValues.wakeUpInterval)
 @ccValueProperty("controllerNodeId", WakeUpCCValues.controllerNodeId)
 export class WakeUpCCIntervalReport extends WakeUpCC {
-	public constructor(
-		options: WithAddress<WakeUpCCIntervalReportOptions>,
-	) {
+	public constructor(options: WithAddress<WakeUpCCIntervalReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -553,8 +538,7 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 				"minimum interval": `${this.minWakeUpInterval} seconds`,
 				"maximum interval": `${this.maxWakeUpInterval} seconds`,
 				"interval steps": `${this.wakeUpIntervalSteps} seconds`,
-				"wake up on demand supported":
-					`${this.wakeUpOnDemandSupported}`,
+				"wake up on demand supported": `${this.wakeUpOnDemandSupported}`,
 			},
 		};
 	}

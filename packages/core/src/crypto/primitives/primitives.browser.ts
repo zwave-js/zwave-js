@@ -1,6 +1,8 @@
+import type { webcrypto } from "node:crypto";
+
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
-import type { webcrypto } from "node:crypto";
+
 import {
 	BLOCK_SIZE,
 	decodeX25519KeyDER,
@@ -95,10 +97,7 @@ async function encryptAES128OFB(
 		key,
 		{ name: "AES-CTR" },
 		true,
-		[
-			"encrypt",
-			"decrypt",
-		],
+		["encrypt", "decrypt"],
 	);
 
 	const ret = new Uint8Array(plaintext.length);
@@ -119,10 +118,7 @@ async function encryptAES128OFB(
 		ret.set(ciphertext, offset);
 
 		// Determine the next counter value
-		counter = zeroPad(
-			xor(ciphertext, input),
-			BLOCK_SIZE,
-		).output;
+		counter = zeroPad(xor(ciphertext, input), BLOCK_SIZE).output;
 	}
 
 	return ret;
@@ -144,10 +140,7 @@ async function decryptAES128OFB(
 		key,
 		{ name: "AES-CTR" },
 		true,
-		[
-			"encrypt",
-			"decrypt",
-		],
+		["encrypt", "decrypt"],
 	);
 
 	const ret = new Uint8Array(ciphertext.length);
@@ -168,10 +161,7 @@ async function decryptAES128OFB(
 		ret.set(plaintext, offset);
 
 		// Determine the next counter value
-		counter = zeroPad(
-			xor(plaintext, input),
-			BLOCK_SIZE,
-		).output;
+		counter = zeroPad(xor(plaintext, input), BLOCK_SIZE).output;
 	}
 
 	return ret;
@@ -231,10 +221,9 @@ async function encryptAES128CCM(
 	const authTagAndCiphertext = new Uint8Array(encryptionOutput);
 
 	const authTag = authTagAndCiphertext.slice(0, authTagLength);
-	const ciphertext = authTagAndCiphertext.slice(BLOCK_SIZE).slice(
-		0,
-		plaintext.length,
-	);
+	const ciphertext = authTagAndCiphertext
+		.slice(BLOCK_SIZE)
+		.slice(0, plaintext.length);
 
 	return { ciphertext, authTag };
 }
@@ -270,9 +259,7 @@ function getCCMAuthenticationBlocks(
 	plaintextBlocks: Bytes,
 ) {
 	const B0 = new Bytes(BLOCK_SIZE);
-	B0[0] = (hasAData ? 64 : 0)
-		| ((M & 0b111) << 3)
-		| ((L - 1) & 0b111);
+	B0[0] = (hasAData ? 64 : 0) | ((M & 0b111) << 3) | ((L - 1) & 0b111);
 	B0.set(iv, 1);
 	B0.writeUIntBE(plaintext.length, 16 - L, L);
 
@@ -296,8 +283,8 @@ function getCCMAuthenticationBlocks(
 	const aDataBlocks = new Bytes(
 		// B0 | aDataLength | additionalData | ...padding
 		Math.ceil(
-			(BLOCK_SIZE + aDataLength.length + additionalData.length)
-				/ BLOCK_SIZE,
+			(BLOCK_SIZE + aDataLength.length + additionalData.length) /
+				BLOCK_SIZE,
 		) * BLOCK_SIZE,
 	);
 	aDataBlocks.set(B0, 0);
@@ -396,10 +383,7 @@ async function digest(
 	return new Uint8Array(output);
 }
 
-async function hmacSHA256(
-	key: BytesView,
-	data: BytesView,
-): Promise<BytesView> {
+async function hmacSHA256(key: BytesView, data: BytesView): Promise<BytesView> {
 	const cryptoKey = await crypto.subtle.importKey(
 		"raw",
 		key,
@@ -439,19 +423,15 @@ async function decryptChaCha20Poly1305(
 }
 
 async function generateECDHKeyPair(): Promise<KeyPair> {
-	const pair = await crypto.subtle.generateKey(
-		"X25519",
-		true,
-		["deriveKey"],
-	) as webcrypto.CryptoKeyPair;
+	const pair = (await crypto.subtle.generateKey("X25519", true, [
+		"deriveKey",
+	])) as webcrypto.CryptoKeyPair;
 
 	const publicKey = new Uint8Array(
 		await crypto.subtle.exportKey("raw", pair.publicKey),
 	);
 	const privateKey = decodeX25519KeyDER(
-		new Uint8Array(
-			await crypto.subtle.exportKey("pkcs8", pair.privateKey),
-		),
+		new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey)),
 	);
 
 	return { publicKey, privateKey };

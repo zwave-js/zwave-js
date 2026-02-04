@@ -12,8 +12,10 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
+
 import type { ZWaveController } from "../../controller/Controller.js";
 import type { ZWaveNode } from "../Node.js";
+
 import { MAX_ASSOCIATIONS } from "./_shared.js";
 
 export async function handleMultiChannelAssociationSupportedGroupingsGet(
@@ -30,8 +32,8 @@ export async function handleMultiChannelAssociationSupportedGroupingsGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	// We only "support" the lifeline group
@@ -56,20 +58,21 @@ export async function handleMultiChannelAssociationGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	const nodeIds =
-		controller.associations.filter((a) => a.endpoint == undefined)
+		controller.associations
+			.filter((a) => a.endpoint == undefined)
 			.map((a) => a.nodeId) ?? [];
 	const endpoints =
-		controller.associations.filter((a) => a.endpoint != undefined)
+		controller.associations
+			.filter((a) => a.endpoint != undefined)
 			.map(({ nodeId, endpoint }) => ({
 				nodeId,
 				endpoint: endpoint!,
-			}))
-			?? [];
+			})) ?? [];
 
 	await api.sendReport({
 		groupId,
@@ -95,25 +98,30 @@ export function handleMultiChannelAssociationSet(
 	}
 
 	// Ignore associations that already exists
-	const newNodeIdAssociations = command.nodeIds.filter((newNodeId) =>
-		!controller.associations.some(
-			({ nodeId, endpoint }) =>
-				endpoint === undefined && nodeId === newNodeId,
+	const newNodeIdAssociations = command.nodeIds
+		.filter(
+			(newNodeId) =>
+				!controller.associations.some(
+					({ nodeId, endpoint }) =>
+						endpoint === undefined && nodeId === newNodeId,
+				),
 		)
-	).map((nodeId) => ({ nodeId }));
-	const newEndpointAssociations = command.endpoints.flatMap(
-		({ nodeId, endpoint }) => {
+		.map((nodeId) => ({ nodeId }));
+	const newEndpointAssociations = command.endpoints
+		.flatMap(({ nodeId, endpoint }) => {
 			if (typeof endpoint === "number") {
 				return { nodeId, endpoint };
 			} else {
 				return endpoint.map((e) => ({ nodeId, endpoint: e }));
 			}
-		},
-	).filter(({ nodeId: newNodeId, endpoint: newEndpoint }) =>
-		!controller.associations.some(({ nodeId, endpoint }) =>
-			nodeId === newNodeId && endpoint === newEndpoint
-		)
-	);
+		})
+		.filter(
+			({ nodeId: newNodeId, endpoint: newEndpoint }) =>
+				!controller.associations.some(
+					({ nodeId, endpoint }) =>
+						nodeId === newNodeId && endpoint === newEndpoint,
+				),
+		);
 
 	const associations = [...controller.associations];
 	associations.push(...newNodeIdAssociations, ...newEndpointAssociations);
@@ -126,10 +134,7 @@ export function handleMultiChannelAssociationSet(
 		);
 	}
 
-	controller.associations = associations.slice(
-		0,
-		MAX_ASSOCIATIONS,
-	);
+	controller.associations = associations.slice(0, MAX_ASSOCIATIONS);
 }
 
 export function handleMultiChannelAssociationRemove(
@@ -152,15 +157,17 @@ export function handleMultiChannelAssociationRemove(
 		if (command.nodeIds?.length) {
 			associations = associations.filter(
 				({ nodeId, endpoint }) =>
-					endpoint === undefined
-					&& !command.nodeIds!.includes(nodeId),
+					endpoint === undefined &&
+					!command.nodeIds!.includes(nodeId),
 			);
 		}
 		if (command.endpoints?.length) {
 			associations = associations.filter(
 				({ nodeId, endpoint }) =>
-					!command.endpoints!.some((dest) =>
-						dest.nodeId === nodeId && dest.endpoint === endpoint
+					!command.endpoints!.some(
+						(dest) =>
+							dest.nodeId === nodeId &&
+							dest.endpoint === endpoint,
 					),
 			);
 		}

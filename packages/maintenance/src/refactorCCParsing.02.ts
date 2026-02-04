@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -7,48 +8,53 @@ async function main() {
 	});
 	// project.addSourceFilesAtPaths("packages/cc/src/cc/**/*CC.ts");
 
-	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getBaseNameWithoutExtension().endsWith("CC")
-	);
+	const sourceFiles = project
+		.getSourceFiles()
+		.filter((file) => file.getBaseNameWithoutExtension().endsWith("CC"));
 	for (const file of sourceFiles) {
 		// const filePath = path.relative(process.cwd(), file.getFilePath());
 
-		const ccImplementations = file.getDescendantsOfKind(
-			SyntaxKind.ClassDeclaration,
-		).filter((cls) => {
-			const name = cls.getName();
-			if (!name) return false;
-			if (!name.includes("CC")) return false;
-			// if (name.endsWith("CC")) return false;
-			return true;
-		});
+		const ccImplementations = file
+			.getDescendantsOfKind(SyntaxKind.ClassDeclaration)
+			.filter((cls) => {
+				const name = cls.getName();
+				if (!name) return false;
+				if (!name.includes("CC")) return false;
+				// if (name.endsWith("CC")) return false;
+				return true;
+			});
 
-		const parse = ccImplementations.map((cls) => {
-			const method = cls.getMethod("parse");
-			if (!method) return;
-			if (!method.isStatic()) return;
+		const parse = ccImplementations
+			.map((cls) => {
+				const method = cls.getMethod("parse");
+				if (!method) return;
+				if (!method.isStatic()) return;
 
-			return method;
-		}).filter((m) => m != undefined);
+				return method;
+			})
+			.filter((m) => m != undefined);
 
 		if (!parse.length) continue;
 
 		// Add required imports
-		const hasRawImport = file.getImportDeclarations().some(
-			(decl) =>
+		const hasRawImport = file
+			.getImportDeclarations()
+			.some((decl) =>
 				decl.getNamedImports().some((imp) => imp.getName() === "CCRaw"),
-		);
+			);
 		if (!hasRawImport) {
 			const existing = file.getImportDeclaration((decl) =>
-				decl.getModuleSpecifierValue().endsWith("/lib/CommandClass")
+				decl.getModuleSpecifierValue().endsWith("/lib/CommandClass"),
 			);
 			if (!existing) {
 				file.addImportDeclaration({
 					moduleSpecifier: "../lib/CommandClass",
-					namedImports: [{
-						name: "CCRaw",
-						isTypeOnly: true,
-					}],
+					namedImports: [
+						{
+							name: "CCRaw",
+							isTypeOnly: true,
+						},
+					],
 				});
 			} else {
 				existing.addNamedImport({
@@ -58,23 +64,26 @@ async function main() {
 			}
 		}
 
-		const hasCCParsingContextImport = file.getImportDeclarations().some(
-			(decl) =>
-				decl.getNamedImports().some((imp) =>
-					imp.getName() === "CCParsingContext"
-				),
-		);
+		const hasCCParsingContextImport = file
+			.getImportDeclarations()
+			.some((decl) =>
+				decl
+					.getNamedImports()
+					.some((imp) => imp.getName() === "CCParsingContext"),
+			);
 		if (!hasCCParsingContextImport) {
 			const existing = file.getImportDeclaration((decl) =>
-				decl.getModuleSpecifierValue().startsWith("@zwave-js/host")
+				decl.getModuleSpecifierValue().startsWith("@zwave-js/host"),
 			);
 			if (!existing) {
 				file.addImportDeclaration({
 					moduleSpecifier: "@zwave-js/host",
-					namedImports: [{
-						name: "CCParsingContext",
-						isTypeOnly: true,
-					}],
+					namedImports: [
+						{
+							name: "CCParsingContext",
+							isTypeOnly: true,
+						},
+					],
 				});
 			} else {
 				existing.addNamedImport({
@@ -98,16 +107,17 @@ async function main() {
 			});
 
 			// Replace "payload" with "raw.payload"
-			const idents = impl.getDescendantsOfKind(SyntaxKind.Identifier)
+			const idents = impl
+				.getDescendantsOfKind(SyntaxKind.Identifier)
 				.filter((id) => id.getText() === "payload");
 			idents.forEach((id) => id.replaceWithText("raw.payload"));
 
 			// Replace "options.context.sourceNodeId" with "ctx.sourceNodeId"
-			const exprs = impl.getDescendantsOfKind(
-				SyntaxKind.PropertyAccessExpression,
-			).filter((expr) =>
-				expr.getText() === "options.context.sourceNodeId"
-			);
+			const exprs = impl
+				.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)
+				.filter(
+					(expr) => expr.getText() === "options.context.sourceNodeId",
+				);
 			exprs.forEach((expr) => expr.replaceWithText("ctx.sourceNodeId"));
 		}
 

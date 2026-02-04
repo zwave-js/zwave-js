@@ -1,6 +1,8 @@
+import type { Transformer } from "node:stream/web";
+
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
-import type { Transformer } from "node:stream/web";
+
 import { NOISE_INDICATOR, decodeNoiseFrame } from "../noise/NoiseProtocol.js";
 
 class NoiseFrameParserTransformer implements Transformer<BytesView, Bytes> {
@@ -22,9 +24,9 @@ class NoiseFrameParserTransformer implements Transformer<BytesView, Bytes> {
 				// Check frame indicator
 				if (this.receiveBuffer[0] !== NOISE_INDICATOR) {
 					throw new ZWaveError(
-						`Invalid frame indicator: expected 0x01, got 0x${
-							this.receiveBuffer[0].toString(16).padStart(2, "0")
-						}`,
+						`Invalid frame indicator: expected 0x01, got 0x${this.receiveBuffer[0]
+							.toString(16)
+							.padStart(2, "0")}`,
 						ZWaveErrorCodes.PacketFormat_Invalid,
 					);
 				}
@@ -42,8 +44,8 @@ class NoiseFrameParserTransformer implements Transformer<BytesView, Bytes> {
 			} catch (error) {
 				// If we can't decode a complete frame yet, wait for more data
 				if (
-					error instanceof ZWaveError
-					&& error.code === ZWaveErrorCodes.PacketFormat_Truncated
+					error instanceof ZWaveError &&
+					error.code === ZWaveErrorCodes.PacketFormat_Truncated
 				) {
 					break;
 				}

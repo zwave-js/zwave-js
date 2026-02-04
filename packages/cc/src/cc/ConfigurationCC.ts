@@ -36,6 +36,7 @@ import {
 import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
+
 import {
 	CCAPI,
 	type CCAPIEndpoint,
@@ -100,9 +101,8 @@ export const ConfigurationCCValues = V.defineCCValues(
 			(parameter: number, bitMask?: number) => parameter,
 			(parameter: number, bitMask?: number) => bitMask,
 			({ property, propertyKey }) =>
-				typeof property === "number"
-				&& (typeof propertyKey === "number"
-					|| propertyKey == undefined),
+				typeof property === "number" &&
+				(typeof propertyKey === "number" || propertyKey == undefined),
 			// Metadata is determined dynamically depending on other factors
 			undefined,
 		),
@@ -110,40 +110,36 @@ export const ConfigurationCCValues = V.defineCCValues(
 );
 
 /** @publicAPI */
-export type ConfigurationCCAPISetOptions =
-	& {
-		parameter: number;
-	}
-	& (
-		| {
+export type ConfigurationCCAPISetOptions = {
+	parameter: number;
+} & (
+	| {
 			// Variant 1: Normal parameter, defined in a config file
 			bitMask?: undefined;
 			value: ConfigValue;
-		}
-		| {
+	  }
+	| {
 			// Variant 2: Normal parameter, not defined in a config file
 			bitMask?: undefined;
 			value: ConfigValue;
 			valueSize: 1 | 2 | 4;
 			valueFormat: ConfigValueFormat;
-		}
-		| {
+	  }
+	| {
 			// Variant 3: Partial parameter, must be defined in a config file
 			bitMask: number;
 			value: number;
-		}
-	);
+	  }
+);
 
-type NormalizedConfigurationCCAPISetOptions =
-	& {
-		parameter: number;
-		valueSize: 1 | 2 | 4;
-		valueFormat: ConfigValueFormat;
-	}
-	& (
-		| { bitMask?: undefined; value: ConfigValue }
-		| { bitMask: number; value: number }
-	);
+type NormalizedConfigurationCCAPISetOptions = {
+	parameter: number;
+	valueSize: 1 | 2 | 4;
+	valueFormat: ConfigValueFormat;
+} & (
+	| { bitMask?: undefined; value: ConfigValue }
+	| { bitMask: number; value: number }
+);
 
 function createConfigurationCCInstance(
 	endpoint: CCAPIEndpoint,
@@ -259,9 +255,9 @@ function isSignedPartial(
 	// Only treat partial params as signed if they span more than 1 bit.
 	// Otherwise we cannot model 0/1 properly.
 	return (
-		getBitMaskWidth(bitMask) > 1
-		&& (format ?? ConfigValueFormat.SignedInteger)
-			=== ConfigValueFormat.SignedInteger
+		getBitMaskWidth(bitMask) > 1 &&
+		(format ?? ConfigValueFormat.SignedInteger) ===
+			ConfigValueFormat.SignedInteger
 	);
 }
 
@@ -284,8 +280,8 @@ function getParamInformationFromConfigFile(
 	const deviceConfig = ctx.getDeviceConfig?.(nodeId);
 	if (endpointIndex === 0) {
 		return (
-			deviceConfig?.paramInformation
-				?? deviceConfig?.endpoints?.get(0)?.paramInformation
+			deviceConfig?.paramInformation ??
+			deviceConfig?.endpoints?.get(0)?.paramInformation
 		);
 	} else {
 		return deviceConfig?.endpoints?.get(endpointIndex)?.paramInformation;
@@ -340,8 +336,8 @@ export function refreshMetadataStringsFromConfigFile(
 		if (existing.states) {
 			for (const option of info.options) {
 				if (
-					option.value in existing.states
-					&& existing.states[option.value] !== option.label
+					option.value in existing.states &&
+					existing.states[option.value] !== option.label
 				) {
 					existing.states[option.value] = option.label;
 					didChange = true;
@@ -378,7 +374,7 @@ export class ConfigurationCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: ConfigurationCCAPI,
 			{ property, propertyKey },
 			value,
@@ -411,7 +407,7 @@ export class ConfigurationCCAPI extends CCAPI {
 					!nodes.every((node) =>
 						node
 							.getEndpoint(this.endpoint.index)
-							?.supportsCC(CommandClasses.Configuration)
+							?.supportsCC(CommandClasses.Configuration),
 					)
 				) {
 					throw new ZWaveError(
@@ -424,19 +420,15 @@ export class ConfigurationCCAPI extends CCAPI {
 					(node) =>
 						createConfigurationCCInstance(
 							node.getEndpoint(this.endpoint.index)!,
-						).getParamInformation(
-							this.host,
-							property,
-							propertyKey,
-						),
+						).getParamInformation(this.host, property, propertyKey),
 				);
 				if (
-					!paramInfos.length
-					|| !paramInfos.every((info, index) => {
+					!paramInfos.length ||
+					!paramInfos.every((info, index) => {
 						if (index === 0) return true;
 						return (
-							info.valueSize === paramInfos[0].valueSize
-							&& info.format === paramInfos[0].format
+							info.valueSize === paramInfos[0].valueSize &&
+							info.format === paramInfos[0].format
 						);
 					})
 				) {
@@ -517,8 +509,8 @@ export class ConfigurationCCAPI extends CCAPI {
 			});
 
 			if (
-				!supervisedCommandSucceeded(result)
-				&& (this as ConfigurationCCAPI).isSinglecast()
+				!supervisedCommandSucceeded(result) &&
+				(this as ConfigurationCCAPI).isSinglecast()
 			) {
 				// Verify the current value after a delay, unless the command was supervised and successful
 				(this as ConfigurationCCAPI).schedulePoll(
@@ -534,7 +526,7 @@ export class ConfigurationCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: ConfigurationCCAPI,
 			{ property, propertyKey },
 		) {
@@ -614,8 +606,7 @@ export class ConfigurationCCAPI extends CCAPI {
 		}
 		this.host.logNode(this.endpoint.nodeId, {
 			endpoint: this.endpoint.index,
-			message:
-				`Received unexpected ConfigurationReport (param = ${response.parameter}, value = ${response.value.toString()})`,
+			message: `Received unexpected ConfigurationReport (param = ${response.parameter}, value = ${response.value.toString()})`,
 			direction: "inbound",
 			level: "error",
 		});
@@ -651,20 +642,19 @@ export class ConfigurationCCAPI extends CCAPI {
 		// If the parameters are consecutive, we may use BulkGet
 		const distinctParameters = distinct(options.map((o) => o.parameter));
 		if (
-			this.supportsCommand(ConfigurationCommand.BulkGet)
-			&& isConsecutiveArray(distinctParameters)
+			this.supportsCommand(ConfigurationCommand.BulkGet) &&
+			isConsecutiveArray(distinctParameters)
 		) {
 			const cc = new ConfigurationCCBulkGet({
 				nodeId: this.endpoint.nodeId,
 				endpointIndex: this.endpoint.index,
 				parameters: distinctParameters,
 			});
-			const response = await this.host.sendCommand<
-				ConfigurationCCBulkReport
-			>(
-				cc,
-				this.commandOptions,
-			);
+			const response =
+				await this.host.sendCommand<ConfigurationCCBulkReport>(
+					cc,
+					this.commandOptions,
+				);
 			if (response) values = response.values;
 		} else {
 			this.assertSupportsCommand(
@@ -679,12 +669,11 @@ export class ConfigurationCCAPI extends CCAPI {
 					endpointIndex: this.endpoint.index,
 					parameter,
 				});
-				const response = await this.host.sendCommand<
-					ConfigurationCCReport
-				>(
-					cc,
-					this.commandOptions,
-				);
+				const response =
+					await this.host.sendCommand<ConfigurationCCReport>(
+						cc,
+						this.commandOptions,
+					);
 				if (response) {
 					_values.set(response.parameter, response.value);
 				}
@@ -766,11 +755,7 @@ export class ConfigurationCCAPI extends CCAPI {
 	): Promise<SupervisionResult | undefined> {
 		// Normalize the values so we can better work with them
 		const normalized = values.map((v) =>
-			normalizeConfigurationCCAPISetOptions(
-				this.host,
-				this.endpoint,
-				v,
-			)
+			normalizeConfigurationCCAPISetOptions(this.host, this.endpoint, v),
 		);
 		// And merge multiple partials that belong the same "full" value
 		const allParams = bulkMergePartialParamValues(
@@ -779,13 +764,14 @@ export class ConfigurationCCAPI extends CCAPI {
 			normalized,
 		);
 
-		const canUseBulkSet = this.supportsCommand(ConfigurationCommand.BulkSet)
+		const canUseBulkSet =
+			this.supportsCommand(ConfigurationCommand.BulkSet) &&
 			// For Bulk Set we need consecutive parameters
-			&& isConsecutiveArray(allParams.map((v) => v.parameter))
+			isConsecutiveArray(allParams.map((v) => v.parameter)) &&
 			// and identical format
-			&& new Set(allParams.map((v) => v.valueFormat)).size === 1
+			new Set(allParams.map((v) => v.valueFormat)).size === 1 &&
 			// and identical size
-			&& new Set(allParams.map((v) => v.valueSize)).size === 1;
+			new Set(allParams.map((v) => v.valueSize)).size === 1;
 
 		if (canUseBulkSet) {
 			const cc = new ConfigurationCCBulkSet({
@@ -798,12 +784,11 @@ export class ConfigurationCCAPI extends CCAPI {
 				handshake: true,
 			});
 			// The handshake flag is set, so we expect a BulkReport in response
-			const result = await this.host.sendCommand<
-				ConfigurationCCBulkReport
-			>(
-				cc,
-				this.commandOptions,
-			);
+			const result =
+				await this.host.sendCommand<ConfigurationCCBulkReport>(
+					cc,
+					this.commandOptions,
+				);
 
 			// If we did receive a response, we also received the updated parameters,
 			// so if any one was not accepted, we know by looking at the values.
@@ -811,8 +796,9 @@ export class ConfigurationCCAPI extends CCAPI {
 			if (result) {
 				const sentValues = cc.values;
 				const receivedValues = [...result.values.values()];
-				const success = sentValues.length === receivedValues.length
-					&& sentValues.every((v, i) => v === receivedValues[i]);
+				const success =
+					sentValues.length === receivedValues.length &&
+					sentValues.every((v, i) => v === receivedValues[i]);
 				return {
 					status: success
 						? SupervisionStatus.Success
@@ -828,14 +814,12 @@ export class ConfigurationCCAPI extends CCAPI {
 			);
 
 			const supervisionResults: (SupervisionResult | undefined)[] = [];
-			for (
-				const {
-					parameter,
-					value,
-					valueSize,
-					valueFormat,
-				} of allParams
-			) {
+			for (const {
+				parameter,
+				value,
+				valueSize,
+				valueFormat,
+			} of allParams) {
 				const cc = new ConfigurationCCSet({
 					nodeId: this.endpoint.nodeId,
 					endpointIndex: this.endpoint.index,
@@ -872,8 +856,7 @@ export class ConfigurationCCAPI extends CCAPI {
 		if (this.version <= 3) {
 			throw new ZWaveError(
 				`Resetting configuration parameters to default MUST not be done on nodes implementing ConfigurationCC V3 or below!`,
-				ZWaveErrorCodes
-					.ConfigurationCC_NoResetToDefaultOnLegacyDevices,
+				ZWaveErrorCodes.ConfigurationCC_NoResetToDefaultOnLegacyDevices,
 			);
 		}
 
@@ -901,8 +884,8 @@ export class ConfigurationCCAPI extends CCAPI {
 		parameters: number[],
 	): Promise<SupervisionResult | undefined> {
 		if (
-			isConsecutiveArray(parameters)
-			&& this.supportsCommand(ConfigurationCommand.BulkSet)
+			isConsecutiveArray(parameters) &&
+			this.supportsCommand(ConfigurationCommand.BulkSet)
 		) {
 			const cc = new ConfigurationCCBulkSet({
 				nodeId: this.endpoint.nodeId,
@@ -959,12 +942,11 @@ export class ConfigurationCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			parameter,
 		});
-		const response = await this.host.sendCommand<
-			ConfigurationCCPropertiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ConfigurationCCPropertiesReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"valueSize",
@@ -992,9 +974,7 @@ export class ConfigurationCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			parameter,
 		});
-		const response = await this.host.sendCommand<
-			ConfigurationCCNameReport
-		>(
+		const response = await this.host.sendCommand<ConfigurationCCNameReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -1012,9 +992,7 @@ export class ConfigurationCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			parameter,
 		});
-		const response = await this.host.sendCommand<
-			ConfigurationCCInfoReport
-		>(
+		const response = await this.host.sendCommand<ConfigurationCCInfoReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -1067,10 +1045,7 @@ export class ConfigurationCCAPI extends CCAPI {
 				if (originalValue != undefined) {
 					const logMessage = `  Param ${param}:
     readable  = true
-    valueSize = ${
-						ccInstance.getParamInformation(this.host, param)
-							.valueSize
-					}
+    valueSize = ${ccInstance.getParamInformation(this.host, param).valueSize}
     value     = ${originalValue.toString()}`;
 					this.host.logNode(this.endpoint.nodeId, {
 						endpoint: this.endpoint.index,
@@ -1080,9 +1055,9 @@ export class ConfigurationCCAPI extends CCAPI {
 				}
 			} catch (e) {
 				if (
-					e instanceof ConfigurationCCError
-					&& e.code
-						=== ZWaveErrorCodes.ConfigurationCC_FirstParameterNumber
+					e instanceof ConfigurationCCError &&
+					e.code ===
+						ZWaveErrorCodes.ConfigurationCC_FirstParameterNumber
 				) {
 					// Continue iterating with the next param
 					if (e.argument - 1 > param) param = e.argument - 1;
@@ -1100,9 +1075,7 @@ export class ConfigurationCCAPI extends CCAPI {
 export class ConfigurationCC extends CommandClass {
 	declare ccCommand: ConfigurationCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -1128,8 +1101,7 @@ export class ConfigurationCC extends CommandClass {
 		if (paramInfo) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`${this.constructor.name}: Loading configuration parameters from device config`,
+				message: `${this.constructor.name}: Loading configuration parameters from device config`,
 				direction: "none",
 			});
 			this.deserializeParamInformationFromConfig(ctx, paramInfo);
@@ -1151,8 +1123,7 @@ export class ConfigurationCC extends CommandClass {
 				if (param === 0) {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message:
-							`didn't report any config params, trying #1 just to be sure...`,
+						message: `didn't report any config params, trying #1 just to be sure...`,
 						direction: "inbound",
 					});
 					param = 1;
@@ -1182,8 +1153,7 @@ export class ConfigurationCC extends CommandClass {
 				if (!props) {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message:
-							`Querying parameter #${param} information timed out, skipping scan...`,
+						message: `Querying parameter #${param} information timed out, skipping scan...`,
 						level: "warn",
 					});
 					break;
@@ -1192,8 +1162,7 @@ export class ConfigurationCC extends CommandClass {
 
 				let logMessage: string;
 				if (properties.valueSize === 0) {
-					logMessage =
-						`Parameter #${param} is unsupported. Next parameter: ${nextParameter}`;
+					logMessage = `Parameter #${param} is unsupported. Next parameter: ${nextParameter}`;
 				} else {
 					let name: string | undefined;
 					// Query the name and info for parameters that are NOT defined in a config file
@@ -1215,19 +1184,16 @@ export class ConfigurationCC extends CommandClass {
 						}
 					}
 
-					logMessage =
-						`received information for parameter #${param}:`;
+					logMessage = `received information for parameter #${param}:`;
 					if (name) {
 						logMessage += `
 parameter name:      ${name}`;
 					}
 					logMessage += `
-value format:        ${
-						getEnumMemberName(
-							ConfigValueFormat,
-							properties.valueFormat,
-						)
-					}
+value format:        ${getEnumMemberName(
+						ConfigValueFormat,
+						properties.valueFormat,
+					)}
 value size:          ${properties.valueSize} bytes
 min value:           ${properties.minValue?.toString() ?? "undefined"}
 max value:           ${properties.maxValue?.toString() ?? "undefined"}
@@ -1258,9 +1224,8 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 
 		// Apply recommended values from device config
 		if (
-			paramInfo !== undefined
-			&& ctx.getInterviewOptions().applyRecommendedConfigParamValues
-				=== true
+			paramInfo !== undefined &&
+			ctx.getInterviewOptions().applyRecommendedConfigParamValues === true
 		) {
 			await this.applyRecommendedValues(ctx, node, paramInfo, api);
 		}
@@ -1285,9 +1250,10 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		// Find parameters for which current value doesn't match the recommended value
 		for (const [paramKey, param] of paramInfo) {
 			if (
-				param.recommendedValue === undefined
-				|| param.defaultValue === param.recommendedValue
-			) continue;
+				param.recommendedValue === undefined ||
+				param.defaultValue === param.recommendedValue
+			)
+				continue;
 
 			// Get the current value of this parameter from the device
 			const currentValue = this.getValue(
@@ -1301,8 +1267,8 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 			// If the current value is the default value (i.e. it was never changed by the user)
 			// and the recommended value is different, we should update it
 			if (
-				currentValue === param.defaultValue
-				&& currentValue !== param.recommendedValue
+				currentValue === param.defaultValue &&
+				currentValue !== param.recommendedValue
 			) {
 				const baseParam = {
 					parameter: paramKey.parameter,
@@ -1320,8 +1286,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		if (parametersNeededUpdate.length === 0) return;
 
 		// Log what we're about to do
-		let message =
-			`Applying recommended config parameter values during interview:`;
+		let message = `Applying recommended config parameter values during interview:`;
 		for (const param of parametersNeededUpdate) {
 			const formatterBitMask = param.bitMask
 				? `[0x${num2hex(param.bitMask)}]`
@@ -1337,15 +1302,15 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		});
 
 		await api.setBulk(parametersNeededUpdate);
-		await api.getBulk(parametersNeededUpdate.map((param) => ({
-			parameter: param.parameter,
-			bitMask: param.bitMask,
-		})));
+		await api.getBulk(
+			parametersNeededUpdate.map((param) => ({
+				parameter: param.parameter,
+				bitMask: param.bitMask,
+			})),
+		);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -1377,8 +1342,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 					// Query the current value
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message:
-							`querying parameter #${param.parameter} value...`,
+						message: `querying parameter #${param.parameter} value...`,
 						direction: "outbound",
 					});
 					// ... at least try to
@@ -1386,15 +1350,13 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 					if (typeof paramValue === "number") {
 						ctx.logNode(node.id, {
 							endpoint: this.endpointIndex,
-							message:
-								`parameter #${param.parameter} has value: ${paramValue}`,
+							message: `parameter #${param.parameter} has value: ${paramValue}`,
 							direction: "inbound",
 						});
 					} else if (!paramValue) {
 						ctx.logNode(node.id, {
 							endpoint: this.endpointIndex,
-							message:
-								`received no value for parameter #${param.parameter}`,
+							message: `received no value for parameter #${param.parameter}`,
 							direction: "inbound",
 							level: "warn",
 						});
@@ -1403,8 +1365,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 			} else {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message:
-						`${this.constructor.name}: skipping interview because CC version is < 3 and there is no config file`,
+					message: `${this.constructor.name}: skipping interview because CC version is < 3 and there is no config file`,
 					direction: "none",
 				});
 			}
@@ -1416,9 +1377,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 					.filter((p) => typeof p === "number"),
 			);
 			for (const param of parameters) {
-				if (
-					this.getParamInformation(ctx, param).readable !== false
-				) {
+				if (this.getParamInformation(ctx, param).readable !== false) {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
 						message: `querying parameter #${param} value...`,
@@ -1428,8 +1387,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				} else {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message:
-							`not querying parameter #${param} value, because it is writeonly`,
+						message: `not querying parameter #${param} value, because it is writeonly`,
 						direction: "none",
 					});
 				}
@@ -1486,18 +1444,14 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 	): void {
 		// Don't trust param information that a node reports if we have already loaded it from a config file
 		if (
-			valueBitMask === undefined
-			&& this.paramExistsInConfigFile(ctx, parameter)
+			valueBitMask === undefined &&
+			this.paramExistsInConfigFile(ctx, parameter)
 		) {
 			return;
 		}
 
 		// Retrieve the base metadata
-		const metadata = this.getParamInformation(
-			ctx,
-			parameter,
-			valueBitMask,
-		);
+		const metadata = this.getParamInformation(ctx, parameter, valueBitMask);
 		// Override it with new data
 		Object.assign(metadata, info);
 		// And store it back
@@ -1532,13 +1486,10 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 	 * and does not include partial parameters.
 	 */
 	public getQueriedParamInfos(
-		ctx:
-			& GetValueDB
-			& GetSupportedCCVersion
-			& GetDeviceConfig
-			& GetNode<
-				NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-			>,
+		ctx: GetValueDB &
+			GetSupportedCCVersion &
+			GetDeviceConfig &
+			GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>,
 	): Record<number, ConfigurationMetadata> {
 		const parameters = distinct(
 			this.getDefinedValueIDs(ctx)
@@ -1546,10 +1497,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				.filter((p) => typeof p === "number"),
 		);
 		return Object.fromEntries(
-			parameters.map((p) => [
-				p as any,
-				this.getParamInformation(ctx, p),
-			]),
+			parameters.map((p) => [p as any, this.getParamInformation(ctx, p)]),
 		);
 	}
 
@@ -1563,10 +1511,10 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		const valueDB = this.getValueDB(ctx);
 		return valueDB.findMetadata(
 			(id) =>
-				id.commandClass === this.ccId
-				&& (id.endpoint ?? 0) === this.endpointIndex
-				&& id.property === parameter
-				&& id.propertyKey != undefined,
+				id.commandClass === this.ccId &&
+				(id.endpoint ?? 0) === this.endpointIndex &&
+				id.property === parameter &&
+				id.propertyKey != undefined,
 		) as (ValueID & { metadata: ConfigurationMetadata })[];
 	}
 
@@ -1599,19 +1547,17 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		// Add the other values together
 		const otherValues = valueDB.findValues(
 			(id) =>
-				id.commandClass === this.ccId
-				&& (id.endpoint ?? 0) === this.endpointIndex
-				&& id.property === parameter
-				&& id.propertyKey != undefined
-				&& !partials.some((p) => id.propertyKey === p.bitMask),
+				id.commandClass === this.ccId &&
+				(id.endpoint ?? 0) === this.endpointIndex &&
+				id.property === parameter &&
+				id.propertyKey != undefined &&
+				!partials.some((p) => id.propertyKey === p.bitMask),
 		);
 		let ret = 0;
-		for (
-			const {
-				propertyKey: bitMask,
-				value: partialValue,
-			} of otherValues
-		) {
+		for (const {
+			propertyKey: bitMask,
+			value: partialValue,
+		} of otherValues) {
 			ret = encodePartial(ret, partialValue as number, bitMask as number);
 		}
 		for (const { bitMask, partialValue } of partials) {
@@ -1630,8 +1576,8 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		// Clear old param information
 		for (const meta of valueDB.getAllMetadata(this.ccId)) {
 			if (
-				typeof meta.property === "number"
-				&& (meta.endpoint ?? 0) === this.endpointIndex
+				typeof meta.property === "number" &&
+				(meta.endpoint ?? 0) === this.endpointIndex
 			) {
 				// this is a param information, delete it
 				valueDB.setMetadata(
@@ -1674,14 +1620,15 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				readable: !info.writeOnly,
 				writeable: !info.readOnly,
 				allowManualEntry: info.allowManualEntry,
-				states: info.options.length > 0
-					? Object.fromEntries(
-						info.options.map(({ label, value }) => [
-							value.toString(),
-							label,
-						]),
-					)
-					: undefined,
+				states:
+					info.options.length > 0
+						? Object.fromEntries(
+								info.options.map(({ label, value }) => [
+									value.toString(),
+									label,
+								]),
+							)
+						: undefined,
 				label: info.label,
 				description: info.description,
 				isFromConfig: true,
@@ -1709,8 +1656,8 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		propertyKey?: string | number,
 	): string | undefined {
 		if (
-			typeof property === "number"
-			&& (propertyKey == undefined || typeof propertyKey === "number")
+			typeof property === "number" &&
+			(propertyKey == undefined || typeof propertyKey === "number")
 		) {
 			// This CC names all configuration parameters differently,
 			// so no name for the property key is required
@@ -1726,8 +1673,8 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 	): string {
 		// Try to retrieve the configured param label
 		if (
-			typeof property === "number"
-			&& (propertyKey == undefined || typeof propertyKey === "number")
+			typeof property === "number" &&
+			(propertyKey == undefined || typeof propertyKey === "number")
 		) {
 			const paramInfo = this.getParamInformation(
 				ctx,
@@ -1756,9 +1703,7 @@ export interface ConfigurationCCReportOptions {
 
 @CCCommand(ConfigurationCommand.Report)
 export class ConfigurationCCReport extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCReportOptions>) {
 		super(options);
 
 		this.parameter = options.parameter;
@@ -1821,10 +1766,7 @@ export class ConfigurationCCReport extends ConfigurationCC {
 		// This parameter may be a partial param in the following cases:
 		// * a config file defines it as such
 		// * it was reported by the device as a bit field
-		const partialParams = this.getPartialParamInfos(
-			ctx,
-			this.parameter,
-		);
+		const partialParams = this.getPartialParamInfos(ctx, this.parameter);
 
 		let cachedValueFormat: ConfigValueFormat | undefined;
 
@@ -1845,14 +1787,15 @@ export class ConfigurationCCReport extends ConfigurationCC {
 				valueSize: this.valueSize,
 			});
 			if (
-				ccVersion < 3
-				&& !this.paramExistsInConfigFile(ctx, this.parameter)
-				&& oldParamInformation.min == undefined
-				&& oldParamInformation.max == undefined
+				ccVersion < 3 &&
+				!this.paramExistsInConfigFile(ctx, this.parameter) &&
+				oldParamInformation.min == undefined &&
+				oldParamInformation.max == undefined
 			) {
-				const isSigned = oldParamInformation.format == undefined
-					|| oldParamInformation.format
-						=== ConfigValueFormat.SignedInteger;
+				const isSigned =
+					oldParamInformation.format == undefined ||
+					oldParamInformation.format ===
+						ConfigValueFormat.SignedInteger;
 				this.extendParamInformation(
 					ctx,
 					this.parameter,
@@ -1864,8 +1807,8 @@ export class ConfigurationCCReport extends ConfigurationCC {
 
 		// We may have to re-interpret the value as unsigned, depending on the cached value format
 		if (
-			cachedValueFormat != undefined
-			&& cachedValueFormat !== ConfigValueFormat.SignedInteger
+			cachedValueFormat != undefined &&
+			cachedValueFormat !== ConfigValueFormat.SignedInteger
 		) {
 			// Re-interpret the value with the new format
 			this.value = reInterpretSignedValue(
@@ -1959,13 +1902,10 @@ export interface ConfigurationCCGetOptions {
 @CCCommand(ConfigurationCommand.Get)
 @expectedCCResponse(ConfigurationCCReport, testResponseForConfigurationGet)
 export class ConfigurationCCGet extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCGetOptions>) {
 		super(options);
 		this.parameter = options.parameter;
-		this.allowUnexpectedResponse = options.allowUnexpectedResponse
-			?? false;
+		this.allowUnexpectedResponse = options.allowUnexpectedResponse ?? false;
 	}
 
 	public static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCGet {
@@ -1997,32 +1937,30 @@ export class ConfigurationCCGet extends ConfigurationCC {
 // @publicAPI
 export type ConfigurationCCSetOptions =
 	| {
-		parameter: number;
-		resetToDefault: true;
-	}
+			parameter: number;
+			resetToDefault: true;
+	  }
 	| {
-		parameter: number;
-		resetToDefault?: false;
-		valueSize: number;
-		/** How the value is encoded. Defaults to SignedInteger */
-		valueFormat?: ConfigValueFormat;
-		value: ConfigValue;
-	};
+			parameter: number;
+			resetToDefault?: false;
+			valueSize: number;
+			/** How the value is encoded. Defaults to SignedInteger */
+			valueFormat?: ConfigValueFormat;
+			value: ConfigValue;
+	  };
 
 @CCCommand(ConfigurationCommand.Set)
 @useSupervision()
 export class ConfigurationCCSet extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCSetOptions>) {
 		super(options);
 		this.parameter = options.parameter;
 		this.resetToDefault = !!options.resetToDefault;
 		if (!options.resetToDefault) {
 			// TODO: Default to the stored value size
 			this.valueSize = options.valueSize;
-			this.valueFormat = options.valueFormat
-				?? ConfigValueFormat.SignedInteger;
+			this.valueFormat =
+				options.valueFormat ?? ConfigValueFormat.SignedInteger;
 			this.value = options.value;
 		}
 	}
@@ -2066,13 +2004,13 @@ export class ConfigurationCCSet extends ConfigurationCC {
 		const payloadLength = 2 + valueSize;
 		this.payload = Bytes.alloc(payloadLength, 0);
 		this.payload[0] = this.parameter;
-		this.payload[1] = (this.resetToDefault ? 0b1000_0000 : 0)
-			| (valueSize & 0b111);
+		this.payload[1] =
+			(this.resetToDefault ? 0b1000_0000 : 0) | (valueSize & 0b111);
 		if (!this.resetToDefault) {
 			// Make sure that the given value fits into the value size
 			if (
-				typeof this.value === "number"
-				&& !isSafeValue(this.value, valueSize, this.valueFormat!)
+				typeof this.value === "number" &&
+				!isSafeValue(this.value, valueSize, this.valueFormat!)
 			) {
 				// If there is a value size configured, check that the given value is compatible
 				throwInvalidValueError(
@@ -2129,22 +2067,20 @@ export class ConfigurationCCSet extends ConfigurationCC {
 }
 
 // @publicAPI
-export type ConfigurationCCBulkSetOptions =
-	& {
-		parameters: number[];
-		handshake?: boolean;
-	}
-	& (
-		| {
+export type ConfigurationCCBulkSetOptions = {
+	parameters: number[];
+	handshake?: boolean;
+} & (
+	| {
 			resetToDefault: true;
-		}
-		| {
+	  }
+	| {
 			resetToDefault?: false;
 			valueSize: number;
 			valueFormat?: ConfigValueFormat;
 			values: number[];
-		}
-	);
+	  }
+);
 
 function getResponseForBulkSet(
 	ctx: GetNode<NodeId & SupportsCC>,
@@ -2157,9 +2093,7 @@ function getResponseForBulkSet(
 @expectedCCResponse(getResponseForBulkSet)
 @useSupervision()
 export class ConfigurationCCBulkSet extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCBulkSetOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCBulkSetOptions>) {
 		super(options);
 		this._parameters = options.parameters;
 		if (this._parameters.length < 1) {
@@ -2181,8 +2115,8 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 			this._values = this._parameters.map(() => 0);
 		} else {
 			this._valueSize = options.valueSize;
-			this._valueFormat = options.valueFormat
-				?? ConfigValueFormat.SignedInteger;
+			this._valueFormat =
+				options.valueFormat ?? ConfigValueFormat.SignedInteger;
 			this._values = options.values;
 		}
 	}
@@ -2233,9 +2167,10 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 		this.payload = Bytes.alloc(payloadLength, 0);
 		this.payload.writeUInt16BE(this.parameters[0], 0);
 		this.payload[2] = this.parameters.length;
-		this.payload[3] = (this._resetToDefault ? 0b1000_0000 : 0)
-			| (this.handshake ? 0b0100_0000 : 0)
-			| (valueSize & 0b111);
+		this.payload[3] =
+			(this._resetToDefault ? 0b1000_0000 : 0) |
+			(this.handshake ? 0b0100_0000 : 0) |
+			(valueSize & 0b111);
 		if (!this._resetToDefault) {
 			for (let i = 0; i < this.parameters.length; i++) {
 				const value = this._values[i];
@@ -2284,11 +2219,9 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 			message.values = this._values
 				.map(
 					(value, i) =>
-						`\n· #${this._parameters[i]}: ${
-							configValueToString(
-								value,
-							)
-						}`,
+						`\n· #${this._parameters[i]}: ${configValueToString(
+							value,
+						)}`,
 				)
 				.join("");
 		}
@@ -2310,9 +2243,7 @@ export interface ConfigurationCCBulkReportOptions {
 
 @CCCommand(ConfigurationCommand.BulkReport)
 export class ConfigurationCCBulkReport extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCBulkReportOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCBulkReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -2373,9 +2304,8 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 				parameter,
 			);
 			if (
-				oldParamInformation.format != undefined
-				&& oldParamInformation.format
-					!== ConfigValueFormat.SignedInteger
+				oldParamInformation.format != undefined &&
+				oldParamInformation.format !== ConfigValueFormat.SignedInteger
 			) {
 				// Re-interpret the value with the new format
 				value = reInterpretSignedValue(
@@ -2445,9 +2375,7 @@ export interface ConfigurationCCBulkGetOptions {
 @CCCommand(ConfigurationCommand.BulkGet)
 @expectedCCResponse(ConfigurationCCBulkReport)
 export class ConfigurationCCBulkGet extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCBulkGetOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCBulkGetOptions>) {
 		super(options);
 		this._parameters = options.parameters.toSorted((a, b) => a - b);
 		if (!isConsecutiveArray(this.parameters)) {
@@ -2502,9 +2430,7 @@ export interface ConfigurationCCNameReportOptions {
 
 @CCCommand(ConfigurationCommand.NameReport)
 export class ConfigurationCCNameReport extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCNameReportOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCNameReportOptions>) {
 		super(options);
 
 		this.parameter = options.parameter;
@@ -2545,10 +2471,7 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 		// Bitfield parameters that are not documented in a config file
 		// are split into multiple partial parameters. We need to set the name for
 		// all of them.
-		const partialParams = this.getPartialParamInfos(
-			ctx,
-			this.parameter,
-		);
+		const partialParams = this.getPartialParamInfos(ctx, this.parameter);
 
 		if (partialParams.length === 0) {
 			this.extendParamInformation(ctx, this.parameter, undefined, {
@@ -2558,9 +2481,10 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 			for (const param of partialParams) {
 				const paramNumber = param.property as number;
 				const bitMask = param.propertyKey as number;
-				const bitNumber = Math.log2(bitMask) % 1 === 0
-					? Math.log2(bitMask)
-					: undefined;
+				const bitNumber =
+					Math.log2(bitMask) % 1 === 0
+						? Math.log2(bitMask)
+						: undefined;
 
 				let label = `${this.name} - ${bitMask}`;
 				if (bitNumber != undefined) {
@@ -2620,9 +2544,7 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 @CCCommand(ConfigurationCommand.NameGet)
 @expectedCCResponse(ConfigurationCCNameReport)
 export class ConfigurationCCNameGet extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCGetOptions>) {
 		super(options);
 		this.parameter = options.parameter;
 	}
@@ -2665,9 +2587,7 @@ export interface ConfigurationCCInfoReportOptions {
 
 @CCCommand(ConfigurationCommand.InfoReport)
 export class ConfigurationCCInfoReport extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCInfoReportOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCInfoReportOptions>) {
 		super(options);
 
 		this.parameter = options.parameter;
@@ -2714,8 +2634,8 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 			this.parameter,
 		).toSorted(
 			(a, b) =>
-				((a.propertyKey as number) ?? 0)
-				- ((b.propertyKey as number) ?? 0),
+				((a.propertyKey as number) ?? 0) -
+				((b.propertyKey as number) ?? 0),
 		);
 
 		if (partialParams.length === 0) {
@@ -2796,9 +2716,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 @CCCommand(ConfigurationCommand.InfoGet)
 @expectedCCResponse(ConfigurationCCInfoReport)
 export class ConfigurationCCInfoGet extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCGetOptions>) {
 		super(options);
 		this.parameter = options.parameter;
 	}
@@ -2891,8 +2809,8 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 	): ConfigurationCCPropertiesReport {
 		validatePayload(raw.payload.length >= 3);
 		const parameter = raw.payload.readUInt16BE(0);
-		const valueFormat: ConfigValueFormat = (raw.payload[2] & 0b111000)
-			>>> 3;
+		const valueFormat: ConfigValueFormat =
+			(raw.payload[2] & 0b111000) >>> 3;
 		const valueSize = raw.payload[2] & 0b111;
 
 		// GH#1309 Some devices don't tell us the first parameter if we query #0
@@ -2940,9 +2858,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 			);
 		}
 
-		nextParameter = raw.payload.readUInt16BE(
-			nextParameterOffset,
-		);
+		nextParameter = raw.payload.readUInt16BE(nextParameterOffset);
 
 		let altersCapabilities: MaybeNotKnown<boolean>;
 		let isReadonly: MaybeNotKnown<boolean>;
@@ -2996,14 +2912,12 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 			if (this.valueFormat !== ConfigValueFormat.BitField) {
 				// Do not override param information from a config file
 				if (!this.paramExistsInConfigFile(ctx, this.parameter)) {
-					const paramInfo = stripUndefined(
-						{
-							...baseInfo,
-							min: this.minValue,
-							max: this.maxValue,
-							default: this.defaultValue,
-						} as const satisfies ConfigurationMetadata,
-					);
+					const paramInfo = stripUndefined({
+						...baseInfo,
+						min: this.minValue,
+						max: this.maxValue,
+						default: this.defaultValue,
+					} as const satisfies ConfigurationMetadata);
 
 					this.extendParamInformation(
 						ctx,
@@ -3019,22 +2933,16 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 				while (mask <= bits) {
 					if (
 						// Only create partials that exist
-						!!(mask & bits)
+						!!(mask & bits) &&
 						// Do not override param information from a config file
-						&& !this.paramExistsInConfigFile(
-							ctx,
-							this.parameter,
-							mask,
-						)
+						!this.paramExistsInConfigFile(ctx, this.parameter, mask)
 					) {
-						const paramInfo = stripUndefined(
-							{
-								...baseInfo,
-								min: 0,
-								max: 1,
-								default: this.defaultValue! & mask ? 1 : 0,
-							} as const satisfies ConfigurationMetadata,
-						);
+						const paramInfo = stripUndefined({
+							...baseInfo,
+							min: 0,
+							max: 1,
+							default: this.defaultValue! & mask ? 1 : 0,
+						} as const satisfies ConfigurationMetadata);
 
 						this.extendParamInformation(
 							ctx,
@@ -3068,16 +2976,17 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = new Bytes(
-			3 // preamble
-				+ 3 * this.valueSize // min, max, default value
-				+ 2 // next parameter
-				+ 1, // options2
+			3 + // preamble
+				3 * this.valueSize + // min, max, default value
+				2 + // next parameter
+				1, // options2
 		);
 		this.payload.writeUInt16BE(this.parameter, 0);
-		const options1 = (this.altersCapabilities ? 0b1000_0000 : 0)
-			| (this.isReadonly ? 0b0100_0000 : 0)
-			| ((this.valueFormat & 0b111) << 3)
-			| (this.valueSize & 0b111);
+		const options1 =
+			(this.altersCapabilities ? 0b1000_0000 : 0) |
+			(this.isReadonly ? 0b0100_0000 : 0) |
+			((this.valueFormat & 0b111) << 3) |
+			(this.valueSize & 0b111);
 		this.payload[2] = options1;
 
 		let offset = 3;
@@ -3110,8 +3019,8 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 		this.payload.writeUInt16BE(this.nextParameter, offset);
 		offset += 2;
 
-		const options2 = (this.isAdvanced ? 0b1 : 0)
-			| (this.noBulkSupport ? 0b10 : 0);
+		const options2 =
+			(this.isAdvanced ? 0b1 : 0) | (this.noBulkSupport ? 0b10 : 0);
 		this.payload[offset] = options2;
 
 		return super.serialize(ctx);
@@ -3158,9 +3067,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 @CCCommand(ConfigurationCommand.PropertiesGet)
 @expectedCCResponse(ConfigurationCCPropertiesReport)
 export class ConfigurationCCPropertiesGet extends ConfigurationCC {
-	public constructor(
-		options: WithAddress<ConfigurationCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<ConfigurationCCGetOptions>) {
 		super(options);
 		this.parameter = options.parameter;
 	}
@@ -3245,12 +3152,10 @@ function throwInvalidValueError(
 	valueFormat: ConfigValueFormat,
 ): never {
 	throw new ZWaveError(
-		`The value ${value} is invalid for configuration parameter ${parameter} (size = ${valueSize}, format = ${
-			getEnumMemberName(
-				ConfigValueFormat,
-				valueFormat,
-			)
-		})!`,
+		`The value ${value} is invalid for configuration parameter ${parameter} (size = ${valueSize}, format = ${getEnumMemberName(
+			ConfigValueFormat,
+			valueFormat,
+		)})!`,
 		ZWaveErrorCodes.Argument_Invalid,
 	);
 }

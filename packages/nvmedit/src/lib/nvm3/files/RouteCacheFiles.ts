@@ -1,5 +1,6 @@
 import { MAX_NODES, MAX_REPEATERS } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
+
 import {
 	EMPTY_ROUTECACHE_FILL,
 	ROUTECACHE_SIZE,
@@ -9,6 +10,7 @@ import {
 	parseRoute,
 } from "../../common/routeCache.js";
 import type { NVM3Object } from "../object.js";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -76,15 +78,15 @@ export interface RouteCacheFileV1Options extends NVMFileCreationOptions {
 export const RouteCacheFileV1IDBase = 0x51400;
 export function nodeIdToRouteCacheFileIDV1(nodeId: number): number {
 	return (
-		RouteCacheFileV1IDBase
-		+ Math.floor((nodeId - 1) / ROUTECACHES_PER_FILE_V1)
+		RouteCacheFileV1IDBase +
+		Math.floor((nodeId - 1) / ROUTECACHES_PER_FILE_V1)
 	);
 }
 
 @nvmFileID(
 	(id) =>
-		id >= RouteCacheFileV1IDBase
-		&& id < RouteCacheFileV1IDBase + MAX_NODES / ROUTECACHES_PER_FILE_V1,
+		id >= RouteCacheFileV1IDBase &&
+		id < RouteCacheFileV1IDBase + MAX_NODES / ROUTECACHES_PER_FILE_V1,
 )
 @nvmSection("protocol")
 export class RouteCacheFileV1 extends NVMFile {
@@ -102,10 +104,11 @@ export class RouteCacheFileV1 extends NVMFile {
 				);
 				if (entry.equals(emptyRouteCache)) continue;
 
-				const nodeId = (this.fileId - RouteCacheFileV1IDBase)
-						* ROUTECACHES_PER_FILE_V1
-					+ 1
-					+ i;
+				const nodeId =
+					(this.fileId - RouteCacheFileV1IDBase) *
+						ROUTECACHES_PER_FILE_V1 +
+					1 +
+					i;
 				const lwr = parseRoute(this.payload, offset);
 				const nlwr = parseRoute(
 					this.payload,
@@ -127,17 +130,18 @@ export class RouteCacheFileV1 extends NVMFile {
 		const minNodeId = this.routeCaches[0].nodeId;
 		this.fileId = nodeIdToRouteCacheFileIDV1(minNodeId);
 
-		this.payload = new Bytes(ROUTECACHES_PER_FILE_V1 * ROUTECACHE_SIZE)
-			.fill(EMPTY_ROUTECACHE_FILL);
+		this.payload = new Bytes(
+			ROUTECACHES_PER_FILE_V1 * ROUTECACHE_SIZE,
+		).fill(EMPTY_ROUTECACHE_FILL);
 
 		const minFileNodeId =
-			Math.floor((minNodeId - 1) / ROUTECACHES_PER_FILE_V1)
-				* ROUTECACHES_PER_FILE_V1
-			+ 1;
+			Math.floor((minNodeId - 1) / ROUTECACHES_PER_FILE_V1) *
+				ROUTECACHES_PER_FILE_V1 +
+			1;
 
 		for (const routeCache of this.routeCaches) {
-			const offset = (routeCache.nodeId - minFileNodeId)
-				* ROUTECACHE_SIZE;
+			const offset =
+				(routeCache.nodeId - minFileNodeId) * ROUTECACHE_SIZE;
 			const routes = Bytes.concat([
 				encodeRoute(routeCache.lwr),
 				encodeRoute(routeCache.nlwr),

@@ -35,8 +35,7 @@ export const getS2ExtensionConstructor =
 	extensionTypeDecorator.lookupConstructor;
 
 export type Security2ExtensionConstructor<T extends Security2Extension> =
-	& typeof Security2Extension
-	& {
+	typeof Security2Extension & {
 		new (options: Security2ExtensionOptions): T;
 	};
 
@@ -144,19 +143,15 @@ export class Security2Extension {
 		this.payload = payload;
 	}
 
-	public static parse(
-		data: BytesView,
-	): Security2Extension {
+	public static parse(data: BytesView): Security2Extension {
 		const raw = Security2ExtensionRaw.parse(data);
-		const Constructor = getS2ExtensionConstructor(raw.type)
-			?? Security2Extension;
+		const Constructor =
+			getS2ExtensionConstructor(raw.type) ?? Security2Extension;
 		return Constructor.from(raw);
 	}
 
 	/** Creates an instance of the message that is serialized in the given buffer */
-	public static from(
-		raw: Security2ExtensionRaw,
-	): Security2Extension {
+	public static from(raw: Security2ExtensionRaw): Security2Extension {
 		return new this({
 			type: raw.type,
 			critical: raw.critical,
@@ -178,18 +173,19 @@ export class Security2Extension {
 		return Bytes.concat([
 			[
 				2 + this.payload.length,
-				(moreToFollow ? 0b1000_0000 : 0)
-				| (this.critical ? 0b0100_0000 : 0)
-				| (this.type & 0b11_1111),
+				(moreToFollow ? 0b1000_0000 : 0) |
+					(this.critical ? 0b0100_0000 : 0) |
+					(this.type & 0b11_1111),
 			],
 			this.payload,
 		]);
 	}
 
 	/** Returns the number of bytes the first extension in the buffer occupies */
-	public static getExtensionLength(
-		data: BytesView,
-	): { expected?: number; actual: number } {
+	public static getExtensionLength(data: BytesView): {
+		expected?: number;
+		actual: number;
+	} {
 		const actual = data[0];
 		let expected: number | undefined;
 
@@ -229,8 +225,7 @@ export class Security2Extension {
 	}
 }
 
-export class InvalidExtension extends Security2Extension {
-}
+export class InvalidExtension extends Security2Extension {}
 
 interface SPANExtensionOptions {
 	senderEI: BytesView;
@@ -321,18 +316,16 @@ export class MPANExtension extends Security2Extension {
 	public static readonly expectedLength = 19;
 
 	public serialize(moreToFollow: boolean): Bytes {
-		this.payload = Bytes.concat([
-			[this.groupId],
-			this.innerMPANState,
-		]);
+		this.payload = Bytes.concat([[this.groupId], this.innerMPANState]);
 		return super.serialize(moreToFollow);
 	}
 
 	public toLogEntry(): string {
-		const mpanState = process.env.NODE_ENV === "test"
-				|| process.env.NODE_ENV === "development"
-			? buffer2hex(this.innerMPANState)
-			: "(hidden)";
+		const mpanState =
+			process.env.NODE_ENV === "test" ||
+			process.env.NODE_ENV === "development"
+				? buffer2hex(this.innerMPANState)
+				: "(hidden)";
 		let ret = super.toLogEntry().replace(/^  payload:.+$/m, "");
 		ret += `  group ID: ${this.groupId}
   MPAN state: ${mpanState}`;

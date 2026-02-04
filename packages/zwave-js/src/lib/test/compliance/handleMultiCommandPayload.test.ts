@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	MultiCommandCC,
 	SceneActivationCCSet,
@@ -9,7 +11,7 @@ import {
 	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("All CCs contained in a Multi Command CC are handled", {
@@ -39,16 +41,13 @@ integrationTest("All CCs contained in a Multi Command CC are handled", {
 			nodeId: mockController.ownNodeId,
 			sceneId: 7,
 		});
-		const cc = MultiCommandCC.encapsulate([
-			zwpRequest,
-			scaSet,
-		]);
+		const cc = MultiCommandCC.encapsulate([zwpRequest, scaSet]);
 		await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
 		const expectResponse = mockNode.expectControllerFrame(
 			(msg): msg is any =>
-				msg.type === MockZWaveFrameType.Request
-				&& msg.payload instanceof ZWavePlusCCReport,
+				msg.type === MockZWaveFrameType.Request &&
+				msg.payload instanceof ZWavePlusCCReport,
 			{ timeout: 1000 },
 		);
 
@@ -61,7 +60,7 @@ integrationTest("All CCs contained in a Multi Command CC are handled", {
 			});
 		});
 		const expectNotification = valueNotification.then((val) =>
-			t.expect(val).toBe(7)
+			t.expect(val).toBe(7),
 		);
 
 		await Promise.all([expectResponse, expectNotification]);

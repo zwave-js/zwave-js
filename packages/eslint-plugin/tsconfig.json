@@ -4,11 +4,6 @@
 	"compilerOptions": {
 		"types": ["node", "@typescript-eslint/utils"]
 	},
-	"include": [
-		"src/**/*.ts"
-	],
-	"exclude": [
-		"build/**",
-		"node_modules/**"
-	]
+	"include": ["src/**/*.ts"],
+	"exclude": ["build/**", "node_modules/**"]
 }

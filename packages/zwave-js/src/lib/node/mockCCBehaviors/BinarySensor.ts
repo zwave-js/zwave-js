@@ -47,8 +47,8 @@ const respondToBinarySensorGet: MockNodeBehavior = {
 
 			let sensorType: BinarySensorType | undefined;
 			if (
-				receivedCC.sensorType == undefined
-				|| receivedCC.sensorType === BinarySensorType.Any
+				receivedCC.sensorType == undefined ||
+				receivedCC.sensorType === BinarySensorType.Any
 			) {
 				// If the sensor type is not specified, use the first supported one
 				sensorType = capabilities.supportedSensorTypes[0];

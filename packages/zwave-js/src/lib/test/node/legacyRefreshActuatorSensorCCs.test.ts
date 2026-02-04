@@ -10,6 +10,7 @@ import {
 	MockZWaveFrameType,
 	type MockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -82,8 +83,8 @@ integrationTest(
 
 			await mockNode.expectControllerFrame(
 				(f): f is MockZWaveRequestFrame =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof MultilevelSwitchCCGet,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof MultilevelSwitchCCGet,
 				{ timeout: 100 },
 			);
 		},

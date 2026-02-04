@@ -1,5 +1,6 @@
 import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
+
 import { TypedEventTarget } from "./EventTarget.js";
 import { AllOf, Mixin } from "./inheritance.js";
 import type { Constructor } from "./types.js";

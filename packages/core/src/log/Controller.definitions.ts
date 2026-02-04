@@ -1,4 +1,5 @@
 import type { InterviewStage, ValueID } from "../index_browser.js";
+
 import type { DataDirection, LogContext } from "./shared.js";
 
 export const CONTROLLER_LABEL = "CNTRLR";
@@ -20,21 +21,15 @@ export interface Interviewable {
 // FIXME: Do we need this to be a separate type?
 export type NodeLogContext = LogContext & { nodeId: number; type: "node" };
 
-export type ControllerNodeLogContext =
-	& LogContext<"controller">
-	& NodeLogContext
-	& { endpoint?: number; direction: string };
+export type ControllerNodeLogContext = LogContext<"controller"> &
+	NodeLogContext & { endpoint?: number; direction: string };
 
 // FIXME: Do we need this to be a separate type?
-export type ValueLogContext =
-	& LogContext
-	& ValueID
-	& { nodeId: number; type: "value" };
+export type ValueLogContext = LogContext &
+	ValueID & { nodeId: number; type: "value" };
 
-export type ControllerValueLogContext =
-	& LogContext<"controller">
-	& ValueLogContext
-	& {
+export type ControllerValueLogContext = LogContext<"controller"> &
+	ValueLogContext & {
 		direction?: string;
 		change?: "added" | "updated" | "removed" | "notification";
 		internal?: boolean;

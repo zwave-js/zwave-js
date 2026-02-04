@@ -49,10 +49,7 @@ import { WindowCoveringCCBehaviors } from "./mockCCBehaviors/WindowCovering.js";
 
 const respondToRequestNodeInfo: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
-		if (
-			receivedCC
-				instanceof ZWaveProtocolCCRequestNodeInformationFrame
-		) {
+		if (receivedCC instanceof ZWaveProtocolCCRequestNodeInformationFrame) {
 			const cc = new ZWaveProtocolCCNodeInformationFrame({
 				nodeId: self.id,
 				...self.capabilities,
@@ -72,9 +69,10 @@ const respondToRequestNodeInfo: MockNodeBehavior = {
 const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof VersionCCCommandClassGet) {
-			const endpoint = receivedCC.endpointIndex === 0
-				? self
-				: self.endpoints.get(receivedCC.endpointIndex);
+			const endpoint =
+				receivedCC.endpointIndex === 0
+					? self
+					: self.endpoints.get(receivedCC.endpointIndex);
 			if (!endpoint) return;
 
 			let version = 0;
@@ -88,7 +86,8 @@ const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 
 			// Basic CC is always supported implicitly
 			if (
-				version === 0 && receivedCC.requestedCC === CommandClasses.Basic
+				version === 0 &&
+				receivedCC.requestedCC === CommandClasses.Basic
 			) {
 				version = 1;
 			}
@@ -114,8 +113,8 @@ const respondToZWavePlusCCGet: MockNodeBehavior = {
 				roleType: self.capabilities.isListening
 					? ZWavePlusRoleType.AlwaysOnSlave
 					: self.capabilities.isFrequentListening
-					? ZWavePlusRoleType.SleepingListeningSlave
-					: ZWavePlusRoleType.SleepingReportingSlave,
+						? ZWavePlusRoleType.SleepingListeningSlave
+						: ZWavePlusRoleType.SleepingReportingSlave,
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
@@ -127,8 +126,8 @@ const respondToZWavePlusCCGet: MockNodeBehavior = {
 const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (
-			receivedCC instanceof Security2CCMessageEncapsulation
-			&& receivedCC.encapsulated instanceof ZWavePlusCCGet
+			receivedCC instanceof Security2CCMessageEncapsulation &&
+			receivedCC.encapsulated instanceof ZWavePlusCCGet
 		) {
 			let cc: CommandClass = new ZWavePlusCCReport({
 				nodeId: controller.ownNodeId,
@@ -137,16 +136,12 @@ const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
 				roleType: self.capabilities.isListening
 					? ZWavePlusRoleType.AlwaysOnSlave
 					: self.capabilities.isFrequentListening
-					? ZWavePlusRoleType.SleepingListeningSlave
-					: ZWavePlusRoleType.SleepingReportingSlave,
+						? ZWavePlusRoleType.SleepingListeningSlave
+						: ZWavePlusRoleType.SleepingReportingSlave,
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
-			cc = Security2CC.encapsulate(
-				cc,
-				self.id,
-				self.securityManagers,
-			);
+			cc = Security2CC.encapsulate(cc, self.id, self.securityManagers);
 			return { action: "sendCC", cc };
 		}
 	},

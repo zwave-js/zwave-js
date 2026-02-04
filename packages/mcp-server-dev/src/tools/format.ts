@@ -1,7 +1,9 @@
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import spawn from "nano-spawn";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import spawn from "nano-spawn";
+
 import type { ToolHandler } from "../types.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,12 +25,9 @@ async function handleFormat(): Promise<CallToolResult> {
 			content: [
 				{
 					type: "text",
-					text:
-						`Code formatting completed successfully.\n\nOutput:\n${result.stdout}${
-							result.stderr
-								? `\nStderr:\n${result.stderr}`
-								: ""
-						}`,
+					text: `Code formatting completed successfully.\n\nOutput:\n${result.stdout}${
+						result.stderr ? `\nStderr:\n${result.stderr}` : ""
+					}`,
 				},
 			],
 		};
@@ -37,14 +36,9 @@ async function handleFormat(): Promise<CallToolResult> {
 			content: [
 				{
 					type: "text",
-					text:
-						`Code formatting failed: ${error.message}\n\nOutput:\n${
-							error.stdout || ""
-						}${
-							error.stderr
-								? `\nStderr:\n${error.stderr}`
-								: ""
-						}`,
+					text: `Code formatting failed: ${error.message}\n\nOutput:\n${
+						error.stdout || ""
+					}${error.stderr ? `\nStderr:\n${error.stderr}` : ""}`,
 				},
 			],
 			isError: true,

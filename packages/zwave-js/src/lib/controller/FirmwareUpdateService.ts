@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/shared";
 import type { Options as KyOptions } from "ky";
 import type PQueue from "p-queue";
+
 import type {
 	FirmwareUpdateBulkInfo,
 	FirmwareUpdateDeviceID,
@@ -94,14 +95,16 @@ function calculateCacheExpiry(response: Response): number {
 			currentAge = Math.max(0, currentAge);
 
 			if (maxAge > currentAge) {
-				return Date.now()
-					+ Math.min(MAX_CACHE_SECONDS, maxAge - currentAge) * 1000;
+				return (
+					Date.now() +
+					Math.min(MAX_CACHE_SECONDS, maxAge - currentAge) * 1000
+				);
 			}
 		}
 	}
 
 	// Default fallback cache duration
-	return Date.now() + (MAX_CACHE_SECONDS * 1000);
+	return Date.now() + MAX_CACHE_SECONDS * 1000;
 }
 
 async function makeRequest<T>(
@@ -124,9 +127,7 @@ export interface GetAvailableFirmwareUpdateOptions {
 	apiKey?: string;
 }
 
-export interface GetAvailableFirmwareUpdateBulkOptions
-	extends GetAvailableFirmwareUpdateOptions
-{
+export interface GetAvailableFirmwareUpdateBulkOptions extends GetAvailableFirmwareUpdateOptions {
 	rfRegion?: RFRegion;
 }
 
@@ -172,13 +173,14 @@ export async function getAvailableFirmwareUpdatesBulk(
 	// Remove duplicates based on device fingerprint
 	const uniqueDeviceIds = deviceIds.filter(
 		(device, index) =>
-			index
-				=== deviceIds.findIndex((d) =>
-					d.manufacturerId === device.manufacturerId
-					&& d.productType === device.productType
-					&& d.productId === device.productId
-					&& d.firmwareVersion === device.firmwareVersion
-				),
+			index ===
+			deviceIds.findIndex(
+				(d) =>
+					d.manufacturerId === device.manufacturerId &&
+					d.productType === device.productType &&
+					d.productId === device.productId &&
+					d.firmwareVersion === device.firmwareVersion,
+			),
 	);
 
 	const now = Date.now();
@@ -234,7 +236,7 @@ export async function getAvailableFirmwareUpdatesBulk(
 		}
 
 		const requestResult = await requestQueue.add(() =>
-			makeRequest<FirmwareUpdateBulkInfo[]>(url, config)
+			makeRequest<FirmwareUpdateBulkInfo[]>(url, config),
 		);
 		const { data: result, expiry } = requestResult!;
 
@@ -242,24 +244,22 @@ export async function getAvailableFirmwareUpdatesBulk(
 			// Find the original device info to get the RF region
 			const originalDevice = staleDevices.find(
 				(device) =>
-					formatId(device.manufacturerId)
-						=== deviceResponse.manufacturerId
-					&& formatId(device.productType)
-						=== deviceResponse.productType
-					&& formatId(device.productId) === deviceResponse.productId
-					&& padVersion(device.firmwareVersion)
-						=== padVersion(deviceResponse.firmwareVersion),
+					formatId(device.manufacturerId) ===
+						deviceResponse.manufacturerId &&
+					formatId(device.productType) ===
+						deviceResponse.productType &&
+					formatId(device.productId) === deviceResponse.productId &&
+					padVersion(device.firmwareVersion) ===
+						padVersion(deviceResponse.firmwareVersion),
 			);
 
 			if (originalDevice) {
-				const updates: FirmwareUpdateInfo[] = deviceResponse.updates
-					.map(
-						(update) => ({
-							device: originalDevice,
-							...update,
-							channel: update.channel ?? "stable",
-						}),
-					);
+				const updates: FirmwareUpdateInfo[] =
+					deviceResponse.updates.map((update) => ({
+						device: originalDevice,
+						...update,
+						channel: update.channel ?? "stable",
+					}));
 
 				deviceFirmwareCache.set(originalDevice, {
 					updates,
@@ -345,11 +345,7 @@ export async function downloadFirmwareUpdate(
 	const contentDisposition = downloadResponse.headers.get(
 		"content-disposition",
 	);
-	if (
-		contentDisposition?.startsWith(
-			"attachment; filename=",
-		)
-	) {
+	if (contentDisposition?.startsWith("attachment; filename=")) {
 		filename = contentDisposition
 			.split("filename=")[1]
 			.replace(/^"/, "")

@@ -86,20 +86,20 @@ export class GetControllerCapabilitiesResponse extends Message {
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
-			(this.isSecondary ? ControllerCapabilityFlags.Secondary : 0)
-			| (this.isUsingHomeIdFromOtherNetwork
-				? ControllerCapabilityFlags.OnOtherNetwork
-				: 0)
-			| (this.isSISPresent ? ControllerCapabilityFlags.SISPresent : 0)
-			| (this.wasRealPrimary
-				? ControllerCapabilityFlags.WasRealPrimary
-				: 0)
-			| (this.isStaticUpdateController
-				? ControllerCapabilityFlags.SUC
-				: 0)
-			| (this.noNodesIncluded
-				? ControllerCapabilityFlags.NoNodesIncluded
-				: 0),
+			(this.isSecondary ? ControllerCapabilityFlags.Secondary : 0) |
+				(this.isUsingHomeIdFromOtherNetwork
+					? ControllerCapabilityFlags.OnOtherNetwork
+					: 0) |
+				(this.isSISPresent ? ControllerCapabilityFlags.SISPresent : 0) |
+				(this.wasRealPrimary
+					? ControllerCapabilityFlags.WasRealPrimary
+					: 0) |
+				(this.isStaticUpdateController
+					? ControllerCapabilityFlags.SUC
+					: 0) |
+				(this.noNodesIncluded
+					? ControllerCapabilityFlags.NoNodesIncluded
+					: 0),
 		]);
 		return super.serialize(ctx);
 	}

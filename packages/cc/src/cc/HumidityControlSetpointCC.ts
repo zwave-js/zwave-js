@@ -21,6 +21,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -68,17 +69,16 @@ export const HumidityControlSetpointCCValues = V.defineCCValues(
 			(setpointType: number) => setpointType,
 			({ property, propertyKey }) =>
 				property === "setpoint" && typeof propertyKey === "number",
-			(setpointType: number) => ({
-				// This is the base metadata that will be extended on the fly
-				...ValueMetadata.Number,
-				label: `Setpoint (${
-					getEnumMemberName(
+			(setpointType: number) =>
+				({
+					// This is the base metadata that will be extended on the fly
+					...ValueMetadata.Number,
+					label: `Setpoint (${getEnumMemberName(
 						HumidityControlSetpointType,
 						setpointType,
-					)
-				})`,
-				ccSpecific: { setpointType },
-			} as const),
+					)})`,
+					ccSpecific: { setpointType },
+				}) as const,
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
@@ -86,15 +86,14 @@ export const HumidityControlSetpointCCValues = V.defineCCValues(
 			(setpointType: number) => setpointType,
 			({ property, propertyKey }) =>
 				property === "setpointScale" && typeof propertyKey === "number",
-			(setpointType: number) => ({
-				...ValueMetadata.ReadOnlyUInt8,
-				label: `Setpoint scale (${
-					getEnumMemberName(
+			(setpointType: number) =>
+				({
+					...ValueMetadata.ReadOnlyUInt8,
+					label: `Setpoint scale (${getEnumMemberName(
 						HumidityControlSetpointType,
 						setpointType,
-					)
-				})`,
-			} as const),
+					)})`,
+				}) as const,
 		),
 	},
 );
@@ -123,7 +122,7 @@ export class HumidityControlSetpointCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: HumidityControlSetpointCCAPI,
 			{ property, propertyKey },
 			value,
@@ -151,9 +150,8 @@ export class HumidityControlSetpointCCAPI extends CCAPI {
 			const scaleValueId = HumidityControlSetpointCCValues.setpointScale(
 				propertyKey,
 			).endpoint(this.endpoint.index);
-			const preferredScale = this.tryGetValueDB()?.getValue<number>(
-				scaleValueId,
-			);
+			const preferredScale =
+				this.tryGetValueDB()?.getValue<number>(scaleValueId);
 
 			const result = await this.set(
 				propertyKey,
@@ -171,7 +169,7 @@ export class HumidityControlSetpointCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: HumidityControlSetpointCCAPI,
 			{ property, propertyKey },
 		) {
@@ -207,21 +205,20 @@ export class HumidityControlSetpointCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			setpointType,
 		});
-		const response = await this.host.sendCommand<
-			HumidityControlSetpointCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<HumidityControlSetpointCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (!response) return;
 		return response.type === HumidityControlSetpointType["N/A"]
-			// not supported
-			? undefined
-			// supported
-			: {
-				value: response.value,
-				scale: response.scale,
-			};
+			? // not supported
+				undefined
+			: // supported
+				{
+					value: response.value,
+					scale: response.scale,
+				};
 	}
 
 	@validateArgs()
@@ -259,12 +256,11 @@ export class HumidityControlSetpointCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			setpointType,
 		});
-		const response = await this.host.sendCommand<
-			HumidityControlSetpointCCCapabilitiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<HumidityControlSetpointCCCapabilitiesReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"minValue",
@@ -287,12 +283,11 @@ export class HumidityControlSetpointCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			HumidityControlSetpointCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<HumidityControlSetpointCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedSetpointTypes;
 	}
 
@@ -310,12 +305,11 @@ export class HumidityControlSetpointCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			setpointType,
 		});
-		const response = await this.host.sendCommand<
-			HumidityControlSetpointCCScaleSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<HumidityControlSetpointCCScaleSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return response.supportedScales.map((scale) => getScale(scale));
 		}
@@ -343,9 +337,7 @@ export class HumidityControlSetpointCC extends CommandClass {
 		}
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -372,10 +364,11 @@ export class HumidityControlSetpointCC extends CommandClass {
 		const resp = await api.getSupportedSetpointTypes();
 		if (resp) {
 			setpointTypes = [...resp];
-			const logMessage = "received supported setpoint types:\n"
-				+ setpointTypes
+			const logMessage =
+				"received supported setpoint types:\n" +
+				setpointTypes
 					.map((type) =>
-						getEnumMemberName(HumidityControlSetpointType, type)
+						getEnumMemberName(HumidityControlSetpointType, type),
 					)
 					.map((name) => `· ${name}`)
 					.join("\n");
@@ -403,27 +396,23 @@ export class HumidityControlSetpointCC extends CommandClass {
 			// Find out the capabilities of this setpoint
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`retrieving capabilities for setpoint ${setpointName}...`,
+				message: `retrieving capabilities for setpoint ${setpointName}...`,
 				direction: "outbound",
 			});
 			const setpointScaleSupported = await api.getSupportedScales(type);
 			if (setpointScaleSupported) {
-				const logMessage =
-					`received supported scales for setpoint ${setpointName}: 
-${
-						setpointScaleSupported
-							.map((t) => `\n· ${t.key} ${t.unit} - ${t.label}`)
-							.join("")
-					}`;
+				const logMessage = `received supported scales for setpoint ${setpointName}: 
+${setpointScaleSupported
+	.map((t) => `\n· ${t.key} ${t.unit} - ${t.label}`)
+	.join("")}`;
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: logMessage,
 					direction: "inbound",
 				});
 
-				const scaleValue = HumidityControlSetpointCCValues
-					.setpointScale(type);
+				const scaleValue =
+					HumidityControlSetpointCCValues.setpointScale(type);
 				const states: Record<number, string> = {};
 				for (const scale of setpointScaleSupported) {
 					if (scale.unit) states[scale.key] = scale.unit;
@@ -441,8 +430,7 @@ ${
 				const maxValueUnit = getSetpointUnit(
 					setpointCaps.maxValueScale,
 				);
-				const logMessage =
-					`received capabilities for setpoint ${setpointName}:
+				const logMessage = `received capabilities for setpoint ${setpointName}:
 minimum value: ${setpointCaps.minValue} ${minValueUnit}
 maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 				ctx.logNode(node.id, {
@@ -460,9 +448,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -473,10 +459,11 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 			priority: MessagePriority.NodeQuery,
 		});
 
-		const setpointTypes: HumidityControlSetpointType[] = this.getValue(
-			ctx,
-			HumidityControlSetpointCCValues.supportedSetpointTypes,
-		) ?? [];
+		const setpointTypes: HumidityControlSetpointType[] =
+			this.getValue(
+				ctx,
+				HumidityControlSetpointCCValues.supportedSetpointTypes,
+			) ?? [];
 
 		// Query each setpoint's current value
 		for (const type of setpointTypes) {
@@ -487,16 +474,14 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 			// Every time, query the current value
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`querying current value of setpoint ${setpointName}...`,
+				message: `querying current value of setpoint ${setpointName}...`,
 				direction: "outbound",
 			});
 			const setpoint = await api.get(type);
 			if (setpoint) {
-				const logMessage =
-					`received current value of setpoint ${setpointName}: ${setpoint.value} ${
-						getScale(setpoint.scale).unit ?? ""
-					}`;
+				const logMessage = `received current value of setpoint ${setpointName}: ${setpoint.value} ${
+					getScale(setpoint.scale).unit ?? ""
+				}`;
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: logMessage,
@@ -738,9 +723,7 @@ export interface HumidityControlSetpointCCSupportedReportOptions {
 	"supportedSetpointTypes",
 	HumidityControlSetpointCCValues.supportedSetpointTypes,
 )
-export class HumidityControlSetpointCCSupportedReport
-	extends HumidityControlSetpointCC
-{
+export class HumidityControlSetpointCCSupportedReport extends HumidityControlSetpointCC {
 	public constructor(
 		options: WithAddress<HumidityControlSetpointCCSupportedReportOptions>,
 	) {
@@ -756,10 +739,7 @@ export class HumidityControlSetpointCCSupportedReport
 	): HumidityControlSetpointCCSupportedReport {
 		validatePayload(raw.payload.length >= 1);
 		const supportedSetpointTypes: HumidityControlSetpointType[] =
-			parseBitMask(
-				raw.payload,
-				HumidityControlSetpointType["N/A"],
-			);
+			parseBitMask(raw.payload, HumidityControlSetpointType["N/A"]);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -767,8 +747,7 @@ export class HumidityControlSetpointCCSupportedReport
 		});
 	}
 
-	public readonly supportedSetpointTypes:
-		readonly HumidityControlSetpointType[];
+	public readonly supportedSetpointTypes: readonly HumidityControlSetpointType[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -777,12 +756,10 @@ export class HumidityControlSetpointCCSupportedReport
 				"supported setpoint types": this.supportedSetpointTypes
 					.map(
 						(t) =>
-							`\n· ${
-								getEnumMemberName(
-									HumidityControlSetpointType,
-									t,
-								)
-							}`,
+							`\n· ${getEnumMemberName(
+								HumidityControlSetpointType,
+								t,
+							)}`,
 					)
 					.join(""),
 			},
@@ -792,9 +769,7 @@ export class HumidityControlSetpointCCSupportedReport
 
 @CCCommand(HumidityControlSetpointCommand.SupportedGet)
 @expectedCCResponse(HumidityControlSetpointCCSupportedReport)
-export class HumidityControlSetpointCCSupportedGet
-	extends HumidityControlSetpointCC
-{}
+export class HumidityControlSetpointCCSupportedGet extends HumidityControlSetpointCC {}
 
 // @publicAPI
 export interface HumidityControlSetpointCCScaleSupportedReportOptions {
@@ -802,13 +777,9 @@ export interface HumidityControlSetpointCCScaleSupportedReportOptions {
 }
 
 @CCCommand(HumidityControlSetpointCommand.ScaleSupportedReport)
-export class HumidityControlSetpointCCScaleSupportedReport
-	extends HumidityControlSetpointCC
-{
+export class HumidityControlSetpointCCScaleSupportedReport extends HumidityControlSetpointCC {
 	public constructor(
-		options: WithAddress<
-			HumidityControlSetpointCCScaleSupportedReportOptions
-		>,
+		options: WithAddress<HumidityControlSetpointCCScaleSupportedReportOptions>,
 	) {
 		super(options);
 
@@ -836,7 +807,7 @@ export class HumidityControlSetpointCCScaleSupportedReport
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const supportedScales = this.supportedScales.map((scale) =>
-			getScale(scale)
+			getScale(scale),
 		);
 		return {
 			...super.toLogEntry(ctx),
@@ -856,9 +827,7 @@ export interface HumidityControlSetpointCCScaleSupportedGetOptions {
 
 @CCCommand(HumidityControlSetpointCommand.ScaleSupportedGet)
 @expectedCCResponse(HumidityControlSetpointCCScaleSupportedReport)
-export class HumidityControlSetpointCCScaleSupportedGet
-	extends HumidityControlSetpointCC
-{
+export class HumidityControlSetpointCCScaleSupportedGet extends HumidityControlSetpointCC {
 	public constructor(
 		options: WithAddress<HumidityControlSetpointCCScaleSupportedGetOptions>,
 	) {
@@ -911,13 +880,9 @@ export interface HumidityControlSetpointCCCapabilitiesReportOptions {
 }
 
 @CCCommand(HumidityControlSetpointCommand.CapabilitiesReport)
-export class HumidityControlSetpointCCCapabilitiesReport
-	extends HumidityControlSetpointCC
-{
+export class HumidityControlSetpointCCCapabilitiesReport extends HumidityControlSetpointCC {
 	public constructor(
-		options: WithAddress<
-			HumidityControlSetpointCCCapabilitiesReportOptions
-		>,
+		options: WithAddress<HumidityControlSetpointCCCapabilitiesReportOptions>,
 	) {
 		super(options);
 
@@ -966,8 +931,9 @@ export class HumidityControlSetpointCCCapabilitiesReport
 			...setpointValue.meta,
 			min: this.minValue,
 			max: this.maxValue,
-			unit: getSetpointUnit(this.minValueScale)
-				|| getSetpointUnit(this.maxValueScale),
+			unit:
+				getSetpointUnit(this.minValueScale) ||
+				getSetpointUnit(this.maxValueScale),
 		});
 
 		return true;
@@ -1003,9 +969,7 @@ export interface HumidityControlSetpointCCCapabilitiesGetOptions {
 
 @CCCommand(HumidityControlSetpointCommand.CapabilitiesGet)
 @expectedCCResponse(HumidityControlSetpointCCCapabilitiesReport)
-export class HumidityControlSetpointCCCapabilitiesGet
-	extends HumidityControlSetpointCC
-{
+export class HumidityControlSetpointCCCapabilitiesGet extends HumidityControlSetpointCC {
 	public constructor(
 		options: WithAddress<HumidityControlSetpointCCCapabilitiesGetOptions>,
 	) {

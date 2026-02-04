@@ -1,5 +1,6 @@
 import type { CommandClasses } from "@zwave-js/core";
 import type { BytesView, Expand } from "@zwave-js/shared";
+
 import type {
 	ApplicationCCsFile,
 	ApplicationRFConfigFile,
@@ -8,6 +9,7 @@ import type {
 	LRNodeInfo,
 	NodeInfo,
 } from "../nvm3/files/index.js";
+
 import type { Route } from "./routeCache.js";
 import type { SUCUpdateEntry } from "./sucUpdateEntry.js";
 
@@ -85,8 +87,9 @@ export interface NVMAdapter {
 		property: T,
 		required?: R,
 	): Promise<
-		R extends true ? NVMPropertyToDataType<T>
-			: (NVMPropertyToDataType<T> | undefined)
+		R extends true
+			? NVMPropertyToDataType<T>
+			: NVMPropertyToDataType<T> | undefined
 	>;
 
 	/**
@@ -111,7 +114,7 @@ export interface NVMAdapter {
 }
 
 export type ControllerNVMPropertyTypes = Expand<
-	& {
+	{
 		protocolVersion: string;
 		protocolFileFormat: number;
 		applicationVersion: string;
@@ -124,74 +127,74 @@ export type ControllerNVMPropertyTypes = Expand<
 		pendingDiscovery: number[];
 		virtualNodeIds: number[];
 		nodeIds: number[];
-	}
-	// 700+ series only
-	& Partial<{
-		applicationFileFormat: number;
-		applicationName: string;
-		lrNodeIds: number[];
-	}>
-	// 500 series only
-	& Partial<{
-		learnedHomeId: BytesView;
-		commandClasses: CommandClasses[];
-		systemState: number;
-		watchdogStarted: number;
-		powerLevelNormal: number[];
-		powerLevelLow: number[];
-		powerMode: number;
-		powerModeExtintEnable: number;
-		powerModeWutTimeout: number;
-	}>
-	& Pick<
-		ControllerInfoFile,
-		| "homeId"
-		| "nodeId"
-		| "lastNodeId"
-		| "staticControllerNodeId"
-		| "sucLastIndex"
-		| "controllerConfiguration"
-		| "sucAwarenessPushNeeded"
-		| "maxNodeId"
-		| "reservedId"
-		| "systemState"
-		| "lastNodeIdLR"
-		| "maxNodeIdLR"
-		| "reservedIdLR"
-		| "primaryLongRangeChannelId"
-		| "dcdcConfig"
-	>
-	// 700+ series only
-	& Partial<
+	} &
+		// 700+ series only
+		Partial<{
+			applicationFileFormat: number;
+			applicationName: string;
+			lrNodeIds: number[];
+		}> &
+		// 500 series only
+		Partial<{
+			learnedHomeId: BytesView;
+			commandClasses: CommandClasses[];
+			systemState: number;
+			watchdogStarted: number;
+			powerLevelNormal: number[];
+			powerLevelLow: number[];
+			powerMode: number;
+			powerModeExtintEnable: number;
+			powerModeWutTimeout: number;
+		}> &
 		Pick<
-			ApplicationCCsFile,
-			| "includedInsecurely"
-			| "includedSecurelyInsecureCCs"
-			| "includedSecurelySecureCCs"
+			ControllerInfoFile,
+			| "homeId"
+			| "nodeId"
+			| "lastNodeId"
+			| "staticControllerNodeId"
+			| "sucLastIndex"
+			| "controllerConfiguration"
+			| "sucAwarenessPushNeeded"
+			| "maxNodeId"
+			| "reservedId"
+			| "systemState"
+			| "lastNodeIdLR"
+			| "maxNodeIdLR"
+			| "reservedIdLR"
+			| "primaryLongRangeChannelId"
+			| "dcdcConfig"
+		> &
+		// 700+ series only
+		Partial<
+			Pick<
+				ApplicationCCsFile,
+				| "includedInsecurely"
+				| "includedSecurelyInsecureCCs"
+				| "includedSecurelySecureCCs"
+			>
+		> &
+		// 700+ series only
+		Partial<
+			Pick<
+				ApplicationRFConfigFile,
+				| "rfRegion"
+				| "txPower"
+				| "measured0dBm"
+				| "enablePTI"
+				| "maxTXPower"
+				| "nodeIdType"
+			>
+		> &
+		// 700+ series only
+		Partial<
+			Pick<
+				ApplicationTypeFile,
+				| "isListening"
+				| "optionalFunctionality"
+				| "genericDeviceClass"
+				| "specificDeviceClass"
+			>
 		>
-	>
-	// 700+ series only
-	& Partial<
-		Pick<
-			ApplicationRFConfigFile,
-			| "rfRegion"
-			| "txPower"
-			| "measured0dBm"
-			| "enablePTI"
-			| "maxTXPower"
-			| "nodeIdType"
-		>
-	>
-	// 700+ series only
-	& Partial<
-		Pick<
-			ApplicationTypeFile,
-			| "isListening"
-			| "optionalFunctionality"
-			| "genericDeviceClass"
-			| "specificDeviceClass"
-		>
-	>
 >;
 
 export interface NodeNVMPropertyTypes {
@@ -239,8 +242,11 @@ export type NVMProperty =
 	| NodeNVMProperty
 	| LRNodeNVMProperty;
 
-export type NVMPropertyToDataType<P extends NVMProperty> = P extends
-	ControllerNVMProperty ? ControllerNVMPropertyToDataType<P>
-	: P extends NodeNVMProperty ? NodeNVMPropertyToDataType<P>
-	: P extends LRNodeNVMProperty ? LRNodeNVMPropertyToDataType<P>
-	: never;
+export type NVMPropertyToDataType<P extends NVMProperty> =
+	P extends ControllerNVMProperty
+		? ControllerNVMPropertyToDataType<P>
+		: P extends NodeNVMProperty
+			? NodeNVMPropertyToDataType<P>
+			: P extends LRNodeNVMProperty
+				? LRNodeNVMPropertyToDataType<P>
+				: never;

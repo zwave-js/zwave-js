@@ -9,6 +9,7 @@ import {
 	ccCaps,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -79,8 +80,8 @@ integrationTest(
 			}>((resolve) => {
 				node.on("value updated", (node, args) => {
 					if (
-						args.commandClass === CommandClasses.Configuration
-						&& args.property === 2
+						args.commandClass === CommandClasses.Configuration &&
+						args.property === 2
 					) {
 						resolve({
 							prevValue: args.prevValue as number,

@@ -15,8 +15,7 @@ async function main(param) {
 
 	let feedbackText;
 	if (process.env.FEEDBACK === "error") {
-		feedbackText =
-			`❌ I tried my best, but unfortunately this branch cannot be rebased automatically.`;
+		feedbackText = `❌ I tried my best, but unfortunately this branch cannot be rebased automatically.`;
 	} else {
 		return;
 	}

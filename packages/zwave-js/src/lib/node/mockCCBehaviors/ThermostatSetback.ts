@@ -25,14 +25,10 @@ const respondToThermostatSetbackSet: MockNodeBehavior = {
 const respondToThermostatSetbackGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof ThermostatSetbackCCGet) {
-			const setbackType = (
-				self.state.get(StateKeys.setbackType)
-					?? SetbackType.None
-			) as SetbackType;
-			const setbackState = (
-				self.state.get(StateKeys.setbackState)
-					?? "Unused"
-			) as SetbackState;
+			const setbackType = (self.state.get(StateKeys.setbackType) ??
+				SetbackType.None) as SetbackType;
+			const setbackState = (self.state.get(StateKeys.setbackState) ??
+				"Unused") as SetbackState;
 
 			const cc = new ThermostatSetbackCCReport({
 				nodeId: controller.ownNodeId,

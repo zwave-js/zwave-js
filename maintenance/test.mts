@@ -1,10 +1,11 @@
 // Test runner that automatically chooses which workspace to run tests in
 
-import { execa } from "execa";
 import path from "node:path";
-import { readJSON } from "../packages/shared/src/fs";
-
 import { fileURLToPath } from "node:url";
+
+import { execa } from "execa";
+
+import { readJSON } from "../packages/shared/src/fs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const repoRoot = path.join(__dirname, "..");
@@ -51,16 +52,14 @@ async function runFiles() {
 		const workspaceName = packageJson.name;
 
 		try {
-			await execa("yarn", [
-				"workspace",
-				workspaceName,
-				"run",
-				"test:ts",
-				...filenames,
-			], {
-				cwd: repoRoot,
-				stdio: "inherit",
-			});
+			await execa(
+				"yarn",
+				["workspace", workspaceName, "run", "test:ts", ...filenames],
+				{
+					cwd: repoRoot,
+					stdio: "inherit",
+				},
+			);
 		} catch {
 			hasErrors = true;
 		}

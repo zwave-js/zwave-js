@@ -6,7 +6,9 @@ import {
 } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
+
 import { cacheKeys } from "../../driver/NetworkCache.js";
+
 import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
 
 export interface NodeDeviceConfig {
@@ -47,7 +49,8 @@ export interface NodeDeviceConfig {
 	get currentDeviceConfigHash(): BytesView | undefined;
 }
 
-export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
+export abstract class DeviceConfigMixin
+	extends FirmwareUpdateMixin
 	implements NodeDeviceConfig
 {
 	private _deviceConfig: DeviceConfig | undefined;
@@ -81,9 +84,9 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 
 	public get deviceDatabaseUrl(): MaybeNotKnown<string> {
 		if (
-			this.manufacturerId != undefined
-			&& this.productType != undefined
-			&& this.productId != undefined
+			this.manufacturerId != undefined &&
+			this.productType != undefined &&
+			this.productId != undefined
 		) {
 			const manufacturerId = formatId(this.manufacturerId);
 			const productType = formatId(this.productType);
@@ -150,9 +153,9 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 	protected async loadDeviceConfig(): Promise<void> {
 		// But the configuration definitions might change
 		if (
-			this.manufacturerId == undefined
-			|| this.productType == undefined
-			|| this.productId == undefined
+			this.manufacturerId == undefined ||
+			this.productType == undefined ||
+			this.productId == undefined
 		) {
 			return;
 		}
@@ -188,28 +191,24 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 		// New "hashes" are variable length, contain a condensed version of the device config and are prefixed with a version number.
 
 		const versionPrefix = Bytes.from("$v", "utf8");
-		const hasVersionPrefix = !!this.cachedDeviceConfigHash
-			&& Bytes
-				.view(this.cachedDeviceConfigHash.subarray(0, 2))
-				.equals(versionPrefix);
+		const hasVersionPrefix =
+			!!this.cachedDeviceConfigHash &&
+			Bytes.view(this.cachedDeviceConfigHash.subarray(0, 2)).equals(
+				versionPrefix,
+			);
 		let cachedHashVersion: number | undefined;
 
-		if (
-			this.cachedDeviceConfigHash?.length === 16
-			&& !hasVersionPrefix
-		) {
+		if (this.cachedDeviceConfigHash?.length === 16 && !hasVersionPrefix) {
 			// MD5 = version 0
 			cachedHashVersion = 0;
-			this._currentDeviceConfigHash = await this.deviceConfig
-				.getHash(0);
+			this._currentDeviceConfigHash = await this.deviceConfig.getHash(0);
 		} else if (
-			this.cachedDeviceConfigHash?.length === 32
-			&& !hasVersionPrefix
+			this.cachedDeviceConfigHash?.length === 32 &&
+			!hasVersionPrefix
 		) {
 			// SHA-256 = version 1
 			cachedHashVersion = 1;
-			this._currentDeviceConfigHash = await this.deviceConfig
-				.getHash(1);
+			this._currentDeviceConfigHash = await this.deviceConfig.getHash(1);
 		} else {
 			// Variable length prefixed hash - determine the hash version from the cache
 			if (this.cachedDeviceConfigHash) {
@@ -242,8 +241,8 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 		// since then.
 		if (this.interviewStage === InterviewStage.Complete) {
 			if (
-				cachedHashVersion < DeviceConfig.maxHashVersion
-				&& this.hasDeviceConfigChanged() === false
+				cachedHashVersion < DeviceConfig.maxHashVersion &&
+				this.hasDeviceConfigChanged() === false
 			) {
 				this.cachedDeviceConfigHash = await this.deviceConfig.getHash();
 				// Also update the current hash to the new version, in case
@@ -264,9 +263,7 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 		this.driver.controllerLog.logNode(
 			this.id,
 			`${
-				this.deviceConfig.isEmbedded
-					? "Embedded"
-					: "User-provided"
+				this.deviceConfig.isEmbedded ? "Embedded" : "User-provided"
 			} device config loaded`,
 		);
 	}

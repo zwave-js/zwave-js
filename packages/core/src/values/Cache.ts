@@ -5,6 +5,7 @@ import {
 	uint8ArrayToHex,
 } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { Duration } from "./Duration.js";
 import type { ValueMetadata } from "./Metadata.js";
 import { Timeout } from "./Timeout.js";
@@ -18,15 +19,17 @@ export type SerializedValue =
 	| JSONObject
 	| undefined;
 
-export interface CacheValue
-	extends Pick<ValueID, "endpoint" | "property" | "propertyKey">
-{
+export interface CacheValue extends Pick<
+	ValueID,
+	"endpoint" | "property" | "propertyKey"
+> {
 	value: SerializedValue;
 }
 
-export interface CacheMetadata
-	extends Pick<ValueID, "endpoint" | "property" | "propertyKey">
-{
+export interface CacheMetadata extends Pick<
+	ValueID,
+	"endpoint" | "property" | "propertyKey"
+> {
 	metadata: ValueMetadata;
 }
 
@@ -67,11 +70,11 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 			data: uint8ArrayToHex(value),
 		};
 	} else if (
-		typeof value === "number"
-		|| typeof value === "string"
-		|| typeof value === "boolean"
-		|| isObject(value)
-		|| isArray(value)
+		typeof value === "number" ||
+		typeof value === "string" ||
+		typeof value === "boolean" ||
+		isObject(value) ||
+		isArray(value)
 	) {
 		return value;
 	}

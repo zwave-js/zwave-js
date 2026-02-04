@@ -1,4 +1,5 @@
 import { test as baseTest } from "vitest";
+
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
 
@@ -32,7 +33,10 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("the automatically created callback ID should be incremented and wrap from 0xff back to 1", ({ context, expect }) => {
+test("the automatically created callback ID should be incremented and wrap from 0xff back to 1", ({
+	context,
+	expect,
+}) => {
 	const { driver } = context;
 	let lastCallbackId: number | undefined;
 	for (let i = 0; i <= 300; i++) {

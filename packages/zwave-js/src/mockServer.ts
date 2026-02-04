@@ -1,3 +1,5 @@
+import { type AddressInfo, type Server, createServer } from "node:net";
+
 import {
 	type CiaoService,
 	Protocol,
@@ -46,7 +48,7 @@ import {
 	getDefaultMockNodeCapabilities,
 } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
-import { type AddressInfo, type Server, createServer } from "node:net";
+
 import {
 	createDefaultMockControllerBehaviors,
 	createDefaultMockNodeBehaviors,
@@ -54,23 +56,19 @@ import {
 import { ProtocolVersion } from "./Utils.js";
 import type { CommandClassDump, NodeDump } from "./lib/node/Dump.js";
 
-export type MockServerControllerOptions =
-	& Pick<
-		MockControllerOptions,
-		"ownNodeId" | "homeId" | "capabilities"
-	>
-	& {
-		behaviors?: MockControllerBehavior[];
-	};
+export type MockServerControllerOptions = Pick<
+	MockControllerOptions,
+	"ownNodeId" | "homeId" | "capabilities"
+> & {
+	behaviors?: MockControllerBehavior[];
+};
 
-export type MockServerNodeOptions =
-	& Pick<
-		MockNodeOptions,
-		"id" | "capabilities"
-	>
-	& {
-		behaviors?: MockNodeBehavior[];
-	};
+export type MockServerNodeOptions = Pick<
+	MockNodeOptions,
+	"id" | "capabilities"
+> & {
+	behaviors?: MockNodeBehavior[];
+};
 
 export type MockServerInitHook = (
 	controller: MockController,
@@ -201,14 +199,12 @@ export class MockServer {
 				// Advertise the service via mDNS
 				try {
 					await this.service!.advertise();
-					console.log(
-						`Enabled mDNS service discovery.`,
-					);
+					console.log(`Enabled mDNS service discovery.`);
 				} catch (e) {
 					console.error(
-						`Failed to enable mDNS service discovery: ${
-							getErrorMessage(e)
-						}`,
+						`Failed to enable mDNS service discovery: ${getErrorMessage(
+							e,
+						)}`,
 					);
 				}
 			},
@@ -299,8 +295,9 @@ export function createMockNodeOptionsFromDump(
 		ret.capabilities.supportedDataRates = dump.supportedDataRates;
 	}
 	if ((ProtocolVersion as any)[dump.protocol] !== undefined) {
-		ret.capabilities.protocolVersion =
-			(ProtocolVersion as any)[dump.protocol];
+		ret.capabilities.protocolVersion = (ProtocolVersion as any)[
+			dump.protocol
+		];
 	}
 
 	if (dump.deviceClass !== "unknown") {
@@ -322,8 +319,8 @@ export function createMockNodeOptionsFromDump(
 		if (ccId == undefined) continue;
 		// FIXME: Security encapsulation is not supported yet in mocks
 		if (
-			ccId === CommandClasses.Security
-			|| ccId === CommandClasses["Security 2"]
+			ccId === CommandClasses.Security ||
+			ccId === CommandClasses["Security 2"]
 		) {
 			continue;
 		}
@@ -360,25 +357,21 @@ export function createMockNodeOptionsFromDump(
 					endpointDump.deviceClass.specific.key;
 			}
 
-			for (
-				const [ccName, ccDump] of Object.entries(
-					endpointDump.commandClasses,
-				)
-			) {
+			for (const [ccName, ccDump] of Object.entries(
+				endpointDump.commandClasses,
+			)) {
 				const ccId = (CommandClasses as any)[ccName];
 				if (ccId == undefined) continue;
 				// FIXME: Security encapsulation is not supported yet in mocks
 				if (
-					ccId === CommandClasses.Security
-					|| ccId === CommandClasses["Security 2"]
+					ccId === CommandClasses.Security ||
+					ccId === CommandClasses["Security 2"]
 				) {
 					continue;
 				}
 
 				epCCs ??= [];
-				epCCs.push(
-					createCCCapabilitiesFromDump(ccId, ccDump),
-				);
+				epCCs.push(createCCCapabilitiesFromDump(ccId, ccDump));
 			}
 
 			ret.capabilities.endpoints ??= [];
@@ -552,11 +545,9 @@ function createSoundSwitchCCCapabilitiesFromDump(
 	);
 
 	if (tonesMetadata?.states) {
-		for (
-			const [toneIdStr, nameAndDuration] of Object.entries(
-				tonesMetadata.states,
-			)
-		) {
+		for (const [toneIdStr, nameAndDuration] of Object.entries(
+			tonesMetadata.states,
+		)) {
 			const toneId = parseInt(toneIdStr);
 			if (Number.isNaN(toneId) || toneId < 1 || toneId > 0xfe) continue;
 
@@ -584,11 +575,12 @@ function findDumpedValue<T>(
 	defaultValue: T,
 ): T {
 	return (
-		dump.values.find((id) =>
-			id.property === valueId.property
-			&& id.propertyKey === valueId.propertyKey
-		)?.value
-	) as (T | undefined) ?? defaultValue;
+		(dump.values.find(
+			(id) =>
+				id.property === valueId.property &&
+				id.propertyKey === valueId.propertyKey,
+		)?.value as T | undefined) ?? defaultValue
+	);
 }
 
 function findDumpedMetadata<T extends ValueMetadata>(
@@ -596,10 +588,9 @@ function findDumpedMetadata<T extends ValueMetadata>(
 	commandClass: CommandClasses,
 	valueId: ValueID,
 ): T | undefined {
-	return (
-		dump.values.find((id) =>
-			id.property === valueId.property
-			&& id.propertyKey === valueId.propertyKey
-		)?.metadata as (T | undefined)
-	);
+	return dump.values.find(
+		(id) =>
+			id.property === valueId.property &&
+			id.propertyKey === valueId.propertyKey,
+	)?.metadata as T | undefined;
 }

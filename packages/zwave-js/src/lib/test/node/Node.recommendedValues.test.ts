@@ -1,6 +1,8 @@
-import { CommandClasses } from "@zwave-js/core";
 import path from "node:path";
+
+import { CommandClasses } from "@zwave-js/core";
 import type { TestContext } from "vitest";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Structure for property expectations
@@ -65,17 +67,18 @@ async function verifyPropertiesMatchExpectedValues(
 		const value = await node.getValue(valueId);
 
 		const paramName = bitMask
-			? `Parameter ${property}[0x${
-				bitMask.toString(16).toUpperCase().padStart(2, "0")
-			}]`
+			? `Parameter ${property}[0x${bitMask
+					.toString(16)
+					.toUpperCase()
+					.padStart(2, "0")}]`
 			: `Parameter ${property}`;
 
 		// Add descriptive message that shows what we're testing
 		t.expect(
 			value,
-			`${paramName} should have value ${expected} but got ${
-				String(value)
-			}`,
+			`${paramName} should have value ${expected} but got ${String(
+				value,
+			)}`,
 		).toBe(expected);
 	}
 }

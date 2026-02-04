@@ -5,10 +5,12 @@ export enum ZnifferSerialFrameType {
 	Discarded = 0xff,
 }
 
-export type ZnifferSerialFrame = {
-	type: ZnifferSerialFrameType.SerialAPI;
-	data: Bytes;
-} | {
-	type: ZnifferSerialFrameType.Discarded;
-	data: BytesView;
-};
+export type ZnifferSerialFrame =
+	| {
+			type: ZnifferSerialFrameType.SerialAPI;
+			data: Bytes;
+	  }
+	| {
+			type: ZnifferSerialFrameType.Discarded;
+			data: BytesView;
+	  };

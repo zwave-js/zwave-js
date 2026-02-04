@@ -1,4 +1,5 @@
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import type { NVMAccess, NVMIO } from "../common/definitions.js";
 
 interface BufferedChunk {
@@ -34,8 +35,8 @@ export class BufferedNVMReader implements NVMIO {
 		alignedOffset: number,
 		chunkSize: number,
 	): Promise<BytesView> {
-		let buffered = this._buffer.find((chunk) =>
-			chunk.offset === alignedOffset
+		let buffered = this._buffer.find(
+			(chunk) => chunk.offset === alignedOffset,
 		);
 		if (!buffered) {
 			const { buffer: data } = await this._inner.read(
@@ -57,9 +58,9 @@ export class BufferedNVMReader implements NVMIO {
 		length = Math.min(length, chunkSize);
 
 		// Figure out at which offsets to read
-		const firstChunkStart = offset - offset % chunkSize;
-		const secondChunkStart = (offset + length)
-			- (offset + length) % chunkSize;
+		const firstChunkStart = offset - (offset % chunkSize);
+		const secondChunkStart =
+			offset + length - ((offset + length) % chunkSize);
 
 		// Read one or two chunks, depending on how many are needed
 		const chunks: BytesView[] = [];
@@ -91,9 +92,11 @@ export class BufferedNVMReader implements NVMIO {
 		// Invalidate cached chunks
 		const chunkSize = await this.determineChunkSize();
 		// Figure out at which offsets to read
-		const firstChunkStart = offset - offset % chunkSize;
-		const lastChunkStart = (offset + ret.bytesWritten)
-			- (offset + ret.bytesWritten) % chunkSize;
+		const firstChunkStart = offset - (offset % chunkSize);
+		const lastChunkStart =
+			offset +
+			ret.bytesWritten -
+			((offset + ret.bytesWritten) % chunkSize);
 
 		// TODO: We should update existing chunks where possible
 		for (let i = firstChunkStart; i <= lastChunkStart; i += chunkSize) {

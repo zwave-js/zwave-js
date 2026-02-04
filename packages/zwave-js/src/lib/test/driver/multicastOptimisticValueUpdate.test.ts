@@ -9,6 +9,7 @@ import {
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuiteMulti.js";
 
 // Regression test for #5844
@@ -18,8 +19,8 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	...getDefaultMockControllerCapabilities(),
 	supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
 		(ft) =>
-			ft !== FunctionType.SendDataBridge
-			&& ft !== FunctionType.SendDataMulticastBridge,
+			ft !== FunctionType.SendDataBridge &&
+			ft !== FunctionType.SendDataMulticastBridge,
 	),
 };
 
@@ -68,12 +69,12 @@ integrationTest("multicast setValue: do optimistic value update after ACK", {
 		t.expect(node3.getValue(BinarySwitchCCValues.targetValue.id)).toBe(
 			NOT_KNOWN,
 		);
-		t.expect(
-			node2.getValue(BinarySwitchCCValues.currentValue.id),
-		).toBe(UNKNOWN_STATE);
-		t.expect(
-			node3.getValue(BinarySwitchCCValues.currentValue.id),
-		).toBe(UNKNOWN_STATE);
+		t.expect(node2.getValue(BinarySwitchCCValues.currentValue.id)).toBe(
+			UNKNOWN_STATE,
+		);
+		t.expect(node3.getValue(BinarySwitchCCValues.currentValue.id)).toBe(
+			UNKNOWN_STATE,
+		);
 
 		const mcGroup = driver.controller.getMulticastGroup([2, 3]);
 
@@ -82,11 +83,10 @@ integrationTest("multicast setValue: do optimistic value update after ACK", {
 		for (const mockNode of mockNodes) {
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof BinarySwitchCCSet,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof BinarySwitchCCSet,
 				{
-					errorMessage:
-						`Node ${mockNode.id} should have received a BinarySwitchCCSet`,
+					errorMessage: `Node ${mockNode.id} should have received a BinarySwitchCCSet`,
 				},
 			);
 		}

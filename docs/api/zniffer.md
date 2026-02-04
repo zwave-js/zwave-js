@@ -131,8 +131,10 @@ await zniffer.saveCaptureToFile("/path/to/file.zlf", (frame) => {
 });
 await zniffer.getCaptureAsZLFBuffer((frame) => {
 	// Only include ZWLR frames
-	return "protocol" in f.parsedFrame
-		&& f.parsedFrame.protocol === Protocols.ZWaveLongRange;
+	return (
+		"protocol" in f.parsedFrame &&
+		f.parsedFrame.protocol === Protocols.ZWaveLongRange
+	);
 });
 ```
 
@@ -217,10 +219,7 @@ A valid frame can either be a Z-Wave frame or a Z-Wave Long Range frame, either 
 <!-- #import Frame from "zwave-js" -->
 
 ```ts
-type Frame =
-	| ZWaveFrame
-	| LongRangeFrame
-	| BeamFrame;
+type Frame = ZWaveFrame | LongRangeFrame | BeamFrame;
 ```
 
 ...all of which have several subtypes:
@@ -230,7 +229,7 @@ type Frame =
 ```ts
 type ZWaveFrame =
 	// Common fields for all Z-Wave frames
-	& {
+	{
 		protocol: Protocols.ZWave;
 
 		channel: number;
@@ -245,93 +244,91 @@ type ZWaveFrame =
 
 		homeId: number;
 		sourceNodeId: number;
-	}
-	// Different kinds of Z-Wave frames:
-	& (
-		| (
-			// Singlecast frame, either routed or not
-			& {
-				type: ZWaveFrameType.Singlecast;
-				destinationNodeId: number;
-				ackRequested: boolean;
-				payload: BytesView | CommandClass;
-			}
-			// Only present in routed frames:
-			& AllOrNone<
-				& {
-					direction: "outbound" | "inbound";
-					hop: number;
-					repeaters: number[];
-					repeaterRSSI?: RSSI[];
-				}
-				// Different kinds of routed frames:
-				& (
-					// Normal frame
-					| {
-						routedAck: false;
-						routedError: false;
-						failedHop?: undefined;
-					}
-					// Routed acknowledgement
-					| {
-						routedAck: true;
-						routedError: false;
-						failedHop?: undefined;
-					}
-					// Routed error
-					| {
-						routedAck: false;
-						routedError: true;
-						failedHop: number;
-					}
-				)
-			>
-		)
-		// Broadcast frame. This is technically a singlecast frame,
-		// but the destination node ID is always 255 and it is not routed
-		| {
-			type: ZWaveFrameType.Broadcast;
-			destinationNodeId: typeof NODE_ID_BROADCAST;
-			ackRequested: boolean;
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Multicast frame, not routed
-			type: ZWaveFrameType.Multicast;
-			destinationNodeIds: number[];
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Ack frame, not routed
-			type: ZWaveFrameType.AckDirect;
-			destinationNodeId: number;
-		}
-		| (
+	} &
+		// Different kinds of Z-Wave frames:
+		(| // Singlecast frame, either routed or not
+			({
+					type: ZWaveFrameType.Singlecast;
+					destinationNodeId: number;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  } &
+					// Only present in routed frames:
+					AllOrNone<
+						{
+							direction: "outbound" | "inbound";
+							hop: number;
+							repeaters: number[];
+							repeaterRSSI?: RSSI[];
+						} &
+							// Different kinds of routed frames:
+							// Normal frame
+							(| {
+										routedAck: false;
+										routedError: false;
+										failedHop?: undefined;
+								  }
+								// Routed acknowledgement
+								| {
+										routedAck: true;
+										routedError: false;
+										failedHop?: undefined;
+								  }
+								// Routed error
+								| {
+										routedAck: false;
+										routedError: true;
+										failedHop: number;
+								  }
+							)
+					>)
+			// Broadcast frame. This is technically a singlecast frame,
+			// but the destination node ID is always 255 and it is not routed
+			| {
+					type: ZWaveFrameType.Broadcast;
+					destinationNodeId: typeof NODE_ID_BROADCAST;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Multicast frame, not routed
+					type: ZWaveFrameType.Multicast;
+					destinationNodeIds: number[];
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Ack frame, not routed
+					type: ZWaveFrameType.AckDirect;
+					destinationNodeId: number;
+			  }
 			// Different kind of explorer frames
-			& ({
-				type: ZWaveFrameType.ExplorerNormal;
-				payload: BytesView | CommandClass;
-			} | {
-				type: ZWaveFrameType.ExplorerSearchResult;
-				searchingNodeId: number;
-				frameHandle: number;
-				resultTTL: number;
-				resultRepeaters: readonly number[];
-			} | {
-				type: ZWaveFrameType.ExplorerInclusionRequest;
-				networkHomeId: number;
-				payload: BytesView | CommandClass;
-			})
-			// Common fields for all explorer frames
-			& {
-				destinationNodeId: number;
-				ackRequested: boolean;
-				direction: "outbound" | "inbound";
-				repeaters: number[];
-				ttl: number;
-			}
-		)
-	);
+			| ((
+					| {
+							type: ZWaveFrameType.ExplorerNormal;
+							payload: BytesView | CommandClass;
+					  }
+					| {
+							type: ZWaveFrameType.ExplorerSearchResult;
+							searchingNodeId: number;
+							frameHandle: number;
+							resultTTL: number;
+							resultRepeaters: readonly number[];
+					  }
+					| {
+							type: ZWaveFrameType.ExplorerInclusionRequest;
+							networkHomeId: number;
+							payload: BytesView | CommandClass;
+					  }
+			  ) &
+					// Common fields for all explorer frames
+					{
+						destinationNodeId: number;
+						ackRequested: boolean;
+						direction: "outbound" | "inbound";
+						repeaters: number[];
+						ttl: number;
+					})
+		);
 ```
 
 <!-- #import LongRangeFrame from "zwave-js" -->
@@ -339,7 +336,7 @@ type ZWaveFrame =
 ```ts
 type LongRangeFrame =
 	// Common fields for all Long Range frames
-	& {
+	{
 		protocol: Protocols.ZWaveLongRange;
 
 		channel: number;
@@ -356,30 +353,29 @@ type LongRangeFrame =
 		homeId: number;
 		sourceNodeId: number;
 		destinationNodeId: number;
-	}
-	// Different kinds of Long Range frames:
-	& (
-		| {
-			// Singlecast frame
-			type: LongRangeFrameType.Singlecast;
-			ackRequested: boolean;
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Broadcast frame. This is technically a singlecast frame,
-			// but the destination node ID is always 4095
-			type: LongRangeFrameType.Broadcast;
-			destinationNodeId: typeof NODE_ID_BROADCAST_LR;
-			ackRequested: boolean;
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Acknowledgement frame
-			type: LongRangeFrameType.Ack;
-			incomingRSSI: RSSI;
-			payload: BytesView;
-		}
-	);
+	} &
+		// Different kinds of Long Range frames:
+		(| {
+					// Singlecast frame
+					type: LongRangeFrameType.Singlecast;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Broadcast frame. This is technically a singlecast frame,
+					// but the destination node ID is always 4095
+					type: LongRangeFrameType.Broadcast;
+					destinationNodeId: typeof NODE_ID_BROADCAST_LR;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Acknowledgement frame
+					type: LongRangeFrameType.Ack;
+					incomingRSSI: RSSI;
+					payload: BytesView;
+			  }
+		);
 ```
 
 <!-- #import BeamFrame from "zwave-js" -->
@@ -387,50 +383,49 @@ type LongRangeFrame =
 ```ts
 type BeamFrame =
 	// Common fields for all Beam frames
-	& {
+	{
 		channel: number;
-	}
-	// Different types of beam frames:
-	& (
-		| {
-			// Z-Wave Classic
-			protocol: Protocols.ZWave;
-			type: ZWaveFrameType.BeamStart;
+	} &
+		// Different types of beam frames:
+		(| {
+					// Z-Wave Classic
+					protocol: Protocols.ZWave;
+					type: ZWaveFrameType.BeamStart;
 
-			protocolDataRate: ZnifferProtocolDataRate;
-			rssiRaw: number;
-			rssi?: RSSI;
-			region: ZnifferRegion;
+					protocolDataRate: ZnifferProtocolDataRate;
+					rssiRaw: number;
+					rssi?: RSSI;
+					region: ZnifferRegion;
 
-			homeIdHash?: number;
-			destinationNodeId: number;
-		}
-		| {
-			// Z-Wave Long Range
-			protocol: Protocols.ZWaveLongRange;
-			type: LongRangeFrameType.BeamStart;
+					homeIdHash?: number;
+					destinationNodeId: number;
+			  }
+			| {
+					// Z-Wave Long Range
+					protocol: Protocols.ZWaveLongRange;
+					type: LongRangeFrameType.BeamStart;
 
-			protocolDataRate: ZnifferProtocolDataRate;
-			rssiRaw: number;
-			rssi?: RSSI;
-			region: ZnifferRegion;
+					protocolDataRate: ZnifferProtocolDataRate;
+					rssiRaw: number;
+					rssi?: RSSI;
+					region: ZnifferRegion;
 
-			txPower: number;
-			homeIdHash: number;
-			destinationNodeId: number;
-		}
-		// The Zniffer sends the same command for the beam ending for both
-		// Z-Wave Classic and Long Range. To make testing the frame type more
-		// consistent with the other frames, two different values are used
-		| {
-			protocol: Protocols.ZWave;
-			type: ZWaveFrameType.BeamStop;
-		}
-		| {
-			protocol: Protocols.ZWaveLongRange;
-			type: LongRangeFrameType.BeamStop;
-		}
-	);
+					txPower: number;
+					homeIdHash: number;
+					destinationNodeId: number;
+			  }
+			// The Zniffer sends the same command for the beam ending for both
+			// Z-Wave Classic and Long Range. To make testing the frame type more
+			// consistent with the other frames, two different values are used
+			| {
+					protocol: Protocols.ZWave;
+					type: ZWaveFrameType.BeamStop;
+			  }
+			| {
+					protocol: Protocols.ZWaveLongRange;
+					type: LongRangeFrameType.BeamStop;
+			  }
+		);
 ```
 
 ## Type definitions

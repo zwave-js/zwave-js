@@ -54,9 +54,7 @@ function testAssignSUCReturnRouteCallback(
 
 @expectedResponse(FunctionType.AssignSUCReturnRoute)
 @expectedCallback(testAssignSUCReturnRouteCallback)
-export class AssignSUCReturnRouteRequest
-	extends AssignSUCReturnRouteRequestBase
-{
+export class AssignSUCReturnRouteRequest extends AssignSUCReturnRouteRequestBase {
 	public constructor(
 		options: AssignSUCReturnRouteRequestOptions & MessageBaseOptions,
 	) {
@@ -96,7 +94,8 @@ export interface AssignSUCReturnRouteResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.AssignSUCReturnRoute)
-export class AssignSUCReturnRouteResponse extends Message
+export class AssignSUCReturnRouteResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -145,9 +144,8 @@ export class AssignSUCReturnRouteRequestTransmitReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& AssignSUCReturnRouteRequestTransmitReportOptions
-			& MessageBaseOptions,
+		options: AssignSUCReturnRouteRequestTransmitReportOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 

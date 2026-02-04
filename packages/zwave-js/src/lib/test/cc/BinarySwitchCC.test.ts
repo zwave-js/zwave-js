@@ -30,9 +30,7 @@ test("the Get command should serialize correctly", async (t) => {
 			BinarySwitchCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should serialize correctly (no duration)", async (t) => {
@@ -86,10 +84,9 @@ test("the Report command (v1) should be deserialized correctly", async (t) => {
 			0xff, // current value
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as BinarySwitchCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as BinarySwitchCCReport;
 	t.expect(cc.constructor).toBe(BinarySwitchCCReport);
 
 	t.expect(cc.currentValue).toBe(true);
@@ -106,10 +103,9 @@ test("the Report command (v2) should be deserialized correctly", async (t) => {
 			1, // duration
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as BinarySwitchCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as BinarySwitchCCReport;
 	t.expect(cc.constructor).toBe(BinarySwitchCCReport);
 
 	t.expect(cc.currentValue).toBe(true);
@@ -122,10 +118,9 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 2 } as any,
-	) as BinarySwitchCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 2,
+	} as any)) as BinarySwitchCC;
 	t.expect(cc.constructor).toBe(BinarySwitchCC);
 });
 

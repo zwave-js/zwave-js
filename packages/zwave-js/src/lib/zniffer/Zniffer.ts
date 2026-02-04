@@ -87,8 +87,10 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
+
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ZnifferLogger } from "../log/Zniffer.js";
+
 import {
 	BeamStop,
 	type CorruptedFrame,
@@ -181,9 +183,7 @@ export interface ZnifferOptions {
 	maxCapturedFrames?: number;
 }
 
-function is700PlusSeries(
-	chipType: string | UnknownZWaveChipType,
-): boolean {
+function is700PlusSeries(chipType: string | UnknownZWaveChipType): boolean {
 	if (typeof chipType !== "string") {
 		return chipType.type >= 0x07;
 	}
@@ -235,8 +235,8 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 
 		// Ensure the given serial port is valid
 		if (
-			typeof port !== "string"
-			&& !isZWaveSerialPortImplementation(port)
+			typeof port !== "string" &&
+			!isZWaveSerialPortImplementation(port)
 		) {
 			throw new ZWaveError(
 				`The port must be a string or a valid custom serial port implementation!`,
@@ -308,12 +308,7 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 	 * The host bindings used to access file system etc.
 	 */
 	// This is set during `init()` and should not be accessed before
-	private bindings!: Omit<
-		Required<
-			NonNullable<ZWaveOptions["host"]>
-		>,
-		"db"
-	>;
+	private bindings!: Omit<Required<NonNullable<ZWaveOptions["host"]>>, "db">;
 
 	private serialFactory: ZnifferSerialStreamFactory | undefined;
 	/** The serial port instance */
@@ -367,11 +362,14 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 	private znifferLog!: ZnifferLogger;
 
 	/** The security managers for each node */
-	private securityManagers: Map<number, {
-		securityManager: SecurityManager | undefined;
-		securityManager2: SecurityManager2 | undefined;
-		securityManagerLR: SecurityManager2 | undefined;
-	}> = new Map();
+	private securityManagers: Map<
+		number,
+		{
+			securityManager: SecurityManager | undefined;
+			securityManager2: SecurityManager2 | undefined;
+			securityManagerLR: SecurityManager2 | undefined;
+		}
+	> = new Map();
 
 	/** A list of awaited messages */
 	private awaitedMessages: AwaitedMessageEntry[] = [];
@@ -386,7 +384,8 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 
 	/** A list of raw captured frames that can be saved to a .zlf file later */
 	public get capturedFrames(): Readonly<CapturedFrame>[] {
-		return this._capturedFrames.filter((f) => f.parsedFrame !== undefined)
+		return this._capturedFrames
+			.filter((f) => f.parsedFrame !== undefined)
 			.map((f) => ({
 				timestamp: f.timestamp,
 				frameData: f.frameData,
@@ -405,12 +404,15 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		// Populate default bindings. This has to happen asynchronously, so the driver does not have a hard dependency
 		// on Node.js internals
 		this.bindings = {
-			fs: this._options.host?.fs
-				?? (await import("#default_bindings/fs")).fs,
-			serial: this._options.host?.serial
-				?? (await import("#default_bindings/serial")).serial,
-			log: this._options.host?.log
-				?? (await import("#default_bindings/log")).log,
+			fs:
+				this._options.host?.fs ??
+				(await import("#default_bindings/fs")).fs,
+			serial:
+				this._options.host?.serial ??
+				(await import("#default_bindings/serial")).serial,
+			log:
+				this._options.host?.log ??
+				(await import("#default_bindings/log")).log,
 		};
 
 		// Initialize logging
@@ -465,12 +467,12 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		this.znifferLog.print(
 			`received Zniffer info:
   Chip type:       ${
-				typeof versionInfo.chipType === "string"
-					? versionInfo.chipType
-					: `unknown (${num2hex(versionInfo.chipType.type)}, ${
-						num2hex(versionInfo.chipType.version)
-					})`
-			}
+		typeof versionInfo.chipType === "string"
+			? versionInfo.chipType
+			: `unknown (${num2hex(versionInfo.chipType.type)}, ${num2hex(
+					versionInfo.chipType.version,
+				)})`
+  }
   Zniffer version: ${versionInfo.majorVersion}.${versionInfo.minorVersion}`,
 			"info",
 		);
@@ -488,8 +490,8 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 				);
 			}
 			// ... but there might be unknown regions. Query those from the Zniffer
-			const unknownRegions = freqs.supportedFrequencies.filter((f) =>
-				!isEnumMember(ZnifferRegion, f)
+			const unknownRegions = freqs.supportedFrequencies.filter(
+				(f) => !isEnumMember(ZnifferRegion, f),
 			);
 			for (const freq of unknownRegions) {
 				const freqInfo = await this.getFrequencyInfo(freq);
@@ -520,21 +522,22 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		this.znifferLog.print(
 			`received frequency info:
 current frequency: ${
-				this._supportedFrequencies.get(freqs.currentFrequency)
-					?? `unknown (${num2hex(freqs.currentFrequency)})`
+				this._supportedFrequencies.get(freqs.currentFrequency) ??
+				`unknown (${num2hex(freqs.currentFrequency)})`
 			}
-supported frequencies: ${
-				[...this._supportedFrequencies].map(([region, name]) =>
-					`\n  · ${region.toString().padStart(2, " ")}: ${name}`
-				).join("")
-			}`,
+supported frequencies: ${[...this._supportedFrequencies]
+				.map(
+					([region, name]) =>
+						`\n  · ${region.toString().padStart(2, " ")}: ${name}`,
+				)
+				.join("")}`,
 			"info",
 		);
 
 		if (
-			typeof this._options.defaultFrequency === "number"
-			&& freqs.currentFrequency !== this._options.defaultFrequency
-			&& this._supportedFrequencies.has(this._options.defaultFrequency)
+			typeof this._options.defaultFrequency === "number" &&
+			freqs.currentFrequency !== this._options.defaultFrequency &&
+			this._supportedFrequencies.has(this._options.defaultFrequency)
 		) {
 			await this.setFrequency(this._options.defaultFrequency);
 		}
@@ -560,13 +563,11 @@ supported frequencies: ${
 				);
 			}
 			// ... but there might be unknown configurations. Query those from the Zniffer
-			const unknownConfigs = channels.supportedConfigs.filter((f) =>
-				!isEnumMember(ZnifferLRChannelConfig, f)
+			const unknownConfigs = channels.supportedConfigs.filter(
+				(f) => !isEnumMember(ZnifferLRChannelConfig, f),
 			);
 			for (const channel of unknownConfigs) {
-				const channelInfo = await this.getLRChannelConfigInfo(
-					channel,
-				);
+				const channelInfo = await this.getLRChannelConfigInfo(channel);
 				this._supportedLRChannelConfigs.set(
 					channel,
 					channelInfo.configName,
@@ -576,25 +577,21 @@ supported frequencies: ${
 			this.znifferLog.print(
 				`received LR channel info:
 	current channel: ${
-					this._supportedLRChannelConfigs.get(
-						this._currentLRChannelConfig,
-					)
-						?? `unknown (${num2hex(this._currentLRChannelConfig)})`
-				}
-	supported channels: ${
-					[...this._supportedLRChannelConfigs].map((
-						[channel, name],
-					) => `\n  · ${channel.toString()}: ${name}`).join("")
-				}`,
+		this._supportedLRChannelConfigs.get(this._currentLRChannelConfig) ??
+		`unknown (${num2hex(this._currentLRChannelConfig)})`
+	}
+	supported channels: ${[...this._supportedLRChannelConfigs]
+		.map(([channel, name]) => `\n  · ${channel.toString()}: ${name}`)
+		.join("")}`,
 				"info",
 			);
 
 			if (
-				this._lrRegions.has(this._currentFrequency)
-				&& typeof this._options.defaultLRChannelConfig === "number"
-				&& this._currentLRChannelConfig
-					!== this._options.defaultLRChannelConfig
-				&& this._supportedLRChannelConfigs.has(
+				this._lrRegions.has(this._currentFrequency) &&
+				typeof this._options.defaultLRChannelConfig === "number" &&
+				this._currentLRChannelConfig !==
+					this._options.defaultLRChannelConfig &&
+				this._supportedLRChannelConfigs.has(
 					this._options.defaultLRChannelConfig,
 				)
 			) {
@@ -622,7 +619,8 @@ supported frequencies: ${
 			if (isAbortError(e)) {
 				return;
 			} else if (
-				isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_Failed
+				isZWaveError(e) &&
+				e.code === ZWaveErrorCodes.Driver_Failed
 			) {
 				this.emit("error", e);
 				return this.destroy();
@@ -634,9 +632,7 @@ supported frequencies: ${
 	/**
 	 * Is called when the serial port has received a Zniffer frame
 	 */
-	private async serialport_onData(
-		data: BytesView,
-	): Promise<void> {
+	private async serialport_onData(data: BytesView): Promise<void> {
 		let msg: ZnifferMessage | undefined;
 		let bytesRead: number;
 		try {
@@ -665,8 +661,8 @@ supported frequencies: ${
 			};
 			this._capturedFrames.push(capture);
 			if (
-				this._options.maxCapturedFrames != undefined
-				&& this._capturedFrames.length > this._options.maxCapturedFrames
+				this._options.maxCapturedFrames != undefined &&
+				this._capturedFrames.length > this._options.maxCapturedFrames
 			) {
 				this._capturedFrames.shift();
 			}
@@ -700,9 +696,9 @@ supported frequencies: ${
 			capture.parsedFrame = frame.external;
 
 			if (
-				frame.internal instanceof ZWaveBeamStart
-				|| frame.internal instanceof LongRangeBeamStart
-				|| frame.internal instanceof BeamStop
+				frame.internal instanceof ZWaveBeamStart ||
+				frame.internal instanceof LongRangeBeamStart ||
+				frame.internal instanceof BeamStop
 			) {
 				this.znifferLog.beam(frame.internal);
 				this.emit("frame", frame.external as Frame, capture.frameData);
@@ -721,8 +717,8 @@ supported frequencies: ${
 			}
 
 			if (
-				frame.internal instanceof ZWaveMPDU
-				|| frame.internal instanceof LongRangeMPDU
+				frame.internal instanceof ZWaveMPDU ||
+				frame.internal instanceof LongRangeMPDU
 			) {
 				this.znifferLog.mpdu(frame.internal, frame.cc);
 				this.emit("frame", frame.external as Frame, capture.frameData);
@@ -792,10 +788,7 @@ supported frequencies: ${
 			1000,
 		);
 
-		return pick(res, [
-			"currentFrequency",
-			"supportedFrequencies",
-		]);
+		return pick(res, ["currentFrequency", "supportedFrequencies"]);
 	}
 
 	public async setFrequency(frequency: number): Promise<void> {
@@ -813,8 +806,8 @@ supported frequencies: ${
 		await this.serial?.writeAsync(req.serialize());
 		const res = await this.waitForMessage<ZnifferGetFrequencyInfoResponse>(
 			(msg) =>
-				msg instanceof ZnifferGetFrequencyInfoResponse
-				&& msg.frequency === frequency,
+				msg instanceof ZnifferGetFrequencyInfoResponse &&
+				msg.frequency === frequency,
 			1000,
 		);
 
@@ -835,23 +828,19 @@ supported frequencies: ${
 	private async getLRChannelConfigs() {
 		const req = new ZnifferGetLRChannelConfigsRequest();
 		await this.serial?.writeAsync(req.serialize());
-		const res = await this.waitForMessage<
-			ZnifferGetLRChannelConfigsResponse
-		>(
-			(msg) => msg instanceof ZnifferGetLRChannelConfigsResponse,
-			1000,
-		);
+		const res =
+			await this.waitForMessage<ZnifferGetLRChannelConfigsResponse>(
+				(msg) => msg instanceof ZnifferGetLRChannelConfigsResponse,
+				1000,
+			);
 
-		return pick(res, [
-			"currentConfig",
-			"supportedConfigs",
-		]);
+		return pick(res, ["currentConfig", "supportedConfigs"]);
 	}
 
 	public async setLRChannelConfig(channelConfig: number): Promise<void> {
 		if (
-			this._currentFrequency == undefined
-			|| !this._lrRegions.has(this._currentFrequency)
+			this._currentFrequency == undefined ||
+			!this._lrRegions.has(this._currentFrequency)
 		) {
 			throw new ZWaveError(
 				`The LR channel configuration can only be set for LR regions!`,
@@ -871,14 +860,13 @@ supported frequencies: ${
 	private async getLRChannelConfigInfo(channelConfig: number) {
 		const req = new ZnifferGetLRChannelConfigInfoRequest({ channelConfig });
 		await this.serial?.writeAsync(req.serialize());
-		const res = await this.waitForMessage<
-			ZnifferGetLRChannelConfigInfoResponse
-		>(
-			(msg) =>
-				msg instanceof ZnifferGetLRChannelConfigInfoResponse
-				&& msg.channelConfig === channelConfig,
-			1000,
-		);
+		const res =
+			await this.waitForMessage<ZnifferGetLRChannelConfigInfoResponse>(
+				(msg) =>
+					msg instanceof ZnifferGetLRChannelConfigInfoResponse &&
+					msg.channelConfig === channelConfig,
+				1000,
+			);
 
 		return pick(res, ["numChannels", "configName"]);
 	}
@@ -927,9 +915,7 @@ supported frequencies: ${
 		);
 	}
 
-	private async getSecurityManagers(
-		sourceNodeId: number,
-	) {
+	private async getSecurityManagers(sourceNodeId: number) {
 		if (this.securityManagers.has(sourceNodeId)) {
 			return this.securityManagers.get(sourceNodeId)!;
 		}
@@ -957,13 +943,13 @@ supported frequencies: ${
 
 		let securityManager2: SecurityManager2 | undefined;
 		if (
-			this._options.securityKeys
+			this._options.securityKeys &&
 			// Only set it up if we have security keys for at least one S2 security class
-			&& Object.keys(this._options.securityKeys).some(
+			Object.keys(this._options.securityKeys).some(
 				(key) =>
-					key.startsWith("S2_")
-					&& key in SecurityClass
-					&& securityClassIsS2((SecurityClass as any)[key]),
+					key.startsWith("S2_") &&
+					key in SecurityClass &&
+					securityClassIsS2((SecurityClass as any)[key]),
 			)
 		) {
 			// this.znifferLog.print(
@@ -974,20 +960,15 @@ supported frequencies: ${
 			securityManager2.isDuplicateSinglecast = () => false;
 
 			// Set up all keys
-			for (
-				const secClass of [
-					"S2_Unauthenticated",
-					"S2_Authenticated",
-					"S2_AccessControl",
-					"S0_Legacy",
-				] as const
-			) {
+			for (const secClass of [
+				"S2_Unauthenticated",
+				"S2_Authenticated",
+				"S2_AccessControl",
+				"S0_Legacy",
+			] as const) {
 				const key = this._options.securityKeys[secClass];
 				if (key) {
-					await securityManager2.setKey(
-						SecurityClass[secClass],
-						key,
-					);
+					await securityManager2.setKey(SecurityClass[secClass], key);
 				}
 			}
 			// } else {
@@ -999,8 +980,8 @@ supported frequencies: ${
 
 		let securityManagerLR: SecurityManager2 | undefined;
 		if (
-			this._options.securityKeysLongRange?.S2_AccessControl
-			|| this._options.securityKeysLongRange?.S2_Authenticated
+			this._options.securityKeysLongRange?.S2_AccessControl ||
+			this._options.securityKeysLongRange?.S2_Authenticated
 		) {
 			// this.znifferLog.print(
 			// 	"At least one network key for Z-Wave Long Range configured, enabling security manager...",
@@ -1056,21 +1037,19 @@ supported frequencies: ${
 		header.writeUInt16BE(0x2312, 0x07fe); // checksum
 		let filteredFrames = this._capturedFrames;
 		if (frameFilter) {
-			filteredFrames = filteredFrames.filter((f) =>
-				// Always include Zniffer-protocol frames
-				f.parsedFrame == undefined
-				// Apply the filter to all other frames
-				|| frameFilter({
-					frameData: f.frameData,
-					parsedFrame: f.parsedFrame,
-					timestamp: f.timestamp,
-				})
+			filteredFrames = filteredFrames.filter(
+				(f) =>
+					// Always include Zniffer-protocol frames
+					f.parsedFrame == undefined ||
+					// Apply the filter to all other frames
+					frameFilter({
+						frameData: f.frameData,
+						parsedFrame: f.parsedFrame,
+						timestamp: f.timestamp,
+					}),
 			);
 		}
-		return Bytes.concat([
-			header,
-			...filteredFrames.map(captureToZLFEntry),
-		]);
+		return Bytes.concat([header, ...filteredFrames.map(captureToZLFEntry)]);
 	}
 
 	/**
@@ -1140,11 +1119,7 @@ supported frequencies: ${
 				complete,
 				accumulator: newAccumulator,
 				entries,
-			} = parseZLFEntry(
-				buffer,
-				offset,
-				accumulator,
-			);
+			} = parseZLFEntry(buffer, offset, accumulator);
 			// console.log(
 			// 	`parsing offset ${num2hex(offset)}, len ${bytesRead} (${
 			// 		num2hex(bytesRead)
@@ -1175,9 +1150,9 @@ supported frequencies: ${
 					}
 				} catch (e) {
 					console.warn(
-						`Failed to parse entry #${index} at offset ${
-							num2hex(offset - bytesRead)
-						}:`,
+						`Failed to parse entry #${index} at offset ${num2hex(
+							offset - bytesRead,
+						)}:`,
 						getErrorMessage(e, true),
 					);
 				}
@@ -1196,16 +1171,13 @@ supported frequencies: ${
 	}> {
 		let convertedRSSI: RSSI | undefined;
 		if (convertRSSI && this._chipType) {
-			convertedRSSI = tryConvertRSSI(
-				msg.rssiRaw,
-				this._chipType,
-			);
+			convertedRSSI = tryConvertRSSI(msg.rssiRaw, this._chipType);
 		}
 
 		// Short-circuit if we're dealing with beam frames
 		if (
-			msg.frameType === ZnifferFrameType.BeamStart
-			|| msg.frameType === ZnifferFrameType.BeamStop
+			msg.frameType === ZnifferFrameType.BeamStart ||
+			msg.frameType === ZnifferFrameType.BeamStop
 		) {
 			const beam = parseBeamFrame(msg);
 			beam.frameInfo.rssi = convertedRSSI;
@@ -1238,8 +1210,8 @@ supported frequencies: ${
 		// FIXME: Cache data => parsed CC, so we can understand re-transmitted S2 frames
 
 		if (
-			mpdu.payload.length > 0
-			&& mpdu.headerType !== MPDUHeaderType.Acknowledgement
+			mpdu.payload.length > 0 &&
+			mpdu.headerType !== MPDUHeaderType.Acknowledgement
 		) {
 			if ("destinationNodeId" in mpdu) {
 				destNodeId = mpdu.destinationNodeId;
@@ -1254,24 +1226,21 @@ supported frequencies: ${
 			const frameType: FrameType =
 				mpdu.headerType === MPDUHeaderType.Multicast
 					? "multicast"
-					: (destNodeId === NODE_ID_BROADCAST
-							|| destNodeId === NODE_ID_BROADCAST_LR)
-					? "broadcast"
-					: "singlecast";
+					: destNodeId === NODE_ID_BROADCAST ||
+						  destNodeId === NODE_ID_BROADCAST_LR
+						? "broadcast"
+						: "singlecast";
 			try {
-				cc = await CommandClass.parse(
-					mpdu.payload,
-					{
-						homeId: mpdu.homeId,
-						ownNodeId: destNodeId,
-						sourceNodeId: mpdu.sourceNodeId,
-						frameType,
-						securityManager: destSecurityManager,
-						securityManager2: destSecurityManager2,
-						securityManagerLR: destSecurityManagerLR,
-						...this.parsingContext,
-					},
-				);
+				cc = await CommandClass.parse(mpdu.payload, {
+					homeId: mpdu.homeId,
+					ownNodeId: destNodeId,
+					sourceNodeId: mpdu.sourceNodeId,
+					frameType,
+					securityManager: destSecurityManager,
+					securityManager2: destSecurityManager2,
+					securityManagerLR: destSecurityManagerLR,
+					...this.parsingContext,
+				});
 			} catch (e: any) {
 				// Ignore
 				console.error(e.stack);
@@ -1284,8 +1253,9 @@ supported frequencies: ${
 			const securityManagers = await this.getSecurityManagers(
 				mpdu.sourceNodeId,
 			);
-			const isLR = isLongRangeNodeId(mpdu.sourceNodeId)
-				|| isLongRangeNodeId(destNodeId);
+			const isLR =
+				isLongRangeNodeId(mpdu.sourceNodeId) ||
+				isLongRangeNodeId(destNodeId);
 			const senderSecurityManager = isLR
 				? securityManagers.securityManagerLR
 				: securityManagers.securityManager2;
@@ -1315,8 +1285,8 @@ supported frequencies: ${
 						// The security manager for the sender however, does not. Therefore, update it manually,
 						// if the receiver SPAN is indeed valid.
 
-						const receiverSPANState = destSecurityManager
-							.getSPANState(mpdu.sourceNodeId);
+						const receiverSPANState =
+							destSecurityManager.getSPANState(mpdu.sourceNodeId);
 						if (receiverSPANState.type === SPANState.SPAN) {
 							senderSecurityManager.setSPANState(
 								destNodeId,
@@ -1327,24 +1297,22 @@ supported frequencies: ${
 				}
 			}
 		} else if (
-			cc?.ccId === CommandClasses.Security
-			&& cc instanceof SecurityCCNonceReport
+			cc?.ccId === CommandClasses.Security &&
+			cc instanceof SecurityCCNonceReport
 		) {
-			const senderSecurityManager =
-				(await this.getSecurityManagers(mpdu.sourceNodeId))
-					.securityManager;
-			const destSecurityManager =
-				(await this.getSecurityManagers(destNodeId))
-					.securityManager;
+			const senderSecurityManager = (
+				await this.getSecurityManagers(mpdu.sourceNodeId)
+			).securityManager;
+			const destSecurityManager = (
+				await this.getSecurityManagers(destNodeId)
+			).securityManager;
 
 			if (senderSecurityManager && destSecurityManager) {
 				// Both nodes have a shared nonce now
 				senderSecurityManager.setNonce(
 					{
 						issuer: mpdu.sourceNodeId,
-						nonceId: senderSecurityManager.getNonceId(
-							cc.nonce,
-						),
+						nonceId: senderSecurityManager.getNonceId(cc.nonce),
 					},
 					{
 						nonce: cc.nonce,
@@ -1356,9 +1324,7 @@ supported frequencies: ${
 				destSecurityManager.setNonce(
 					{
 						issuer: mpdu.sourceNodeId,
-						nonceId: senderSecurityManager.getNonceId(
-							cc.nonce,
-						),
+						nonceId: senderSecurityManager.getNonceId(cc.nonce),
 					},
 					{
 						nonce: cc.nonce,

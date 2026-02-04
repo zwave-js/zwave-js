@@ -31,6 +31,7 @@ import {
 	pick,
 	staticExtends,
 } from "@zwave-js/shared";
+
 import {
 	ExplorerFrameCommand,
 	LongRangeFrameType,
@@ -52,24 +53,9 @@ function getChannelConfiguration(region: ZnifferRegion): "1/2" | "3" | "4" {
 }
 
 function longRangeBeamPowerToDBm(power: number): number {
-	return [
-		-6,
-		-2,
-		2,
-		6,
-		10,
-		13,
-		16,
-		19,
-		21,
-		23,
-		25,
-		26,
-		27,
-		28,
-		29,
-		30,
-	][power];
+	return [-6, -2, 2, 6, 10, 13, 16, 19, 21, 23, 25, 26, 27, 28, 29, 30][
+		power
+	];
 }
 
 function formatNodeId(nodeId: number): string {
@@ -92,14 +78,15 @@ function formatRoute(
 		direction === "outbound"
 			? formatNodeId(destination)
 			: formatNodeId(source),
-	].map((id, i) => {
-		if (i === 0) return id;
-		if (i - 1 === failedHop) return " × " + id;
-		if (i - 1 === currentHop) {
-			return (direction === "outbound" ? " » " : " « ") + id;
-		}
-		return (direction === "outbound" ? " › " : " ‹ ") + id;
-	})
+	]
+		.map((id, i) => {
+			if (i === 0) return id;
+			if (i - 1 === failedHop) return " × " + id;
+			if (i - 1 === currentHop) {
+				return (direction === "outbound" ? " » " : " « ") + id;
+			}
+			return (direction === "outbound" ? " › " : " ‹ ") + id;
+		})
 		.join("");
 }
 
@@ -131,9 +118,9 @@ export function parseMPDU(
 			return LongRangeMPDU.from(frame);
 		default:
 			validatePayload.fail(
-				`Unsupported channel ${frame.channel}. MPDU payload: ${
-					buffer2hex(frame.payload)
-				}`,
+				`Unsupported channel ${frame.channel}. MPDU payload: ${buffer2hex(
+					frame.payload,
+				)}`,
 			);
 	}
 }
@@ -144,8 +131,8 @@ export class LongRangeMPDU implements MPDU {
 		this.frameInfo = options.frameInfo;
 
 		if (
-			options.frameInfo.channel !== 3 // LR Channel A
-			&& options.frameInfo.channel !== 4 // LR Channel B
+			options.frameInfo.channel !== 3 && // LR Channel A
+			options.frameInfo.channel !== 4 // LR Channel B
 		) {
 			validatePayload.fail(
 				`Unsupported channel ${options.frameInfo.channel} for LongRangeMPDU`,
@@ -178,18 +165,19 @@ export class LongRangeMPDU implements MPDU {
 			offset += extensionLength;
 		}
 
-		const Constructor = this.headerType === MPDUHeaderType.Acknowledgement
-			? AckLongRangeMPDU
-			: this.headerType === MPDUHeaderType.Singlecast
-			? SinglecastLongRangeMPDU
-			: undefined;
+		const Constructor =
+			this.headerType === MPDUHeaderType.Acknowledgement
+				? AckLongRangeMPDU
+				: this.headerType === MPDUHeaderType.Singlecast
+					? SinglecastLongRangeMPDU
+					: undefined;
 		if (!Constructor) {
 			validatePayload.fail(
 				`Unsupported Long Range MPDU header type ${this.headerType}`,
 			);
 		} else if (
-			new.target !== Constructor
-			&& !staticExtends(new.target, Constructor)
+			new.target !== Constructor &&
+			!staticExtends(new.target, Constructor)
 		) {
 			return new Constructor(options);
 		}
@@ -243,9 +231,10 @@ export class LongRangeMPDU implements MPDU {
 				this.frameInfo.protocolDataRate,
 			),
 			"TX power": `${this.txPower} dBm`,
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
+			RSSI:
+				this.frameInfo.rssi != undefined
+					? rssiToString(this.frameInfo.rssi)
+					: this.frameInfo.rssiRaw.toString(),
 			"noise floor": rssiToString(this.noiseFloor),
 		};
 		if (this.headerType !== MPDUHeaderType.Acknowledgement) {
@@ -342,33 +331,34 @@ export class ZWaveMPDU implements MPDU {
 			}
 			default: {
 				validatePayload.fail(
-					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
-						buffer2hex(data)
-					}`,
+					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${buffer2hex(
+						data,
+					)}`,
 				);
 			}
 		}
 
-		const Constructor = this.headerType === MPDUHeaderType.Acknowledgement
-			? AckZWaveMPDU
-			: (this.headerType === MPDUHeaderType.Routed
-					|| (this.headerType === MPDUHeaderType.Singlecast
-						&& this.routed))
-			? RoutedZWaveMPDU
-			: this.headerType === MPDUHeaderType.Singlecast
-			? SinglecastZWaveMPDU
-			: this.headerType === MPDUHeaderType.Multicast
-			? MulticastZWaveMPDU
-			: this.headerType === MPDUHeaderType.Explorer
-			? ExplorerZWaveMPDU
-			: undefined;
+		const Constructor =
+			this.headerType === MPDUHeaderType.Acknowledgement
+				? AckZWaveMPDU
+				: this.headerType === MPDUHeaderType.Routed ||
+					  (this.headerType === MPDUHeaderType.Singlecast &&
+							this.routed)
+					? RoutedZWaveMPDU
+					: this.headerType === MPDUHeaderType.Singlecast
+						? SinglecastZWaveMPDU
+						: this.headerType === MPDUHeaderType.Multicast
+							? MulticastZWaveMPDU
+							: this.headerType === MPDUHeaderType.Explorer
+								? ExplorerZWaveMPDU
+								: undefined;
 		if (!Constructor) {
 			validatePayload.fail(
 				`Unsupported MPDU header type ${this.headerType}`,
 			);
 		} else if (
-			new.target !== Constructor
-			&& !staticExtends(new.target, Constructor)
+			new.target !== Constructor &&
+			!staticExtends(new.target, Constructor)
 		) {
 			return new Constructor(options);
 		}
@@ -380,9 +370,8 @@ export class ZWaveMPDU implements MPDU {
 
 		// byte 7 is another length byte
 		// FIXME: This should consider the multicast control byte
-		const destinationLength = this.headerType === MPDUHeaderType.Multicast
-			? 30
-			: 1;
+		const destinationLength =
+			this.headerType === MPDUHeaderType.Multicast ? 30 : 1;
 		this.destinationBuffer = data.subarray(
 			destinationOffset,
 			destinationOffset + destinationLength,
@@ -426,11 +415,13 @@ export class ZWaveMPDU implements MPDU {
 			"sequence no.": this.sequenceNumber,
 			channel: this.frameInfo.channel,
 			"protocol/data rate":
-				znifferProtocolDataRateToString(this.frameInfo.protocolDataRate)
-				+ (this.speedModified ? " (reduced)" : ""),
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
+				znifferProtocolDataRateToString(
+					this.frameInfo.protocolDataRate,
+				) + (this.speedModified ? " (reduced)" : ""),
+			RSSI:
+				this.frameInfo.rssi != undefined
+					? rssiToString(this.frameInfo.rssi)
+					: this.frameInfo.rssiRaw.toString(),
 		};
 		return {
 			tags,
@@ -505,7 +496,7 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 
 		const channelConfig = getChannelConfiguration(this.frameInfo.region);
 
-		this.direction = (this.payload[0] & 0b1) ? "inbound" : "outbound";
+		this.direction = this.payload[0] & 0b1 ? "inbound" : "outbound";
 		this.routedAck = !!(this.payload[0] & 0b10);
 		this.routedError = !!(this.payload[0] & 0b100);
 		const hasExtendedHeader = !!(this.payload[0] & 0b1000);
@@ -543,11 +534,12 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			offset += headerLength;
 
 			if (headerType === 0x00) {
-				this.destinationWakeupType = header[0] & 0b0100_0000
-					? "1000ms"
-					: header[0] & 0b0010_0000
-					? "250ms"
-					: undefined;
+				this.destinationWakeupType =
+					header[0] & 0b0100_0000
+						? "1000ms"
+						: header[0] & 0b0010_0000
+							? "250ms"
+							: undefined;
 			} else if (headerType === 0x01) {
 				const repeaterRSSI = [];
 				for (let i = 0; i < numRepeaters; i++) {
@@ -642,21 +634,22 @@ export class ExplorerZWaveMPDU extends ZWaveMPDU {
 		this.repeaters = [...this.payload.subarray(4, 4 + numRepeaters)];
 
 		// Make sure the correct constructor gets called
-		const Constructor = this.command === ExplorerFrameCommand.Normal
-			? NormalExplorerZWaveMPDU
-			: this.command === ExplorerFrameCommand.InclusionRequest
-			? InclusionRequestExplorerZWaveMPDU
-			: this.command === ExplorerFrameCommand.SearchResult
-			? SearchResultExplorerZWaveMPDU
-			: undefined;
+		const Constructor =
+			this.command === ExplorerFrameCommand.Normal
+				? NormalExplorerZWaveMPDU
+				: this.command === ExplorerFrameCommand.InclusionRequest
+					? InclusionRequestExplorerZWaveMPDU
+					: this.command === ExplorerFrameCommand.SearchResult
+						? SearchResultExplorerZWaveMPDU
+						: undefined;
 
 		if (!Constructor) {
 			validatePayload.fail(
 				`Unsupported Explorer MPDU command ${this.command}`,
 			);
 		} else if (
-			new.target !== Constructor
-			&& !staticExtends(new.target, Constructor)
+			new.target !== Constructor &&
+			!staticExtends(new.target, Constructor)
 		) {
 			return new Constructor(options);
 		}
@@ -727,10 +720,7 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 
 		const message: MessageRecord = {
 			...original,
-			"network home ID": this.networkHomeId.toString(16).padStart(
-				8,
-				"0",
-			),
+			"network home ID": this.networkHomeId.toString(16).padStart(8, "0"),
 			payload: buffer2hex(this.payload),
 		};
 		return {
@@ -748,9 +738,7 @@ export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		this.frameHandle = this.payload[1];
 		this.resultTTL = this.payload[2] >>> 4;
 		const numRepeaters = this.payload[2] & 0b1111;
-		this.resultRepeaters = [
-			...this.payload.subarray(3, 3 + numRepeaters),
-		];
+		this.resultRepeaters = [...this.payload.subarray(3, 3 + numRepeaters)];
 
 		// This frame contains no payload
 		this.payload = new Bytes();
@@ -816,9 +804,9 @@ export function parseBeamFrame(
 		default:
 			validatePayload.fail(
 				// oxlint-disable-next-line typescript/restrict-template-expressions
-				`Unsupported channel configuration ${channelConfig}. MPDU payload: ${
-					buffer2hex(frame.payload)
-				}`,
+				`Unsupported channel configuration ${channelConfig}. MPDU payload: ${buffer2hex(
+					frame.payload,
+				)}`,
 			);
 	}
 }
@@ -842,9 +830,9 @@ export class ZWaveBeamStart {
 			}
 			default: {
 				validatePayload.fail(
-					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
-						buffer2hex(data)
-					}`,
+					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${buffer2hex(
+						data,
+					)}`,
 				);
 			}
 		}
@@ -860,18 +848,17 @@ export class ZWaveBeamStart {
 	public readonly destinationNodeId: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const tags = [
-			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
-		];
+		const tags = [`BEAM » ${formatNodeId(this.destinationNodeId)}`];
 
 		const message: MessageRecord = {
 			channel: this.frameInfo.channel,
 			"protocol/data rate": znifferProtocolDataRateToString(
 				this.frameInfo.protocolDataRate,
 			),
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
+			RSSI:
+				this.frameInfo.rssi != undefined
+					? rssiToString(this.frameInfo.rssi)
+					: this.frameInfo.rssiRaw.toString(),
 		};
 		return {
 			tags,
@@ -900,9 +887,9 @@ export class LongRangeBeamStart {
 			}
 			default: {
 				validatePayload.fail(
-					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
-						buffer2hex(data)
-					}`,
+					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${buffer2hex(
+						data,
+					)}`,
 				);
 			}
 		}
@@ -919,9 +906,7 @@ export class LongRangeBeamStart {
 	public readonly txPower: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const tags = [
-			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
-		];
+		const tags = [`BEAM » ${formatNodeId(this.destinationNodeId)}`];
 
 		const message: MessageRecord = {
 			channel: this.frameInfo.channel,
@@ -929,9 +914,10 @@ export class LongRangeBeamStart {
 				this.frameInfo.protocolDataRate,
 			),
 			"TX power": `${this.txPower} dBm`,
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
+			RSSI:
+				this.frameInfo.rssi != undefined
+					? rssiToString(this.frameInfo.rssi)
+					: this.frameInfo.rssiRaw.toString(),
 		};
 		return {
 			tags,
@@ -948,9 +934,7 @@ export class BeamStop {
 	public readonly frameInfo: ZnifferFrameInfo;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const tags = [
-			"BEAM STOP",
-		];
+		const tags = ["BEAM STOP"];
 
 		const message: MessageRecord = {
 			channel: this.frameInfo.channel,
@@ -965,7 +949,7 @@ export class BeamStop {
 /** An application-oriented representation of a Z-Wave frame that was captured by the Zniffer */
 export type ZWaveFrame =
 	// Common fields for all Z-Wave frames
-	& {
+	{
 		protocol: Protocols.ZWave;
 
 		channel: number;
@@ -980,97 +964,97 @@ export type ZWaveFrame =
 
 		homeId: number;
 		sourceNodeId: number;
-	}
-	// Different kinds of Z-Wave frames:
-	& (
-		| (
-			// Singlecast frame, either routed or not
-			& {
-				type: ZWaveFrameType.Singlecast;
-				destinationNodeId: number;
-				ackRequested: boolean;
-				payload: BytesView | CommandClass;
-			}
-			// Only present in routed frames:
-			& AllOrNone<
-				& {
-					direction: "outbound" | "inbound";
-					hop: number;
-					repeaters: number[];
-					repeaterRSSI?: RSSI[];
-				}
-				// Different kinds of routed frames:
-				& (
-					// Normal frame
-					| {
-						routedAck: false;
-						routedError: false;
-						failedHop?: undefined;
-					}
-					// Routed acknowledgement
-					| {
-						routedAck: true;
-						routedError: false;
-						failedHop?: undefined;
-					}
-					// Routed error
-					| {
-						routedAck: false;
-						routedError: true;
-						failedHop: number;
-					}
-				)
-			>
-		)
-		// Broadcast frame. This is technically a singlecast frame,
-		// but the destination node ID is always 255 and it is not routed
-		| {
-			type: ZWaveFrameType.Broadcast;
-			destinationNodeId: typeof NODE_ID_BROADCAST;
-			ackRequested: boolean;
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Multicast frame, not routed
-			type: ZWaveFrameType.Multicast;
-			destinationNodeIds: number[];
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Ack frame, not routed
-			type: ZWaveFrameType.AckDirect;
-			destinationNodeId: number;
-		}
-		| (
+	} &
+		// Different kinds of Z-Wave frames:
+		(
+			| // Singlecast frame, either routed or not
+			  ({
+					type: ZWaveFrameType.Singlecast;
+					destinationNodeId: number;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  } &
+					// Only present in routed frames:
+					AllOrNone<
+						{
+							direction: "outbound" | "inbound";
+							hop: number;
+							repeaters: number[];
+							repeaterRSSI?: RSSI[];
+						} &
+							// Different kinds of routed frames:
+							// Normal frame
+							(
+								| {
+										routedAck: false;
+										routedError: false;
+										failedHop?: undefined;
+								  }
+								// Routed acknowledgement
+								| {
+										routedAck: true;
+										routedError: false;
+										failedHop?: undefined;
+								  }
+								// Routed error
+								| {
+										routedAck: false;
+										routedError: true;
+										failedHop: number;
+								  }
+							)
+					>)
+			// Broadcast frame. This is technically a singlecast frame,
+			// but the destination node ID is always 255 and it is not routed
+			| {
+					type: ZWaveFrameType.Broadcast;
+					destinationNodeId: typeof NODE_ID_BROADCAST;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Multicast frame, not routed
+					type: ZWaveFrameType.Multicast;
+					destinationNodeIds: number[];
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Ack frame, not routed
+					type: ZWaveFrameType.AckDirect;
+					destinationNodeId: number;
+			  }
 			// Different kind of explorer frames
-			& ({
-				type: ZWaveFrameType.ExplorerNormal;
-				payload: BytesView | CommandClass;
-			} | {
-				type: ZWaveFrameType.ExplorerSearchResult;
-				searchingNodeId: number;
-				frameHandle: number;
-				resultTTL: number;
-				resultRepeaters: readonly number[];
-			} | {
-				type: ZWaveFrameType.ExplorerInclusionRequest;
-				networkHomeId: number;
-				payload: BytesView | CommandClass;
-			})
-			// Common fields for all explorer frames
-			& {
-				destinationNodeId: number;
-				ackRequested: boolean;
-				direction: "outbound" | "inbound";
-				repeaters: number[];
-				ttl: number;
-			}
-		)
-	);
+			| ((
+					| {
+							type: ZWaveFrameType.ExplorerNormal;
+							payload: BytesView | CommandClass;
+					  }
+					| {
+							type: ZWaveFrameType.ExplorerSearchResult;
+							searchingNodeId: number;
+							frameHandle: number;
+							resultTTL: number;
+							resultRepeaters: readonly number[];
+					  }
+					| {
+							type: ZWaveFrameType.ExplorerInclusionRequest;
+							networkHomeId: number;
+							payload: BytesView | CommandClass;
+					  }
+			  ) &
+					// Common fields for all explorer frames
+					{
+						destinationNodeId: number;
+						ackRequested: boolean;
+						direction: "outbound" | "inbound";
+						repeaters: number[];
+						ttl: number;
+					})
+		);
 
 export type LongRangeFrame =
 	// Common fields for all Long Range frames
-	& {
+	{
 		protocol: Protocols.ZWaveLongRange;
 
 		channel: number;
@@ -1087,82 +1071,79 @@ export type LongRangeFrame =
 		homeId: number;
 		sourceNodeId: number;
 		destinationNodeId: number;
-	}
-	// Different kinds of Long Range frames:
-	& (
-		| {
-			// Singlecast frame
-			type: LongRangeFrameType.Singlecast;
-			ackRequested: boolean;
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Broadcast frame. This is technically a singlecast frame,
-			// but the destination node ID is always 4095
-			type: LongRangeFrameType.Broadcast;
-			destinationNodeId: typeof NODE_ID_BROADCAST_LR;
-			ackRequested: boolean;
-			payload: BytesView | CommandClass;
-		}
-		| {
-			// Acknowledgement frame
-			type: LongRangeFrameType.Ack;
-			incomingRSSI: RSSI;
-			payload: BytesView;
-		}
-	);
+	} &
+		// Different kinds of Long Range frames:
+		(
+			| {
+					// Singlecast frame
+					type: LongRangeFrameType.Singlecast;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Broadcast frame. This is technically a singlecast frame,
+					// but the destination node ID is always 4095
+					type: LongRangeFrameType.Broadcast;
+					destinationNodeId: typeof NODE_ID_BROADCAST_LR;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Acknowledgement frame
+					type: LongRangeFrameType.Ack;
+					incomingRSSI: RSSI;
+					payload: BytesView;
+			  }
+		);
 
 export type BeamFrame =
 	// Common fields for all Beam frames
-	& {
+	{
 		channel: number;
-	}
-	// Different types of beam frames:
-	& (
-		| {
-			// Z-Wave Classic
-			protocol: Protocols.ZWave;
-			type: ZWaveFrameType.BeamStart;
+	} &
+		// Different types of beam frames:
+		(
+			| {
+					// Z-Wave Classic
+					protocol: Protocols.ZWave;
+					type: ZWaveFrameType.BeamStart;
 
-			protocolDataRate: ZnifferProtocolDataRate;
-			rssiRaw: number;
-			rssi?: RSSI;
-			region: ZnifferRegion;
+					protocolDataRate: ZnifferProtocolDataRate;
+					rssiRaw: number;
+					rssi?: RSSI;
+					region: ZnifferRegion;
 
-			homeIdHash?: number;
-			destinationNodeId: number;
-		}
-		| {
-			// Z-Wave Long Range
-			protocol: Protocols.ZWaveLongRange;
-			type: LongRangeFrameType.BeamStart;
+					homeIdHash?: number;
+					destinationNodeId: number;
+			  }
+			| {
+					// Z-Wave Long Range
+					protocol: Protocols.ZWaveLongRange;
+					type: LongRangeFrameType.BeamStart;
 
-			protocolDataRate: ZnifferProtocolDataRate;
-			rssiRaw: number;
-			rssi?: RSSI;
-			region: ZnifferRegion;
+					protocolDataRate: ZnifferProtocolDataRate;
+					rssiRaw: number;
+					rssi?: RSSI;
+					region: ZnifferRegion;
 
-			txPower: number;
-			homeIdHash: number;
-			destinationNodeId: number;
-		}
-		// The Zniffer sends the same command for the beam ending for both
-		// Z-Wave Classic and Long Range. To make testing the frame type more
-		// consistent with the other frames, two different values are used
-		| {
-			protocol: Protocols.ZWave;
-			type: ZWaveFrameType.BeamStop;
-		}
-		| {
-			protocol: Protocols.ZWaveLongRange;
-			type: LongRangeFrameType.BeamStop;
-		}
-	);
+					txPower: number;
+					homeIdHash: number;
+					destinationNodeId: number;
+			  }
+			// The Zniffer sends the same command for the beam ending for both
+			// Z-Wave Classic and Long Range. To make testing the frame type more
+			// consistent with the other frames, two different values are used
+			| {
+					protocol: Protocols.ZWave;
+					type: ZWaveFrameType.BeamStop;
+			  }
+			| {
+					protocol: Protocols.ZWaveLongRange;
+					type: LongRangeFrameType.BeamStop;
+			  }
+		);
 
-export type Frame =
-	| ZWaveFrame
-	| LongRangeFrame
-	| BeamFrame;
+export type Frame = ZWaveFrame | LongRangeFrame | BeamFrame;
 
 export type CorruptedFrame = {
 	channel: number;

@@ -4,7 +4,9 @@
  */
 
 import path from "node:path";
+
 import { type SourceFile, type Type, ts as tsm } from "ts-morph";
+
 import type { ValidateArgsOptions } from "../index.js";
 
 interface ParameterInfo {
@@ -34,7 +36,7 @@ export async function generateValidateArgsFiles(
 
 	for (const sf of sourceFiles) {
 		const content = sf.getFullText();
-		if (!content.includes("from \"@zwave-js/transformers\"")) continue;
+		if (!content.includes('from "@zwave-js/transformers"')) continue;
 
 		const validateArgsContent = generateValidateArgsFileContent(sf);
 		if (validateArgsContent) {
@@ -65,8 +67,9 @@ function generateValidateArgsFileContent(
 		.getDescendantsOfKind(tsm.SyntaxKind.Decorator)
 		.filter(
 			(d) =>
-				d.getFirstDescendantByKind(tsm.SyntaxKind.Identifier)?.getText()
-					=== "validateArgs",
+				d
+					.getFirstDescendantByKind(tsm.SyntaxKind.Identifier)
+					?.getText() === "validateArgs",
 		);
 
 	if (validateArgsDecorators.length === 0) {
@@ -126,10 +129,12 @@ function generateValidateArgsFileContent(
 	// import specifier -> [exported name, renamed to?]
 	const additionalImports = new Map<string, Set<string>>();
 
-	for (
-		const { methodName, className, parameters, options }
-			of withMethodAndClassName
-	) {
+	for (const {
+		methodName,
+		className,
+		parameters,
+		options,
+	} of withMethodAndClassName) {
 		const paramSpreadWithUnknown = parameters
 			.map(
 				(p) =>
@@ -154,12 +159,12 @@ export function validateArgs_${className}_${methodName}() {
 	return <T extends Function>(__decoratedMethod: T, { kind }: ClassMethodDecoratorContext): T | void => {
 		if (kind === "method") {
 			return function ${methodName}(this: any, ${paramSpreadWithUnknown}) {
-				v.assert(${
-			parameters
-				.map((p) => `
-					${getValidationFunction(context, p)}(${p.name}),`)
-				.join("\n")
-		}
+				v.assert(${parameters
+					.map(
+						(p) => `
+					${getValidationFunction(context, p)}(${p.name}),`,
+					)
+					.join("\n")}
 				);
 				return __decoratedMethod.call(this, ${paramSpread});
 			} as unknown as T;
@@ -170,9 +175,9 @@ export function validateArgs_${className}_${methodName}() {
 
 	for (const [specifier, imports] of additionalImports) {
 		newSourceText =
-			`import { ${[...imports].join(", ")} } from "${specifier}";`
-			+ "\n"
-			+ newSourceText;
+			`import { ${[...imports].join(", ")} } from "${specifier}";` +
+			"\n" +
+			newSourceText;
 	}
 
 	return newSourceText;
@@ -192,8 +197,8 @@ function getValidationFunction(
 	// Detect and avoid recursive references for now.
 	// TODO: Solve this by generating a new validation function that calls itself
 	const typeStack = context.typeStack ?? new WeakSet();
-	const possiblyRecursive = param.type.isUnionOrIntersection()
-		|| param.type.isClassOrInterface();
+	const possiblyRecursive =
+		param.type.isUnionOrIntersection() || param.type.isClassOrInterface();
 	if (possiblyRecursive && typeStack.has(param.type)) {
 		throw new Error(
 			`Error while transforming ${context.sourceFile.getFilePath()}
@@ -212,25 +217,23 @@ Type ${param.typeName} recursively references itself`,
 
 	// Parameters with a default value, but no `| undefined` in the type need to be treated as optional
 	if (
-		param.hasInitializer
-		&& !(
-			param.type.isUnion()
-			&& param.type.getUnionTypes().some((t) => t.isUndefined())
+		param.hasInitializer &&
+		!(
+			param.type.isUnion() &&
+			param.type.getUnionTypes().some((t) => t.isUndefined())
 		)
 	) {
-		return `v.optional(${ctx}, ${
-			getValidationFunction(
-				context,
-				{ ...param, hasInitializer: false },
-				kind,
-			)
-		})`;
+		return `v.optional(${ctx}, ${getValidationFunction(
+			context,
+			{ ...param, hasInitializer: false },
+			kind,
+		)})`;
 	}
 
 	if (
-		param.type.isNumberLiteral()
-		|| param.type.isStringLiteral()
-		|| param.type.isBooleanLiteral()
+		param.type.isNumberLiteral() ||
+		param.type.isStringLiteral() ||
+		param.type.isBooleanLiteral()
 	) {
 		const literal = param.type.getLiteralValue() as string | number;
 		if (typeof literal === "string") {
@@ -262,9 +265,9 @@ Type ${param.typeName} recursively references itself`,
 			const values = param.type
 				.getUnionTypes()
 				.map((t) => t.getLiteralValue() as number);
-			return `v.enum(${ctx}, "${param.typeName}", [${
-				values.join(", ")
-			}])`;
+			return `v.enum(${ctx}, "${param.typeName}", [${values.join(
+				", ",
+			)}])`;
 		} else {
 			return `v.enum(${ctx}, "${param.typeName}")`;
 		}
@@ -272,12 +275,9 @@ Type ${param.typeName} recursively references itself`,
 	if (param.type.isUnion()) {
 		const types = param.type.getUnionTypes();
 		// boolean is actually union of true and false, but we want to treat it as a primitive
-		const typeIsBoolean = types.some(
-			(t) => t.isBooleanLiteral() && t.getText() === "true",
-		)
-			&& types.some(
-				(t) => t.isBooleanLiteral() && t.getText() === "false",
-			);
+		const typeIsBoolean =
+			types.some((t) => t.isBooleanLiteral() && t.getText() === "true") &&
+			types.some((t) => t.isBooleanLiteral() && t.getText() === "false");
 		const typeIsOptional = types.some((t) => t.isUndefined());
 
 		const actualUnionTypes = types.filter((t) => {
@@ -295,7 +295,7 @@ Type ${param.typeName} recursively references itself`,
 					typeName: getTypeName(t),
 				},
 				kind,
-			)
+			),
 		);
 		if (typeIsBoolean) {
 			recurse.push(`v.primitive(${ctx}, "boolean")`);
@@ -303,11 +303,12 @@ Type ${param.typeName} recursively references itself`,
 
 		const typeAlias = param.type.getAliasSymbol()?.getEscapedName();
 
-		let ret = recurse.length > 1
-			? `v.oneOf(${ctx}, ${typeAlias ? `"${typeAlias}"` : `undefined`}, ${
-				recurse.join(", ")
-			})`
-			: recurse[0];
+		let ret =
+			recurse.length > 1
+				? `v.oneOf(${ctx}, ${typeAlias ? `"${typeAlias}"` : `undefined`}, ${recurse.join(
+						", ",
+					)})`
+				: recurse[0];
 
 		if (typeIsOptional) {
 			ret = `v.optional(${ctx}, ${ret})`;
@@ -328,7 +329,7 @@ Type ${param.typeName} recursively references itself`,
 					typeName: getTypeName(t),
 				},
 				kind,
-			)
+			),
 		);
 
 		const typeAlias = param.type.getAliasSymbol()?.getEscapedName();
@@ -368,19 +369,16 @@ Type ${param.typeName} recursively references itself`,
 					typeName: getTypeName(t),
 				},
 				"item",
-			)
+			),
 		);
 
-		return `v.tuple(${ctx}, '${param.typeName}', ${
-			itemValidations.join(", ")
-		})`;
+		return `v.tuple(${ctx}, '${param.typeName}', ${itemValidations.join(
+			", ",
+		)})`;
 	}
 
 	const symbol = param.type.getSymbol();
-	if (
-		symbol
-		&& (param.type.isClassOrInterface() || param.type.isObject())
-	) {
+	if (symbol && (param.type.isClassOrInterface() || param.type.isObject())) {
 		const symbolName = symbol.getName();
 		const valueDeclaration = symbol.getValueDeclaration();
 
@@ -390,8 +388,9 @@ Type ${param.typeName} recursively references itself`,
 
 		if (isClass) {
 			const sourceFilePath = context.sourceFile.getFilePath();
-			const isLocalClass = valueDeclaration?.getSourceFile().getFilePath()
-				=== sourceFilePath;
+			const isLocalClass =
+				valueDeclaration?.getSourceFile().getFilePath() ===
+				sourceFilePath;
 
 			if (isLocalClass) {
 				throw new Error(
@@ -421,8 +420,8 @@ Class ${param.typeName} which is used as a parameter type for @validateArgs has 
 						.getNamedImports()
 						.find(
 							(imp) =>
-								imp.getSymbol()?.getEscapedName()
-									=== param.typeName,
+								imp.getSymbol()?.getEscapedName() ===
+								param.typeName,
 						);
 					if (!namedImport || !specifier) return;
 					return { namedImport, specifier };
@@ -441,8 +440,8 @@ Unable to find import specifier for class ${param.typeName}.`,
 			const declaredName = namedImport.getName();
 			const importedName = namedImport.getSymbol()!.getEscapedName();
 
-			const importsForFile = context.additionalImports.get(specifier)
-				?? new Set();
+			const importsForFile =
+				context.additionalImports.get(specifier) ?? new Set();
 			// TODO: We may need to namespace the import here
 			// import { OriginalName as RenamedName } from "module";
 			// TODO: Consider ignoring the rename, but make sure
@@ -462,9 +461,12 @@ Unable to find import specifier for class ${param.typeName}.`,
 		const variableDeclaration = valueDeclaration?.asKind(
 			tsm.SyntaxKind.VariableDeclaration,
 		);
-		const isAmbient = !!variableDeclaration
-			&& !!(variableDeclaration?.getCombinedModifierFlags()
-				& tsm.ModifierFlags.Ambient);
+		const isAmbient =
+			!!variableDeclaration &&
+			!!(
+				variableDeclaration?.getCombinedModifierFlags() &
+				tsm.ModifierFlags.Ambient
+			);
 
 		if (isAmbient) {
 			if (isInterface && symbolName === "Date") {
@@ -474,22 +476,22 @@ Unable to find import specifier for class ${param.typeName}.`,
 			const structure = variableDeclaration?.getStructure();
 
 			if (
-				structure?.name === "Uint8Array"
-				&& structure.type === "Uint8ArrayConstructor"
+				structure?.name === "Uint8Array" &&
+				structure.type === "Uint8ArrayConstructor"
 			) {
 				return `v.uint8array(${ctx})`;
 			}
 
 			if (
-				structure?.name === "Map"
-				&& structure.type === "MapConstructor"
+				structure?.name === "Map" &&
+				structure.type === "MapConstructor"
 			) {
 				return `v.class(${ctx}, "Map", Map)`;
 			}
 
 			if (
-				structure?.name === "Set"
-				&& structure.type === "SetConstructor"
+				structure?.name === "Set" &&
+				structure.type === "SetConstructor"
 			) {
 				return `v.class(${ctx}, "Set", Set)`;
 			}
@@ -497,16 +499,16 @@ Unable to find import specifier for class ${param.typeName}.`,
 
 		// Those are not detected as ambient interfaces for some reason
 		if (
-			symbolName === "ReadonlyMap"
-			&& symbol
+			symbolName === "ReadonlyMap" &&
+			symbol
 				.getDeclarations()
 				.every((d) => d.isKind(tsm.SyntaxKind.InterfaceDeclaration))
 		) {
 			return `v.class(${ctx}, "Map", Map)`;
 		}
 		if (
-			symbolName === "ReadonlySet"
-			&& symbol
+			symbolName === "ReadonlySet" &&
+			symbol
 				.getDeclarations()
 				.every((d) => d.isKind(tsm.SyntaxKind.InterfaceDeclaration))
 		) {
@@ -534,19 +536,20 @@ Unable to find import specifier for class ${param.typeName}.`,
 
 			const recurse = properties.map(
 				(p) =>
-					`"${p.name}": ${
-						getValidationFunction(context, p, "property")
-					}`,
+					`"${p.name}": ${getValidationFunction(
+						context,
+						p,
+						"property",
+					)}`,
 			);
 
 			// In type definitions, the symbols may be anonymous object types
-			const objectTypeName = symbolName === "__type"
-				? "<anonymous object>"
-				: symbolName;
+			const objectTypeName =
+				symbolName === "__type" ? "<anonymous object>" : symbolName;
 
-			return `v.object(${ctx}, '${objectTypeName}', { ${
-				recurse.join(", ")
-			} })`;
+			return `v.object(${ctx}, '${objectTypeName}', { ${recurse.join(
+				", ",
+			)} })`;
 		}
 	}
 

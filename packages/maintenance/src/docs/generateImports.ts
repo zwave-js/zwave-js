@@ -2,14 +2,15 @@
  * This method returns the original source code for an interface or type so it can be put into documentation
  */
 
-import { fs } from "@zwave-js/core/bindings/fs/node";
-import { enumFilesRecursive } from "@zwave-js/shared";
-import c from "ansi-colors";
-import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
+
+import { fs } from "@zwave-js/core/bindings/fs/node";
+import { enumFilesRecursive } from "@zwave-js/shared";
+import c from "ansi-colors";
+import esMain from "es-main";
 import { Piscina } from "piscina";
 import {
 	type CommentRange,
@@ -23,14 +24,14 @@ import {
 	SyntaxKind,
 	type TypeLiteralNode,
 } from "ts-morph";
-import { formatWithDprint } from "../dprint.js";
+// Support directly loading this file in a worker
+import { register } from "tsx/esm/api";
+
+import { formatWithOxfmt } from "../oxfmt.js";
 import {
 	projectRoot,
 	tsConfigFilePathForDocs as tsConfigFilePath,
 } from "../tsAPITools.js";
-
-// Support directly loading this file in a worker
-import { register } from "tsx/esm/api";
 register();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -47,12 +48,12 @@ export function findSourceNode(
 ): ExportedDeclarations | undefined {
 	// Scan all source files
 	if (!exportDeclarationCache.has(exportingFile)) {
-		const decls = program.getSourceFile(exportingFile)
+		const decls = program
+			.getSourceFile(exportingFile)
 			?.getExportedDeclarations();
 		if (decls) exportDeclarationCache.set(exportingFile, decls);
 	}
-	return exportDeclarationCache.get(exportingFile)
-		?.get(identifier)?.[0];
+	return exportDeclarationCache.get(exportingFile)?.get(identifier)?.[0];
 }
 
 function stripComments(
@@ -63,10 +64,10 @@ function stripComments(
 		// Remove some comments if desired
 		const ranges: { pos: number; end: number }[] = [];
 		const removePredicate = (c: CommentRange) =>
-			(!options.comments
-				&& c.getKind() === SyntaxKind.SingleLineCommentTrivia)
-			|| (!options.jsdoc
-				&& c.getKind() === SyntaxKind.MultiLineCommentTrivia);
+			(!options.comments &&
+				c.getKind() === SyntaxKind.SingleLineCommentTrivia) ||
+			(!options.jsdoc &&
+				c.getKind() === SyntaxKind.MultiLineCommentTrivia);
 
 		const getCommentRangesForNode = (
 			node: Node,
@@ -74,9 +75,10 @@ function stripComments(
 			const comments = node.getLeadingCommentRanges();
 			const ret = comments.map((c, i) => ({
 				pos: c.getPos(),
-				end: i < comments.length - 1
-					? comments[i + 1].getPos()
-					: Math.max(node.getStart(), c.getEnd()),
+				end:
+					i < comments.length - 1
+						? comments[i + 1].getPos()
+						: Math.max(node.getStart(), c.getEnd()),
 				remove: removePredicate(c),
 			}));
 			// Only use comment ranges that should be removed
@@ -113,8 +115,8 @@ function shouldStripPropertySignature(
 ): boolean {
 	return !!p.docs?.some(
 		(d) =>
-			typeof d !== "string"
-			&& d.tags?.some((t) => /(deprecated|internal)/.test(t.tagName)),
+			typeof d !== "string" &&
+			d.tags?.some((t) => /(deprecated|internal)/.test(t.tagName)),
 	);
 }
 
@@ -126,33 +128,29 @@ function printInterfaceDeclarationStructure(
 	return `
 interface ${struct.name}${
 		struct.typeParameters?.length
-			// oxlint-disable-next-line typescript/no-base-to-string
-			? `<${struct.typeParameters.map((t) => t.toString()).join(", ")}>`
+			? // oxlint-disable-next-line typescript/no-base-to-string
+				`<${struct.typeParameters.map((t) => t.toString()).join(", ")}>`
 			: ""
 	} {
-	${
-		struct.properties
-			?.filter((p) => !shouldStripPropertySignature(p))
-			.map((p) => {
-				return `${p.isReadonly ? "readonly " : ""}${p.name}${
-					p.hasQuestionToken ? "?:" : ":"
-				} ${p.type as string};`;
-			})
-			.join("\n")
-	}
+	${struct.properties
+		?.filter((p) => !shouldStripPropertySignature(p))
+		.map((p) => {
+			return `${p.isReadonly ? "readonly " : ""}${p.name}${
+				p.hasQuestionToken ? "?:" : ":"
+			} ${p.type as string};`;
+		})
+		.join("\n")}
 }`;
 }
 
-export function getTransformedSource(
+export async function getTransformedSource(
 	node: ExportedDeclarations,
 	options: ImportRange["options"],
-): string {
+): Promise<string> {
 	// Create a temporary project with a temporary source file to print the node
 	const project = new Project();
 	const sourceFile = project.createSourceFile("index.ts", node.getText());
-	node = [
-		...sourceFile.getExportedDeclarations().values(),
-	][0][0];
+	node = [...sourceFile.getExportedDeclarations().values()][0][0];
 
 	// Remove @internal and @deprecated members
 	if (Node.isInterfaceDeclaration(node)) {
@@ -165,7 +163,7 @@ export function getTransformedSource(
 					member
 						.getJsDocs()
 						.some((doc) =>
-							/@(deprecated|internal)/.test(doc.getInnerText())
+							/@(deprecated|internal)/.test(doc.getInnerText()),
 						)
 				) {
 					commentsToRemove.push(member);
@@ -205,7 +203,7 @@ export function getTransformedSource(
 	}
 
 	// Format so we get the original formatting back
-	ret = formatWithDprint("index.ts", ret).trim();
+	ret = (await formatWithOxfmt("index.ts", ret)).trim();
 	return ret;
 }
 
@@ -264,7 +262,10 @@ export async function processDocFile(
 			);
 			hasErrors = true;
 		} else {
-			const source = getTransformedSource(sourceNode, range.options);
+			const source = await getTransformedSource(
+				sourceNode,
+				range.options,
+			);
 			fileContent = `${fileContent.slice(0, range.index)}${range.import}
 
 \`\`\`ts
@@ -274,7 +275,7 @@ ${source}
 	}
 	console.log(`formatting ${docFile}...`);
 	fileContent = fileContent.replaceAll("\r\n", "\n");
-	fileContent = formatWithDprint(docFile, fileContent);
+	fileContent = await formatWithOxfmt(docFile, fileContent);
 	if (!hasErrors) {
 		await fsp.writeFile(docFile, fileContent, "utf8");
 	}

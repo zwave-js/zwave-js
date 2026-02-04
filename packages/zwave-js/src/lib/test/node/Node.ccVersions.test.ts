@@ -1,6 +1,7 @@
 import { CommandClasses } from "@zwave-js/core";
 import { MockController } from "@zwave-js/testing";
 import { test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -46,14 +47,20 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("getCCVersion() should return 0 if a command class is not supported", ({ context, expect }) => {
+test("getCCVersion() should return 0 if a command class is not supported", ({
+	context,
+	expect,
+}) => {
 	const { driver } = context;
 	const node = new ZWaveNode(2, driver);
 	expect(node.getCCVersion(CommandClasses["Anti-Theft"])).toBe(0);
 	node.destroy();
 });
 
-test("getCCVersion() should return the supported version otherwise", ({ context, expect }) => {
+test("getCCVersion() should return the supported version otherwise", ({
+	context,
+	expect,
+}) => {
 	const { driver } = context;
 	const node = new ZWaveNode(2, driver);
 	node.addCC(CommandClasses["Anti-Theft"], {

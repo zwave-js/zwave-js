@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project } from "ts-morph";
 
 async function main() {
@@ -12,8 +13,10 @@ async function main() {
 		// const filePath = path.relative(process.cwd(), file.getFilePath());
 
 		const relativeExports = file.getExportDeclarations().filter((exp) => {
-			return exp.getModuleSpecifierValue()?.startsWith(".")
-				&& !exp.getModuleSpecifierValue()?.endsWith(".js");
+			return (
+				exp.getModuleSpecifierValue()?.startsWith(".") &&
+				!exp.getModuleSpecifierValue()?.endsWith(".js")
+			);
 		});
 
 		for (const exp of relativeExports) {
@@ -23,8 +26,10 @@ async function main() {
 		}
 
 		const relativeImports = file.getImportDeclarations().filter((imp) => {
-			return imp.getModuleSpecifierValue()?.startsWith(".")
-				&& !imp.getModuleSpecifierValue()?.endsWith(".js");
+			return (
+				imp.getModuleSpecifierValue()?.startsWith(".") &&
+				!imp.getModuleSpecifierValue()?.endsWith(".js")
+			);
 		});
 
 		for (const imp of relativeImports) {

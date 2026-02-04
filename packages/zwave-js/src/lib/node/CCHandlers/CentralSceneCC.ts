@@ -6,14 +6,15 @@ import {
 } from "@zwave-js/cc";
 import type { LogNode } from "@zwave-js/core";
 import { type Timer, setTimer, stringify } from "@zwave-js/shared";
+
 import type { ZWaveNode } from "../Node.js";
 
 export interface CentralSceneHandlerStore {
 	keyHeldDownContext:
 		| {
-			timeout: Timer;
-			sceneNumber: number;
-		}
+				timeout: Timer;
+				sceneNumber: number;
+		  }
 		| undefined;
 	lastSequenceNumber: number | undefined;
 	forcedKeyUp: boolean;
@@ -80,9 +81,8 @@ export function handleCentralSceneNotification(
 	};
 
 	if (
-		store.keyHeldDownContext
-		&& store.keyHeldDownContext.sceneNumber
-			!== command.sceneNumber
+		store.keyHeldDownContext &&
+		store.keyHeldDownContext.sceneNumber !== command.sceneNumber
 	) {
 		// The user pressed another button, force release
 		forceKeyUp();
@@ -97,16 +97,14 @@ export function handleCentralSceneNotification(
 		store.keyHeldDownContext?.timeout?.clear();
 		// If the node does not advertise support for the slow refresh capability, we might still be dealing with a
 		// slow refresh node. We use the stored value for fallback behavior
-		const slowRefresh = command.slowRefresh
+		const slowRefresh =
+			command.slowRefresh ||
 			// Prefer the stored value, even if the command claims slowRefresh == false
-			|| node.valueDB.getValue<boolean>(slowRefreshValueId);
+			node.valueDB.getValue<boolean>(slowRefreshValueId);
 		store.keyHeldDownContext = {
 			sceneNumber: command.sceneNumber,
 			// Unref'ing long running timers allows the process to exit mid-timeout
-			timeout: setTimer(
-				forceKeyUp,
-				slowRefresh ? 60000 : 400,
-			).unref(),
+			timeout: setTimer(forceKeyUp, slowRefresh ? 60000 : 400).unref(),
 		};
 	} else if (command.keyAttribute === CentralSceneKeys.KeyReleased) {
 		// Stop the release timer

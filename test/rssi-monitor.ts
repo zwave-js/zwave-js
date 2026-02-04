@@ -1,5 +1,6 @@
 // demo.ts
 import { exit } from "node:process";
+
 import { type ControllerStatistics, Driver } from "zwave-js";
 
 const MINIMUM_RSSI = -120;
@@ -31,22 +32,21 @@ function writeChannelRow(
 	// increment row to leave a space for the header
 	row += rowOffset;
 	// Writing the progress bar
-	if (!channel?.current) { // If current is undefined or 0
+	if (!channel?.current) {
+		// If current is undefined or 0
 		process.stdout.write(
 			`
 				\r\x1b[${row};12H ${drawRSSIProgressBar(0, 30)}`,
 		);
-	} else { // If current has a valid value
+	} else {
+		// If current has a valid value
 		process.stdout.write(
 			`
 				\r\x1b[${row};1HChannel ${channel.id + 1}: 
-				\r\x1b[${row};12H${
-				drawRSSIProgressBar(
-					channel.current
-						|| MINIMUM_RSSI,
+				\r\x1b[${row};12H${drawRSSIProgressBar(
+					channel.current || MINIMUM_RSSI,
 					30,
-				)
-			} `,
+				)} `,
 		);
 	}
 
@@ -77,25 +77,19 @@ function updateChannelsDisplay(
 	channels.forEach((id) => {
 		const channel = stats.backgroundRSSI?.[`channel${id}`];
 		if (channel) {
-			writeChannelRow(
-				id + 1,
-				1,
-				{
-					id: id,
-					average: channel?.average,
-					current: channel?.current,
-				},
-			);
+			writeChannelRow(id + 1, 1, {
+				id: id,
+				average: channel?.average,
+				current: channel?.current,
+			});
 		}
 	});
 	// Write the footer
 	process.stdout.write(
 		`
 			\r\x1b[6;1HSerial: ${PORT} - HF mode: ${
-			hfEnabled
-				? `enabled`
-				: "disabled"
-		}
+				hfEnabled ? `enabled` : "disabled"
+			}
 			\r\x1b[7;1H(type "h" to enable HF mode, "x" to exit)`,
 	);
 
@@ -109,15 +103,11 @@ function showTemporalUpdateHint() {
 	// Clear any previous timeout
 	if (lastHintTimeout) clearTimeout(lastHintTimeout);
 	// write on line 6 a red square
-	process.stdout.write(
-		`\r\x1b[7;63HX`,
-	);
+	process.stdout.write(`\r\x1b[7;63HX`);
 
 	lastHintTimeout = setTimeout(() => {
 		// clear the red square
-		process.stdout.write(
-			`\r\x1b[7;63H `,
-		);
+		process.stdout.write(`\r\x1b[7;63H `);
 	}, 300);
 }
 
@@ -165,9 +155,7 @@ async function main(args: string[] = process.argv.slice(2)) {
 			// 'h' toggles high-frequency mode
 			if (key === "h") {
 				if (!driver.isFrequentRSSIMonitoringEnabled) {
-					driver.enableFrequentRSSIMonitoring(
-						HF_MODE_TIMEOUT,
-					);
+					driver.enableFrequentRSSIMonitoring(HF_MODE_TIMEOUT);
 				} else {
 					driver.disableFrequentRSSIMonitoring();
 				}

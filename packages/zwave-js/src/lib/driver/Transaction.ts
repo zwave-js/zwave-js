@@ -14,7 +14,9 @@ import {
 	compareNumberOrString,
 } from "alcalzone-shared/comparable";
 import type { DeferredPromise } from "alcalzone-shared/deferred-promise";
+
 import { NodeStatus } from "../node/_Types.js";
+
 import type { Driver } from "./Driver.js";
 
 export interface MessageGenerator {
@@ -73,18 +75,16 @@ export class Transaction implements Comparable<Transaction> {
 
 	public clone(): Transaction {
 		const ret = new Transaction(this.driver, this.options);
-		for (
-			const prop of [
-				"_stack",
-				"_progress",
-				"creationTimestamp",
-				"changeNodeStatusOnTimeout",
-				"pauseSendThread",
-				"priority",
-				"tag",
-				"requestWakeUpOnDemand",
-			] as const
-		) {
+		for (const prop of [
+			"_stack",
+			"_progress",
+			"creationTimestamp",
+			"changeNodeStatusOnTimeout",
+			"pauseSendThread",
+			"priority",
+			"tag",
+			"requestWakeUpOnDemand",
+		] as const) {
 			(ret as any)[prop] = this[prop];
 		}
 
@@ -226,10 +226,10 @@ export class Transaction implements Comparable<Transaction> {
 			const otherNode = _other.message.tryGetNode(this.driver);
 			if (thisNode && otherNode) {
 				// Both nodes exist
-				const thisListening = thisNode.isListening
-					|| thisNode.isFrequentListening;
-				const otherListening = otherNode.isListening
-					|| otherNode.isFrequentListening;
+				const thisListening =
+					thisNode.isListening || thisNode.isFrequentListening;
+				const otherListening =
+					otherNode.isListening || otherNode.isFrequentListening;
 				// prioritize (-1) the one node that is listening when the other is not
 				if (thisListening && !otherListening) return -1;
 				if (!thisListening && otherListening) return 1;

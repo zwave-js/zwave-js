@@ -1,5 +1,6 @@
 import { Bytes } from "@zwave-js/shared";
 import { expect, test } from "vitest";
+
 import { DeviceInfoRequest, DeviceInfoResponse } from "./DeviceInfoMessages.js";
 import { ESPHomeMessage, ESPHomeMessageType } from "./ESPHomeMessage.js";
 import { HelloRequest, HelloResponse } from "./HelloMessages.js";
@@ -183,7 +184,7 @@ test("DeviceInfoResponse with all boolean flags", () => {
 		usesPassword: true,
 		hasDeepSleep: true,
 		apiEncryptionSupported: true,
-		zwaveProxyFeatureFlags: 0x0F,
+		zwaveProxyFeatureFlags: 0x0f,
 	});
 
 	const serialized = original.serialize();

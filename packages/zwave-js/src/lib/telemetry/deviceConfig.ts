@@ -18,16 +18,13 @@ export async function reportMissingDeviceConfig(
 ): Promise<void> {
 	// TODO: Actually do something
 	// We removed Sentry as it wasn't really useful
-
 	// const configFingerprint = `${formatId(node.manufacturerId)}:${
 	// 	formatId(
 	// 		node.productType,
 	// 	)
 	// }:${formatId(node.productId)}:${node.firmwareVersion}`;
-
 	// // We used to get a LOT of false positives, so we should check with our device
 	// // database whether this config file is actually unknown
-
 	// // If we tried to report this file earlier, we can skip the report
 	// if (missingDeviceConfigCache.has(configFingerprint)) return;
 	// // Otherwise ask our device DB if it exists
@@ -41,7 +38,6 @@ export async function reportMissingDeviceConfig(
 	// 			)}`,
 	// 		)
 	// 		.json();
-
 	// 	if (
 	// 		isObject(data)
 	// 		&& typeof data.deviceFound === "boolean"
@@ -55,9 +51,7 @@ export async function reportMissingDeviceConfig(
 	// 	// didn't work, try again next time
 	// 	return;
 	// }
-
 	// const message = `Missing device config: ${configFingerprint}`;
-
 	// const deviceInfo: Record<string, any> = {
 	// 	supportsConfigCCV3:
 	// 		node.getCCVersion(CommandClasses.Configuration) >= 3,
@@ -95,9 +89,7 @@ export async function reportMissingDeviceConfig(
 	// } catch {
 	// 	// Don't fail on the last meters :)
 	// }
-
 	// // TODO: Actually report somewhere
-
 	// // Remember that we reported the config
 	// missingDeviceConfigCache.add(configFingerprint);
 }

@@ -19,6 +19,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -97,8 +98,9 @@ integrationTest(
 			const valuePromise = new Promise<number>((resolve) => {
 				node.on("value updated", (node, args) => {
 					if (
-						args.commandClass === CommandClasses["Window Covering"]
-						&& args.propertyName === "currentValue"
+						args.commandClass ===
+							CommandClasses["Window Covering"] &&
+						args.propertyName === "currentValue"
 					) {
 						resolve(args.newValue as number);
 					}
@@ -210,8 +212,9 @@ integrationTest(
 			const valuePromise = new Promise<number>((resolve) => {
 				node.on("value updated", (node, args) => {
 					if (
-						args.commandClass === CommandClasses["Window Covering"]
-						&& args.propertyName === "currentValue"
+						args.commandClass ===
+							CommandClasses["Window Covering"] &&
+						args.propertyName === "currentValue"
 					) {
 						resolve(args.newValue as number);
 					}
@@ -271,9 +274,8 @@ integrationTest(
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
-						&& receivedCC.encapsulated
-							instanceof WindowCoveringCCSet
+						receivedCC instanceof SupervisionCCGet &&
+						receivedCC.encapsulated instanceof WindowCoveringCCSet
 					) {
 						// Update the internal state
 						if (receivedCC.encapsulated.targetValues.length > 0) {
@@ -324,8 +326,9 @@ integrationTest(
 			const valuePromise = new Promise<number>((resolve) => {
 				node.on("value updated", (node, args) => {
 					if (
-						args.commandClass === CommandClasses["Window Covering"]
-						&& args.propertyName === "currentValue"
+						args.commandClass ===
+							CommandClasses["Window Covering"] &&
+						args.propertyName === "currentValue"
 					) {
 						resolve(args.newValue as number);
 					}
@@ -379,9 +382,8 @@ integrationTest(
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
-						&& receivedCC.encapsulated
-							instanceof WindowCoveringCCSet
+						receivedCC instanceof SupervisionCCGet &&
+						receivedCC.encapsulated instanceof WindowCoveringCCSet
 					) {
 						// Update the internal state
 						if (receivedCC.encapsulated.targetValues.length > 0) {
@@ -450,8 +452,9 @@ integrationTest(
 			const valuePromise = new Promise<number>((resolve) => {
 				node.on("value updated", (node, args) => {
 					if (
-						args.commandClass === CommandClasses["Window Covering"]
-						&& args.propertyName === "currentValue"
+						args.commandClass ===
+							CommandClasses["Window Covering"] &&
+						args.propertyName === "currentValue"
 					) {
 						resolve(args.newValue as number);
 					}

@@ -116,10 +116,11 @@ const respondToUserCodeSet: MockNodeBehavior = {
 			if (capabilities.numUsers >= userId) {
 				self.state.set(StateKeys.userIdStatus(userId), userIdStatus);
 
-				const code = userIdStatus !== UserIDStatus.Available
-						&& userIdStatus !== UserIDStatus.StatusNotAvailable
-					? receivedCC.userCode
-					: undefined;
+				const code =
+					userIdStatus !== UserIDStatus.Available &&
+					userIdStatus !== UserIDStatus.StatusNotAvailable
+						? receivedCC.userCode
+						: undefined;
 
 				self.state.set(StateKeys.userCode(userId), code);
 				return { action: "ok" };
@@ -160,20 +161,21 @@ const respondToExtendedUserCodeSet: MockNodeBehavior = {
 				}
 
 				if (
-					capabilities.numUsers != undefined
-					&& capabilities.numUsers >= userId
+					capabilities.numUsers != undefined &&
+					capabilities.numUsers >= userId
 				) {
 					self.state.set(
 						StateKeys.userIdStatus(userId),
 						userIdStatus,
 					);
 
-					const code = userIdStatus !== UserIDStatus.Available
-							// @ts-expect-error Just making sure that we're not accidentally
-							// passing the wrong status
-							&& userIdStatus !== UserIDStatus.StatusNotAvailable
-						? userCodeData.userCode
-						: undefined;
+					const code =
+						userIdStatus !== UserIDStatus.Available &&
+						// @ts-expect-error Just making sure that we're not accidentally
+						// passing the wrong status
+						userIdStatus !== UserIDStatus.StatusNotAvailable
+							? userCodeData.userCode
+							: undefined;
 
 					self.state.set(StateKeys.userCode(userId), code);
 				} else {
@@ -199,10 +201,10 @@ const respondToUserCodeCapabilitiesGet: MockNodeBehavior = {
 			const cc = new UserCodeCCCapabilitiesReport({
 				nodeId: controller.ownNodeId,
 				supportsAdminCode: capabilities.supportsAdminCode!,
-				supportsAdminCodeDeactivation: capabilities
-					.supportsAdminCodeDeactivation!,
-				supportsUserCodeChecksum: capabilities
-					.supportsUserCodeChecksum!,
+				supportsAdminCodeDeactivation:
+					capabilities.supportsAdminCodeDeactivation!,
+				supportsUserCodeChecksum:
+					capabilities.supportsUserCodeChecksum!,
 				supportsMultipleUserCodeReport: false,
 				supportsMultipleUserCodeSet: false,
 				supportedUserIDStatuses: capabilities.supportedUserIDStatuses!,
@@ -226,9 +228,9 @@ const respondToUserCodeKeypadModeGet: MockNodeBehavior = {
 			};
 			const cc = new UserCodeCCKeypadModeReport({
 				nodeId: controller.ownNodeId,
-				keypadMode: (self.state.get(StateKeys.keypadMode)
-					?? capabilities.supportedKeypadModes?.[0]
-					?? KeypadMode.Normal) as KeypadMode,
+				keypadMode: (self.state.get(StateKeys.keypadMode) ??
+					capabilities.supportedKeypadModes?.[0] ??
+					KeypadMode.Normal) as KeypadMode,
 			});
 			return { action: "sendCC", cc };
 		}
@@ -271,13 +273,10 @@ const respondToUserCodeAdminCodeSet: MockNodeBehavior = {
 			const adminCode = receivedCC.adminCode;
 			if (capabilities.supportsAdminCode) {
 				if (
-					adminCode.length > 0
-					|| capabilities.supportsAdminCodeDeactivation
+					adminCode.length > 0 ||
+					capabilities.supportsAdminCodeDeactivation
 				) {
-					self.state.set(
-						StateKeys.adminCode,
-						receivedCC.adminCode,
-					);
+					self.state.set(StateKeys.adminCode, receivedCC.adminCode);
 					return { action: "ok" };
 				}
 			}
@@ -330,9 +329,9 @@ const respondToUserCodeUserCodeChecksumGet: MockNodeBehavior = {
 						| string
 						| Bytes;
 					if (
-						status === undefined
-						|| status === UserIDStatus.Available
-						|| code.length === 0
+						status === undefined ||
+						status === UserIDStatus.Available ||
+						code.length === 0
 					) {
 						continue;
 					}

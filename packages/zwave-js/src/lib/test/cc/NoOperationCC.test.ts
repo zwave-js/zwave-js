@@ -17,16 +17,15 @@ test("the CC should serialize correctly", async (t) => {
 	const expected = buildCCBuffer(
 		Uint8Array.from([]), // No command!
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the CC should be deserialized correctly", (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([]), // No command!
 	);
-	t.expect(() =>
-		new NoOperationCC({ nodeId: 2, data: ccData, context: {} as any })
+	t.expect(
+		() =>
+			new NoOperationCC({ nodeId: 2, data: ccData, context: {} as any }),
 	).not.toThrow();
 });

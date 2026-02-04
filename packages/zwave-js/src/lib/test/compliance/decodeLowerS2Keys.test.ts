@@ -1,3 +1,6 @@
+import { randomBytes } from "node:crypto";
+import path from "node:path";
+
 import {
 	BasicCCSet,
 	type CommandClass,
@@ -16,8 +19,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import { randomBytes } from "node:crypto";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -125,8 +127,8 @@ integrationTest(
 			// The controller should NOT have sent a NonceReport in response
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof Security2CCNonceReport,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof Security2CCNonceReport,
 				{
 					noMatch: true,
 				},
@@ -135,9 +137,9 @@ integrationTest(
 			// And the controller should also NOT have answered it
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof Security2CCMessageEncapsulation
-					&& f.payload.encapsulated instanceof TimeCCTimeReport,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof Security2CCMessageEncapsulation &&
+					f.payload.encapsulated instanceof TimeCCTimeReport,
 				{
 					noMatch: true,
 				},
@@ -167,8 +169,8 @@ integrationTest(
 			// The controller should NOT have sent a NonceReport in response
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof Security2CCNonceReport,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof Security2CCNonceReport,
 				{
 					noMatch: true,
 				},
@@ -177,11 +179,11 @@ integrationTest(
 			// It should have answered though
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof Security2CCMessageEncapsulation
-					&& f.payload.encapsulated
-						instanceof Security2CCCommandsSupportedReport
-					&& f.payload.encapsulated.supportedCCs.length === 0,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof Security2CCMessageEncapsulation &&
+					f.payload.encapsulated instanceof
+						Security2CCCommandsSupportedReport &&
+					f.payload.encapsulated.supportedCCs.length === 0,
 			);
 
 			await wait(200);
@@ -193,15 +195,15 @@ integrationTest(
 			// The controller MUST have sent a NonceGet
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof Security2CCNonceGet,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof Security2CCNonceGet,
 			);
 			// And the Basic Set with the sender EI
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof Security2CCMessageEncapsulation
-					&& f.payload.encapsulated instanceof BasicCCSet,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof Security2CCMessageEncapsulation &&
+					f.payload.encapsulated instanceof BasicCCSet,
 			);
 		},
 	},

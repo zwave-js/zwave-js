@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/core";
 import type { ZnifferDataMessage } from "@zwave-js/serial";
 import { buffer2hex, num2hex } from "@zwave-js/shared";
+
 import type {
 	BeamStop,
 	LongRangeBeamStart,
@@ -65,10 +66,7 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 		});
 	}
 
-	public crcError(
-		frame: ZnifferDataMessage,
-		rssi?: RSSI,
-	): void {
+	public crcError(frame: ZnifferDataMessage, rssi?: RSSI): void {
 		if (!this.isLogVisible()) return;
 
 		const logEntry: MessageOrCCLogEntry = {
@@ -78,9 +76,10 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 				"protocol/data rate": znifferProtocolDataRateToString(
 					frame.protocolDataRate,
 				),
-				RSSI: rssi != undefined
-					? rssiToString(rssi)
-					: frame.rssiRaw.toString(),
+				RSSI:
+					rssi != undefined
+						? rssiToString(rssi)
+						: frame.rssiRaw.toString(),
 				payload: buffer2hex(frame.payload),
 			},
 		};
@@ -128,8 +127,9 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 				msg = msg.filter((line) => !line.startsWith("│ payload:"));
 
 				const logCC = (cc: CommandClass, indent: number = 0) => {
-					const isEncapCC = isEncapsulatingCommandClass(cc)
-						|| isMultiEncapsulatingCommandClass(cc);
+					const isEncapCC =
+						isEncapsulatingCommandClass(cc) ||
+						isMultiEncapsulatingCommandClass(cc);
 					const loggedCC = cc.toLogEntry(this.zniffer as any);
 					msg.push(
 						" ".repeat(indent * 2) + "└─" + tagify(loggedCC.tags),
@@ -159,7 +159,9 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 				logCC(payloadCC);
 			}
 
-			const homeId = mpdu.homeId.toString(16).padStart(8, "0")
+			const homeId = mpdu.homeId
+				.toString(16)
+				.padStart(8, "0")
 				.toLowerCase();
 
 			this.logger.log({
@@ -172,9 +174,7 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 		} catch {}
 	}
 
-	public beam(
-		beam: ZWaveBeamStart | LongRangeBeamStart | BeamStop,
-	): void {
+	public beam(beam: ZWaveBeamStart | LongRangeBeamStart | BeamStop): void {
 		if (!this.isLogVisible()) return;
 
 		const logEntry = beam.toLogEntry();
@@ -183,7 +183,7 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 		if (logEntry.message) {
 			msg.push(
 				...messageRecordToLines(logEntry.message).map(
-					(line) => ("  ") + line,
+					(line) => "  " + line,
 				),
 			);
 		}

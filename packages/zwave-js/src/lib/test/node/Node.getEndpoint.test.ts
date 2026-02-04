@@ -6,6 +6,7 @@ import {
 import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import { afterEach, beforeEach, test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -76,7 +77,10 @@ afterEach<LocalTestContext>(({ context, expect }) => {
 	driver.networkCache.clear();
 });
 
-test.sequential("throws when a negative endpoint index is requested", ({ context, expect }) => {
+test.sequential("throws when a negative endpoint index is requested", ({
+	context,
+	expect,
+}) => {
 	const { node } = context;
 	assertZWaveError(expect, () => node.getEndpoint(-1), {
 		errorCode: ZWaveErrorCodes.Argument_Invalid,
@@ -84,38 +88,44 @@ test.sequential("throws when a negative endpoint index is requested", ({ context
 	});
 });
 
-test.sequential("returns the node itself when endpoint 0 is requested", ({ context, expect }) => {
+test.sequential("returns the node itself when endpoint 0 is requested", ({
+	context,
+	expect,
+}) => {
 	const { node } = context;
 	expect(node.getEndpoint(0)).toBe(node);
 });
 
-test.sequential(
-	"returns a new endpoint with the correct endpoint index otherwise",
-	({ context, expect }) => {
-		const { node } = context;
+test.sequential("returns a new endpoint with the correct endpoint index otherwise", ({
+	context,
+	expect,
+}) => {
+	const { node } = context;
 
-		// interviewComplete needs to be true for getEndpoint to work
-		node.valueDB.setValue(
-			{
-				commandClass: CommandClasses["Multi Channel"],
-				property: "interviewComplete",
-			},
-			true,
-		);
-		node.valueDB.setValue(
-			{
-				commandClass: CommandClasses["Multi Channel"],
-				property: "individualCount",
-			},
-			5,
-		);
-		const actual = node.getEndpoint(5)!;
-		expect(actual.index).toBe(5);
-		expect(actual.nodeId).toBe(2);
-	},
-);
+	// interviewComplete needs to be true for getEndpoint to work
+	node.valueDB.setValue(
+		{
+			commandClass: CommandClasses["Multi Channel"],
+			property: "interviewComplete",
+		},
+		true,
+	);
+	node.valueDB.setValue(
+		{
+			commandClass: CommandClasses["Multi Channel"],
+			property: "individualCount",
+		},
+		5,
+	);
+	const actual = node.getEndpoint(5)!;
+	expect(actual.index).toBe(5);
+	expect(actual.nodeId).toBe(2);
+});
 
-test.sequential("caches the created endpoint instances", ({ context, expect }) => {
+test.sequential("caches the created endpoint instances", ({
+	context,
+	expect,
+}) => {
 	const { node } = context;
 
 	// interviewComplete needs to be true for getEndpoint to work
@@ -139,16 +149,19 @@ test.sequential("caches the created endpoint instances", ({ context, expect }) =
 	expect(first).toBe(second);
 });
 
-test.sequential(
-	"returns undefined if a non-existent endpoint is requested",
-	({ context, expect }) => {
-		const { node } = context;
-		const actual = node.getEndpoint(5);
-		expect(actual).toBeUndefined();
-	},
-);
+test.sequential("returns undefined if a non-existent endpoint is requested", ({
+	context,
+	expect,
+}) => {
+	const { node } = context;
+	const actual = node.getEndpoint(5);
+	expect(actual).toBeUndefined();
+});
 
-test.sequential("sets the correct device class for the endpoint", async ({ context, expect }) => {
+test.sequential("sets the correct device class for the endpoint", async ({
+	context,
+	expect,
+}) => {
 	const { node } = context;
 
 	// interviewComplete needs to be true for getEndpoint to work

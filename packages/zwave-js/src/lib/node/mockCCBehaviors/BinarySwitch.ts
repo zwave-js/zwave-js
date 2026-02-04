@@ -34,11 +34,9 @@ const respondToBinarySwitchGet: MockNodeBehavior = {
 			};
 			const cc = new BinarySwitchCCReport({
 				nodeId: controller.ownNodeId,
-				currentValue: (
-					self.state.get(StateKeys.currentValue)
-						?? capabilities.defaultValue
-						?? UNKNOWN_STATE
-				) as MaybeUnknown<boolean>,
+				currentValue: (self.state.get(StateKeys.currentValue) ??
+					capabilities.defaultValue ??
+					UNKNOWN_STATE) as MaybeUnknown<boolean>,
 			});
 			return { action: "sendCC", cc };
 		}

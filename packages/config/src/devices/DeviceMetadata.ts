@@ -1,6 +1,8 @@
 import { type JSONObject, pick } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type ConditionalItem,
 	conditionApplies,
@@ -12,19 +14,15 @@ import {
 } from "./ConditionalPrimitive.js";
 import type { DeviceID } from "./shared.js";
 
-export class ConditionalDeviceMetadata
-	implements ConditionalItem<DeviceMetadata>
-{
+export class ConditionalDeviceMetadata implements ConditionalItem<DeviceMetadata> {
 	public constructor(filename: string, definition: JSONObject) {
-		for (
-			const prop of [
-				"wakeup",
-				"inclusion",
-				"exclusion",
-				"reset",
-				"manual",
-			] as const
-		) {
+		for (const prop of [
+			"wakeup",
+			"inclusion",
+			"exclusion",
+			"reset",
+			"manual",
+		] as const) {
 			if (prop in definition) {
 				this[prop] = parseConditionalPrimitive(
 					filename,
@@ -39,9 +37,9 @@ export class ConditionalDeviceMetadata
 		if ("comments" in definition) {
 			const value = definition.comments;
 			const isComment = (opt: unknown) =>
-				isObject(opt)
-				&& typeof opt.level === "string"
-				&& typeof opt.text === "string";
+				isObject(opt) &&
+				typeof opt.level === "string" &&
+				typeof opt.text === "string";
 
 			if (isComment(value)) {
 				this.comments = new ConditionalDeviceComment(
@@ -69,15 +67,13 @@ The metadata entry comments is invalid!`,
 	public evaluateCondition(deviceId?: DeviceID): DeviceMetadata | undefined {
 		if (!conditionApplies(this, deviceId)) return;
 		const ret: DeviceMetadata = {};
-		for (
-			const prop of [
-				"wakeup",
-				"inclusion",
-				"exclusion",
-				"reset",
-				"manual",
-			] as const
-		) {
+		for (const prop of [
+			"wakeup",
+			"inclusion",
+			"exclusion",
+			"reset",
+			"manual",
+		] as const) {
 			if (this[prop]) {
 				const evaluated = evaluateDeep(this[prop], deviceId);
 				if (evaluated) ret[prop] = evaluated;
@@ -114,9 +110,7 @@ export interface DeviceMetadata {
 	comments?: DeviceComment | DeviceComment[];
 }
 
-export class ConditionalDeviceComment
-	implements ConditionalItem<DeviceComment>
-{
+export class ConditionalDeviceComment implements ConditionalItem<DeviceComment> {
 	public constructor(
 		public readonly level: DeviceComment["level"],
 		public readonly text: string,

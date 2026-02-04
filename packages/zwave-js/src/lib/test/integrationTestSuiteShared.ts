@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import type { ZWaveSerialStream } from "@zwave-js/serial";
 import type { MockPort } from "@zwave-js/serial/mock";
 import { Bytes } from "@zwave-js/shared";
@@ -7,8 +10,7 @@ import {
 	MockNode,
 	type MockNodeOptions,
 } from "@zwave-js/testing";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+
 import {
 	createDefaultMockControllerBehaviors,
 	createDefaultMockNodeBehaviors,
@@ -29,18 +31,14 @@ export function prepareDriver(
 	// Skipping the bootloader check speeds up tests a lot
 	additionalOptions.testingHooks ??= {};
 	additionalOptions.testingHooks.skipFirmwareIdentification =
-		additionalOptions.bootloaderMode === "recover"
-		|| additionalOptions.bootloaderMode == undefined;
+		additionalOptions.bootloaderMode === "recover" ||
+		additionalOptions.bootloaderMode == undefined;
 
 	const logConfig = additionalOptions.logConfig ?? {};
 	if (logToFile) {
 		logConfig.enabled = true;
 		logConfig.logToFile = true;
-		logConfig.filename = path.join(
-			cacheDir,
-			"logs",
-			"zwavejs_%DATE%.log",
-		);
+		logConfig.filename = path.join(cacheDir, "logs", "zwavejs_%DATE%.log");
 		logConfig.level ??= "debug";
 	}
 

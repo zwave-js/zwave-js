@@ -12,6 +12,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	SET_VALUE,
@@ -46,13 +47,10 @@ export const SceneActivationCCValues = V.defineCCValues(
 			} as const,
 			{ stateful: false },
 		),
-		...V.staticProperty(
-			"dimmingDuration",
-			{
-				...ValueMetadata.Duration,
-				label: "Dimming duration",
-			} as const,
-		),
+		...V.staticProperty("dimmingDuration", {
+			...ValueMetadata.Duration,
+			label: "Dimming duration",
+		} as const),
 	},
 );
 
@@ -68,7 +66,7 @@ export class SceneActivationCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: SceneActivationCCAPI,
 			{ property },
 			value,
@@ -132,9 +130,7 @@ export interface SceneActivationCCSetOptions {
 @ccValueProperty("sceneId", SceneActivationCCValues.sceneId)
 @ccValueProperty("dimmingDuration", SceneActivationCCValues.dimmingDuration)
 export class SceneActivationCCSet extends SceneActivationCC {
-	public constructor(
-		options: WithAddress<SceneActivationCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<SceneActivationCCSetOptions>) {
 		super(options);
 		this.sceneId = options.sceneId;
 		this.dimmingDuration = Duration.from(options.dimmingDuration);

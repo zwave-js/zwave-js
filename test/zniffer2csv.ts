@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { promises as fs } from "node:fs";
+import { resolve } from "node:path";
+
 import { CommandClass } from "@zwave-js/cc";
 import {
 	isEncapsulatingCommandClass,
@@ -13,8 +16,6 @@ import {
 	getEnumMemberName,
 	getErrorMessage,
 } from "@zwave-js/shared";
-import { promises as fs } from "node:fs";
-import { resolve } from "node:path";
 import type { CorruptedFrame, Frame } from "zwave-js";
 import { Zniffer } from "zwave-js";
 import { LongRangeFrameType, ZWaveFrameType } from "zwave-js";
@@ -80,23 +81,21 @@ function escapeCSVValue(value: any): string {
 	const str = String(value);
 	// If the value contains semicolon, newline, or quote, wrap it in quotes and escape internal quotes
 	if (
-		str.includes(";")
-		|| str.includes("\n")
-		|| str.includes("\r")
-		|| str.includes("\"")
+		str.includes(";") ||
+		str.includes("\n") ||
+		str.includes("\r") ||
+		str.includes('"')
 	) {
-		return `"${str.replaceAll("\"", "\"\"")}"`;
+		return `"${str.replaceAll('"', '""')}"`;
 	}
 	return str;
 }
 
-function convertFrameToCSVRow(
-	capturedFrame: {
-		timestamp: Date;
-		parsedFrame: Frame | CorruptedFrame;
-		frameData: BytesView;
-	},
-): string {
+function convertFrameToCSVRow(capturedFrame: {
+	timestamp: Date;
+	parsedFrame: Frame | CorruptedFrame;
+	frameData: BytesView;
+}): string {
 	const row: string[] = [];
 
 	// Extract date and time from timestamp
@@ -200,9 +199,10 @@ function convertFrameToCSVRow(
 	}
 
 	// Columns 7-8: Protocol and Data Rate (split from protocol data rate)
-	const protocolDataRate = "protocolDataRate" in validFrame
-		? validFrame.protocolDataRate
-		: undefined;
+	const protocolDataRate =
+		"protocolDataRate" in validFrame
+			? validFrame.protocolDataRate
+			: undefined;
 	if (typeof protocolDataRate === "number") {
 		const protocolStr = znifferProtocolDataRateToString(
 			protocolDataRate,
@@ -262,12 +262,10 @@ function convertFrameToCSVRow(
 	if ("homeId" in validFrame) {
 		row.push(
 			escapeCSVValue(
-				`0x${
-					validFrame.homeId.toString(16).toUpperCase().padStart(
-						8,
-						"0",
-					)
-				}`,
+				`0x${validFrame.homeId
+					.toString(16)
+					.toUpperCase()
+					.padStart(8, "0")}`,
 			),
 		);
 	} else if ("homeIdHash" in validFrame) {
@@ -275,9 +273,10 @@ function convertFrameToCSVRow(
 		row.push(
 			escapeCSVValue(
 				hashValue !== undefined
-					? `0x${
-						hashValue.toString(16).toUpperCase().padStart(2, "0")
-					}`
+					? `0x${hashValue
+							.toString(16)
+							.toUpperCase()
+							.padStart(2, "0")}`
 					: "",
 			),
 		);
@@ -340,9 +339,9 @@ function convertFrameToCSVRow(
 		if (validFrame.routedAck && !validFrame.routedError) {
 			routingStatus = "routed ack";
 		} else if (
-			!validFrame.routedAck
-			&& validFrame.routedError
-			&& "failedHop" in validFrame
+			!validFrame.routedAck &&
+			validFrame.routedError &&
+			"failedHop" in validFrame
 		) {
 			routingStatus = `route failed (hop ${validFrame.failedHop})`;
 		}

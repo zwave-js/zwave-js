@@ -73,12 +73,14 @@ try {
 If you know that your firmware data can be transmitted as-is, you can also skip the extraction part and provide the raw data directly:
 
 ```ts
-const result = await node.updateFirmware([{
-	data: firmwareData,
-	// optionally specify target and firmare ID:
-	firmwareTarget: 1,
-	firmwareId: 0xcafe,
-}]);
+const result = await node.updateFirmware([
+	{
+		data: firmwareData,
+		// optionally specify target and firmare ID:
+		firmwareTarget: 1,
+		firmwareId: 0xcafe,
+	},
+]);
 ```
 
 To be notified of the progress, two driver events exist. Listening to progress can be done like this:

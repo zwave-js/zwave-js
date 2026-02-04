@@ -26,7 +26,9 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import { distinct } from "alcalzone-shared/arrays";
+
 import type { Driver } from "../driver/Driver.js";
+
 import type { ZWaveNode } from "./Node.js";
 import { VirtualEndpoint } from "./VirtualEndpoint.js";
 
@@ -95,9 +97,9 @@ export class VirtualNode extends VirtualEndpoint {
 		this.physicalNodes = [...physicalNodes].filter(
 			(n) =>
 				// And avoid including the controller node in the support checks
-				n.id !== driver.controller.ownNodeId
+				n.id !== driver.controller.ownNodeId &&
 				// And omit nodes using Security S0 which does not support broadcast / multicast
-				&& n.getHighestSecurityClass() !== SecurityClass.S0_Legacy,
+				n.getHighestSecurityClass() !== SecurityClass.S0_Legacy,
 		);
 		this.nodesByCommunicationProfile = groupNodesByCommunicationProfile(
 			this.physicalNodes,
@@ -136,10 +138,9 @@ export class VirtualNode extends VirtualEndpoint {
 			if (!endpointInstance) {
 				return {
 					status: SetValueStatus.EndpointNotFound,
-					message:
-						`Endpoint ${valueId.endpoint} does not exist on virtual node ${
-							this.id ?? "??"
-						}`,
+					message: `Endpoint ${valueId.endpoint} does not exist on virtual node ${
+						this.id ?? "??"
+					}`,
 				};
 			}
 			let api = (endpointInstance.commandClasses as any)[
@@ -149,11 +150,9 @@ export class VirtualNode extends VirtualEndpoint {
 			if (!api.setValue) {
 				return {
 					status: SetValueStatus.NotImplemented,
-					message: `The ${
-						getCCName(
-							valueId.commandClass,
-						)
-					} CC does not support setting values`,
+					message: `The ${getCCName(
+						valueId.commandClass,
+					)} CC does not support setting values`,
 				};
 			}
 
@@ -201,12 +200,11 @@ export class VirtualNode extends VirtualEndpoint {
 			if (api.isSetValueOptimistic(valueId)) {
 				// If the call did not throw, assume that the call was successful and remember the new value
 				// for each node that was affected by this command
-				const affectedNodes = this.physicalNodes
-					.filter((node) =>
-						node
-							.getEndpoint(endpointInstance.index)
-							?.supportsCC(valueId.commandClass)
-					);
+				const affectedNodes = this.physicalNodes.filter((node) =>
+					node
+						.getEndpoint(endpointInstance.index)
+						?.supportsCC(valueId.commandClass),
+				);
 				for (const node of affectedNodes) {
 					node.valueDB.setValue(valueId, value);
 				}
@@ -215,17 +213,18 @@ export class VirtualNode extends VirtualEndpoint {
 			// Depending on the settings of the SET_VALUE implementation, we may have to
 			// optimistically update a different value and/or verify the changes
 			if (hooks) {
-				const supervisedAndSuccessful = isSupervisionResult(result)
-					&& result.status === SupervisionStatus.Success;
+				const supervisedAndSuccessful =
+					isSupervisionResult(result) &&
+					result.status === SupervisionStatus.Success;
 
 				const shouldUpdateOptimistically =
-					api.isSetValueOptimistic(valueId)
+					api.isSetValueOptimistic(valueId) &&
 					// For successful supervised commands, we know that an optimistic update is ok
-					&& (supervisedAndSuccessful
+					(supervisedAndSuccessful ||
 						// For unsupervised commands that did not fail, we let the application decide whether
 						// to update related value optimistically
-						|| (!this.driver.options.disableOptimisticValueUpdate
-							&& result == undefined));
+						(!this.driver.options.disableOptimisticValueUpdate &&
+							result == undefined));
 
 				// The actual API implementation handles additional optimistic updates
 				if (shouldUpdateOptimistically) {
@@ -238,8 +237,8 @@ export class VirtualNode extends VirtualEndpoint {
 				// ...the command was supervised and successful
 				// ...and the CC API decides not to verify anyway
 				if (
-					!supervisedCommandSucceeded(result)
-					|| hooks.forceVerifyChanges?.()
+					!supervisedCommandSucceeded(result) ||
+					hooks.forceVerifyChanges?.()
 				) {
 					// Let the CC API implementation handle the verification.
 					// It may still decide not to do it.
@@ -303,8 +302,8 @@ export class VirtualNode extends VirtualEndpoint {
 				// Don't expose read-only values for virtual nodes, they won't ever have any value
 				if (!metadata.writeable) continue;
 
-				const needsUpdate = !ret.has(mapKey)
-					|| ret.get(mapKey)!.ccVersion < ccVersion;
+				const needsUpdate =
+					!ret.has(mapKey) || ret.get(mapKey)!.ccVersion < ccVersion;
 				if (needsUpdate) {
 					ret.set(mapKey, {
 						...valueId,

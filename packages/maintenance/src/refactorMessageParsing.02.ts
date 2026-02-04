@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -6,23 +7,25 @@ async function main() {
 		tsConfigFilePath: "packages/zwave-js/tsconfig.json",
 	});
 
-	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getFilePath().includes("lib/serialapi/")
-	);
+	const sourceFiles = project
+		.getSourceFiles()
+		.filter((file) => file.getFilePath().includes("lib/serialapi/"));
 	for (const file of sourceFiles) {
-		const emptyFromImpls = file.getDescendantsOfKind(
-			SyntaxKind.MethodDeclaration,
-		)
+		const emptyFromImpls = file
+			.getDescendantsOfKind(SyntaxKind.MethodDeclaration)
 			.filter((m) => m.isStatic() && m.getName() === "from")
 			.filter((m) => {
 				const params = m.getParameters();
 				if (params.length !== 2) return false;
 				if (
-					params[0].getDescendantsOfKind(SyntaxKind.TypeReference)[0]
+					params[0]
+						.getDescendantsOfKind(SyntaxKind.TypeReference)[0]
 						?.getText() !== "MessageRaw"
-				) return false;
+				)
+					return false;
 				if (
-					params[1].getDescendantsOfKind(SyntaxKind.TypeReference)[0]
+					params[1]
+						.getDescendantsOfKind(SyntaxKind.TypeReference)[0]
 						?.getText() !== "MessageParsingContext"
 				) {
 					return false;
@@ -35,8 +38,8 @@ async function main() {
 				const firstStmt = body.getStatements()[0];
 				if (!firstStmt) return false;
 				if (
-					firstStmt.isKind(SyntaxKind.ThrowStatement)
-					&& firstStmt.getText().includes("ZWaveError")
+					firstStmt.isKind(SyntaxKind.ThrowStatement) &&
+					firstStmt.getText().includes("ZWaveError")
 				) {
 					return true;
 				}

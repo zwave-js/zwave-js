@@ -1,7 +1,9 @@
 import { test } from "vitest";
+
 import { SecurityClass } from "../definitions/SecurityClass.js";
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import { QRCodeVersion, parseQRCodeString } from "./index.js";
 
 function createDummyQR(firstDigits: string): string {
@@ -22,8 +24,7 @@ const cases = [
 		reason: "is too short",
 	},
 	{
-		code:
-			"900199999003090360850151462432730701509765221393752300100179303072022000881000020000900257",
+		code: "900199999003090360850151462432730701509765221393752300100179303072022000881000020000900257",
 		reason: "has an incorrect checksum",
 	},
 ];
@@ -162,42 +163,45 @@ test("QR code parsing -> Example case: Acme Light Dimmer w/o SmartStart", async 
 	});
 
 	test("QR code parsing -> handles whitespace in the middle", async (t) => {
-		const qrWithSpaces = validQRCode.slice(0, 20)
-			+ " "
-			+ validQRCode.slice(20, 40)
-			+ " "
-			+ validQRCode.slice(40);
+		const qrWithSpaces =
+			validQRCode.slice(0, 20) +
+			" " +
+			validQRCode.slice(20, 40) +
+			" " +
+			validQRCode.slice(40);
 		const result = await parseQRCodeString(qrWithSpaces);
 		t.expect(result).toStrictEqual(expectedResult);
 	});
 
 	test("QR code parsing -> handles newlines in the middle", async (t) => {
-		const qrWithNewlines = validQRCode.slice(0, 30)
-			+ "\n"
-			+ validQRCode.slice(30, 60)
-			+ "\n"
-			+ validQRCode.slice(60);
+		const qrWithNewlines =
+			validQRCode.slice(0, 30) +
+			"\n" +
+			validQRCode.slice(30, 60) +
+			"\n" +
+			validQRCode.slice(60);
 		const result = await parseQRCodeString(qrWithNewlines);
 		t.expect(result).toStrictEqual(expectedResult);
 	});
 
 	test("QR code parsing -> handles mixed whitespace in the middle", async (t) => {
-		const qrWithMixedWhitespace = validQRCode.slice(0, 10)
-			+ " "
-			+ validQRCode.slice(10, 30)
-			+ "\n"
-			+ validQRCode.slice(30, 50)
-			+ "\t"
-			+ validQRCode.slice(50);
+		const qrWithMixedWhitespace =
+			validQRCode.slice(0, 10) +
+			" " +
+			validQRCode.slice(10, 30) +
+			"\n" +
+			validQRCode.slice(30, 50) +
+			"\t" +
+			validQRCode.slice(50);
 		const result = await parseQRCodeString(qrWithMixedWhitespace);
 		t.expect(result).toStrictEqual(expectedResult);
 	});
 
 	test("QR code parsing -> handles multiple candidates", async (t) => {
 		const result = await parseQRCodeString(
-			`${validQRCode.slice(0, 14)}${validQRCode}${
-				validQRCode.slice(5)
-			}90`,
+			`${validQRCode.slice(0, 14)}${validQRCode}${validQRCode.slice(
+				5,
+			)}90`,
 		);
 		t.expect(result).toStrictEqual(expectedResult);
 	});

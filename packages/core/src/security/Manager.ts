@@ -1,15 +1,14 @@
 /** Management class and utils for Security S0 */
 
 import { type BytesView, type Timer, setTimer } from "@zwave-js/shared";
+
 import { encryptAES128ECB, randomBytes } from "../crypto/index.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 const authKeyBase = new Uint8Array(16).fill(0x55);
 const encryptionKeyBase = new Uint8Array(16).fill(0xaa);
 
-export function generateAuthKey(
-	networkKey: BytesView,
-): Promise<BytesView> {
+export function generateAuthKey(networkKey: BytesView): Promise<BytesView> {
 	return encryptAES128ECB(authKeyBase, networkKey);
 }
 
@@ -78,9 +77,7 @@ export class SecurityManager {
 	private _encryptionKey: BytesView | undefined;
 	public async getEncryptionKey(): Promise<BytesView> {
 		if (!this._encryptionKey) {
-			this._encryptionKey = await generateEncryptionKey(
-				this.networkKey,
-			);
+			this._encryptionKey = await generateEncryptionKey(this.networkKey);
 		}
 		return this._encryptionKey;
 	}

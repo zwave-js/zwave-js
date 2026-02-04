@@ -87,10 +87,7 @@
 			"label": "High Load Timeout Protection: Power Threshold",
 			"valueSize": 2,
 			"unit": "W",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [100, 3500] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [100, 3500] }],
 			"defaultValue": 0,
 			"options": [
 				{

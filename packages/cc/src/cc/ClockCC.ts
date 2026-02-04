@@ -12,6 +12,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -85,9 +86,7 @@ export class ClockCCAPI extends CCAPI {
 export class ClockCC extends CommandClass {
 	declare ccCommand: ClockCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -102,9 +101,7 @@ export class ClockCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -146,9 +143,7 @@ export interface ClockCCSetOptions {
 @CCCommand(ClockCommand.Set)
 @useSupervision()
 export class ClockCCSet extends ClockCC {
-	public constructor(
-		options: WithAddress<ClockCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<ClockCCSetOptions>) {
 		super(options);
 		this.weekday = options.weekday;
 		this.hour = options.hour;
@@ -183,17 +178,12 @@ export class ClockCCSet extends ClockCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"clock setting": `${
-					getEnumMemberName(
-						Weekday,
-						this.weekday,
-					)
-				}, ${this.hour.toString().padStart(2, "0")}:${
-					this.minute.toString().padStart(
-						2,
-						"0",
-					)
-				}`,
+				"clock setting": `${getEnumMemberName(
+					Weekday,
+					this.weekday,
+				)}, ${this.hour.toString().padStart(2, "0")}:${this.minute
+					.toString()
+					.padStart(2, "0")}`,
 			},
 		};
 	}
@@ -208,9 +198,7 @@ export interface ClockCCReportOptions {
 
 @CCCommand(ClockCommand.Report)
 export class ClockCCReport extends ClockCC {
-	public constructor(
-		options: WithAddress<ClockCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<ClockCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -224,11 +212,7 @@ export class ClockCCReport extends ClockCC {
 		const weekday: Weekday = raw.payload[0] >>> 5;
 		const hour = raw.payload[0] & 0b11111;
 		const minute = raw.payload[1];
-		validatePayload(
-			weekday <= Weekday.Sunday,
-			hour <= 23,
-			minute <= 59,
-		);
+		validatePayload(weekday <= Weekday.Sunday, hour <= 23, minute <= 59);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -246,17 +230,12 @@ export class ClockCCReport extends ClockCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"clock setting": `${
-					getEnumMemberName(
-						Weekday,
-						this.weekday,
-					)
-				}, ${this.hour.toString().padStart(2, "0")}:${
-					this.minute.toString().padStart(
-						2,
-						"0",
-					)
-				}`,
+				"clock setting": `${getEnumMemberName(
+					Weekday,
+					this.weekday,
+				)}, ${this.hour.toString().padStart(2, "0")}:${this.minute
+					.toString()
+					.padStart(2, "0")}`,
 			},
 		};
 	}

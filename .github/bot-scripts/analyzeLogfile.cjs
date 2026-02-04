@@ -53,12 +53,14 @@ async function main(param) {
 		// Run the analysis
 		console.log("Analyzing logfile...");
 		let analysisResult = "";
-		const analysisQuery = query
-			|| "Analyze this Z-Wave JS log file and provide insights about any issues, errors, or notable events.";
+		const analysisQuery =
+			query ||
+			"Analyze this Z-Wave JS log file and provide insights about any issues, errors, or notable events.";
 
-		for await (
-			const chunk of analyzer.analyzeLogFile(tempFile.name, analysisQuery)
-		) {
+		for await (const chunk of analyzer.analyzeLogFile(
+			tempFile.name,
+			analysisQuery,
+		)) {
 			analysisResult += chunk;
 		}
 

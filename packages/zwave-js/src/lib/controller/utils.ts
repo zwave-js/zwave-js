@@ -6,7 +6,9 @@ import {
 	isValidDSK,
 } from "@zwave-js/core";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import type { Task } from "../driver/Task.js";
+
 import {
 	type PlannedProvisioningEntry,
 	ProvisioningEntryStatus,
@@ -30,9 +32,9 @@ export function assertProvisioningEntry(
 	}
 
 	if (
-		arg.status != undefined
-		&& (typeof arg.status !== "number"
-			|| !(arg.status in ProvisioningEntryStatus))
+		arg.status != undefined &&
+		(typeof arg.status !== "number" ||
+			!(arg.status in ProvisioningEntryStatus))
 	) {
 		fail("status is not a ProvisioningEntryStatus");
 	}
@@ -62,8 +64,8 @@ export function assertProvisioningEntry(
 	}
 
 	if (
-		arg.protocol != undefined
-		&& (typeof arg.protocol !== "number" || !(arg.protocol in Protocols))
+		arg.protocol != undefined &&
+		(typeof arg.protocol !== "number" || !(arg.protocol in Protocols))
 	) {
 		fail("protocol is not a valid");
 	}
@@ -83,8 +85,9 @@ export function assertProvisioningEntry(
 
 /** Checks if a task belongs to a route rebuilding process */
 export function isRebuildRoutesTask(t: Task<unknown>): boolean {
-	return t.tag?.id === "rebuild-routes"
-		|| t.tag?.id === "rebuild-node-routes";
+	return (
+		t.tag?.id === "rebuild-routes" || t.tag?.id === "rebuild-node-routes"
+	);
 }
 
 export function getInitial500SeriesNVMBackupChunkSize(
@@ -94,11 +97,7 @@ export function getInitial500SeriesNVMBackupChunkSize(
 ): number {
 	// Some 500 series controllers choke when trying to read from the NVM
 	// with a chunk size that is too big.
-	if (
-		manufacturerId === 0x86
-		&& productType === 0x01
-		&& productId === 0x5a
-	) {
+	if (manufacturerId === 0x86 && productType === 0x01 && productId === 0x5a) {
 		// Aeotec Z-Stick Gen5 (some revisions at least)
 		return 48;
 	}

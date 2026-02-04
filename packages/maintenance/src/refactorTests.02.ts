@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import {
 	type CallExpression,
 	type Identifier,
@@ -17,31 +18,42 @@ async function main() {
 
 	for (const file of sourceFiles) {
 		// Find tests
-		const tests = file.getDescendantsOfKind(SyntaxKind.CallExpression)
-			.filter((c) =>
-				c.getExpressionIfKind(SyntaxKind.Identifier)?.getText()
-					=== "test"
-				|| c.getExpressionIfKind(SyntaxKind.PropertyAccessExpression)
-						?.getExpressionIfKind(SyntaxKind.Identifier)?.getText()
-					=== "test"
-			).filter((f) =>
-				f.getArguments().length >= 2
-				&& f.getArguments()[1].asKind(SyntaxKind.ArrowFunction)
-						?.getParameters().length === 1
+		const tests = file
+			.getDescendantsOfKind(SyntaxKind.CallExpression)
+			.filter(
+				(c) =>
+					c.getExpressionIfKind(SyntaxKind.Identifier)?.getText() ===
+						"test" ||
+					c
+						.getExpressionIfKind(
+							SyntaxKind.PropertyAccessExpression,
+						)
+						?.getExpressionIfKind(SyntaxKind.Identifier)
+						?.getText() === "test",
+			)
+			.filter(
+				(f) =>
+					f.getArguments().length >= 2 &&
+					f
+						.getArguments()[1]
+						.asKind(SyntaxKind.ArrowFunction)
+						?.getParameters().length === 1,
 			);
 
 		const testsAndContexts = tests.map((t) => {
-			const context =
-				t.getArguments()[1].asKind(SyntaxKind.ArrowFunction)!
-					.getParameters()[0];
+			const context = t
+				.getArguments()[1]
+				.asKind(SyntaxKind.ArrowFunction)!
+				.getParameters()[0];
 			return [t, context] as const;
 		});
-		const testsAndContextUsages = testsAndContexts.map((
-			[t, c],
-		) => [t, c.findReferencesAsNodes()]);
+		const testsAndContextUsages = testsAndContexts.map(([t, c]) => [
+			t,
+			c.findReferencesAsNodes(),
+		]);
 
-		const contextUsages = testsAndContextUsages.flatMap(([, usages]) =>
-			usages
+		const contextUsages = testsAndContextUsages.flatMap(
+			([, usages]) => usages,
 		);
 
 		if (contextUsages.length === 0) continue;
@@ -82,14 +94,10 @@ function replaceAssertion_not(
 	if (arg1) callExpr.removeArgument(1);
 	switch (arg1) {
 		case "undefined":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.toBeDefined()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.toBeDefined()`);
 			break;
 		case "null":
-			callExpr.replaceWithText(
-				`${callExpr.getText()}.not.toBeNull()`,
-			);
+			callExpr.replaceWithText(`${callExpr.getText()}.not.toBeNull()`);
 			break;
 		default:
 			callExpr.replaceWithText(

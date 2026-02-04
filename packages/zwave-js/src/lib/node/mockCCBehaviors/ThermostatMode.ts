@@ -38,8 +38,8 @@ const respondToThermostatModeSet: MockNodeBehavior = {
 const respondToThermostatModeGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof ThermostatModeCCGet) {
-			const mode = (self.state.get(StateKeys.mode)
-				?? ThermostatMode.Off) as ThermostatMode;
+			const mode = (self.state.get(StateKeys.mode) ??
+				ThermostatMode.Off) as ThermostatMode;
 			const manufacturerData =
 				mode === ThermostatMode["Manufacturer specific"]
 					? self.state.get(StateKeys.manufacturerData)

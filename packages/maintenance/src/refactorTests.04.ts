@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -11,9 +12,8 @@ async function main() {
 
 	for (const file of sourceFiles) {
 		// Find calls to `CommandClass.parse`
-		const ccParse = file.getDescendantsOfKind(
-			SyntaxKind.PropertyAccessExpression,
-		)
+		const ccParse = file
+			.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)
 			.filter((p) => p.getText() === "CommandClass.parse")
 			.map((p) => {
 				const callExpr = p.getParentIfKind(SyntaxKind.CallExpression);

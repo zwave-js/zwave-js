@@ -7,7 +7,9 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type ConditionalItem,
 	conditionApplies,
@@ -17,9 +19,7 @@ import {
 import type { ConditionalDeviceConfig } from "./DeviceConfig.js";
 import type { DeviceID } from "./shared.js";
 
-export class ConditionalParamInformation
-	implements ConditionalItem<ParamInformation>
-{
+export class ConditionalParamInformation implements ConditionalItem<ParamInformation> {
 	public constructor(
 		parent: ConditionalDeviceConfig,
 		parameterNumber: number,
@@ -42,8 +42,8 @@ Parameter #${parameterNumber} has a non-string label`,
 		this.label = definition.label;
 
 		if (
-			definition.description != undefined
-			&& typeof definition.description !== "string"
+			definition.description != undefined &&
+			typeof definition.description !== "string"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -54,8 +54,8 @@ Parameter #${parameterNumber} has a non-string description`,
 		this.description = definition.description;
 
 		if (
-			typeof definition.valueSize !== "number"
-			|| definition.valueSize <= 0
+			typeof definition.valueSize !== "number" ||
+			definition.valueSize <= 0
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -66,8 +66,8 @@ Parameter #${parameterNumber} has an invalid value size`,
 		this.valueSize = definition.valueSize;
 
 		if (
-			definition.minValue != undefined
-			&& typeof definition.minValue !== "number"
+			definition.minValue != undefined &&
+			typeof definition.minValue !== "number"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -78,8 +78,8 @@ Parameter #${parameterNumber} has a non-numeric property minValue`,
 		this.minValue = definition.minValue;
 
 		if (
-			definition.maxValue != undefined
-			&& typeof definition.maxValue !== "number"
+			definition.maxValue != undefined &&
+			typeof definition.maxValue !== "number"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -90,8 +90,8 @@ Parameter #${parameterNumber} has a non-numeric property maxValue`,
 		this.maxValue = definition.maxValue;
 
 		if (
-			definition.unsigned != undefined
-			&& typeof definition.unsigned !== "boolean"
+			definition.unsigned != undefined &&
+			typeof definition.unsigned !== "boolean"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -102,8 +102,8 @@ Parameter #${parameterNumber} has a non-boolean property unsigned`,
 		this.unsigned = definition.unsigned === true;
 
 		if (
-			definition.unit != undefined
-			&& typeof definition.unit !== "string"
+			definition.unit != undefined &&
+			typeof definition.unit !== "string"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -123,8 +123,8 @@ Parameter #${parameterNumber} has a non-string unit`,
 		this.readOnly = definition.readOnly;
 
 		if (
-			definition.writeOnly != undefined
-			&& definition.writeOnly !== true
+			definition.writeOnly != undefined &&
+			definition.writeOnly !== true
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -152,8 +152,8 @@ Parameter #${parameterNumber} has a non-numeric property defaultValue`,
 		this.defaultValue = definition.defaultValue;
 
 		if (
-			definition.recommendedValue != undefined
-			&& typeof definition.recommendedValue !== "number"
+			definition.recommendedValue != undefined &&
+			typeof definition.recommendedValue !== "number"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -164,8 +164,8 @@ Parameter #${parameterNumber} has a non-numeric property recommendedValue`,
 		this.recommendedValue = definition.recommendedValue;
 
 		if (
-			definition.allowManualEntry != undefined
-			&& definition.allowManualEntry !== false
+			definition.allowManualEntry != undefined &&
+			definition.allowManualEntry !== false
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -177,8 +177,8 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 		this.allowManualEntry = definition.allowManualEntry ?? !this.readOnly;
 
 		if (
-			definition.destructive != undefined
-			&& typeof definition.destructive !== "boolean"
+			definition.destructive != undefined &&
+			typeof definition.destructive !== "boolean"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -189,12 +189,12 @@ Parameter #${parameterNumber} has a non-boolean property destructive`,
 		this.destructive = definition.destructive;
 
 		if (
-			isArray(definition.options)
-			&& !definition.options.every(
+			isArray(definition.options) &&
+			!definition.options.every(
 				(opt: unknown) =>
-					isObject(opt)
-					&& typeof opt.label === "string"
-					&& typeof opt.value === "number",
+					isObject(opt) &&
+					typeof opt.label === "string" &&
+					typeof opt.value === "number",
 			)
 		) {
 			throwInvalidConfig(
@@ -204,14 +204,15 @@ Parameter #${parameterNumber}: options is malformed!`,
 			);
 		}
 
-		this.options = definition.options?.map(
-			(opt: any) =>
-				new ConditionalConfigOption(opt.value, opt.label, opt.$if),
-		) ?? [];
+		this.options =
+			definition.options?.map(
+				(opt: any) =>
+					new ConditionalConfigOption(opt.value, opt.label, opt.$if),
+			) ?? [];
 
 		if (
-			definition.hidden != undefined
-			&& typeof definition.hidden !== "boolean"
+			definition.hidden != undefined &&
+			typeof definition.hidden !== "boolean"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -450,22 +451,20 @@ Parameter #${this.parameterNumber} is missing required property "maxValue"!`,
 	}
 }
 
-export type ParamInformation =
-	& Omit<
-		ConditionalParamInformation,
-		| "condition"
-		| "evaluateCondition"
-		| "options"
-		| "minValue"
-		| "maxValue"
-		| "allowed"
-	>
-	& {
-		options: readonly ConfigOption[];
-		minValue: NonNullable<ConditionalParamInformation["minValue"]>;
-		maxValue: NonNullable<ConditionalParamInformation["maxValue"]>;
-		allowed: NonNullable<ConditionalParamInformation["allowed"]>;
-	};
+export type ParamInformation = Omit<
+	ConditionalParamInformation,
+	| "condition"
+	| "evaluateCondition"
+	| "options"
+	| "minValue"
+	| "maxValue"
+	| "allowed"
+> & {
+	options: readonly ConfigOption[];
+	minValue: NonNullable<ConditionalParamInformation["minValue"]>;
+	maxValue: NonNullable<ConditionalParamInformation["maxValue"]>;
+	allowed: NonNullable<ConditionalParamInformation["allowed"]>;
+};
 
 export class ConditionalConfigOption implements ConditionalItem<ConfigOption> {
 	public constructor(

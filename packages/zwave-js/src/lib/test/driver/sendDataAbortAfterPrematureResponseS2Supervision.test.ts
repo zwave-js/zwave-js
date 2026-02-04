@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCGet,
 	BasicCCReport,
@@ -20,7 +22,7 @@ import {
 	type MockNodeBehavior,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
@@ -99,9 +101,7 @@ integrationTest(
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (
-						receivedCC instanceof SupervisionCCGet
-					) {
+					if (receivedCC instanceof SupervisionCCGet) {
 						const cc = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
 							sessionId: receivedCC.sessionId,

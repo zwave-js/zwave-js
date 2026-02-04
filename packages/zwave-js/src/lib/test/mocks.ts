@@ -27,6 +27,7 @@ import {
 } from "@zwave-js/serial";
 import { SendDataRequest } from "@zwave-js/serial/serialapi";
 import sinon from "sinon";
+
 import type { ZWaveNode } from "../node/Node.js";
 import * as nodeUtils from "../node/utils.js";
 
@@ -92,8 +93,8 @@ export function createEmptyMockDriver() {
 			): T | undefined => {
 				let _ret = ret.networkCache.get(cacheKey);
 				if (
-					_ret !== undefined
-					&& typeof options?.reviver === "function"
+					_ret !== undefined &&
+					typeof options?.reviver === "function"
 				) {
 					try {
 						_ret = options.reviver(_ret);
@@ -113,8 +114,8 @@ export function createEmptyMockDriver() {
 				},
 			): void => {
 				if (
-					value !== undefined
-					&& typeof options?.serializer === "function"
+					value !== undefined &&
+					typeof options?.serializer === "function"
 				) {
 					value = options.serializer(value);
 				}
@@ -176,8 +177,8 @@ export function createEmptyMockDriver() {
 	ret.getSupportedCCVersion.callsFake(
 		(ccId: CommandClasses, nodeId: number, endpointIndex: number = 0) => {
 			if (
-				ret.controller?.nodes instanceof Map
-				&& ret.controller.nodes.has(nodeId)
+				ret.controller?.nodes instanceof Map &&
+				ret.controller.nodes.has(nodeId)
 			) {
 				const node: ZWaveNode = ret.controller.nodes.get(nodeId);
 				const ccVersion = node
@@ -191,8 +192,8 @@ export function createEmptyMockDriver() {
 	ret.getSafeCCVersion.callsFake(
 		(ccId: CommandClasses, nodeId: number, endpointIndex: number = 0) => {
 			return (
-				ret.getSupportedCCVersion(ccId, nodeId, endpointIndex)
-				|| getImplementedVersion(ccId)
+				ret.getSupportedCCVersion(ccId, nodeId, endpointIndex) ||
+				getImplementedVersion(ccId)
 			);
 		},
 	);
@@ -207,12 +208,7 @@ export interface CreateTestNodeOptions {
 	interviewStage?: InterviewStage;
 	isSecure?: MaybeNotKnown<boolean>;
 
-	commandClasses?: Partial<
-		Record<
-			CommandClasses,
-			Partial<CommandClassInfo>
-		>
-	>;
+	commandClasses?: Partial<Record<CommandClasses, Partial<CommandClassInfo>>>;
 	endpoints?: Record<
 		number,
 		Omit<CreateTestEndpointOptions, "index" | "nodeId">
@@ -336,12 +332,7 @@ export function createTestNode(
 export interface CreateTestEndpointOptions {
 	nodeId: number;
 	index: number;
-	commandClasses?: Partial<
-		Record<
-			CommandClasses,
-			Partial<CommandClassInfo>
-		>
-	>;
+	commandClasses?: Partial<Record<CommandClasses, Partial<CommandClassInfo>>>;
 }
 
 export function createTestEndpoint(
@@ -372,9 +363,11 @@ export function createTestEndpoint(
 			const defaultVersion = ccInfo?.isSupported
 				? getImplementedVersion(cc)
 				: 0;
-			return ccInfo?.version
-				?? host.getNode(options.nodeId)?.getCCVersion(cc)
-				?? defaultVersion;
+			return (
+				ccInfo?.version ??
+				host.getNode(options.nodeId)?.getCCVersion(cc) ??
+				defaultVersion
+			);
 		},
 	};
 

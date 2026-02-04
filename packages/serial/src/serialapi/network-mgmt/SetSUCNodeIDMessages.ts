@@ -61,8 +61,8 @@ export class SetSUCNodeIdRequest extends SetSUCNodeIdRequestBase {
 		this.sucNodeId = options.sucNodeId;
 		this.enableSUC = options.enableSUC;
 		this.enableSIS = options.enableSIS;
-		this.transmitOptions = options.transmitOptions
-			?? TransmitOptions.DEFAULT;
+		this.transmitOptions =
+			options.transmitOptions ?? TransmitOptions.DEFAULT;
 		this._ownNodeId = options.ownNodeId;
 	}
 
@@ -151,7 +151,8 @@ export interface SetSUCNodeIdRequestStatusReportOptions {
 	status: SetSUCNodeIdStatus;
 }
 
-export class SetSUCNodeIdRequestStatusReport extends SetSUCNodeIdRequestBase
+export class SetSUCNodeIdRequestStatusReport
+	extends SetSUCNodeIdRequestBase
 	implements SuccessIndicator
 {
 	public constructor(

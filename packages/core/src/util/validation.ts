@@ -1,5 +1,6 @@
 import { isUint8Array } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
+
 import { ZWaveError, ZWaveErrorCodes } from "../index_browser.js";
 
 const primivitiveTypes = new Set([
@@ -10,10 +11,7 @@ const primivitiveTypes = new Set([
 	"undefined",
 ]);
 
-function addIndexToName(
-	e: ErrorElaboration,
-	index?: number,
-): ErrorElaboration {
+function addIndexToName(e: ErrorElaboration, index?: number): ErrorElaboration {
 	if (index != undefined) {
 		return {
 			...e,
@@ -72,20 +70,20 @@ function formatElaboration(e: ErrorElaboration, indent: number = 0): string {
 	} else if (e.type === "union") {
 		const allPrimitive = e.nested.every((n) => n.type === "primitive");
 		if (allPrimitive || primivitiveTypes.has(e.actualType)) {
-			ret += `Expected ${what} to be one of ${
-				e.nested.map(getTypeName).join(" | ")
-			}, got ${e.actual}`;
+			ret += `Expected ${what} to be one of ${e.nested
+				.map(getTypeName)
+				.join(" | ")}, got ${e.actual}`;
 		} else {
 			if (e.typeName) {
-				ret +=
-					`${what} is not assignable to ${e.typeName}. Expected one of the following constraints to pass:`;
+				ret += `${what} is not assignable to ${e.typeName}. Expected one of the following constraints to pass:`;
 			} else {
 				ret += `Expected ${what} to be one of ${getTypeName(e)}`;
 			}
 			for (const nested of e.nested) {
 				if (nested.type === "primitive") continue;
-				ret += "\n"
-					+ formatElaboration(
+				ret +=
+					"\n" +
+					formatElaboration(
 						addIndexToName(nested, e.index),
 						indent + 1,
 					);
@@ -95,80 +93,76 @@ function formatElaboration(e: ErrorElaboration, indent: number = 0): string {
 		if (e.nested.length > 1) {
 			ret += `${what} is violating multiple constraints`;
 			for (const nested of e.nested) {
-				ret += "\n"
-					+ formatElaboration(
+				ret +=
+					"\n" +
+					formatElaboration(
 						addIndexToName(nested, e.index),
 						indent + 1,
 					);
 			}
 		} else {
-			ret = ret.slice(0, -2)
-				+ formatElaboration(
-					addIndexToName(e.nested[0], e.index),
-					indent,
-				);
+			ret =
+				ret.slice(0, -2) +
+				formatElaboration(addIndexToName(e.nested[0], e.index), indent);
 		}
 	} else if (e.type === "enum") {
-		ret +=
-			`Expected ${what} to be a member of enum ${e.enum}, got ${e.actual}`;
+		ret += `Expected ${what} to be a member of enum ${e.enum}, got ${e.actual}`;
 	} else if (e.type === "date") {
 		ret += `Expected ${what} to be a Date, got ${e.actual}`;
 	} else if (e.type === "array") {
 		if (e.nested) {
 			ret += `${what} is not assignable to Array<${e.itemType}>`;
 			for (const nested of e.nested) {
-				ret += "\n"
-					+ formatElaboration(
+				ret +=
+					"\n" +
+					formatElaboration(
 						addIndexToName(nested, e.index),
 						indent + 1,
 					);
 			}
 		} else {
-			ret +=
-				`Expected ${what} to be an Array<${e.itemType}>, got ${e.actual}`;
+			ret += `Expected ${what} to be an Array<${e.itemType}>, got ${e.actual}`;
 		}
 	} else if (e.type === "tuple") {
 		if (e.nested) {
 			ret += `${what} is not assignable to ${e.tupleType}`;
 			for (const nested of e.nested) {
-				ret += "\n"
-					+ formatElaboration(
+				ret +=
+					"\n" +
+					formatElaboration(
 						addIndexToName(nested, e.index),
 						indent + 1,
 					);
 			}
 		} else {
-			ret +=
-				`Expected ${what} to be of type ${e.tupleType}, got ${e.actual}`;
+			ret += `Expected ${what} to be of type ${e.tupleType}, got ${e.actual}`;
 		}
 	} else if (e.type === "object") {
 		if (e.nested) {
 			ret += `${what} is not assignable to ${e.objectType}`;
 			for (const nested of e.nested) {
 				if ("actual" in nested && nested.actual === "undefined") {
-					ret += `\n${
-						" ".repeat((indent + 1) * 2)
-					}required property ${nested.name} is missing`;
+					ret += `\n${" ".repeat(
+						(indent + 1) * 2,
+					)}required property ${nested.name} is missing`;
 				} else {
-					ret += "\n"
-						+ formatElaboration(
+					ret +=
+						"\n" +
+						formatElaboration(
 							addIndexToName(nested, e.index),
 							indent + 1,
 						);
 				}
 			}
 		} else {
-			ret +=
-				`Expected ${what} to be of type ${e.objectType}, got ${e.actual}`;
+			ret += `Expected ${what} to be of type ${e.objectType}, got ${e.actual}`;
 		}
 	} else if (e.type === "uint8array") {
-		ret +=
-			`Expected ${what} to be a Uint8Array or BytesView, got ${e.actual}`;
+		ret += `Expected ${what} to be a Uint8Array or BytesView, got ${e.actual}`;
 	} else if (e.type === "missing") {
 		ret += `ERROR: Missing validation for ${what}`;
 	} else if (e.type === "class") {
-		ret +=
-			`Expected ${what} to be an instance of class ${e.class}, got ${e.actual}`;
+		ret += `Expected ${what} to be an instance of class ${e.class}, got ${e.actual}`;
 	} else {
 		assertNever(e);
 	}
@@ -226,135 +220,146 @@ export interface ValidatorContext {
 
 export type ValidatorFunction = (value: any) => ValidatorResult;
 
-type ErrorElaboration =
-	& ValidatorContext
-	& {
-		optional?: boolean;
-		// Only for array item elaborations
-		index?: number;
-	}
-	& ({
-		type: "primitive";
-		expected: "string" | "number" | "boolean" | "null" | "undefined";
-		actual: string;
-	} | {
-		type: "literal";
-		expected: string;
-		actual: string;
-	} | {
-		type: "date";
-		actual: string;
-	} | {
-		type: "uint8array";
-		actual: string;
-	} | {
-		type: "union";
-		typeName: string | undefined;
-		actual: string;
-		actualType: string;
-		nested: ErrorElaboration[];
-	} | {
-		type: "intersection";
-		typeName: string | undefined;
-		actual: string;
-		nested: ErrorElaboration[];
-	} | {
-		type: "array";
-		itemType: string;
-		actual: string;
-		// Only defined if the value is an array
-		nested?: ErrorElaboration[];
-	} | {
-		type: "tuple";
-		tupleType: string;
-		actual: string;
-		// Only defined if the value is an array
-		nested?: ErrorElaboration[];
-	} | {
-		type: "object";
-		objectType: string;
-		actual: string;
-		// Only defined if the value is an object
-		nested?: ErrorElaboration[];
-	} | {
-		type: "enum";
-		enum: string;
-		actual: string;
-	} | {
-		type: "class";
-		class: string;
-		actual: string;
-	} | {
-		type: "missing";
-	});
+type ErrorElaboration = ValidatorContext & {
+	optional?: boolean;
+	// Only for array item elaborations
+	index?: number;
+} & (
+		| {
+				type: "primitive";
+				expected:
+					| "string"
+					| "number"
+					| "boolean"
+					| "null"
+					| "undefined";
+				actual: string;
+		  }
+		| {
+				type: "literal";
+				expected: string;
+				actual: string;
+		  }
+		| {
+				type: "date";
+				actual: string;
+		  }
+		| {
+				type: "uint8array";
+				actual: string;
+		  }
+		| {
+				type: "union";
+				typeName: string | undefined;
+				actual: string;
+				actualType: string;
+				nested: ErrorElaboration[];
+		  }
+		| {
+				type: "intersection";
+				typeName: string | undefined;
+				actual: string;
+				nested: ErrorElaboration[];
+		  }
+		| {
+				type: "array";
+				itemType: string;
+				actual: string;
+				// Only defined if the value is an array
+				nested?: ErrorElaboration[];
+		  }
+		| {
+				type: "tuple";
+				tupleType: string;
+				actual: string;
+				// Only defined if the value is an array
+				nested?: ErrorElaboration[];
+		  }
+		| {
+				type: "object";
+				objectType: string;
+				actual: string;
+				// Only defined if the value is an object
+				nested?: ErrorElaboration[];
+		  }
+		| {
+				type: "enum";
+				enum: string;
+				actual: string;
+		  }
+		| {
+				type: "class";
+				class: string;
+				actual: string;
+		  }
+		| {
+				type: "missing";
+		  }
+	);
 
-export type ValidatorResult = {
-	success: true;
-	elaboration?: undefined;
-} | {
-	success: false;
-	elaboration: ErrorElaboration;
-};
+export type ValidatorResult =
+	| {
+			success: true;
+			elaboration?: undefined;
+	  }
+	| {
+			success: false;
+			elaboration: ErrorElaboration;
+	  };
 
-export const primitive = (
-	ctx: ValidatorContext,
-	expected: "string" | "number" | "boolean",
-) =>
-(value: any): ValidatorResult => {
-	if (typeof value === expected) return { success: true };
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "primitive",
-			expected,
-			actual: formatActualValue(value),
-		},
+export const primitive =
+	(ctx: ValidatorContext, expected: "string" | "number" | "boolean") =>
+	(value: any): ValidatorResult => {
+		if (typeof value === expected) return { success: true };
+		return {
+			success: false,
+			elaboration: {
+				...ctx,
+				type: "primitive",
+				expected,
+				actual: formatActualValue(value),
+			},
+		};
 	};
-};
 
-export const literal = (
-	ctx: ValidatorContext,
-	expected: string | number | boolean,
-) =>
-(value: any): ValidatorResult => {
-	if (value === expected) return { success: true };
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "literal",
-			expected: formatActualValue(expected),
-			actual: formatActualValue(value),
-		},
+export const literal =
+	(ctx: ValidatorContext, expected: string | number | boolean) =>
+	(value: any): ValidatorResult => {
+		if (value === expected) return { success: true };
+		return {
+			success: false,
+			elaboration: {
+				...ctx,
+				type: "literal",
+				expected: formatActualValue(expected),
+				actual: formatActualValue(value),
+			},
+		};
 	};
-};
 
-const enm = (
-	ctx: ValidatorContext,
-	name: string,
-	values?: number[],
-) =>
-(value: any): ValidatorResult => {
-	if (typeof value === "number") {
-		if (!values) return { success: true };
-		if (values.includes(value)) return { success: true };
-	}
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "enum",
-			enum: name,
-			actual: formatActualValue(value),
-		},
+const enm =
+	(ctx: ValidatorContext, name: string, values?: number[]) =>
+	(value: any): ValidatorResult => {
+		if (typeof value === "number") {
+			if (!values) return { success: true };
+			if (values.includes(value)) return { success: true };
+		}
+		return {
+			success: false,
+			elaboration: {
+				...ctx,
+				type: "enum",
+				enum: name,
+				actual: formatActualValue(value),
+			},
+		};
 	};
-};
 
 export { enm as enum };
 
 export const undef =
-	(ctx: ValidatorContext) => (value: any): ValidatorResult => {
+	(ctx: ValidatorContext) =>
+	(value: any): ValidatorResult => {
 		if (value === undefined) return { success: true };
 		return {
 			success: false,
@@ -368,22 +373,25 @@ export const undef =
 	};
 export { undef as undefined };
 
-export const nul = (ctx: ValidatorContext) => (value: any): ValidatorResult => {
-	if (value === null) return { success: true };
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "primitive",
-			expected: "null",
-			actual: formatActualValue(value),
-		},
+export const nul =
+	(ctx: ValidatorContext) =>
+	(value: any): ValidatorResult => {
+		if (value === null) return { success: true };
+		return {
+			success: false,
+			elaboration: {
+				...ctx,
+				type: "primitive",
+				expected: "null",
+				actual: formatActualValue(value),
+			},
+		};
 	};
-};
 export { nul as null };
 
 export const date =
-	(ctx: ValidatorContext) => (value: any): ValidatorResult => {
+	(ctx: ValidatorContext) =>
+	(value: any): ValidatorResult => {
 		if (value instanceof globalThis.Date) return { success: true };
 		return {
 			success: false,
@@ -487,80 +495,81 @@ export const tuple =
 		};
 	};
 
-export const object = (
-	ctx: ValidatorContext,
-	objectType: string,
-	properties: Record<string, ValidatorFunction>,
-) =>
-(value: any): ValidatorResult => {
-	if (
-		typeof value !== "object" || Array.isArray(value) || value === null
-	) {
+export const object =
+	(
+		ctx: ValidatorContext,
+		objectType: string,
+		properties: Record<string, ValidatorFunction>,
+	) =>
+	(value: any): ValidatorResult => {
+		if (
+			typeof value !== "object" ||
+			Array.isArray(value) ||
+			value === null
+		) {
+			return {
+				success: false,
+				elaboration: {
+					...ctx,
+					type: "object",
+					objectType,
+					actual: formatActualValue(value),
+				},
+			};
+		}
+
+		const result: ErrorElaboration[] = [];
+		for (const [prop, validator] of Object.entries(properties)) {
+			const ret = validator(value[prop]);
+			if (!ret.success) {
+				ret.elaboration.kind = "property";
+				result.push(ret.elaboration);
+			}
+		}
+
+		if (result.length === 0) return { success: true };
+
 		return {
 			success: false,
 			elaboration: {
 				...ctx,
 				type: "object",
 				objectType,
+				actual: "", // not relevant
+				nested: result,
+			},
+		};
+	};
+
+const klass =
+	(ctx: ValidatorContext, name: string, klass: new (...args: any[]) => any) =>
+	(value: any): ValidatorResult => {
+		// First do an instanceof check
+		if (value instanceof klass) return { success: true };
+		// Then try to call the class's static isXyz method
+		if (
+			typeof (klass as any)[`is${name}`] === "function" &&
+			(klass as any)[`is${name}`](value)
+		) {
+			return { success: true };
+		}
+
+		return {
+			success: false,
+			elaboration: {
+				...ctx,
+				type: "class",
+				class: name,
 				actual: formatActualValue(value),
 			},
 		};
-	}
-
-	const result: ErrorElaboration[] = [];
-	for (const [prop, validator] of Object.entries(properties)) {
-		const ret = validator(value[prop]);
-		if (!ret.success) {
-			ret.elaboration.kind = "property";
-			result.push(ret.elaboration);
-		}
-	}
-
-	if (result.length === 0) return { success: true };
-
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "object",
-			objectType,
-			actual: "", // not relevant
-			nested: result,
-		},
 	};
-};
-
-const klass = (
-	ctx: ValidatorContext,
-	name: string,
-	klass: new (...args: any[]) => any,
-) =>
-(value: any): ValidatorResult => {
-	// First do an instanceof check
-	if (value instanceof klass) return { success: true };
-	// Then try to call the class's static isXyz method
-	if (
-		typeof (klass as any)[`is${name}`] === "function"
-		&& (klass as any)[`is${name}`](value)
-	) {
-		return { success: true };
-	}
-
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "class",
-			class: name,
-			actual: formatActualValue(value),
-		},
-	};
-};
 
 export { klass as class };
 
 export const uint8array =
-	(ctx: ValidatorContext) => (value: any): ValidatorResult => {
+	(ctx: ValidatorContext) =>
+	(value: any): ValidatorResult => {
 		if (isUint8Array(value)) return { success: true };
 		return {
 			success: false,
@@ -587,73 +596,75 @@ export const optional =
 		};
 	};
 
-export const oneOf = (
-	ctx: ValidatorContext,
-	typeName: string | undefined,
-	...nested: ValidatorFunction[]
-) =>
-(value: any): ValidatorResult => {
-	if (!nested.length) {
+export const oneOf =
+	(
+		ctx: ValidatorContext,
+		typeName: string | undefined,
+		...nested: ValidatorFunction[]
+	) =>
+	(value: any): ValidatorResult => {
+		if (!nested.length) {
+			return {
+				success: false,
+				elaboration: {
+					...ctx,
+					type: "missing",
+				},
+			};
+		}
+
+		const failed: (ValidatorResult & { success: false })[] = [];
+		for (const f of nested) {
+			const result = f(value);
+			if (result.success) return result;
+			failed.push(result);
+		}
+
 		return {
 			success: false,
 			elaboration: {
 				...ctx,
-				type: "missing",
+				type: "union",
+				typeName,
+				actual: formatActualValue(value),
+				actualType: formatActualType(value),
+				nested: failed.map((r) => r.elaboration),
 			},
 		};
-	}
-
-	const failed: (ValidatorResult & { success: false })[] = [];
-	for (const f of nested) {
-		const result = f(value);
-		if (result.success) return result;
-		failed.push(result);
-	}
-
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "union",
-			typeName,
-			actual: formatActualValue(value),
-			actualType: formatActualType(value),
-			nested: failed.map((r) => r.elaboration),
-		},
 	};
-};
 
-export const allOf = (
-	ctx: ValidatorContext,
-	typeName: string | undefined,
-	...nested: ValidatorFunction[]
-) =>
-(value: any): ValidatorResult => {
-	if (!nested.length) {
+export const allOf =
+	(
+		ctx: ValidatorContext,
+		typeName: string | undefined,
+		...nested: ValidatorFunction[]
+	) =>
+	(value: any): ValidatorResult => {
+		if (!nested.length) {
+			return {
+				success: false,
+				elaboration: {
+					...ctx,
+					type: "missing",
+				},
+			};
+		}
+
+		const results = nested.map((f) => f(value));
+		const failed = results.filter((r) => !r.success);
+		if (failed.length === 0) return { success: true };
+
 		return {
 			success: false,
 			elaboration: {
 				...ctx,
-				type: "missing",
+				type: "intersection",
+				typeName,
+				actual: formatActualValue(value),
+				nested: failed.map((r) => r.elaboration),
 			},
 		};
-	}
-
-	const results = nested.map((f) => f(value));
-	const failed = results.filter((r) => !r.success);
-	if (failed.length === 0) return { success: true };
-
-	return {
-		success: false,
-		elaboration: {
-			...ctx,
-			type: "intersection",
-			typeName,
-			actual: formatActualValue(value),
-			nested: failed.map((r) => r.elaboration),
-		},
 	};
-};
 
 export function assert(...results: ValidatorResult[]): void {
 	const failed = results.filter((r) => !r.success);

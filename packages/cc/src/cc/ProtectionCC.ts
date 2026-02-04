@@ -21,6 +21,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -55,6 +56,7 @@ import {
 	RFProtectionState,
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 
 export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
@@ -68,15 +70,11 @@ export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
 		} as const,
 		{ minVersion: 2 } as const,
 	),
-	...V.staticPropertyWithName(
-		"localProtectionState",
-		"local",
-		{
-			...ValueMetadata.Number,
-			label: "Local protection state",
-			states: enumValuesToMetadataStates(LocalProtectionState),
-		} as const,
-	),
+	...V.staticPropertyWithName("localProtectionState", "local", {
+		...ValueMetadata.Number,
+		label: "Local protection state",
+		states: enumValuesToMetadataStates(LocalProtectionState),
+	} as const),
 	...V.staticPropertyWithName(
 		"rfProtectionState",
 		"rf",
@@ -122,8 +120,8 @@ export class ProtectionCCAPI extends CCAPI {
 			case ProtectionCommand.TimeoutGet:
 			case ProtectionCommand.TimeoutSet: {
 				return (
-					this.isSinglecast()
-					&& this.tryGetValueDB()?.getValue<boolean>(
+					this.isSinglecast() &&
+					this.tryGetValueDB()?.getValue<boolean>(
 						ProtectionCCValues.supportsTimeout.endpoint(
 							this.endpoint.index,
 						),
@@ -133,8 +131,8 @@ export class ProtectionCCAPI extends CCAPI {
 			case ProtectionCommand.ExclusiveControlGet:
 			case ProtectionCommand.ExclusiveControlSet: {
 				return (
-					this.isSinglecast()
-					&& this.tryGetValueDB()?.getValue<boolean>(
+					this.isSinglecast() &&
+					this.tryGetValueDB()?.getValue<boolean>(
 						ProtectionCCValues.supportsExclusiveControl.endpoint(
 							this.endpoint.index,
 						),
@@ -146,7 +144,7 @@ export class ProtectionCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: ProtectionCCAPI, { property }, value) {
+		return async function (this: ProtectionCCAPI, { property }, value) {
 			const valueDB = this.tryGetValueDB();
 			if (property === "local") {
 				if (typeof value !== "number") {
@@ -200,7 +198,7 @@ export class ProtectionCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: ProtectionCCAPI, { property }) {
+		return async function (this: ProtectionCCAPI, { property }) {
 			switch (property) {
 				case "local":
 				case "rf":
@@ -257,12 +255,11 @@ export class ProtectionCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ProtectionCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ProtectionCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"supportsExclusiveControl",
@@ -283,12 +280,11 @@ export class ProtectionCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ProtectionCCExclusiveControlReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ProtectionCCExclusiveControlReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.exclusiveControlNodeId;
 	}
 
@@ -319,9 +315,7 @@ export class ProtectionCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ProtectionCCTimeoutReport
-		>(
+		const response = await this.host.sendCommand<ProtectionCCTimeoutReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -352,9 +346,7 @@ export class ProtectionCCAPI extends CCAPI {
 export class ProtectionCC extends CommandClass {
 	declare ccCommand: ProtectionCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -386,22 +378,16 @@ export class ProtectionCC extends CommandClass {
 				const logMessage = `received protection capabilities:
 exclusive control:       ${resp.supportsExclusiveControl}
 timeout:                 ${resp.supportsTimeout}
-local protection states: ${
-					resp.supportedLocalStates
-						.map((local) =>
-							getEnumMemberName(LocalProtectionState, local)
-						)
-						.map((str) => `\n· ${str}`)
-						.join("")
-				}
-RF protection states:    ${
-					resp.supportedRFStates
-						.map((local) =>
-							getEnumMemberName(RFProtectionState, local)
-						)
-						.map((str) => `\n· ${str}`)
-						.join("")
-				}`;
+local protection states: ${resp.supportedLocalStates
+					.map((local) =>
+						getEnumMemberName(LocalProtectionState, local),
+					)
+					.map((str) => `\n· ${str}`)
+					.join("")}
+RF protection states:    ${resp.supportedRFStates
+					.map((local) => getEnumMemberName(RFProtectionState, local))
+					.map((str) => `\n· ${str}`)
+					.join("")}`;
 				ctx.logNode(node.id, {
 					message: logMessage,
 					direction: "inbound",
@@ -417,9 +403,7 @@ RF protection states:    ${
 		if (!hadCriticalTimeout) this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -482,9 +466,10 @@ rf     ${getEnumMemberName(RFProtectionState, protectionResp.rf)}`;
 			const nodeId = await api.getExclusiveControl();
 			if (nodeId != undefined) {
 				ctx.logNode(node.id, {
-					message: (nodeId !== 0
-						? `Node ${nodeId.toString().padStart(3, "0")}`
-						: `no node`) + ` has exclusive control`,
+					message:
+						(nodeId !== 0
+							? `Node ${nodeId.toString().padStart(3, "0")}`
+							: `no node`) + ` has exclusive control`,
 					direction: "inbound",
 				});
 			}
@@ -508,11 +493,11 @@ function getCCResponseForProtectionCCSet(
 	// by the RF protection state. In that case, the Application Rejected
 	// Request Command MUST be returned.
 	if (
-		sent.isSinglecast()
-		&& !sent.isEncapsulatedWith(CommandClasses.Supervision)
-		&& ctx.getNode(sent.nodeId)?.supportsCC(
-			CommandClasses["Application Status"],
-		)
+		sent.isSinglecast() &&
+		!sent.isEncapsulatedWith(CommandClasses.Supervision) &&
+		ctx
+			.getNode(sent.nodeId)
+			?.supportsCC(CommandClasses["Application Status"])
 	) {
 		return ApplicationStatusCCRejectedRequest;
 	}
@@ -522,9 +507,7 @@ function getCCResponseForProtectionCCSet(
 @expectedCCResponse(getCCResponseForProtectionCCSet)
 @useSupervision()
 export class ProtectionCCSet extends ProtectionCC {
-	public constructor(
-		options: WithAddress<ProtectionCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<ProtectionCCSetOptions>) {
 		super(options);
 		this.local = options.local;
 		this.rf = options.rf;
@@ -553,9 +536,9 @@ export class ProtectionCCSet extends ProtectionCC {
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 		if (
-			ccVersion < 2 && ctx.getDeviceConfig?.(
-				this.nodeId as number,
-			)?.compat?.encodeCCsUsingTargetVersion
+			ccVersion < 2 &&
+			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
+				?.encodeCCsUsingTargetVersion
 		) {
 			// When forcing CC version 1, only include the local state
 			this.payload = this.payload.subarray(0, 1);
@@ -588,9 +571,7 @@ export interface ProtectionCCReportOptions {
 @ccValueProperty("local", ProtectionCCValues.localProtectionState)
 @ccValueProperty("rf", ProtectionCCValues.rfProtectionState)
 export class ProtectionCCReport extends ProtectionCC {
-	public constructor(
-		options: WithAddress<ProtectionCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<ProtectionCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -733,7 +714,7 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 				"supports timeout": this.supportsTimeout,
 				"local protection states": this.supportedLocalStates
 					.map((local) =>
-						getEnumMemberName(LocalProtectionState, local)
+						getEnumMemberName(LocalProtectionState, local),
 					)
 					.map((str) => `\n· ${str}`)
 					.join(""),
@@ -855,9 +836,7 @@ export interface ProtectionCCTimeoutReportOptions {
 @CCCommand(ProtectionCommand.TimeoutReport)
 @ccValueProperty("timeout", ProtectionCCValues.timeout)
 export class ProtectionCCTimeoutReport extends ProtectionCC {
-	public constructor(
-		options: WithAddress<ProtectionCCTimeoutReportOptions>,
-	) {
+	public constructor(options: WithAddress<ProtectionCCTimeoutReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -900,9 +879,7 @@ export interface ProtectionCCTimeoutSetOptions {
 @expectedCCResponse(ProtectionCCReport)
 @useSupervision()
 export class ProtectionCCTimeoutSet extends ProtectionCC {
-	public constructor(
-		options: WithAddress<ProtectionCCTimeoutSetOptions>,
-	) {
+	public constructor(options: WithAddress<ProtectionCCTimeoutSetOptions>) {
 		super(options);
 		this.timeout = options.timeout;
 	}

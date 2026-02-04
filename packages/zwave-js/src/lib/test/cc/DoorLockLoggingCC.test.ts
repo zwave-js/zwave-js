@@ -29,9 +29,7 @@ test("the RecordsCountGet command should serialize correctly", async (t) => {
 			DoorLockLoggingCommand.RecordsSupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the RecordsCountReport command should be deserialized correctly", async (t) => {
@@ -41,10 +39,9 @@ test("the RecordsCountReport command should be deserialized correctly", async (t
 			0x14, // max records supported (20)
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as DoorLockLoggingCCRecordsSupportedReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as DoorLockLoggingCCRecordsSupportedReport;
 	t.expect(cc.constructor).toBe(DoorLockLoggingCCRecordsSupportedReport);
 
 	t.expect(cc.recordsCount).toBe(20);
@@ -61,9 +58,7 @@ test("the RecordGet command should serialize correctly", async (t) => {
 			1, // Record Number
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the RecordReport command should be deserialized correctly", async (t) => {
@@ -85,19 +80,18 @@ test("the RecordReport command should be deserialized correctly", async (t) => {
 		]),
 	);
 
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as DoorLockLoggingCCRecordReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as DoorLockLoggingCCRecordReport;
 	t.expect(cc.constructor).toBe(DoorLockLoggingCCRecordReport);
 
 	t.expect(cc.recordNumber).toBe(7);
 
 	t.expect(cc.record!.eventType).toBe(1);
 	t.expect(cc.record!.label).toBe("Locked via Access Code");
-	t.expect(
-		cc.record!.timestamp,
-	).toBe(new Date(1989, 12 - 1, 27, 10, 40, 30).toISOString());
+	t.expect(cc.record!.timestamp).toBe(
+		new Date(1989, 12 - 1, 27, 10, 40, 30).toISOString(),
+	);
 	t.expect(cc.record!.userId).toBe(1);
 });
 

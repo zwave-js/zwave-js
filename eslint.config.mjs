@@ -14,11 +14,11 @@
 
 // @ts-check
 
-import zjs from "@zwave-js/eslint-plugin";
-import tseslint from "typescript-eslint";
-
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import zjs from "@zwave-js/eslint-plugin";
+import tseslint from "typescript-eslint";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** @type import("typescript-eslint").FlatConfig.LanguageOptions */
@@ -89,10 +89,7 @@ export default tseslint.config(
 	},
 	{
 		// Avoid import issues at runtime. It should be enough to do this in the barrel files
-		files: [
-			"packages/*/src/index.ts",
-			"packages/*/src/index_*.ts",
-		],
+		files: ["packages/*/src/index.ts", "packages/*/src/index_*.ts"],
 		languageOptions: tsparser,
 		rules: {
 			"@zwave-js/no-forbidden-imports": "error",

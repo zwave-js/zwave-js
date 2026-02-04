@@ -1,7 +1,10 @@
-import { Bytes, type BytesView, type Timer, setTimer } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
+
+import { Bytes, type BytesView, type Timer, setTimer } from "@zwave-js/shared";
+
 import type { SerialLogger } from "../log/Logger.js";
 import { XModemMessageHeaders } from "../message/MessageHeaders.js";
+
 import {
 	type BootloaderChunk,
 	BootloaderChunkType,
@@ -11,16 +14,17 @@ import {
 
 function isFlowControl(byte: number): boolean {
 	return (
-		byte === XModemMessageHeaders.ACK
-		|| byte === XModemMessageHeaders.NAK
-		|| byte === XModemMessageHeaders.CAN
-		|| byte === XModemMessageHeaders.C
+		byte === XModemMessageHeaders.ACK ||
+		byte === XModemMessageHeaders.NAK ||
+		byte === XModemMessageHeaders.CAN ||
+		byte === XModemMessageHeaders.C
 	);
 }
 
-class BootloaderScreenParserTransformer
-	implements Transformer<BytesView, number | string>
-{
+class BootloaderScreenParserTransformer implements Transformer<
+	BytesView,
+	number | string
+> {
 	constructor(private logger?: SerialLogger) {}
 
 	private receiveBuffer = "";
@@ -80,12 +84,11 @@ class BootloaderScreenParserTransformer
 }
 
 /** Parses the screen output from the bootloader, either waiting for a NUL char or a timeout */
-export class BootloaderScreenParser
-	extends TransformStream<BytesView, number | string>
-{
-	constructor(
-		logger?: SerialLogger,
-	) {
+export class BootloaderScreenParser extends TransformStream<
+	BytesView,
+	number | string
+> {
+	constructor(logger?: SerialLogger) {
 		super(new BootloaderScreenParserTransformer(logger));
 	}
 }
@@ -118,10 +121,12 @@ export class BootloaderParser extends TransformStream<
 			transform(chunk, controller) {
 				// Flow control bytes come in as numbers
 				if (typeof chunk === "number") {
-					controller.enqueue(wrapChunk({
-						type: BootloaderChunkType.FlowControl,
-						command: chunk,
-					}));
+					controller.enqueue(
+						wrapChunk({
+							type: BootloaderChunkType.FlowControl,
+							command: chunk,
+						}),
+					);
 					return;
 				}
 
@@ -138,11 +143,13 @@ export class BootloaderParser extends TransformStream<
 					screen = screen.slice(menuPreambleIndex);
 					const version = preambleRegex.exec(screen)?.groups?.version;
 					if (!version) {
-						controller.enqueue(wrapChunk({
-							type: BootloaderChunkType.Error,
-							error: "Could not determine bootloader version",
-							_raw: screen,
-						}) /* satisfies BootloaderChunk */);
+						controller.enqueue(
+							wrapChunk({
+								type: BootloaderChunkType.Error,
+								error: "Could not determine bootloader version",
+								_raw: screen,
+							}) /* satisfies BootloaderChunk */,
+						);
 						return;
 					}
 
@@ -161,7 +168,7 @@ export class BootloaderParser extends TransformStream<
 							_raw: screen,
 							version,
 							options,
-						}), /* satisfies BootloaderChunk */
+						}) /* satisfies BootloaderChunk */,
 					);
 				} else {
 					// Some output
@@ -170,7 +177,7 @@ export class BootloaderParser extends TransformStream<
 							type: BootloaderChunkType.Message,
 							_raw: screen,
 							message: screen,
-						}), /* satisfies BootloaderChunk */
+						}) /* satisfies BootloaderChunk */,
 					);
 				}
 			},

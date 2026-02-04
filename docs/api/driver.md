@@ -541,9 +541,7 @@ interface FileSystem {
 	writeFile(
 		file: string,
 		data: string | BytesView,
-		options?:
-			| { encoding: BufferEncoding }
-			| BufferEncoding,
+		options?: { encoding: BufferEncoding } | BufferEncoding,
 	): Promise<void>;
 	readFile(file: string, encoding: BufferEncoding): Promise<string>;
 	pathExists(path: string): Promise<boolean>;
@@ -805,16 +803,16 @@ Configures how `driver.sendCommand` deals with supervised commands. It is an obj
 ```ts
 type SupervisionResult =
 	| {
-		status:
-			| SupervisionStatus.NoSupport
-			| SupervisionStatus.Fail
-			| SupervisionStatus.Success;
-		remainingDuration?: undefined;
-	}
+			status:
+				| SupervisionStatus.NoSupport
+				| SupervisionStatus.Fail
+				| SupervisionStatus.Success;
+			remainingDuration?: undefined;
+	  }
 	| {
-		status: SupervisionStatus.Working;
-		remainingDuration: Duration;
-	};
+			status: SupervisionStatus.Working;
+			remainingDuration: Duration;
+	  };
 ```
 
 ### `ZWaveOptions`

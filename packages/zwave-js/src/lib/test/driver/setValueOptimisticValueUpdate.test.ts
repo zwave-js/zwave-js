@@ -6,6 +6,7 @@ import {
 import { BasicDeviceClass, CommandClasses } from "@zwave-js/core";
 import { ccCaps } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuiteMulti.js";
 
 integrationTest(

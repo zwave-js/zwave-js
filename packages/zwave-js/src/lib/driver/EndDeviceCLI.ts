@@ -52,14 +52,16 @@ export class EndDeviceCLI {
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
-		const commands = commandList.trim()
+		const commands = commandList
+			.trim()
 			.split("\n")
 			.map((line) => line.trim())
-			.map((line) =>
-				line.split(/\s+/, 2).map((part) => part.trim()) as [
-					string,
-					string,
-				]
+			.map(
+				(line) =>
+					line.split(/\s+/, 2).map((part) => part.trim()) as [
+						string,
+						string,
+					],
 			)
 			.filter((parts) => parts.every((part) => !!part));
 		this._commands = new Map(commands);

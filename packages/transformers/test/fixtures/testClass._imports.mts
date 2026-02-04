@@ -16,10 +16,12 @@ export class Baz {
 	public baz: "baz";
 
 	public static isBaz(value: any): value is Baz {
-		return typeof value === "object"
-			&& value != null
-			&& "baz" in value
-			&& value.baz === "baz";
+		return (
+			typeof value === "object" &&
+			value != null &&
+			"baz" in value &&
+			value.baz === "baz"
+		);
 	}
 }
 

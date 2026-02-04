@@ -51,11 +51,11 @@ const respondToSoundSwitchConfigurationGet: MockNodeBehavior = {
 			const cc = new SoundSwitchCCConfigurationReport({
 				nodeId: controller.ownNodeId,
 				defaultToneId:
-					(self.state.get(StateKeys.defaultToneId) as number)
-						?? capabilities.defaultToneId,
+					(self.state.get(StateKeys.defaultToneId) as number) ??
+					capabilities.defaultToneId,
 				defaultVolume:
-					(self.state.get(StateKeys.defaultVolume) as number)
-						?? capabilities.defaultVolume,
+					(self.state.get(StateKeys.defaultVolume) as number) ??
+					capabilities.defaultVolume,
 			});
 			return { action: "sendCC", cc };
 		}
@@ -65,14 +65,8 @@ const respondToSoundSwitchConfigurationGet: MockNodeBehavior = {
 const respondToSoundSwitchConfigurationSet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof SoundSwitchCCConfigurationSet) {
-			self.state.set(
-				StateKeys.defaultToneId,
-				receivedCC.defaultToneId,
-			);
-			self.state.set(
-				StateKeys.defaultVolume,
-				receivedCC.defaultVolume,
-			);
+			self.state.set(StateKeys.defaultToneId, receivedCC.defaultToneId);
+			self.state.set(StateKeys.defaultVolume, receivedCC.defaultVolume);
 			return { action: "ok" };
 		}
 	},
@@ -132,9 +126,9 @@ const respondToSoundSwitchTonePlaySet: MockNodeBehavior = {
 				),
 			};
 
-			const currentState = self.state.get(
-				StateKeys.state,
-			) as SoundSwitchState | undefined;
+			const currentState = self.state.get(StateKeys.state) as
+				| SoundSwitchState
+				| undefined;
 
 			if (receivedCC.toneId === 0) {
 				if (currentState) {
@@ -146,19 +140,21 @@ const respondToSoundSwitchTonePlaySet: MockNodeBehavior = {
 
 				return { action: "ok" };
 			} else {
-				const toneId = receivedCC.toneId === 0xff
-					? capabilities.defaultToneId
-					: receivedCC.toneId;
+				const toneId =
+					receivedCC.toneId === 0xff
+						? capabilities.defaultToneId
+						: receivedCC.toneId;
 				const tone = capabilities.tones[toneId - 1];
 				if (!tone) return { action: "fail" };
 
-				const volume = (receivedCC.volume === 0
-					? capabilities.defaultVolume
-					: receivedCC.volume === 0xff
-					? self.state.get(
-						StateKeys.lastNonZeroVolume,
-					) as (number | undefined)
-					: receivedCC.volume) || capabilities.defaultVolume;
+				const volume =
+					(receivedCC.volume === 0
+						? capabilities.defaultVolume
+						: receivedCC.volume === 0xff
+							? (self.state.get(StateKeys.lastNonZeroVolume) as
+									| number
+									| undefined)
+							: receivedCC.volume) || capabilities.defaultVolume;
 
 				// Stop "playing" the previous tone
 				if (currentState) {
@@ -201,9 +197,9 @@ const respondToSoundSwitchTonePlaySet: MockNodeBehavior = {
 const respondToSoundSwitchTonePlayGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof SoundSwitchCCTonePlayGet) {
-			const currentState = self.state.get(
-				StateKeys.state,
-			) as SoundSwitchState | undefined;
+			const currentState = self.state.get(StateKeys.state) as
+				| SoundSwitchState
+				| undefined;
 
 			const cc = new SoundSwitchCCTonePlayReport({
 				nodeId: controller.ownNodeId,

@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -7,25 +8,27 @@ async function main() {
 	});
 	// project.addSourceFilesAtPaths("packages/cc/src/cc/**/*CC.ts");
 
-	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getBaseNameWithoutExtension().endsWith("CC")
-	);
+	const sourceFiles = project
+		.getSourceFiles()
+		.filter((file) => file.getBaseNameWithoutExtension().endsWith("CC"));
 	for (const file of sourceFiles) {
 		// const filePath = path.relative(process.cwd(), file.getFilePath());
 
-		const emptyFromImpls = file.getDescendantsOfKind(
-			SyntaxKind.MethodDeclaration,
-		)
+		const emptyFromImpls = file
+			.getDescendantsOfKind(SyntaxKind.MethodDeclaration)
 			.filter((m) => m.isStatic() && m.getName() === "from")
 			.filter((m) => {
 				const params = m.getParameters();
 				if (params.length !== 2) return false;
 				if (
-					params[0].getDescendantsOfKind(SyntaxKind.TypeReference)[0]
+					params[0]
+						.getDescendantsOfKind(SyntaxKind.TypeReference)[0]
 						?.getText() !== "CCRaw"
-				) return false;
+				)
+					return false;
 				if (
-					params[1].getDescendantsOfKind(SyntaxKind.TypeReference)[0]
+					params[1]
+						.getDescendantsOfKind(SyntaxKind.TypeReference)[0]
 						?.getText() !== "CCParsingContext"
 				) {
 					return false;
@@ -38,8 +41,8 @@ async function main() {
 				const firstStmt = body.getStatements()[0];
 				if (!firstStmt) return false;
 				if (
-					firstStmt.isKind(SyntaxKind.ThrowStatement)
-					&& firstStmt.getText().includes("ZWaveError")
+					firstStmt.isKind(SyntaxKind.ThrowStatement) &&
+					firstStmt.getText().includes("ZWaveError")
 				) {
 					return true;
 				}

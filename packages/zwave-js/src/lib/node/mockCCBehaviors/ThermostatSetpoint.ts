@@ -47,16 +47,13 @@ const respondToThermostatSetpointSet: MockNodeBehavior = {
 
 			const value = receivedCC.value;
 			if (
-				value > setpointCaps.minValue
-				|| value > setpointCaps.maxValue
+				value > setpointCaps.minValue ||
+				value > setpointCaps.maxValue
 			) {
 				return { action: "fail" };
 			}
 
-			self.state.set(
-				StateKeys.setpoint(receivedCC.setpointType),
-				value,
-			);
+			self.state.set(StateKeys.setpoint(receivedCC.setpointType), value);
 			self.state.set(
 				StateKeys.scale(receivedCC.setpointType),
 				receivedCC.scale,

@@ -24,6 +24,7 @@ import type {
 } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
+
 import {
 	ProvisioningEntryStatus,
 	type SmartStartProvisioningEntry,
@@ -39,19 +40,15 @@ export const cacheKeys = {
 		provisioningList: "controller.provisioningList",
 		associations: (groupId: number) => `controller.associations.${groupId}`,
 		securityKeys: (secClass: SecurityClass) =>
-			`controller.securityKeys.${
-				getEnumMemberName(
-					SecurityClass,
-					secClass,
-				)
-			}`,
+			`controller.securityKeys.${getEnumMemberName(
+				SecurityClass,
+				secClass,
+			)}`,
 		securityKeysLongRange: (secClass: SecurityClass) =>
-			`controller.securityKeyLongRange.${
-				getEnumMemberName(
-					SecurityClass,
-					secClass,
-				)
-			}`,
+			`controller.securityKeyLongRange.${getEnumMemberName(
+				SecurityClass,
+				secClass,
+			)}`,
 		privateKey: "controller.privateKey",
 	},
 	// TODO: somehow these functions should be combined with the pattern matching below
@@ -73,12 +70,10 @@ export const cacheKeys = {
 			supportsSecurity: `${nodeBaseKey}supportsSecurity`,
 			supportsBeaming: `${nodeBaseKey}supportsBeaming`,
 			securityClass: (secClass: SecurityClass) =>
-				`${nodeBaseKey}securityClasses.${
-					getEnumMemberName(
-						SecurityClass,
-						secClass,
-					)
-				}`,
+				`${nodeBaseKey}securityClasses.${getEnumMemberName(
+					SecurityClass,
+					secClass,
+				)}`,
 			dsk: `${nodeBaseKey}dsk`,
 			failedS2Bootstrapping: `${nodeBaseKey}failedS2Bootstrapping`,
 			endpoint: (index: number) => {
@@ -100,8 +95,7 @@ export const cacheKeys = {
 			customReturnRoutes: (destinationNodeId: number) =>
 				`${nodeBaseKey}customReturnRoutes.${destinationNodeId}`,
 			customSUCReturnRoutes: `${nodeBaseKey}customReturnRoutes.SUC`,
-			defaultTransitionDuration:
-				`${nodeBaseKey}defaultTransitionDuration`,
+			defaultTransitionDuration: `${nodeBaseKey}defaultTransitionDuration`,
 			defaultVolume: `${nodeBaseKey}defaultVolume`,
 			lastSeen: `${nodeBaseKey}lastSeen`,
 			deviceConfigHash: `${nodeBaseKey}deviceConfigHash`,
@@ -141,8 +135,8 @@ export const cacheKeyUtils = {
 
 function tryParseInterviewStage(value: unknown): InterviewStage | undefined {
 	if (
-		(typeof value === "string" || typeof value === "number")
-		&& value in InterviewStage
+		(typeof value === "string" || typeof value === "number") &&
+		value in InterviewStage
 	) {
 		return typeof value === "number"
 			? value
@@ -154,15 +148,11 @@ function tryParseDeviceClass(value: unknown): DeviceClass | undefined {
 	if (isObject(value)) {
 		const { basic, generic, specific } = value;
 		if (
-			typeof basic === "number"
-			&& typeof generic === "number"
-			&& typeof specific === "number"
+			typeof basic === "number" &&
+			typeof generic === "number" &&
+			typeof specific === "number"
 		) {
-			return new DeviceClass(
-				basic,
-				generic,
-				specific,
-			);
+			return new DeviceClass(basic, generic, specific);
 		}
 	}
 }
@@ -174,9 +164,9 @@ function tryParseSecurityClasses(
 		const ret = new Map<SecurityClass, boolean>();
 		for (const [key, val] of Object.entries(value)) {
 			if (
-				key in SecurityClass
-				&& typeof (SecurityClass as any)[key] === "number"
-				&& typeof val === "boolean"
+				key in SecurityClass &&
+				typeof (SecurityClass as any)[key] === "number" &&
+				typeof val === "boolean"
 			) {
 				ret.set((SecurityClass as any)[key] as SecurityClass, val);
 			}
@@ -198,27 +188,26 @@ function tryParseProvisioningList(
 	if (!isArray(value)) return;
 	for (const entry of value) {
 		if (
-			isObject(entry)
-			&& typeof entry.dsk === "string"
-			&& isArray(entry.securityClasses)
+			isObject(entry) &&
+			typeof entry.dsk === "string" &&
+			isArray(entry.securityClasses) &&
 			// securityClasses are stored as strings, not the enum values
-			&& entry.securityClasses.every((s) => isSerializedSecurityClass(s))
-			&& (entry.requestedSecurityClasses == undefined
-				|| (isArray(entry.requestedSecurityClasses)
-					&& entry.requestedSecurityClasses.every((s) =>
-						isSerializedSecurityClass(s)
-					)))
+			entry.securityClasses.every((s) => isSerializedSecurityClass(s)) &&
+			(entry.requestedSecurityClasses == undefined ||
+				(isArray(entry.requestedSecurityClasses) &&
+					entry.requestedSecurityClasses.every((s) =>
+						isSerializedSecurityClass(s),
+					))) &&
 			// protocol and supportedProtocols are (supposed to be) stored as strings, not the enum values
-			&& (entry.protocol == undefined
-				|| isSerializedProtocol(entry.protocol))
-			&& (entry.supportedProtocols == undefined || (
-				isArray(entry.supportedProtocols)
-				&& entry.supportedProtocols.every((s) =>
-					isSerializedProtocol(s)
-				)
-			))
-			&& (entry.status == undefined
-				|| isSerializedProvisioningEntryStatus(entry.status))
+			(entry.protocol == undefined ||
+				isSerializedProtocol(entry.protocol)) &&
+			(entry.supportedProtocols == undefined ||
+				(isArray(entry.supportedProtocols) &&
+					entry.supportedProtocols.every((s) =>
+						isSerializedProtocol(s),
+					))) &&
+			(entry.status == undefined ||
+				isSerializedProvisioningEntryStatus(entry.status))
 		) {
 			// This is at least a PlannedProvisioningEntry, maybe it is an IncludedProvisioningEntry
 			if ("nodeId" in entry && typeof entry.nodeId !== "number") {
@@ -247,9 +236,7 @@ function tryParseProvisioningList(
 				parsed.protocol = tryParseSerializedProtocol(entry.protocol);
 			}
 			if (entry.supportedProtocols) {
-				parsed.supportedProtocols = (
-					entry.supportedProtocols as any[]
-				)
+				parsed.supportedProtocols = (entry.supportedProtocols as any[])
 					.map((s) => tryParseSerializedProtocol(s))
 					.filter((s) => s !== undefined);
 			}
@@ -273,8 +260,8 @@ function isSerializedSecurityClass(value: unknown): boolean {
 			value = value.slice(11, -1);
 		}
 		if (
-			(value as any) in SecurityClass
-			&& typeof SecurityClass[value as any] === "number"
+			(value as any) in SecurityClass &&
+			typeof SecurityClass[value as any] === "number"
 		) {
 			return true;
 		}
@@ -297,8 +284,8 @@ function tryParseSerializedSecurityClass(
 			value = value.slice(11, -1);
 		}
 		if (
-			(value as any) in SecurityClass
-			&& typeof SecurityClass[value as any] === "number"
+			(value as any) in SecurityClass &&
+			typeof SecurityClass[value as any] === "number"
 		) {
 			return (SecurityClass as any)[value as any];
 		}
@@ -309,15 +296,13 @@ function isSerializedProvisioningEntryStatus(
 	s: unknown,
 ): s is keyof typeof ProvisioningEntryStatus {
 	return (
-		typeof s === "string"
-		&& s in ProvisioningEntryStatus
-		&& typeof ProvisioningEntryStatus[s as any] === "number"
+		typeof s === "string" &&
+		s in ProvisioningEntryStatus &&
+		typeof ProvisioningEntryStatus[s as any] === "number"
 	);
 }
 
-function isSerializedProtocol(
-	s: unknown,
-): boolean {
+function isSerializedProtocol(s: unknown): boolean {
 	// The list of supported protocols has been around since before we started
 	// saving them as their stringified variant, so we
 	// now have to deal with the following variants:
@@ -325,15 +310,13 @@ function isSerializedProtocol(
 	// 2. strings representing a valid Protocols: "ZWave"
 	if (typeof s === "number" && s in Protocols) return true;
 	return (
-		typeof s === "string"
-		&& s in Protocols
-		&& typeof Protocols[s as any] === "number"
+		typeof s === "string" &&
+		s in Protocols &&
+		typeof Protocols[s as any] === "number"
 	);
 }
 
-function tryParseSerializedProtocol(
-	value: unknown,
-): Protocols | undefined {
+function tryParseSerializedProtocol(value: unknown): Protocols | undefined {
 	// The list of supported protocols has been around since before we started
 	// saving them as their stringified variant, so we
 	// now have to deal with the following variants:
@@ -343,8 +326,8 @@ function tryParseSerializedProtocol(
 	if (typeof value === "number" && value in Protocols) return value;
 	if (typeof value === "string") {
 		if (
-			(value as any) in Protocols
-			&& typeof Protocols[value as any] === "number"
+			(value as any) in Protocols &&
+			typeof Protocols[value as any] === "number"
 		) {
 			return (Protocols as any)[value as any];
 		}
@@ -371,9 +354,7 @@ function tryParseAssociationAddress(
 	}
 }
 
-function tryParseBuffer(
-	value: unknown,
-): BytesView | undefined {
+function tryParseBuffer(value: unknown): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "hex");
@@ -383,9 +364,7 @@ function tryParseBuffer(
 	}
 }
 
-function tryParseBufferBase64(
-	value: unknown,
-): BytesView | undefined {
+function tryParseBufferBase64(value: unknown): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "base64");
@@ -476,8 +455,8 @@ export function deserializeNetworkCacheValue(
 
 		case "supportedDataRates": {
 			if (
-				isArray(value)
-				&& value.every((r: unknown) => typeof r === "number")
+				isArray(value) &&
+				value.every((r: unknown) => typeof r === "number")
 			) {
 				return value;
 			}
@@ -584,10 +563,12 @@ export function serializeNetworkCacheValue(
 			);
 			const versionMatch = valueAsString.match(/^\$v\d+\$/)?.[0];
 			if (versionMatch) {
-				return versionMatch
-					+ Bytes.view(value as BytesView).subarray(
-						versionMatch.length,
-					).toString("base64");
+				return (
+					versionMatch +
+					Bytes.view(value as BytesView)
+						.subarray(versionMatch.length)
+						.toString("base64")
+				);
 			} else {
 				// For lecacy hashes, just return the hex representation
 				return Bytes.view(value as BytesView).toString("hex");
@@ -607,12 +588,12 @@ export function serializeNetworkCacheValue(
 			for (const entry of value as SmartStartProvisioningEntry[]) {
 				const serialized: Record<string, any> = { ...entry };
 				serialized.securityClasses = entry.securityClasses.map((c) =>
-					getEnumMemberName(SecurityClass, c)
+					getEnumMemberName(SecurityClass, c),
 				);
 				if (entry.requestedSecurityClasses) {
-					serialized.requestedSecurityClasses = entry
-						.requestedSecurityClasses.map((c) =>
-							getEnumMemberName(SecurityClass, c)
+					serialized.requestedSecurityClasses =
+						entry.requestedSecurityClasses.map((c) =>
+							getEnumMemberName(SecurityClass, c),
 						);
 				}
 				if (entry.status != undefined) {
@@ -628,9 +609,9 @@ export function serializeNetworkCacheValue(
 					);
 				}
 				if (entry.supportedProtocols != undefined) {
-					serialized.supportedProtocols = entry.supportedProtocols
-						.map(
-							(p) => getEnumMemberName(Protocols, p),
+					serialized.supportedProtocols =
+						entry.supportedProtocols.map((p) =>
+							getEnumMemberName(Protocols, p),
 						);
 				}
 				ret.push(serialized);
@@ -795,11 +776,9 @@ export async function migrateLegacyNetworkCache(
 			// The nesting was inverted from the legacy cache: node -> EP -> CCs
 			// as opposed to node -> CC -> EPs
 			if (isObject(node.commandClasses)) {
-				for (
-					const [ccIdHex, cc] of Object.entries<any>(
-						node.commandClasses,
-					)
-				) {
+				for (const [ccIdHex, cc] of Object.entries<any>(
+					node.commandClasses,
+				)) {
 					const ccId = parseInt(ccIdHex, 16);
 					if (isObject(cc.endpoints)) {
 						for (const endpointId of Object.keys(cc.endpoints)) {

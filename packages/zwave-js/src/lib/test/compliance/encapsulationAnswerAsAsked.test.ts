@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCReport,
 	CRC16CC,
@@ -15,7 +17,7 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -98,16 +100,16 @@ integrationTest(
 
 			await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
-			const { payload: response } = await mockNode.expectControllerFrame<
-				MockZWaveRequestFrame
-			>(
-				(msg): msg is MockZWaveRequestFrame =>
-					msg.type === MockZWaveFrameType.Request,
-				{ timeout: 1000 },
-			);
+			const { payload: response } =
+				await mockNode.expectControllerFrame<MockZWaveRequestFrame>(
+					(msg): msg is MockZWaveRequestFrame =>
+						msg.type === MockZWaveFrameType.Request,
+					{ timeout: 1000 },
+				);
 
-			t.expect(response instanceof MultiChannelCCCommandEncapsulation)
-				.toBe(true);
+			t.expect(
+				response instanceof MultiChannelCCCommandEncapsulation,
+			).toBe(true);
 			const mcc = response as MultiChannelCCCommandEncapsulation;
 			t.expect(mcc.destination).toBe(2);
 			const inner = mcc.encapsulated;
@@ -152,13 +154,12 @@ integrationTest(
 
 			await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
-			const { payload: response } = await mockNode.expectControllerFrame<
-				MockZWaveRequestFrame
-			>(
-				(msg): msg is MockZWaveRequestFrame =>
-					msg.type === MockZWaveFrameType.Request,
-				{ timeout: 1000 },
-			);
+			const { payload: response } =
+				await mockNode.expectControllerFrame<MockZWaveRequestFrame>(
+					(msg): msg is MockZWaveRequestFrame =>
+						msg.type === MockZWaveFrameType.Request,
+					{ timeout: 1000 },
+				);
 
 			t.expect(response instanceof SupervisionCCReport).toBe(true);
 		},
@@ -208,16 +209,16 @@ integrationTest(
 
 			await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
-			const { payload: response } = await mockNode.expectControllerFrame<
-				MockZWaveRequestFrame
-			>(
-				(msg): msg is MockZWaveRequestFrame =>
-					msg.type === MockZWaveFrameType.Request,
-				{ timeout: 1000 },
-			);
+			const { payload: response } =
+				await mockNode.expectControllerFrame<MockZWaveRequestFrame>(
+					(msg): msg is MockZWaveRequestFrame =>
+						msg.type === MockZWaveFrameType.Request,
+					{ timeout: 1000 },
+				);
 
-			t.expect(response instanceof MultiChannelCCCommandEncapsulation)
-				.toBe(true);
+			t.expect(
+				response instanceof MultiChannelCCCommandEncapsulation,
+			).toBe(true);
 			const mcc = response as MultiChannelCCCommandEncapsulation;
 			t.expect(mcc.destination).toBe(2);
 			const inner = mcc.encapsulated;

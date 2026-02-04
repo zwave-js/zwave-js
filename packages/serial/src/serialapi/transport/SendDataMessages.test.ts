@@ -1,5 +1,6 @@
 import { ProtocolDataRate, TransmitStatus } from "@zwave-js/core";
 import { describe, expect, test } from "vitest";
+
 import { SendDataRequestTransmitReport } from "./SendDataMessages.js";
 
 describe("SendDataRequestTransmitReport", () => {

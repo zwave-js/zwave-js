@@ -17,6 +17,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -47,6 +48,7 @@ import {
 import { V } from "../lib/Values.js";
 import { SceneControllerConfigurationCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { AssociationCC } from "./AssociationCC.js";
 
 export const SceneControllerConfigurationCCValues = V.defineCCValues(
@@ -58,23 +60,25 @@ export const SceneControllerConfigurationCCValues = V.defineCCValues(
 			(groupId: number) => groupId,
 			({ property, propertyKey }) =>
 				property === "sceneId" && typeof propertyKey === "number",
-			(groupId: number) => ({
-				...ValueMetadata.UInt8,
-				label: `Associated Scene ID (${groupId})`,
-				valueChangeOptions: ["transitionDuration"],
-			} as const),
+			(groupId: number) =>
+				({
+					...ValueMetadata.UInt8,
+					label: `Associated Scene ID (${groupId})`,
+					valueChangeOptions: ["transitionDuration"],
+				}) as const,
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
 			"dimmingDuration",
 			(groupId: number) => groupId,
 			({ property, propertyKey }) =>
-				property === "dimmingDuration"
-				&& typeof propertyKey === "number",
-			(groupId: number) => ({
-				...ValueMetadata.Duration,
-				label: `Dimming duration (${groupId})`,
-			} as const),
+				property === "dimmingDuration" &&
+				typeof propertyKey === "number",
+			(groupId: number) =>
+				({
+					...ValueMetadata.Duration,
+					label: `Dimming duration (${groupId})`,
+				}) as const,
 		),
 	},
 );
@@ -94,7 +98,7 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: SceneControllerConfigurationCCAPI,
 			{ property, propertyKey },
 			value,
@@ -125,14 +129,13 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 					// 2. current stored value
 					// 3. default value
 					const dimmingDuration =
-						Duration.from(options?.transitionDuration)
-							?? this.tryGetValueDB()?.getValue<Duration>(
-								SceneControllerConfigurationCCValues
-									.dimmingDuration(
-										propertyKey,
-									).endpoint(this.endpoint.index),
-							)
-							?? Duration.default();
+						Duration.from(options?.transitionDuration) ??
+						this.tryGetValueDB()?.getValue<Duration>(
+							SceneControllerConfigurationCCValues.dimmingDuration(
+								propertyKey,
+							).endpoint(this.endpoint.index),
+						) ??
+						Duration.default();
 					return this.set(propertyKey, value, dimmingDuration);
 				}
 			} else if (property === "dimmingDuration") {
@@ -148,15 +151,11 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 				const dimmingDuration = Duration.from(value);
 				if (dimmingDuration == undefined) {
 					throw new ZWaveError(
-						`${
-							getCCName(
-								this.ccId,
-							)
-						}: "${property}" could not be set. ${
-							JSON.stringify(
-								value,
-							)
-						} is not a valid duration.`,
+						`${getCCName(
+							this.ccId,
+						)}: "${property}" could not be set. ${JSON.stringify(
+							value,
+						)} is not a valid duration.`,
 						ZWaveErrorCodes.Argument_Invalid,
 					);
 				}
@@ -172,10 +171,9 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 						// Can't actually send dimmingDuration without valid sceneId
 						// So we save it in the valueDB without sending it to the node
 						const dimmingDurationValueId =
-							SceneControllerConfigurationCCValues
-								.dimmingDuration(
-									propertyKey,
-								).endpoint(this.endpoint.index);
+							SceneControllerConfigurationCCValues.dimmingDuration(
+								propertyKey,
+							).endpoint(this.endpoint.index);
 						valueDB.setValue(
 							dimmingDurationValueId,
 							dimmingDuration,
@@ -192,7 +190,7 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: SceneControllerConfigurationCCAPI,
 			{ property, propertyKey },
 		) {
@@ -240,8 +238,8 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 		);
 
 		if (!this.endpoint.virtual) {
-			const groupCount = SceneControllerConfigurationCC
-				.getGroupCountCached(
+			const groupCount =
+				SceneControllerConfigurationCC.getGroupCountCached(
 					this.host,
 					this.endpoint,
 				);
@@ -291,12 +289,11 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			groupId: 0,
 		});
-		const response = await this.host.sendCommand<
-			SceneControllerConfigurationCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SceneControllerConfigurationCCReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		// Return value includes "groupId", because
 		// the returned report will include the actual groupId of the
@@ -339,12 +336,11 @@ export class SceneControllerConfigurationCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			groupId,
 		});
-		const response = await this.host.sendCommand<
-			SceneControllerConfigurationCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SceneControllerConfigurationCCReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		// Since groupId is not allowed to be 0, only Reports with
 		// groupId equal to the requested groupId will be accepted,
@@ -370,9 +366,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
 		];
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 
@@ -389,8 +383,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
 		if (groupCount === 0) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`skipping Scene Controller Configuration interview because Association group count is unknown`,
+				message: `skipping Scene Controller Configuration interview because Association group count is unknown`,
 				direction: "none",
 				level: "warn",
 			});
@@ -400,13 +393,12 @@ export class SceneControllerConfigurationCC extends CommandClass {
 		// Create metadata for each scene, but don't query their actual configuration
 		// since some devices only support setting scenes
 		for (let groupId = 1; groupId <= groupCount; groupId++) {
-			const sceneIdValue = SceneControllerConfigurationCCValues.sceneId(
-				groupId,
-			);
+			const sceneIdValue =
+				SceneControllerConfigurationCCValues.sceneId(groupId);
 			this.ensureMetadata(ctx, sceneIdValue);
 
-			const dimmingDurationValue = SceneControllerConfigurationCCValues
-				.dimmingDuration(groupId);
+			const dimmingDurationValue =
+				SceneControllerConfigurationCCValues.dimmingDuration(groupId);
 			this.ensureMetadata(ctx, dimmingDurationValue);
 		}
 
@@ -414,9 +406,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -439,14 +429,12 @@ export class SceneControllerConfigurationCC extends CommandClass {
 		for (let groupId = 1; groupId <= groupCount; groupId++) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`querying scene configuration for group #${groupId}...`,
+				message: `querying scene configuration for group #${groupId}...`,
 				direction: "outbound",
 			});
 			const group = await api.get(groupId);
 			if (group != undefined) {
-				const logMessage =
-					`received scene configuration for group #${groupId}:
+				const logMessage = `received scene configuration for group #${groupId}:
 scene ID:         ${group.sceneId}
 dimming duration: ${group.dimmingDuration.toString()}`;
 				ctx.logNode(node.id, {
@@ -467,10 +455,12 @@ dimming duration: ${group.dimmingDuration.toString()}`;
 		ctx: GetValueDB & GetDeviceConfig,
 		endpoint: EndpointId,
 	): number {
-		return ctx.getDeviceConfig?.(endpoint.nodeId)?.compat
-			?.forceSceneControllerGroupCount
-			?? AssociationCC.getGroupCountCached(ctx, endpoint)
-			?? 0;
+		return (
+			ctx.getDeviceConfig?.(endpoint.nodeId)?.compat
+				?.forceSceneControllerGroupCount ??
+			AssociationCC.getGroupCountCached(ctx, endpoint) ??
+			0
+		);
 	}
 }
 
@@ -483,9 +473,7 @@ export interface SceneControllerConfigurationCCSetOptions {
 
 @CCCommand(SceneControllerConfigurationCommand.Set)
 @useSupervision()
-export class SceneControllerConfigurationCCSet
-	extends SceneControllerConfigurationCC
-{
+export class SceneControllerConfigurationCCSet extends SceneControllerConfigurationCC {
 	public constructor(
 		options: WithAddress<SceneControllerConfigurationCCSetOptions>,
 	) {
@@ -493,8 +481,8 @@ export class SceneControllerConfigurationCCSet
 		this.groupId = options.groupId;
 		this.sceneId = options.sceneId;
 		// if dimmingDuration was missing, use default duration.
-		this.dimmingDuration = Duration.from(options.dimmingDuration)
-			?? Duration.default();
+		this.dimmingDuration =
+			Duration.from(options.dimmingDuration) ?? Duration.default();
 	}
 
 	public static from(
@@ -545,9 +533,7 @@ export interface SceneControllerConfigurationCCReportOptions {
 }
 
 @CCCommand(SceneControllerConfigurationCommand.Report)
-export class SceneControllerConfigurationCCReport
-	extends SceneControllerConfigurationCC
-{
+export class SceneControllerConfigurationCCReport extends SceneControllerConfigurationCC {
 	public constructor(
 		options: WithAddress<SceneControllerConfigurationCCReportOptions>,
 	) {
@@ -566,8 +552,8 @@ export class SceneControllerConfigurationCCReport
 		validatePayload(raw.payload.length >= 3);
 		const groupId = raw.payload[0];
 		const sceneId = raw.payload[1];
-		const dimmingDuration: Duration = Duration.parseReport(raw.payload[2])
-			?? Duration.unknown();
+		const dimmingDuration: Duration =
+			Duration.parseReport(raw.payload[2]) ?? Duration.unknown();
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -591,8 +577,8 @@ export class SceneControllerConfigurationCCReport
 			this.groupId,
 		);
 		this.ensureMetadata(ctx, sceneIdValue);
-		const dimmingDurationValue = SceneControllerConfigurationCCValues
-			.dimmingDuration(this.groupId);
+		const dimmingDurationValue =
+			SceneControllerConfigurationCCValues.dimmingDuration(this.groupId);
 		this.ensureMetadata(ctx, dimmingDurationValue);
 
 		this.setValue(ctx, sceneIdValue, this.sceneId);
@@ -632,9 +618,7 @@ export interface SceneControllerConfigurationCCGetOptions {
 	SceneControllerConfigurationCCReport,
 	testResponseForSceneControllerConfigurationGet,
 )
-export class SceneControllerConfigurationCCGet
-	extends SceneControllerConfigurationCC
-{
+export class SceneControllerConfigurationCCGet extends SceneControllerConfigurationCC {
 	public constructor(
 		options: WithAddress<SceneControllerConfigurationCCGetOptions>,
 	) {

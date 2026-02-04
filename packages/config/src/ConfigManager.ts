@@ -8,6 +8,7 @@ import {
 import { getErrorMessage, pathExists } from "@zwave-js/shared";
 import type { FileSystem } from "@zwave-js/shared/bindings";
 import path from "pathe";
+
 import { ConfigLogger } from "./Logger.js";
 import {
 	type ManufacturersMap,
@@ -92,8 +93,9 @@ export class ConfigManager {
 	private deviceConfigPriorityDir: string | undefined;
 	private deviceConfigExternalDir: string | undefined;
 	public get externalConfigDir(): string | undefined {
-		return this.deviceConfigExternalDir
-			?? getExternalConfigDirEnvVariable();
+		return (
+			this.deviceConfigExternalDir ?? getExternalConfigDirEnvVariable()
+		);
 	}
 
 	private index: DeviceConfigIndex | undefined;
@@ -138,7 +140,8 @@ export class ConfigManager {
 		try {
 			this._manufacturers = await loadManufacturersInternal(
 				await this.getFS(),
-				this._useExternalConfig && this.externalConfigDir || undefined,
+				(this._useExternalConfig && this.externalConfigDir) ||
+					undefined,
 			);
 		} catch (e) {
 			// If the config file is missing or invalid, don't try to find it again
@@ -213,7 +216,8 @@ export class ConfigManager {
 			const embeddedIndex = await loadDeviceIndexInternal(
 				fs,
 				logger,
-				this._useExternalConfig && this.externalConfigDir || undefined,
+				(this._useExternalConfig && this.externalConfigDir) ||
+					undefined,
 			);
 			// A dynamic index of the user-defined priority device config files
 			const priorityIndex: DeviceConfigIndex = [];
@@ -238,9 +242,8 @@ export class ConfigManager {
 		} catch (e) {
 			// If the index file is missing or invalid, don't try to find it again
 			if (
-				(!isZWaveError(e) && e instanceof Error)
-				|| (isZWaveError(e)
-					&& e.code === ZWaveErrorCodes.Config_Invalid)
+				(!isZWaveError(e) && e instanceof Error) ||
+				(isZWaveError(e) && e.code === ZWaveErrorCodes.Config_Invalid)
 			) {
 				// Fall back to no index on production systems
 				if (!this.index) this.index = [];
@@ -302,12 +305,13 @@ export class ConfigManager {
 			),
 		);
 		// If there are multiple with overlapping firmware ranges, return the preferred one first
-		const indexEntry = indexEntries.find((e) => !!e.preferred)
-			?? indexEntries[0];
+		const indexEntry =
+			indexEntries.find((e) => !!e.preferred) ?? indexEntries[0];
 
 		if (indexEntry) {
 			const devicesDir = getDevicesPaths(
-				this._useExternalConfig && this.externalConfigDir || configDir,
+				(this._useExternalConfig && this.externalConfigDir) ||
+					configDir,
 			).devicesDir;
 			const filePath = path.isAbsolute(indexEntry.filename)
 				? indexEntry.filename
@@ -323,9 +327,8 @@ export class ConfigManager {
 			// When a device file is located in a different root directory than the embedded config files,
 			// we use the embedded dir a fallback
 			const rootDir = indexEntry.rootDir ?? devicesDir;
-			const fallbackDirs = rootDir === devicesDir
-				? undefined
-				: [devicesDir];
+			const fallbackDirs =
+				rootDir === devicesDir ? undefined : [devicesDir];
 
 			try {
 				return await ConditionalDeviceConfig.from(
@@ -337,12 +340,10 @@ export class ConfigManager {
 			} catch (e) {
 				if (process.env.NODE_ENV !== "test") {
 					(await this.getLogger()).print(
-						`Error loading device config ${filePath}: ${
-							getErrorMessage(
-								e,
-								true,
-							)
-						}`,
+						`Error loading device config ${filePath}: ${getErrorMessage(
+							e,
+							true,
+						)}`,
 						"error",
 					);
 				}

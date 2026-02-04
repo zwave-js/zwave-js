@@ -72,9 +72,7 @@ export class SerialAPIStartedRequest extends Message {
 		this.supportsLongRange = options.supportsLongRange;
 	}
 
-	public static from(
-		raw: MessageRaw,
-	): SerialAPIStartedRequest {
+	public static from(raw: MessageRaw): SerialAPIStartedRequest {
 		const wakeUpReason: SerialAPIWakeUpReason = raw.payload[0];
 		const watchdogEnabled = raw.payload[1] === 0x01;
 		const deviceOption = raw.payload[2];

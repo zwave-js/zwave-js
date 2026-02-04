@@ -32,9 +32,7 @@ test("the ConfigurationGet command should serialize correctly", async (t) => {
 			CentralSceneCommand.ConfigurationGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the ConfigurationSet command should serialize correctly (flags set)", async (t) => {
@@ -48,9 +46,7 @@ test("the ConfigurationSet command should serialize correctly (flags set)", asyn
 			0b1000_0000,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the ConfigurationSet command should serialize correctly (flags not set)", async (t) => {
@@ -64,9 +60,7 @@ test("the ConfigurationSet command should serialize correctly (flags not set)", 
 			0,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the ConfigurationReport command should be deserialized correctly", async (t) => {
@@ -76,10 +70,9 @@ test("the ConfigurationReport command should be deserialized correctly", async (
 			0b1000_0000,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as CentralSceneCCConfigurationReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as CentralSceneCCConfigurationReport;
 	t.expect(cc.constructor).toBe(CentralSceneCCConfigurationReport);
 
 	t.expect(cc.slowRefresh).toBe(true);
@@ -94,9 +87,7 @@ test("the SupportedGet command should serialize correctly", async (t) => {
 			CentralSceneCommand.SupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the SupportedReport command should be deserialized correctly", async (t) => {
@@ -111,10 +102,9 @@ test("the SupportedReport command should be deserialized correctly", async (t) =
 			0,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as CentralSceneCCSupportedReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as CentralSceneCCSupportedReport;
 	t.expect(cc.constructor).toBe(CentralSceneCCSupportedReport);
 
 	t.expect(cc.sceneCount).toBe(2);
@@ -134,10 +124,9 @@ test("the Notification command should be deserialized correctly", async (t) => {
 			8, // scene number
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as CentralSceneCCNotification;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as CentralSceneCCNotification;
 	t.expect(cc.constructor).toBe(CentralSceneCCNotification);
 
 	t.expect(cc.sequenceNumber).toBe(7);
@@ -156,10 +145,9 @@ test("the Notification command should be deserialized correctly (KeyHeldDown)", 
 			8, // scene number
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as CentralSceneCCNotification;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as CentralSceneCCNotification;
 	t.expect(cc.constructor).toBe(CentralSceneCCNotification);
 
 	t.expect(cc.sequenceNumber).toBe(7);
@@ -172,10 +160,9 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as CentralSceneCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as CentralSceneCC;
 	t.expect(cc.constructor).toBe(CentralSceneCC);
 });
 
@@ -208,16 +195,22 @@ test("deserializing an unsupported command should return an unspecified version 
 test("CentralSceneCCSupportedReport should use custom scene labels from device config when available", async (t) => {
 	// Mock device config with custom scenes
 	const scenes = new Map([
-		[1, {
-			sceneId: 1,
-			label: "Single Press",
-			description: "Single button press",
-		}],
-		[2, {
-			sceneId: 2,
-			label: "Double Press",
-			description: "Double button press",
-		}],
+		[
+			1,
+			{
+				sceneId: 1,
+				label: "Single Press",
+				description: "Single button press",
+			},
+		],
+		[
+			2,
+			{
+				sceneId: 2,
+				label: "Double Press",
+				description: "Double button press",
+			},
+		],
 		[3, { sceneId: 3, label: "Hold" }],
 	]);
 
@@ -318,11 +311,14 @@ test("CentralSceneCCSupportedReport should fallback to default labels when no de
 test("CentralSceneCCNotification should use custom scene labels from device config when available", async (t) => {
 	// Mock device config with custom scenes
 	const scenes = new Map([
-		[5, {
-			sceneId: 5,
-			label: "Release",
-			description: "Button release action",
-		}],
+		[
+			5,
+			{
+				sceneId: 5,
+				label: "Release",
+				description: "Button release action",
+			},
+		],
 	]);
 
 	const mockDeviceConfig = { scenes };

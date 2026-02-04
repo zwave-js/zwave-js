@@ -19,6 +19,7 @@ import {
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import { roundTo } from "alcalzone-shared/math";
+
 import type { Driver } from "../../driver/Driver.js";
 import type { ZWaveController } from "../Controller.js";
 import type { ControllerProprietaryCommon } from "../Proprietary.js";
@@ -102,20 +103,15 @@ const BLACK: RGB = { r: 0, g: 2, b: 0 };
 
 function parseGyro(msg: Message): Vector {
 	// According to datasheet: 8g range => 977 µg/LSB
-	const x = roundTo(msg.payload.readInt16BE(1) / 1024 * 9.77, 2);
-	const y = roundTo(msg.payload.readInt16BE(3) / 1024 * 9.77, 2);
-	const z = roundTo(msg.payload.readInt16BE(5) / 1024 * 9.77, 2);
+	const x = roundTo((msg.payload.readInt16BE(1) / 1024) * 9.77, 2);
+	const y = roundTo((msg.payload.readInt16BE(3) / 1024) * 9.77, 2);
+	const z = roundTo((msg.payload.readInt16BE(5) / 1024) * 9.77, 2);
 
 	return { x, y, z };
 }
 
-export class ControllerProprietary_NabuCasa
-	implements ControllerProprietaryCommon
-{
-	constructor(
-		driver: Driver,
-		controller: ZWaveController,
-	) {
+export class ControllerProprietary_NabuCasa implements ControllerProprietaryCommon {
+	constructor(driver: Driver, controller: ZWaveController) {
 		this.driver = driver;
 		this.controller = controller;
 	}
@@ -131,8 +127,8 @@ export class ControllerProprietary_NabuCasa
 		this.supportedCommands = supported;
 
 		if (
-			supported.includes(NabuCasaCommand.GetLEDBinary)
-			|| supported.includes(NabuCasaCommand.GetLED)
+			supported.includes(NabuCasaCommand.GetLEDBinary) ||
+			supported.includes(NabuCasaCommand.GetLED)
 		) {
 			// Fake a binary switch for the LED
 			valueDB.setMetadata(
@@ -145,50 +141,37 @@ export class ControllerProprietary_NabuCasa
 			);
 
 			// Clean up RGB values if they exist
-			valueDB.setMetadata(
-				ColorSwitchCCValues.currentColor.id,
-				undefined,
-			);
+			valueDB.setMetadata(ColorSwitchCCValues.currentColor.id, undefined);
 			valueDB.removeValue(ColorSwitchCCValues.currentColor.id);
 
-			valueDB.setMetadata(
-				ColorSwitchCCValues.targetColor.id,
-				undefined,
-			);
+			valueDB.setMetadata(ColorSwitchCCValues.targetColor.id, undefined);
 			valueDB.removeValue(ColorSwitchCCValues.targetColor.id);
 
-			valueDB.setMetadata(
-				ColorSwitchCCValues.hexColor.id,
-				undefined,
-			);
+			valueDB.setMetadata(ColorSwitchCCValues.hexColor.id, undefined);
 			valueDB.removeValue(ColorSwitchCCValues.hexColor.id);
 
 			valueDB.setMetadata(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Red).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Red).id,
 				undefined,
 			);
 			valueDB.removeValue(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Red).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Red).id,
 			);
 			valueDB.setMetadata(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Green).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Green)
+					.id,
 				undefined,
 			);
 			valueDB.removeValue(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Green).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Green)
+					.id,
 			);
 			valueDB.setMetadata(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Blue).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Blue).id,
 				undefined,
 			);
 			valueDB.removeValue(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Blue).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Blue).id,
 			);
 		}
 
@@ -209,17 +192,11 @@ export class ControllerProprietary_NabuCasa
 				configEnableTiltIndicator,
 				configEnableTiltIndicatorMeta,
 			);
-			valueDB.setValue(
-				configEnableTiltIndicator,
-				enableTiltIndicator,
-			);
+			valueDB.setValue(configEnableTiltIndicator, enableTiltIndicator);
 		}
 	}
 
-	private persistRGBValue(
-		valueDB: ValueDB,
-		rgb: RGB,
-	) {
+	private persistRGBValue(valueDB: ValueDB, rgb: RGB) {
 		// Treat any other color than black as "on"
 		valueDB.setValue(
 			BinarySwitchCCValues.currentValue.id,
@@ -231,10 +208,7 @@ export class ControllerProprietary_NabuCasa
 		);
 	}
 
-	private persistLEDState(
-		valueDB: ValueDB,
-		state: boolean,
-	) {
+	private persistLEDState(valueDB: ValueDB, state: boolean) {
 		valueDB.setValue(BinarySwitchCCValues.currentValue.id, state);
 		valueDB.setValue(BinarySwitchCCValues.targetValue.id, state);
 	}
@@ -249,20 +223,17 @@ export class ControllerProprietary_NabuCasa
 			payload: Bytes.from([NabuCasaCommand.GetSupportedCommands]),
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.GetSupportedCommands
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.GetSupportedCommands
 				);
 			},
 		});
 
-		const result = await this.driver.sendMessage(
-			getSupportedCmd,
-			{
-				priority: MessagePriority.Controller,
-				supportCheck: false,
-			},
-		);
+		const result = await this.driver.sendMessage(getSupportedCmd, {
+			priority: MessagePriority.Controller,
+			supportCheck: false,
+		});
 		const supported = result.payload.subarray(1);
 
 		return parseBitMask(supported, NabuCasaCommand.GetSupportedCommands);
@@ -278,9 +249,9 @@ export class ControllerProprietary_NabuCasa
 			payload: Bytes.from([NabuCasaCommand.GetLED]),
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.GetLED
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.GetLED
 				);
 			},
 		});
@@ -316,9 +287,9 @@ export class ControllerProprietary_NabuCasa
 			payload,
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.SetLED
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.SetLED
 				);
 			},
 		});
@@ -341,9 +312,9 @@ export class ControllerProprietary_NabuCasa
 			payload: Bytes.from([NabuCasaCommand.GetLEDBinary]),
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.GetLEDBinary
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.GetLEDBinary
 				);
 			},
 		});
@@ -372,9 +343,9 @@ export class ControllerProprietary_NabuCasa
 			payload,
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.SetLEDBinary
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.SetLEDBinary
 				);
 			},
 		});
@@ -402,18 +373,18 @@ export class ControllerProprietary_NabuCasa
 			payload: Bytes.from([NabuCasaCommand.ReadGyro]),
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.ReadGyro
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.ReadGyro
 				);
 			},
 		});
 
 		const callbackPromise = this.driver.waitForMessage((msg) => {
 			return (
-				msg.functionType === FUNC_ID_NABUCASA
-				&& msg.type === MessageType.Request
-				&& msg.payload[0] === NabuCasaCommand.ReadGyro
+				msg.functionType === FUNC_ID_NABUCASA &&
+				msg.type === MessageType.Request &&
+				msg.payload[0] === NabuCasaCommand.ReadGyro
 			);
 		}, 1000);
 
@@ -448,9 +419,9 @@ export class ControllerProprietary_NabuCasa
 			payload,
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.SetSystemIndication
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.SetSystemIndication
 				);
 			},
 		});
@@ -467,10 +438,7 @@ export class ControllerProprietary_NabuCasa
 		// HOST->ZW (REQ): NABU_CASA_CONFIG_GET | key
 		// ZW->HOST (RES): NABU_CASA_CONFIG_GET | key | size | value...
 
-		const payload = Bytes.from([
-			NabuCasaCommand.GetConfig,
-			key,
-		]);
+		const payload = Bytes.from([NabuCasaCommand.GetConfig, key]);
 
 		const getConfigCmd = new Message({
 			type: MessageType.Request,
@@ -478,10 +446,10 @@ export class ControllerProprietary_NabuCasa
 			payload,
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.GetConfig
-					&& msg.payload[1] === key
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.GetConfig &&
+					msg.payload[1] === key
 				);
 			},
 		});
@@ -522,9 +490,9 @@ export class ControllerProprietary_NabuCasa
 			payload,
 			expectedResponse: (self, msg) => {
 				return (
-					msg.functionType === FUNC_ID_NABUCASA
-					&& msg.type === MessageType.Response
-					&& msg.payload[0] === NabuCasaCommand.SetConfig
+					msg.functionType === FUNC_ID_NABUCASA &&
+					msg.type === MessageType.Response &&
+					msg.payload[0] === NabuCasaCommand.SetConfig
 				);
 			},
 		});
@@ -551,8 +519,8 @@ export class ControllerProprietary_NabuCasa
 
 	public async pollValue(valueId: ValueID): Promise<unknown> {
 		if (
-			BinarySwitchCCValues.targetValue.is(valueId)
-			|| BinarySwitchCCValues.currentValue.is(valueId)
+			BinarySwitchCCValues.targetValue.is(valueId) ||
+			BinarySwitchCCValues.currentValue.is(valueId)
 		) {
 			if (
 				this.supportedCommands?.includes(NabuCasaCommand.GetLEDBinary)
@@ -569,8 +537,8 @@ export class ControllerProprietary_NabuCasa
 		}
 
 		if (
-			ConfigurationCCValues.paramInformation.is(valueId)
-			&& valueId.propertyKey == undefined
+			ConfigurationCCValues.paramInformation.is(valueId) &&
+			valueId.propertyKey == undefined
 		) {
 			switch (valueId.property) {
 				case NabuCasaConfigKey.EnableTiltIndicator:
@@ -593,8 +561,8 @@ export class ControllerProprietary_NabuCasa
 		value: unknown,
 	): Promise<SetValueResult> {
 		if (
-			BinarySwitchCCValues.targetValue.is(valueId)
-			&& typeof value === "boolean"
+			BinarySwitchCCValues.targetValue.is(valueId) &&
+			typeof value === "boolean"
 		) {
 			if (
 				this.supportedCommands?.includes(NabuCasaCommand.SetLEDBinary)
@@ -612,17 +580,14 @@ export class ControllerProprietary_NabuCasa
 		}
 
 		if (
-			ConfigurationCCValues.paramInformation.is(valueId)
-			&& valueId.propertyKey == undefined
-			&& typeof value === "number"
-			&& [
-				NabuCasaConfigKey.EnableTiltIndicator,
-			].includes(valueId.property as any)
+			ConfigurationCCValues.paramInformation.is(valueId) &&
+			valueId.propertyKey == undefined &&
+			typeof value === "number" &&
+			[NabuCasaConfigKey.EnableTiltIndicator].includes(
+				valueId.property as any,
+			)
 		) {
-			await this.setConfig(
-				valueId.property as NabuCasaConfigKey,
-				value,
-			);
+			await this.setConfig(valueId.property as NabuCasaConfigKey, value);
 			this.controller.valueDB.setValue(valueId, value);
 
 			return { status: SetValueStatus.Success };

@@ -1,5 +1,7 @@
 import { type JSONObject, pick } from "@zwave-js/shared";
+
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type ConditionalItem,
 	conditionApplies,
@@ -15,11 +17,7 @@ export class ConditionalSceneConfig implements ConditionalItem<SceneConfig> {
 	) {
 		this.sceneId = sceneId;
 
-		validateCondition(
-			filename,
-			definition,
-			`Scene ${sceneId} contains an`,
-		);
+		validateCondition(filename, definition, `Scene ${sceneId} contains an`);
 		this.condition = definition.$if;
 
 		if (typeof definition.label !== "string") {
@@ -32,8 +30,8 @@ Scene ${sceneId} has a non-string label`,
 		this.label = definition.label;
 
 		if (
-			definition.description != undefined
-			&& typeof definition.description !== "string"
+			definition.description != undefined &&
+			typeof definition.description !== "string"
 		) {
 			throwInvalidConfig(
 				"devices",
@@ -50,16 +48,10 @@ Scene ${sceneId} has a non-string description`,
 	public readonly label: string;
 	public readonly description?: string;
 
-	public evaluateCondition(
-		deviceId?: DeviceID,
-	): SceneConfig | undefined {
+	public evaluateCondition(deviceId?: DeviceID): SceneConfig | undefined {
 		if (!conditionApplies(this, deviceId)) return;
 
-		return pick(this, [
-			"sceneId",
-			"label",
-			"description",
-		]);
+		return pick(this, ["sceneId", "label", "description"]);
 	}
 }
 

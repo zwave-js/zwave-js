@@ -4,6 +4,7 @@ import {
 	SecurityClass,
 	SecurityManager2,
 } from "@zwave-js/core";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro for https://github.com/zwave-js/zwave-js/issues/6098
@@ -54,8 +55,9 @@ integrationTest(
 			t.expect(node.hasSecurityClass(SecurityClass.S0_Legacy)).toBe(
 				false,
 			);
-			t.expect(node.hasSecurityClass(SecurityClass.S2_AccessControl))
-				.toBe(false);
+			t.expect(
+				node.hasSecurityClass(SecurityClass.S2_AccessControl),
+			).toBe(false);
 			t.expect(node.getHighestSecurityClass()).toBe(SecurityClass.None);
 		},
 	},
@@ -124,10 +126,12 @@ integrationTest(
 			t.expect(
 				node.hasSecurityClass(SecurityClass.S2_Unauthenticated),
 			).toBe(false);
-			t.expect(node.hasSecurityClass(SecurityClass.S2_Authenticated))
-				.toBe(false);
-			t.expect(node.hasSecurityClass(SecurityClass.S2_AccessControl))
-				.toBe(false);
+			t.expect(
+				node.hasSecurityClass(SecurityClass.S2_Authenticated),
+			).toBe(false);
+			t.expect(
+				node.hasSecurityClass(SecurityClass.S2_AccessControl),
+			).toBe(false);
 			t.expect(node.getHighestSecurityClass()).toBe(SecurityClass.None);
 		},
 	},

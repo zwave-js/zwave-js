@@ -1,8 +1,10 @@
-import { hexToUint8Array } from "@zwave-js/shared";
 import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { hexToUint8Array } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import { CtrDRBG } from "./ctr_drbg.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -47,31 +49,20 @@ for (const id of ["AES-128"]) {
 	const vectors = getVectors(name);
 
 	for (const [i, vector] of vectors.entries()) {
-		test(
-			`CtrDRBG -> should pass ${name} NIST vector #${
-				i + 1
-			} (ctr,df=false)`,
-			async (t) => {
-				const drbg = new CtrDRBG();
+		test(`CtrDRBG -> should pass ${name} NIST vector #${
+			i + 1
+		} (ctr,df=false)`, async (t) => {
+			const drbg = new CtrDRBG();
 
-				await drbg.init(
-					vector.EntropyInput,
-				);
+			await drbg.init(vector.EntropyInput);
 
-				await drbg["reseed"](
-					vector.EntropyInputReseed,
-				);
+			await drbg["reseed"](vector.EntropyInputReseed);
 
-				await drbg.generate(
-					vector.ReturnedBits.byteLength,
-				);
+			await drbg.generate(vector.ReturnedBits.byteLength);
 
-				const result = await drbg.generate(
-					vector.ReturnedBits.byteLength,
-				);
+			const result = await drbg.generate(vector.ReturnedBits.byteLength);
 
-				t.expect(result).toStrictEqual(vector.ReturnedBits);
-			},
-		);
+			t.expect(result).toStrictEqual(vector.ReturnedBits);
+		});
 	}
 }

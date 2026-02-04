@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { computeBergerCode } from "./utils.js";
 
 {

@@ -1,5 +1,6 @@
 import type { HailCC, PersistValuesContext } from "@zwave-js/cc";
 import type { LogNode } from "@zwave-js/core";
+
 import type { ZWaveNode } from "../Node.js";
 
 export interface HailHandlerStore {
@@ -24,15 +25,13 @@ export async function handleHail(
 
 	if (store.busyPolling) {
 		ctx.logNode(node.id, {
-			message:
-				`Hail received from node, but still busy with previous one...`,
+			message: `Hail received from node, but still busy with previous one...`,
 		});
 		return;
 	}
 
 	ctx.logNode(node.id, {
-		message:
-			`Hail received from node, refreshing actuator and sensor values...`,
+		message: `Hail received from node, refreshing actuator and sensor values...`,
 	});
 	try {
 		store.busyPolling = true;

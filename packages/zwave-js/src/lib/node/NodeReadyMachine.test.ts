@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { createNodeReadyMachine } from "./NodeReadyMachine.js";
 
 test(`The node should start in the notReady state`, (t) => {

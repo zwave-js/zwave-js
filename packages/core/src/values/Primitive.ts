@@ -1,4 +1,5 @@
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import {
 	MAX_NODES_LR,
 	NUM_LR_NODES_PER_SEGMENT,
@@ -70,8 +71,8 @@ export function maybeUnknownToString<T>(
 	return val === undefined
 		? "undefined"
 		: val === UNKNOWN_STATE
-		? "unknown"
-		: ifNotUnknown(val);
+			? "unknown"
+			: ifNotUnknown(val);
 }
 
 /**
@@ -155,17 +156,18 @@ export function getMinIntegerSize(
 ): 1 | 2 | 4 | undefined {
 	if (signed) {
 		if (
-			value >= IntegerLimits.Int8.min && value <= IntegerLimits.Int8.max
+			value >= IntegerLimits.Int8.min &&
+			value <= IntegerLimits.Int8.max
 		) {
 			return 1;
 		} else if (
-			value >= IntegerLimits.Int16.min
-			&& value <= IntegerLimits.Int16.max
+			value >= IntegerLimits.Int16.min &&
+			value <= IntegerLimits.Int16.max
 		) {
 			return 2;
 		} else if (
-			value >= IntegerLimits.Int32.min
-			&& value <= IntegerLimits.Int32.max
+			value >= IntegerLimits.Int32.min &&
+			value <= IntegerLimits.Int32.max
 		) {
 			return 4;
 		}
@@ -234,9 +236,8 @@ export function encodeFloatWithScale(
 		size = override.size;
 	}
 	const ret = new Bytes(1 + size);
-	ret[0] = ((precision & 0b111) << 5)
-		| ((scale & 0b11) << 3)
-		| (size & 0b111);
+	ret[0] =
+		((precision & 0b111) << 5) | ((scale & 0b11) << 3) | (size & 0b111);
 	ret.writeIntBE(value, 1, size);
 	return ret;
 }
@@ -351,7 +352,8 @@ export function encodePartial(
 	partialValue: number,
 	bitMask: number,
 ): number {
-	const ret = (fullValue & ~bitMask)
-		| ((partialValue << getMinimumShiftForBitMask(bitMask)) & bitMask);
+	const ret =
+		(fullValue & ~bitMask) |
+		((partialValue << getMinimumShiftForBitMask(bitMask)) & bitMask);
 	return ret >>> 0; // convert to unsigned if necessary
 }

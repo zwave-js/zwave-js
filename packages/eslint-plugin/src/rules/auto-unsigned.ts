@@ -1,5 +1,6 @@
 import { getIntegerLimits, tryParseParamNumber } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
+
 import {
 	type JSONCRule,
 	getJSONBoolean,
@@ -29,14 +30,12 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 			maxLimit: number,
 		) {
 			// Find the property after which we should insert the unsigned property
-			const unsignedIndex = paramInfoPropertyOrder.indexOf(
-				"unsigned",
-			);
-			const insertAfter = parent.properties.findLast((p) =>
-				p.key.type === "JSONLiteral"
-				&& typeof p.key.value === "string"
-				&& paramInfoPropertyOrder.indexOf(p.key.value)
-					< unsignedIndex
+			const unsignedIndex = paramInfoPropertyOrder.indexOf("unsigned");
+			const insertAfter = parent.properties.findLast(
+				(p) =>
+					p.key.type === "JSONLiteral" &&
+					typeof p.key.value === "string" &&
+					paramInfoPropertyOrder.indexOf(p.key.value) < unsignedIndex,
 			);
 			context.report({
 				loc: valueSizeNode.loc,
@@ -53,16 +52,16 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 						messageId: "convert-to-unsigned",
 						fix: insertAfter
 							? insertAfterJSONProperty(
-								context,
-								insertAfter,
-								`"unsigned": true,`,
-								{ insertComma: true },
-							)
+									context,
+									insertAfter,
+									`"unsigned": true,`,
+									{ insertComma: true },
+								)
 							: insertBeforeJSONProperty(
-								context,
-								parent.properties[0],
-								`"unsigned": true,`,
-							),
+									context,
+									parent.properties[0],
+									`"unsigned": true,`,
+								),
 					},
 				],
 			});
@@ -74,9 +73,10 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 				node: AST.JSONObjectExpression,
 			) {
 				// We cannot handle imports yet
-				const hasImport = node.properties.some((p) =>
-					p.key.type === "JSONLiteral"
-					&& p.key.value === "$import"
+				const hasImport = node.properties.some(
+					(p) =>
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "$import",
 				);
 				if (hasImport) return;
 
@@ -104,9 +104,9 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 				// Check for 'allowed' field first
 				const allowedProp = node.properties.find(
 					(p) =>
-						p.key.type === "JSONLiteral"
-						&& p.key.value === "allowed"
-						&& p.value.type === "JSONArrayExpression",
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "allowed" &&
+						p.value.type === "JSONArrayExpression",
 				);
 
 				const parsedAllowed = parseAllowedField(node);
@@ -125,18 +125,19 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 					}
 				} else {
 					const allowManualEntry =
-						getJSONBoolean(node, "allowManualEntry")?.value
-							!== false;
-					const options = (node.properties.find((p) =>
-						p.key.type === "JSONLiteral"
-						&& p.key.value === "options"
-						&& p.value.type === "JSONArrayExpression"
-						&& p.value.elements.length > 0
-					)?.value as AST.JSONArrayExpression | undefined)
-						?.elements
-						?.filter((e): e is AST.JSONObjectExpression =>
-							!!e
-						);
+						getJSONBoolean(node, "allowManualEntry")?.value !==
+						false;
+					const options = (
+						node.properties.find(
+							(p) =>
+								p.key.type === "JSONLiteral" &&
+								p.key.value === "options" &&
+								p.value.type === "JSONArrayExpression" &&
+								p.value.elements.length > 0,
+						)?.value as AST.JSONArrayExpression | undefined
+					)?.elements?.filter(
+						(e): e is AST.JSONObjectExpression => !!e,
+					);
 
 					if (!allowManualEntry && !!options) {
 						// Deduce min/max value from options
@@ -145,7 +146,8 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 								const valueProp = getJSONNumber(o, "value");
 								const label = getJSONString(o, "label")?.value;
 								if (
-									label == undefined || valueProp == undefined
+									label == undefined ||
+									valueProp == undefined
 								) {
 									return;
 								}
@@ -154,7 +156,8 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 									value: valueProp.value,
 									label,
 								};
-							}).filter(Boolean)
+							})
+							.filter(Boolean)
 							.toSorted((a, b) => a!.value - b!.value);
 
 						if (sortedOptions.length === 0) return;
@@ -207,14 +210,16 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 					return;
 				}
 
-				const fitsSignedLimits = minValue >= limits.min
-					&& minValue <= limits.max
-					&& maxValue >= limits.min
-					&& maxValue <= limits.max;
-				const fitsUnsignedLimits = minValue >= unsignedLimits.min
-					&& minValue <= unsignedLimits.max
-					&& maxValue >= unsignedLimits.min
-					&& maxValue <= unsignedLimits.max;
+				const fitsSignedLimits =
+					minValue >= limits.min &&
+					minValue <= limits.max &&
+					maxValue >= limits.min &&
+					maxValue <= limits.max;
+				const fitsUnsignedLimits =
+					minValue >= unsignedLimits.min &&
+					minValue <= unsignedLimits.max &&
+					maxValue >= unsignedLimits.min &&
+					maxValue <= unsignedLimits.max;
 
 				// Helper to get the right message ID based on source
 				const getMinMessageId = () => {
@@ -290,10 +295,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 					context.report({
 						loc: unsignedProperty.node.loc,
 						messageId: "unnecessary-unsigned",
-						fix: removeJSONProperty(
-							context,
-							unsignedProperty.node,
-						),
+						fix: removeJSONProperty(context, unsignedProperty.node),
 					});
 				}
 			},
@@ -302,8 +304,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 	meta: {
 		// @ts-expect-error Something is off about the rule types
 		docs: {
-			description:
-				`Ensures that "unsigned = true" is used when necessary and omitted when not.`,
+			description: `Ensures that "unsigned = true" is used when necessary and omitted when not.`,
 		},
 		fixable: "code",
 		hasSuggestions: true,

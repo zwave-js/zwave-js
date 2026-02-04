@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import type { JSONCRule } from "../utils.js";
 
 export const preferDefaultValue: JSONCRule.RuleModule = {
@@ -14,9 +15,10 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 			) {
 				debugger;
 				if (
-					node.value.type !== "JSONLiteral"
-					|| typeof node.value.value !== "string"
-				) return;
+					node.value.type !== "JSONLiteral" ||
+					typeof node.value.value !== "string"
+				)
+					return;
 
 				const match = node.value.raw.match(/ *\(default\) */i);
 				if (!match) return;
@@ -27,9 +29,10 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 					match.index! + match[0].length,
 				);
 
-				const fixed = before
-					+ (startsWithWhitespace && endsWithWhitespace ? " " : "")
-					+ after;
+				const fixed =
+					before +
+					(startsWithWhitespace && endsWithWhitespace ? " " : "") +
+					after;
 
 				context.report({
 					loc: node.value.loc,
@@ -43,8 +46,7 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 	meta: {
 		// @ts-expect-error Something is off about the rule types
 		docs: {
-			description:
-				`Ensures that the defaultValue property is used instead of mentioning in text that an option/value is the default`,
+			description: `Ensures that the defaultValue property is used instead of mentioning in text that an option/value is the default`,
 		},
 		fixable: "code",
 		schema: false,

@@ -1,5 +1,7 @@
 import { test } from "vitest";
+
 import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import { ZWaveError, ZWaveErrorCodes } from "./ZWaveError.js";
 
 const err = new ZWaveError(

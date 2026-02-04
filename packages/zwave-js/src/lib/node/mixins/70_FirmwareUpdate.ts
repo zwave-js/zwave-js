@@ -41,12 +41,14 @@ import {
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import {
 	type Task,
 	type TaskBuilder,
 	TaskPriority,
 } from "../../driver/Task.js";
 import type { Transaction } from "../../driver/Transaction.js";
+
 import { SchedulePollMixin } from "./60_ScheduledPoll.js";
 
 interface AbortFirmwareUpdateContext {
@@ -55,9 +57,10 @@ interface AbortFirmwareUpdateContext {
 	abortPromise: DeferredPromise<boolean>;
 }
 
-type PartialFirmwareUpdateResult =
-	& Pick<FirmwareUpdateResult, "status" | "waitTime">
-	& { success: boolean };
+type PartialFirmwareUpdateResult = Pick<
+	FirmwareUpdateResult,
+	"status" | "waitTime"
+> & { success: boolean };
 
 /** Checks if a task belongs to a route rebuilding process */
 export function isFirmwareUpdateOTATask(t: Task<unknown>): boolean {
@@ -104,12 +107,11 @@ export interface NodeFirmwareUpdate {
 	getFirmwareUpdateCapabilitiesCached(): FirmwareUpdateCapabilities;
 }
 
-export abstract class FirmwareUpdateMixin extends SchedulePollMixin
+export abstract class FirmwareUpdateMixin
+	extends SchedulePollMixin
 	implements NodeFirmwareUpdate
 {
-	public async getFirmwareUpdateCapabilities(): Promise<
-		FirmwareUpdateCapabilities
-	> {
+	public async getFirmwareUpdateCapabilities(): Promise<FirmwareUpdateCapabilities> {
 		const api = this.commandClasses["Firmware Update Meta Data"];
 		const meta = await api.getMetaData();
 		if (!meta) {
@@ -126,8 +128,9 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		return {
 			firmwareUpgradable: true,
 			// TODO: Targets are not the list of IDs - maybe expose the IDs as well?
-			firmwareTargets: Array
-				.from<number>({ length: 1 + meta.additionalFirmwareIDs.length })
+			firmwareTargets: Array.from<number>({
+				length: 1 + meta.additionalFirmwareIDs.length,
+			})
 				.fill(0)
 				.map((_, i) => i),
 			continuesToFunction: meta.continuesToFunction,
@@ -158,18 +161,16 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		);
 
 		// Ensure all information was queried
-		if (
-			!firmwareUpgradable
-			|| !isArray(additionalFirmwareIDs)
-		) {
+		if (!firmwareUpgradable || !isArray(additionalFirmwareIDs)) {
 			return { firmwareUpgradable: false };
 		}
 
 		return {
 			firmwareUpgradable: true,
 			// TODO: Targets are not the list of IDs - maybe expose the IDs as well?
-			firmwareTargets: Array
-				.from<number>({ length: 1 + additionalFirmwareIDs.length })
+			firmwareTargets: Array.from<number>({
+				length: 1 + additionalFirmwareIDs.length,
+			})
 				.fill(0)
 				.map((_, i) => i),
 			continuesToFunction,
@@ -215,8 +216,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 		// Check that the targets are not duplicates
 		if (
-			distinct(updates.map((u) => u.firmwareTarget ?? 0)).length
-				!== updates.length
+			distinct(updates.map((u) => u.firmwareTarget ?? 0)).length !==
+			updates.length
 		) {
 			throw new ZWaveError(
 				`The target of all provided firmware updates must be unique`,
@@ -256,12 +257,12 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		const self = this;
 
 		// This task should only run once at a time
-		const existingTask = this.driver.scheduler.findTask<
-			FirmwareUpdateResult
-		>((t) =>
-			t.tag?.id === "firmware-update-ota"
-			&& t.tag.nodeId === self.id
-		);
+		const existingTask =
+			this.driver.scheduler.findTask<FirmwareUpdateResult>(
+				(t) =>
+					t.tag?.id === "firmware-update-ota" &&
+					t.tag.nodeId === self.id,
+			);
 		if (existingTask) return existingTask;
 
 		let keepAwake: boolean;
@@ -316,8 +317,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 				let hardwareVersion: number | undefined;
 				let meta: FirmwareUpdateMetaData;
 				try {
-					const prepareResult = await self
-						.prepareFirmwareUpdateInternal(
+					const prepareResult =
+						await self.prepareFirmwareUpdateInternal(
 							updates.map((u) => u.firmwareTarget ?? 0),
 							abortContext,
 						);
@@ -326,15 +327,10 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					if (abortContext.abort) {
 						const result: FirmwareUpdateResult = {
 							success: false,
-							status: FirmwareUpdateStatus
-								.Error_TransmissionFailed,
+							status: FirmwareUpdateStatus.Error_TransmissionFailed,
 							reInterview: false,
 						};
-						self._emit(
-							"firmware update finished",
-							self,
-							result,
-						);
+						self._emit("firmware update finished", self, result);
 						return result;
 					}
 
@@ -363,8 +359,9 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 				if (!meta.supportsResuming) options.resume = false;
 
 				const securityClass = self.getHighestSecurityClass();
-				const isSecure = securityClass === SecurityClass.S0_Legacy
-					|| securityClassIsS2(securityClass);
+				const isSecure =
+					securityClass === SecurityClass.S0_Legacy ||
+					securityClassIsS2(securityClass);
 				if (!isSecure) {
 					// The nonSecureTransfer option is only relevant for secure devices
 					options.nonSecureTransfer = false;
@@ -375,11 +372,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 				// Throttle the progress emitter so applications can handle the load of events
 				const notifyProgress = throttle(
 					(progress) =>
-						self._emit(
-							"firmware update progress",
-							self,
-							progress,
-						),
+						self._emit("firmware update progress", self, progress),
 					250,
 					true,
 				);
@@ -390,8 +383,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					checksum: CRC16_CCITT(u.data),
 				}));
 				let skipFinishedFiles = -1;
-				let shouldResume = options.resume
-					&& self._previousFirmwareCRC != undefined;
+				let shouldResume =
+					options.resume && self._previousFirmwareCRC != undefined;
 				if (shouldResume) {
 					skipFinishedFiles = updatesWithChecksum.findIndex(
 						(u) => u.checksum === self._previousFirmwareCRC,
@@ -447,8 +440,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 						: fragmentSizeSecure;
 
 					// Tell the node to start requesting fragments
-					const { resume, nonSecureTransfer } = yield* self
-						.beginFirmwareUpdateInternal(
+					const { resume, nonSecureTransfer } =
+						yield* self.beginFirmwareUpdateInternal(
 							data,
 							meta.manufacturerId,
 							target,
@@ -498,14 +491,13 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 								sentFragments: fragment,
 								totalFragments: total,
 								progress: roundTo(
-									(
-										(sentBytesOfPreviousFiles
-											+ Math.min(
-												fragment * fragmentSize,
-												data.length,
-											))
-										/ totalBytes
-									) * 100,
+									((sentBytesOfPreviousFiles +
+										Math.min(
+											fragment * fragmentSize,
+											data.length,
+										)) /
+										totalBytes) *
+										100,
 									2,
 								),
 							};
@@ -519,8 +511,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					);
 
 					// If we wait, wait a bit longer than the device told us, so it is actually ready to use
-					conservativeWaitTime = self.driver
-						.getConservativeWaitTimeAfterFirmwareUpdate(
+					conservativeWaitTime =
+						self.driver.getConservativeWaitTimeAfterFirmwareUpdate(
 							updateResult.waitTime,
 						);
 
@@ -528,12 +520,10 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 						self.driver.controllerLog.logNode(self.id, {
 							message: `Firmware update (part ${
 								i + 1
-							} / ${updatesWithChecksum.length}) failed with status ${
-								getEnumMemberName(
-									FirmwareUpdateStatus,
-									updateResult.status,
-								)
-							}`,
+							} / ${updatesWithChecksum.length}) failed with status ${getEnumMemberName(
+								FirmwareUpdateStatus,
+								updateResult.status,
+							)}`,
 							direction: "inbound",
 						});
 
@@ -542,11 +532,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 							waitTime: undefined,
 							reInterview: false,
 						};
-						self._emit(
-							"firmware update finished",
-							self,
-							result,
-						);
+						self._emit("firmware update finished", self, result);
 
 						return result;
 					} else if (i < updatesWithChecksum.length - 1) {
@@ -555,12 +541,10 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 						self.driver.controllerLog.logNode(self.id, {
 							message: `Firmware update (part ${
 								i + 1
-							} / ${updatesWithChecksum.length}) succeeded with status ${
-								getEnumMemberName(
-									FirmwareUpdateStatus,
-									updateResult.status,
-								)
-							}`,
+							} / ${updatesWithChecksum.length}) succeeded with status ${getEnumMemberName(
+								FirmwareUpdateStatus,
+								updateResult.status,
+							)}`,
 							direction: "inbound",
 						});
 
@@ -617,9 +601,9 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 	): Promise<
 		| undefined
 		| (FirmwareUpdateMetaData & {
-			fragmentSizeSecure: number;
-			fragmentSizeNonSecure: number;
-		})
+				fragmentSizeSecure: number;
+				fragmentSizeNonSecure: number;
+		  })
 	> {
 		const api = this.commandClasses["Firmware Update Meta Data"];
 
@@ -667,20 +651,20 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			EncapsulationFlags.Security,
 			this.driver.isCCSecure(fcc.ccId, this.id),
 		);
-		const maxGrossPayloadSizeSecure = this.driver
-			.computeNetCCPayloadSize(
-				fcc,
-			);
-		const maxGrossPayloadSizeNonSecure = this.driver
-			.computeNetCCPayloadSize(fcc, true);
+		const maxGrossPayloadSizeSecure =
+			this.driver.computeNetCCPayloadSize(fcc);
+		const maxGrossPayloadSizeNonSecure =
+			this.driver.computeNetCCPayloadSize(fcc, true);
 
 		const ccVersion = getEffectiveCCVersion(this.driver, fcc);
-		const maxNetPayloadSizeSecure = maxGrossPayloadSizeSecure
-			- 2 // report number
-			- (ccVersion >= 2 ? 2 : 0); // checksum
-		const maxNetPayloadSizeNonSecure = maxGrossPayloadSizeNonSecure
-			- 2 // report number
-			- (ccVersion >= 2 ? 2 : 0); // checksum
+		const maxNetPayloadSizeSecure =
+			maxGrossPayloadSizeSecure -
+			2 - // report number
+			(ccVersion >= 2 ? 2 : 0); // checksum
+		const maxNetPayloadSizeNonSecure =
+			maxGrossPayloadSizeNonSecure -
+			2 - // report number
+			(ccVersion >= 2 ? 2 : 0); // checksum
 
 		// Use the smallest allowed payload
 		const fragmentSizeSecure = Math.min(
@@ -716,8 +700,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 		// 2. No firmware update is in progress -> abort
 		this.driver.controllerLog.logNode(this.id, {
-			message:
-				`Received Firmware Update Get, but no firmware update is in progress. Forcing the node to abort...`,
+			message: `Received Firmware Update Get, but no firmware update is in progress. Forcing the node to abort...`,
 			direction: "inbound",
 		});
 
@@ -728,9 +711,10 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			!!(command.encapsulationFlags & EncapsulationFlags.Security),
 		);
 		const ccVersion = getEffectiveCCVersion(this.driver, fcc);
-		const fragmentSize = this.driver.computeNetCCPayloadSize(fcc)
-			- 2 // report number
-			- (ccVersion >= 2 ? 2 : 0); // checksum
+		const fragmentSize =
+			this.driver.computeNetCCPayloadSize(fcc) -
+			2 - // report number
+			(ccVersion >= 2 ? 2 : 0); // checksum
 		const fragment = randomBytes(fragmentSize);
 		try {
 			await this.sendCorruptedFirmwareUpdateReport(
@@ -781,13 +765,12 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		// probably because of a manual out-of-band activation.
 		if (!result) {
 			result = yield* waitFor(
-				this.driver
-					.waitForCommand(
-						(cc): cc is FirmwareUpdateMetaDataCCRequestReport =>
-							cc instanceof FirmwareUpdateMetaDataCCRequestReport
-							&& cc.nodeId === this.id,
-						60000,
-					),
+				this.driver.waitForCommand(
+					(cc): cc is FirmwareUpdateMetaDataCCRequestReport =>
+						cc instanceof FirmwareUpdateMetaDataCCRequestReport &&
+						cc.nodeId === this.id,
+					60000,
+				),
 			);
 		}
 
@@ -802,14 +785,12 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					`Failed to start the update: The battery level is too low!`,
 					ZWaveErrorCodes.FirmwareUpdateCC_FailedToStart,
 				);
-			case FirmwareUpdateRequestStatus
-				.Error_FirmwareUpgradeInProgress:
+			case FirmwareUpdateRequestStatus.Error_FirmwareUpgradeInProgress:
 				throw new ZWaveError(
 					`Failed to start the update: A firmware upgrade is already in progress!`,
 					ZWaveErrorCodes.FirmwareUpdateCC_Busy,
 				);
-			case FirmwareUpdateRequestStatus
-				.Error_InvalidManufacturerOrFirmwareID:
+			case FirmwareUpdateRequestStatus.Error_InvalidManufacturerOrFirmwareID:
 				throw new ZWaveError(
 					`Failed to start the update: Invalid manufacturer or firmware id!`,
 					ZWaveErrorCodes.FirmwareUpdateCC_FailedToStart,
@@ -844,8 +825,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 	protected async handleFirmwareUpdateMetaDataGet(
 		command: FirmwareUpdateMetaDataCCMetaDataGet,
 	): Promise<void> {
-		const endpoint = this.getEndpoint(command.endpointIndex)
-			?? this;
+		const endpoint = this.getEndpoint(command.endpointIndex) ?? this;
 
 		// We are being queried, so the device may actually not support the CC, just control it.
 		// Using the commandClasses property would throw in that case
@@ -854,17 +834,17 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			.withOptions({
 				// Answer with the same encapsulation as asked, but omit
 				// Supervision as it shouldn't be used for Get-Report flows
-				encapsulationFlags: command.encapsulationFlags
-					& ~EncapsulationFlags.Supervision,
+				encapsulationFlags:
+					command.encapsulationFlags &
+					~EncapsulationFlags.Supervision,
 			});
 
 		// We do not support the firmware to be upgraded.
 		await api.reportMetaData({
-			manufacturerId: this.driver.options.vendor?.manufacturerId
-				?? 0xffff,
+			manufacturerId:
+				this.driver.options.vendor?.manufacturerId ?? 0xffff,
 			firmwareUpgradable: false,
-			hardwareVersion: this.driver.options.vendor?.hardwareVersion
-				?? 0,
+			hardwareVersion: this.driver.options.vendor?.hardwareVersion ?? 0,
 			// We must advertise Z-Wave JS itself as firmware 1
 			// No firmware is upgradable, so we advertise firmware id 0
 			additionalFirmwareIDs: [0],
@@ -874,8 +854,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 	protected async handleFirmwareUpdateRequestGet(
 		command: FirmwareUpdateMetaDataCCRequestGet,
 	): Promise<void> {
-		const endpoint = this.getEndpoint(command.endpointIndex)
-			?? this;
+		const endpoint = this.getEndpoint(command.endpointIndex) ?? this;
 
 		// We are being queried, so the device may actually not support the CC, just control it.
 		// Using the commandClasses property would throw in that case
@@ -884,8 +863,9 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			.withOptions({
 				// Answer with the same encapsulation as asked, but omit
 				// Supervision as it shouldn't be used for Get-Report flows
-				encapsulationFlags: command.encapsulationFlags
-					& ~EncapsulationFlags.Supervision,
+				encapsulationFlags:
+					command.encapsulationFlags &
+					~EncapsulationFlags.Supervision,
 			});
 
 		// We do not support the firmware to be upgraded.
@@ -897,8 +877,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 	protected async handleFirmwareUpdatePrepareGet(
 		command: FirmwareUpdateMetaDataCCPrepareGet,
 	): Promise<void> {
-		const endpoint = this.getEndpoint(command.endpointIndex)
-			?? this;
+		const endpoint = this.getEndpoint(command.endpointIndex) ?? this;
 
 		// We are being queried, so the device may actually not support the CC, just control it.
 		// Using the commandClasses property would throw in that case
@@ -907,8 +886,9 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			.withOptions({
 				// Answer with the same encapsulation as asked, but omit
 				// Supervision as it shouldn't be used for Get-Report flows
-				encapsulationFlags: command.encapsulationFlags
-					& ~EncapsulationFlags.Supervision,
+				encapsulationFlags:
+					command.encapsulationFlags &
+					~EncapsulationFlags.Supervision,
 			});
 
 		// We do not support the firmware to be downloaded
@@ -935,19 +915,15 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		}
 	}
 
-	private hasPendingFirmwareUpdateFragment(
-		fragmentNumber: number,
-	): boolean {
+	private hasPendingFirmwareUpdateFragment(fragmentNumber: number): boolean {
 		// Avoid queuing duplicate fragments
 		const isCurrentFirmwareFragment = (t: Transaction) =>
-			t.message.getNodeId() === this.id
-			&& containsCC(t.message)
-			&& t.message.command instanceof FirmwareUpdateMetaDataCCReport
-			&& t.message.command.reportNumber === fragmentNumber;
+			t.message.getNodeId() === this.id &&
+			containsCC(t.message) &&
+			t.message.command instanceof FirmwareUpdateMetaDataCCReport &&
+			t.message.command.reportNumber === fragmentNumber;
 
-		return this.driver.hasPendingTransactions(
-			isCurrentFirmwareFragment,
-		);
+		return this.driver.hasPendingTransactions(isCurrentFirmwareFragment);
 	}
 
 	private async *doFirmwareUpdateInternal(
@@ -956,11 +932,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		nonSecureTransfer: boolean,
 		abortContext: AbortFirmwareUpdateContext,
 		onProgress: (fragment: number, total: number) => void,
-	): AsyncGenerator<
-		any,
-		PartialFirmwareUpdateResult,
-		any
-	> {
+	): AsyncGenerator<any, PartialFirmwareUpdateResult, any> {
 		const numFragments = Math.ceil(data.length / fragmentSize);
 
 		// Make sure we're not responding to an outdated request immediately
@@ -981,16 +953,14 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			} else {
 				try {
 					fragmentRequest = yield* waitFor(
-						this.driver
-							.waitForCommand<FirmwareUpdateMetaDataCCGet>(
-								(cc) =>
-									cc.nodeId === this.id
-									&& cc
-										instanceof FirmwareUpdateMetaDataCCGet,
-								// Wait up to 2 minutes for each fragment request.
-								// Some users try to update devices with unstable connections, where 30s can be too short.
-								timespan.minutes(2),
-							),
+						this.driver.waitForCommand<FirmwareUpdateMetaDataCCGet>(
+							(cc) =>
+								cc.nodeId === this.id &&
+								cc instanceof FirmwareUpdateMetaDataCCGet,
+							// Wait up to 2 minutes for each fragment request.
+							// Some users try to update devices with unstable connections, where 30s can be too short.
+							timespan.minutes(2),
+						),
 					);
 				} catch {
 					// In some cases it can happen that the device stops requesting update frames
@@ -1013,8 +983,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 			if (fragmentRequest.reportNumber > numFragments) {
 				this.driver.controllerLog.logNode(this.id, {
-					message:
-						`Received Firmware Update Get for an out-of-bounds fragment. Forcing the node to abort...`,
+					message: `Received Firmware Update Get for an out-of-bounds fragment. Forcing the node to abort...`,
 					direction: "inbound",
 				});
 				await this.sendCorruptedFirmwareUpdateReport(
@@ -1029,9 +998,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			// Actually send the requested frames
 			request: for (
 				let num = fragmentRequest.reportNumber;
-				num
-					< fragmentRequest.reportNumber
-						+ fragmentRequest.numReports;
+				num < fragmentRequest.reportNumber + fragmentRequest.numReports;
 				num++
 			) {
 				yield; // Give the task scheduler time to do something else
@@ -1064,15 +1031,13 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					}
 
 					this.driver.controllerLog.logNode(this.id, {
-						message:
-							`Sending firmware fragment ${num} / ${numFragments}`,
+						message: `Sending firmware fragment ${num} / ${numFragments}`,
 						direction: "outbound",
 					});
 					const isLast = num === numFragments;
 
 					try {
-						await this
-							.commandClasses["Firmware Update Meta Data"]
+						await this.commandClasses["Firmware Update Meta Data"]
 							.withOptions({
 								// Only encapsulate if the transfer is secure
 								autoEncapsulate: !nonSecureTransfer,
@@ -1089,8 +1054,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 					} catch {
 						// When transmitting fails, simply stop responding to this request and wait for the node to re-request the fragment
 						this.driver.controllerLog.logNode(this.id, {
-							message:
-								`Failed to send firmware fragment ${num} / ${numFragments}`,
+							message: `Failed to send firmware fragment ${num} / ${numFragments}`,
 							direction: "outbound",
 							level: "warn",
 						});
@@ -1106,15 +1070,13 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		// STEP 5:
 		// Finalize the update process
 
-		const statusReport:
-			| FirmwareUpdateMetaDataCCStatusReport
-			| undefined = yield* waitFor(
+		const statusReport: FirmwareUpdateMetaDataCCStatusReport | undefined =
+			yield* waitFor(
 				this.driver
 					.waitForCommand(
 						(cc): cc is FirmwareUpdateMetaDataCCStatusReport =>
-							cc.nodeId === this.id
-							&& cc
-								instanceof FirmwareUpdateMetaDataCCStatusReport,
+							cc.nodeId === this.id &&
+							cc instanceof FirmwareUpdateMetaDataCCStatusReport,
 						// Wait up to 5 minutes. It should never take that long, but the specs
 						// don't say anything specific
 						5 * 60000,
@@ -1124,8 +1086,8 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 		if (abortContext.abort) {
 			abortContext.abortPromise.resolve(
-				statusReport?.status
-					=== FirmwareUpdateStatus.Error_TransmissionFailed,
+				statusReport?.status ===
+					FirmwareUpdateStatus.Error_TransmissionFailed,
 			);
 		}
 

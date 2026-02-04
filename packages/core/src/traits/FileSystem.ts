@@ -8,9 +8,7 @@ export interface FileSystem {
 	writeFile(
 		file: string,
 		data: string | BytesView,
-		options?:
-			| { encoding: BufferEncoding }
-			| BufferEncoding,
+		options?: { encoding: BufferEncoding } | BufferEncoding,
 	): Promise<void>;
 	readFile(file: string, encoding: BufferEncoding): Promise<string>;
 	pathExists(path: string): Promise<boolean>;

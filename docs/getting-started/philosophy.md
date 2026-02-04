@@ -41,8 +41,8 @@ But maybe **having a majority of their users complain** because their stuff does
 1. When there are issues with a device, contact the manufacturer support. Open Source projects are not free tech support for manufacturers.
 1. Hold them accountable. If there is clearly an issue with the device firmware, demand them to fix it. Even if they initially claim its not their fault. European law recently even made it mandatory to provide updates for ~5 years.
 1. Vote with your wallet:
-   - Don't buy from manufacturers that don't provide any support
-   - Don't buy from manufacturers that don't provide firmware updates or make you pay for them. Nowadays there is really not a reason not to provide them online.
-   - Don't buy from manufacturers that tend to seek fault elsewhere (_"The device is certified, cannot be our fault..."_)
-   - **DO** buy from manufacturers that have reliable devices and give good support.
-   - [Inform yourself](getting-started/device-review.md) beforehand
+    - Don't buy from manufacturers that don't provide any support
+    - Don't buy from manufacturers that don't provide firmware updates or make you pay for them. Nowadays there is really not a reason not to provide them online.
+    - Don't buy from manufacturers that tend to seek fault elsewhere (_"The device is certified, cannot be our fault..."_)
+    - **DO** buy from manufacturers that have reliable devices and give good support.
+    - [Inform yourself](getting-started/device-review.md) beforehand

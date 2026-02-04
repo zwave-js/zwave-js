@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { BasicCCGet, BasicCCSet } from "@zwave-js/cc";
 import { MessagePriority, NodeStatus } from "@zwave-js/core";
 import type { SendDataRequest } from "@zwave-js/serial/serialapi";
@@ -7,7 +9,7 @@ import {
 	type MockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro from #1078
@@ -45,9 +47,9 @@ integrationTest(
 			// The node should have received the first command
 			await mockNode.expectControllerFrame(
 				(frame): frame is MockZWaveRequestFrame =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof BasicCCSet
-					&& frame.payload.targetValue === 99,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof BasicCCSet &&
+					frame.payload.targetValue === 99,
 				{
 					timeout: 50,
 					errorMessage: "The first command was not received",
@@ -67,12 +69,12 @@ integrationTest(
 			driver.driverLog.sendQueue(sendQueue);
 			t.expect(sendQueue.length).toBe(2);
 			// with priority WakeUp
-			t.expect(
-				sendQueue.transactions.get(0)?.priority,
-			).toBe(MessagePriority.WakeUp);
-			t.expect(
-				sendQueue.transactions.get(1)?.priority,
-			).toBe(MessagePriority.WakeUp);
+			t.expect(sendQueue.transactions.get(0)?.priority).toBe(
+				MessagePriority.WakeUp,
+			);
+			t.expect(sendQueue.transactions.get(1)?.priority).toBe(
+				MessagePriority.WakeUp,
+			);
 			t.expect(node2.status).toBe(NodeStatus.Asleep);
 
 			// And the order should be correct

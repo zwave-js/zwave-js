@@ -1,5 +1,6 @@
 import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
+
 import { AsyncQueue } from "./AsyncQueue.js";
 
 test("can be iterated over after adding items", async (t) => {

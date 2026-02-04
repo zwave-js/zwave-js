@@ -5,6 +5,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
+
 import { SUC_MAX_UPDATES } from "../../consts.js";
 import type { NVM500, NVM500Info } from "../NVM500.js";
 import type {
@@ -17,6 +18,7 @@ import type {
 import type { Route } from "../common/routeCache.js";
 import type { SUCUpdateEntry } from "../common/sucUpdateEntry.js";
 import type { NodeInfo } from "../nvm3/files/index.js";
+
 import type { NVM500NodeInfo } from "./EntryParsers.js";
 import {
 	APPL_NODEPARM_MAX,
@@ -36,10 +38,11 @@ export class NVM500Adapter implements NVMAdapter {
 		property: T,
 		required?: R,
 	): Promise<
-		R extends true ? NonNullable<NVMPropertyToDataType<T>>
-			: (NVMPropertyToDataType<T> | undefined)
+		R extends true
+			? NonNullable<NVMPropertyToDataType<T>>
+			: NVMPropertyToDataType<T> | undefined
 	> {
-		const info = this._nvm.info ?? await this._nvm.init();
+		const info = this._nvm.info ?? (await this._nvm.init());
 
 		let ret: unknown;
 		if (property.domain === "controller") {
@@ -108,9 +111,7 @@ export class NVM500Adapter implements NVMAdapter {
 
 			case "homeId": {
 				// 500 series stores the home ID as a number
-				const homeId = await this.getOnly<number>(
-					"EX_NVM_HOME_ID_far",
-				);
+				const homeId = await this.getOnly<number>("EX_NVM_HOME_ID_far");
 				if (homeId == undefined) return;
 				const ret = new Bytes(4).fill(0);
 				// FIXME: BE? LE?
@@ -141,9 +142,7 @@ export class NVM500Adapter implements NVMAdapter {
 					"EX_NVM_STATIC_CONTROLLER_NODE_ID_START_far",
 				);
 			case "sucLastIndex":
-				return this.getOnly<number>(
-					"EX_NVM_SUC_LAST_INDEX_START_far",
-				);
+				return this.getOnly<number>("EX_NVM_SUC_LAST_INDEX_START_far");
 			case "controllerConfiguration":
 				return this.getOnly<number>(
 					"EX_NVM_CONTROLLER_CONFIGURATION_far",
@@ -170,9 +169,7 @@ export class NVM500Adapter implements NVMAdapter {
 				return this.getOnly<number[]>("NVM_PREFERRED_REPEATERS_far");
 
 			case "appRouteLock": {
-				return this.getOnly<number[]>(
-					"EX_NVM_ROUTECACHE_APP_LOCK_far",
-				);
+				return this.getOnly<number[]>("EX_NVM_ROUTECACHE_APP_LOCK_far");
 			}
 			case "routeSlaveSUC": {
 				return this.getOnly<number[]>(
@@ -191,7 +188,7 @@ export class NVM500Adapter implements NVMAdapter {
 					"EX_NVM_NODE_TABLE_START_far",
 				);
 				return nodeInfos
-					?.map((info, index) => info ? (index + 1) : undefined)
+					?.map((info, index) => (info ? index + 1 : undefined))
 					.filter((id) => id != undefined);
 			}
 
@@ -213,17 +210,11 @@ export class NVM500Adapter implements NVMAdapter {
 				return this.getOnly<number>("EEOFFSET_WATCHDOG_STARTED_far");
 
 			case "powerLevelNormal":
-				return this.getAll<number>(
-					"EEOFFSET_POWERLEVEL_NORMAL_far",
-				);
+				return this.getAll<number>("EEOFFSET_POWERLEVEL_NORMAL_far");
 			case "powerLevelLow":
-				return this.getAll<number>(
-					"EEOFFSET_POWERLEVEL_LOW_far",
-				);
+				return this.getAll<number>("EEOFFSET_POWERLEVEL_LOW_far");
 			case "powerMode":
-				return this.getOnly<number>(
-					"EEOFFSET_MODULE_POWER_MODE_far",
-				);
+				return this.getOnly<number>("EEOFFSET_MODULE_POWER_MODE_far");
 			case "powerModeExtintEnable":
 				return this.getOnly<number>(
 					"EEOFFSET_MODULE_POWER_MODE_EXTINT_ENABLE_far",
@@ -271,14 +262,16 @@ export class NVM500Adapter implements NVMAdapter {
 					"EX_NVM_NODE_TABLE_START_far",
 					nodeId - 1,
 				);
-				const sucUpdateIndex = await this.getSingle<number>(
-					"EX_NVM_SUC_CONTROLLER_LIST_START_far",
-					nodeId - 1,
-				) ?? 0xff;
-				const neighbors = await this.getSingle<number[]>(
-					"EX_NVM_ROUTING_TABLE_START_far",
-					nodeId - 1,
-				) ?? [];
+				const sucUpdateIndex =
+					(await this.getSingle<number>(
+						"EX_NVM_SUC_CONTROLLER_LIST_START_far",
+						nodeId - 1,
+					)) ?? 0xff;
+				const neighbors =
+					(await this.getSingle<number[]>(
+						"EX_NVM_ROUTING_TABLE_START_far",
+						nodeId - 1,
+					)) ?? [];
 
 				if (!nodeInfo) return;
 
@@ -304,10 +297,7 @@ export class NVM500Adapter implements NVMAdapter {
 		}
 	}
 
-	private setOnly(
-		property: NVMEntryName,
-		value: NVMData,
-	): Promise<void> {
+	private setOnly(property: NVMEntryName, value: NVMData): Promise<void> {
 		return this._nvm.set(property, [value]);
 	}
 
@@ -319,10 +309,7 @@ export class NVM500Adapter implements NVMAdapter {
 		return this._nvm.setSingle(property, index, value);
 	}
 
-	private setAll(
-		property: NVMEntryName,
-		value: NVMData[],
-	): Promise<void> {
+	private setAll(property: NVMEntryName, value: NVMData[]): Promise<void> {
 		return this._nvm.set(property, value);
 	}
 
@@ -394,10 +381,7 @@ export class NVM500Adapter implements NVMAdapter {
 					value,
 				);
 			case "sucLastIndex":
-				return this.setOnly(
-					"EX_NVM_SUC_LAST_INDEX_START_far",
-					value,
-				);
+				return this.setOnly("EX_NVM_SUC_LAST_INDEX_START_far", value);
 			case "controllerConfiguration":
 				return this.setOnly(
 					"EX_NVM_CONTROLLER_CONFIGURATION_far",
@@ -412,21 +396,16 @@ export class NVM500Adapter implements NVMAdapter {
 				return this.setOnly("NVM_SYSTEM_STATE", value);
 
 			case "commandClasses": {
-				await this.setOnly(
-					"EEOFFSET_CMDCLASS_LEN_far",
-					value.length,
-				);
-				const CCs = Array.from<number>({ length: APPL_NODEPARM_MAX })
-					.fill(0xff);
+				await this.setOnly("EEOFFSET_CMDCLASS_LEN_far", value.length);
+				const CCs = Array.from<number>({
+					length: APPL_NODEPARM_MAX,
+				}).fill(0xff);
 				for (let i = 0; i < value.length; i++) {
 					if (i < APPL_NODEPARM_MAX) {
 						CCs[i] = value[i];
 					}
 				}
-				await this.setAll(
-					"EEOFFSET_CMDCLASS_far",
-					CCs,
-				);
+				await this.setAll("EEOFFSET_CMDCLASS_far", CCs);
 				return;
 			}
 
@@ -434,10 +413,7 @@ export class NVM500Adapter implements NVMAdapter {
 				return this.setOnly("NVM_PREFERRED_REPEATERS_far", value);
 
 			case "appRouteLock": {
-				return this.setOnly(
-					"EX_NVM_ROUTECACHE_APP_LOCK_far",
-					value,
-				);
+				return this.setOnly("EX_NVM_ROUTECACHE_APP_LOCK_far", value);
 			}
 			case "routeSlaveSUC": {
 				return this.setOnly(
@@ -457,19 +433,16 @@ export class NVM500Adapter implements NVMAdapter {
 				return;
 
 			case "virtualNodeIds": {
-				return this.setOnly(
-					"EX_NVM_BRIDGE_NODEPOOL_START_far",
-					value,
-				);
+				return this.setOnly("EX_NVM_BRIDGE_NODEPOOL_START_far", value);
 			}
 
 			case "sucUpdateEntries": {
 				const entries = value as SUCUpdateEntry[];
-				const sucUpdateEntries = Array
-					.from<SUCUpdateEntry | undefined>({
+				const sucUpdateEntries = Array.from<SUCUpdateEntry | undefined>(
+					{
 						length: SUC_MAX_UPDATES,
-					})
-					.fill(undefined);
+					},
+				).fill(undefined);
 				for (let i = 0; i < entries.length; i++) {
 					if (i < SUC_MAX_UPDATES) {
 						sucUpdateEntries[i] = entries[i];
@@ -485,20 +458,11 @@ export class NVM500Adapter implements NVMAdapter {
 				return this.setOnly("EEOFFSET_WATCHDOG_STARTED_far", value);
 
 			case "powerLevelNormal":
-				return this.setAll(
-					"EEOFFSET_POWERLEVEL_NORMAL_far",
-					value,
-				);
+				return this.setAll("EEOFFSET_POWERLEVEL_NORMAL_far", value);
 			case "powerLevelLow":
-				return this.setAll(
-					"EEOFFSET_POWERLEVEL_LOW_far",
-					value,
-				);
+				return this.setAll("EEOFFSET_POWERLEVEL_LOW_far", value);
 			case "powerMode":
-				return this.setOnly(
-					"EEOFFSET_MODULE_POWER_MODE_far",
-					value,
-				);
+				return this.setOnly("EEOFFSET_MODULE_POWER_MODE_far", value);
 			case "powerModeExtintEnable":
 				return this.setOnly(
 					"EEOFFSET_MODULE_POWER_MODE_EXTINT_ENABLE_far",
@@ -550,20 +514,21 @@ export class NVM500Adapter implements NVMAdapter {
 					"EX_NVM_NODE_TABLE_START_far",
 					nodeId - 1,
 					node
-						? {
-							isListening: node.isListening,
-							isFrequentListening: node.isFrequentListening,
-							isRouting: node.isRouting,
-							supportedDataRates: node.supportedDataRates,
-							protocolVersion: node.protocolVersion,
-							optionalFunctionality: node.optionalFunctionality,
-							nodeType: node.nodeType,
-							supportsSecurity: node.supportsSecurity,
-							supportsBeaming: node.supportsBeaming,
-							genericDeviceClass: node.genericDeviceClass,
-							specificDeviceClass: node.specificDeviceClass
-								?? null,
-						} satisfies NVM500NodeInfo
+						? ({
+								isListening: node.isListening,
+								isFrequentListening: node.isFrequentListening,
+								isRouting: node.isRouting,
+								supportedDataRates: node.supportedDataRates,
+								protocolVersion: node.protocolVersion,
+								optionalFunctionality:
+									node.optionalFunctionality,
+								nodeType: node.nodeType,
+								supportsSecurity: node.supportsSecurity,
+								supportsBeaming: node.supportsBeaming,
+								genericDeviceClass: node.genericDeviceClass,
+								specificDeviceClass:
+									node.specificDeviceClass ?? null,
+							} satisfies NVM500NodeInfo)
 						: undefined,
 				);
 				await this.setSingle(

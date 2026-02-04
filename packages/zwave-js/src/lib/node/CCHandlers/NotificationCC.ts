@@ -37,10 +37,9 @@ import {
 	setTimer,
 	stringify,
 } from "@zwave-js/shared";
+
 import type { ZWaveNode } from "../Node.js";
-import type {
-	ZWaveNotificationCallbackArgs_NotificationCC,
-} from "../_Types.js";
+import type { ZWaveNotificationCallbackArgs_NotificationCC } from "../_Types.js";
 import type { NodeValues } from "../mixins/40_Values.js";
 
 export interface NotificationHandlerStore {
@@ -63,11 +62,9 @@ export function handleNotificationReport(
 	if (command.notificationType == undefined) {
 		if (command.alarmType == undefined) {
 			ctx.logNode(node.id, {
-				message: `received unsupported notification ${
-					stringify(
-						command,
-					)
-				}`,
+				message: `received unsupported notification ${stringify(
+					command,
+				)}`,
 				direction: "inbound",
 			});
 		}
@@ -84,8 +81,7 @@ export function handleNotificationReport(
 		const notificationName = notification.name;
 
 		ctx.logNode(node.id, {
-			message:
-				`[handleNotificationReport] notificationName: ${notificationName}`,
+			message: `[handleNotificationReport] notificationName: ${notificationName}`,
 			level: "silly",
 		});
 
@@ -103,8 +99,8 @@ export function handleNotificationReport(
 
 		const setUnknownStateIdle = (prevValue?: number) => {
 			// Find the value for the unknown notification variable bucket
-			const unknownNotificationVariableValueId = NotificationCCValues
-				.unknownNotificationVariable(
+			const unknownNotificationVariableValueId =
+				NotificationCCValues.unknownNotificationVariable(
 					command.notificationType!,
 					notificationName,
 				).endpoint(command.endpointIndex);
@@ -117,7 +113,7 @@ export function handleNotificationReport(
 			if (prevValue == undefined || currentValue === prevValue) {
 				node.valueDB.setValue(
 					unknownNotificationVariableValueId,
-					0, /* idle */
+					0 /* idle */,
 				);
 			}
 		};
@@ -126,8 +122,8 @@ export function handleNotificationReport(
 		if (value === 0) {
 			// Generic idle notification, this contains a value to be reset
 			if (
-				isUint8Array(command.eventParameters)
-				&& command.eventParameters.length
+				isUint8Array(command.eventParameters) &&
+				command.eventParameters.length
 			) {
 				// The target value is the first byte of the event parameters
 				setStateIdle(command.eventParameters[0]);
@@ -138,10 +134,10 @@ export function handleNotificationReport(
 					.getValues(CommandClasses.Notification)
 					.filter(
 						(v) =>
-							(v.endpoint || 0) === command.endpointIndex
-							&& v.property === notificationName
-							&& typeof v.value === "number"
-							&& v.value !== 0,
+							(v.endpoint || 0) === command.endpointIndex &&
+							v.property === notificationName &&
+							typeof v.value === "number" &&
+							v.value !== 0,
 					);
 				for (const v of nonIdleValues) {
 					setStateIdle(v.value as number);
@@ -159,11 +155,11 @@ export function handleNotificationReport(
 				message: `[handleNotificationReport] valueConfig:
   label: ${valueConfig.label}
   ${
-					valueConfig.type === "event"
-						? "type: event"
-						: `type: state
+		valueConfig.type === "event"
+			? "type: event"
+			: `type: state
   variableName: ${valueConfig.variableName}`
-				}`,
+  }`,
 				level: "silly",
 			});
 		} else {
@@ -184,8 +180,7 @@ export function handleNotificationReport(
 			allowIdleReset = valueConfig.idle;
 		} else {
 			// This is an event
-			const endpoint = node.getEndpoint(command.endpointIndex)
-				?? node;
+			const endpoint = node.getEndpoint(command.endpointIndex) ?? node;
 
 			// Build the notification event args
 			const eventArgs: ZWaveNotificationCallbackArgs_NotificationCC = {
@@ -200,12 +195,12 @@ export function handleNotificationReport(
 			// look up the user code and status and add them to the parameters
 			const prefs = ctx.getUserPreferences();
 			if (
-				prefs.lookupUserIdInNotificationEvents
-				&& command.eventParameters != null
-				&& typeof command.eventParameters === "object"
-				&& !isUint8Array(command.eventParameters)
-				&& "userId" in command.eventParameters
-				&& typeof command.eventParameters.userId === "number"
+				prefs.lookupUserIdInNotificationEvents &&
+				command.eventParameters != null &&
+				typeof command.eventParameters === "object" &&
+				!isUint8Array(command.eventParameters) &&
+				"userId" in command.eventParameters &&
+				typeof command.eventParameters.userId === "number"
 			) {
 				const userId = command.eventParameters.userId;
 				const nodeEndpoint: EndpointId = {
@@ -276,8 +271,8 @@ export function handleNotificationReport(
 			);
 		} else {
 			// Collect unknown values in an "unknown" bucket
-			const unknownValue = NotificationCCValues
-				.unknownNotificationVariable(
+			const unknownValue =
+				NotificationCCValues.unknownNotificationVariable(
 					command.notificationType,
 					notificationName,
 				);
@@ -294,18 +289,16 @@ export function handleNotificationReport(
 			// we may need to set "fake" values for these to distinguish them
 			// from states without enum values
 			const enumBehavior = valueConfig
-				? getNotificationEnumBehavior(
-					notification,
-					valueConfig,
-				)
+				? getNotificationEnumBehavior(notification, valueConfig)
 				: "extend";
 
-			const valueWithEnum = enumBehavior === "replace"
-				? command.eventParameters
-				: getNotificationStateValueWithEnum(
-					value,
-					command.eventParameters,
-				);
+			const valueWithEnum =
+				enumBehavior === "replace"
+					? command.eventParameters
+					: getNotificationStateValueWithEnum(
+							value,
+							command.eventParameters,
+						);
 			node.valueDB.setValue(valueId, valueWithEnum);
 		} else {
 			node.valueDB.setValue(valueId, value);
@@ -316,17 +309,15 @@ export function handleNotificationReport(
 		// with some motion sensors that don't refresh their active notification. Therefore, we set a fallback
 		// timer if the `forceNotificationIdleReset` compat flag is set.
 		if (
-			allowIdleReset
-			&& !!node.deviceConfig?.compat?.forceNotificationIdleReset
+			allowIdleReset &&
+			!!node.deviceConfig?.compat?.forceNotificationIdleReset
 		) {
 			ctx.logNode(node.id, {
 				message: `[handleNotificationReport] scheduling idle reset`,
 				level: "silly",
 			});
-			scheduleNotificationIdleReset(
-				store,
-				valueId,
-				() => setStateIdle(value),
+			scheduleNotificationIdleReset(store, valueId, () =>
+				setStateIdle(value),
 			);
 		}
 	} else {
@@ -358,35 +349,29 @@ function handleKnownNotification(
 	const unlockEvents = new Set([0x02, 0x04, 0x06]);
 	const doorStatusEvents = [
 		// Actual status
-		0x16,
-		0x17,
+		0x16, 0x17,
 		// Synthetic status with enum
-		0x1600,
-		0x1601,
+		0x1600, 0x1601,
 	];
 	if (
 		// Access Control, manual/keypad/rf/auto (un)lock operation
-		command.notificationType === 0x06
-		&& (lockEvents.has(command.notificationEvent as number)
-			|| unlockEvents.has(command.notificationEvent as number))
-		&& (node.supportsCC(CommandClasses["Door Lock"])
-			|| node.supportsCC(CommandClasses.Lock))
+		command.notificationType === 0x06 &&
+		(lockEvents.has(command.notificationEvent as number) ||
+			unlockEvents.has(command.notificationEvent as number)) &&
+		(node.supportsCC(CommandClasses["Door Lock"]) ||
+			node.supportsCC(CommandClasses.Lock))
 	) {
 		// The Door Lock Command Class is constrained to the S2 Access Control key,
 		// while the Notification Command Class, in the same device, could use a
 		// different key. This way the device can notify devices which don't belong
 		// to the S2 Access Control key group of changes in its state.
 
-		const isLocked = lockEvents.has(
-			command.notificationEvent as number,
-		);
+		const isLocked = lockEvents.has(command.notificationEvent as number);
 
 		// Update the current lock status
 		if (node.supportsCC(CommandClasses["Door Lock"])) {
 			node.valueDB.setValue(
-				DoorLockCCValues.currentMode.endpoint(
-					command.endpointIndex,
-				),
+				DoorLockCCValues.currentMode.endpoint(command.endpointIndex),
 				isLocked ? DoorLockMode.Secured : DoorLockMode.Unsecured,
 			);
 		}
@@ -397,8 +382,8 @@ function handleKnownNotification(
 			);
 		}
 	} else if (
-		command.notificationType === 0x06
-		&& doorStatusEvents.includes(command.notificationEvent as number)
+		command.notificationType === 0x06 &&
+		doorStatusEvents.includes(command.notificationEvent as number)
 	) {
 		// https://github.com/zwave-js/zwave-js/pull/5394 added support for
 		// notification enums. Unfortunately, there's no way to discover which nodes
@@ -434,9 +419,9 @@ function handleKnownNotification(
 		}
 	} else if (
 		// Access Control, all user codes deleted
-		command.notificationType === 0x06
-		&& command.notificationEvent === 0x0c
-		&& node.supportsCC(CommandClasses["User Code"])
+		command.notificationType === 0x06 &&
+		command.notificationEvent === 0x0c &&
+		node.supportsCC(CommandClasses["User Code"])
 	) {
 		// Clear all user codes from the cache
 		const endpoint: EndpointId = {

@@ -78,8 +78,8 @@ When authoring and reviewing configuration files, consistency is key for maintai
 
 - Should be as wide as possible, by default "0.0" to "255.255"
 - Only specify a narrower range if
-  - there are multiple revisions of a device that only differ in firmware version
-  - changes in a firmware version are significant enough that using conditional parameters would introduce too much complexity
+    - there are multiple revisions of a device that only differ in firmware version
+    - changes in a firmware version are significant enough that using conditional parameters would introduce too much complexity
 
 ## Configuration Parameters
 
@@ -108,18 +108,18 @@ When authoring and reviewing configuration files, consistency is key for maintai
 - Remove ranges/units that are defined in other properties
 - Do not include unnecessary whitespace, newlines, or tabs
 - **When editing new or uncleaned files**: If possible, convert description information to proper fields instead of removing:
-  - If description states available options, convert those to the `options` field
-  - If description states min/max values, convert those to `minValue`/`maxValue` fields
-  - If description explains the parameter unit, convert to the `unit` field
+    - If description states available options, convert those to the `options` field
+    - If description states min/max values, convert those to `minValue`/`maxValue` fields
+    - If description explains the parameter unit, convert to the `unit` field
 - **Exception 1**: When parameter has gaps in valid ranges (e.g., 0-99 plus 255), explain the allowable range. This includes cases with a single option outside of the allowable range.
-  - Examples:
-    - `"description": "Allowable range: 0-99, 255"`
-    - `"description": "Allowable range: 30-1000"` plus an option for 0 (Disabled)
+    - Examples:
+        - `"description": "Allowable range: 0-99, 255"`
+        - `"description": "Allowable range: 30-1000"` plus an option for 0 (Disabled)
 - **Exception 2**: When units change based on parameter value, describe this in the description
-  - Examples:
-    - `"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)"`
-    - `"description": "0 = disabled, 1 to 60 = seconds, 61 to 120 = minutes (minus 60), 121 - 254 = hours (minus 120), 255 = indefinitely"`
-    - `"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)"`
+    - Examples:
+        - `"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)"`
+        - `"description": "0 = disabled, 1 to 60 = seconds, 61 to 120 = minutes (minus 60), 121 - 254 = hours (minus 120), 255 = indefinitely"`
+        - `"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)"`
 
 ### Parameter Options
 
@@ -142,9 +142,9 @@ When authoring and reviewing configuration files, consistency is key for maintai
 ### Units
 
 - Use unit symbols instead of full words where common:
-  - `%` instead of "percent"
-  - `°C` instead of "degrees Celsius"
-  - `W`, `V`, `A` instead of "watts", "volts", "Ampere"
+    - `%` instead of "percent"
+    - `°C` instead of "degrees Celsius"
+    - `W`, `V`, `A` instead of "watts", "volts", "Ampere"
 - Don't abbreviate time units except `ms` for milliseconds
 - Use decimal notation for multiples: `0.01 V`, `10 seconds`, `100 ms`
 - Do not define range 0-99 as percent (it's not mathematically 0-100%)
@@ -245,9 +245,9 @@ The `scenes` property allows defining custom labels and descriptions for Central
 
 - Use clear, concise labels that users will easily understand
 - Prefer standardized terminology when possible:
-  - "Single Press", "Double Press", "Triple Press" for tap sequences
-  - "Hold" or "Press and Hold" for held down actions
-  - "Release" for key release actions
+    - "Single Press", "Double Press", "Triple Press" for tap sequences
+    - "Hold" or "Press and Hold" for held down actions
+    - "Release" for key release actions
 - Avoid manufacturer-specific jargon unless it's commonly understood
 - Keep labels reasonably short to fit in user interfaces
 
@@ -287,14 +287,14 @@ Templates allow reusing common parameter definitions across devices to maintain 
 ### Template Types
 
 1. **Master Template** (`~/templates/master_template.json`):
-   - Common parameter bases usable across all manufacturers
-   - Examples: `base_enable_disable`, `base_0-99_nounit`, `orientation`, `led_indicator_three_options`
-   - Modifying existing master templates affects ALL devices using them, be careful with changes
+    - Common parameter bases usable across all manufacturers
+    - Examples: `base_enable_disable`, `base_0-99_nounit`, `orientation`, `led_indicator_three_options`
+    - Modifying existing master templates affects ALL devices using them, be careful with changes
 
 2. **Manufacturer-specific Templates** (in each manufacturer's `templates/` folder):
-   - Parameters common to devices from that specific manufacturer
-   - Should only be created if there are multiple devices from that manufacturer reusing the same parameter definitions
-   - Changing existing manufacturer templates affects all devices from that manufacturer
+    - Parameters common to devices from that specific manufacturer
+    - Should only be created if there are multiple devices from that manufacturer reusing the same parameter definitions
+    - Changing existing manufacturer templates affects all devices from that manufacturer
 
 ### When Reviewing Templates
 
@@ -340,18 +340,19 @@ Example:
 
 - The `metadata` property is optional with the following structure:
 
-  ```json
-  {
-  	// rest of the file
-  	"metadata": {
-  		"wakeup": "How to wake up the device manually",
-  		"inclusion": "How to include this device",
-  		"exclusion": "How to exclude this device",
-  		"reset": "How to factory-reset this device",
-  		"manual": "A link to the device manual"
-  	}
-  }
-  ```
+    ```json
+    {
+    	// rest of the file
+    	"metadata": {
+    		"wakeup": "How to wake up the device manually",
+    		"inclusion": "How to include this device",
+    		"exclusion": "How to exclude this device",
+    		"reset": "How to factory-reset this device",
+    		"manual": "A link to the device manual"
+    	}
+    }
+    ```
+
 - All properties in `metadata` are optional.
 - Do not add metadata if there is none
 

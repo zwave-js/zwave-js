@@ -44,6 +44,5 @@ export interface TXReport {
 }
 /** Information about the transmission, but for serialization in mocks */
 
-export type SerializableTXReport =
-	& Partial<Omit<TXReport, "numRepeaters">>
-	& Pick<TXReport, "txTicks" | "routeSpeed">;
+export type SerializableTXReport = Partial<Omit<TXReport, "numRepeaters">> &
+	Pick<TXReport, "txTicks" | "routeSpeed">;

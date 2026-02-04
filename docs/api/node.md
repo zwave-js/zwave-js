@@ -80,12 +80,15 @@ interface ZWaveNotificationCapability_NotificationCC {
 	commandClass: CommandClasses.Notification;
 	endpoint: number;
 	/** A dictionary of supported event types and information */
-	supportedNotificationTypes: Record<number, {
-		/** The human-readable label for the notification type */
-		label: string;
-		/** A dictionary of supported events for this notification type and their human-readable labels */
-		supportedEvents: Record<number, string>;
-	}>;
+	supportedNotificationTypes: Record<
+		number,
+		{
+			/** The human-readable label for the notification type */
+			label: string;
+			/** A dictionary of supported events for this notification type and their human-readable labels */
+			supportedEvents: Record<number, string>;
+		}
+	>;
 }
 ```
 
@@ -195,11 +198,11 @@ To make it easier for applications to test the status, a few helper methods are 
 
 - `setValueSucceeded(result: SetValueResult)` returns whether the command was sent using supervision and the device either executed it or started working on it
 - `setValueWasUnsupervisedOrSucceeded(result: SetValueResult)` returns whether:
-  - the above applies
-  - or the command was sent without supervision and was acknowledged (but not necessarily executed) by the device
+    - the above applies
+    - or the command was sent without supervision and was acknowledged (but not necessarily executed) by the device
 - `setValueFailed(result: SetValueResult)` returns whether:
-  - the command was either not sent due to an error
-  - or the command was sent using supervision and the device indicated an error
+    - the command was either not sent due to an error
+    - or the command was sent using supervision and the device indicated an error
 
 ### `pollValue`
 
@@ -357,23 +360,23 @@ Retrieves the firmware update capabilities of a node to decide which options (e.
 ```ts
 type FirmwareUpdateCapabilities =
 	| {
-		/** Indicates whether the node's firmware can be upgraded */
-		readonly firmwareUpgradable: false;
-	}
+			/** Indicates whether the node's firmware can be upgraded */
+			readonly firmwareUpgradable: false;
+	  }
 	| {
-		/** Indicates whether the node's firmware can be upgraded */
-		readonly firmwareUpgradable: true;
-		/** An array of firmware targets that can be upgraded */
-		readonly firmwareTargets: readonly number[];
-		/** Indicates whether the node continues to function normally during an upgrade */
-		readonly continuesToFunction: MaybeNotKnown<boolean>;
-		/** Indicates whether the node supports delayed activation of the new firmware */
-		readonly supportsActivation: MaybeNotKnown<boolean>;
-		/** Indicates whether the node supports resuming aborted firmware transfers */
-		readonly supportsResuming: MaybeNotKnown<boolean>;
-		/** Indicates whether the node supports non-secure firmware transfers */
-		readonly supportsNonSecureTransfer: MaybeNotKnown<boolean>;
-	};
+			/** Indicates whether the node's firmware can be upgraded */
+			readonly firmwareUpgradable: true;
+			/** An array of firmware targets that can be upgraded */
+			readonly firmwareTargets: readonly number[];
+			/** Indicates whether the node continues to function normally during an upgrade */
+			readonly continuesToFunction: MaybeNotKnown<boolean>;
+			/** Indicates whether the node supports delayed activation of the new firmware */
+			readonly supportsActivation: MaybeNotKnown<boolean>;
+			/** Indicates whether the node supports resuming aborted firmware transfers */
+			readonly supportsResuming: MaybeNotKnown<boolean>;
+			/** Indicates whether the node supports non-secure firmware transfers */
+			readonly supportsNonSecureTransfer: MaybeNotKnown<boolean>;
+	  };
 ```
 
 ### `updateFirmware`
@@ -884,8 +887,7 @@ Returns the ID this node has been assigned by the controller. This is a number b
 ### `name`
 
 ```ts
-name:
-string | undefined;
+name: string | undefined;
 ```
 
 The user-defined name of this node. Uses the value reported by `Node Naming and Location CC` if it exists.
@@ -896,8 +898,7 @@ The user-defined name of this node. Uses the value reported by `Node Naming and 
 ### `location`
 
 ```ts
-location:
-string | undefined;
+location: string | undefined;
 ```
 
 The user-defined location of this node. Uses the value reported by `Node Naming and Location CC` if it exists.
@@ -1233,8 +1234,7 @@ The URL to the device in the device database.
 ### `keepAwake`
 
 ```ts
-keepAwake:
-boolean;
+keepAwake: boolean;
 ```
 
 In order to save energy, battery powered devices should go back to sleep after they no longer need to communicate with the controller. This library honors this requirement by sending nodes back to sleep as soon as there are no more pending messages.
@@ -1254,8 +1254,7 @@ This can be done using the `defaultTransitionDuration` property. It accepts a du
 ### `defaultVolume`
 
 ```ts
-defaultVolume:
-number | undefined;
+defaultVolume: number | undefined;
 ```
 
 While the volume for sound switch commands can be provided on a per-command basis as part of the [`setValue`](#setvalue) method, it may be desirable to configure a persistent default for a node.
@@ -1491,7 +1490,7 @@ uses the following signature
 ```ts
 type ZWaveNotificationCallbackParams_BatteryCC = [
 	endpoint: Endpoint,
-	ccId: (typeof CommandClasses.Battery),
+	ccId: typeof CommandClasses.Battery,
 	args: ZWaveNotificationCallbackArgs_BatteryCC,
 ];
 ```

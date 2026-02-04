@@ -48,9 +48,7 @@ export interface RequestNodeNeighborUpdateRequestOptions {
 }
 
 @expectedCallback(FunctionType.RequestNodeNeighborUpdate)
-export class RequestNodeNeighborUpdateRequest
-	extends RequestNodeNeighborUpdateRequestBase
-{
+export class RequestNodeNeighborUpdateRequest extends RequestNodeNeighborUpdateRequestBase {
 	public constructor(
 		options: RequestNodeNeighborUpdateRequestOptions & MessageBaseOptions,
 	) {

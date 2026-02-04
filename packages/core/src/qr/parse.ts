@@ -1,9 +1,11 @@
 import { Bytes } from "@zwave-js/shared";
+
 import { digest } from "../crypto/index.js";
 import { SecurityClass } from "../definitions/SecurityClass.js";
 import { dskToString } from "../dsk/index.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { parseBitMask } from "../values/Primitive.js";
+
 import {
 	ProvisioningInformationType,
 	QRCodeVersion,
@@ -43,7 +45,7 @@ async function parseQRCodeStringInternal(
 	const expectedChecksum = readUInt16(qr, 4);
 	if (!parseSubsets) {
 		// If we are not parsing subsets, just validate the checksum for the entire QR code
-		if (await computeChecksum(qr, qr.length) !== expectedChecksum) {
+		if ((await computeChecksum(qr, qr.length)) !== expectedChecksum) {
 			fail("invalid checksum");
 		}
 	}
@@ -97,10 +99,10 @@ async function parseQRCodeStringInternal(
 		// If we are parsing subsets, we need to validate the checksum at the end of each TLV
 		// to see if we've reached the end of the QR code
 		if (
-			parseSubsets
-			&& hasProductID
-			&& hasProductType
-			&& await computeChecksum(qr, offset) === expectedChecksum
+			parseSubsets &&
+			hasProductID &&
+			hasProductType &&
+			(await computeChecksum(qr, offset)) === expectedChecksum
 		) {
 			return ret;
 		}
@@ -112,7 +114,7 @@ async function parseQRCodeStringInternal(
 	}
 
 	// Final checksum validation
-	if (await computeChecksum(qr, offset) !== expectedChecksum) {
+	if ((await computeChecksum(qr, offset)) !== expectedChecksum) {
 		fail("invalid checksum");
 	}
 
@@ -135,8 +137,8 @@ export async function parseQRCodeString(
 		return await parseQRCodeStringInternal(normalized, false);
 	} catch (e) {
 		if (
-			!(e instanceof ZWaveError)
-			|| e.code !== ZWaveErrorCodes.Security2CC_InvalidQRCode
+			!(e instanceof ZWaveError) ||
+			e.code !== ZWaveErrorCodes.Security2CC_InvalidQRCode
 		) {
 			throw e;
 		}
@@ -150,8 +152,8 @@ export async function parseQRCodeString(
 			return await parseQRCodeStringInternal(match[0], true);
 		} catch (e) {
 			if (
-				!(e instanceof ZWaveError)
-				|| e.code !== ZWaveErrorCodes.Security2CC_InvalidQRCode
+				!(e instanceof ZWaveError) ||
+				e.code !== ZWaveErrorCodes.Security2CC_InvalidQRCode
 			) {
 				throw e;
 			}

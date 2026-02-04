@@ -95,7 +95,7 @@ import {
 import { V } from "../lib/Values.js";
 ```
 
-## Types in _Types.ts
+## Types in \_Types.ts
 
 Add command enum and type definitions to `packages/cc/src/lib/_Types.ts`:
 
@@ -168,7 +168,9 @@ export const MyCommandClassCCValues = V.defineCCValues(
 		// Conditional value creation based on capabilities
 		...V.staticProperty(
 			"optionalFeatureValue",
-			{/* metadata */} as const,
+			{
+				/* metadata */
+			} as const,
 			{
 				minVersion: 4,
 				autoCreate: shouldAutoCreateOptionalFeatureValue,
@@ -282,12 +284,11 @@ export class MyCommandClassCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 		});
 
-		const result = await this.host.sendCommand<
-			MyCommandClassCCCapabilitiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const result =
+			await this.host.sendCommand<MyCommandClassCCCapabilitiesReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (result) {
 			return pick(result, ["field1", "field2"]);
@@ -335,10 +336,9 @@ CCs that split values into target and current (like switches) typically support 
 if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
 	this.tryGetValueDB()?.setValue(currentValueValueId, value);
 } else if (this.isMulticast()) {
-	const affectedNodes = this.endpoint.node.physicalNodes
-		.filter((node) =>
-			node.getEndpoint(this.endpoint.index)?.supportsCC(this.ccId)
-		);
+	const affectedNodes = this.endpoint.node.physicalNodes.filter((node) =>
+		node.getEndpoint(this.endpoint.index)?.supportsCC(this.ccId),
+	);
 	for (const node of affectedNodes) {
 		this.host.tryGetValueDB(node.id)?.setValue(currentValueValueId, value);
 	}
@@ -457,24 +457,24 @@ validatePayload(raw.payload.length >= 10);
 ## Checklist for New CC Implementation
 
 1. **Types** (`packages/cc/src/lib/_Types.ts`)
-   - [ ] Add command enum
-   - [ ] Add type interfaces for options and data structures
-   - [ ] Add any needed enums (report reasons, actions, etc.)
+    - [ ] Add command enum
+    - [ ] Add type interfaces for options and data structures
+    - [ ] Add any needed enums (report reasons, actions, etc.)
 
 2. **CC File** (`packages/cc/src/cc/MyCommandClassCC.ts`)
-   - [ ] Helper functions for parsing/encoding (if needed)
-   - [ ] CC Values definition with appropriate `internal`/`minVersion`/`autoCreate`
-   - [ ] API class with `supportsCommand()` and all methods
-   - [ ] Base CC class with `interview()` and optionally `refreshValues()`
-   - [ ] All command classes (Get, Set, Report for each command pair)
+    - [ ] Helper functions for parsing/encoding (if needed)
+    - [ ] CC Values definition with appropriate `internal`/`minVersion`/`autoCreate`
+    - [ ] API class with `supportsCommand()` and all methods
+    - [ ] Base CC class with `interview()` and optionally `refreshValues()`
+    - [ ] All command classes (Get, Set, Report for each command pair)
 
 3. **Generate Exports**
-   - [ ] Run `yarn workspace @zwave-js/cc run codegen`
+    - [ ] Run `yarn workspace @zwave-js/cc run codegen`
 
 4. **Validation**
-   - [ ] Run `yarn build @zwave-js/cc`
-   - [ ] Run `yarn fmt`
-   - [ ] Run `yarn lint:ts:fix`
+    - [ ] Run `yarn build @zwave-js/cc`
+    - [ ] Run `yarn fmt`
+    - [ ] Run `yarn lint:ts:fix`
 
 ## Questions to Ask the Developer
 

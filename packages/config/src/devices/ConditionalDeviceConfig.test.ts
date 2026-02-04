@@ -1,5 +1,6 @@
 import { isArray } from "alcalzone-shared/typeguards";
 import { test } from "vitest";
+
 import { ConditionalDeviceConfig } from "./DeviceConfig.js";
 
 test("parses a simple device config", (t) => {
@@ -267,37 +268,39 @@ test("parses a device config with conditional config parameter options", (t) => 
 		...deviceId,
 		firmwareVersion: "0.5",
 	});
-	t.expect(evaluated1.paramInformation?.get({ parameter: 1 })?.options)
-		.toStrictEqual([
-			{
-				label: "Yes",
-				value: 1,
-			},
-			{
-				label: "No",
-				value: 2,
-			},
-			{
-				label: "Maybe",
-				value: 3,
-			},
-		]);
+	t.expect(
+		evaluated1.paramInformation?.get({ parameter: 1 })?.options,
+	).toStrictEqual([
+		{
+			label: "Yes",
+			value: 1,
+		},
+		{
+			label: "No",
+			value: 2,
+		},
+		{
+			label: "Maybe",
+			value: 3,
+		},
+	]);
 
 	const evaluated2 = condConfig.evaluate({
 		...deviceId,
 		firmwareVersion: "1.0",
 	});
-	t.expect(evaluated2.paramInformation?.get({ parameter: 1 })?.options)
-		.toStrictEqual([
-			{
-				label: "Yes",
-				value: 1,
-			},
-			{
-				label: "No",
-				value: 2,
-			},
-		]);
+	t.expect(
+		evaluated2.paramInformation?.get({ parameter: 1 })?.options,
+	).toStrictEqual([
+		{
+			label: "Yes",
+			value: 1,
+		},
+		{
+			label: "No",
+			value: 2,
+		},
+	]);
 });
 
 test("supports sdkVersion in conditions", (t) => {
@@ -372,8 +375,8 @@ test("supports sdkVersion in conditions", (t) => {
 	const evaluatedWithoutSDK = condConfig.evaluate(deviceId);
 	t.expect(evaluatedWithoutSDK.manufacturer).toBe("Legacy Manufacturer");
 	t.expect(
-		isArray(evaluatedWithoutSDK.metadata?.comments)
-			&& evaluatedWithoutSDK.metadata?.comments.length,
+		isArray(evaluatedWithoutSDK.metadata?.comments) &&
+			evaluatedWithoutSDK.metadata?.comments.length,
 	).toBe(0);
 });
 
@@ -417,8 +420,8 @@ test("supports x.y.z firmware versions", (t) => {
 		firmwareVersion: "7.17",
 	});
 	t.expect(
-		isArray(evaluatedXY_warning.metadata?.comments)
-			&& evaluatedXY_warning.metadata?.comments.length,
+		isArray(evaluatedXY_warning.metadata?.comments) &&
+			evaluatedXY_warning.metadata?.comments.length,
 	).toBe(1);
 
 	const evaluatedXY_ok = condConfig.evaluate({
@@ -426,8 +429,8 @@ test("supports x.y.z firmware versions", (t) => {
 		firmwareVersion: "7.18",
 	});
 	t.expect(
-		isArray(evaluatedXY_ok.metadata?.comments)
-			&& evaluatedXY_ok.metadata?.comments.length,
+		isArray(evaluatedXY_ok.metadata?.comments) &&
+			evaluatedXY_ok.metadata?.comments.length,
 	).toBe(0);
 
 	const evaluatedXYZ_warning = condConfig.evaluate({
@@ -435,8 +438,8 @@ test("supports x.y.z firmware versions", (t) => {
 		firmwareVersion: "7.17.1",
 	});
 	t.expect(
-		isArray(evaluatedXYZ_warning.metadata?.comments)
-			&& evaluatedXYZ_warning.metadata?.comments.length,
+		isArray(evaluatedXYZ_warning.metadata?.comments) &&
+			evaluatedXYZ_warning.metadata?.comments.length,
 	).toBe(1);
 
 	const evaluatedXYZ_ok = condConfig.evaluate({
@@ -444,8 +447,8 @@ test("supports x.y.z firmware versions", (t) => {
 		firmwareVersion: "7.17.2",
 	});
 	t.expect(
-		isArray(evaluatedXYZ_ok.metadata?.comments)
-			&& evaluatedXYZ_ok.metadata?.comments.length,
+		isArray(evaluatedXYZ_ok.metadata?.comments) &&
+			evaluatedXYZ_ok.metadata?.comments.length,
 	).toBe(0);
 });
 
@@ -560,8 +563,9 @@ test("rejects parameter with both allowed and minValue/maxValue", (t) => {
 		],
 	};
 
-	t.expect(() => new ConditionalDeviceConfig("test-invalid.json", true, json))
-		.toThrow(/cannot be used together with/);
+	t.expect(
+		() => new ConditionalDeviceConfig("test-invalid.json", true, json),
+	).toThrow(/cannot be used together with/);
 });
 
 test("legacy config with minValue/maxValue gets allowed set to single range", (t) => {

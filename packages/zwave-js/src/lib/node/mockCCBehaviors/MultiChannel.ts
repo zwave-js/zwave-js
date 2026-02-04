@@ -33,12 +33,10 @@ const encapsulateMultiChannelCC: MockNodeBehavior = {
 
 	transformResponse(controller, self, receivedCC, response) {
 		if (
-			response.action === "sendCC"
-			&& receivedCC instanceof CommandClass
-			&& receivedCC.isEncapsulatedWith(
-				CommandClasses["Multi Channel"],
-			)
-			&& !response.cc.isEncapsulatedWith(CommandClasses["Multi Channel"])
+			response.action === "sendCC" &&
+			receivedCC instanceof CommandClass &&
+			receivedCC.isEncapsulatedWith(CommandClasses["Multi Channel"]) &&
+			!response.cc.isEncapsulatedWith(CommandClasses["Multi Channel"])
 		) {
 			const multiChannelEncap = receivedCC.getEncapsulatingCC(
 				CommandClasses["Multi Channel"],
@@ -46,8 +44,8 @@ const encapsulateMultiChannelCC: MockNodeBehavior = {
 			if (!multiChannelEncap) return response;
 
 			if (
-				multiChannelEncap
-					instanceof MultiChannelCCV1CommandEncapsulation
+				multiChannelEncap instanceof
+				MultiChannelCCV1CommandEncapsulation
 			) {
 				response.cc = new MultiChannelCCV1CommandEncapsulation({
 					nodeId: response.cc.nodeId,
@@ -106,16 +104,16 @@ const respondToMultiChannelCCEndPointFind: MockNodeBehavior = {
 const respondToMultiChannelCCCapabilityGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof MultiChannelCCCapabilityGet) {
-			const endpoint = self.endpoints.get(
-				receivedCC.requestedEndpoint,
-			)!;
+			const endpoint = self.endpoints.get(receivedCC.requestedEndpoint)!;
 			const cc = new MultiChannelCCCapabilityReport({
 				nodeId: controller.ownNodeId,
 				endpointIndex: endpoint.index,
-				genericDeviceClass: endpoint?.capabilities.genericDeviceClass
-					?? self.capabilities.genericDeviceClass,
-				specificDeviceClass: endpoint?.capabilities.specificDeviceClass
-					?? self.capabilities.specificDeviceClass,
+				genericDeviceClass:
+					endpoint?.capabilities.genericDeviceClass ??
+					self.capabilities.genericDeviceClass,
+				specificDeviceClass:
+					endpoint?.capabilities.specificDeviceClass ??
+					self.capabilities.specificDeviceClass,
 				isDynamic: false,
 				wasRemoved: false,
 				supportedCCs: [...endpoint.implementedCCs.keys()]
@@ -137,7 +135,8 @@ const respondToMultiChannelCCV1Get: MockNodeBehavior = {
 				.filter((ep) => {
 					const info = ep.implementedCCs.get(requestedCC);
 					return info && info.version > 0 && info.isSupported;
-				}).map((ep) => ep.index);
+				})
+				.map((ep) => ep.index);
 			const endpointCount = Math.max(0, ...supportedEndpointIndizes);
 
 			const cc = new MultiChannelCCV1Report({
@@ -150,9 +149,7 @@ const respondToMultiChannelCCV1Get: MockNodeBehavior = {
 	},
 };
 
-export const MultiChannelCCHooks = [
-	encapsulateMultiChannelCC,
-];
+export const MultiChannelCCHooks = [encapsulateMultiChannelCC];
 
 export const MultiChannelCCBehaviors = [
 	respondToMultiChannelCCEndPointGet,

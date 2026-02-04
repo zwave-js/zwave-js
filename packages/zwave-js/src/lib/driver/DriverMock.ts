@@ -1,9 +1,11 @@
+import { tmpdir } from "node:os";
+
 import type { ZWaveSerialStream } from "@zwave-js/serial";
 import { MockPort } from "@zwave-js/serial/mock";
 import type { FileSystem } from "@zwave-js/shared/bindings";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
-import { tmpdir } from "node:os";
 import path from "pathe";
+
 import { Driver } from "./Driver.js";
 import type { PartialZWaveOptions, ZWaveOptions } from "./ZWaveOptions.js";
 
@@ -20,9 +22,8 @@ export interface CreateAndStartDriverWithMockPortOptions {
 
 /** Creates a real driver instance with a mocked serial port to enable end to end tests */
 export function createAndStartDriverWithMockPort(
-	options:
-		& Partial<CreateAndStartDriverWithMockPortOptions>
-		& PartialZWaveOptions = {},
+	options: Partial<CreateAndStartDriverWithMockPortOptions> &
+		PartialZWaveOptions = {},
 ): Promise<CreateAndStartDriverWithMockPortResult> {
 	const { ...driverOptions } = options;
 	return new Promise((resolve, reject) => {
@@ -38,9 +39,7 @@ export function createAndStartDriverWithMockPort(
 		// });
 
 		// This will be called when the driver has opened the serial port
-		const onSerialPortOpen = (
-			serial: ZWaveSerialStream,
-		): Promise<void> => {
+		const onSerialPortOpen = (serial: ZWaveSerialStream): Promise<void> => {
 			// // Extract the mock serial port
 			// mockPort = MockBinding.getInstance(portAddress)!;
 			// if (!mockPort) reject(new Error("Mock serial port is not open!"));
@@ -114,9 +113,8 @@ export interface CreateAndStartTestingDriverOptions {
 }
 
 export async function createAndStartTestingDriver(
-	options:
-		& Partial<CreateAndStartTestingDriverOptions>
-		& PartialZWaveOptions = {},
+	options: Partial<CreateAndStartTestingDriverOptions> &
+		PartialZWaveOptions = {},
 ): Promise<CreateAndStartTestingDriverResult> {
 	const {
 		beforeStartup,

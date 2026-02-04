@@ -10,7 +10,9 @@ import {
 	getEnumMemberName,
 	num2hex,
 } from "@zwave-js/shared";
+
 import { MessageHeaders } from "../message/MessageHeaders.js";
+
 import {
 	SERIAL_LABEL,
 	SERIAL_LOGLEVEL,

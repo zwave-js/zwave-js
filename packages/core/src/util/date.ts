@@ -39,8 +39,8 @@ function findSwitchDate(
 
 	function middleDate(date1: Date, date2: Date): Date {
 		const middleTime =
-			Math.floor((date1.getTime() + date2.getTime()) / 2 / stepSize)
-			* stepSize;
+			Math.floor((date1.getTime() + date2.getTime()) / 2 / stepSize) *
+			stepSize;
 		return new Date(middleTime);
 	}
 
@@ -62,8 +62,8 @@ export function getDSTInfo(now: Date = new Date()): DSTInfo {
 	const halfAYearAgo = dayjs(now).subtract(6, "months").toDate();
 	const inAHalfYear = dayjs(now).add(6, "months").toDate();
 	if (
-		now.getTimezoneOffset() === halfAYearAgo.getTimezoneOffset()
-		|| now.getTimezoneOffset() === inAHalfYear.getTimezoneOffset()
+		now.getTimezoneOffset() === halfAYearAgo.getTimezoneOffset() ||
+		now.getTimezoneOffset() === inAHalfYear.getTimezoneOffset()
 	) {
 		// There is no DST in this timezone
 		return getDefaultDSTInfo();

@@ -12,8 +12,10 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
+
 import type { ZWaveController } from "../../controller/Controller.js";
 import type { ZWaveNode } from "../Node.js";
+
 import { MAX_ASSOCIATIONS } from "./_shared.js";
 
 export async function handleAssociationGet(
@@ -34,12 +36,13 @@ export async function handleAssociationGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	const nodeIds =
-		controller.associations.filter((a) => a.endpoint == undefined)
+		controller.associations
+			.filter((a) => a.endpoint == undefined)
 			.map((a) => a.nodeId) ?? [];
 
 	await api.sendReport({
@@ -65,12 +68,15 @@ export function handleAssociationSet(
 	}
 
 	// Ignore associations that already exist
-	const newAssociations = command.nodeIds.filter((newNodeId) =>
-		!controller.associations.some(
-			({ nodeId, endpoint }) =>
-				endpoint === undefined && nodeId === newNodeId,
+	const newAssociations = command.nodeIds
+		.filter(
+			(newNodeId) =>
+				!controller.associations.some(
+					({ nodeId, endpoint }) =>
+						endpoint === undefined && nodeId === newNodeId,
+				),
 		)
-	).map((nodeId) => ({ nodeId }));
+		.map((nodeId) => ({ nodeId }));
 
 	const associations = [...controller.associations];
 	associations.push(...newAssociations);
@@ -101,12 +107,10 @@ export function handleAssociationRemove(
 		// clear
 		controller.associations = [];
 	} else {
-		controller.associations = controller
-			.associations.filter(
-				({ nodeId, endpoint }) =>
-					endpoint === undefined
-					&& !command.nodeIds!.includes(nodeId),
-			);
+		controller.associations = controller.associations.filter(
+			({ nodeId, endpoint }) =>
+				endpoint === undefined && !command.nodeIds!.includes(nodeId),
+		);
 	}
 }
 
@@ -124,8 +128,8 @@ export async function handleAssociationSpecificGroupGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	// We don't support this feature.

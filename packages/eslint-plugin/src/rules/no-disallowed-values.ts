@@ -1,5 +1,6 @@
 import type { AllowedConfigValue } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
+
 import { type JSONCRule, isValueAllowed, parseAllowedField } from "../utils.js";
 
 function getAllowedEntriesAndRange(node: AST.JSONObjectExpression): {
@@ -26,12 +27,12 @@ function getAllowedEntriesAndRange(node: AST.JSONObjectExpression): {
 		(p) => p.key.type === "JSONLiteral" && p.key.value === "maxValue",
 	);
 	if (
-		minValueProp
-		&& minValueProp.value.type === "JSONLiteral"
-		&& typeof minValueProp.value.value === "number"
-		&& maxValueProp
-		&& maxValueProp.value.type === "JSONLiteral"
-		&& typeof maxValueProp.value.value === "number"
+		minValueProp &&
+		minValueProp.value.type === "JSONLiteral" &&
+		typeof minValueProp.value.value === "number" &&
+		maxValueProp &&
+		maxValueProp.value.type === "JSONLiteral" &&
+		typeof maxValueProp.value.value === "number"
 	) {
 		return {
 			allowedEntries: [
@@ -71,13 +72,13 @@ export const noDisallowedDefaultValue: JSONCRule.RuleModule = {
 
 				const defaultValueProp = node.properties.find(
 					(p) =>
-						p.key.type === "JSONLiteral"
-						&& p.key.value === "defaultValue",
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "defaultValue",
 				);
 				if (
-					defaultValueProp
-					&& defaultValueProp.value.type === "JSONLiteral"
-					&& typeof defaultValueProp.value.value === "number"
+					defaultValueProp &&
+					defaultValueProp.value.type === "JSONLiteral" &&
+					typeof defaultValueProp.value.value === "number"
 				) {
 					const defaultValue = defaultValueProp.value.value;
 					if (!isValueAllowed(defaultValue, allowedEntries)) {
@@ -111,10 +112,8 @@ export const noDisallowedDefaultValue: JSONCRule.RuleModule = {
 		},
 		schema: false,
 		messages: {
-			"default-value-not-allowed":
-				`Default value {{value}} is not in the allowed values.`,
-			"default-value-outside-range":
-				`Default value {{value}} is outside of the min/max value range {{min}}...{{max}}.`,
+			"default-value-not-allowed": `Default value {{value}} is not in the allowed values.`,
+			"default-value-outside-range": `Default value {{value}} is outside of the min/max value range {{min}}...{{max}}.`,
 		},
 		type: "problem",
 	},
@@ -137,44 +136,45 @@ export const noDisallowedOptionValues: JSONCRule.RuleModule = {
 
 				const optionsProp = node.properties.find(
 					(p) =>
-						p.key.type === "JSONLiteral"
-						&& p.key.value === "options",
+						p.key.type === "JSONLiteral" &&
+						p.key.value === "options",
 				);
 				if (
-					optionsProp
-					&& optionsProp.value.type === "JSONArrayExpression"
+					optionsProp &&
+					optionsProp.value.type === "JSONArrayExpression"
 				) {
 					for (const optionElement of optionsProp.value.elements) {
 						if (
-							!optionElement
-							|| optionElement.type !== "JSONObjectExpression"
+							!optionElement ||
+							optionElement.type !== "JSONObjectExpression"
 						) {
 							continue;
 						}
 						const optionValueProp = optionElement.properties.find(
 							(p) =>
-								p.key.type === "JSONLiteral"
-								&& p.key.value === "value",
+								p.key.type === "JSONLiteral" &&
+								p.key.value === "value",
 						);
 						const optionLabelProp = optionElement.properties.find(
 							(p) =>
-								p.key.type === "JSONLiteral"
-								&& p.key.value === "label",
+								p.key.type === "JSONLiteral" &&
+								p.key.value === "label",
 						);
 						if (
-							optionValueProp
-							&& optionValueProp.value.type === "JSONLiteral"
-							&& typeof optionValueProp.value.value === "number"
+							optionValueProp &&
+							optionValueProp.value.type === "JSONLiteral" &&
+							typeof optionValueProp.value.value === "number"
 						) {
 							const optionValue = optionValueProp.value.value;
 							if (!isValueAllowed(optionValue, allowedEntries)) {
-								const label = optionLabelProp
-										&& optionLabelProp.value.type
-											=== "JSONLiteral"
-										&& typeof optionLabelProp.value.value
-											=== "string"
-									? optionLabelProp.value.value
-									: undefined;
+								const label =
+									optionLabelProp &&
+									optionLabelProp.value.type ===
+										"JSONLiteral" &&
+									typeof optionLabelProp.value.value ===
+										"string"
+										? optionLabelProp.value.value
+										: undefined;
 								if (hasExplicitAllowed) {
 									context.report({
 										loc: optionValueProp.loc,
@@ -211,10 +211,8 @@ export const noDisallowedOptionValues: JSONCRule.RuleModule = {
 		},
 		schema: false,
 		messages: {
-			"option-value-not-allowed":
-				`Option value {{value}}{{label}} is not in the allowed values.`,
-			"option-value-outside-range":
-				`Option value {{value}}{{label}} is outside of the min/max value range {{min}}...{{max}}.`,
+			"option-value-not-allowed": `Option value {{value}}{{label}} is not in the allowed values.`,
+			"option-value-outside-range": `Option value {{value}}{{label}} is outside of the min/max value range {{min}}...{{max}}.`,
 		},
 		type: "problem",
 	},

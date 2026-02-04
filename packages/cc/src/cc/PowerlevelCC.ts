@@ -13,6 +13,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { PhysicalCCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -164,12 +165,11 @@ export class PowerlevelCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			PowerlevelCCTestNodeReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<PowerlevelCCTestNodeReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"testNodeId",
@@ -206,20 +206,18 @@ export class PowerlevelCC extends CommandClass {
 // @publicAPI
 export type PowerlevelCCSetOptions =
 	| {
-		powerlevel: Powerlevel;
-		timeout: number;
-	}
+			powerlevel: Powerlevel;
+			timeout: number;
+	  }
 	| {
-		powerlevel: (typeof Powerlevel)["Normal Power"];
-		timeout?: undefined;
-	};
+			powerlevel: (typeof Powerlevel)["Normal Power"];
+			timeout?: undefined;
+	  };
 
 @CCCommand(PowerlevelCommand.Set)
 @useSupervision()
 export class PowerlevelCCSet extends PowerlevelCC {
-	public constructor(
-		options: WithAddress<PowerlevelCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<PowerlevelCCSetOptions>) {
 		super(options);
 		this.powerlevel = options.powerlevel;
 		if (options.powerlevel !== Powerlevel["Normal Power"]) {
@@ -276,19 +274,22 @@ export class PowerlevelCCSet extends PowerlevelCC {
 }
 
 // @publicAPI
-export type PowerlevelCCReportOptions = {
-	powerlevel: typeof Powerlevel["Normal Power"];
-	timeout?: undefined;
-} | {
-	powerlevel: Exclude<Powerlevel, typeof Powerlevel["Normal Power"]>;
-	timeout: number;
-};
+export type PowerlevelCCReportOptions =
+	| {
+			powerlevel: (typeof Powerlevel)["Normal Power"];
+			timeout?: undefined;
+	  }
+	| {
+			powerlevel: Exclude<
+				Powerlevel,
+				(typeof Powerlevel)["Normal Power"]
+			>;
+			timeout: number;
+	  };
 
 @CCCommand(PowerlevelCommand.Report)
 export class PowerlevelCCReport extends PowerlevelCC {
-	public constructor(
-		options: WithAddress<PowerlevelCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<PowerlevelCCReportOptions>) {
 		super(options);
 
 		this.powerlevel = options.powerlevel;
@@ -351,9 +352,7 @@ export interface PowerlevelCCTestNodeSetOptions {
 @CCCommand(PowerlevelCommand.TestNodeSet)
 @useSupervision()
 export class PowerlevelCCTestNodeSet extends PowerlevelCC {
-	public constructor(
-		options: WithAddress<PowerlevelCCTestNodeSetOptions>,
-	) {
+	public constructor(options: WithAddress<PowerlevelCCTestNodeSetOptions>) {
 		super(options);
 		this.testNodeId = options.testNodeId;
 		this.powerlevel = options.powerlevel;

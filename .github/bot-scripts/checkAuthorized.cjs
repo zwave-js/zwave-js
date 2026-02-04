@@ -33,9 +33,7 @@ async function main(param) {
 		console.log(`Commenting user: ${user}`);
 		isAuthorized = authorizedUsers.includes(user);
 		console.log(`Is authorized: ${isAuthorized}`);
-	} else if (
-		context.payload.issue?.html_url?.includes("/pull/")
-	) {
+	} else if (context.payload.issue?.html_url?.includes("/pull/")) {
 		console.log("Comment appears in a PR, retrieving PR info...");
 		// Only the pull request author and authorized users may execute this command
 		const { data: pull } = await github.rest.pulls.get({

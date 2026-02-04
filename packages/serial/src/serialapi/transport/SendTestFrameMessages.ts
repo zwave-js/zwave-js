@@ -83,10 +83,7 @@ export class SendTestFrameRequest extends SendTestFrameRequestBase {
 		const nodeId = encodeNodeID(this.testNodeId, ctx.nodeIdType);
 		this.payload = Bytes.concat([
 			nodeId,
-			[
-				this.powerlevel,
-				this.callbackId,
-			],
+			[this.powerlevel, this.callbackId],
 		]);
 
 		return super.serialize(ctx);
@@ -142,7 +139,8 @@ export interface SendTestFrameTransmitReportOptions {
 	transmitStatus: TransmitStatus;
 }
 
-export class SendTestFrameTransmitReport extends SendTestFrameRequestBase
+export class SendTestFrameTransmitReport
+	extends SendTestFrameRequestBase
 	implements SuccessIndicator
 {
 	public constructor(

@@ -1,168 +1,168 @@
 {
-  "name": "zwave-js",
-  "version": "15.20.1",
-  "description": "Z-Wave driver written entirely in JavaScript/TypeScript",
-  "keywords": [],
-  "type": "module",
-  "exports": {
-    ".": {
-      "@@dev": "./src/index.ts",
-      "browser": "./build/esm/index_browser.js",
-      "import": "./build/esm/index.js",
-      "require": "./build/cjs/index.js"
-    },
-    "./safe": {
-      "@@dev": "./src/index_safe.ts",
-      "import": "./build/esm/index_safe.js",
-      "require": "./build/cjs/index_safe.js"
-    },
-    "./Controller": {
-      "@@dev": "./src/Controller.ts",
-      "import": "./build/esm/Controller.js",
-      "require": "./build/cjs/Controller.js"
-    },
-    "./Driver": {
-      "@@dev": "./src/Driver.ts",
-      "import": "./build/esm/Driver.js",
-      "require": "./build/cjs/Driver.js"
-    },
-    "./Error": {
-      "@@dev": "./src/Error.ts",
-      "import": "./build/esm/Error.js",
-      "require": "./build/cjs/Error.js"
-    },
-    "./Node": {
-      "@@dev": "./src/Node.ts",
-      "import": "./build/esm/Node.js",
-      "require": "./build/cjs/Node.js"
-    },
-    "./Testing": {
-      "@@dev": "./src/Testing.ts",
-      "import": "./build/esm/Testing.js",
-      "require": "./build/cjs/Testing.js"
-    },
-    "./Utils": {
-      "@@dev": "./src/Utils.ts",
-      "import": "./build/esm/Utils.js",
-      "require": "./build/cjs/Utils.js"
-    },
-    "./Values": {
-      "@@dev": "./src/Values.ts",
-      "import": "./build/esm/Values.js",
-      "require": "./build/cjs/Values.js"
-    },
-    "./Zniffer": {
-      "@@dev": "./src/Zniffer.ts",
-      "import": "./build/esm/Zniffer.js",
-      "require": "./build/cjs/Zniffer.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "imports": {
-    "#default_bindings/fs": {
-      "@@dev": "@zwave-js/core/bindings/fs/node",
-      "node": "@zwave-js/core/bindings/fs/node",
-      "default": "@zwave-js/core/bindings/fs/stub"
-    },
-    "#default_bindings/serial": {
-      "@@dev": "@zwave-js/serial/bindings/node",
-      "node": "@zwave-js/serial/bindings/node",
-      "default": "@zwave-js/serial/bindings/stub"
-    },
-    "#default_bindings/db": {
-      "@@dev": "@zwave-js/core/bindings/db/jsonl",
-      "node": "@zwave-js/core/bindings/db/jsonl",
-      "default": "@zwave-js/core/bindings/db/stub"
-    },
-    "#default_bindings/log": {
-      "@@dev": "@zwave-js/core/bindings/log/node",
-      "node": "@zwave-js/core/bindings/log/node",
-      "default": "@zwave-js/core/bindings/log/stub"
-    },
-    "#mdns_discovery": {
-      "@@dev": "./src/lib/driver/mDNSDiscovery/node.ts",
-      "require": "./build/cjs/lib/driver/mDNSDiscovery/node.js",
-      "node": "./build/esm/lib/driver/mDNSDiscovery/node.js",
-      "default": "./build/esm/lib/driver/mDNSDiscovery/stub.js"
-    }
-  },
-  "files": [
-    "bin/",
-    "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
-    "build/**/package.json"
-  ],
-  "sideEffects": false,
-  "bin": {
-    "mock-server": "bin/mock-server.cjs"
-  },
-  "author": {
-    "name": "AlCalzone",
-    "email": "d.griesel@gmx.net"
-  },
-  "license": "MIT",
-  "homepage": "https://github.com/zwave-js/zwave-js#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zwave-js/zwave-js.git"
-  },
-  "bugs": {
-    "url": "https://github.com/zwave-js/zwave-js/issues"
-  },
-  "funding": {
-    "url": "https://github.com/sponsors/AlCalzone/"
-  },
-  "engines": {
-    "node": ">= 20"
-  },
-  "scripts": {
-    "ts": "tsx --conditions=@@dev",
-    "codegen": "yarn ts maintenance/codegen.ts",
-    "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
-    "watch": "tsc -b tsconfig.build.json --pretty --watch",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
-    "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "extract-api": "yarn api-extractor run",
-    "test:ts": "vitest",
-    "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
-  },
-  "dependencies": {
-    "@alcalzone/jsonl-db": "^4.0.2",
-    "@andrewbranch/untar.js": "^1.0.3",
-    "@homebridge/ciao": "^1.3.4",
-    "@zwave-js/cc": "workspace:*",
-    "@zwave-js/config": "workspace:*",
-    "@zwave-js/core": "workspace:*",
-    "@zwave-js/host": "workspace:*",
-    "@zwave-js/nvmedit": "workspace:*",
-    "@zwave-js/serial": "workspace:*",
-    "@zwave-js/shared": "workspace:*",
-    "@zwave-js/testing": "workspace:*",
-    "@zwave-js/waddle": "^1.2.1",
-    "alcalzone-shared": "^5.0.0",
-    "ansi-colors": "^4.1.3",
-    "ky": "^1.8.1",
-    "mdns-server": "^1.0.11",
-    "p-queue": "^8.1.0",
-    "pathe": "^2.0.3",
-    "reflect-metadata": "^0.2.2",
-    "semver": "^7.7.2",
-    "serialport": "^13.0.0",
-    "source-map-support": "^0.5.21",
-    "winston": "^3.18.3"
-  },
-  "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.55.1",
-    "@types/node": "^20.19.23",
-    "@types/semver": "^7.7.1",
-    "@types/sinon": "^21.0.0",
-    "@types/source-map-support": "^0.5.10",
-    "@zwave-js/maintenance": "workspace:*",
-    "del-cli": "^7.0.0",
-    "mockdate": "^3.0.5",
-    "sinon": "^21.0.1",
-    "tsx": "^4.20.5",
-    "typescript": "5.9.3",
-    "vitest": "^4.0.18"
-  }
+	"name": "zwave-js",
+	"version": "15.20.1",
+	"description": "Z-Wave driver written entirely in JavaScript/TypeScript",
+	"keywords": [],
+	"homepage": "https://github.com/zwave-js/zwave-js#readme",
+	"bugs": {
+		"url": "https://github.com/zwave-js/zwave-js/issues"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "AlCalzone",
+		"email": "d.griesel@gmx.net"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/zwave-js/zwave-js.git"
+	},
+	"funding": {
+		"url": "https://github.com/sponsors/AlCalzone/"
+	},
+	"bin": {
+		"mock-server": "bin/mock-server.cjs"
+	},
+	"files": [
+		"bin/",
+		"build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
+		"build/**/package.json"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"imports": {
+		"#default_bindings/fs": {
+			"@@dev": "@zwave-js/core/bindings/fs/node",
+			"node": "@zwave-js/core/bindings/fs/node",
+			"default": "@zwave-js/core/bindings/fs/stub"
+		},
+		"#default_bindings/serial": {
+			"@@dev": "@zwave-js/serial/bindings/node",
+			"node": "@zwave-js/serial/bindings/node",
+			"default": "@zwave-js/serial/bindings/stub"
+		},
+		"#default_bindings/db": {
+			"@@dev": "@zwave-js/core/bindings/db/jsonl",
+			"node": "@zwave-js/core/bindings/db/jsonl",
+			"default": "@zwave-js/core/bindings/db/stub"
+		},
+		"#default_bindings/log": {
+			"@@dev": "@zwave-js/core/bindings/log/node",
+			"node": "@zwave-js/core/bindings/log/node",
+			"default": "@zwave-js/core/bindings/log/stub"
+		},
+		"#mdns_discovery": {
+			"@@dev": "./src/lib/driver/mDNSDiscovery/node.ts",
+			"require": "./build/cjs/lib/driver/mDNSDiscovery/node.js",
+			"node": "./build/esm/lib/driver/mDNSDiscovery/node.js",
+			"default": "./build/esm/lib/driver/mDNSDiscovery/stub.js"
+		}
+	},
+	"exports": {
+		".": {
+			"@@dev": "./src/index.ts",
+			"browser": "./build/esm/index_browser.js",
+			"import": "./build/esm/index.js",
+			"require": "./build/cjs/index.js"
+		},
+		"./safe": {
+			"@@dev": "./src/index_safe.ts",
+			"import": "./build/esm/index_safe.js",
+			"require": "./build/cjs/index_safe.js"
+		},
+		"./Controller": {
+			"@@dev": "./src/Controller.ts",
+			"import": "./build/esm/Controller.js",
+			"require": "./build/cjs/Controller.js"
+		},
+		"./Driver": {
+			"@@dev": "./src/Driver.ts",
+			"import": "./build/esm/Driver.js",
+			"require": "./build/cjs/Driver.js"
+		},
+		"./Error": {
+			"@@dev": "./src/Error.ts",
+			"import": "./build/esm/Error.js",
+			"require": "./build/cjs/Error.js"
+		},
+		"./Node": {
+			"@@dev": "./src/Node.ts",
+			"import": "./build/esm/Node.js",
+			"require": "./build/cjs/Node.js"
+		},
+		"./Testing": {
+			"@@dev": "./src/Testing.ts",
+			"import": "./build/esm/Testing.js",
+			"require": "./build/cjs/Testing.js"
+		},
+		"./Utils": {
+			"@@dev": "./src/Utils.ts",
+			"import": "./build/esm/Utils.js",
+			"require": "./build/cjs/Utils.js"
+		},
+		"./Values": {
+			"@@dev": "./src/Values.ts",
+			"import": "./build/esm/Values.js",
+			"require": "./build/cjs/Values.js"
+		},
+		"./Zniffer": {
+			"@@dev": "./src/Zniffer.ts",
+			"import": "./build/esm/Zniffer.js",
+			"require": "./build/cjs/Zniffer.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"scripts": {
+		"ts": "tsx --conditions=@@dev",
+		"codegen": "yarn ts maintenance/codegen.ts",
+		"build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
+		"watch": "tsc -b tsconfig.build.json --pretty --watch",
+		"postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
+		"clean": "del-cli build/ \"*.tsbuildinfo\"",
+		"extract-api": "yarn api-extractor run",
+		"test:ts": "vitest",
+		"test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
+	},
+	"dependencies": {
+		"@alcalzone/jsonl-db": "^4.0.2",
+		"@andrewbranch/untar.js": "^1.0.3",
+		"@homebridge/ciao": "^1.3.4",
+		"@zwave-js/cc": "workspace:*",
+		"@zwave-js/config": "workspace:*",
+		"@zwave-js/core": "workspace:*",
+		"@zwave-js/host": "workspace:*",
+		"@zwave-js/nvmedit": "workspace:*",
+		"@zwave-js/serial": "workspace:*",
+		"@zwave-js/shared": "workspace:*",
+		"@zwave-js/testing": "workspace:*",
+		"@zwave-js/waddle": "^1.2.1",
+		"alcalzone-shared": "^5.0.0",
+		"ansi-colors": "^4.1.3",
+		"ky": "^1.8.1",
+		"mdns-server": "^1.0.11",
+		"p-queue": "^8.1.0",
+		"pathe": "^2.0.3",
+		"reflect-metadata": "^0.2.2",
+		"semver": "^7.7.2",
+		"serialport": "^13.0.0",
+		"source-map-support": "^0.5.21",
+		"winston": "^3.18.3"
+	},
+	"devDependencies": {
+		"@alcalzone/esm2cjs": "^1.4.2",
+		"@microsoft/api-extractor": "^7.55.1",
+		"@types/node": "^20.19.23",
+		"@types/semver": "^7.7.1",
+		"@types/sinon": "^21.0.0",
+		"@types/source-map-support": "^0.5.10",
+		"@zwave-js/maintenance": "workspace:*",
+		"del-cli": "^7.0.0",
+		"mockdate": "^3.0.5",
+		"sinon": "^21.0.1",
+		"tsx": "^4.20.5",
+		"typescript": "5.9.3",
+		"vitest": "^4.0.18"
+	},
+	"engines": {
+		"node": ">= 20"
+	}
 }

@@ -67,8 +67,8 @@
 			"\t\t\t},",
 			"\t\t};",
 			"\t}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Serial API command with response": {
 		"scope": "typescript",
@@ -179,8 +179,8 @@
 			"\t\t\tmessage: { \"was sent\": this.wasSent },",
 			"\t\t};",
 			"\t}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Serial API command with response and callback": {
 		"scope": "typescript",
@@ -351,8 +351,8 @@
 			"\t\t\t},",
 			"\t\t};",
 			"\t}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Serial API command with callback": {
 		"scope": "typescript",
@@ -487,8 +487,8 @@
 			"\t\t\t},",
 			"\t\t};",
 			"\t}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Serial API command with subcommands": {
 		"scope": "typescript",
@@ -669,8 +669,8 @@
 			"\t\t\tmessage,",
 			"\t\t};",
 			"\t}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Serial API subcommand with response": {
 		"scope": "typescript",
@@ -758,8 +758,8 @@
 			"\t\tdelete message.payload;",
 			"\t\treturn ret;",
 			"\t}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Serial API subcommand with response (empty request)": {
 		"scope": "typescript",
@@ -805,8 +805,8 @@
 			"\t\tdelete message.payload;",
 			"\t\treturn ret;",
 			"\t}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Command Class log override": {
 		"scope": "typescript",
@@ -817,8 +817,8 @@
 			"\t\t...super.toLogEntry(ctx),",
 			"\t\tmessage: { ${1:someProp}: this.${1} },",
 			"\t};",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Command Class log override (empty)": {
 		"scope": "typescript",
@@ -830,8 +830,8 @@
 			"\t\t// Hide the default payload line",
 			"\t\tmessage: undefined,",
 			"\t};",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Command Class persistValues override": {
 		"scope": "typescript",
@@ -844,8 +844,8 @@
 			"\t${0://TODO: Implementation}",
 			"",
 			"\treturn true;",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave Command Class implementation": {
 		"scope": "typescript",
@@ -895,9 +895,9 @@
 			"\tdeclare ccCommand: ${1}Command;",
 			"}",
 			"",
-			"${0}"
+			"${0}",
 		],
-		"description": "Z-Wave Command Class implementation"
+		"description": "Z-Wave Command Class implementation",
 	},
 	"Z-Wave CC Values": {
 		"scope": "typescript",
@@ -912,9 +912,9 @@
 			"\t\t// Dynamic CC values go here",
 			"\t}),",
 			"});",
-			""
+			"",
 		],
-		"description": "Z-Wave Command Class values definition"
+		"description": "Z-Wave Command Class values definition",
 	},
 	"Z-Wave CC Value (static, property only)": {
 		"scope": "typescript",
@@ -924,9 +924,9 @@
 			"\t\"${1:property}\",",
 			"\t${2:// undefined, // meta}",
 			"\t${3:// { internal: true \\}, // value options}",
-			"),"
+			"),",
 		],
-		"description": "Static CC value"
+		"description": "Static CC value",
 	},
 	"Z-Wave CC Value (static, named property)": {
 		"scope": "typescript",
@@ -937,9 +937,9 @@
 			"\t\"${2:property}\",",
 			"\t${3:// undefined, // meta}",
 			"\t${4:// { internal: true \\}, // value options}",
-			"),"
+			"),",
 		],
-		"description": "Static CC value with name"
+		"description": "Static CC value with name",
 	},
 	"Z-Wave CC Value (static, named, property & key)": {
 		"scope": "typescript",
@@ -951,9 +951,9 @@
 			"\t\"${3:propertyKey}\",",
 			"\t${4:// undefined, // meta}",
 			"\t${5:// { internal: true \\}, // value options}",
-			"),"
+			"),",
 		],
-		"description": "Static CC value with name, property and propertyKey"
+		"description": "Static CC value with name, property and propertyKey",
 	},
 	"Z-Wave CC Value (dynamic, named property)": {
 		"scope": "typescript",
@@ -965,9 +965,9 @@
 			"\t({ property }) => typeof property === \"${3}\",",
 			"\t// (${2}: ${3}) => ({ ...ValueMetadata.Any }), // meta, can also be a static value",
 			"\t// (${2}: ${3}) => ({ internal: true }), // value options, can also be a static value",
-			"),"
+			"),",
 		],
-		"description": "Dynamic CC value with name"
+		"description": "Dynamic CC value with name",
 	},
 	"Z-Wave CC Value (dynamic, named, property & key)": {
 		"scope": "typescript",
@@ -980,9 +980,9 @@
 			"\t({ property, propertyKey }) => property === \"${1}\",",
 			"\t// (${2}: ${3}) => ({ ...ValueMetadata.Any }), // meta, can also be a static value",
 			"\t// (${2}: ${3}) => ({ internal: true }), // value options, can also be a static value",
-			"),"
+			"),",
 		],
-		"description": "Dynamic CC value with name, property and propertyKey"
+		"description": "Dynamic CC value with name, property and propertyKey",
 	},
 	"Z-Wave CC Command": {
 		"scope": "typescript",
@@ -1024,9 +1024,9 @@
 			"\t\treturn super.serialize(ctx);",
 			"\t}",
 			"}",
-			"${0}"
+			"${0}",
 		],
-		"description": "Specific implementation of a single CC command"
+		"description": "Specific implementation of a single CC command",
 	},
 	"Z-Wave CC Command (Report)": {
 		"scope": "typescript",
@@ -1060,18 +1060,18 @@
 			"\t\t// \t// ...",
 			"\t\t// });",
 			"\t}",
-			"}"
+			"}",
 		],
-		"description": "Specific implementation of a single CC report"
+		"description": "Specific implementation of a single CC report",
 	},
 	"ZWave CC Command (empty)": {
 		"scope": "typescript",
 		"prefix": "zwccemptycmd",
 		"body": [
 			"@CCCommand(${1:${TM_FILENAME_BASE/(.*)CC$/$1/}}Command.${2:Get})",
-			"export class ${1}CC${2} extends ${1}CC {}"
+			"export class ${1}CC${2} extends ${1}CC {}",
 		],
-		"description": "Specific implementation of CC command that is sent and expects no parameters"
+		"description": "Specific implementation of CC command that is sent and expects no parameters",
 	},
 	"ZWave CC Get Command (empty)": {
 		"scope": "typescript",
@@ -1079,9 +1079,9 @@
 		"body": [
 			"@CCCommand(${1:${TM_FILENAME_BASE/(.*)CC$/$1/}}Command.${2}Get)",
 			"@expectedCCResponse(${1}CC${2}Report)",
-			"export class ${1}CC${2}Get extends ${1}CC {}"
+			"export class ${1}CC${2}Get extends ${1}CC {}",
 		],
-		"description": "Specific implementation of a CC Get command that expects no parameters"
+		"description": "Specific implementation of a CC Get command that expects no parameters",
 	},
 	"ZWave test CC response implementation": {
 		"scope": "typescript",
@@ -1092,9 +1092,9 @@
 			"\treceived: ${1}CC${2}Report,",
 			") {",
 			"\treturn received.${3:type} === sent.${3};",
-			"}"
+			"}",
 		],
-		"description": "Tests if a received message belongs to this Get-type command"
+		"description": "Tests if a received message belongs to this Get-type command",
 	},
 	"Readonly property": {
 		"scope": "typescript",
@@ -1103,13 +1103,13 @@
 			"private _${1:value}: ${2:string};",
 			"public get ${1}(): ${2} {",
 			"\treturn this._${1};",
-			"}${0}"
-		]
+			"}${0}",
+		],
 	},
 	"Z-Wave CC property": {
 		"scope": "typescript",
 		"prefix": "zwccprop",
-		"body": ["@ccValue() public ${1:property}: ${2:number};${0}"]
+		"body": ["@ccValue() public ${1:property}: ${2:number};${0}"],
 	},
 	"Z-Wave CC API": {
 		"scope": "typescript",
@@ -1118,8 +1118,8 @@
 			"@API(CommandClasses.${1:${TM_FILENAME_BASE/(.*)CC$/$1/}})",
 			"export class ${1}CCAPI extends CCAPI {",
 			"\t${0:// TODO: Implementation}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave CC supportsCommand": {
 		"scope": "typescript",
@@ -1135,9 +1135,9 @@
 			"\t}",
 			"\treturn super.supportsCommand(cmd);",
 			"}",
-			""
+			"",
 		],
-		"description": "Implementation of CCAPI.supportsCommand"
+		"description": "Implementation of CCAPI.supportsCommand",
 	},
 	"Z-Wave CC API assert command supported": {
 		"scope": "typescript",
@@ -1147,9 +1147,9 @@
 			"\t${1:${TM_FILENAME_BASE/(.*)CC$/$1/}}Command,",
 			"\t${1}Command.${2:Get},",
 			");",
-			""
+			"",
 		],
-		"description": "Implementation of CCAPI.supportsCommand"
+		"description": "Implementation of CCAPI.supportsCommand",
 	},
 	"Z-Wave CC interview procedure": {
 		"scope": "typescript",
@@ -1187,8 +1187,8 @@
 			"",
 			"\t// Remember that the interview is complete",
 			"\tthis.setInterviewComplete(ctx, true);",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave CC interview requirements": {
 		"scope": "typescript",
@@ -1199,8 +1199,8 @@
 			"\t\t...super.determineRequiredCCInterviews(),",
 			"\t\tCommandClasses.${0:${TM_FILENAME_BASE/(.*)CC$/$1/}},",
 			"\t];",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave CC Refresh Values": {
 		"scope": "typescript",
@@ -1218,8 +1218,8 @@
 			"\t});",
 			"",
 			"\t${0:// TODO: Implementation}",
-			"}"
-		]
+			"}",
+		],
 	},
 	"Z-Wave CC Test": {
 		"scope": "typescript",
@@ -1342,8 +1342,8 @@
 			"\t\t});",
 			"\t});",
 			"});",
-			""
+			"",
 		],
-		"description": "Specific implementation of a single CC command"
-	}
+		"description": "Specific implementation of a single CC command",
+	},
 }

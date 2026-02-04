@@ -48,8 +48,7 @@ async function main(param) {
 
 		// Create a new issue referencing the original discussion using GitHub's template
 		const issueTitle = context.payload.discussion.title;
-		const issueBody =
-			`### Discussed in https://github.com/${context.repo.owner}/${context.repo.repo}/discussions/${context.payload.discussion.number}
+		const issueBody = `### Discussed in https://github.com/${context.repo.owner}/${context.repo.repo}/discussions/${context.payload.discussion.number}
 
 <div type='discussions-op-text'>
 
@@ -189,8 +188,8 @@ async function findBotAnalysisComment(github, context) {
 		// Find the comment from zwave-js-bot that contains the AUTO_ANALYSIS_COMMENT_TAG
 		const botComment = comments.find(
 			(c) =>
-				c.author.login === "zwave-js-bot"
-				&& c.body.includes(AUTO_ANALYSIS_COMMENT_TAG),
+				c.author.login === "zwave-js-bot" &&
+				c.body.includes(AUTO_ANALYSIS_COMMENT_TAG),
 		);
 
 		if (!botComment) {

@@ -15,6 +15,7 @@ import type {
 import { isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";
 import path from "pathe";
+
 import { hexKeyRegex4Digits, throwInvalidConfig } from "./utils_safe.js";
 
 export type ManufacturersMap = Map<number, string>;
@@ -65,7 +66,7 @@ export async function loadManufacturersInternal(
 
 		return manufacturers;
 	} catch (e) {
-		if (isZWaveError(e) || ((e as any).code === "ENOENT")) {
+		if (isZWaveError(e) || (e as any).code === "ENOENT") {
 			throw e;
 		} else {
 			throwInvalidConfig("manufacturers");

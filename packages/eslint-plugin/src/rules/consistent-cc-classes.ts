@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	AST_NODE_TYPES,
 	ESLintUtils,
@@ -5,7 +7,7 @@ import {
 	type TSESTree,
 } from "@typescript-eslint/utils";
 import { type CommandClasses, applicationCCs, getCCName } from "@zwave-js/core";
-import path from "node:path";
+
 import {
 	findDecorator,
 	findDecoratorContainingCCId,
@@ -23,8 +25,9 @@ function getRequiredInterviewCCsFromMethod(
 			s,
 		): s is TSESTree.ReturnStatement & {
 			argument: TSESTree.ArrayExpression;
-		} => s.type === AST_NODE_TYPES.ReturnStatement
-			&& s.argument?.type === AST_NODE_TYPES.ArrayExpression,
+		} =>
+			s.type === AST_NODE_TYPES.ReturnStatement &&
+			s.argument?.type === AST_NODE_TYPES.ArrayExpression,
 	);
 	if (!returnExpression) return;
 
@@ -70,9 +73,9 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 						messageId: "wrong-filename",
 					});
 				} else if (
-					context.filename.split(path.sep).includes(
-						"manufacturerProprietary",
-					)
+					context.filename
+						.split(path.sep)
+						.includes("manufacturerProprietary")
 				) {
 					// The rules for manufacturer proprietary CCs are different
 					return;
@@ -107,8 +110,9 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 
 				// ...be exported
 				if (
-					node.parent.type !== AST_NODE_TYPES.ExportNamedDeclaration
-					|| node.parent.exportKind !== "value"
+					node.parent.type !==
+						AST_NODE_TYPES.ExportNamedDeclaration ||
+					node.parent.exportKind !== "value"
 				) {
 					context.report({
 						node,
@@ -116,14 +120,12 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 						messageId: "must-export",
 						fix: (fixer) => {
 							const classKeyword = context.sourceCode
-								.getTokensBefore(
-									node.id,
-									{
-										filter: (t) =>
-											t.type === "Keyword"
-											&& t.value === "class",
-									},
-								).at(-1);
+								.getTokensBefore(node.id, {
+									filter: (t) =>
+										t.type === "Keyword" &&
+										t.value === "class",
+								})
+								.at(-1);
 
 							return fixer.insertTextBefore(
 								classKeyword!,
@@ -135,9 +137,9 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 
 				// ...inherit from CommandClass
 				if (
-					!node.superClass
-					|| node.superClass.type !== AST_NODE_TYPES.Identifier
-					|| node.superClass.name !== "CommandClass"
+					!node.superClass ||
+					node.superClass.type !== AST_NODE_TYPES.Identifier ||
+					node.superClass.name !== "CommandClass"
 				) {
 					context.report({
 						node,
@@ -145,13 +147,13 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 						fix: (fixer) =>
 							node.superClass
 								? fixer.replaceText(
-									node.superClass,
-									"CommandClass",
-								)
+										node.superClass,
+										"CommandClass",
+									)
 								: fixer.insertTextAfter(
-									node.id,
-									" extends CommandClass",
-								),
+										node.id,
+										" extends CommandClass",
+									),
 						messageId: "must-inherit-commandclass",
 					});
 				}
@@ -159,15 +161,15 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 			MethodDefinition(node) {
 				if (isInCCCommand) {
 					if (
-						node.key.type === AST_NODE_TYPES.Identifier
-						&& node.key.name === "from"
+						node.key.type === AST_NODE_TYPES.Identifier &&
+						node.key.name === "from"
 					) {
 						hasFromImpl = true;
 					}
 
 					if (
-						node.key.type === AST_NODE_TYPES.Identifier
-						&& node.key.name === "constructor"
+						node.key.type === AST_NODE_TYPES.Identifier &&
+						node.key.name === "constructor"
 					) {
 						ctor = node;
 					}
@@ -181,8 +183,8 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 
 				// ...that are called determineRequiredCCInterviews
 				if (
-					node.key.type !== AST_NODE_TYPES.Identifier
-					|| node.key.name !== "determineRequiredCCInterviews"
+					node.key.type !== AST_NODE_TYPES.Identifier ||
+					node.key.name !== "determineRequiredCCInterviews"
 				) {
 					return;
 				}
@@ -200,8 +202,9 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 					return;
 				}
 
-				const requiredApplicationCCs = requiredCCs
-					.filter((cc) => applicationCCs.includes(cc.ccId));
+				const requiredApplicationCCs = requiredCCs.filter((cc) =>
+					applicationCCs.includes(cc.ccId),
+				);
 				if (requiredApplicationCCs.length === 0) return;
 
 				// This is a non-application CC that depends on at least one application CC
@@ -269,8 +272,8 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 				},
 			) {
 				if (
-					node.superClass?.type === AST_NODE_TYPES.Identifier
-					&& node.superClass.name.endsWith("CC")
+					node.superClass?.type === AST_NODE_TYPES.Identifier &&
+					node.superClass.name.endsWith("CC")
 				) {
 					// TODO: Implement more rules, for now only look at constructor/from
 					isInCCCommand = true;
@@ -298,18 +301,16 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 						messageId: "api-wrong-filename",
 					});
 				} else if (
-					context.filename.split(path.sep).includes(
-						"manufacturerProprietary",
-					)
+					context.filename
+						.split(path.sep)
+						.includes("manufacturerProprietary")
 				) {
 					// The rules for manufacturer proprietary CCs are different
 					return;
 				}
 
 				// ...have an @API decorator
-				const apiDecorator = findDecoratorContainingCCId(node, [
-					"API",
-				]);
+				const apiDecorator = findDecoratorContainingCCId(node, ["API"]);
 				if (!apiDecorator) {
 					context.report({
 						node,
@@ -320,8 +321,9 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 
 				// ...be exported
 				if (
-					node.parent.type !== AST_NODE_TYPES.ExportNamedDeclaration
-					|| node.parent.exportKind !== "value"
+					node.parent.type !==
+						AST_NODE_TYPES.ExportNamedDeclaration ||
+					node.parent.exportKind !== "value"
 				) {
 					context.report({
 						node,
@@ -329,14 +331,12 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 						messageId: "must-export",
 						fix: (fixer) => {
 							const classKeyword = context.sourceCode
-								.getTokensBefore(
-									node.id,
-									{
-										filter: (t) =>
-											t.type === "Keyword"
-											&& t.value === "class",
-									},
-								).at(-1);
+								.getTokensBefore(node.id, {
+									filter: (t) =>
+										t.type === "Keyword" &&
+										t.value === "class",
+								})
+								.at(-1);
 
 							return fixer.insertTextBefore(
 								classKeyword!,
@@ -348,23 +348,18 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 
 				// ...inherit from CCAPI or PhysicalCCAPI
 				if (
-					!node.superClass
-					|| node.superClass.type !== AST_NODE_TYPES.Identifier
-					|| !apiBaseClasses.has(
-						node.superClass.name,
-					)
+					!node.superClass ||
+					node.superClass.type !== AST_NODE_TYPES.Identifier ||
+					!apiBaseClasses.has(node.superClass.name)
 				) {
 					const createFixer = (baseClass: string) => {
 						return (fixer: TSESLint.RuleFixer) =>
 							node.superClass
-								? fixer.replaceText(
-									node.superClass,
-									baseClass,
-								)
+								? fixer.replaceText(node.superClass, baseClass)
 								: fixer.insertTextAfter(
-									node.id,
-									` extends ${baseClass}`,
-								);
+										node.id,
+										` extends ${baseClass}`,
+									);
 					};
 					context.report({
 						node,

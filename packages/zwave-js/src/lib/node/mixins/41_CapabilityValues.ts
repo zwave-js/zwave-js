@@ -7,6 +7,7 @@ import {
 	type ZWavePlusRoleType,
 } from "@zwave-js/cc";
 import type { MaybeNotKnown } from "@zwave-js/core";
+
 import { NodeValuesMixin } from "./40_Values.js";
 
 export interface NodeCapabilityValues {
@@ -22,7 +23,8 @@ export interface NodeCapabilityValues {
 	get supportsWakeUpOnDemand(): MaybeNotKnown<boolean>;
 }
 
-export abstract class NodeCapabilityValuesMixin extends NodeValuesMixin
+export abstract class NodeCapabilityValuesMixin
+	extends NodeValuesMixin
 	implements NodeCapabilityValues
 {
 	public get manufacturerId(): MaybeNotKnown<number> {

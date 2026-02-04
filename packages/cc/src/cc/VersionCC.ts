@@ -25,6 +25,7 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -83,14 +84,10 @@ export const VersionCCValues = V.defineCCValues(CommandClasses.Version, {
 			supportsEndpoints: false,
 		} as const,
 	),
-	...V.staticProperty(
-		"supportsZWaveSoftwareGet",
-		undefined,
-		{
-			minVersion: 3,
-			internal: true,
-		} as const,
-	),
+	...V.staticProperty("supportsZWaveSoftwareGet", undefined, {
+		minVersion: 3,
+		internal: true,
+	} as const),
 	...V.staticProperty(
 		"sdkVersion",
 		{
@@ -275,12 +272,11 @@ export class VersionCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			requestedCC,
 		});
-		const response = await this.host.sendCommand<
-			VersionCCCommandClassReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<VersionCCCommandClassReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.ccVersion;
 	}
 
@@ -337,12 +333,11 @@ export class VersionCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			VersionCCCapabilitiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<VersionCCCapabilitiesReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, ["supportsZWaveSoftwareGet"]);
 		}
@@ -374,12 +369,11 @@ export class VersionCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			VersionCCZWaveSoftwareReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<VersionCCZWaveSoftwareReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"sdkVersion",
@@ -407,9 +401,7 @@ export class VersionCC extends CommandClass {
 		return [CommandClasses["Manufacturer Specific"]];
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		// SDS13782: In a Multi Channel device, the Version Command Class MUST be supported by the Root Device, while
@@ -423,13 +415,11 @@ export class VersionCC extends CommandClass {
 		const endpoint = this.getEndpoint(ctx)!;
 
 		// Use the CC API of the root device for all queries
-		const api = CCAPI.create(
-			CommandClasses.Version,
-			ctx,
-			node,
-		).withOptions({
-			priority: MessagePriority.NodeQuery,
-		});
+		const api = CCAPI.create(CommandClasses.Version, ctx, node).withOptions(
+			{
+				priority: MessagePriority.NodeQuery,
+			},
+		);
 
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
@@ -444,11 +434,9 @@ export class VersionCC extends CommandClass {
 			if (maxImplemented === 0) {
 				ctx.logNode(
 					node.id,
-					`  skipping query for ${CommandClasses[cc]} (${
-						num2hex(
-							cc,
-						)
-					}) because max implemented version is ${maxImplemented}`,
+					`  skipping query for ${CommandClasses[cc]} (${num2hex(
+						cc,
+					)}) because max implemented version is ${maxImplemented}`,
 				);
 				return;
 			}
@@ -475,16 +463,16 @@ export class VersionCC extends CommandClass {
 							version: supportedVersion,
 						});
 					}
-					logMessage = `  supports CC ${CommandClasses[cc]} (${
-						num2hex(cc)
-					}) in version ${supportedVersion}`;
+					logMessage = `  supports CC ${CommandClasses[cc]} (${num2hex(
+						cc,
+					)}) in version ${supportedVersion}`;
 				} else {
 					// We were lied to - the NIF said this CC is supported, now the node claims it isn't
 					// Make sure this is not a critical CC, which must be supported though
 
 					if (
-						cc === CommandClasses.Version
-						|| cc === CommandClasses["Manufacturer Specific"]
+						cc === CommandClasses.Version ||
+						cc === CommandClasses["Manufacturer Specific"]
 					) {
 						logMessage = `  claims NOT to support CC ${
 							CommandClasses[cc]
@@ -493,19 +481,20 @@ export class VersionCC extends CommandClass {
 						} supports version 1...`;
 						endpoint.addCC(cc, { version: 1 });
 					} else if (
-						(cc === CommandClasses.Security
-							&& node.hasSecurityClass(SecurityClass.S0_Legacy))
-						|| (cc === CommandClasses["Security 2"]
-							&& securityClassOrder.some((sc) =>
-								securityClassIsS2(sc)
-								&& node.hasSecurityClass(sc)
+						(cc === CommandClasses.Security &&
+							node.hasSecurityClass(SecurityClass.S0_Legacy)) ||
+						(cc === CommandClasses["Security 2"] &&
+							securityClassOrder.some(
+								(sc) =>
+									securityClassIsS2(sc) &&
+									node.hasSecurityClass(sc),
 							))
 					) {
 						logMessage = `  claims NOT to support CC ${
 							CommandClasses[cc]
-						} (${
-							num2hex(cc)
-						}), but it is known to support it. Assuming the ${
+						} (${num2hex(
+							cc,
+						)}), but it is known to support it. Assuming the ${
 							this.endpointIndex === 0 ? "node" : "endpoint"
 						} supports version 1...`;
 						endpoint.addCC(cc, { version: 1 });
@@ -524,11 +513,9 @@ export class VersionCC extends CommandClass {
 			} else {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message: `CC version query for ${
-						getCCName(
-							cc,
-						)
-					} timed out - assuming the ${
+					message: `CC version query for ${getCCName(
+						cc,
+					)} timed out - assuming the ${
 						this.endpointIndex === 0 ? "node" : "endpoint"
 					} supports version 1...`,
 					level: "warn",
@@ -552,14 +539,13 @@ export class VersionCC extends CommandClass {
 			const versionGetResponse = await api.get();
 			if (versionGetResponse) {
 				let logMessage = `received response for node versions:
-  library type:      ${ZWaveLibraryTypes[versionGetResponse.libraryType]} (${
-					num2hex(versionGetResponse.libraryType)
-				})
+  library type:      ${ZWaveLibraryTypes[versionGetResponse.libraryType]} (${num2hex(
+		versionGetResponse.libraryType,
+  )})
   protocol version:  ${versionGetResponse.protocolVersion}
   firmware versions: ${versionGetResponse.firmwareVersions.join(", ")}`;
 				if (versionGetResponse.hardwareVersion != undefined) {
-					logMessage +=
-						`\n  hardware version:  ${versionGetResponse.hardwareVersion}`;
+					logMessage += `\n  hardware version:  ${versionGetResponse.hardwareVersion}`;
 				}
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
@@ -648,9 +634,7 @@ export interface VersionCCReportOptions {
 @ccValueProperty("firmwareVersions", VersionCCValues.firmwareVersions)
 @ccValueProperty("hardwareVersion", VersionCCValues.hardwareVersion)
 export class VersionCCReport extends VersionCC {
-	public constructor(
-		options: WithAddress<VersionCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<VersionCCReportOptions>) {
 		super(options);
 
 		if (!/^\d+\.\d+(\.\d+)?$/.test(options.protocolVersion)) {
@@ -660,15 +644,13 @@ export class VersionCCReport extends VersionCC {
 			);
 		} else if (
 			!options.firmwareVersions.every((fw) =>
-				/^\d+\.\d+(\.\d+)?$/.test(fw)
+				/^\d+\.\d+(\.\d+)?$/.test(fw),
 			)
 		) {
 			throw new ZWaveError(
-				`firmwareVersions must be an array of strings in the format "major.minor" or "major.minor.patch", received "${
-					JSON.stringify(
-						options.firmwareVersions,
-					)
-				}"`,
+				`firmwareVersions must be an array of strings in the format "major.minor" or "major.minor.patch", received "${JSON.stringify(
+					options.firmwareVersions,
+				)}"`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -689,9 +671,7 @@ export class VersionCCReport extends VersionCC {
 			// V2+
 			hardwareVersion = raw.payload[5];
 			const additionalFirmwares = raw.payload[6];
-			validatePayload(
-				raw.payload.length >= 7 + 2 * additionalFirmwares,
-			);
+			validatePayload(raw.payload.length >= 7 + 2 * additionalFirmwares);
 			for (let i = 0; i < additionalFirmwares; i++) {
 				firmwareVersions.push(
 					`${raw.payload[7 + 2 * i]}.${raw.payload[7 + 2 * i + 1]}`,
@@ -840,9 +820,7 @@ function testResponseForVersionCommandClassGet(
 	testResponseForVersionCommandClassGet,
 )
 export class VersionCCCommandClassGet extends VersionCC {
-	public constructor(
-		options: WithAddress<VersionCCCommandClassGetOptions>,
-	) {
+	public constructor(options: WithAddress<VersionCCCommandClassGetOptions>) {
 		super(options);
 		this.requestedCC = options.requestedCC;
 	}

@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	type CommandClass,
 	InvalidCC,
@@ -19,7 +21,7 @@ import {
 	securityClassOrder as allSecurityClasses,
 } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
@@ -104,10 +106,9 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 			async handleCC(controller, self, receivedCC) {
 				if (receivedCC instanceof InvalidCC) {
 					if (
-						receivedCC.reason
-							=== ZWaveErrorCodes.Security2CC_CannotDecode
-						|| receivedCC.reason
-							=== ZWaveErrorCodes.Security2CC_NoSPAN
+						receivedCC.reason ===
+							ZWaveErrorCodes.Security2CC_CannotDecode ||
+						receivedCC.reason === ZWaveErrorCodes.Security2CC_NoSPAN
 					) {
 						const nonce = await sm2Node.generateNonce(
 							controller.ownNodeId,
@@ -129,8 +130,8 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 		const respondToSupervisionGet: MockNodeBehavior = {
 			handleCC(controller, self, receivedCC) {
 				if (
-					receivedCC instanceof Security2CCMessageEncapsulation
-					&& receivedCC.encapsulated instanceof SupervisionCCGet
+					receivedCC instanceof Security2CCMessageEncapsulation &&
+					receivedCC.encapsulated instanceof SupervisionCCGet
 				) {
 					let cc: CommandClass = new SupervisionCCReport({
 						nodeId: controller.ownNodeId,
@@ -155,10 +156,10 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 
 		mockNode.assertReceivedControllerFrame(
 			(f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof SecurityCCCommandEncapsulation
-				&& f.payload.encapsulated
-					instanceof SecurityCCCommandsSupportedGet,
+				f.type === MockZWaveFrameType.Request &&
+				f.payload instanceof SecurityCCCommandEncapsulation &&
+				f.payload.encapsulated instanceof
+					SecurityCCCommandsSupportedGet,
 		);
 	},
 });

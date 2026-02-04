@@ -44,8 +44,9 @@ export class GetRoutingInfoRequest extends Message {
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		const nodeId = encodeNodeID(this.sourceNodeId, ctx.nodeIdType);
-		const optionsByte = (this.removeBadLinks ? 0b1000_0000 : 0)
-			| (this.removeNonRepeaters ? 0b0100_0000 : 0);
+		const optionsByte =
+			(this.removeBadLinks ? 0b1000_0000 : 0) |
+			(this.removeNonRepeaters ? 0b0100_0000 : 0);
 		this.payload = Bytes.concat([
 			nodeId,
 			[

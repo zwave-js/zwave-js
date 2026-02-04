@@ -1,6 +1,8 @@
 import { Bytes, type BytesView, sum } from "@zwave-js/shared";
+
 import type { BasicDeviceClass } from "../registries/DeviceClasses.js";
 import { validatePayload } from "../util/misc.js";
+
 import { CommandClasses } from "./CommandClasses.js";
 import { NodeIDType } from "./NodeID.js";
 import type { ProtocolVersion } from "./Protocol.js";
@@ -147,9 +149,9 @@ export function encodeCCList(
 	controlledCCs: readonly CommandClasses[],
 ): Bytes {
 	const bufferLength =
-		sum(supportedCCs.map((cc) => (isExtendedCCId(cc) ? 2 : 1)))
-		+ (controlledCCs.length > 0 ? 1 : 0) // support/control mark
-		+ sum(controlledCCs.map((cc) => (isExtendedCCId(cc) ? 2 : 1)));
+		sum(supportedCCs.map((cc) => (isExtendedCCId(cc) ? 2 : 1))) +
+		(controlledCCs.length > 0 ? 1 : 0) + // support/control mark
+		sum(controlledCCs.map((cc) => (isExtendedCCId(cc) ? 2 : 1)));
 
 	const ret = new Bytes(bufferLength);
 	let offset = 0;
@@ -196,17 +198,17 @@ export interface NodeProtocolInfo {
 	hasSpecificDeviceClass: boolean;
 }
 
-export interface NodeProtocolInfoAndDeviceClass
-	extends Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-{
+export interface NodeProtocolInfoAndDeviceClass extends Omit<
+	NodeProtocolInfo,
+	"hasSpecificDeviceClass"
+> {
 	basicDeviceClass: BasicDeviceClass;
 	genericDeviceClass: number;
 	specificDeviceClass: number;
 }
 
-export type NodeInformationFrame =
-	& NodeProtocolInfoAndDeviceClass
-	& ApplicationNodeInformation;
+export type NodeInformationFrame = NodeProtocolInfoAndDeviceClass &
+	ApplicationNodeInformation;
 
 export function parseNodeProtocolInfo(
 	buffer: BytesView,
@@ -266,7 +268,7 @@ export function parseNodeProtocolInfo(
 			nodeType = NodeType.Controller;
 			break;
 		case 0b1000:
-			// Routing end node
+		// Routing end node
 		default:
 			// Non-routing end node
 			nodeType = NodeType["End Node"];
@@ -378,10 +380,7 @@ export function parseNodeInformationFrame(
 	buffer: BytesView,
 	isLongRange: boolean = false,
 ): NodeInformationFrame {
-	const result = parseNodeProtocolInfoAndDeviceClass(
-		buffer,
-		isLongRange,
-	);
+	const result = parseNodeProtocolInfoAndDeviceClass(buffer, isLongRange);
 	const info = result.info;
 	let offset = result.bytesRead;
 

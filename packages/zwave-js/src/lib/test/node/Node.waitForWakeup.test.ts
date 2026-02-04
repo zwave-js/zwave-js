@@ -7,6 +7,7 @@ import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -81,7 +82,10 @@ test("resolves when a sleeping node wakes up", async ({ context, expect }) => {
 	node.destroy();
 });
 
-test("resolves immediately when called on an awake node", async ({ context, expect }) => {
+test("resolves immediately when called on an awake node", async ({
+	context,
+	expect,
+}) => {
 	const { makeNode } = context;
 	const node = makeNode(true);
 	node.markAsAwake();
@@ -90,7 +94,10 @@ test("resolves immediately when called on an awake node", async ({ context, expe
 	node.destroy();
 });
 
-test("throws when called on a non-sleeping node", async ({ context, expect }) => {
+test("throws when called on a non-sleeping node", async ({
+	context,
+	expect,
+}) => {
 	const { makeNode } = context;
 	const node = makeNode(false);
 

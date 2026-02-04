@@ -1,9 +1,11 @@
 import { pick } from "@zwave-js/shared";
 import sinon from "sinon";
 import { test } from "vitest";
+
 import { CommandClasses } from "../definitions/CommandClasses.js";
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import { ValueMetadata } from "./Metadata.js";
 import { ValueDB, dbKeyToValueIdFast, valueEquals } from "./ValueDB.js";
 import type { ValueID } from "./_Types.js";
@@ -505,9 +507,9 @@ test("findValues() -> should return all values whose id matches the given predic
 	for (const { value, ...valueId } of values) {
 		valueDB.setValue(valueId, value);
 	}
-	t.expect(
-		valueDB.findValues((id) => id.endpoint === 2),
-	).toStrictEqual(values.filter((v) => v.endpoint === 2));
+	t.expect(valueDB.findValues((id) => id.endpoint === 2)).toStrictEqual(
+		values.filter((v) => v.endpoint === 2),
+	);
 });
 
 test("findValues() -> should ignore values from another node", (t) => {
@@ -551,9 +553,9 @@ test("findValues() -> should ignore values from another node", (t) => {
 
 	// The node has nodeID 2
 	const { nodeId, ...expected } = values[1];
-	t.expect(
-		valueDB.findValues((id) => id.endpoint === 2),
-	).toStrictEqual([expected]);
+	t.expect(valueDB.findValues((id) => id.endpoint === 2)).toStrictEqual([
+		expected,
+	]);
 });
 
 test("Metadata is assigned to a specific combination of endpoint, property name (and property key)", (t) => {
@@ -567,8 +569,9 @@ test("Metadata is assigned to a specific combination of endpoint, property name 
 	t.expect(valueDB.hasMetadata(valueId)).toBe(true);
 	t.expect(valueDB.hasMetadata({ ...valueId, propertyKey: 4 })).toBe(false);
 	t.expect(valueDB.getMetadata(valueId)).toBe(ValueMetadata.Any);
-	t.expect(valueDB.getMetadata({ ...valueId, propertyKey: 4 }))
-		.toBeUndefined();
+	t.expect(
+		valueDB.getMetadata({ ...valueId, propertyKey: 4 }),
+	).toBeUndefined();
 });
 
 test("Metadata is cleared together with the values", (t) => {
@@ -743,9 +746,9 @@ test("findMetadata() -> should return all metadata whose id matches the given pr
 			metadata: meta,
 		}));
 
-	t.expect(
-		valueDB.findMetadata((id) => id.endpoint === 2),
-	).toStrictEqual(expected);
+	t.expect(valueDB.findMetadata((id) => id.endpoint === 2)).toStrictEqual(
+		expected,
+	);
 });
 
 test("findMetadata() -> should ignore metadata from another node", (t) => {
@@ -794,9 +797,9 @@ test("findMetadata() -> should ignore metadata from another node", (t) => {
 		...pick(expectedMeta, ["commandClass", "endpoint", "property"]),
 		metadata: expectedMeta.meta,
 	};
-	t.expect(
-		valueDB.findMetadata((id) => id.endpoint === 2),
-	).toStrictEqual([expected]);
+	t.expect(valueDB.findMetadata((id) => id.endpoint === 2)).toStrictEqual([
+		expected,
+	]);
 });
 
 {
@@ -917,7 +920,7 @@ test("findMetadata() -> should ignore metadata from another node", (t) => {
 		const { valueDB } = setup();
 		for (const valueId of invalidValueIDs) {
 			t.expect(() =>
-				valueDB.setValue(valueId as any, 0, { noThrow: true })
+				valueDB.setValue(valueId as any, 0, { noThrow: true }),
 			).not.toThrow();
 		}
 	});
@@ -928,7 +931,7 @@ test("findMetadata() -> should ignore metadata from another node", (t) => {
 			t.expect(() =>
 				valueDB.setMetadata(valueId as any, {} as any, {
 					noThrow: true,
-				})
+				}),
 			).not.toThrow();
 		}
 	});
@@ -1043,28 +1046,38 @@ test("valueEquals() -> should return false for different objects", (t) => {
 });
 
 test("valueEquals() -> should return false for functions and symbols", (t) => {
-	t.expect(valueEquals(() => {}, () => {})).toBe(false);
+	t.expect(
+		valueEquals(
+			() => {},
+			() => {},
+		),
+	).toBe(false);
 	t.expect(valueEquals(Symbol("a"), Symbol("a"))).toBe(false);
 });
 
 test("valueEquals() -> should return true for equal nested arrays", (t) => {
-	t.expect(valueEquals([1, [2, 3], [4, [5, 6]]], [1, [2, 3], [4, [5, 6]]]))
-		.toBe(true);
+	t.expect(
+		valueEquals([1, [2, 3], [4, [5, 6]]], [1, [2, 3], [4, [5, 6]]]),
+	).toBe(true);
 });
 
 test("valueEquals() -> should return false for different nested arrays", (t) => {
-	t.expect(valueEquals([1, [2, 3], [4, [5, 6]]], [1, [2, 3], [4, [5, 7]]]))
-		.toBe(false);
+	t.expect(
+		valueEquals([1, [2, 3], [4, [5, 6]]], [1, [2, 3], [4, [5, 7]]]),
+	).toBe(false);
 	t.expect(valueEquals([1, [2, 3]], [1, [2, 3, 4]])).toBe(false);
 });
 
 // Tests für verschachtelte Objekte
 test("valueEquals() -> should return true for equal nested objects", (t) => {
 	t.expect(
-		valueEquals({ a: 1, b: { c: 2, d: { e: 3 } } }, {
-			a: 1,
-			b: { c: 2, d: { e: 3 } },
-		}),
+		valueEquals(
+			{ a: 1, b: { c: 2, d: { e: 3 } } },
+			{
+				a: 1,
+				b: { c: 2, d: { e: 3 } },
+			},
+		),
 	).toBe(true);
 });
 
@@ -1076,10 +1089,7 @@ test("valueEquals() -> should return false for different nested objects", (t) =>
 		),
 	).toBe(false);
 	t.expect(
-		valueEquals(
-			{ a: 1, b: { c: 2 } },
-			{ a: 1, b: { c: 2, d: 3 } },
-		),
+		valueEquals({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2, d: 3 } }),
 	).toBe(false);
 });
 

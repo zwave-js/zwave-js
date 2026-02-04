@@ -1,5 +1,6 @@
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
+
 import { computeCMAC, computeMAC } from "./operations.js";
 
 function assertBufferEquals(

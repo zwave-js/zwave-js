@@ -8,6 +8,7 @@ import {
 import type { MockControllerBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { vi } from "vitest";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldRespond = true;
@@ -103,13 +104,12 @@ integrationTest(
 			shouldRespond = false;
 			mockController.autoAckHostMessages = false;
 
-			const serialPortCloseSpy = vi.spyOn(mockController.serial, "close")
-				.mockImplementation(
-					async () => {
-						shouldRespond = true;
-						mockController.autoAckHostMessages = true;
-					},
-				);
+			const serialPortCloseSpy = vi
+				.spyOn(mockController.serial, "close")
+				.mockImplementation(async () => {
+					shouldRespond = true;
+					mockController.autoAckHostMessages = true;
+				});
 
 			await wait(1000);
 
@@ -197,9 +197,9 @@ integrationTest(
 
 			// And the controller does not get soft-reset
 			t.expect(() =>
-				mockController.assertReceivedHostMessage((msg) =>
-					msg.functionType === FunctionType.SoftReset
-				)
+				mockController.assertReceivedHostMessage(
+					(msg) => msg.functionType === FunctionType.SoftReset,
+				),
 			).toThrow();
 		},
 	},

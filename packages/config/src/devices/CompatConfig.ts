@@ -7,7 +7,9 @@ import {
 } from "@zwave-js/core";
 import { type JSONObject, pick } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { throwInvalidConfig, tryParseCCId } from "../utils_safe.js";
+
 import { type ConditionalItem, conditionApplies } from "./ConditionalItem.js";
 import type { DeviceID } from "./shared.js";
 
@@ -19,20 +21,20 @@ export class ConditionalCompatConfig implements ConditionalItem<CompatConfig> {
 
 		if (definition.queryOnWakeup != undefined) {
 			if (
-				!isArray(definition.queryOnWakeup)
-				|| !definition.queryOnWakeup.every(
+				!isArray(definition.queryOnWakeup) ||
+				!definition.queryOnWakeup.every(
 					(cmd: unknown) =>
-						isArray(cmd)
-						&& cmd.length >= 2
-						&& typeof cmd[0] === "string"
-						&& typeof cmd[1] === "string"
-						&& cmd
+						isArray(cmd) &&
+						cmd.length >= 2 &&
+						typeof cmd[0] === "string" &&
+						typeof cmd[1] === "string" &&
+						cmd
 							.slice(2)
 							.every(
 								(arg) =>
-									typeof arg === "string"
-									|| typeof arg === "number"
-									|| typeof arg === "boolean",
+									typeof arg === "string" ||
+									typeof arg === "number" ||
+									typeof arg === "boolean",
 							),
 				)
 			) {
@@ -48,8 +50,8 @@ error in compat option queryOnWakeup`,
 				(cmd) =>
 					cmd.map((arg) => {
 						if (
-							typeof arg === "string"
-							&& this.valueIdRegex.test(arg)
+							typeof arg === "string" &&
+							this.valueIdRegex.test(arg)
 						) {
 							const tuple = JSON.parse(
 								arg.slice("$value$".length),
@@ -78,8 +80,8 @@ compat option disableAutoRefresh must be true or omitted`,
 
 		if (definition.disableCallbackFunctionTypeCheck != undefined) {
 			if (
-				!isArray(definition.disableCallbackFunctionTypeCheck)
-				|| !definition.disableCallbackFunctionTypeCheck.every(
+				!isArray(definition.disableCallbackFunctionTypeCheck) ||
+				!definition.disableCallbackFunctionTypeCheck.every(
 					(d: any) => typeof d === "number" && d % 1 === 0 && d > 0,
 				)
 			) {
@@ -155,8 +157,8 @@ compat option forceSceneControllerGroupCount must be a number!`,
 			}
 
 			if (
-				definition.forceSceneControllerGroupCount < 0
-				|| definition.forceSceneControllerGroupCount > 255
+				definition.forceSceneControllerGroupCount < 0 ||
+				definition.forceSceneControllerGroupCount > 255
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -208,10 +210,10 @@ error in compat option preserveRootApplicationCCValueIDs`,
 
 		if (definition.preserveEndpoints != undefined) {
 			if (
-				definition.preserveEndpoints !== "*"
-				&& !(
-					isArray(definition.preserveEndpoints)
-					&& definition.preserveEndpoints.every(
+				definition.preserveEndpoints !== "*" &&
+				!(
+					isArray(definition.preserveEndpoints) &&
+					definition.preserveEndpoints.every(
 						(d: any) =>
 							typeof d === "number" && d % 1 === 0 && d > 0,
 					)
@@ -229,10 +231,10 @@ compat option preserveEndpoints must be "*" or an array of positive integers`,
 
 		if (definition.removeEndpoints != undefined) {
 			if (
-				definition.removeEndpoints !== "*"
-				&& !(
-					isArray(definition.removeEndpoints)
-					&& definition.removeEndpoints.every(
+				definition.removeEndpoints !== "*" &&
+				!(
+					isArray(definition.removeEndpoints) &&
+					definition.removeEndpoints.every(
 						(d: any) =>
 							typeof d === "number" && d % 1 === 0 && d > 0,
 					)
@@ -289,10 +291,12 @@ error in compat option treatMultilevelSwitchSetAsEvent`,
 
 		if (definition.treatSetAsReport != undefined) {
 			if (
-				!(isArray(definition.treatSetAsReport)
-					&& definition.treatSetAsReport.every(
+				!(
+					isArray(definition.treatSetAsReport) &&
+					definition.treatSetAsReport.every(
 						(d: any) => typeof d === "string",
-					))
+					)
+				)
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -339,8 +343,8 @@ compat option manualValueRefreshDelayMs must be a number!`,
 			}
 
 			if (
-				definition.manualValueRefreshDelayMs % 1 !== 0
-				|| definition.manualValueRefreshDelayMs < 0
+				definition.manualValueRefreshDelayMs % 1 !== 0 ||
+				definition.manualValueRefreshDelayMs < 0
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -363,9 +367,9 @@ compat option reportTimeout must be a number!`,
 			}
 
 			if (
-				definition.reportTimeout % 1 !== 0
-				|| definition.reportTimeout < 1000
-				|| definition.reportTimeout > 10000
+				definition.reportTimeout % 1 !== 0 ||
+				definition.reportTimeout < 1000 ||
+				definition.reportTimeout > 10000
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -387,8 +391,8 @@ compat option mapRootReportsToEndpoint must be a number!`,
 			}
 
 			if (
-				definition.mapRootReportsToEndpoint % 1 !== 0
-				|| definition.mapRootReportsToEndpoint < 1
+				definition.mapRootReportsToEndpoint % 1 !== 0 ||
+				definition.mapRootReportsToEndpoint < 1
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -412,8 +416,8 @@ error in compat option overrideFloatEncoding`,
 			this.overrideFloatEncoding = {};
 			if ("precision" in definition.overrideFloatEncoding) {
 				if (
-					typeof definition.overrideFloatEncoding.precision
-						!= "number"
+					typeof definition.overrideFloatEncoding.precision !=
+					"number"
 				) {
 					throwInvalidConfig(
 						"devices",
@@ -423,8 +427,8 @@ compat option overrideFloatEncoding.precision must be a number!`,
 				}
 
 				if (
-					definition.overrideFloatEncoding.precision % 1 !== 0
-					|| definition.overrideFloatEncoding.precision < 0
+					definition.overrideFloatEncoding.precision % 1 !== 0 ||
+					definition.overrideFloatEncoding.precision < 0
 				) {
 					throwInvalidConfig(
 						"devices",
@@ -446,9 +450,9 @@ compat option overrideFloatEncoding.size must be a number!`,
 				}
 
 				if (
-					definition.overrideFloatEncoding.size % 1 !== 0
-					|| definition.overrideFloatEncoding.size < 1
-					|| definition.overrideFloatEncoding.size > 4
+					definition.overrideFloatEncoding.size % 1 !== 0 ||
+					definition.overrideFloatEncoding.size < 1 ||
+					definition.overrideFloatEncoding.size > 4
 				) {
 					throwInvalidConfig(
 						"devices",
@@ -488,7 +492,7 @@ error in compat option commandClasses.add`,
 					);
 				} else if (
 					!Object.values(definition.commandClasses.add).every((v) =>
-						isObject(v)
+						isObject(v),
 					)
 				) {
 					throwInvalidConfig(
@@ -499,11 +503,9 @@ All values in compat option commandClasses.add must be objects`,
 				}
 
 				const addCCs = new Map<CommandClasses, CompatAddCC>();
-				for (
-					const [key, info] of Object.entries(
-						definition.commandClasses.add,
-					)
-				) {
+				for (const [key, info] of Object.entries(
+					definition.commandClasses.add,
+				)) {
 					// Parse the key into a CC ID
 					const cc = tryParseCCId(key);
 					if (cc == undefined) {
@@ -532,11 +534,9 @@ error in compat option commandClasses.remove`,
 					CommandClasses,
 					"*" | readonly number[]
 				>();
-				for (
-					const [key, info] of Object.entries(
-						definition.commandClasses.remove,
-					)
-				) {
+				for (const [key, info] of Object.entries(
+					definition.commandClasses.remove,
+				)) {
 					// Parse the key into a CC ID
 					const cc = tryParseCCId(key);
 					if (cc == undefined) {
@@ -548,9 +548,9 @@ Invalid Command Class "${key}" specified in compat option commandClasses.remove!
 					}
 					if (isObject(info) && "endpoints" in info) {
 						if (
-							info.endpoints === "*"
-							|| (isArray(info.endpoints)
-								&& info.endpoints.every(
+							info.endpoints === "*" ||
+							(isArray(info.endpoints) &&
+								info.endpoints.every(
 									(i) => typeof i === "number",
 								))
 						) {
@@ -576,8 +576,8 @@ All values in compat option commandClasses.remove must be objects with an "endpo
 
 		if (definition.alarmMapping != undefined) {
 			if (
-				!isArray(definition.alarmMapping)
-				|| !definition.alarmMapping.every((m: any) => isObject(m))
+				!isArray(definition.alarmMapping) ||
+				!definition.alarmMapping.every((m: any) => isObject(m))
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -743,10 +743,10 @@ Property version in compat option commandClasses.add, endpoint ${endpoint} must 
 		};
 		// Parse root endpoint info if given
 		if (
-			definition.isSupported != undefined
-			|| definition.isControlled != undefined
-			|| definition.version != undefined
-			|| definition.secure != undefined
+			definition.isSupported != undefined ||
+			definition.isControlled != undefined ||
+			definition.version != undefined ||
+			definition.secure != undefined
 		) {
 			// We have info for the root endpoint
 			parseEndpointInfo(0, definition);
@@ -805,8 +805,8 @@ error in compat option alarmMapping, mapping #${index}: property "from.alarmType
 				);
 			}
 			if (
-				definition.from.alarmLevel != undefined
-				&& typeof definition.from.alarmLevel !== "number"
+				definition.from.alarmLevel != undefined &&
+				typeof definition.from.alarmLevel !== "number"
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -845,11 +845,9 @@ error in compat option alarmMapping, mapping #${index}: property "to.notificatio
 error in compat option alarmMapping, mapping #${index}: property "to.eventParameters" must be an object!`,
 					);
 				} else {
-					for (
-						const [key, val] of Object.entries(
-							definition.to.eventParameters,
-						)
-					) {
+					for (const [key, val] of Object.entries(
+						definition.to.eventParameters,
+					)) {
 						if (typeof val !== "number" && val !== "alarmLevel") {
 							throwInvalidConfig(
 								"devices",
@@ -886,67 +884,55 @@ export class CompatOverrideQueries {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "method" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be a string!`,
+Property "method" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be a string!`,
 				);
 			} else if (
-				info.matchArgs != undefined
-				&& !isArray(info.matchArgs)
+				info.matchArgs != undefined &&
+				!isArray(info.matchArgs)
 			) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "matchArgs" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be an array!`,
+Property "matchArgs" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be an array!`,
 				);
 			} else if (!("result" in info)) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "result" is missing in in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					}!`,
+Property "result" is missing in in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)}!`,
 				);
 			} else if (
-				info.endpoint != undefined
-				&& typeof info.endpoint !== "number"
+				info.endpoint != undefined &&
+				typeof info.endpoint !== "number"
 			) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "endpoint" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be a number!`,
+Property "endpoint" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be a number!`,
 				);
 			} else if (info.persistValues && !isObject(info.persistValues)) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "persistValues" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be an object!`,
+Property "persistValues" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be an object!`,
 				);
 			} else if (info.extendMetadata && !isObject(info.extendMetadata)) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "extendMetadata" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be an object!`,
+Property "extendMetadata" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be an object!`,
 				);
 			}
 
@@ -1010,11 +996,10 @@ Property "${key}" in compat option overrideQueries must be a single override obj
 		args: any[],
 	):
 		| Pick<
-			CompatOverrideQuery,
-			"result" | "persistValues" | "extendMetadata"
-		>
-		| undefined
-	{
+				CompatOverrideQuery,
+				"result" | "persistValues" | "extendMetadata"
+		  >
+		| undefined {
 		const queries = this.overrides.get(cc);
 		if (!queries) return undefined;
 		for (const query of queries) {
@@ -1056,11 +1041,7 @@ export interface CompatOverrideQuery {
 	extendMetadata?: Record<string, any>;
 }
 
-const basicReportMappings = [
-	false,
-	"auto",
-	"Binary Sensor",
-] as const;
+const basicReportMappings = [false, "auto", "Binary Sensor"] as const;
 
 /**
  * Defines how to handle a received Basic CC Report:
@@ -1068,18 +1049,13 @@ const basicReportMappings = [
  * - false: treat the report verbatim without mapping
  * - "Binary Sensor": treat it as a Binary Sensor CC Report, regardless of device type
  */
-export type BasicReportMapping = typeof basicReportMappings[number];
+export type BasicReportMapping = (typeof basicReportMappings)[number];
 
 function isBasicReportMapping(v: unknown): v is BasicReportMapping {
 	return basicReportMappings.includes(v as any);
 }
 
-const basicSetMappings = [
-	"event",
-	"report",
-	"auto",
-	"Binary Sensor",
-] as const;
+const basicSetMappings = ["event", "report", "auto", "Binary Sensor"] as const;
 
 /**
  * Defines how to handle a received Basic CC Set:
@@ -1088,7 +1064,7 @@ const basicSetMappings = [
  * - "auto": map it to a different CC based on the device type, with fallback to Basic CC report
  * - "Binary Sensor": treat it as a Binary Sensor CC Report, regardless of device type
  */
-export type BasicSetMapping = typeof basicSetMappings[number];
+export type BasicSetMapping = (typeof basicSetMappings)[number];
 
 function isBasicSetMapping(v: unknown): v is BasicSetMapping {
 	return basicSetMappings.includes(v as any);

@@ -1,11 +1,11 @@
-import c from "ansi-colors";
-import chokidar from "chokidar";
 import cp from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { basename, relative, sep } from "node:path";
 import stream from "node:stream/promises";
 
+import c from "ansi-colors";
+import chokidar from "chokidar";
 import type PQueue from "p-queue";
 
 const ABORT_RUNNING = false;
@@ -22,46 +22,43 @@ let ready = false;
 let child: cp.ChildProcess | undefined;
 
 const cwd = process.cwd();
-const watcher = chokidar.watch(
-	".",
-	{
-		ignored: (path, stat) => {
-			const relativePath = relative(cwd, path);
-			const pathPortions = relativePath.split(sep);
-			// Ignore build and node_modules directories
+const watcher = chokidar.watch(".", {
+	ignored: (path, stat) => {
+		const relativePath = relative(cwd, path);
+		const pathPortions = relativePath.split(sep);
+		// Ignore build and node_modules directories
+		if (
+			pathPortions.includes("build") ||
+			pathPortions.includes("node_modules")
+		) {
+			return true;
+		}
+		if (stat?.isFile()) {
+			const filename = basename(path);
+			// Watch .ts files
+			if (relativePath.endsWith(".ts")) return false;
+			// Watch tsconfig files
 			if (
-				pathPortions.includes("build")
-				|| pathPortions.includes("node_modules")
+				filename.startsWith("tsconfig.") &&
+				filename.endsWith(".json")
 			) {
-				return true;
+				return false;
 			}
-			if (stat?.isFile()) {
-				const filename = basename(path);
-				// Watch .ts files
-				if (relativePath.endsWith(".ts")) return false;
-				// Watch tsconfig files
-				if (
-					filename.startsWith("tsconfig.")
-					&& filename.endsWith(".json")
-				) {
-					return false;
-				}
-				// Watch npm package files
-				if (filename === "package.json" || filename === "yarn.lock") {
-					return false;
-				}
-				// Watch turbo.json
-				if (filename === "turbo.json") return false;
-				// Ignore all other files
-				return true;
+			// Watch npm package files
+			if (filename === "package.json" || filename === "yarn.lock") {
+				return false;
 			}
-			// Watch all directories
-			return false;
-		},
-		cwd, //
-		atomic: true,
+			// Watch turbo.json
+			if (filename === "turbo.json") return false;
+			// Ignore all other files
+			return true;
+		}
+		// Watch all directories
+		return false;
 	},
-);
+	cwd, //
+	atomic: true,
+});
 
 async function exec(): Promise<void> {
 	if (!ABORT_RUNNING && child) return;

@@ -1,3 +1,5 @@
+import * as path from "node:path";
+
 import { configDir } from "#config_dir";
 import {
 	getBitMaskWidth,
@@ -20,7 +22,7 @@ import c from "ansi-colors";
 import esMain from "es-main";
 import levenshtein from "js-levenshtein";
 import type { RulesLogic } from "json-logic-js";
-import * as path from "node:path";
+
 import { ConfigManager } from "../src/ConfigManager.js";
 import { parseLogic } from "../src/Logic.js";
 import {
@@ -59,37 +61,35 @@ function getAllConditions(
 		} else if ("and" in logic) {
 			logic.and.forEach((rule) => walkLogic(rule));
 		} else {
-			for (
-				const operator of [
-					"ver >=",
-					"ver >",
-					"ver <=",
-					"ver <",
-					"ver ===",
-					">=",
-					">",
-					"<=",
-					"<",
-					"===",
-				] as const
-			) {
+			for (const operator of [
+				"ver >=",
+				"ver >",
+				"ver <=",
+				"ver <",
+				"ver ===",
+				">=",
+				">",
+				"<=",
+				"<",
+				"===",
+			] as const) {
 				if (operator in logic) {
 					const [lhs, rhs] = (logic as any)[operator] as [
 						RulesLogic,
 						RulesLogic,
 					];
 					if (
-						isObject(lhs)
-						&& "var" in lhs
-						&& typeof lhs.var === "string"
-						&& typeof rhs === "string"
+						isObject(lhs) &&
+						"var" in lhs &&
+						typeof lhs.var === "string" &&
+						typeof rhs === "string"
 					) {
 						addCondition(lhs.var, rhs);
 					} else if (
-						isObject(rhs)
-						&& "var" in rhs
-						&& typeof rhs.var === "string"
-						&& typeof lhs === "string"
+						isObject(rhs) &&
+						"var" in rhs &&
+						typeof rhs.var === "string" &&
+						typeof lhs === "string"
 					) {
 						addCondition(rhs.var, lhs);
 					}
@@ -151,16 +151,14 @@ function getAllConditions(
 	}
 
 	if (config.metadata) {
-		for (
-			const prop of [
-				"wakeup",
-				"inclusion",
-				"exclusion",
-				"reset",
-				"manual",
-				"comments",
-			] as const
-		) {
+		for (const prop of [
+			"wakeup",
+			"inclusion",
+			"exclusion",
+			"reset",
+			"manual",
+			"comments",
+		] as const) {
 			const value = config.metadata[prop];
 			if (!value || typeof value === "string") continue;
 
@@ -182,9 +180,8 @@ function getAllConditions(
 }
 
 function paramNoToString(parameter: number, valueBitMask?: number): string {
-	const bitmaskString = valueBitMask != undefined
-		? `[${num2hex(valueBitMask)}]`
-		: "";
+	const bitmaskString =
+		valueBitMask != undefined ? `[${num2hex(valueBitMask)}]` : "";
 	return `Parameter #${parameter}${bitmaskString}`;
 }
 
@@ -218,15 +215,11 @@ async function lintDevices(): Promise<void> {
 		endpoint?: number,
 	): void {
 		if (variant) {
-			filename += ` (Variant ${
-				formatId(
-					variant.manufacturerId,
-				)
-			}:${formatId(variant.productType)}:${
-				formatId(
-					variant.productId,
-				)
-			}:${variant.firmwareVersion})`;
+			filename += ` (Variant ${formatId(
+				variant.manufacturerId,
+			)}:${formatId(variant.productType)}:${formatId(
+				variant.productId,
+			)}:${variant.firmwareVersion})`;
 		}
 		if (!errors.has(filename)) errors.set(filename, []);
 
@@ -242,15 +235,11 @@ async function lintDevices(): Promise<void> {
 		endpoint?: number,
 	): void {
 		if (variant) {
-			filename += ` (Variant ${
-				formatId(
-					variant.manufacturerId,
-				)
-			}:${formatId(variant.productType)}:${
-				formatId(
-					variant.productId,
-				)
-			}:${variant.firmwareVersion})`;
+			filename += ` (Variant ${formatId(
+				variant.manufacturerId,
+			)}:${formatId(variant.productType)}:${formatId(
+				variant.productId,
+			)}:${variant.firmwareVersion})`;
 		}
 		if (!warnings.has(filename)) warnings.set(filename, []);
 
@@ -268,9 +257,9 @@ async function lintDevices(): Promise<void> {
 	for (const file of forbiddenFiles) {
 		addError(
 			path.relative(rootDir, file),
-			`Invalid extension for device config file. Expected ".json", got "${
-				path.extname(file)
-			}"`,
+			`Invalid extension for device config file. Expected ".json", got "${path.extname(
+				file,
+			)}"`,
 		);
 	}
 
@@ -319,8 +308,8 @@ async function lintDevices(): Promise<void> {
 		const conditions = getAllConditions(conditionalConfig);
 		if (conditions.size > 0) {
 			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
-			const fwVersions: Set<string> = conditions.get("firmwareVersion")
-				?? new Set();
+			const fwVersions: Set<string> =
+				conditions.get("firmwareVersion") ?? new Set();
 			if (fwVersions.size > 0) {
 				fwVersions.add(conditionalConfig.firmwareVersion.min);
 				fwVersions.add(conditionalConfig.firmwareVersion.max);
@@ -416,10 +405,10 @@ async function lintDevices(): Promise<void> {
 					.split(".", 2)
 					.map((v) => parseInt(v, 10));
 				if (
-					minMajor < 0
-					|| minMajor > 255
-					|| minMinor < 0
-					|| minMinor > 255
+					minMajor < 0 ||
+					minMajor > 255 ||
+					minMinor < 0 ||
+					minMinor > 255
 				) {
 					addError(
 						file,
@@ -431,10 +420,10 @@ async function lintDevices(): Promise<void> {
 					.split(".", 2)
 					.map((v) => parseInt(v, 10));
 				if (
-					maxMajor < 0
-					|| maxMajor > 255
-					|| maxMinor < 0
-					|| maxMinor > 255
+					maxMajor < 0 ||
+					maxMajor > 255 ||
+					maxMinor < 0 ||
+					maxMinor > 255
 				) {
 					addError(
 						file,
@@ -446,8 +435,8 @@ async function lintDevices(): Promise<void> {
 				const leadingZeroMajor = /^0\d+\./;
 				const leadingZeroMinor = /\.0\d+$/;
 				if (
-					leadingZeroMajor.test(config.firmwareVersion.min)
-					|| leadingZeroMinor.test(config.firmwareVersion.min)
+					leadingZeroMajor.test(config.firmwareVersion.min) ||
+					leadingZeroMinor.test(config.firmwareVersion.min)
 				) {
 					addError(
 						file,
@@ -455,8 +444,8 @@ async function lintDevices(): Promise<void> {
 					);
 				}
 				if (
-					leadingZeroMajor.test(config.firmwareVersion.max)
-					|| leadingZeroMinor.test(config.firmwareVersion.max)
+					leadingZeroMajor.test(config.firmwareVersion.max) ||
+					leadingZeroMinor.test(config.firmwareVersion.max)
 				) {
 					addError(
 						file,
@@ -507,15 +496,13 @@ async function lintDevices(): Promise<void> {
 
 		// Metadata
 		if (conditionalConfig.metadata) {
-			for (
-				const prop of [
-					"wakeup",
-					"inclusion",
-					"exclusion",
-					"reset",
-					"manual",
-				] as const
-			) {
+			for (const prop of [
+				"wakeup",
+				"inclusion",
+				"exclusion",
+				"reset",
+				"manual",
+			] as const) {
 				const value = conditionalConfig.metadata[prop];
 				if (isArray(value) && !unconditionalComesLast(value)) {
 					addError(
@@ -581,10 +568,10 @@ async function lintDevices(): Promise<void> {
 			// Ensure that the firmware version ranges do not overlap,
 			// except if one is preferred and the other isn't
 			if (
-				versionInRange(me.min, other.min, other.max)
-				|| versionInRange(me.max, other.min, other.max)
-				|| versionInRange(other.min, me.min, me.max)
-				|| versionInRange(other.max, me.min, me.max)
+				versionInRange(me.min, other.min, other.max) ||
+				versionInRange(me.max, other.min, other.max) ||
+				versionInRange(other.min, me.min, me.max) ||
+				versionInRange(other.max, me.min, me.max)
 			) {
 				if (entry.preferred !== index[firstIndex].preferred) {
 					continue;
@@ -678,9 +665,10 @@ function validateAllowedValuesDefinition(
 		if (step <= 0) {
 			addError(
 				file,
-				`${
-					paramNoToString(parameter, valueBitMask)
-				}: step must be positive (got ${step})`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)}: step must be positive (got ${step})`,
 				variant,
 			);
 			continue;
@@ -689,9 +677,10 @@ function validateAllowedValuesDefinition(
 		if (from > to) {
 			addError(
 				file,
-				`${
-					paramNoToString(parameter, valueBitMask)
-				}: range 'from' (${from}) must be <= 'to' (${to})`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)}: range 'from' (${from}) must be <= 'to' (${to})`,
 				variant,
 			);
 			continue;
@@ -700,9 +689,10 @@ function validateAllowedValuesDefinition(
 		if ((to - from) % step !== 0) {
 			addError(
 				file,
-				`${
-					paramNoToString(parameter, valueBitMask)
-				}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
 				variant,
 			);
 		}
@@ -713,29 +703,24 @@ function lintUnconditionalParamInformation(
 	paramInformation: ParamInfoMap,
 	{ file, variant, addError, addWarning }: LintDevicesContext,
 ): void {
-	for (
-		const [
-			{ parameter, valueBitMask },
-			{ label, description },
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		{ label, description },
+	] of paramInformation.entries()) {
 		// Check if the description is too similar to the label
 		if (description != undefined) {
-			const normalizedDistance = levenshtein(label, description)
-				/ Math.max(label.length, description.length);
+			const normalizedDistance =
+				levenshtein(label, description) /
+				Math.max(label.length, description.length);
 			if (normalizedDistance < 0.5) {
 				addWarning(
 					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} has a very similar label and description (normalized distance ${
-						normalizedDistance.toFixed(
-							2,
-						)
-					}). Consider removing the description if it does not add any information:
+					`${paramNoToString(
+						parameter,
+						valueBitMask,
+					)} has a very similar label and description (normalized distance ${normalizedDistance.toFixed(
+						2,
+					)}). Consider removing the description if it does not add any information:
 label:       ${label}
 description: ${description}`,
 					variant,
@@ -745,25 +730,21 @@ description: ${description}`,
 	}
 
 	// Check if there are options when manual entry is forbidden
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		if (
-			!value.allowManualEntry
-			&& !value.readOnly
-			&& !value.options?.length
+			!value.allowManualEntry &&
+			!value.readOnly &&
+			!value.options?.length
 		) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				} must allow manual entry if there are no options defined!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)} must allow manual entry if there are no options defined!`,
 				variant,
 			);
 		}
@@ -771,59 +752,49 @@ description: ${description}`,
 		if (value.readOnly && value.writeOnly) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				} is invalid: readOnly and writeOnly are mutually exclusive!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)} is invalid: readOnly and writeOnly are mutually exclusive!`,
 				variant,
 			);
 		}
 	}
 
 	// Check if there are readOnly parameters with allowManualEntry = true
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		// We can't actually distinguish between `false` and missing, but this is good enough
 		if (value.readOnly && value.allowManualEntry) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				} is invalid: allowManualEntry must be omitted for readOnly parameters!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)} is invalid: allowManualEntry must be omitted for readOnly parameters!`,
 				variant,
 			);
 		}
 	}
 
 	// Check if there are options where readOnly and writeOnly are unnecessarily specified
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		if (
-			!value.allowManualEntry
-			&& !value.readOnly
-			&& !value.options?.length
+			!value.allowManualEntry &&
+			!value.readOnly &&
+			!value.options?.length
 		) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				} must allow manual entry if there are no options defined!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)} must allow manual entry if there are no options defined!`,
 				variant,
 			);
 		}
@@ -831,38 +802,32 @@ description: ${description}`,
 		if (value.readOnly && value.writeOnly) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				} is invalid: readOnly and writeOnly are mutually exclusive!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)} is invalid: readOnly and writeOnly are mutually exclusive!`,
 				variant,
 			);
 		} else if (
-			value.readOnly !== undefined
-			&& value.writeOnly !== undefined
+			value.readOnly !== undefined &&
+			value.writeOnly !== undefined
 		) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				} is invalid: readOnly and writeOnly must not both be specified!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)} is invalid: readOnly and writeOnly must not both be specified!`,
 				variant,
 			);
 		}
 	}
 
 	// Check if there are options with duplicate values
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		for (let i = 0; i < value.options.length; i++) {
 			const option = value.options[i];
 			const firstIndex = value.options.findIndex(
@@ -871,12 +836,10 @@ description: ${description}`,
 			if (firstIndex !== i) {
 				addError(
 					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} is invalid: option value ${option.value} duplicated between "${
+					`${paramNoToString(
+						parameter,
+						valueBitMask,
+					)} is invalid: option value ${option.value} duplicated between "${
 						value.options[firstIndex].label
 					}" and "${option.label}"!`,
 					variant,
@@ -886,33 +849,27 @@ description: ${description}`,
 	}
 
 	// Check if there are options where min/max values is not compatible with the valueSize
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		if (value.valueSize < 1 || value.valueSize > 4) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				} is invalid: valueSize must be in the range 1...4!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)} is invalid: valueSize must be in the range 1...4!`,
 				variant,
 			);
 		} else {
 			if (value.minValue > value.maxValue) {
 				addError(
 					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} is invalid: minValue must not be greater than maxValue!`,
+					`${paramNoToString(
+						parameter,
+						valueBitMask,
+					)} is invalid: minValue must not be greater than maxValue!`,
 					variant,
 				);
 			}
@@ -926,63 +883,55 @@ description: ${description}`,
 			if (!limits) {
 				addError(
 					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} is invalid: cannot determine limits for valueSize ${value.valueSize}!`,
+					`${paramNoToString(
+						parameter,
+						valueBitMask,
+					)} is invalid: cannot determine limits for valueSize ${value.valueSize}!`,
 					variant,
 				);
 			} else {
-				const fitsSignedLimits = value.minValue >= limits.min
-					&& value.minValue <= limits.max
-					&& value.maxValue >= limits.min
-					&& value.maxValue <= limits.max;
-				const fitsUnsignedLimits = value.minValue >= unsignedLimits.min
-					&& value.minValue <= unsignedLimits.max
-					&& value.maxValue >= unsignedLimits.min
-					&& value.maxValue <= unsignedLimits.max;
+				const fitsSignedLimits =
+					value.minValue >= limits.min &&
+					value.minValue <= limits.max &&
+					value.maxValue >= limits.min &&
+					value.maxValue <= limits.max;
+				const fitsUnsignedLimits =
+					value.minValue >= unsignedLimits.min &&
+					value.minValue <= unsignedLimits.max &&
+					value.maxValue >= unsignedLimits.min &&
+					value.maxValue <= unsignedLimits.max;
 
 				if (!value.unsigned && !fitsSignedLimits) {
 					if (fitsUnsignedLimits) {
 						addError(
 							file,
-							`${
-								paramNoToString(
-									parameter,
-									valueBitMask,
-								)
-							} is invalid: Value range ${value.minValue}...${value.maxValue} is incompatible with valueSize ${value.valueSize} (min = ${limits.min}, max = ${limits.max}).
-Consider converting this parameter to unsigned using ${
-								c.white(
-									`"unsigned": true`,
-								)
-							}!`,
+							`${paramNoToString(
+								parameter,
+								valueBitMask,
+							)} is invalid: Value range ${value.minValue}...${value.maxValue} is incompatible with valueSize ${value.valueSize} (min = ${limits.min}, max = ${limits.max}).
+Consider converting this parameter to unsigned using ${c.white(
+								`"unsigned": true`,
+							)}!`,
 							variant,
 						);
 					} else {
 						if (value.minValue < limits.min) {
 							addError(
 								file,
-								`${
-									paramNoToString(
-										parameter,
-										valueBitMask,
-									)
-								} is invalid: minValue ${value.minValue} is incompatible with valueSize ${value.valueSize} (min = ${limits.min})!`,
+								`${paramNoToString(
+									parameter,
+									valueBitMask,
+								)} is invalid: minValue ${value.minValue} is incompatible with valueSize ${value.valueSize} (min = ${limits.min})!`,
 								variant,
 							);
 						}
 						if (value.maxValue > limits.max) {
 							addError(
 								file,
-								`${
-									paramNoToString(
-										parameter,
-										valueBitMask,
-									)
-								} is invalid: maxValue ${value.maxValue} is incompatible with valueSize ${value.valueSize} (max = ${limits.max})!`,
+								`${paramNoToString(
+									parameter,
+									valueBitMask,
+								)} is invalid: maxValue ${value.maxValue} is incompatible with valueSize ${value.valueSize} (max = ${limits.max})!`,
 								variant,
 							);
 						}
@@ -991,24 +940,20 @@ Consider converting this parameter to unsigned using ${
 					if (value.minValue < unsignedLimits.min) {
 						addError(
 							file,
-							`${
-								paramNoToString(
-									parameter,
-									valueBitMask,
-								)
-							} is invalid: minValue ${value.minValue} is incompatible with valueSize ${value.valueSize} (min = ${unsignedLimits.min})!`,
+							`${paramNoToString(
+								parameter,
+								valueBitMask,
+							)} is invalid: minValue ${value.minValue} is incompatible with valueSize ${value.valueSize} (min = ${unsignedLimits.min})!`,
 							variant,
 						);
 					}
 					if (value.maxValue > unsignedLimits.max) {
 						addError(
 							file,
-							`${
-								paramNoToString(
-									parameter,
-									valueBitMask,
-								)
-							} is invalid: maxValue ${value.maxValue} is incompatible with valueSize ${value.valueSize} (max = ${unsignedLimits.max})!`,
+							`${paramNoToString(
+								parameter,
+								valueBitMask,
+							)} is invalid: maxValue ${value.maxValue} is incompatible with valueSize ${value.valueSize} (max = ${unsignedLimits.max})!`,
 							variant,
 						);
 					}
@@ -1018,12 +963,10 @@ Consider converting this parameter to unsigned using ${
 	}
 
 	// Validate the allowed field definitions if present
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		if (value.allowed) {
 			validateAllowedValuesDefinition(
 				value.allowed,
@@ -1037,26 +980,22 @@ Consider converting this parameter to unsigned using ${
 	}
 
 	// Check if there are parameters with predefined options that are not compatible with min/maxValue
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		if (!value.options.length) continue;
 		for (const option of value.options) {
 			if (
-				option.value < value.minValue
-				|| option.value > value.maxValue
+				option.value < value.minValue ||
+				option.value > value.maxValue
 			) {
 				addError(
 					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} is invalid: The option value ${option.value} must be in the range ${value.minValue}...${value.maxValue}!`,
+					`${paramNoToString(
+						parameter,
+						valueBitMask,
+					)} is invalid: The option value ${option.value} must be in the range ${value.minValue}...${value.maxValue}!`,
 					variant,
 				);
 			}
@@ -1069,24 +1008,20 @@ Consider converting this parameter to unsigned using ${
 			if (value.minValue < actualMin) {
 				addError(
 					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} is invalid: minValue ${value.minValue} is less than the minimum option value ${actualMin}! If allowManualEntry is false, minValue must be omitted or match the option values.`,
+					`${paramNoToString(
+						parameter,
+						valueBitMask,
+					)} is invalid: minValue ${value.minValue} is less than the minimum option value ${actualMin}! If allowManualEntry is false, minValue must be omitted or match the option values.`,
 					variant,
 				);
 			}
 			if (value.maxValue > actualMax) {
 				addError(
 					file,
-					`${
-						paramNoToString(
-							parameter,
-							valueBitMask,
-						)
-					} is invalid: maxValue ${value.maxValue} is greater than the maximum option value ${actualMax}! If allowManualEntry is false, maxValue must be omitted or match the option values.`,
+					`${paramNoToString(
+						parameter,
+						valueBitMask,
+					)} is invalid: maxValue ${value.maxValue} is greater than the maximum option value ${actualMax}! If allowManualEntry is false, maxValue must be omitted or match the option values.`,
 					variant,
 				);
 			}
@@ -1106,18 +1041,14 @@ Consider converting this parameter to unsigned using ${
 		if (params.length === 1) continue;
 		addWarning(
 			file,
-			`Label "${label}" is duplicated in the following parameters: ${
-				params
-					.map(
-						(p) =>
-							`${p.parameter}${
-								p.valueBitMask
-									? `[${num2hex(p.valueBitMask)}]`
-									: ""
-							}`,
-					)
-					.join(", ")
-			}`,
+			`Label "${label}" is duplicated in the following parameters: ${params
+				.map(
+					(p) =>
+						`${p.parameter}${
+							p.valueBitMask ? `[${num2hex(p.valueBitMask)}]` : ""
+						}`,
+				)
+				.join(", ")}`,
 			variant,
 		);
 	}
@@ -1136,11 +1067,9 @@ Consider converting this parameter to unsigned using ${
 	if (duplicatedPartials.length) {
 		addError(
 			file,
-			`The following non-partial parameters need to be removed because partial parameters with the same key exist: ${
-				duplicatedPartials
-					.map((p) => `#${p}`)
-					.join(", ")
-			}!`,
+			`The following non-partial parameters need to be removed because partial parameters with the same key exist: ${duplicatedPartials
+				.map((p) => `#${p}`)
+				.join(", ")}!`,
 			variant,
 		);
 	}
@@ -1157,33 +1086,27 @@ Consider converting this parameter to unsigned using ${
 		if (param.minValue < minValue) {
 			addError(
 				file,
-				`Parameter #${key.parameter}[${
-					num2hex(
-						bitMask,
-					)
-				}]: minimum value ${param.minValue} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Minimum value expected to be >= ${minValue}.`,
+				`Parameter #${key.parameter}[${num2hex(
+					bitMask,
+				)}]: minimum value ${param.minValue} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Minimum value expected to be >= ${minValue}.`,
 				variant,
 			);
 		}
 		if (param.maxValue > maxValue) {
 			addError(
 				file,
-				`Parameter #${key.parameter}[${
-					num2hex(
-						bitMask,
-					)
-				}]: maximum value ${param.maxValue} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Maximum value expected to be <= ${maxValue}.`,
+				`Parameter #${key.parameter}[${num2hex(
+					bitMask,
+				)}]: maximum value ${param.maxValue} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Maximum value expected to be <= ${maxValue}.`,
 				variant,
 			);
 		}
 		if (param.defaultValue < minValue || param.defaultValue > maxValue) {
 			addError(
 				file,
-				`Parameter #${key.parameter}[${
-					num2hex(
-						bitMask,
-					)
-				}]: default value ${param.defaultValue} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Default value expected to be between ${minValue} and ${maxValue}.`,
+				`Parameter #${key.parameter}[${num2hex(
+					bitMask,
+				)}]: default value ${param.defaultValue} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Default value expected to be between ${minValue} and ${maxValue}.`,
 				variant,
 			);
 		}
@@ -1197,8 +1120,8 @@ Consider converting this parameter to unsigned using ${
 
 		const others = partialParams.filter(
 			([kk]) =>
-				key.parameter === kk.parameter
-				&& key.valueBitMask !== kk.valueBitMask,
+				key.parameter === kk.parameter &&
+				key.valueBitMask !== kk.valueBitMask,
 		);
 		if (others.some(([, other]) => other.valueSize !== param.valueSize)) {
 			addError(
@@ -1225,9 +1148,9 @@ Consider converting this parameter to unsigned using ${
 			if (opt.value < minValue || opt.value > maxValue) {
 				addError(
 					file,
-					`Parameter #${key.parameter}[${
-						num2hex(bitMask)
-					}]: Option ${opt.value} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Value expected to be between ${minValue} and ${maxValue}`,
+					`Parameter #${key.parameter}[${num2hex(
+						bitMask,
+					)}]: Option ${opt.value} is incompatible with the bit mask (${bitMask}, aligned ${shiftedBitMask}). Value expected to be between ${minValue} and ${maxValue}`,
 					variant,
 				);
 			}
@@ -1239,38 +1162,30 @@ Consider converting this parameter to unsigned using ${
 		if (key.valueBitMask! >= 256 ** param.valueSize) {
 			addError(
 				file,
-				`Parameter #${key.parameter}[${
-					num2hex(
-						key.valueBitMask,
-					)
-				}]: valueSize ${param.valueSize} is incompatible with the bit mask ${
-					num2hex(
-						key.valueBitMask,
-					)
-				}!`,
+				`Parameter #${key.parameter}[${num2hex(
+					key.valueBitMask,
+				)}]: valueSize ${param.valueSize} is incompatible with the bit mask ${num2hex(
+					key.valueBitMask,
+				)}!`,
 				variant,
 			);
 		}
 	}
 
 	// Check if there are descriptions with common errors
-	for (
-		const [
-			{ parameter, valueBitMask },
-			value,
-		] of paramInformation.entries()
-	) {
+	for (const [
+		{ parameter, valueBitMask },
+		value,
+	] of paramInformation.entries()) {
 		if (!value.description) continue;
 
 		if (/default:?\s+\d+/i.test(value.description)) {
 			addWarning(
 				file,
-				`${
-					paramNoToString(
-						parameter,
-						valueBitMask,
-					)
-				}: The description mentions a default value which should be handled by the "defaultValue" property instead!`,
+				`${paramNoToString(
+					parameter,
+					valueBitMask,
+				)}: The description mentions a default value which should be handled by the "defaultValue" property instead!`,
 				variant,
 			);
 		}
@@ -1314,12 +1229,10 @@ function lintConditionalParamInformation(
 		if (!unconditionalComesLast(definitions)) {
 			addError(
 				file,
-				`${
-					paramNoToString(
-						key.parameter,
-						key.valueBitMask,
-					)
-				} is either invalid or duplicated: When there are multiple definitions, every definition except the last one MUST have an "$if" condition!`,
+				`${paramNoToString(
+					key.parameter,
+					key.valueBitMask,
+				)} is either invalid or duplicated: When there are multiple definitions, every definition except the last one MUST have an "$if" condition!`,
 			);
 		}
 	}

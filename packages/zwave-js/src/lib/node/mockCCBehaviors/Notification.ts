@@ -48,15 +48,16 @@ const respondToNotificationEventSupportedGet: MockNodeBehavior = {
 				),
 			};
 			if (
-				receivedCC.notificationType
-					in capabilities.notificationTypesAndEvents
+				receivedCC.notificationType in
+				capabilities.notificationTypesAndEvents
 			) {
 				const cc = new NotificationCCEventSupportedReport({
 					nodeId: controller.ownNodeId,
 					notificationType: receivedCC.notificationType,
-					supportedEvents: capabilities.notificationTypesAndEvents[
-						receivedCC.notificationType
-					],
+					supportedEvents:
+						capabilities.notificationTypesAndEvents[
+							receivedCC.notificationType
+						],
 				});
 				return { action: "sendCC", cc };
 			}

@@ -11,6 +11,7 @@ import {
 	ZWaveLibraryTypes,
 } from "@zwave-js/core";
 import semverParse from "semver/functions/parse.js";
+
 import type { ZWaveController } from "../../controller/Controller.js";
 import { libVersion } from "../../driver/Driver.js";
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
@@ -27,14 +28,12 @@ export async function handleVersionGet(
 
 	// We are being queried, so the device may actually not support the CC, just control it.
 	// Using the commandClasses property would throw in that case
-	const api = endpoint
-		.createAPI(CommandClasses.Version, false)
-		.withOptions({
-			// Answer with the same encapsulation as asked, but omit
-			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
-		});
+	const api = endpoint.createAPI(CommandClasses.Version, false).withOptions({
+		// Answer with the same encapsulation as asked, but omit
+		// Supervision as it shouldn't be used for Get-Report flows
+		encapsulationFlags:
+			command.encapsulationFlags & ~EncapsulationFlags.Supervision,
+	});
 
 	const firmwareVersion1 = semverParse(libVersion, { loose: true })!;
 
@@ -61,14 +60,12 @@ export async function handleVersionCommandClassGet(
 
 	// We are being queried, so the device may actually not support the CC, just control it.
 	// Using the commandClasses property would throw in that case
-	const api = endpoint
-		.createAPI(CommandClasses.Version, false)
-		.withOptions({
-			// Answer with the same encapsulation as asked, but omit
-			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
-		});
+	const api = endpoint.createAPI(CommandClasses.Version, false).withOptions({
+		// Answer with the same encapsulation as asked, but omit
+		// Supervision as it shouldn't be used for Get-Report flows
+		encapsulationFlags:
+			command.encapsulationFlags & ~EncapsulationFlags.Supervision,
+	});
 
 	await api.reportCCVersion(command.requestedCC, reportVersion);
 }
@@ -82,14 +79,12 @@ export async function handleVersionCapabilitiesGet(
 
 	// We are being queried, so the device may actually not support the CC, just control it.
 	// Using the commandClasses property would throw in that case
-	const api = endpoint
-		.createAPI(CommandClasses.Version, false)
-		.withOptions({
-			// Answer with the same encapsulation as asked, but omit
-			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
-		});
+	const api = endpoint.createAPI(CommandClasses.Version, false).withOptions({
+		// Answer with the same encapsulation as asked, but omit
+		// Supervision as it shouldn't be used for Get-Report flows
+		encapsulationFlags:
+			command.encapsulationFlags & ~EncapsulationFlags.Supervision,
+	});
 
 	await api.reportCapabilities();
 }

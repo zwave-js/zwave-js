@@ -2,9 +2,10 @@
  * This script generates the exports for all utility types from `src/lib/commandclass/*CC.ts`
  */
 
-import { formatWithDprint, hasComment } from "@zwave-js/maintenance";
-import { compareStrings } from "@zwave-js/shared";
 import path from "node:path";
+
+import { formatWithOxfmt, hasComment } from "@zwave-js/maintenance";
+import { compareStrings } from "@zwave-js/shared";
 import { type SourceFile } from "ts-morph";
 import ts from "typescript";
 
@@ -71,9 +72,9 @@ export async function generateCCExportsFile(
 			}
 			// Ignore test files and the index
 			if (
-				relativePath.endsWith(".test.ts")
-				|| relativePath.endsWith("index.ts")
-				|| relativePath.includes(".generated.")
+				relativePath.endsWith(".test.ts") ||
+				relativePath.endsWith("index.ts") ||
+				relativePath.includes(".generated.")
 			) {
 				continue;
 			}
@@ -82,20 +83,20 @@ export async function generateCCExportsFile(
 			ts.forEachChild(sourceFile, (node) => {
 				// Define which declaration types we need to export
 				if (
-					ts.isEnumDeclaration(node)
-					|| ts.isTypeAliasDeclaration(node)
-					|| ts.isInterfaceDeclaration(node)
-					|| ts.isClassDeclaration(node)
-					|| ts.isFunctionDeclaration(node)
-					|| ts.isArrowFunction(node)
+					ts.isEnumDeclaration(node) ||
+					ts.isTypeAliasDeclaration(node) ||
+					ts.isInterfaceDeclaration(node) ||
+					ts.isClassDeclaration(node) ||
+					ts.isFunctionDeclaration(node) ||
+					ts.isArrowFunction(node)
 				) {
 					if (!node.name) return;
 
 					// Export all CommandClass implementations
 					if (
-						ts.isClassDeclaration(node)
-						&& node.name.text.includes("CC")
-						&& inheritsFromCommandClass(node)
+						ts.isClassDeclaration(node) &&
+						node.name.text.includes("CC") &&
+						inheritsFromCommandClass(node)
 					) {
 						addExport(sourceFile.fileName, node.name.text, false);
 						return;
@@ -120,14 +121,14 @@ export async function generateCCExportsFile(
 					addExport(
 						sourceFile.fileName,
 						node.name.text,
-						ts.isTypeAliasDeclaration(node)
-							|| ts.isInterfaceDeclaration(node),
+						ts.isTypeAliasDeclaration(node) ||
+							ts.isInterfaceDeclaration(node),
 					);
 				} else if (
-					ts.isExportDeclaration(node)
-					&& hasPublicAPIComment(node, sourceFile)
-					&& node.exportClause
-					&& ts.isNamedExports(node.exportClause)
+					ts.isExportDeclaration(node) &&
+					hasPublicAPIComment(node, sourceFile) &&
+					node.exportClause &&
+					ts.isNamedExports(node.exportClause)
 				) {
 					// Also include all re-exports from other locations in the project
 					for (const exportSpecifier of node.exportClause.elements) {
@@ -138,15 +139,15 @@ export async function generateCCExportsFile(
 						);
 					}
 				} else if (
-					ts.isVariableStatement(node)
-					&& node.modifiers?.some(
+					ts.isVariableStatement(node) &&
+					node.modifiers?.some(
 						(m) => m.kind === ts.SyntaxKind.ExportKeyword,
-					)
+					) &&
 					// Export consts marked with @publicAPI
-					&& (hasPublicAPIComment(node, sourceFile)
+					(hasPublicAPIComment(node, sourceFile) ||
 						// and the xyzCCValues const
-						|| node.declarationList.declarations.some((d) =>
-							d.name.getText().endsWith("CCValues")
+						node.declarationList.declarations.some((d) =>
+							d.name.getText().endsWith("CCValues"),
 						))
 				) {
 					for (const variable of node.declarationList.declarations) {
@@ -173,11 +174,9 @@ export async function generateCCExportsFile(
 	let registerFunctionContent = ``;
 
 	// Generate type and value exports for all found symbols
-	for (
-		const [filename, fileExports] of [...ccExports.entries()].toSorted(
-			([fileA], [fileB]) => compareStrings(fileA, fileB),
-		)
-	) {
+	for (const [filename, fileExports] of [...ccExports.entries()].toSorted(
+		([fileA], [fileB]) => compareStrings(fileA, fileB),
+	)) {
 		const relativePath = path
 			.relative(indexFilePath, filename)
 			// normalize to slashes
@@ -189,28 +188,21 @@ export async function generateCCExportsFile(
 
 		const typeExports = fileExports.filter((e) => e.typeOnly);
 		if (typeExports.length) {
-			fileContent += `export type { ${
-				typeExports
-					.map((e) => e.name)
-					.join(", ")
-			} } from "${relativePath}"\n`;
+			fileContent += `export type { ${typeExports
+				.map((e) => e.name)
+				.join(", ")} } from "${relativePath}"\n`;
 		}
 		const valueExports = fileExports.filter((e) => !e.typeOnly);
 		if (valueExports.length) {
-			fileContent += `import { ${
-				valueExports
-					.map((e) => e.name)
-					.join(", ")
-			} } from "${relativePath}";\n`;
-			fileContent += `export { ${
-				valueExports
-					.map((e) => e.name)
-					.join(", ")
-			} };\n`;
+			fileContent += `import { ${valueExports
+				.map((e) => e.name)
+				.join(", ")} } from "${relativePath}";\n`;
+			fileContent += `export { ${valueExports
+				.map((e) => e.name)
+				.join(", ")} };\n`;
 
-			registerFunctionContent += valueExports
-				.map((e) => `void ${e.name};`)
-				.join("\n") + "\n";
+			registerFunctionContent +=
+				valueExports.map((e) => `void ${e.name};`).join("\n") + "\n";
 		}
 	}
 
@@ -220,8 +212,7 @@ ${registerFunctionContent}
 }
 `;
 
-	return new Map([[
-		"cc/index.ts",
-		formatWithDprint(indexFilePath, fileContent),
-	]]);
+	return new Map([
+		["cc/index.ts", await formatWithOxfmt(indexFilePath, fileContent)],
+	]);
 }

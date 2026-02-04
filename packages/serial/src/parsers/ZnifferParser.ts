@@ -1,8 +1,11 @@
-import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
+
+import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import type { SerialLogger } from "../log/Logger.js";
 import { ZnifferFrameType } from "../message/Constants.js";
 import { ZnifferMessageHeaders } from "../message/MessageHeaders.js";
+
 import {
 	type ZnifferSerialFrame,
 	ZnifferSerialFrameType,
@@ -32,12 +35,11 @@ function getMessageLength(data: BytesView): number | undefined {
 	}
 }
 
-class ZnifferParserTransformer
-	implements Transformer<BytesView, ZnifferSerialFrame>
-{
-	constructor(
-		private logger?: SerialLogger,
-	) {}
+class ZnifferParserTransformer implements Transformer<
+	BytesView,
+	ZnifferSerialFrame
+> {
+	constructor(private logger?: SerialLogger) {}
 
 	private receiveBuffer = new Bytes();
 
@@ -55,9 +57,9 @@ class ZnifferParserTransformer
 
 			let skip = 0;
 			while (
-				skip < this.receiveBuffer.length
-				&& this.receiveBuffer[skip] !== ZnifferMessageHeaders.SOCF
-				&& this.receiveBuffer[skip] !== ZnifferMessageHeaders.SODF
+				skip < this.receiveBuffer.length &&
+				this.receiveBuffer[skip] !== ZnifferMessageHeaders.SOCF &&
+				this.receiveBuffer[skip] !== ZnifferMessageHeaders.SODF
 			) {
 				skip++;
 			}
@@ -77,7 +79,8 @@ class ZnifferParserTransformer
 			const msgLength = getMessageLength(this.receiveBuffer);
 
 			if (
-				msgLength == undefined || this.receiveBuffer.length < msgLength
+				msgLength == undefined ||
+				this.receiveBuffer.length < msgLength
 			) {
 				// The buffer contains no complete message, we're done here for now
 				break;
@@ -97,12 +100,11 @@ class ZnifferParserTransformer
 	}
 }
 
-export class ZnifferParser
-	extends TransformStream<BytesView, ZnifferSerialFrame>
-{
-	constructor(
-		logger?: SerialLogger,
-	) {
+export class ZnifferParser extends TransformStream<
+	BytesView,
+	ZnifferSerialFrame
+> {
+	constructor(logger?: SerialLogger) {
 		super(new ZnifferParserTransformer(logger));
 	}
 }

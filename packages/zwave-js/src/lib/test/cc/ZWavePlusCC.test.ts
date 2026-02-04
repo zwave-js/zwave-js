@@ -21,9 +21,7 @@ test("The Get command should serialize correctly", async (t) => {
 			ZWavePlusCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 // describe.skip(`interview()`, () => {

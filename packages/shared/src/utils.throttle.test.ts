@@ -1,5 +1,6 @@
 import sinon from "sinon";
 import { afterAll, beforeAll, test, vi } from "vitest";
+
 import { throttle } from "./utils.js";
 
 beforeAll((t) => {

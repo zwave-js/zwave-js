@@ -1,4 +1,5 @@
 import { MAX_NODES, NUM_NODEMASK_BYTES } from "@zwave-js/core";
+
 import { SUC_MAX_UPDATES } from "../../../consts.js";
 import {
 	APPL_NODEPARM_MAX,

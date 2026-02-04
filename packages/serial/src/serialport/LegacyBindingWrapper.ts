@@ -1,13 +1,15 @@
+import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import type { BytesView } from "@zwave-js/shared";
-import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+
 import type { ZWaveSerialPortImplementation } from "./ZWaveSerialPortImplementation.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export function wrapLegacySerialBinding(
 	legacy: ZWaveSerialPortImplementation,
 ): ZWaveSerialBindingFactory {
-	return async function() {
+	return async function () {
 		const instance = legacy.create();
 
 		await legacy.open(instance);

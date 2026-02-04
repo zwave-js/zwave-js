@@ -1,4 +1,5 @@
 import { isObject } from "alcalzone-shared/typeguards";
+
 import { CommandClasses } from "../definitions/CommandClasses.js";
 import { InterviewStage } from "../definitions/InterviewStage.js";
 import type {
@@ -8,6 +9,7 @@ import type {
 	ValueRemovedArgs,
 	ValueUpdatedArgs,
 } from "../values/_Types.js";
+
 import {
 	CONTROLLER_LABEL,
 	CONTROLLER_LOGLEVEL,
@@ -24,7 +26,8 @@ import { ZWaveLoggerBase } from "./ZWaveLoggerBase.js";
 import { getDirectionPrefix, getNodeTag, tagify } from "./shared.js";
 import type { LogContainer } from "./traits.js";
 
-export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext>
+export class ControllerLogger
+	extends ZWaveLoggerBase<ControllerLogContext>
 	implements LogNode
 {
 	constructor(loggers: LogContainer) {
@@ -165,34 +168,26 @@ export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext>
 		}
 		switch (change) {
 			case "added":
-				message += `: ${
-					this.formatValue(
-						(args as unknown as ValueAddedArgs).newValue,
-					)
-				}`;
+				message += `: ${this.formatValue(
+					(args as unknown as ValueAddedArgs).newValue,
+				)}`;
 				break;
 			case "updated": {
 				const _args = args as unknown as ValueUpdatedArgs;
-				message += `: ${
-					this.formatValue(
-						_args.prevValue,
-					)
-				} => ${this.formatValue(_args.newValue)}`;
+				message += `: ${this.formatValue(
+					_args.prevValue,
+				)} => ${this.formatValue(_args.newValue)}`;
 				break;
 			}
 			case "removed":
-				message += ` (was ${
-					this.formatValue(
-						(args as unknown as ValueRemovedArgs).prevValue,
-					)
-				})`;
+				message += ` (was ${this.formatValue(
+					(args as unknown as ValueRemovedArgs).prevValue,
+				)})`;
 				break;
 			case "notification":
-				message += `: ${
-					this.formatValue(
-						(args as unknown as ValueNotificationArgs).value,
-					)
-				}`;
+				message += `: ${this.formatValue(
+					(args as unknown as ValueNotificationArgs).value,
+				)}`;
 				break;
 		}
 		this.logger.log({
@@ -253,11 +248,12 @@ export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext>
 		this.logger.log<ControllerNodeLogContext>({
 			level: CONTROLLER_LOGLEVEL,
 			primaryTags: tagify([getNodeTag(node.id)]),
-			message: node.interviewStage === InterviewStage.Complete
-				? "Interview completed"
-				: `Interview stage completed: ${
-					InterviewStage[node.interviewStage]
-				}`,
+			message:
+				node.interviewStage === InterviewStage.Complete
+					? "Interview completed"
+					: `Interview stage completed: ${
+							InterviewStage[node.interviewStage]
+						}`,
 			direction: getDirectionPrefix("none"),
 			context: {
 				nodeId: node.id,

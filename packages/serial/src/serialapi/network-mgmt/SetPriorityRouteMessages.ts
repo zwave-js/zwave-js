@@ -25,14 +25,12 @@ import {
 } from "@zwave-js/serial";
 import { type AllOrNone, Bytes, getEnumMemberName } from "@zwave-js/shared";
 
-export type SetPriorityRouteRequestOptions =
-	& {
-		destinationNodeId: number;
-	}
-	& AllOrNone<{
-		repeaters: number[];
-		routeSpeed: ZWaveDataRate;
-	}>;
+export type SetPriorityRouteRequestOptions = {
+	destinationNodeId: number;
+} & AllOrNone<{
+	repeaters: number[];
+	routeSpeed: ZWaveDataRate;
+}>;
 
 @messageTypes(MessageType.Request, FunctionType.SetPriorityRoute)
 @priority(MessagePriority.Normal)
@@ -44,8 +42,8 @@ export class SetPriorityRouteRequest extends Message {
 		super(options);
 		if (options.repeaters) {
 			if (
-				options.repeaters.length > MAX_REPEATERS
-				|| options.repeaters.some((id) => id < 1 || id > MAX_NODES)
+				options.repeaters.length > MAX_REPEATERS ||
+				options.repeaters.some((id) => id < 1 || id > MAX_NODES)
 			) {
 				throw new ZWaveError(
 					`The repeaters array must contain at most ${MAX_REPEATERS} node IDs between 1 and ${MAX_NODES}`,
@@ -82,10 +80,7 @@ export class SetPriorityRouteRequest extends Message {
 	public routeSpeed: ZWaveDataRate | undefined;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		const nodeId = encodeNodeID(
-			this.destinationNodeId,
-			ctx.nodeIdType,
-		);
+		const nodeId = encodeNodeID(this.destinationNodeId, ctx.nodeIdType);
 		if (this.repeaters == undefined || this.routeSpeed == undefined) {
 			// Remove the priority route
 			this.payload = nodeId;
@@ -113,9 +108,10 @@ export class SetPriorityRouteRequest extends Message {
 		if (this.repeaters != undefined && this.routeSpeed != undefined) {
 			message = {
 				...message,
-				repeaters: this.repeaters.length > 0
-					? this.repeaters.join(" -> ")
-					: "none",
+				repeaters:
+					this.repeaters.length > 0
+						? this.repeaters.join(" -> ")
+						: "none",
 				"route speed": getEnumMemberName(
 					ZWaveDataRate,
 					this.routeSpeed,
@@ -134,7 +130,8 @@ export interface SetPriorityRouteResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.SetPriorityRoute)
-export class SetPriorityRouteResponse extends Message
+export class SetPriorityRouteResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(

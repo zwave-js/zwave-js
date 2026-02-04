@@ -10,16 +10,16 @@ export type TransportServiceRXState =
 	// We have requested a missing segment
 	| { value: "requestMissing"; offset: number }
 	| {
-		value: "success" | "failure";
-		done: true;
-	};
+			value: "success" | "failure";
+			done: true;
+	  };
 
 export type TransportServiceRXMachineInput =
 	| {
-		value: "segment";
-		offset: number;
-		length: number;
-	}
+			value: "segment";
+			offset: number;
+			length: number;
+	  }
 	| { value: "timeout" }
 	| { value: "abort" };
 
@@ -44,11 +44,11 @@ export function createTransportServiceRXMachine(
 
 	const receivedBytes: boolean[] = [
 		// When the machine is started, we've already received the first segment
-		...(Array.from<boolean>({ length: firstSegmentSize })
-			.fill(true)),
+		...Array.from<boolean>({ length: firstSegmentSize }).fill(true),
 		// The rest of the segments are still missing
-		...(Array.from<boolean>({ length: datagramSize - firstSegmentSize })
-			.fill(false)),
+		...Array.from<boolean>({
+			length: datagramSize - firstSegmentSize,
+		}).fill(false),
 	];
 
 	function markReceived(offset: number, length: number): void {
@@ -66,63 +66,61 @@ export function createTransportServiceRXMachine(
 	}
 
 	function hasHole(): boolean {
-		return receivedBytes.lastIndexOf(true)
-			> receivedBytes.indexOf(false);
+		return receivedBytes.lastIndexOf(true) > receivedBytes.indexOf(false);
 	}
 
-	const transitions: InferStateMachineTransitions<
-		TransportServiceRXMachine
-	> = (state) => (input) => {
-		if (input.value === "abort") {
-			if (state.value !== "success" && state.value !== "failure") {
-				return to({ value: "failure", done: true });
-			}
-			return;
-		}
-
-		switch (state.value) {
-			case "receive": {
-				if (input.value === "segment") {
-					markReceived(input.offset, input.length);
-					if (isComplete()) {
-						return to({ value: "success", done: true });
-					} else if (hasReceivedLastSegment() && hasHole()) {
-						return to({
-							value: "requestMissing",
-							offset: receivedBytes.indexOf(false),
-						});
-					} else {
-						return to({ value: "receive" });
-					}
-				} else if (input.value === "timeout") {
-					// One or more segments are missing, start requesting them
-					return to({
-						value: "requestMissing",
-						offset: receivedBytes.indexOf(false),
-					});
-				}
-				break;
-			}
-
-			case "requestMissing": {
-				if (input.value === "segment") {
-					markReceived(input.offset, input.length);
-					if (isComplete()) {
-						return to({ value: "success", done: true });
-					} else {
-						// still not complete, request the next missing segment
-						return to({
-							value: "requestMissing",
-							offset: receivedBytes.indexOf(false),
-						});
-					}
-				} else if (input.value === "timeout") {
-					// Give up
+	const transitions: InferStateMachineTransitions<TransportServiceRXMachine> =
+		(state) => (input) => {
+			if (input.value === "abort") {
+				if (state.value !== "success" && state.value !== "failure") {
 					return to({ value: "failure", done: true });
 				}
+				return;
 			}
-		}
-	};
+
+			switch (state.value) {
+				case "receive": {
+					if (input.value === "segment") {
+						markReceived(input.offset, input.length);
+						if (isComplete()) {
+							return to({ value: "success", done: true });
+						} else if (hasReceivedLastSegment() && hasHole()) {
+							return to({
+								value: "requestMissing",
+								offset: receivedBytes.indexOf(false),
+							});
+						} else {
+							return to({ value: "receive" });
+						}
+					} else if (input.value === "timeout") {
+						// One or more segments are missing, start requesting them
+						return to({
+							value: "requestMissing",
+							offset: receivedBytes.indexOf(false),
+						});
+					}
+					break;
+				}
+
+				case "requestMissing": {
+					if (input.value === "segment") {
+						markReceived(input.offset, input.length);
+						if (isComplete()) {
+							return to({ value: "success", done: true });
+						} else {
+							// still not complete, request the next missing segment
+							return to({
+								value: "requestMissing",
+								offset: receivedBytes.indexOf(false),
+							});
+						}
+					} else if (input.value === "timeout") {
+						// Give up
+						return to({ value: "failure", done: true });
+					}
+				}
+			}
+		};
 
 	return new StateMachine(initialState, transitions);
 }

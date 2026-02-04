@@ -11,10 +11,7 @@ export type Constructor<T = object> = new (...args: any[]) => T;
 
 export type TypedClassDecorator<
 	Class extends abstract new (...args: any) => any,
-> = (
-	target: Class,
-	context: ClassDecoratorContext<Class>,
-) => Class | void;
+> = (target: Class, context: ClassDecoratorContext<Class>) => Class | void;
 
 export type TypedPropertyDecorator<TTarget extends object> = <
 	T extends TTarget,
@@ -25,7 +22,8 @@ export type TypedPropertyDecorator<TTarget extends object> = <
 
 export type UnionToIntersection<T> = (
 	T extends any ? (x: T) => any : never
-) extends (x: infer R) => any ? R
+) extends (x: infer R) => any
+	? R
 	: never;
 
 export type OnlyMethods<T> = {
@@ -44,4 +42,4 @@ export type Expand<T> =
 			? { [K in keyof O]: O[K] }
 			: never
 		: // Fallback to the type itself if no match
-		  T;
+			T;

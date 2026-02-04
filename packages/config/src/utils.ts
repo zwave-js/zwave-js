@@ -20,6 +20,7 @@ import semverInc from "semver/functions/inc.js";
 import semverLte from "semver/functions/lte.js";
 import semverSatisfies from "semver/functions/satisfies.js";
 import semverValid from "semver/functions/valid.js";
+
 import type { ConfigLogger } from "./Logger.js";
 import { PACKAGE_VERSION } from "./_version.js";
 import type { DeviceConfigIndexEntry } from "./devices/DeviceConfig.js";
@@ -45,8 +46,8 @@ export function getDeviceEntryPredicate(
 				semverLte(
 					padVersion(entry.firmwareVersion.min),
 					padVersion(firmwareVersion),
-				)
-				&& semverGte(
+				) &&
+				semverGte(
 					padVersion(entry.firmwareVersion.max),
 					padVersion(firmwareVersion),
 				)
@@ -58,12 +59,12 @@ export function getDeviceEntryPredicate(
 
 export type SyncExternalConfigDirResult =
 	| {
-		success: false;
-	}
+			success: false;
+	  }
 	| {
-		success: true;
-		version: string;
-	};
+			success: true;
+			version: string;
+	  };
 
 /**
  * Synchronizes or updates the external config directory and returns whether the directory is in a state that can be used
@@ -88,12 +89,10 @@ export async function syncExternalConfigDir(
 
 	const externalVersionFilename = path.join(extConfigDir, "version");
 	const currentVersion = PACKAGE_VERSION;
-	const supportedRange = `>=${currentVersion} <${
-		semverInc(
-			currentVersion,
-			"patch",
-		)
-	}`;
+	const supportedRange = `>=${currentVersion} <${semverInc(
+		currentVersion,
+		"patch",
+	)}`;
 
 	// We remember the config version that was copied there in a file called "version"
 	// If that either...
@@ -130,11 +129,8 @@ export async function syncExternalConfigDir(
 		logger.print(`Synchronizing external config dir ${extConfigDir}...`);
 		await fs.deleteDir(extConfigDir);
 		await fs.ensureDir(extConfigDir);
-		await copyFilesRecursive(
-			fs,
-			configDir,
-			extConfigDir,
-			(src) => src.endsWith(".json"),
+		await copyFilesRecursive(fs, configDir, extConfigDir, (src) =>
+			src.endsWith(".json"),
 		);
 		await writeTextFile(
 			fs,
@@ -161,7 +157,7 @@ export function versionInRange(
 	max: string,
 ): boolean {
 	return (
-		semverGte(padVersion(version), padVersion(min))
-		&& semverLte(padVersion(version), padVersion(max))
+		semverGte(padVersion(version), padVersion(min)) &&
+		semverLte(padVersion(version), padVersion(max))
 	);
 }

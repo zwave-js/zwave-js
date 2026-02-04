@@ -58,44 +58,44 @@ Depending on the chosen inclusion strategy, the options object requires addition
 ```ts
 type InclusionOptions =
 	| {
-		strategy: InclusionStrategy.Default;
-		/**
-		 * Allows overriding the user callbacks for this inclusion.
-		 * If not given, the inclusion user callbacks of the driver options will be used.
-		 */
-		userCallbacks?: InclusionUserCallbacks;
-		/**
-		 * Force secure communication (S0) even when S2 is not supported and S0 is supported but not necessary.
-		 * This is not recommended due to the overhead caused by S0.
-		 */
-		forceSecurity?: boolean;
-	}
+			strategy: InclusionStrategy.Default;
+			/**
+			 * Allows overriding the user callbacks for this inclusion.
+			 * If not given, the inclusion user callbacks of the driver options will be used.
+			 */
+			userCallbacks?: InclusionUserCallbacks;
+			/**
+			 * Force secure communication (S0) even when S2 is not supported and S0 is supported but not necessary.
+			 * This is not recommended due to the overhead caused by S0.
+			 */
+			forceSecurity?: boolean;
+	  }
 	| {
-		strategy: InclusionStrategy.Security_S2;
-		/**
-		 * Allows pre-filling the DSK, e.g. when a DSK-only QR code has been scanned.
-		 * If this is given, the `validateDSKAndEnterPIN` callback will not be called.
-		 */
-		dsk?: string;
-		/**
-		 * Allows overriding the user callbacks for this inclusion.
-		 * If not given, the inclusion user callbacks of the driver options will be used.
-		 */
-		userCallbacks?: InclusionUserCallbacks;
-	}
+			strategy: InclusionStrategy.Security_S2;
+			/**
+			 * Allows pre-filling the DSK, e.g. when a DSK-only QR code has been scanned.
+			 * If this is given, the `validateDSKAndEnterPIN` callback will not be called.
+			 */
+			dsk?: string;
+			/**
+			 * Allows overriding the user callbacks for this inclusion.
+			 * If not given, the inclusion user callbacks of the driver options will be used.
+			 */
+			userCallbacks?: InclusionUserCallbacks;
+	  }
 	| {
-		strategy: InclusionStrategy.Security_S2;
-		/**
-		 * The optional provisioning entry for the device to be included.
-		 * If not given, the inclusion user callbacks of the driver options will be used.
-		 */
-		provisioning?: PlannedProvisioningEntry;
-	}
+			strategy: InclusionStrategy.Security_S2;
+			/**
+			 * The optional provisioning entry for the device to be included.
+			 * If not given, the inclusion user callbacks of the driver options will be used.
+			 */
+			provisioning?: PlannedProvisioningEntry;
+	  }
 	| {
-		strategy:
-			| InclusionStrategy.Insecure
-			| InclusionStrategy.Security_S0;
-	};
+			strategy:
+				| InclusionStrategy.Insecure
+				| InclusionStrategy.Security_S0;
+	  };
 ```
 
 For inclusion with _Security S2_, callbacks into the application must be defined as part of the [driver options](api/driver.md#ZWaveOptions) (`inclusionUserCallbacks`). They can optionally be overridden for individual inclusion attempts by setting the `userCallbacks` property in the `InclusionOptions`. The callbacks are defined as follows:
@@ -499,18 +499,18 @@ type ReplaceNodeOptions =
 	// We don't know which security CCs a node supports when it is a replacement
 	// we we need the user to specify how the node should be included
 	| {
-		strategy: InclusionStrategy.Security_S2;
-		userCallbacks: InclusionUserCallbacks;
-	}
+			strategy: InclusionStrategy.Security_S2;
+			userCallbacks: InclusionUserCallbacks;
+	  }
 	| {
-		strategy: InclusionStrategy.Security_S2;
-		provisioning: PlannedProvisioningEntry;
-	}
+			strategy: InclusionStrategy.Security_S2;
+			provisioning: PlannedProvisioningEntry;
+	  }
 	| {
-		strategy:
-			| InclusionStrategy.Insecure
-			| InclusionStrategy.Security_S0;
-	};
+			strategy:
+				| InclusionStrategy.Insecure
+				| InclusionStrategy.Security_S0;
+	  };
 ```
 
 ### Managing routes
@@ -568,9 +568,9 @@ removePriorityRoute(destinationNodeId: number): Promise<boolean>;
 
 - `setPriorityRoute` sets the priority route which will always be used for the first transmission attempt from the controller to the given node.
 - `getPriorityRoute` returns the priority route to the given node, which can be:
-  - `undefined` if there is no route at all,
-  - the priority route if it exists,
-  - otherwise the LWR/NLWR
+    - `undefined` if there is no route at all,
+    - the priority route if it exists,
+    - otherwise the LWR/NLWR
 
 `routeKind` identifies which kind of route is returned by `getPriorityRoute` (`None` is only used internally):
 
@@ -1642,14 +1642,14 @@ The second argument gives additional info about the inclusion result.
 ```ts
 type InclusionResult =
 	| {
-		/** This flag warns that a node was included with a lower than intended security, meaning unencrypted when it should have been included with Security S0/S2 */
-		lowSecurity?: false;
-	}
+			/** This flag warns that a node was included with a lower than intended security, meaning unencrypted when it should have been included with Security S0/S2 */
+			lowSecurity?: false;
+	  }
 	| {
-		/** This flag warns that a node was included with a lower than intended security, meaning unencrypted when it should have been included with Security S0/S2 */
-		lowSecurity: true;
-		lowSecurityReason: SecurityBootstrapFailure;
-	};
+			/** This flag warns that a node was included with a lower than intended security, meaning unencrypted when it should have been included with Security S0/S2 */
+			lowSecurity: true;
+			lowSecurityReason: SecurityBootstrapFailure;
+	  };
 ```
 
 If there was a failure during the inclusion, the `lowSecurity` flag will be `true` and the `lowSecurityReason` property will contain additional information why.

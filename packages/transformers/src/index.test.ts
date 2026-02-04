@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+
 import { beforeAll, test } from "vitest";
 
 const fixturesDir = path.join(__dirname, "../test/fixtures");
@@ -10,9 +11,9 @@ beforeAll(async (t) => {
 	await spawn("yarn", ["run", "pretest"], { cwd: __dirname });
 	const jsFiles = (await fs.readdir(fixturesDir)).filter(
 		(f) =>
-			f.startsWith("test")
-			&& f.endsWith(".mjs")
-			&& !f.endsWith("._validateArgs.mjs"),
+			f.startsWith("test") &&
+			f.endsWith(".mjs") &&
+			!f.endsWith("._validateArgs.mjs"),
 	);
 	files.push(...jsFiles);
 }, 360000);

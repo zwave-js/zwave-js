@@ -85,8 +85,8 @@ export class MyCommandClassCCReport extends MyCommandClassCC {
 		offset += encodeCCId(this.targetCC, this.payload, offset);
 		this.payload.writeUInt16BE(this.targetId, offset);
 		offset += 2;
-		this.payload[offset++] = ((this.reportReason & 0b111) << 1)
-			| (this.value ? 0b1 : 0);
+		this.payload[offset++] =
+			((this.reportReason & 0b111) << 1) | (this.value ? 0b1 : 0);
 
 		// Trim to actual size
 		this.payload = this.payload.subarray(0, offset);
@@ -137,10 +137,7 @@ export class MyCommandClassCCGet extends MyCommandClassCC {
 		this.targetId = options.targetId;
 	}
 
-	public static from(
-		raw: CCRaw,
-		ctx: CCParsingContext,
-	): MyCommandClassCCGet {
+	public static from(raw: CCRaw, ctx: CCParsingContext): MyCommandClassCCGet {
 		validatePayload(raw.payload.length >= 2);
 		const targetId = raw.payload.readUInt16BE(0);
 
@@ -189,10 +186,7 @@ export class MyCommandClassCCSet extends MyCommandClassCC {
 		this.value = options.value;
 	}
 
-	public static from(
-		raw: CCRaw,
-		ctx: CCParsingContext,
-	): MyCommandClassCCSet {
+	public static from(raw: CCRaw, ctx: CCParsingContext): MyCommandClassCCSet {
 		validatePayload(raw.payload.length >= 3);
 		const targetId = raw.payload.readUInt16BE(0);
 		const value = !!(raw.payload[2] & 0b1);
@@ -234,9 +228,8 @@ When a Set command can either erase or modify data:
 
 ```typescript
 /** @publicAPI */
-export type MyScheduleSetOptions =
-	& SlotId
-	& (
+export type MyScheduleSetOptions = SlotId &
+	(
 		| { action: SetAction.Erase }
 		| ({ action: SetAction.Modify } & ScheduleData)
 	);

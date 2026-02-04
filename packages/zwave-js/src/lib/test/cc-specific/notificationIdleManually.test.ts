@@ -1,10 +1,12 @@
+import path from "node:path";
+
 import {
 	NotificationCCReport,
 	NotificationCCValues,
 } from "@zwave-js/cc/NotificationCC";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Notification values can get idled manually", {
@@ -97,7 +99,7 @@ integrationTest(
 			// wait a bit for the value to be updated
 			await wait(100);
 			t.expect(
-				node.getValue(alarmStatusValueId), /* Smoke alarm test */
+				node.getValue(alarmStatusValueId) /* Smoke alarm test */,
 			).toBe(0x03);
 
 			// Idling with a valueId does work

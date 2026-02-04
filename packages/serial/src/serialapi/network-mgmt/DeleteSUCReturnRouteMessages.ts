@@ -54,9 +54,7 @@ function testDeleteSUCReturnRouteCallback(
 
 @expectedResponse(FunctionType.DeleteSUCReturnRoute)
 @expectedCallback(testDeleteSUCReturnRouteCallback)
-export class DeleteSUCReturnRouteRequest
-	extends DeleteSUCReturnRouteRequestBase
-{
+export class DeleteSUCReturnRouteRequest extends DeleteSUCReturnRouteRequestBase {
 	public constructor(
 		options: DeleteSUCReturnRouteRequestOptions & MessageBaseOptions,
 	) {
@@ -96,7 +94,8 @@ export interface DeleteSUCReturnRouteResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.DeleteSUCReturnRoute)
-export class DeleteSUCReturnRouteResponse extends Message
+export class DeleteSUCReturnRouteResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -145,9 +144,8 @@ export class DeleteSUCReturnRouteRequestTransmitReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& DeleteSUCReturnRouteRequestTransmitReportOptions
-			& MessageBaseOptions,
+		options: DeleteSUCReturnRouteRequestTransmitReportOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 

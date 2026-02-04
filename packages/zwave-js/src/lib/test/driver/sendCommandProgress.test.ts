@@ -1,10 +1,11 @@
+import path from "node:path";
+
 import { BinarySwitchCCValues } from "@zwave-js/cc/BinarySwitchCC";
 import { CommandClasses, TransactionState } from "@zwave-js/core";
-import sinon from "sinon";
-
 import { getEnumMemberName } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+import sinon from "sinon";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -22,9 +23,10 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const onProgress = sinon.stub().callsFake((progress) => {
 				driver.driverLog.print(
-					`onProgress: ${
-						getEnumMemberName(TransactionState, progress.state)
-					}`,
+					`onProgress: ${getEnumMemberName(
+						TransactionState,
+						progress.state,
+					)}`,
 				);
 			});
 
@@ -46,75 +48,73 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"Communication with sleeping nodes is considered correctly",
-	{
-		// debug: true,
+integrationTest("Communication with sleeping nodes is considered correctly", {
+	// debug: true,
 
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/binarySwitchSleeping",
-		),
+	provisioningDirectory: path.join(
+		__dirname,
+		"fixtures/binarySwitchSleeping",
+	),
 
-		// nodeCapabilities: {
-		// 	isListening: false,
-		// 	isFrequentListening: false,
-		// 	commandClasses: [
-		// 		CommandClasses.Version,
-		// 		CommandClasses["Binary Switch"],
-		// 	],
-		// },
+	// nodeCapabilities: {
+	// 	isListening: false,
+	// 	isFrequentListening: false,
+	// 	commandClasses: [
+	// 		CommandClasses.Version,
+	// 		CommandClasses["Binary Switch"],
+	// 	],
+	// },
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const states: TransactionState[] = [];
-			const onProgress = sinon.stub().callsFake((progress) => {
-				driver.driverLog.print(
-					`onProgress: ${
-						getEnumMemberName(TransactionState, progress.state)
-					}`,
-				);
-				states.push(progress.state);
-			});
-
-			// Node is asleep, but assumed to be awake
-			mockNode.autoAckControllerFrames = false;
-			node.markAsAwake();
-			const promise = node.setValue(
-				BinarySwitchCCValues.targetValue.id,
-				true,
-				{
-					onProgress,
-				},
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		const states: TransactionState[] = [];
+		const onProgress = sinon.stub().callsFake((progress) => {
+			driver.driverLog.print(
+				`onProgress: ${getEnumMemberName(
+					TransactionState,
+					progress.state,
+				)}`,
 			);
+			states.push(progress.state);
+		});
 
-			// Wait for the node to get marked asleep again
-			await new Promise((resolve) => {
-				node.once("sleep", resolve);
-			});
+		// Node is asleep, but assumed to be awake
+		mockNode.autoAckControllerFrames = false;
+		node.markAsAwake();
+		const promise = node.setValue(
+			BinarySwitchCCValues.targetValue.id,
+			true,
+			{
+				onProgress,
+			},
+		);
 
-			await wait(200);
+		// Wait for the node to get marked asleep again
+		await new Promise((resolve) => {
+			node.once("sleep", resolve);
+		});
 
-			t.expect(states).toStrictEqual([
-				TransactionState.Queued,
-				TransactionState.Active,
-				TransactionState.Queued,
-			]);
+		await wait(200);
 
-			// Now the node is awake again
-			mockNode.autoAckControllerFrames = true;
-			node.markAsAwake();
+		t.expect(states).toStrictEqual([
+			TransactionState.Queued,
+			TransactionState.Active,
+			TransactionState.Queued,
+		]);
 
-			await promise;
+		// Now the node is awake again
+		mockNode.autoAckControllerFrames = true;
+		node.markAsAwake();
 
-			await wait(200);
+		await promise;
 
-			t.expect(states).toStrictEqual([
-				TransactionState.Queued,
-				TransactionState.Active,
-				TransactionState.Queued,
-				TransactionState.Active,
-				TransactionState.Completed,
-			]);
-		},
+		await wait(200);
+
+		t.expect(states).toStrictEqual([
+			TransactionState.Queued,
+			TransactionState.Active,
+			TransactionState.Queued,
+			TransactionState.Active,
+			TransactionState.Completed,
+		]);
 	},
-);
+});

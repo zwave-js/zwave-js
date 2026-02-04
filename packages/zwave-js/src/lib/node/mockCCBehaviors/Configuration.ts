@@ -46,9 +46,10 @@ const respondToConfigurationGet: MockNodeBehavior = {
 			// Do not respond if the parameter is not supported
 			if (!paramInfo) return { action: "stop" };
 
-			const value = (self.state.get(StateKeys.value(parameter)) as number)
-				?? paramInfo.defaultValue
-				?? 0;
+			const value =
+				(self.state.get(StateKeys.value(parameter)) as number) ??
+				paramInfo.defaultValue ??
+				0;
 
 			const cc = new ConfigurationCCReport({
 				nodeId: controller.ownNodeId,
@@ -90,8 +91,8 @@ const respondToConfigurationSet: MockNodeBehavior = {
 			if (paramInfo.minValue != undefined && value < paramInfo.minValue) {
 				return { action: "fail" };
 			} else if (
-				paramInfo.maxValue != undefined
-				&& value > paramInfo.maxValue
+				paramInfo.maxValue != undefined &&
+				value > paramInfo.maxValue
 			) {
 				return { action: "fail" };
 			}
@@ -209,8 +210,8 @@ const respondToConfigurationPropertiesGet: MockNodeBehavior = {
 					nodeId: controller.ownNodeId,
 					parameter,
 					valueSize: paramInfo.valueSize,
-					valueFormat: paramInfo.format
-						?? ConfigValueFormat.SignedInteger,
+					valueFormat:
+						paramInfo.format ?? ConfigValueFormat.SignedInteger,
 					minValue: paramInfo.minValue,
 					maxValue: paramInfo.maxValue,
 					defaultValue: paramInfo.defaultValue,

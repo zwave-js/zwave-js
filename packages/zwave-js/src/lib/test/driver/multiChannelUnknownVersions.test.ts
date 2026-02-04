@@ -1,9 +1,11 @@
+import path from "node:path";
+
 import {
 	BinarySwitchCCSet,
 	MultiChannelCCCommandEncapsulation,
 } from "@zwave-js/cc";
 import { MockZWaveFrameType } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -22,10 +24,10 @@ integrationTest(
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof MultiChannelCCCommandEncapsulation
-					&& frame.payload.encapsulated instanceof BinarySwitchCCSet,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof
+						MultiChannelCCCommandEncapsulation &&
+					frame.payload.encapsulated instanceof BinarySwitchCCSet,
 			);
 
 			await driver.waitForIdle();

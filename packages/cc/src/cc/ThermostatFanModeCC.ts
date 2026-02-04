@@ -17,6 +17,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -59,15 +60,11 @@ export const ThermostatFanModeCCValues = V.defineCCValues(
 			} as const,
 			{ minVersion: 3 } as const,
 		),
-		...V.staticPropertyWithName(
-			"fanMode",
-			"mode",
-			{
-				...ValueMetadata.UInt8,
-				states: enumValuesToMetadataStates(ThermostatFanMode),
-				label: "Thermostat fan mode",
-			} as const,
-		),
+		...V.staticPropertyWithName("fanMode", "mode", {
+			...ValueMetadata.UInt8,
+			states: enumValuesToMetadataStates(ThermostatFanMode),
+			label: "Thermostat fan mode",
+		} as const),
 		...V.staticPropertyWithName(
 			"supportedFanModes",
 			"supportedModes",
@@ -93,7 +90,7 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: ThermostatFanModeCCAPI,
 			{ property },
 			value,
@@ -154,7 +151,7 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: ThermostatFanModeCCAPI, { property }) {
+		return async function (this: ThermostatFanModeCCAPI, { property }) {
 			switch (property) {
 				case "mode":
 				case "off":
@@ -177,9 +174,7 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatFanModeCCReport
-		>(
+		const response = await this.host.sendCommand<ThermostatFanModeCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -219,12 +214,11 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatFanModeCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ThermostatFanModeCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedModes;
 	}
 }
@@ -235,9 +229,7 @@ export class ThermostatFanModeCCAPI extends CCAPI {
 export class ThermostatFanModeCC extends CommandClass {
 	declare ccCommand: ThermostatFanModeCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -263,14 +255,12 @@ export class ThermostatFanModeCC extends CommandClass {
 
 		const supportedModes = await api.getSupportedModes();
 		if (supportedModes) {
-			const logMessage = `received supported thermostat fan modes:${
-				supportedModes
-					.map(
-						(mode) =>
-							`\n· ${getEnumMemberName(ThermostatFanMode, mode)}`,
-					)
-					.join("")
-			}`;
+			const logMessage = `received supported thermostat fan modes:${supportedModes
+				.map(
+					(mode) =>
+						`\n· ${getEnumMemberName(ThermostatFanMode, mode)}`,
+				)
+				.join("")}`;
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
@@ -291,9 +281,7 @@ export class ThermostatFanModeCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -312,12 +300,10 @@ export class ThermostatFanModeCC extends CommandClass {
 		});
 		const currentStatus = await api.get();
 		if (currentStatus) {
-			let logMessage = `received current thermostat fan mode: ${
-				getEnumMemberName(
-					ThermostatFanMode,
-					currentStatus.mode,
-				)
-			}`;
+			let logMessage = `received current thermostat fan mode: ${getEnumMemberName(
+				ThermostatFanMode,
+				currentStatus.mode,
+			)}`;
 			if (currentStatus.off != undefined) {
 				logMessage += ` (turned off)`;
 			}
@@ -339,9 +325,7 @@ export interface ThermostatFanModeCCSetOptions {
 @CCCommand(ThermostatFanModeCommand.Set)
 @useSupervision()
 export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
-	public constructor(
-		options: WithAddress<ThermostatFanModeCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<ThermostatFanModeCCSetOptions>) {
 		super(options);
 		this.mode = options.mode;
 		this.off = options.off;
@@ -367,8 +351,7 @@ export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
-			(this.off ? 0b1000_0000 : 0)
-			| (this.mode & 0b1111),
+			(this.off ? 0b1000_0000 : 0) | (this.mode & 0b1111),
 		]);
 		return super.serialize(ctx);
 	}
@@ -394,9 +377,7 @@ export interface ThermostatFanModeCCReportOptions {
 @ccValueProperty("mode", ThermostatFanModeCCValues.fanMode)
 @ccValueProperty("off", ThermostatFanModeCCValues.turnedOff)
 export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
-	public constructor(
-		options: WithAddress<ThermostatFanModeCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<ThermostatFanModeCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:

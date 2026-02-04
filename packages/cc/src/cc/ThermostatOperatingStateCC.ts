@@ -10,6 +10,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -42,15 +43,11 @@ import type { CCParsingContext } from "../lib/traits.js";
 export const ThermostatOperatingStateCCValues = V.defineCCValues(
 	CommandClasses["Thermostat Operating State"],
 	{
-		...V.staticPropertyWithName(
-			"operatingState",
-			"state",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Operating state",
-				states: enumValuesToMetadataStates(ThermostatOperatingState),
-			} as const,
-		),
+		...V.staticPropertyWithName("operatingState", "state", {
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Operating state",
+			states: enumValuesToMetadataStates(ThermostatOperatingState),
+		} as const),
 	},
 );
 
@@ -69,7 +66,7 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: ThermostatOperatingStateCCAPI,
 			{ property },
 		) {
@@ -92,12 +89,11 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatOperatingStateCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ThermostatOperatingStateCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.state;
 	}
 }
@@ -108,9 +104,7 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 export class ThermostatOperatingStateCC extends CommandClass {
 	declare ccCommand: ThermostatOperatingStateCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -125,9 +119,7 @@ export class ThermostatOperatingStateCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -149,12 +141,10 @@ export class ThermostatOperatingStateCC extends CommandClass {
 		if (state) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: `received current thermostat operating state: ${
-					getEnumMemberName(
-						ThermostatOperatingState,
-						state,
-					)
-				}`,
+				message: `received current thermostat operating state: ${getEnumMemberName(
+					ThermostatOperatingState,
+					state,
+				)}`,
 				direction: "inbound",
 			});
 		}
@@ -168,9 +158,7 @@ export interface ThermostatOperatingStateCCReportOptions {
 
 @CCCommand(ThermostatOperatingStateCommand.Report)
 @ccValueProperty("state", ThermostatOperatingStateCCValues.operatingState)
-export class ThermostatOperatingStateCCReport
-	extends ThermostatOperatingStateCC
-{
+export class ThermostatOperatingStateCCReport extends ThermostatOperatingStateCC {
 	public constructor(
 		options: WithAddress<ThermostatOperatingStateCCReportOptions>,
 	) {

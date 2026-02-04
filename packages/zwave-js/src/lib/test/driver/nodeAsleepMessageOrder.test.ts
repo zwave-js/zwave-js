@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCGet,
 	type CommandClass,
@@ -13,7 +15,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuiteMulti.js";
 
 // Repro from #1107
@@ -64,8 +66,8 @@ integrationTest(
 			// Ping for 10 should be sent
 			await mockNode10.expectControllerFrame(
 				(frame): frame is MockZWaveRequestFrame =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof NoOperationCC,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof NoOperationCC,
 				{
 					timeout: 50,
 					errorMessage: "Node 10 did not receive the ping",
@@ -90,8 +92,8 @@ integrationTest(
 			// Now the ping for 17 should go out
 			await mockNode17.expectControllerFrame(
 				(frame): frame is MockZWaveRequestFrame =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof NoOperationCC,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof NoOperationCC,
 				{
 					timeout: 500,
 					errorMessage: "Node 17 did not receive the ping",
@@ -99,8 +101,9 @@ integrationTest(
 			);
 
 			// Ping 17 does not get resolved by the other callback
-			t.expect(await Promise.race([pingPromise17, wait(50)]))
-				.toBeUndefined();
+			t.expect(
+				await Promise.race([pingPromise17, wait(50)]),
+			).toBeUndefined();
 
 			// And it should fail since we don't ack:
 			const pingResult17 = await pingPromise17;
@@ -177,9 +180,11 @@ integrationTest(
 			const cc: CommandClass = new WakeUpCCWakeUpNotification({
 				nodeId: mockController.ownNodeId,
 			});
-			mockNode10.sendToController(createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}));
+			mockNode10.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
 
 			// Wait for the node to wake up
 			mockNode10.clearReceivedControllerFrames();
@@ -193,9 +198,10 @@ integrationTest(
 				queryBasicPromise1.catch(() => "error"),
 			]);
 			// The first command should have been sent
-			mockNode10.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof BasicCCGet
+			mockNode10.assertReceivedControllerFrame(
+				(f) =>
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof BasicCCGet,
 			);
 			// and return a number
 			t.expect(typeof result?.currentValue).toBe("number");
@@ -215,9 +221,10 @@ integrationTest(
 			]);
 
 			// The second command should also have been sent
-			mockNode10.assertReceivedControllerFrame((f) =>
-				f.type === MockZWaveFrameType.Request
-				&& f.payload instanceof BasicCCGet
+			mockNode10.assertReceivedControllerFrame(
+				(f) =>
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof BasicCCGet,
 			);
 			// and return a number
 			t.expect(typeof result?.currentValue).toBe("number");
@@ -294,8 +301,8 @@ integrationTest(
 			// The first command should not have been sent
 			mockNode10.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof BasicCCGet,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof BasicCCGet,
 				{
 					noMatch: true,
 				},
@@ -309,9 +316,11 @@ integrationTest(
 			const cc: CommandClass = new WakeUpCCWakeUpNotification({
 				nodeId: mockController.ownNodeId,
 			});
-			mockNode10.sendToController(createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}));
+			mockNode10.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
 
 			// And the first command should be sent
 			result = await Promise.race([

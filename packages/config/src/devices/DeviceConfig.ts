@@ -31,9 +31,11 @@ import { isArray, isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";
 import path from "pathe";
 import semverGt from "semver/functions/gt.js";
+
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
 import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,
@@ -113,9 +115,9 @@ async function hasChangedDeviceFiles(
 
 		const stat = await fs.stat(fullPath);
 		if (
-			(dir !== devicesRoot || f !== "index.json")
-			&& (stat.isFile() || stat.isDirectory())
-			&& stat.mtime > lastChange
+			(dir !== devicesRoot || f !== "index.json") &&
+			(stat.isFile() || stat.isDirectory()) &&
+			stat.mtime > lastChange
 		) {
 			return true;
 		} else if (stat.isDirectory()) {
@@ -153,16 +155,15 @@ async function generateIndex<T extends Record<string, unknown>>(
 		fs,
 		devicesDir,
 		(file) =>
-			file.endsWith(".json")
-			&& !file.endsWith("index.json")
-			&& !file.includes("/templates/")
-			&& !file.includes("\\templates\\"),
+			file.endsWith(".json") &&
+			!file.endsWith("index.json") &&
+			!file.includes("/templates/") &&
+			!file.includes("\\templates\\"),
 	);
 
 	// Add the embedded devices dir as a fallback if necessary
-	const fallbackDirs = devicesDir !== embeddedDevicesDir
-		? [embeddedDevicesDir]
-		: undefined;
+	const fallbackDirs =
+		devicesDir !== embeddedDevicesDir ? [embeddedDevicesDir] : undefined;
 
 	for (const file of configFiles) {
 		const relativePath = path
@@ -170,16 +171,11 @@ async function generateIndex<T extends Record<string, unknown>>(
 			.replaceAll("\\", "/");
 		// Try parsing the file
 		try {
-			const config = await DeviceConfig.from(
-				fs,
-				file,
-				isEmbedded,
-				{
-					rootDir: devicesDir,
-					fallbackDirs,
-					relative: true,
-				},
-			);
+			const config = await DeviceConfig.from(fs, file, isEmbedded, {
+				rootDir: devicesDir,
+				fallbackDirs,
+				relative: true,
+			});
 			// Add the file to the index
 			index.push(
 				...extractIndexEntries(config).map((entry) => {
@@ -401,9 +397,9 @@ function isHexKeyWith4Digits(val: any): val is string {
 const firmwareVersionRegex = /^\d{1,3}\.\d{1,3}(\.\d{1,3})?$/;
 function isFirmwareVersion(val: any): val is string {
 	return (
-		typeof val === "string"
-		&& firmwareVersionRegex.test(val)
-		&& val
+		typeof val === "string" &&
+		firmwareVersionRegex.test(val) &&
+		val
 			.split(".")
 			.map((str) => parseInt(str, 10))
 			.every((num) => num >= 0 && num <= 255)
@@ -441,8 +437,7 @@ const deflateDict = Bytes.from(
 		`"endpoints":`,
 		`"hours"`,
 		`"multiChannel":`,
-	]
-		.join(""),
+	].join(""),
 	"utf8",
 );
 
@@ -463,14 +458,10 @@ export class ConditionalDeviceConfig {
 		const relativePath = relative
 			? path.relative(rootDir, filename).replaceAll("\\", "/")
 			: filename;
-		const json = await readJsonWithTemplate(
-			fs,
-			filename,
-			[
-				options.rootDir,
-				...(options.fallbackDirs ?? []),
-			],
-		);
+		const json = await readJsonWithTemplate(fs, filename, [
+			options.rootDir,
+			...(options.fallbackDirs ?? []),
+		]);
 		return new ConditionalDeviceConfig(relativePath, isEmbedded, json);
 	}
 
@@ -501,12 +492,12 @@ manufacturer id must be a lowercase hexadecimal number with 4 digits`,
 		}
 
 		if (
-			!isArray(definition.devices)
-			|| !(definition.devices as any[]).every(
+			!isArray(definition.devices) ||
+			!(definition.devices as any[]).every(
 				(dev: unknown) =>
-					isObject(dev)
-					&& isHexKeyWith4Digits(dev.productType)
-					&& isHexKeyWith4Digits(dev.productId),
+					isObject(dev) &&
+					isHexKeyWith4Digits(dev.productType) &&
+					isHexKeyWith4Digits(dev.productId),
 			)
 		) {
 			throwInvalidConfig(
@@ -523,9 +514,9 @@ devices is malformed (not an object or type/id that is not a lowercase 4-digit h
 		);
 
 		if (
-			!isObject(definition.firmwareVersion)
-			|| !isFirmwareVersion(definition.firmwareVersion.min)
-			|| !isFirmwareVersion(definition.firmwareVersion.max)
+			!isObject(definition.firmwareVersion) ||
+			!isFirmwareVersion(definition.firmwareVersion.min) ||
+			!isFirmwareVersion(definition.firmwareVersion.max)
 		) {
 			throwInvalidConfig(
 				`device`,
@@ -545,8 +536,8 @@ firmwareVersion.min ${min} must not be greater than firmwareVersion.max ${max}`,
 		}
 
 		if (
-			definition.preferred != undefined
-			&& definition.preferred !== true
+			definition.preferred != undefined &&
+			definition.preferred !== true
 		) {
 			throwInvalidConfig(
 				`device`,
@@ -595,11 +586,9 @@ found non-numeric endpoint index "${key}" in endpoints`,
 associations is not an object`,
 				);
 			}
-			for (
-				const [key, assocDefinition] of Object.entries(
-					definition.associations,
-				)
-			) {
+			for (const [key, assocDefinition] of Object.entries(
+				definition.associations,
+			)) {
 				if (!/^[1-9][0-9]*$/.test(key)) {
 					throwInvalidConfig(
 						`device`,
@@ -641,8 +630,8 @@ proprietary is not an object`,
 
 		if (definition.compat != undefined) {
 			if (
-				isArray(definition.compat)
-				&& definition.compat.every((item: any) => isObject(item))
+				isArray(definition.compat) &&
+				definition.compat.every((item: any) => isObject(item))
 			) {
 				// Make sure all conditions are valid
 				for (const entry of definition.compat) {
@@ -685,10 +674,7 @@ metadata is not an object`,
 		}
 
 		if (definition.scenes != undefined) {
-			const scenes = new Map<
-				number,
-				ConditionalSceneConfig
-			>();
+			const scenes = new Map<number, ConditionalSceneConfig>();
 			if (!isObject(definition.scenes)) {
 				throwInvalidConfig(
 					`device`,
@@ -696,11 +682,9 @@ metadata is not an object`,
 scenes is not an object`,
 				);
 			}
-			for (
-				const [key, sceneDefinition] of Object.entries(
-					definition.scenes,
-				)
-			) {
+			for (const [key, sceneDefinition] of Object.entries(
+				definition.scenes,
+			)) {
 				if (!/^[1-9][0-9]*$/.test(key)) {
 					throwInvalidConfig(
 						`device`,
@@ -886,8 +870,8 @@ export class DeviceConfig {
 		if (endpointIndex === 0) {
 			// The root endpoint's associations may be configured separately or as part of "endpoints"
 			return (
-				this.associations?.get(group)
-					?? this.endpoints?.get(0)?.associations?.get(group)
+				this.associations?.get(group) ??
+				this.endpoints?.get(0)?.associations?.get(group)
 			);
 		} else {
 			// The other endpoints can only have a configuration as part of "endpoints"
@@ -946,7 +930,7 @@ export class DeviceConfig {
 				}`;
 			target.paramInformation = [...map.values()]
 				.toSorted((a, b) =>
-					getParamKey(a).localeCompare(getParamKey(b))
+					getParamKey(a).localeCompare(getParamKey(b)),
 				)
 				.map((p) => cloneDeep(p));
 		};
@@ -990,17 +974,15 @@ export class DeviceConfig {
 			let c: Record<string, any> = {};
 
 			// Copy some simple flags over
-			for (
-				const prop of [
-					"forceSceneControllerGroupCount",
-					"mapRootReportsToEndpoint",
-					"mapBasicSet",
-					"preserveRootApplicationCCValueIDs",
-					"preserveEndpoints",
-					"removeEndpoints",
-					"treatMultilevelSwitchSetAsEvent",
-				] as const
-			) {
+			for (const prop of [
+				"forceSceneControllerGroupCount",
+				"mapRootReportsToEndpoint",
+				"mapBasicSet",
+				"preserveRootApplicationCCValueIDs",
+				"preserveEndpoints",
+				"removeEndpoints",
+				"treatMultilevelSwitchSetAsEvent",
+			] as const) {
 				if (this.compat[prop] != undefined) {
 					c[prop] = this.compat[prop];
 				}
@@ -1024,8 +1006,9 @@ export class DeviceConfig {
 				c.removeCCs = Object.fromEntries(this.compat.removeCCs);
 			}
 			if (this.compat.treatSetAsReport) {
-				c.treatSetAsReport = [...this.compat.treatSetAsReport]
-					.toSorted();
+				c.treatSetAsReport = [
+					...this.compat.treatSetAsReport,
+				].toSorted();
 			}
 
 			c = sortObject(c);
@@ -1036,11 +1019,9 @@ export class DeviceConfig {
 
 		if (version >= 2) {
 			// From version 2 and on, we ignore labels and descriptions, and load them dynamically
-			for (
-				const ep of Object.values<Record<string, any>>(
-					hashable.endpoints ?? {},
-				)
-			) {
+			for (const ep of Object.values<Record<string, any>>(
+				hashable.endpoints ?? {},
+			)) {
 				for (const param of ep.paramInformation ?? []) {
 					delete param.label;
 					delete param.description;
@@ -1055,22 +1036,20 @@ export class DeviceConfig {
 			// Version 3 added the `allowed` field. When targeting older versions
 			// and the allowed field only has a single range, replace it with
 			// minValue/maxValue for compatibility
-			for (
-				const ep of Object.values<Record<string, any>>(
-					hashable.endpoints ?? {},
-				)
-			) {
+			for (const ep of Object.values<Record<string, any>>(
+				hashable.endpoints ?? {},
+			)) {
 				for (const param of ep.paramInformation ?? []) {
 					if (
-						isArray(param.allowed)
-						&& param.allowed.length === 1
-						&& isObject(param.allowed[0])
+						isArray(param.allowed) &&
+						param.allowed.length === 1 &&
+						isObject(param.allowed[0])
 					) {
 						const allowed = param.allowed[0] as Record<string, any>;
 						if (
-							typeof allowed.from === "number"
-							&& typeof allowed.to === "number"
-							&& (allowed.step == undefined || allowed.step === 1)
+							typeof allowed.from === "number" &&
+							typeof allowed.to === "number" &&
+							(allowed.step == undefined || allowed.step === 1)
 						) {
 							param.minValue = allowed.from;
 							param.maxValue = allowed.to;
@@ -1150,10 +1129,12 @@ export class DeviceConfig {
 	}
 }
 
-function parseHash(hash: BytesView): {
-	version: number;
-	hashData: BytesView;
-} | undefined {
+function parseHash(hash: BytesView):
+	| {
+			version: number;
+			hashData: BytesView;
+	  }
+	| undefined {
 	const hashString = Bytes.view(hash).toString("utf8");
 	const versionMatch = hashString.match(/^\$v(\d+)\$/);
 	if (versionMatch) {
@@ -1206,21 +1187,20 @@ export async function fixBrokenDeviceConfigHash(
 	let hashable: Record<string, any>;
 	try {
 		hashable = JSON.parse(
-			Bytes.view(inflateSync(
-				Bytes.view(parsed.hashData),
-				{ dictionary: deflateDict },
-			)).toString("utf8"),
+			Bytes.view(
+				inflateSync(Bytes.view(parsed.hashData), {
+					dictionary: deflateDict,
+				}),
+			).toString("utf8"),
 		);
 	} catch {
 		return broken;
 	}
 
 	// Remove the hidden default property from all paramInformation entries if set to default (false)
-	for (
-		const ep of Object.values<Record<string, any>>(
-			hashable.endpoints ?? {},
-		)
-	) {
+	for (const ep of Object.values<Record<string, any>>(
+		hashable.endpoints ?? {},
+	)) {
 		for (const param of ep.paramInformation ?? []) {
 			if (param.hidden === false) {
 				delete param.hidden;

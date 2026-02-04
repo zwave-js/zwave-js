@@ -20,6 +20,7 @@ import {
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -57,22 +58,16 @@ import {
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
-	...V.staticProperty(
-		"targetMode",
-		{
-			...ValueMetadata.UInt8,
-			label: "Target lock mode",
-			states: enumValuesToMetadataStates(DoorLockMode),
-		} as const,
-	),
-	...V.staticProperty(
-		"currentMode",
-		{
-			...ValueMetadata.ReadOnlyUInt8,
-			label: "Current lock mode",
-			states: enumValuesToMetadataStates(DoorLockMode),
-		} as const,
-	),
+	...V.staticProperty("targetMode", {
+		...ValueMetadata.UInt8,
+		label: "Target lock mode",
+		states: enumValuesToMetadataStates(DoorLockMode),
+	} as const),
+	...V.staticProperty("currentMode", {
+		...ValueMetadata.ReadOnlyUInt8,
+		label: "Current lock mode",
+		states: enumValuesToMetadataStates(DoorLockMode),
+	} as const),
 	...V.staticProperty(
 		"duration",
 		{
@@ -85,60 +80,39 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		internal: true,
 		minVersion: 4,
 	}),
-	...V.staticProperty(
-		"outsideHandlesCanOpenDoorConfiguration",
-		{
-			...ValueMetadata.Any,
-			label: "Which outside handles can open the door (configuration)",
-		} as const,
-	),
-	...V.staticProperty(
-		"outsideHandlesCanOpenDoor",
-		{
-			...ValueMetadata.ReadOnly,
-			label: "Which outside handles can open the door (actual status)",
-		} as const,
-	),
+	...V.staticProperty("outsideHandlesCanOpenDoorConfiguration", {
+		...ValueMetadata.Any,
+		label: "Which outside handles can open the door (configuration)",
+	} as const),
+	...V.staticProperty("outsideHandlesCanOpenDoor", {
+		...ValueMetadata.ReadOnly,
+		label: "Which outside handles can open the door (actual status)",
+	} as const),
 	...V.staticProperty("supportedInsideHandles", undefined, {
 		internal: true,
 		minVersion: 4,
 	}),
-	...V.staticProperty(
-		"insideHandlesCanOpenDoorConfiguration",
-		{
-			...ValueMetadata.Any,
-			label: "Which inside handles can open the door (configuration)",
-		} as const,
-	),
-	...V.staticProperty(
-		"insideHandlesCanOpenDoor",
-		{
-			...ValueMetadata.ReadOnly,
-			label: "Which inside handles can open the door (actual status)",
-		} as const,
-	),
-	...V.staticProperty(
-		"operationType",
-		{
-			...ValueMetadata.UInt8,
-			label: "Lock operation type",
-			states: enumValuesToMetadataStates(DoorLockOperationType),
-		} as const,
-	),
-	...V.staticProperty(
-		"lockTimeoutConfiguration",
-		{
-			...ValueMetadata.UInt16,
-			label: "Duration of timed mode in seconds",
-		} as const,
-	),
-	...V.staticProperty(
-		"lockTimeout",
-		{
-			...ValueMetadata.ReadOnlyUInt16,
-			label: "Seconds until lock mode times out",
-		} as const,
-	),
+	...V.staticProperty("insideHandlesCanOpenDoorConfiguration", {
+		...ValueMetadata.Any,
+		label: "Which inside handles can open the door (configuration)",
+	} as const),
+	...V.staticProperty("insideHandlesCanOpenDoor", {
+		...ValueMetadata.ReadOnly,
+		label: "Which inside handles can open the door (actual status)",
+	} as const),
+	...V.staticProperty("operationType", {
+		...ValueMetadata.UInt8,
+		label: "Lock operation type",
+		states: enumValuesToMetadataStates(DoorLockOperationType),
+	} as const),
+	...V.staticProperty("lockTimeoutConfiguration", {
+		...ValueMetadata.UInt16,
+		label: "Duration of timed mode in seconds",
+	} as const),
+	...V.staticProperty("lockTimeout", {
+		...ValueMetadata.ReadOnlyUInt16,
+		label: "Seconds until lock mode times out",
+	} as const),
 	...V.staticProperty("autoRelockSupported", undefined, {
 		internal: true,
 		minVersion: 4,
@@ -338,7 +312,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: DoorLockCCAPI, { property }, value) {
+		return async function (this: DoorLockCCAPI, { property }, value) {
 			if (property === "targetMode") {
 				if (typeof value !== "number") {
 					throwWrongValueType(
@@ -364,8 +338,8 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 
 				return result;
 			} else if (
-				typeof property === "string"
-				&& configurationSetParameters.includes(property as any)
+				typeof property === "string" &&
+				configurationSetParameters.includes(property as any)
 			) {
 				// checking every type here would create a LOT of duplicate code, so we don't
 
@@ -409,7 +383,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: DoorLockCCAPI, { property }) {
+		return async function (this: DoorLockCCAPI, { property }) {
 			switch (property) {
 				case "currentMode":
 				case "targetMode":
@@ -449,12 +423,11 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			DoorLockCCCapabilitiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<DoorLockCCCapabilitiesReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"autoRelockSupported",
@@ -483,9 +456,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			DoorLockCCOperationReport
-		>(
+		const response = await this.host.sendCommand<DoorLockCCOperationReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -549,12 +520,11 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			DoorLockCCConfigurationReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<DoorLockCCConfigurationReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"operationType",
@@ -576,9 +546,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 export class DoorLockCC extends CommandClass {
 	declare ccCommand: DoorLockCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -613,22 +581,16 @@ export class DoorLockCC extends CommandClass {
 			const resp = await api.getCapabilities();
 			if (resp) {
 				const logMessage = `received lock capabilities:
-supported operation types: ${
-					resp.supportedOperationTypes
-						.map((t) => getEnumMemberName(DoorLockOperationType, t))
-						.join(", ")
-				}
-supported door lock modes: ${
-					resp.supportedDoorLockModes
-						.map((t) => getEnumMemberName(DoorLockMode, t))
-						.map((str) => `\n· ${str}`)
-						.join("")
-				}
-supported outside handles: ${
-					resp.supportedOutsideHandles
-						.map(String)
-						.join(", ")
-				}
+supported operation types: ${resp.supportedOperationTypes
+					.map((t) => getEnumMemberName(DoorLockOperationType, t))
+					.join(", ")}
+supported door lock modes: ${resp.supportedDoorLockModes
+					.map((t) => getEnumMemberName(DoorLockMode, t))
+					.map((str) => `\n· ${str}`)
+					.join("")}
+supported outside handles: ${resp.supportedOutsideHandles
+					.map(String)
+					.join(", ")}
 supported inside handles:  ${resp.supportedInsideHandles.map(String).join(", ")}
 supports door status:      ${resp.doorSupported}
 supports bolt status:      ${resp.boltSupported}
@@ -674,27 +636,15 @@ supports block to block:   ${resp.blockToBlockSupported}`;
 			// Save support information for the status values
 			const doorStatusValue = DoorLockCCValues.doorStatus;
 			if (doorSupported) this.setMetadata(ctx, doorStatusValue);
-			this.setValue(
-				ctx,
-				DoorLockCCValues.doorSupported,
-				doorSupported,
-			);
+			this.setValue(ctx, DoorLockCCValues.doorSupported, doorSupported);
 
 			const latchStatusValue = DoorLockCCValues.latchStatus;
 			if (latchSupported) this.setMetadata(ctx, latchStatusValue);
-			this.setValue(
-				ctx,
-				DoorLockCCValues.latchSupported,
-				latchSupported,
-			);
+			this.setValue(ctx, DoorLockCCValues.latchSupported, latchSupported);
 
 			const boltStatusValue = DoorLockCCValues.boltStatus;
 			if (boltSupported) this.setMetadata(ctx, boltStatusValue);
-			this.setValue(
-				ctx,
-				DoorLockCCValues.boltSupported,
-				boltSupported,
-			);
+			this.setValue(ctx, DoorLockCCValues.boltSupported, boltSupported);
 		}
 
 		await this.refreshValues(ctx);
@@ -703,9 +653,7 @@ supports block to block:   ${resp.blockToBlockSupported}`;
 		if (!hadCriticalTimeout) this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -724,28 +672,22 @@ supports block to block:   ${resp.blockToBlockSupported}`;
 		const config = await api.getConfiguration();
 		if (config) {
 			let logMessage = `received lock configuration:
-operation type:                ${
-				getEnumMemberName(
-					DoorLockOperationType,
-					config.operationType,
-				)
-			}`;
+operation type:                ${getEnumMemberName(
+				DoorLockOperationType,
+				config.operationType,
+			)}`;
 			if (config.operationType === DoorLockOperationType.Timed) {
 				logMessage += `
 lock timeout:                  ${config.lockTimeoutConfiguration} seconds
 `;
 			}
 			logMessage += `
-outside handles can open door: ${
-				config.outsideHandlesCanOpenDoorConfiguration
-					.map(String)
-					.join(", ")
-			}
-inside handles can open door:  ${
-				config.insideHandlesCanOpenDoorConfiguration
-					.map(String)
-					.join(", ")
-			}`;
+outside handles can open door: ${config.outsideHandlesCanOpenDoorConfiguration
+				.map(String)
+				.join(", ")}
+inside handles can open door:  ${config.insideHandlesCanOpenDoorConfiguration
+				.map(String)
+				.join(", ")}`;
 			if (api.version >= 4) {
 				logMessage += `
 auto-relock time               ${config.autoRelockTime ?? "-"} seconds
@@ -904,9 +846,7 @@ export interface DoorLockCCOperationSetOptions {
 @CCCommand(DoorLockCommand.OperationSet)
 @useSupervision()
 export class DoorLockCCOperationSet extends DoorLockCC {
-	public constructor(
-		options: WithAddress<DoorLockCCOperationSetOptions>,
-	) {
+	public constructor(options: WithAddress<DoorLockCCOperationSetOptions>) {
 		super(options);
 		if (options.mode === DoorLockMode.Unknown) {
 			throw new ZWaveError(
@@ -976,9 +916,7 @@ export interface DoorLockCCOperationReportOptions {
 )
 @ccValueProperty("lockTimeout", DoorLockCCValues.lockTimeout)
 export class DoorLockCCOperationReport extends DoorLockCC {
-	public constructor(
-		options: WithAddress<DoorLockCCOperationReportOptions>,
-	) {
+	public constructor(options: WithAddress<DoorLockCCOperationReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -1011,16 +949,21 @@ export class DoorLockCCOperationReport extends DoorLockCC {
 			!!(raw.payload[1] & 0b0100),
 			!!(raw.payload[1] & 0b1000),
 		];
-		const doorStatus: "closed" | "open" | undefined =
-			!!(raw.payload[2] & 0b1)
-				? "closed"
-				: "open";
-		const boltStatus: "unlocked" | "locked" | undefined =
-			!!(raw.payload[2] & 0b10) ? "unlocked" : "locked";
-		const latchStatus: "closed" | "open" | undefined =
-			!!(raw.payload[2] & 0b100)
-				? "closed"
-				: "open";
+		const doorStatus: "closed" | "open" | undefined = !!(
+			raw.payload[2] & 0b1
+		)
+			? "closed"
+			: "open";
+		const boltStatus: "unlocked" | "locked" | undefined = !!(
+			raw.payload[2] & 0b10
+		)
+			? "unlocked"
+			: "locked";
+		const latchStatus: "closed" | "open" | undefined = !!(
+			raw.payload[2] & 0b100
+		)
+			? "closed"
+			: "open";
 		// Ignore invalid timeout values
 		const lockTimeoutMinutes = raw.payload[3];
 		const lockTimeoutSeconds = raw.payload[4];
@@ -1059,33 +1002,21 @@ export class DoorLockCCOperationReport extends DoorLockCC {
 			DoorLockCCValues.doorSupported,
 		);
 		if (supportsDoorStatus) {
-			this.setValue(
-				ctx,
-				DoorLockCCValues.doorStatus,
-				this.doorStatus,
-			);
+			this.setValue(ctx, DoorLockCCValues.doorStatus, this.doorStatus);
 		}
 		const supportsBoltStatus = !!this.getValue(
 			ctx,
 			DoorLockCCValues.boltSupported,
 		);
 		if (supportsBoltStatus) {
-			this.setValue(
-				ctx,
-				DoorLockCCValues.boltStatus,
-				this.boltStatus,
-			);
+			this.setValue(ctx, DoorLockCCValues.boltStatus, this.boltStatus);
 		}
 		const supportsLatchStatus = !!this.getValue(
 			ctx,
 			DoorLockCCValues.latchSupported,
 		);
 		if (supportsLatchStatus) {
-			this.setValue(
-				ctx,
-				DoorLockCCValues.latchStatus,
-				this.latchStatus,
-			);
+			this.setValue(ctx, DoorLockCCValues.latchStatus, this.latchStatus);
 		}
 
 		return true;
@@ -1215,8 +1146,8 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
 			const lockTimeoutMinutes = raw.payload[2];
 			const lockTimeoutSeconds = raw.payload[3];
 			if (lockTimeoutMinutes <= 0xfd && lockTimeoutSeconds <= 59) {
-				lockTimeoutConfiguration = lockTimeoutSeconds
-					+ lockTimeoutMinutes * 60;
+				lockTimeoutConfiguration =
+					lockTimeoutSeconds + lockTimeoutMinutes * 60;
 			}
 		}
 
@@ -1292,11 +1223,7 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
 			DoorLockCCValues.twistAssistSupported,
 		);
 		if (supportsTwistAssist) {
-			this.setValue(
-				ctx,
-				DoorLockCCValues.twistAssist,
-				this.twistAssist,
-			);
+			this.setValue(ctx, DoorLockCCValues.twistAssist, this.twistAssist);
 		}
 		const supportsBlockToBlock = !!this.getValue(
 			ctx,
@@ -1319,23 +1246,21 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
 				DoorLockOperationType,
 				this.operationType,
 			),
-			"outside handle configuration": this
-				.outsideHandlesCanOpenDoorConfiguration.join(", "),
-			"inside handle configuration": this
-				.insideHandlesCanOpenDoorConfiguration.join(", "),
+			"outside handle configuration":
+				this.outsideHandlesCanOpenDoorConfiguration.join(", "),
+			"inside handle configuration":
+				this.insideHandlesCanOpenDoorConfiguration.join(", "),
 		};
 		if (this.lockTimeoutConfiguration != undefined) {
-			message[
-				"timed mode duration"
-			] = `${this.lockTimeoutConfiguration} seconds`;
+			message["timed mode duration"] =
+				`${this.lockTimeoutConfiguration} seconds`;
 		}
 		if (this.autoRelockTime != undefined) {
 			message["auto-relock time"] = `${this.autoRelockTime} seconds`;
 		}
 		if (this.holdAndReleaseTime != undefined) {
-			message[
-				"hold-and-release time"
-			] = `${this.holdAndReleaseTime} seconds`;
+			message["hold-and-release time"] =
+				`${this.holdAndReleaseTime} seconds`;
 		}
 		if (this.twistAssist != undefined) {
 			message["twist assist enabled"] = this.twistAssist;
@@ -1355,26 +1280,24 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
 export class DoorLockCCConfigurationGet extends DoorLockCC {}
 
 // @publicAPI
-export type DoorLockCCConfigurationSetOptions =
-	& (
-		| {
+export type DoorLockCCConfigurationSetOptions = (
+	| {
 			operationType: DoorLockOperationType.Timed;
 			lockTimeoutConfiguration: number;
-		}
-		| {
+	  }
+	| {
 			operationType: DoorLockOperationType.Constant;
 			lockTimeoutConfiguration?: undefined;
-		}
-	)
-	& {
-		outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		// V4+
-		autoRelockTime?: number;
-		holdAndReleaseTime?: number;
-		twistAssist?: boolean;
-		blockToBlock?: boolean;
-	};
+	  }
+) & {
+	outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+	insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+	// V4+
+	autoRelockTime?: number;
+	holdAndReleaseTime?: number;
+	twistAssist?: boolean;
+	blockToBlock?: boolean;
+};
 
 @CCCommand(DoorLockCommand.ConfigurationSet)
 @useSupervision()
@@ -1421,13 +1344,13 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const insideHandles = isArray(
-				this.insideHandlesCanOpenDoorConfiguration,
-			)
+			this.insideHandlesCanOpenDoorConfiguration,
+		)
 			? this.insideHandlesCanOpenDoorConfiguration
 			: [];
 		const outsideHandles = isArray(
-				this.outsideHandlesCanOpenDoorConfiguration,
-			)
+			this.outsideHandlesCanOpenDoorConfiguration,
+		)
 			? this.outsideHandlesCanOpenDoorConfiguration
 			: [];
 
@@ -1446,8 +1369,8 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
 			lockTimeoutSeconds = this.lockTimeoutConfiguration! % 60;
 		}
 
-		const flags = (this.twistAssist ? 0b1 : 0)
-			| (this.blockToBlock ? 0b10 : 0);
+		const flags =
+			(this.twistAssist ? 0b1 : 0) | (this.blockToBlock ? 0b10 : 0);
 
 		this.payload = Bytes.from([
 			this.operationType,
@@ -1464,23 +1387,20 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
 		]);
 
 		this.payload.writeUInt16BE((this.autoRelockTime ?? 0) & 0xffff, 4);
-		this.payload.writeUInt16BE(
-			(this.holdAndReleaseTime ?? 0) & 0xffff,
-			6,
-		);
+		this.payload.writeUInt16BE((this.holdAndReleaseTime ?? 0) & 0xffff, 6);
 
 		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const insideHandles = isArray(
-				this.insideHandlesCanOpenDoorConfiguration,
-			)
+			this.insideHandlesCanOpenDoorConfiguration,
+		)
 			? this.insideHandlesCanOpenDoorConfiguration
 			: [];
 		const outsideHandles = isArray(
-				this.outsideHandlesCanOpenDoorConfiguration,
-			)
+			this.outsideHandlesCanOpenDoorConfiguration,
+		)
 			? this.outsideHandlesCanOpenDoorConfiguration
 			: [];
 		const message: MessageRecord = {
@@ -1492,17 +1412,15 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
 			"inside handle configuration": insideHandles.join(", "),
 		};
 		if (this.lockTimeoutConfiguration != undefined) {
-			message[
-				"timed mode duration"
-			] = `${this.lockTimeoutConfiguration} seconds`;
+			message["timed mode duration"] =
+				`${this.lockTimeoutConfiguration} seconds`;
 		}
 		if (this.autoRelockTime != undefined) {
 			message["auto-relock time"] = `${this.autoRelockTime} seconds`;
 		}
 		if (this.holdAndReleaseTime != undefined) {
-			message[
-				"hold-and-release time"
-			] = `${this.holdAndReleaseTime} seconds`;
+			message["hold-and-release time"] =
+				`${this.holdAndReleaseTime} seconds`;
 		}
 		if (this.twistAssist != undefined) {
 			message["enable twist assist"] = this.twistAssist;
@@ -1665,12 +1583,10 @@ export class DoorLockCCCapabilitiesReport extends DoorLockCC {
 				"operation types": this.supportedOperationTypes
 					.map(
 						(t) =>
-							`\n· ${
-								getEnumMemberName(
-									DoorLockOperationType,
-									t,
-								)
-							}`,
+							`\n· ${getEnumMemberName(
+								DoorLockOperationType,
+								t,
+							)}`,
 					)
 					.join(""),
 				"door lock modes": this.supportedDoorLockModes

@@ -53,9 +53,7 @@ export interface AssignPriorityReturnRouteRequestOptions {
 
 @expectedResponse(FunctionType.AssignPriorityReturnRoute)
 @expectedCallback(FunctionType.AssignPriorityReturnRoute)
-export class AssignPriorityReturnRouteRequest
-	extends AssignPriorityReturnRouteRequestBase
-{
+export class AssignPriorityReturnRouteRequest extends AssignPriorityReturnRouteRequestBase {
 	public constructor(
 		options: AssignPriorityReturnRouteRequestOptions & MessageBaseOptions,
 	) {
@@ -67,8 +65,8 @@ export class AssignPriorityReturnRouteRequest
 			);
 		}
 		if (
-			options.repeaters.length > MAX_REPEATERS
-			|| options.repeaters.some((id) => id < 1 || id > MAX_NODES)
+			options.repeaters.length > MAX_REPEATERS ||
+			options.repeaters.some((id) => id < 1 || id > MAX_NODES)
 		) {
 			throw new ZWaveError(
 				`The repeaters array must contain at most ${MAX_REPEATERS} node IDs between 1 and ${MAX_NODES}`,
@@ -128,9 +126,10 @@ export class AssignPriorityReturnRouteRequest
 			message: {
 				"source node ID": this.nodeId,
 				"destination node ID": this.destinationNodeId,
-				repeaters: this.repeaters.length > 0
-					? this.repeaters.join(" -> ")
-					: "none",
+				repeaters:
+					this.repeaters.length > 0
+						? this.repeaters.join(" -> ")
+						: "none",
 				"route speed": getEnumMemberName(
 					ZWaveDataRate,
 					this.routeSpeed,
@@ -146,7 +145,8 @@ export interface AssignPriorityReturnRouteResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.AssignPriorityReturnRoute)
-export class AssignPriorityReturnRouteResponse extends Message
+export class AssignPriorityReturnRouteResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -192,9 +192,8 @@ export class AssignPriorityReturnRouteRequestTransmitReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& AssignPriorityReturnRouteRequestTransmitReportOptions
-			& MessageBaseOptions,
+		options: AssignPriorityReturnRouteRequestTransmitReportOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 

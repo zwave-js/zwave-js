@@ -1,21 +1,20 @@
 import { getEnumMemberName } from "@zwave-js/shared";
+
 import { NodeStatus } from "../../node/_Types.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
 // https://github.com/zwave-js/zwave-js/issues/1364#issuecomment-760006591
 
-for (
-	const initialStatus of [
-		NodeStatus.Unknown,
-		NodeStatus.Asleep,
-		NodeStatus.Dead,
-	]
-) {
+for (const initialStatus of [
+	NodeStatus.Unknown,
+	NodeStatus.Asleep,
+	NodeStatus.Dead,
+]) {
 	for (const canSleep of [true, false]) {
 		// Exclude tests that make no sense
 		if (
-			(initialStatus === NodeStatus.Asleep && !canSleep)
-			|| (canSleep && initialStatus === NodeStatus.Dead)
+			(initialStatus === NodeStatus.Asleep && !canSleep) ||
+			(canSleep && initialStatus === NodeStatus.Dead)
 		) {
 			continue;
 		}
@@ -23,12 +22,10 @@ for (
 		const expectedStatus = canSleep ? NodeStatus.Awake : NodeStatus.Alive;
 
 		integrationTest(
-			`When a ping succeeds, the node should be marked awake/alive (Can sleep: ${canSleep}, initial status: ${
-				getEnumMemberName(
-					NodeStatus,
-					initialStatus,
-				)
-			})`,
+			`When a ping succeeds, the node should be marked awake/alive (Can sleep: ${canSleep}, initial status: ${getEnumMemberName(
+				NodeStatus,
+				initialStatus,
+			)})`,
 			{
 				// debug: true,
 

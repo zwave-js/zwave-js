@@ -5,6 +5,7 @@ import {
 	getEnumMemberName,
 	num2hex,
 } from "@zwave-js/shared";
+
 import { type NVM, NVMAccess, type NVMIO } from "./common/definitions.js";
 import {
 	nvmReadBuffer,
@@ -77,13 +78,15 @@ export interface NVM3SectionInfo {
 	objectLocations: Map<number, number>;
 }
 
-export type NVM3FileSystemInfo = {
-	isSharedFileSystem: true;
-	sections: Record<"all", NVM3SectionInfo>;
-} | {
-	isSharedFileSystem: false;
-	sections: Record<NVMSection, NVM3SectionInfo>;
-};
+export type NVM3FileSystemInfo =
+	| {
+			isSharedFileSystem: true;
+			sections: Record<"all", NVM3SectionInfo>;
+	  }
+	| {
+			isSharedFileSystem: false;
+			sections: Record<NVMSection, NVM3SectionInfo>;
+	  };
 
 export interface NVM3Meta {
 	sharedFileSystem: boolean;
@@ -110,8 +113,8 @@ export class NVM3 implements NVM<number, BytesView> {
 
 	private async ensureReadable(): Promise<void> {
 		if (
-			this._access === NVMAccess.Read
-			|| this._access === NVMAccess.ReadWrite
+			this._access === NVMAccess.Read ||
+			this._access === NVMAccess.ReadWrite
 		) {
 			return;
 		}
@@ -123,8 +126,8 @@ export class NVM3 implements NVM<number, BytesView> {
 
 	private async ensureWritable(): Promise<void> {
 		if (
-			this._access === NVMAccess.Write
-			|| this._access === NVMAccess.ReadWrite
+			this._access === NVMAccess.Write ||
+			this._access === NVMAccess.ReadWrite
 		) {
 			return;
 		}
@@ -211,13 +214,13 @@ export class NVM3 implements NVM<number, BytesView> {
 			// Find the current page, which is either:
 			// - The last page with the high erase count that contains an object
 			const maxEraseCount = Math.max(...pages.map((p) => p.eraseCount));
-			let currentPageIndex = pages.findLastIndex((p) =>
-				p.eraseCount === maxEraseCount && p.objects.length > 0
+			let currentPageIndex = pages.findLastIndex(
+				(p) => p.eraseCount === maxEraseCount && p.objects.length > 0,
 			);
 			// - or if there is none, the last page with the lower erase count that contains an object
 			if (currentPageIndex === -1) {
-				currentPageIndex = pages.findLastIndex((p) =>
-					p.objects.length > 0
+				currentPageIndex = pages.findLastIndex(
+					(p) => p.objects.length > 0,
 				);
 			}
 			// - Or if no objects exist at all, the beginning of the section
@@ -239,9 +242,9 @@ export class NVM3 implements NVM<number, BytesView> {
 						// Object seen for the first time, remember the page it is in
 						objectLocations.set(object.key, i);
 					} else if (
-						(object.fragmentType === FragmentType.None
-							|| object.fragmentType === FragmentType.First)
-						&& (page.eraseCount >= pages[location].eraseCount)
+						(object.fragmentType === FragmentType.None ||
+							object.fragmentType === FragmentType.First) &&
+						page.eraseCount >= pages[location].eraseCount
 					) {
 						// Object was seen before. Only remember it if it is the only
 						// or first fragment and the object appears in a later location
@@ -328,8 +331,8 @@ export class NVM3 implements NVM<number, BytesView> {
 			complete = false;
 		};
 		pages: for (let offset = 0; offset < pages.length; offset++) {
-			const index = (section.currentPage - offset + pages.length)
-				% pages.length;
+			const index =
+				(section.currentPage - offset + pages.length) % pages.length;
 			const page = pages[index];
 			// console.debug(
 			// 	`NVM3.get(${fileId}): scanning page ${index} at offset ${
@@ -419,24 +422,22 @@ export class NVM3 implements NVM<number, BytesView> {
 		const section = this.getNVMSectionForFile(objects[0].key);
 
 		let page = section.pages[section.currentPage];
-		let remainingSpace = page.pageSize
-			- NVM3_PAGE_HEADER_SIZE
-			- section.offsetInPage;
+		let remainingSpace =
+			page.pageSize - NVM3_PAGE_HEADER_SIZE - section.offsetInPage;
 
 		// TODO: See if we can avoid double writes on a page change
 
 		/** Moves to the next page and erases it if necessary */
 		const nextPage = async () => {
-			section.currentPage = (section.currentPage + 1)
-				% section.pages.length;
+			section.currentPage =
+				(section.currentPage + 1) % section.pages.length;
 			page = section.pages[section.currentPage];
 
 			// Find headers of objects that need to be preserved
-			const toPreserve = [...section.objectLocations].filter((
-				[, pageIndex],
-			) => pageIndex === section.currentPage)
+			const toPreserve = [...section.objectLocations]
+				.filter(([, pageIndex]) => pageIndex === section.currentPage)
 				.map(([fileID]) =>
-					page.objects.findLast((h) => h.key === fileID)
+					page.objects.findLast((h) => h.key === fileID),
 				)
 				.filter((h) => h != undefined)
 				.filter((h) => h.type !== ObjectType.Deleted);
@@ -473,8 +474,9 @@ export class NVM3 implements NVM<number, BytesView> {
 
 		// Go through the list of objects and write all of them to the NVM
 		for (const object of objects) {
-			const isLargeObject = object.type === ObjectType.DataLarge
-				|| object.type === ObjectType.CounterLarge;
+			const isLargeObject =
+				object.type === ObjectType.DataLarge ||
+				object.type === ObjectType.CounterLarge;
 
 			let fragments: NVM3Object[] | undefined;
 
@@ -522,8 +524,8 @@ export class NVM3 implements NVM<number, BytesView> {
 				if (object.type === ObjectType.Deleted) {
 					section.objectLocations.delete(object.key);
 				} else if (
-					fragment.fragmentType === FragmentType.None
-					|| fragment.fragmentType === FragmentType.First
+					fragment.fragmentType === FragmentType.None ||
+					fragment.fragmentType === FragmentType.First
 				) {
 					section.objectLocations.set(
 						fragment.key,
@@ -538,15 +540,18 @@ export class NVM3 implements NVM<number, BytesView> {
 		if (!this._info) await this.init();
 		await this.ensureWritable();
 
-		await this.writeObjects([{
-			key: property,
-			type: value.length <= NVM3_MAX_OBJ_SIZE_SMALL
-				? ObjectType.DataSmall
-				: ObjectType.DataLarge,
-			// writeObject deals with fragmentation
-			fragmentType: FragmentType.None,
-			data: value,
-		}]);
+		await this.writeObjects([
+			{
+				key: property,
+				type:
+					value.length <= NVM3_MAX_OBJ_SIZE_SMALL
+						? ObjectType.DataSmall
+						: ObjectType.DataLarge,
+				// writeObject deals with fragmentation
+				fragmentType: FragmentType.None,
+				data: value,
+			},
+		]);
 	}
 
 	/** Writes multiple values to the NVM at once. `null` / `undefined` cause the value to be deleted */
@@ -558,7 +563,7 @@ export class NVM3 implements NVM<number, BytesView> {
 
 		// Group objects by their NVM section
 		const objectsBySection = new Map<
-			number, /* offset */
+			number /* offset */,
 			[number, BytesView | null | undefined][]
 		>();
 		for (const [key, value] of values) {
@@ -573,21 +578,23 @@ export class NVM3 implements NVM<number, BytesView> {
 		// And call writeObjects for each group
 		for (const objectGroups of objectsBySection.values()) {
 			await this.writeObjects(
-				objectGroups.map(([key, value]) => (value
-					? {
-						key,
-						type: value.length <= NVM3_MAX_OBJ_SIZE_SMALL
-							? ObjectType.DataSmall
-							: ObjectType.DataLarge,
-						// writeObject deals with fragmentation
-						fragmentType: FragmentType.None,
-						data: value,
-					}
-					: {
-						key,
-						type: ObjectType.Deleted,
-						fragmentType: FragmentType.None,
-					})
+				objectGroups.map(([key, value]) =>
+					value
+						? {
+								key,
+								type:
+									value.length <= NVM3_MAX_OBJ_SIZE_SMALL
+										? ObjectType.DataSmall
+										: ObjectType.DataLarge,
+								// writeObject deals with fragmentation
+								fragmentType: FragmentType.None,
+								data: value,
+							}
+						: {
+								key,
+								type: ObjectType.Deleted,
+								fragmentType: FragmentType.None,
+							},
 				),
 			);
 		}
@@ -597,11 +604,13 @@ export class NVM3 implements NVM<number, BytesView> {
 		if (!this._info) await this.init();
 		await this.ensureWritable();
 
-		await this.writeObjects([{
-			key: property,
-			type: ObjectType.Deleted,
-			fragmentType: FragmentType.None,
-		}]);
+		await this.writeObjects([
+			{
+				key: property,
+				type: ObjectType.Deleted,
+				fragmentType: FragmentType.None,
+			},
+		]);
 	}
 
 	public async erase(options?: NVM3EraseOptions): Promise<void> {
@@ -626,20 +635,20 @@ export class NVM3 implements NVM<number, BytesView> {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		} else if (
-			!sharedFileSystem && ZWAVE_APPLICATION_NVM_SIZE % pageSize !== 0
+			!sharedFileSystem &&
+			ZWAVE_APPLICATION_NVM_SIZE % pageSize !== 0
 		) {
 			throw new ZWaveError(
 				`Invalid page size. The application NVM size ${ZWAVE_APPLICATION_NVM_SIZE} must be a multiple of the page size ${pageSize}.`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		} else if (
-			!sharedFileSystem
-			&& (this._io.size - ZWAVE_APPLICATION_NVM_SIZE) % pageSize !== 0
+			!sharedFileSystem &&
+			(this._io.size - ZWAVE_APPLICATION_NVM_SIZE) % pageSize !== 0
 		) {
 			throw new ZWaveError(
 				`Invalid page size. The protocol NVM size ${
-					this._io.size
-					- ZWAVE_APPLICATION_NVM_SIZE
+					this._io.size - ZWAVE_APPLICATION_NVM_SIZE
 				} must be a multiple of the page size ${pageSize}.`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
@@ -679,33 +688,33 @@ export class NVM3 implements NVM<number, BytesView> {
 		// Remember the pages we just created for further use
 		this._info = sharedFileSystem
 			? {
-				isSharedFileSystem: true,
-				sections: {
-					all: {
-						currentPage: 0,
-						objectLocations: new Map(),
-						offsetInPage: NVM3_PAGE_HEADER_SIZE,
-						pages: applicationPages,
+					isSharedFileSystem: true,
+					sections: {
+						all: {
+							currentPage: 0,
+							objectLocations: new Map(),
+							offsetInPage: NVM3_PAGE_HEADER_SIZE,
+							pages: applicationPages,
+						},
 					},
-				},
-			}
+				}
 			: {
-				isSharedFileSystem: false,
-				sections: {
-					application: {
-						currentPage: 0,
-						objectLocations: new Map(),
-						offsetInPage: NVM3_PAGE_HEADER_SIZE,
-						pages: applicationPages,
+					isSharedFileSystem: false,
+					sections: {
+						application: {
+							currentPage: 0,
+							objectLocations: new Map(),
+							offsetInPage: NVM3_PAGE_HEADER_SIZE,
+							pages: applicationPages,
+						},
+						protocol: {
+							currentPage: 0,
+							objectLocations: new Map(),
+							offsetInPage: NVM3_PAGE_HEADER_SIZE,
+							pages: protocolPages,
+						},
 					},
-					protocol: {
-						currentPage: 0,
-						objectLocations: new Map(),
-						offsetInPage: NVM3_PAGE_HEADER_SIZE,
-						pages: protocolPages,
-					},
-				},
-			};
+				};
 	}
 }
 
@@ -745,9 +754,9 @@ async function readPageHeader(
 			const nextOffset = offset + testPageSize;
 			if (
 				// exactly end of NVM OR
-				io.size === nextOffset
+				io.size === nextOffset ||
 				// next page
-				|| await isValidPageHeaderAtOffset(io, nextOffset)
+				(await isValidPageHeaderAtOffset(io, nextOffset))
 			) {
 				pageSize = testPageSize;
 				break;
@@ -784,9 +793,10 @@ async function readPageHeader(
 	};
 }
 
-function tryGetVersionAndEraseCount(
-	header: BytesView,
-): { version: number; eraseCount: number } {
+function tryGetVersionAndEraseCount(header: BytesView): {
+	version: number;
+	eraseCount: number;
+} {
 	const buffer = Bytes.view(header);
 	const version = buffer.readUInt16LE(0);
 	const magic = buffer.readUInt16LE(2);
@@ -860,8 +870,8 @@ async function readObjectHeader(
 	let objType: ObjectType = hdr1 & NVM3_OBJ_TYPE_MASK;
 	let fragmentSize = 0;
 	let hdr2: number | undefined;
-	const isLarge = objType === ObjectType.DataLarge
-		|| objType === ObjectType.CounterLarge;
+	const isLarge =
+		objType === ObjectType.DataLarge || objType === ObjectType.CounterLarge;
 	if (isLarge) {
 		hdr2 = await nvmReadUInt32LE(io, offset + 4);
 		headerSize += 4;

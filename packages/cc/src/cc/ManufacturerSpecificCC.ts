@@ -12,6 +12,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -63,9 +64,9 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 			"deviceId",
 			(type: DeviceIdType) => getEnumMemberName(DeviceIdType, type),
 			({ property, propertyKey }) =>
-				property === "deviceId"
-				&& typeof propertyKey === "string"
-				&& propertyKey in DeviceIdType,
+				property === "deviceId" &&
+				typeof propertyKey === "string" &&
+				propertyKey in DeviceIdType,
 			(type: DeviceIdType) => ({
 				...ValueMetadata.ReadOnlyString,
 				label: `Device ID (${getEnumMemberName(DeviceIdType, type)})`,
@@ -104,12 +105,11 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ManufacturerSpecificCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ManufacturerSpecificCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"manufacturerId",
@@ -133,12 +133,11 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			deviceIdType,
 		});
-		const response = await this.host.sendCommand<
-			ManufacturerSpecificCCDeviceSpecificReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ManufacturerSpecificCCDeviceSpecificReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.deviceId;
 	}
 
@@ -171,9 +170,7 @@ export class ManufacturerSpecificCC extends CommandClass {
 		return [];
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -196,14 +193,10 @@ export class ManufacturerSpecificCC extends CommandClass {
 			});
 			const mfResp = await api.get();
 			if (mfResp) {
-				const logMessage =
-					`received response for manufacturer information:
+				const logMessage = `received response for manufacturer information:
   manufacturer: ${
-						ctx.lookupManufacturer(
-							mfResp.manufacturerId,
-						)
-						|| "unknown"
-					} (${num2hex(mfResp.manufacturerId)})
+		ctx.lookupManufacturer(mfResp.manufacturerId) || "unknown"
+  } (${num2hex(mfResp.manufacturerId)})
   product type: ${num2hex(mfResp.productType)}
   product id:   ${num2hex(mfResp.productId)}`;
 				ctx.logNode(node.id, {
@@ -295,14 +288,10 @@ export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
 }
 
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificReport)
-@ccValueProperty(
-	"deviceId",
-	ManufacturerSpecificCCValues.deviceId,
-	(self) => [self.type],
-)
-export class ManufacturerSpecificCCDeviceSpecificReport
-	extends ManufacturerSpecificCC
-{
+@ccValueProperty("deviceId", ManufacturerSpecificCCValues.deviceId, (self) => [
+	self.type,
+])
+export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpecificCC {
 	public constructor(
 		options: WithAddress<ManufacturerSpecificCCDeviceSpecificReportOptions>,
 	) {
@@ -323,9 +312,10 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 		const dataLength = raw.payload[1] & 0b11111;
 		validatePayload(dataLength > 0, raw.payload.length >= 2 + dataLength);
 		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
-		const deviceId: string = dataFormat === 0
-			? deviceIdData.toString("utf8")
-			: "0x" + deviceIdData.toString("hex");
+		const deviceId: string =
+			dataFormat === 0
+				? deviceIdData.toString("utf8")
+				: "0x" + deviceIdData.toString("hex");
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -356,9 +346,7 @@ export interface ManufacturerSpecificCCDeviceSpecificGetOptions {
 
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificGet)
 @expectedCCResponse(ManufacturerSpecificCCDeviceSpecificReport)
-export class ManufacturerSpecificCCDeviceSpecificGet
-	extends ManufacturerSpecificCC
-{
+export class ManufacturerSpecificCCDeviceSpecificGet extends ManufacturerSpecificCC {
 	public constructor(
 		options: WithAddress<ManufacturerSpecificCCDeviceSpecificGetOptions>,
 	) {

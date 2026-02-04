@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -53,21 +54,15 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 export const BinarySwitchCCValues = V.defineCCValues(
 	CommandClasses["Binary Switch"],
 	{
-		...V.staticProperty(
-			"currentValue",
-			{
-				...ValueMetadata.ReadOnlyBoolean,
-				label: "Current value",
-			} as const,
-		),
-		...V.staticProperty(
-			"targetValue",
-			{
-				...ValueMetadata.Boolean,
-				label: "Target value",
-				valueChangeOptions: ["transitionDuration"],
-			} as const,
-		),
+		...V.staticProperty("currentValue", {
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Current value",
+		} as const),
+		...V.staticProperty("targetValue", {
+			...ValueMetadata.Boolean,
+			label: "Target value",
+			valueChangeOptions: ["transitionDuration"],
+		} as const),
 		...V.staticProperty(
 			"duration",
 			{
@@ -141,7 +136,7 @@ export class BinarySwitchCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: BinarySwitchCCAPI,
 			{ property },
 			value,
@@ -169,8 +164,8 @@ export class BinarySwitchCCAPI extends CCAPI {
 		options,
 	) => {
 		if (property === "targetValue") {
-			const currentValueValueId = BinarySwitchCCValues.currentValue
-				.endpoint(this.endpoint.index);
+			const currentValueValueId =
+				BinarySwitchCCValues.currentValue.endpoint(this.endpoint.index);
 
 			return {
 				optimisticallyUpdateRelatedValues: (
@@ -184,11 +179,11 @@ export class BinarySwitchCCAPI extends CCAPI {
 						);
 					} else if (this.isMulticast()) {
 						// Figure out which nodes were affected by this command
-						const affectedNodes = this.endpoint.node.physicalNodes
-							.filter((node) =>
+						const affectedNodes =
+							this.endpoint.node.physicalNodes.filter((node) =>
 								node
 									.getEndpoint(this.endpoint.index)
-									?.supportsCC(this.ccId)
+									?.supportsCC(this.ccId),
 							);
 						// and optimistically update the currentValue
 						for (const node of affectedNodes) {
@@ -218,7 +213,7 @@ export class BinarySwitchCCAPI extends CCAPI {
 	};
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: BinarySwitchCCAPI, { property }) {
+		return async function (this: BinarySwitchCCAPI, { property }) {
 			switch (property) {
 				case "currentValue":
 				case "targetValue":
@@ -237,9 +232,7 @@ export class BinarySwitchCCAPI extends CCAPI {
 export class BinarySwitchCC extends CommandClass {
 	declare ccCommand: BinarySwitchCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -254,9 +247,7 @@ export class BinarySwitchCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -291,10 +282,7 @@ remaining duration: ${resp.duration?.toString() ?? "undefined"}`;
 		}
 	}
 
-	public setMappedBasicValue(
-		ctx: GetValueDB,
-		value: number,
-	): boolean {
+	public setMappedBasicValue(ctx: GetValueDB, value: number): boolean {
 		this.setValue(ctx, BinarySwitchCCValues.currentValue, value > 0);
 		return true;
 	}
@@ -309,9 +297,7 @@ export interface BinarySwitchCCSetOptions {
 @CCCommand(BinarySwitchCommand.Set)
 @useSupervision()
 export class BinarySwitchCCSet extends BinarySwitchCC {
-	public constructor(
-		options: WithAddress<BinarySwitchCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<BinarySwitchCCSetOptions>) {
 		super(options);
 		this.targetValue = options.targetValue;
 		this.duration = Duration.from(options.duration);
@@ -344,9 +330,9 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 		if (
-			ccVersion < 2 && ctx.getDeviceConfig?.(
-				this.nodeId as number,
-			)?.compat?.encodeCCsUsingTargetVersion
+			ccVersion < 2 &&
+			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
+				?.encodeCCsUsingTargetVersion
 		) {
 			// When forcing CC version 1, only send the target value
 			this.payload = this.payload.subarray(0, 1);
@@ -381,9 +367,7 @@ export interface BinarySwitchCCReportOptions {
 @ccValueProperty("targetValue", BinarySwitchCCValues.targetValue)
 @ccValueProperty("duration", BinarySwitchCCValues.duration)
 export class BinarySwitchCCReport extends BinarySwitchCC {
-	public constructor(
-		options: WithAddress<BinarySwitchCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<BinarySwitchCCReportOptions>) {
 		super(options);
 
 		this.currentValue = options.currentValue;
@@ -397,9 +381,7 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 	): BinarySwitchCCReport {
 		validatePayload(raw.payload.length >= 1);
 		const currentValue: MaybeUnknown<boolean> | undefined =
-			parseMaybeBoolean(
-				raw.payload[0],
-			);
+			parseMaybeBoolean(raw.payload[0]);
 		let targetValue: MaybeUnknown<boolean> | undefined;
 		let duration: Duration | undefined;
 

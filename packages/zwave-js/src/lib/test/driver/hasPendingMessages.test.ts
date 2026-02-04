@@ -1,6 +1,7 @@
 import { CommandClasses, type ValueID } from "@zwave-js/core";
 import { MockController } from "@zwave-js/testing";
 import { test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -53,7 +54,10 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("should return true when there is a poll scheduled for a node", ({ context, expect }) => {
+test("should return true when there is a poll scheduled for a node", ({
+	context,
+	expect,
+}) => {
 	const { driver, node2 } = context;
 	expect(driver["hasPendingMessages"](node2)).toBe(false);
 	const valueId: ValueID = {

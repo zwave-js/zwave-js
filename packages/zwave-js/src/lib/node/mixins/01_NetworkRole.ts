@@ -8,7 +8,9 @@ import {
 	Protocols,
 	isLongRangeNodeId,
 } from "@zwave-js/core";
+
 import { cacheKeys } from "../../driver/NetworkCache.js";
+
 import { ZWaveNodeBase } from "./00_Base.js";
 
 export interface NodeNetworkRole {
@@ -52,7 +54,8 @@ export interface NodeNetworkRole {
 	readonly isControllerNode: boolean;
 }
 
-export abstract class NetworkRoleMixin extends ZWaveNodeBase
+export abstract class NetworkRoleMixin
+	extends ZWaveNodeBase
 	implements NodeNetworkRole
 {
 	public get isListening(): MaybeNotKnown<boolean> {

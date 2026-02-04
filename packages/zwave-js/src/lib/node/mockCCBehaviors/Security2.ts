@@ -47,21 +47,25 @@ enum BootstrapStage {
 	Finalizing,
 }
 
-type Security2BootstrapState = {
-	stage: BootstrapStage.Started;
-} | {
-	stage: BootstrapStage.Handshake;
-	grantedKeys: SecurityClass[];
-} | {
-	stage: BootstrapStage.RequestingKeys | BootstrapStage.Finalizing;
-	grantedKeys: SecurityClass[];
-	keys: Map<SecurityClass, BytesView>;
-} | {
-	stage: BootstrapStage.VerifyingKeys;
-	grantedKeys: SecurityClass[];
-	keys: Map<SecurityClass, BytesView>;
-	currentKey: SecurityClass;
-};
+type Security2BootstrapState =
+	| {
+			stage: BootstrapStage.Started;
+	  }
+	| {
+			stage: BootstrapStage.Handshake;
+			grantedKeys: SecurityClass[];
+	  }
+	| {
+			stage: BootstrapStage.RequestingKeys | BootstrapStage.Finalizing;
+			grantedKeys: SecurityClass[];
+			keys: Map<SecurityClass, BytesView>;
+	  }
+	| {
+			stage: BootstrapStage.VerifyingKeys;
+			grantedKeys: SecurityClass[];
+			keys: Map<SecurityClass, BytesView>;
+			currentKey: SecurityClass;
+	  };
 
 const STATE_KEY_PREFIX = "Security2_";
 const StateKeys = {
@@ -75,10 +79,9 @@ const respondToS2KEXGet: MockNodeBehavior = {
 
 		if (receivedCC instanceof Security2CCKEXGet) {
 			// Reset the bootstrap state
-			self.state.set(
-				StateKeys.bootstrapState,
-				{ stage: BootstrapStage.Started },
-			);
+			self.state.set(StateKeys.bootstrapState, {
+				stage: BootstrapStage.Started,
+			});
 
 			const cc = new Security2CCKEXReport({
 				nodeId: controller.ownNodeId,
@@ -101,13 +104,10 @@ const respondToS2KEXSet: MockNodeBehavior = {
 
 		if (receivedCC instanceof Security2CCKEXSet && !receivedCC.echo) {
 			// Remember the granted keys
-			self.state.set(
-				StateKeys.bootstrapState,
-				{
-					stage: BootstrapStage.Handshake,
-					grantedKeys: receivedCC.grantedKeys,
-				} as Security2BootstrapState,
-			);
+			self.state.set(StateKeys.bootstrapState, {
+				stage: BootstrapStage.Handshake,
+				grantedKeys: receivedCC.grantedKeys,
+			} as Security2BootstrapState);
 
 			// We're supposed to respond with our public key now
 			const cc = new Security2CCPublicKeyReport({
@@ -126,25 +126,22 @@ const respondToS2KEXReport: MockNodeBehavior = {
 		if (!sm2Node) return;
 
 		if (
-			receivedCC instanceof Security2CCKEXReport
-			&& receivedCC.echo
-			&& receivedCC.isEncapsulatedWith(CommandClasses["Security 2"])
+			receivedCC instanceof Security2CCKEXReport &&
+			receivedCC.echo &&
+			receivedCC.isEncapsulatedWith(CommandClasses["Security 2"])
 		) {
 			// This should happen after the "handshake"
-			const currentState = self.state.get(
-				StateKeys.bootstrapState,
-			) as Security2BootstrapState | undefined;
+			const currentState = self.state.get(StateKeys.bootstrapState) as
+				| Security2BootstrapState
+				| undefined;
 			if (currentState?.stage !== BootstrapStage.Handshake) return;
 
 			// We are now ready to request the network keys
-			self.state.set(
-				StateKeys.bootstrapState,
-				{
-					stage: BootstrapStage.RequestingKeys,
-					grantedKeys: currentState.grantedKeys,
-					keys: new Map(),
-				} as Security2BootstrapState,
-			);
+			self.state.set(StateKeys.bootstrapState, {
+				stage: BootstrapStage.RequestingKeys,
+				grantedKeys: currentState.grantedKeys,
+				keys: new Map(),
+			} as Security2BootstrapState);
 
 			// Kick off the key request process using the first key
 			const firstKey = currentState.grantedKeys[0];
@@ -160,8 +157,8 @@ const handleS2PublicKeyReport: MockNodeBehavior = {
 		if (!sm2Node) return;
 
 		if (
-			receivedCC instanceof Security2CCPublicKeyReport
-			&& receivedCC.includingNode
+			receivedCC instanceof Security2CCPublicKeyReport &&
+			receivedCC.includingNode
 		) {
 			// Derive the shared secret and temp keys
 			const sharedSecret = await deriveSharedECDHSecret({
@@ -198,11 +195,7 @@ const handleS2PublicKeyReport: MockNodeBehavior = {
 				permitCSA: false,
 				grantedKeys: [...self.capabilities.securityClasses],
 			});
-			cc = Security2CC.encapsulate(
-				cc,
-				self.id,
-				self.securityManagers,
-			);
+			cc = Security2CC.encapsulate(cc, self.id, self.securityManagers);
 
 			return { action: "sendCC", cc };
 		}
@@ -215,20 +208,17 @@ const handleS2NetworkKeyReport: MockNodeBehavior = {
 		if (!sm2Node) return;
 
 		if (
-			receivedCC instanceof Security2CCNetworkKeyReport
-			&& receivedCC.isEncapsulatedWith(CommandClasses["Security 2"])
+			receivedCC instanceof Security2CCNetworkKeyReport &&
+			receivedCC.isEncapsulatedWith(CommandClasses["Security 2"])
 		) {
 			// Ensure we are in the "requesting keys" stage
-			const currentState = self.state.get(
-				StateKeys.bootstrapState,
-			) as Security2BootstrapState | undefined;
+			const currentState = self.state.get(StateKeys.bootstrapState) as
+				| Security2BootstrapState
+				| undefined;
 			if (currentState?.stage !== BootstrapStage.RequestingKeys) return;
 
 			// Remember the key
-			currentState.keys.set(
-				receivedCC.grantedKey,
-				receivedCC.networkKey,
-			);
+			currentState.keys.set(receivedCC.grantedKey, receivedCC.networkKey);
 
 			// And temporarily use it for verification
 			self.encodingContext.setSecurityClass(
@@ -239,14 +229,11 @@ const handleS2NetworkKeyReport: MockNodeBehavior = {
 			await sm2Node.setKey(receivedCC.grantedKey, receivedCC.networkKey);
 
 			// Verify the key
-			self.state.set(
-				StateKeys.bootstrapState,
-				{
-					...currentState,
-					stage: BootstrapStage.VerifyingKeys,
-					currentKey: receivedCC.grantedKey,
-				},
-			);
+			self.state.set(StateKeys.bootstrapState, {
+				...currentState,
+				stage: BootstrapStage.VerifyingKeys,
+				currentKey: receivedCC.grantedKey,
+			});
 			await requestNonce(controller, self);
 			return verifyKey(self, receivedCC.grantedKey);
 		}
@@ -272,9 +259,10 @@ async function requestNonce(
 		): resp is MockZWaveFrame & {
 			type: MockZWaveFrameType.Request;
 			payload: Security2CCNonceReport;
-		} => resp.type === MockZWaveFrameType.Request
-			&& resp.payload instanceof Security2CCNonceReport
-			&& resp.payload.SOS,
+		} =>
+			resp.type === MockZWaveFrameType.Request &&
+			resp.payload instanceof Security2CCNonceReport &&
+			resp.payload.SOS,
 		{ timeout: 1000 },
 	);
 
@@ -316,20 +304,18 @@ const handleS2TransferEnd: MockNodeBehavior = {
 		if (!sm2Node) return;
 
 		if (
-			receivedCC instanceof Security2CCTransferEnd
-			&& receivedCC.keyVerified
-			&& !receivedCC.keyRequestComplete
-			&& receivedCC.isEncapsulatedWith(CommandClasses["Security 2"])
+			receivedCC instanceof Security2CCTransferEnd &&
+			receivedCC.keyVerified &&
+			!receivedCC.keyRequestComplete &&
+			receivedCC.isEncapsulatedWith(CommandClasses["Security 2"])
 		) {
 			// Ensure we are in the "requesting keys" stage
-			const currentState = self.state.get(
-				StateKeys.bootstrapState,
-			) as Security2BootstrapState | undefined;
+			const currentState = self.state.get(StateKeys.bootstrapState) as
+				| Security2BootstrapState
+				| undefined;
 			if (currentState?.stage !== BootstrapStage.RequestingKeys) return;
 
-			const nextKey = currentState.grantedKeys[
-				currentState.keys.size
-			];
+			const nextKey = currentState.grantedKeys[currentState.keys.size];
 
 			if (nextKey) {
 				// Request the next key
@@ -367,9 +353,9 @@ const respondToS2NonceGet: MockNodeBehavior = {
 		if (!sm2Node) return;
 
 		if (receivedCC instanceof Security2CCNonceGet) {
-			const bootstrapState = self.state.get(
-				StateKeys.bootstrapState,
-			) as Security2BootstrapState | undefined;
+			const bootstrapState = self.state.get(StateKeys.bootstrapState) as
+				| Security2BootstrapState
+				| undefined;
 
 			if (bootstrapState?.stage === BootstrapStage.VerifyingKeys) {
 				// This is the NonceGet after sending the NetworkKeyVerify.
@@ -383,14 +369,11 @@ const respondToS2NonceGet: MockNodeBehavior = {
 				sm2Node.deleteNonce(controller.ownNodeId);
 
 				// Reset the state back to requesting keys
-				self.state.set(
-					StateKeys.bootstrapState,
-					{
-						stage: BootstrapStage.RequestingKeys,
-						grantedKeys: bootstrapState.grantedKeys,
-						keys: bootstrapState.keys,
-					} as Security2BootstrapState,
-				);
+				self.state.set(StateKeys.bootstrapState, {
+					stage: BootstrapStage.RequestingKeys,
+					grantedKeys: bootstrapState.grantedKeys,
+					keys: bootstrapState.keys,
+				} as Security2BootstrapState);
 			} else if (bootstrapState?.stage === BootstrapStage.Finalizing) {
 				// Bootstrapping is now actually done. Restore all keys
 				// and security manager settings, so the communication uses
@@ -415,9 +398,7 @@ const respondToS2NonceGet: MockNodeBehavior = {
 				self.state.delete(StateKeys.bootstrapState);
 			}
 
-			const nonce = await sm2Node.generateNonce(
-				controller.ownNodeId,
-			);
+			const nonce = await sm2Node.generateNonce(controller.ownNodeId);
 			const cc = new Security2CCNonceReport({
 				nodeId: controller.ownNodeId,
 				SOS: true,
@@ -437,14 +418,11 @@ const handleS2DecodeError: MockNodeBehavior = {
 
 		if (receivedCC instanceof InvalidCC) {
 			if (
-				receivedCC.reason
-					=== ZWaveErrorCodes.Security2CC_CannotDecode
-				|| receivedCC.reason
-					=== ZWaveErrorCodes.Security2CC_NoSPAN
+				receivedCC.reason ===
+					ZWaveErrorCodes.Security2CC_CannotDecode ||
+				receivedCC.reason === ZWaveErrorCodes.Security2CC_NoSPAN
 			) {
-				const nonce = await sm2Node.generateNonce(
-					controller.ownNodeId,
-				);
+				const nonce = await sm2Node.generateNonce(controller.ownNodeId);
 				const cc = new Security2CCNonceReport({
 					nodeId: controller.ownNodeId,
 					SOS: true,
@@ -459,35 +437,28 @@ const handleS2DecodeError: MockNodeBehavior = {
 
 const respondToS2CommandsSupportedGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
-		if (
-			receivedCC
-				instanceof Security2CCCommandsSupportedGet
-		) {
+		if (receivedCC instanceof Security2CCCommandsSupportedGet) {
 			const encapCC = receivedCC.getEncapsulatingCC(
 				CommandClasses["Security 2"],
 				Security2Command.MessageEncapsulation,
 			) as Security2CCMessageEncapsulation | undefined;
 			if (!encapCC) return;
 
-			const isHighestGranted = encapCC.securityClass
-				=== self.encodingContext.getHighestSecurityClass(
-					self.id,
-				);
+			const isHighestGranted =
+				encapCC.securityClass ===
+				self.encodingContext.getHighestSecurityClass(self.id);
 
 			const cc = Security2CC.encapsulate(
 				new Security2CCCommandsSupportedReport({
 					nodeId: controller.ownNodeId,
 					supportedCCs: isHighestGranted
 						? [...self.implementedCCs.entries()]
-							.filter(
-								([ccId, info]) =>
-									info.secure
-									&& ccId
-										!== CommandClasses[
-											"Security 2"
-										],
-							)
-							.map(([ccId]) => ccId)
+								.filter(
+									([ccId, info]) =>
+										info.secure &&
+										ccId !== CommandClasses["Security 2"],
+								)
+								.map(([ccId]) => ccId)
 						: [],
 				}),
 				self.id,
@@ -502,8 +473,8 @@ const respondToS2CommandsSupportedGet: MockNodeBehavior = {
 const encapsulateS2CC: MockNodeBehavior = {
 	async transformIncomingCC(controller, self, receivedCC) {
 		if (
-			receivedCC instanceof Security2CCMessageEncapsulation
-			&& receivedCC.encapsulated
+			receivedCC instanceof Security2CCMessageEncapsulation &&
+			receivedCC.encapsulated
 		) {
 			receivedCC.encapsulated?.toggleEncapsulationFlag(
 				EncapsulationFlags.Security,
@@ -518,10 +489,10 @@ const encapsulateS2CC: MockNodeBehavior = {
 	async transformResponse(controller, self, receivedCC, response) {
 		// Ensure that responses to S2-encapsulated CCs are also S2-encapsulated
 		if (
-			response.action === "sendCC"
-			&& receivedCC instanceof CommandClass
-			&& receivedCC.isEncapsulatedWith(CommandClasses["Security 2"])
-			&& !(response.cc instanceof Security2CCMessageEncapsulation)
+			response.action === "sendCC" &&
+			receivedCC instanceof CommandClass &&
+			receivedCC.isEncapsulatedWith(CommandClasses["Security 2"]) &&
+			!(response.cc instanceof Security2CCMessageEncapsulation)
 		) {
 			// Encapsulate the response
 			const encapsulated = Security2CC.encapsulate(
@@ -536,9 +507,7 @@ const encapsulateS2CC: MockNodeBehavior = {
 	},
 };
 
-export const Security2CCHooks = [
-	encapsulateS2CC,
-];
+export const Security2CCHooks = [encapsulateS2CC];
 
 export const Security2CCBehaviors = [
 	// Key exchange

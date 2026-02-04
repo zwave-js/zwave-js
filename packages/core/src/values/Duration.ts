@@ -1,5 +1,6 @@
 import type { JSONObject } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
+
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 export type DurationUnit = "seconds" | "minutes" | "unknown" | "default";
@@ -15,7 +16,10 @@ const durationStringRegex =
 
 /** Represents a duration that is used by some command classes */
 export class Duration {
-	public constructor(value: number, public unit: DurationUnit) {
+	public constructor(
+		value: number,
+		public unit: DurationUnit,
+	) {
 		switch (unit) {
 			case "minutes":
 				// Don't allow 0 minutes as a duration
@@ -46,12 +50,14 @@ export class Duration {
 	}
 
 	public static isDuration(value: any): value is DurationLike {
-		return typeof value === "object"
-			&& value != null
-			&& "value" in value
-			&& typeof value.value === "number"
-			&& "unit" in value
-			&& typeof value.unit === "string";
+		return (
+			typeof value === "object" &&
+			value != null &&
+			"value" in value &&
+			typeof value.value === "number" &&
+			"unit" in value &&
+			typeof value.unit === "string"
+		);
 	}
 
 	/** Parses a duration as represented in Report commands */

@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -62,38 +63,26 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],
 	{
-		...V.staticProperty(
-			"currentValue",
-			{
-				...ValueMetadata.ReadOnlyLevel,
-				label: "Current value",
-			} as const,
-		),
-		...V.staticProperty(
-			"targetValue",
-			{
-				...ValueMetadata.Level,
-				label: "Target value",
-				valueChangeOptions: ["transitionDuration"],
-			} as const,
-		),
-		...V.staticProperty(
-			"duration",
-			{
-				...ValueMetadata.ReadOnlyDuration,
-				label: "Remaining duration",
-			} as const,
-		),
-		...V.staticProperty(
-			"restorePrevious",
-			{
-				...ValueMetadata.WriteOnlyBoolean,
-				label: "Restore previous value",
-				states: {
-					true: "Restore",
-				},
-			} as const,
-		),
+		...V.staticProperty("currentValue", {
+			...ValueMetadata.ReadOnlyLevel,
+			label: "Current value",
+		} as const),
+		...V.staticProperty("targetValue", {
+			...ValueMetadata.Level,
+			label: "Target value",
+			valueChangeOptions: ["transitionDuration"],
+		} as const),
+		...V.staticProperty("duration", {
+			...ValueMetadata.ReadOnlyDuration,
+			label: "Remaining duration",
+		} as const),
+		...V.staticProperty("restorePrevious", {
+			...ValueMetadata.WriteOnlyBoolean,
+			label: "Restore previous value",
+			states: {
+				true: "Restore",
+			},
+		} as const),
 		...V.staticPropertyWithName(
 			"compatEvent",
 			"event",
@@ -126,8 +115,8 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				return up;
 			},
 			({ property }) =>
-				typeof property === "string"
-				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 1,
+				typeof property === "string" &&
+				multilevelSwitchTypeProperties.indexOf(property) % 2 === 1,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
@@ -159,8 +148,8 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				return down;
 			},
 			({ property }) =>
-				typeof property === "string"
-				&& multilevelSwitchTypeProperties.indexOf(property) % 2 === 0,
+				typeof property === "string" &&
+				multilevelSwitchTypeProperties.indexOf(property) % 2 === 0,
 			(switchType: SwitchType) => {
 				const switchTypeName = getEnumMemberName(
 					SwitchType,
@@ -211,9 +200,7 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			MultilevelSwitchCCReport
-		>(
+		const response = await this.host.sendCommand<MultilevelSwitchCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -289,17 +276,16 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			MultilevelSwitchCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<MultilevelSwitchCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.switchType;
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: MultilevelSwitchCCAPI,
 			{ property },
 			value,
@@ -339,12 +325,14 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				if (value) {
 					// The property names are organized so that positive motions are
 					// at odd indices and negative motions at even indices
-					const direction = multilevelSwitchTypeProperties.indexOf(
-									property as string,
-								) % 2
-							=== 0
-						? "down"
-						: "up";
+					const direction =
+						multilevelSwitchTypeProperties.indexOf(
+							property as string,
+						) %
+							2 ===
+						0
+							? "down"
+							: "up";
 					// Singlecast only: Try to retrieve the current value to use as the start level,
 					// even if the target node is going to ignore it. There might
 					// be some bugged devices that ignore the ignore start level flag.
@@ -360,9 +348,10 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 					return this.startLevelChange({
 						direction,
 						ignoreStartLevel: true,
-						startLevel: typeof startLevel === "number"
-							? startLevel
-							: undefined,
+						startLevel:
+							typeof startLevel === "number"
+								? startLevel
+								: undefined,
 						duration,
 					});
 				} else {
@@ -387,8 +376,8 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 
 		if (property === "targetValue") {
 			const duration = Duration.from(options?.transitionDuration);
-			const currentValueValueId = MultilevelSwitchCCValues.currentValue
-				.endpoint(
+			const currentValueValueId =
+				MultilevelSwitchCCValues.currentValue.endpoint(
 					this.endpoint.index,
 				);
 
@@ -400,9 +389,9 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				supervisionOnSuccess: async () => {
 					// Only update currentValue for valid target values
 					if (
-						typeof value === "number"
-						&& value >= 0
-						&& value <= 99
+						typeof value === "number" &&
+						value >= 0 &&
+						value <= 99
 					) {
 						this.tryGetValueDB()?.setValue(
 							currentValueValueId,
@@ -430,9 +419,9 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				) => {
 					// Only update currentValue for valid target values
 					if (
-						typeof value === "number"
-						&& value >= 0
-						&& value <= 99
+						typeof value === "number" &&
+						value >= 0 &&
+						value <= 99
 					) {
 						if (this.isSinglecast()) {
 							this.tryGetValueDB()?.setValue(
@@ -441,8 +430,8 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 							);
 						} else if (this.isMulticast()) {
 							// Figure out which nodes were affected by this command
-							const affectedNodes = this.endpoint.node
-								.physicalNodes.filter(
+							const affectedNodes =
+								this.endpoint.node.physicalNodes.filter(
 									(node) =>
 										node
 											.getEndpoint(this.endpoint.index)
@@ -465,8 +454,10 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 					if (
 						// We generally don't want to poll for multicasts because of how much traffic it can cause
 						// However, when setting the value 255 (ON), we don't know the actual state
-						!(this.isSinglecast()
-							|| (this.isMulticast() && value === 255))
+						!(
+							this.isSinglecast() ||
+							(this.isMulticast() && value === 255)
+						)
 					) {
 						return;
 					}
@@ -482,8 +473,8 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 								currentValueValueId,
 								value === 255 ? undefined : value,
 								{
-									duration: result?.remainingDuration
-										?? duration,
+									duration:
+										result?.remainingDuration ?? duration,
 								},
 							);
 							break;
@@ -494,7 +485,7 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 	};
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: MultilevelSwitchCCAPI, { property }) {
+		return async function (this: MultilevelSwitchCCAPI, { property }) {
 			switch (property) {
 				case "currentValue":
 				case "targetValue":
@@ -513,9 +504,7 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 export class MultilevelSwitchCC extends CommandClass {
 	declare ccCommand: MultilevelSwitchCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -543,12 +532,10 @@ export class MultilevelSwitchCC extends CommandClass {
 			if (switchType != undefined) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message: `has switch type ${
-						getEnumMemberName(
-							SwitchType,
-							switchType,
-						)
-					}`,
+					message: `has switch type ${getEnumMemberName(
+						SwitchType,
+						switchType,
+					)}`,
 					direction: "inbound",
 				});
 			}
@@ -564,9 +551,7 @@ export class MultilevelSwitchCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -585,10 +570,7 @@ export class MultilevelSwitchCC extends CommandClass {
 		await api.get();
 	}
 
-	public setMappedBasicValue(
-		ctx: GetValueDB,
-		value: number,
-	): boolean {
+	public setMappedBasicValue(ctx: GetValueDB, value: number): boolean {
 		this.setValue(ctx, MultilevelSwitchCCValues.currentValue, value);
 		return true;
 	}
@@ -619,9 +601,7 @@ export interface MultilevelSwitchCCSetOptions {
 @CCCommand(MultilevelSwitchCommand.Set)
 @useSupervision()
 export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
-	public constructor(
-		options: WithAddress<MultilevelSwitchCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<MultilevelSwitchCCSetOptions>) {
 		super(options);
 		this.targetValue = options.targetValue;
 		this.duration = Duration.from(options.duration);
@@ -657,9 +637,9 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 		if (
-			ccVersion < 2 && ctx.getDeviceConfig?.(
-				this.nodeId as number,
-			)?.compat?.encodeCCsUsingTargetVersion
+			ccVersion < 2 &&
+			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
+				?.encodeCCsUsingTargetVersion
 		) {
 			// When forcing CC version 1, only include the target value
 			this.payload = this.payload.subarray(0, 1);
@@ -694,9 +674,7 @@ export interface MultilevelSwitchCCReportOptions {
 @ccValueProperty("duration", MultilevelSwitchCCValues.duration)
 @ccValueProperty("currentValue", MultilevelSwitchCCValues.currentValue)
 export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
-	public constructor(
-		options: WithAddress<MultilevelSwitchCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<MultilevelSwitchCCReportOptions>) {
 		super(options);
 
 		this.currentValue = options.currentValue;
@@ -711,9 +689,7 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 		validatePayload(raw.payload.length >= 1);
 		const currentValue: MaybeUnknown<number> | undefined =
 			// 0xff is a legacy value for 100% (99)
-			raw.payload[0] === 0xff
-				? 99
-				: parseMaybeNumber(raw.payload[0]);
+			raw.payload[0] === 0xff ? 99 : parseMaybeNumber(raw.payload[0]);
 		let targetValue: MaybeUnknown<number> | undefined;
 		let duration: Duration | undefined;
 
@@ -765,21 +741,18 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 export class MultilevelSwitchCCGet extends MultilevelSwitchCC {}
 
 // @publicAPI
-export type MultilevelSwitchCCStartLevelChangeOptions =
-	& {
-		direction: keyof typeof LevelChangeDirection;
-	}
-	& (
-		| {
+export type MultilevelSwitchCCStartLevelChangeOptions = {
+	direction: keyof typeof LevelChangeDirection;
+} & (
+	| {
 			ignoreStartLevel: true;
 			startLevel?: number;
-		}
-		| {
+	  }
+	| {
 			ignoreStartLevel: false;
 			startLevel: number;
-		}
-	)
-	& {
+	  }
+) & {
 		// Version >= 2:
 		duration?: Duration | string;
 	};
@@ -803,9 +776,8 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	): MultilevelSwitchCCStartLevelChange {
 		validatePayload(raw.payload.length >= 2);
 		const ignoreStartLevel = !!((raw.payload[0] & 0b0_0_1_00000) >>> 5);
-		const direction = ((raw.payload[0] & 0b0_1_0_00000) >>> 6)
-			? "down"
-			: "up";
+		const direction =
+			(raw.payload[0] & 0b0_1_0_00000) >>> 6 ? "down" : "up";
 		const startLevel = raw.payload[1];
 		let duration: Duration | undefined;
 		if (raw.payload.length >= 3) {
@@ -827,8 +799,9 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	public direction: keyof typeof LevelChangeDirection;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const controlByte = (LevelChangeDirection[this.direction] << 6)
-			| (this.ignoreStartLevel ? 0b0010_0000 : 0);
+		const controlByte =
+			(LevelChangeDirection[this.direction] << 6) |
+			(this.ignoreStartLevel ? 0b0010_0000 : 0);
 		this.payload = Bytes.from([
 			controlByte,
 			this.startLevel,
@@ -837,9 +810,9 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 		if (
-			ccVersion < 2 && ctx.getDeviceConfig?.(
-				this.nodeId as number,
-			)?.compat?.encodeCCsUsingTargetVersion
+			ccVersion < 2 &&
+			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
+				?.encodeCCsUsingTargetVersion
 		) {
 			// When forcing CC version 1, omit the duration byte
 			this.payload = this.payload.subarray(0, -1);

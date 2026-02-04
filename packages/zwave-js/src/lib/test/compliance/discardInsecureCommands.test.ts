@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCReport,
 	BasicCCValues,
@@ -17,7 +19,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -92,10 +94,10 @@ integrationTest(
 				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof InvalidCC) {
 						if (
-							receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_CannotDecode
-							|| receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_NoSPAN
+							receivedCC.reason ===
+								ZWaveErrorCodes.Security2CC_CannotDecode ||
+							receivedCC.reason ===
+								ZWaveErrorCodes.Security2CC_NoSPAN
 						) {
 							const nonce = await smNode.generateNonce(
 								controller.ownNodeId,

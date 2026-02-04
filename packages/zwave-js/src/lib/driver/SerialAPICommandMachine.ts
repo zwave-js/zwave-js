@@ -16,17 +16,17 @@ export type SerialAPICommandState =
 	| { value: "waitingForACK" }
 	| { value: "waitingForResponse" }
 	| {
-		value: "waitingForCallback";
-		responseTimedOut?: boolean;
-	}
+			value: "waitingForCallback";
+			responseTimedOut?: boolean;
+	  }
 	| {
-		value: "success";
-		result?: Message;
-		done: true;
-	}
+			value: "success";
+			result?: Message;
+			done: true;
+	  }
 	| ({
-		value: "failure";
-	} & SerialAPICommandMachineFailure);
+			value: "failure";
+	  } & SerialAPICommandMachineFailure);
 
 export type SerialAPICommandMachineFailure =
 	| { reason: "ACK timeout"; result?: undefined }
@@ -61,9 +61,9 @@ function to(
 function callbackIsFinal(callback: Message): boolean {
 	return (
 		// assume callbacks without success indication to be OK
-		(!isSuccessIndicator(callback) || callback.isOK())
+		(!isSuccessIndicator(callback) || callback.isOK()) &&
 		// assume callbacks without isFinal method to be final
-		&& (!isMultiStageCallback(callback) || callback.isFinal())
+		(!isMultiStageCallback(callback) || callback.isFinal())
 	);
 }
 

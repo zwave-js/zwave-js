@@ -1,6 +1,8 @@
 import { NODE_ID_MAX, encodeBitMask, parseBitMask } from "@zwave-js/core";
 import type { Bytes } from "@zwave-js/shared";
+
 import type { NVM3Object } from "../object.js";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -76,9 +78,7 @@ export const ProtocolSUCPendingUpdateNodeMaskFileID = 0x50008;
 
 @nvmFileID(ProtocolSUCPendingUpdateNodeMaskFileID)
 @nvmSection("protocol")
-export class ProtocolSUCPendingUpdateNodeMaskFile
-	extends ProtocolNodeMaskFile
-{}
+export class ProtocolSUCPendingUpdateNodeMaskFile extends ProtocolNodeMaskFile {}
 
 export const ProtocolVirtualNodeMaskFileID = 0x50009;
 
@@ -90,17 +90,13 @@ export const ProtocolPendingDiscoveryNodeMaskFileID = 0x5000a;
 
 @nvmFileID(ProtocolPendingDiscoveryNodeMaskFileID)
 @nvmSection("protocol")
-export class ProtocolPendingDiscoveryNodeMaskFile
-	extends ProtocolNodeMaskFile
-{}
+export class ProtocolPendingDiscoveryNodeMaskFile extends ProtocolNodeMaskFile {}
 
 export const ProtocolRouteCacheExistsNodeMaskFileID = 0x5000b;
 
 @nvmFileID(ProtocolRouteCacheExistsNodeMaskFileID)
 @nvmSection("protocol")
-export class ProtocolRouteCacheExistsNodeMaskFile
-	extends ProtocolNodeMaskFile
-{}
+export class ProtocolRouteCacheExistsNodeMaskFile extends ProtocolNodeMaskFile {}
 
 export const ProtocolLRNodeListFileID = 0x5000c;
 

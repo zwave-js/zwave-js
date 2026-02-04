@@ -44,10 +44,9 @@ test("the Notification command should deserialize correctly", async (t) => {
 		]),
 	);
 
-	const cc = await CommandClass.parse(
-		data,
-		{ sourceNodeId: 1 } as any,
-	) as EntryControlCCNotification;
+	const cc = (await CommandClass.parse(data, {
+		sourceNodeId: 1,
+	} as any)) as EntryControlCCNotification;
 	t.expect(cc.constructor).toBe(EntryControlCCNotification);
 
 	t.expect(cc.sequenceNumber).toStrictEqual(1);
@@ -65,9 +64,7 @@ test("the ConfigurationGet command should serialize correctly", async (t) => {
 			EntryControlCommand.ConfigurationGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the ConfigurationSet command should serialize correctly", async (t) => {
@@ -83,9 +80,7 @@ test("the ConfigurationSet command should serialize correctly", async (t) => {
 			0x2,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the ConfigurationReport command should be deserialize correctly", async (t) => {
@@ -97,10 +92,9 @@ test("the ConfigurationReport command should be deserialize correctly", async (t
 		]),
 	);
 
-	const cc = await CommandClass.parse(
-		data,
-		{ sourceNodeId: 1 } as any,
-	) as EntryControlCCConfigurationReport;
+	const cc = (await CommandClass.parse(data, {
+		sourceNodeId: 1,
+	} as any)) as EntryControlCCConfigurationReport;
 	t.expect(cc.constructor).toBe(EntryControlCCConfigurationReport);
 
 	t.expect(cc.keyCacheSize).toStrictEqual(1);
@@ -116,9 +110,7 @@ test("the EventSupportedGet command should serialize correctly", async (t) => {
 			EntryControlCommand.EventSupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the EventSupportedReport command should be deserialize correctly", async (t) => {
@@ -139,10 +131,9 @@ test("the EventSupportedReport command should be deserialize correctly", async (
 		]),
 	);
 
-	const cc = await CommandClass.parse(
-		data,
-		{ sourceNodeId: 1 } as any,
-	) as EntryControlCCEventSupportedReport;
+	const cc = (await CommandClass.parse(data, {
+		sourceNodeId: 1,
+	} as any)) as EntryControlCCEventSupportedReport;
 	t.expect(cc.constructor).toBe(EntryControlCCEventSupportedReport);
 
 	t.expect(cc.supportedDataTypes).toStrictEqual([
@@ -167,9 +158,7 @@ test("the KeySupportedGet command should serialize correctly", async (t) => {
 			EntryControlCommand.KeySupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the KeySupportedReport command should be deserialize correctly", async (t) => {
@@ -181,10 +170,9 @@ test("the KeySupportedReport command should be deserialize correctly", async (t)
 		]),
 	);
 
-	const cc = await CommandClass.parse(
-		data,
-		{ sourceNodeId: 1 } as any,
-	) as EntryControlCCKeySupportedReport;
+	const cc = (await CommandClass.parse(data, {
+		sourceNodeId: 1,
+	} as any)) as EntryControlCCKeySupportedReport;
 	t.expect(cc.constructor).toBe(EntryControlCCKeySupportedReport);
 
 	t.expect(cc.supportedKeys).toStrictEqual([1, 3, 4, 6]);

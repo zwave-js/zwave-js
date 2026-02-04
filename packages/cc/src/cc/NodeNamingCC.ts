@@ -18,6 +18,7 @@ import {
 	uint8ArrayToStringUTF16BE,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -90,7 +91,7 @@ export class NodeNamingAndLocationCCAPI extends PhysicalCCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: NodeNamingAndLocationCCAPI,
 			{ property },
 			value,
@@ -119,7 +120,7 @@ export class NodeNamingAndLocationCCAPI extends PhysicalCCAPI {
 	}
 
 	protected override get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: NodeNamingAndLocationCCAPI, { property }) {
+		return async function (this: NodeNamingAndLocationCCAPI, { property }) {
 			switch (property) {
 				case "name":
 					return this.getName();
@@ -141,12 +142,11 @@ export class NodeNamingAndLocationCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			NodeNamingAndLocationCCNameReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<NodeNamingAndLocationCCNameReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.name;
 	}
 
@@ -175,12 +175,11 @@ export class NodeNamingAndLocationCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			NodeNamingAndLocationCCLocationReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<NodeNamingAndLocationCCLocationReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.location;
 	}
 
@@ -213,9 +212,7 @@ export class NodeNamingAndLocationCC extends CommandClass {
 		return true;
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -230,9 +227,7 @@ export class NodeNamingAndLocationCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -386,9 +381,7 @@ export interface NodeNamingAndLocationCCLocationSetOptions {
 
 @CCCommand(NodeNamingAndLocationCommand.LocationSet)
 @useSupervision()
-export class NodeNamingAndLocationCCLocationSet
-	extends NodeNamingAndLocationCC
-{
+export class NodeNamingAndLocationCCLocationSet extends NodeNamingAndLocationCC {
 	public constructor(
 		options: WithAddress<NodeNamingAndLocationCCLocationSetOptions>,
 	) {
@@ -448,9 +441,7 @@ export interface NodeNamingAndLocationCCLocationReportOptions {
 
 @CCCommand(NodeNamingAndLocationCommand.LocationReport)
 @ccValueProperty("location", NodeNamingAndLocationCCValues.location)
-export class NodeNamingAndLocationCCLocationReport
-	extends NodeNamingAndLocationCC
-{
+export class NodeNamingAndLocationCCLocationReport extends NodeNamingAndLocationCC {
 	public constructor(
 		options: WithAddress<NodeNamingAndLocationCCLocationReportOptions>,
 	) {
@@ -491,6 +482,4 @@ export class NodeNamingAndLocationCCLocationReport
 
 @CCCommand(NodeNamingAndLocationCommand.LocationGet)
 @expectedCCResponse(NodeNamingAndLocationCCLocationReport)
-export class NodeNamingAndLocationCCLocationGet
-	extends NodeNamingAndLocationCC
-{}
+export class NodeNamingAndLocationCCLocationGet extends NodeNamingAndLocationCC {}

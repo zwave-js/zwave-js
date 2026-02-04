@@ -1,7 +1,9 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes, type BytesView } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import { DisconnectRequest } from "../esphome/ConnectionMessages.js";
 import {
 	DeviceInfoRequest,
@@ -23,6 +25,7 @@ import {
 import { ESPHomeMessageParser } from "../esphome/parsers/ESPHomeMessageParser.js";
 import { NoiseDecryptTransform } from "../esphome/parsers/NoiseDecryptTransform.js";
 import { NoiseFrameParser } from "../esphome/parsers/NoiseFrameParser.js";
+
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export interface ESPHomeSocketOptions {
@@ -37,7 +40,7 @@ export interface ESPHomeSocketOptions {
 export function createESPHomeFactory(
 	options: ESPHomeSocketOptions,
 ): ZWaveSerialBindingFactory {
-	return async function() {
+	return async function () {
 		const socket = new net.Socket();
 		const host = options.host;
 		const port = options.port ?? 6053;
@@ -158,9 +161,7 @@ export function createESPHomeFactory(
 			const handshakeMsg1 = await handshakeState.writeMessage(
 				new Bytes(0),
 			);
-			await sendNoiseFrame(
-				Bytes.concat([[0x00], handshakeMsg1]),
-			);
+			await sendNoiseFrame(Bytes.concat([[0x00], handshakeMsg1]));
 
 			// Wait for handshake message 2
 			const handshakeMsg2Payload = await readNoiseFrame(timeout);
@@ -184,9 +185,9 @@ export function createESPHomeFactory(
 				);
 			} else if (statusByte !== 0x00) {
 				throw new ZWaveError(
-					`Noise handshake failed: unexpected status byte 0x${
-						statusByte.toString(16).padStart(2, "0")
-					}`,
+					`Noise handshake failed: unexpected status byte 0x${statusByte
+						.toString(16)
+						.padStart(2, "0")}`,
 					ZWaveErrorCodes.Driver_SerialPortClosed,
 				);
 			}
@@ -195,8 +196,8 @@ export function createESPHomeFactory(
 			await handshakeState.readMessage(handshakeMsg2Payload.subarray(1));
 
 			// Derive transport keys
-			const { sendCipher: sc, receiveCipher: rc } = await handshakeState
-				.split();
+			const { sendCipher: sc, receiveCipher: rc } =
+				await handshakeState.split();
 			sendCipher = sc;
 			return rc;
 		}
@@ -216,8 +217,8 @@ export function createESPHomeFactory(
 					}
 					// Skip Z-Wave proxy messages during handshake
 					if (
-						message instanceof ZWaveProxyFrame
-						|| message instanceof ZWaveProxyRequest
+						message instanceof ZWaveProxyFrame ||
+						message instanceof ZWaveProxyRequest
 					) {
 						continue;
 					}
@@ -390,17 +391,15 @@ export function createESPHomeFactory(
 					if (useEncryption) {
 						// Encrypted: socket → NoiseFrameParser → [handshake] → NoiseDecryptTransform → ESPHomeMessageParser
 						const frameParser = new NoiseFrameParser();
-						const noiseFramesStream = socketReadable.pipeThrough(
-							frameParser,
-						);
+						const noiseFramesStream =
+							socketReadable.pipeThrough(frameParser);
 
 						// Get a reader for the Noise handshake
 						const frameReader = noiseFramesStream.getReader();
 
 						// Perform Noise handshake using the stream
-						receiveCipher = await performNoiseHandshake(
-							frameReader,
-						);
+						receiveCipher =
+							await performNoiseHandshake(frameReader);
 
 						// Release the reader so we can continue piping
 						frameReader.releaseLock();
@@ -419,9 +418,8 @@ export function createESPHomeFactory(
 					} else {
 						// Plaintext: socket → ESPHomeMessageParser
 						const messageParser = new ESPHomeMessageParser();
-						parserReadable = socketReadable.pipeThrough(
-							messageParser,
-						);
+						parserReadable =
+							socketReadable.pipeThrough(messageParser);
 					}
 
 					const reader = parserReadable.getReader();

@@ -30,9 +30,7 @@ test("the Get command should serialize correctly", async (t) => {
 			1,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should serialize correctly with level", async (t) => {
@@ -51,9 +49,7 @@ test("the Set command should serialize correctly with level", async (t) => {
 			0x00, // level
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should serialize correctly with undefined level", async (t) => {
@@ -72,9 +68,7 @@ test("the Set command should serialize correctly with undefined level", async (t
 			0xff, // level
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command (v1) should be deserialized correctly", async (t) => {
@@ -86,10 +80,9 @@ test("the Report command (v1) should be deserialized correctly", async (t) => {
 			0x05, // dimmingDuration
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as SceneActuatorConfigurationCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as SceneActuatorConfigurationCCReport;
 	t.expect(cc.constructor).toBe(SceneActuatorConfigurationCCReport);
 
 	t.expect(cc.sceneId).toBe(55);
@@ -101,9 +94,8 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 2 } as any,
-	) as SceneActuatorConfigurationCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 2,
+	} as any)) as SceneActuatorConfigurationCC;
 	t.expect(cc.constructor).toBe(SceneActuatorConfigurationCC);
 });

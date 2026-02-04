@@ -85,9 +85,10 @@ async function main(param) {
 Do not refer to the user's question with phrases like "here's the answer to your question" or similar.
 Just answer the question directly.`;
 
-		for await (
-			const chunk of analyzer.analyzeLogFile(tempFile.name, query)
-		) {
+		for await (const chunk of analyzer.analyzeLogFile(
+			tempFile.name,
+			query,
+		)) {
 			analysisResult += chunk;
 		}
 
@@ -176,8 +177,8 @@ async function findExistingAutoAnalysisComment(github, context) {
 
 		return comments.some(
 			(c) =>
-				c.author.login === "zwave-js-bot"
-				&& c.body.includes(AUTO_ANALYSIS_COMMENT_TAG),
+				c.author.login === "zwave-js-bot" &&
+				c.body.includes(AUTO_ANALYSIS_COMMENT_TAG),
 		);
 	} catch (error) {
 		console.error(

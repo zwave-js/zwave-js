@@ -94,10 +94,7 @@ export class SetLearnModeRequest extends SetLearnModeRequestBase {
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
-		this.payload = Bytes.from([
-			this.intent,
-			this.callbackId,
-		]);
+		this.payload = Bytes.from([this.intent, this.callbackId]);
 
 		return super.serialize(ctx);
 	}
@@ -159,7 +156,8 @@ export interface SetLearnModeCallbackOptions {
 	statusMessage?: BytesView;
 }
 
-export class SetLearnModeCallback extends SetLearnModeRequestBase
+export class SetLearnModeCallback
+	extends SetLearnModeRequestBase
 	implements SuccessIndicator
 {
 	public constructor(
@@ -209,8 +207,8 @@ export class SetLearnModeCallback extends SetLearnModeRequestBase
 			status: getEnumMemberName(LearnModeStatus, this.status),
 		};
 		if (
-			this.status !== LearnModeStatus.Started
-			|| this.assignedNodeId !== LEARN_MODE_EMPTY_NODE_ID
+			this.status !== LearnModeStatus.Started ||
+			this.assignedNodeId !== LEARN_MODE_EMPTY_NODE_ID
 		) {
 			message["assigned node id"] = this.assignedNodeId;
 		}

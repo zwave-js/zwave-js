@@ -28,9 +28,7 @@ test("SupervisionCC/BasicCCSet => SupervisionCCReport (correct session ID) = exp
 		status: SupervisionStatus.Success,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
-		true,
-	);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(true);
 });
 
 test("SupervisionCC/BasicCCSet => SupervisionCCReport (wrong session ID) = unexpected", (t) => {
@@ -48,7 +46,5 @@ test("SupervisionCC/BasicCCSet => SupervisionCCReport (wrong session ID) = unexp
 		status: SupervisionStatus.Success,
 	});
 
-	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(
-		false,
-	);
+	t.expect(ccRequest.isExpectedCCResponse({} as any, ccResponse)).toBe(false);
 });

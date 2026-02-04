@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -7,15 +8,14 @@ async function main() {
 	});
 	// project.addSourceFilesAtPaths("packages/cc/src/cc/**/*CC.ts");
 
-	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getBaseNameWithoutExtension().endsWith("CC")
-	);
+	const sourceFiles = project
+		.getSourceFiles()
+		.filter((file) => file.getBaseNameWithoutExtension().endsWith("CC"));
 	for (const file of sourceFiles) {
 		// const filePath = path.relative(process.cwd(), file.getFilePath());
 
-		const fromImpls = file.getDescendantsOfKind(
-			SyntaxKind.MethodDeclaration,
-		)
+		const fromImpls = file
+			.getDescendantsOfKind(SyntaxKind.MethodDeclaration)
 			.filter((m) => m.isStatic() && m.getName() === "from")
 			.filter((m) => {
 				const returnType = m.getReturnTypeNode()?.getText();
@@ -25,8 +25,9 @@ async function main() {
 		const returnNewStmts = fromImpls
 			.flatMap((m) => m.getDescendantsOfKind(SyntaxKind.ReturnStatement))
 			.map((ret) =>
-				ret.getExpressionIfKind(SyntaxKind.NewExpression)
-					?.getExpressionIfKind(SyntaxKind.Identifier)
+				ret
+					.getExpressionIfKind(SyntaxKind.NewExpression)
+					?.getExpressionIfKind(SyntaxKind.Identifier),
 			)
 			.filter((ident) => ident != undefined)
 			.filter((ident) => ident.getText() !== "this");

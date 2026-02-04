@@ -27,33 +27,34 @@ import {
 	priority,
 } from "@zwave-js/serial";
 import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
+
 import { tryParseRSSI } from "../transport/SendDataShared.js";
 import type { MessageWithCC } from "../utils.js";
+
 import { ApplicationCommandStatusFlags } from "./ApplicationCommandRequest.js";
 
-export type BridgeApplicationCommandRequestOptions =
-	& (
-		| { command: CommandClass }
-		| {
+export type BridgeApplicationCommandRequestOptions = (
+	| { command: CommandClass }
+	| {
 			nodeId: number;
 			serializedCC: BytesView;
-		}
-	)
-	& {
-		routedBusy: boolean;
-		frameType: FrameType;
-		isExploreFrame: boolean;
-		isForeignFrame: boolean;
-		fromForeignHomeId: boolean;
-		ownNodeId: number;
-		targetNodeId: number | number[];
-		rssi?: number;
-	};
+	  }
+) & {
+	routedBusy: boolean;
+	frameType: FrameType;
+	isExploreFrame: boolean;
+	isForeignFrame: boolean;
+	fromForeignHomeId: boolean;
+	ownNodeId: number;
+	targetNodeId: number | number[];
+	rssi?: number;
+};
 
 @messageTypes(MessageType.Request, FunctionType.BridgeApplicationCommand)
 // This does not expect a response. The controller sends us this when a node sends a command
 @priority(MessagePriority.Normal)
-export class BridgeApplicationCommandRequest extends Message
+export class BridgeApplicationCommandRequest
+	extends Message
 	implements MessageWithCC
 {
 	public constructor(
@@ -85,8 +86,9 @@ export class BridgeApplicationCommandRequest extends Message
 	): BridgeApplicationCommandRequest {
 		// first byte is a status flag
 		const status = raw.payload[0];
-		const routedBusy =
-			!!(status & ApplicationCommandStatusFlags.RoutedBusy);
+		const routedBusy = !!(
+			status & ApplicationCommandStatusFlags.RoutedBusy
+		);
 		let frameType: FrameType;
 		switch (status & ApplicationCommandStatusFlags.TypeMask) {
 			case ApplicationCommandStatusFlags.TypeMulti:
@@ -99,8 +101,9 @@ export class BridgeApplicationCommandRequest extends Message
 				frameType = "singlecast";
 		}
 
-		const isExploreFrame = frameType === "broadcast"
-			&& !!(status & ApplicationCommandStatusFlags.Explore);
+		const isExploreFrame =
+			frameType === "broadcast" &&
+			!!(status & ApplicationCommandStatusFlags.Explore);
 		const isForeignFrame = !!(
 			status & ApplicationCommandStatusFlags.ForeignFrame
 		);
@@ -225,9 +228,13 @@ export class BridgeApplicationCommandRequest extends Message
 			ctx.nodeIdType,
 		);
 		const serializedCC = await this.serializeCC(ctx);
-		const multicastNodeMask = typeof this.targetNodeId === "number"
-			? Uint8Array.from([0])
-			: Uint8Array.from([this.targetNodeId.length, ...this.targetNodeId]);
+		const multicastNodeMask =
+			typeof this.targetNodeId === "number"
+				? Uint8Array.from([0])
+				: Uint8Array.from([
+						this.targetNodeId.length,
+						...this.targetNodeId,
+					]);
 
 		this.payload = Bytes.concat([
 			[rxStatus],

@@ -1,4 +1,5 @@
 import { num2hex } from "@zwave-js/shared";
+
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 export interface ScaleDefinition {
@@ -18,99 +19,95 @@ export interface NamedScaleGroup {
 	scales: Record<number, ScaleDefinition>;
 }
 
-const namedScales = Object.freeze(
-	{
-		temperature: {
-			[0x00]: {
-				label: "Celsius",
-				unit: "°C",
-			},
-			[0x01]: {
-				label: "Fahrenheit",
-				unit: "°F",
-			},
+const namedScales = Object.freeze({
+	temperature: {
+		[0x00]: {
+			label: "Celsius",
+			unit: "°C",
 		},
-		humidity: {
-			[0x00]: {
-				label: "Percentage value",
-				unit: "%",
-			},
-			[0x01]: {
-				label: "Absolute humidity",
-				unit: "g/m³",
-			},
+		[0x01]: {
+			label: "Fahrenheit",
+			unit: "°F",
 		},
-		mass: {
-			[0x00]: {
-				label: "Kilogram",
-				unit: "kg",
-			},
+	},
+	humidity: {
+		[0x00]: {
+			label: "Percentage value",
+			unit: "%",
 		},
-		acceleration: {
-			[0x00]: {
-				label: "Meter per square second",
-				unit: "m/s²",
-			},
+		[0x01]: {
+			label: "Absolute humidity",
+			unit: "g/m³",
 		},
-		percentage: {
-			[0x00]: {
-				label: "Percentage value",
-				unit: "%",
-			},
+	},
+	mass: {
+		[0x00]: {
+			label: "Kilogram",
+			unit: "kg",
 		},
-		acidity: {
-			[0x00]: {
-				label: "Acidity",
-				unit: "pH",
-			},
+	},
+	acceleration: {
+		[0x00]: {
+			label: "Meter per square second",
+			unit: "m/s²",
 		},
-		direction: {
-			[0x00]: {
-				label: "Degrees",
-				unit: "°",
-				description:
-					"0° = no motion detected, 90° = east, 180° = south, 270° = west, 360° = north",
-			},
+	},
+	percentage: {
+		[0x00]: {
+			label: "Percentage value",
+			unit: "%",
 		},
-		pressure: {
-			[0x00]: {
-				label: "Kilopascal",
-				unit: "kPa",
-			},
-			[0x01]: {
-				label: "Pound per square inch",
-				unit: "psi",
-			},
+	},
+	acidity: {
+		[0x00]: {
+			label: "Acidity",
+			unit: "pH",
 		},
-		airPressure: {
-			[0x00]: {
-				label: "Kilopascal",
-				unit: "kPa",
-			},
-			[0x01]: {
-				label: "Inches of Mercury",
-				unit: "inHg",
-			},
+	},
+	direction: {
+		[0x00]: {
+			label: "Degrees",
+			unit: "°",
+			description:
+				"0° = no motion detected, 90° = east, 180° = south, 270° = west, 360° = north",
 		},
-		density: {
-			[0x00]: {
-				label: "Density",
-				unit: "µg/m³",
-			},
+	},
+	pressure: {
+		[0x00]: {
+			label: "Kilopascal",
+			unit: "kPa",
 		},
-		unitless: {
-			[0x00]: {
-				label: "Unitless",
-			},
+		[0x01]: {
+			label: "Pound per square inch",
+			unit: "psi",
 		},
-	} as const satisfies Record<string, ScaleGroup>,
-);
+	},
+	airPressure: {
+		[0x00]: {
+			label: "Kilopascal",
+			unit: "kPa",
+		},
+		[0x01]: {
+			label: "Inches of Mercury",
+			unit: "inHg",
+		},
+	},
+	density: {
+		[0x00]: {
+			label: "Density",
+			unit: "µg/m³",
+		},
+	},
+	unitless: {
+		[0x00]: {
+			label: "Unitless",
+		},
+	},
+} as const satisfies Record<string, ScaleGroup>);
 export type NamedScales = typeof namedScales;
 
 /** Returns the group of scale definitions with the given name */
-export function getNamedScaleGroup<
-	Name extends keyof NamedScales,
->(
+export function getNamedScaleGroup<Name extends keyof NamedScales>(
 	group: Name,
 ): NamedScales[Name] {
 	const scaleGroup = namedScales[group];
@@ -126,18 +123,17 @@ export function getNamedScaleGroup<
 
 /** Returns all defined named scale groups */
 export function getAllNamedScaleGroups(): readonly NamedScaleGroup[] {
-	return Object.entries(namedScales)
-		.map(([name, scales]) => ({ name, scales }));
+	return Object.entries(namedScales).map(([name, scales]) => ({
+		name,
+		scales,
+	}));
 }
 
 /** Returns a scale definition for a scale with known name and key */
 export function getNamedScale<
 	Name extends keyof NamedScales,
-	Key extends (keyof NamedScales[Name]) & number,
->(
-	group: Name,
-	key: Key,
-): { key: Key } & (NamedScales[Name][Key]) {
+	Key extends keyof NamedScales[Name] & number,
+>(group: Name, key: Key): { key: Key } & NamedScales[Name][Key] {
 	const scaleGroup = getNamedScaleGroup(group);
 
 	const scaleDef = scaleGroup[key];

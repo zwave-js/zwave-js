@@ -1,6 +1,8 @@
+import path from "node:path";
+
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

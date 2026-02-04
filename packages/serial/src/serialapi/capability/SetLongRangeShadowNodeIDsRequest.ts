@@ -50,9 +50,9 @@ export class SetLongRangeShadowNodeIDsRequest extends Message {
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.payload = encodeBitMask(
 			this.shadowNodeIds,
-			LONG_RANGE_SHADOW_NODE_IDS_START
-				+ NUM_LONG_RANGE_SHADOW_NODE_IDS
-				- 1,
+			LONG_RANGE_SHADOW_NODE_IDS_START +
+				NUM_LONG_RANGE_SHADOW_NODE_IDS -
+				1,
 			LONG_RANGE_SHADOW_NODE_IDS_START,
 		);
 

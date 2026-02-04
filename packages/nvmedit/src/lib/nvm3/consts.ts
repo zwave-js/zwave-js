@@ -3,7 +3,7 @@ export const ZWAVE_APPLICATION_NVM_SIZE = 0x3000;
 export const ZWAVE_PROTOCOL_NVM_SIZE = 0xc000 - ZWAVE_APPLICATION_NVM_SIZE;
 // The 800 series has a shared application/protocol NVM, which is 8 KB smaller
 // than the 700 series
-export const ZWAVE_SHARED_NVM_SIZE = 0xA000;
+export const ZWAVE_SHARED_NVM_SIZE = 0xa000;
 
 // Everything must be word-aligned
 export const NVM3_WORD_SIZE = 4;

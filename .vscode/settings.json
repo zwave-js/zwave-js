@@ -21,20 +21,17 @@
 			"severity": "info"
 		}
 	],
-	"dprint.experimentalLsp": true,
-	"dprint.path": "./node_modules/dprint/bin.js",
-	"editor.defaultFormatter": "dprint.dprint",
+	"oxc.fmt.experimental": true,
+	"editor.defaultFormatter": "oxc.oxc-vscode",
 	"[jsonc]": {
 		"editor.formatOnSave": true,
-		"editor.defaultFormatter": "dprint.dprint"
+		"editor.defaultFormatter": "oxc.oxc-vscode"
 	},
 	"[javascript]": {
-		// Not sure why this is needed, but it is
-		"editor.defaultFormatter": "dprint.dprint"
+		"editor.defaultFormatter": "oxc.oxc-vscode"
 	},
 	"[typescript]": {
-		// Not sure why this is needed, but it is
-		"editor.defaultFormatter": "dprint.dprint",
+		"editor.defaultFormatter": "oxc.oxc-vscode",
 		"editor.autoClosingBrackets": "languageDefined"
 	},
 	"eslint.validate": [

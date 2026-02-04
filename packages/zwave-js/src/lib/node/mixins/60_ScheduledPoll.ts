@@ -10,8 +10,10 @@ import {
 	valueEquals,
 } from "@zwave-js/core";
 import { ObjectKeyMap, type Timer, setTimer } from "@zwave-js/shared";
+
 import type { Driver } from "../../driver/Driver.js";
 import type { DeviceClass } from "../DeviceClass.js";
+
 import { EndpointsMixin } from "./50_Endpoints.js";
 
 export interface ScheduledPoll {
@@ -32,10 +34,7 @@ export interface NodeSchedulePoll {
 	 * Schedules a value to be polled after a given time. Only one schedule can be active for a given value ID.
 	 * @returns `true` if the poll was scheduled, `false` otherwise
 	 */
-	schedulePoll(
-		valueId: ValueID,
-		options: SchedulePollOptions,
-	): boolean;
+	schedulePoll(valueId: ValueID, options: SchedulePollOptions): boolean;
 
 	/**
 	 * @internal
@@ -44,10 +43,7 @@ export interface NodeSchedulePoll {
 	 * @param actualValue If given, this indicates the value that was received by a node, which triggered the poll to be canceled.
 	 * If the scheduled poll expects a certain value and this matches the expected value for the scheduled poll, the poll will be canceled.
 	 */
-	cancelScheduledPoll(
-		valueId: ValueID,
-		actualValue?: unknown,
-	): boolean;
+	cancelScheduledPoll(valueId: ValueID, actualValue?: unknown): boolean;
 
 	/**
 	 * @internal
@@ -56,7 +52,8 @@ export interface NodeSchedulePoll {
 	cancelAllScheduledPolls(): void;
 }
 
-export abstract class SchedulePollMixin extends EndpointsMixin
+export abstract class SchedulePollMixin
+	extends EndpointsMixin
 	implements NodeSchedulePoll
 {
 	public constructor(
@@ -167,9 +164,9 @@ export abstract class SchedulePollMixin extends EndpointsMixin
 		if (!poll) return false;
 
 		if (
-			actualValue !== undefined
-			&& poll.expectedValue !== undefined
-			&& !valueEquals(poll.expectedValue, actualValue)
+			actualValue !== undefined &&
+			poll.expectedValue !== undefined &&
+			!valueEquals(poll.expectedValue, actualValue)
 		) {
 			return false;
 		}

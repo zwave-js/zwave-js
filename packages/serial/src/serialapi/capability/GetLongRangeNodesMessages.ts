@@ -88,10 +88,7 @@ export class GetLongRangeNodesResponse extends Message {
 		const listEnd = listStart + listLength;
 		let nodeIds: number[];
 		if (listEnd <= raw.payload.length) {
-			const nodeBitMask = raw.payload.subarray(
-				listStart,
-				listEnd,
-			);
+			const nodeBitMask = raw.payload.subarray(listStart, listEnd);
 			nodeIds = parseLongRangeNodeBitMask(
 				nodeBitMask,
 				getFirstNodeId(segmentNumber),
@@ -112,9 +109,7 @@ export class GetLongRangeNodesResponse extends Message {
 	public nodeIds: readonly number[];
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = new Bytes(
-			3 + NUM_LR_NODEMASK_SEGMENT_BYTES,
-		);
+		this.payload = new Bytes(3 + NUM_LR_NODEMASK_SEGMENT_BYTES);
 
 		this.payload[0] = this.moreNodes ? 1 : 0;
 		this.payload[1] = this.segmentNumber;

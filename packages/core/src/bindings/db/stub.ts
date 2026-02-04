@@ -6,7 +6,7 @@ import type {
 } from "@zwave-js/shared/bindings";
 
 export const db: DatabaseFactory = {
-	createInstance: function<V>(
+	createInstance: function <V>(
 		filename: string,
 		options?: DatabaseOptions<V>,
 	): Database<V> {

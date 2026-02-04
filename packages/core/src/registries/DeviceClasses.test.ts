@@ -49,10 +49,10 @@ test("device classes marked as fast should support optimistic value updates", (t
 
 test("unknown device classes should default to supporting optimistic value updates", (t) => {
 	// Test unknown generic class
-	const unknownGeneric = getGenericDeviceClass(0xFF);
+	const unknownGeneric = getGenericDeviceClass(0xff);
 	t.expect(unknownGeneric.supportsOptimisticValueUpdate).toBe(true);
 
 	// Test unknown specific class
-	const unknownSpecific = getSpecificDeviceClass(0x10, 0xFF);
+	const unknownSpecific = getSpecificDeviceClass(0x10, 0xff);
 	t.expect(unknownSpecific.supportsOptimisticValueUpdate).toBe(true);
 });

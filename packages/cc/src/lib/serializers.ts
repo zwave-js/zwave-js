@@ -1,6 +1,7 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
+
 import type {
 	SetbackSpecialState,
 	SetbackState,
@@ -77,10 +78,7 @@ export function encodeSwitchpoint(point: Switchpoint): Bytes {
 		);
 	}
 	return Bytes.concat([
-		[
-			point.hour & 0b000_11111,
-			point.minute & 0b00_111111,
-		],
+		[point.hour & 0b000_11111, point.minute & 0b00_111111],
 		encodeSetbackState(point.state),
 	]);
 }
@@ -110,8 +108,8 @@ export function parseTimezone(data: BytesView): Timezone {
  */
 export function encodeTimezone(tz: Timezone): Bytes {
 	if (
-		Math.abs(tz.standardOffset) >= 24 * 60
-		|| Math.abs(tz.dstOffset) >= 24 * 60
+		Math.abs(tz.standardOffset) >= 24 * 60 ||
+		Math.abs(tz.dstOffset) >= 24 * 60
 	) {
 		throw new ZWaveError(
 			"The given timezone is not valid!",

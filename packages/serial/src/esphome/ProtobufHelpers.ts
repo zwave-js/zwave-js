@@ -84,10 +84,7 @@ export function decodeVarInt(
 		}
 	}
 
-	throw new ZWaveError(
-		"Incomplete VarInt",
-		ZWaveErrorCodes.Argument_Invalid,
-	);
+	throw new ZWaveError("Incomplete VarInt", ZWaveErrorCodes.Argument_Invalid);
 }
 
 /**
@@ -97,9 +94,8 @@ export function encodeStringField(
 	fieldNumber: number,
 	value: string | BytesView,
 ): BytesView {
-	const stringBytes = typeof value === "string"
-		? new TextEncoder().encode(value)
-		: value;
+	const stringBytes =
+		typeof value === "string" ? new TextEncoder().encode(value) : value;
 	const tag = encodeTag(fieldNumber, WireType.LengthDelimited);
 	const length = encodeVarInt(stringBytes.length);
 	return Bytes.concat([tag, length, stringBytes]);
@@ -218,7 +214,7 @@ export function decodeSignedVarint(
 	offset: number = 0,
 ): { value: number; bytesRead: number } {
 	const decoded = decodeVarInt(data, offset);
-	const value = (decoded.value >>> 1) ^ (-(decoded.value & 1));
+	const value = (decoded.value >>> 1) ^ -(decoded.value & 1);
 	return { value, bytesRead: decoded.bytesRead };
 }
 

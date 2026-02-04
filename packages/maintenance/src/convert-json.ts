@@ -3,14 +3,16 @@
  * Execute with `yarn ts packages/maintenance/src/convert-json.ts`
  */
 
-import { fs } from "@zwave-js/core/bindings/fs/node";
-import { enumFilesRecursive } from "@zwave-js/shared";
-import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { fs } from "@zwave-js/core/bindings/fs/node";
+import { enumFilesRecursive } from "@zwave-js/shared";
+import esMain from "es-main";
 import { Project, ts } from "ts-morph";
-import { formatWithDprint } from "./dprint.js";
+
+import { formatWithOxfmt } from "./oxfmt.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,10 +25,10 @@ async function main() {
 		fs,
 		devicesDir,
 		(file) =>
-			file.endsWith(".json")
-			&& !file.endsWith("index.json")
-			&& !file.includes("/templates/")
-			&& !file.includes("\\templates\\"),
+			file.endsWith(".json") &&
+			!file.endsWith("index.json") &&
+			!file.includes("/templates/") &&
+			!file.includes("\\templates\\"),
 	);
 
 	for (const filename of configFiles) {
@@ -103,7 +105,7 @@ async function main() {
 
 		if (didChange) {
 			let output = sourceFile.getFullText();
-			output = formatWithDprint(filename, output);
+			output = await formatWithOxfmt(filename, output);
 			await fsp.writeFile(filename, output, "utf8");
 		}
 	}

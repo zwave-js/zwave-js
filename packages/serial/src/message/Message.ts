@@ -25,6 +25,7 @@ import {
 	num2hex,
 	staticExtends,
 } from "@zwave-js/shared";
+
 import { FunctionType, MessageType } from "./Constants.js";
 import { MessageHeaders } from "./MessageHeaders.js";
 
@@ -63,8 +64,7 @@ export interface MessageEncodingContext
 		Readonly<SecurityManagers>,
 		HostIDs,
 		GetSupportedCCVersion,
-		GetDeviceConfig
-{
+		GetDeviceConfig {
 	/** How many bytes a node ID occupies in serial API commands */
 	nodeIdType: NodeIDType;
 
@@ -155,9 +155,7 @@ export class MessageRaw {
  * Represents a Z-Wave message for communication with the serial interface
  */
 export class Message {
-	public constructor(
-		options: MessageOptions = {},
-	) {
+	public constructor(options: MessageOptions = {}) {
 		const {
 			// Try to determine the message type if none is given
 			type = getMessageType(this),
@@ -191,14 +189,11 @@ export class Message {
 		this.payload = payload;
 	}
 
-	public static parse(
-		data: BytesView,
-		ctx: MessageParsingContext,
-	): Message {
+	public static parse(data: BytesView, ctx: MessageParsingContext): Message {
 		const raw = MessageRaw.parse(data);
 
-		const Constructor = getMessageConstructor(raw.type, raw.functionType)
-			?? Message;
+		const Constructor =
+			getMessageConstructor(raw.type, raw.functionType) ?? Message;
 
 		return Constructor.from(raw, ctx);
 	}
@@ -297,9 +292,10 @@ export class Message {
 
 		return {
 			tags,
-			message: this.payload.length > 0
-				? { payload: `0x${this.payload.toString("hex")}` }
-				: undefined,
+			message:
+				this.payload.length > 0
+					? { payload: `0x${this.payload.toString("hex")}` }
+					: undefined,
 		};
 	}
 
@@ -312,8 +308,8 @@ export class Message {
 		const ret: JSONObject = {
 			name: this.constructor.name,
 			type: MessageType[this.type],
-			functionType: FunctionType[this.functionType]
-				|| num2hex(this.functionType),
+			functionType:
+				FunctionType[this.functionType] || num2hex(this.functionType),
 		};
 		if (this.expectedResponse != null) {
 			ret.expectedResponse = FunctionType[this.functionType];
@@ -355,11 +351,11 @@ export class Message {
 		// A message expects a callback...
 		return (
 			// ...when it has a callback id that is not 0 (no callback)
-			((this.hasCallbackId() && this.callbackId !== 0)
+			((this.hasCallbackId() && this.callbackId !== 0) ||
 				// or the message type does not need a callback id to match the response
-				|| !this.needsCallbackId())
+				!this.needsCallbackId()) &&
 			// and the expected callback is defined
-			&& !!this.expectedCallback
+			!!this.expectedCallback
 		);
 	}
 
@@ -376,8 +372,8 @@ export class Message {
 	/** Checks if a message is an expected response for this message */
 	public isExpectedResponse(msg: Message): boolean {
 		return (
-			msg.type === MessageType.Response
-			&& this.testMessage(msg, this.expectedResponse)
+			msg.type === MessageType.Response &&
+			this.testMessage(msg, this.expectedResponse)
 		);
 	}
 
@@ -387,7 +383,7 @@ export class Message {
 
 		// Some controllers have a bug causing them to send a callback with a function type of 0 and no callback ID
 		// To prevent this from triggering the unresponsive controller detection we need to forward these messages as if they were correct
-		if (msg.functionType !== 0 as any) {
+		if (msg.functionType !== (0 as any)) {
 			// If a received request included a callback id, enforce that the response contains the same
 			if (this.callbackId !== msg.callbackId) {
 				return false;
@@ -420,9 +416,7 @@ export class Message {
 	/**
 	 * Returns the node this message is linked to or undefined
 	 */
-	public tryGetNode<T extends NodeId>(
-		ctx: GetNode<T>,
-	): T | undefined {
+	public tryGetNode<T extends NodeId>(ctx: GetNode<T>): T | undefined {
 		const nodeId = this.getNodeId();
 		if (nodeId != undefined) return ctx.getNode(nodeId);
 	}

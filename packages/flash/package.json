@@ -1,53 +1,53 @@
 {
-  "name": "@zwave-js/flash",
-  "version": "15.20.1",
-  "description": "zwave-js: firmware flash utility",
-  "keywords": [],
-  "publishConfig": {
-    "access": "public"
-  },
-  "type": "module",
-  "main": "build/cli.js",
-  "sideEffects": false,
-  "files": [
-    "bin/",
-    "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
-    "build/**/package.json"
-  ],
-  "bin": "bin/flash.mjs",
-  "author": {
-    "name": "AlCalzone",
-    "email": "d.griesel@gmx.net"
-  },
-  "license": "MIT",
-  "homepage": "https://github.com/zwave-js/zwave-js#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zwave-js/zwave-js.git"
-  },
-  "bugs": {
-    "url": "https://github.com/zwave-js/zwave-js/issues"
-  },
-  "funding": {
-    "url": "https://github.com/sponsors/AlCalzone/"
-  },
-  "engines": {
-    "node": ">= 20"
-  },
-  "dependencies": {
-    "@zwave-js/core": "workspace:*",
-    "pathe": "^2.0.3",
-    "yargs": "^18.0.0",
-    "zwave-js": "workspace:*"
-  },
-  "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty",
-    "clean": "del-cli build/ \"*.tsbuildinfo\""
-  },
-  "devDependencies": {
-    "@types/node": "^20.19.23",
-    "@types/yargs": "^17.0.34",
-    "del-cli": "^7.0.0",
-    "typescript": "5.9.3"
-  }
+	"name": "@zwave-js/flash",
+	"version": "15.20.1",
+	"description": "zwave-js: firmware flash utility",
+	"keywords": [],
+	"homepage": "https://github.com/zwave-js/zwave-js#readme",
+	"bugs": {
+		"url": "https://github.com/zwave-js/zwave-js/issues"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "AlCalzone",
+		"email": "d.griesel@gmx.net"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/zwave-js/zwave-js.git"
+	},
+	"funding": {
+		"url": "https://github.com/sponsors/AlCalzone/"
+	},
+	"bin": "bin/flash.mjs",
+	"files": [
+		"bin/",
+		"build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
+		"build/**/package.json"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"main": "build/cli.js",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc -b tsconfig.build.json --pretty",
+		"clean": "del-cli build/ \"*.tsbuildinfo\""
+	},
+	"dependencies": {
+		"@zwave-js/core": "workspace:*",
+		"pathe": "^2.0.3",
+		"yargs": "^18.0.0",
+		"zwave-js": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^20.19.23",
+		"@types/yargs": "^17.0.34",
+		"del-cli": "^7.0.0",
+		"typescript": "5.9.3"
+	},
+	"engines": {
+		"node": ">= 20"
+	}
 }

@@ -1,8 +1,9 @@
-import core from "@actions/core";
 import fs from "fs";
+import path from "path";
+
+import core from "@actions/core";
 import yaml from "js-yaml";
 import OpenAI from "openai";
-import path from "path";
 
 async function run() {
 	try {

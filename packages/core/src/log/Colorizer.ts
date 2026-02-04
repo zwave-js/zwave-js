@@ -1,5 +1,6 @@
 import colors from "ansi-colors";
 import { configs } from "triple-beam";
+
 import type { LogFormat } from "./format.js";
 
 const defaultColors = configs.npm.colors;
@@ -32,7 +33,7 @@ export function colorizer(bg: boolean = true): LogFormat {
 			const textColor = (colors as any)[levelColorKey];
 			const bgColor = bg
 				? (colors as any)[getBgColorName(levelColorKey)]
-				: ((txt: string) => txt);
+				: (txt: string) => txt;
 			// Colorize all segments separately
 			if (typeof info.message === "string") {
 				info.message = colorizeTextAndTags(
@@ -42,7 +43,7 @@ export function colorizer(bg: boolean = true): LogFormat {
 				);
 			} else {
 				info.message = info.message.map((msg) =>
-					colorizeTextAndTags(msg, textColor, bgColor)
+					colorizeTextAndTags(msg, textColor, bgColor),
 				);
 			}
 			info.direction = colors.white(info.direction);

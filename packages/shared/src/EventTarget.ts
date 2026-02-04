@@ -82,9 +82,9 @@ export class TypedEventTarget<
 			return this.wrappers.get(callback)!;
 		} else {
 			const wrapper = (e: Event) => {
-				const detail =
-					(e as CustomEvent<Parameters<TEvents[keyof TEvents]>>)
-						.detail;
+				const detail = (
+					e as CustomEvent<Parameters<TEvents[keyof TEvents]>>
+				).detail;
 				// @ts-expect-error
 				callback(...detail);
 				if (once) this.listeners.get(event)?.delete(callback);

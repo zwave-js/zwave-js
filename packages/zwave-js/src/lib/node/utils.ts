@@ -29,6 +29,7 @@ import {
 	getCCName,
 	getNotification,
 } from "@zwave-js/core";
+
 import type {
 	ZWaveNotificationCapability,
 	ZWaveNotificationCapability_EntryControlCC,
@@ -97,13 +98,10 @@ export function getAggregatedEndpointCount(
 	);
 }
 
-export function getEndpointCount(
-	ctx: GetValueDB,
-	nodeId: number,
-): number {
+export function getEndpointCount(ctx: GetValueDB, nodeId: number): number {
 	return (
-		(getIndividualEndpointCount(ctx, nodeId) || 0)
-		+ (getAggregatedEndpointCount(ctx, nodeId) || 0)
+		(getIndividualEndpointCount(ctx, nodeId) || 0) +
+		(getAggregatedEndpointCount(ctx, nodeId) || 0)
 	);
 }
 
@@ -133,10 +131,7 @@ export function setAggregatedEndpointCount(
 	);
 }
 
-export function getEndpointIndizes(
-	ctx: GetValueDB,
-	nodeId: number,
-): number[] {
+export function getEndpointIndizes(ctx: GetValueDB, nodeId: number): number[] {
 	let ret = getValue<number[]>(
 		ctx,
 		nodeId,
@@ -157,12 +152,7 @@ export function setEndpointIndizes(
 	nodeId: number,
 	indizes: number[],
 ): void {
-	setValue(
-		ctx,
-		nodeId,
-		MultiChannelCCValues.endpointIndizes.id,
-		indizes,
-	);
+	setValue(ctx, nodeId, MultiChannelCCValues.endpointIndizes.id, indizes);
 }
 
 export function isMultiChannelInterviewComplete(
@@ -225,9 +215,9 @@ export function shouldHideRootApplicationCCValues(
 	// This is not the case when only individual endpoints should be preserved in addition to the root
 	const preserveEndpoints = compatConfig?.preserveEndpoints;
 	if (
-		preserveEndpoints != undefined
-		&& preserveEndpoints !== "*"
-		&& preserveEndpoints.length !== endpointIndizes.length
+		preserveEndpoints != undefined &&
+		preserveEndpoints !== "*" &&
+		preserveEndpoints.length !== endpointIndizes.length
 	) {
 		return false;
 	}
@@ -256,11 +246,9 @@ export function translateValueID<T extends ValueID>(
 	);
 	if (!ccInstance) {
 		throw new ZWaveError(
-			`Cannot translate a value ID for the non-implemented CC ${
-				getCCName(
-					valueId.commandClass,
-				)
-			}`,
+			`Cannot translate a value ID for the non-implemented CC ${getCCName(
+				valueId.commandClass,
+			)}`,
 			ZWaveErrorCodes.CC_NotImplemented,
 		);
 	}
@@ -302,12 +290,12 @@ export function filterRootApplicationCCValueIDs<T extends ValueID>(
 		const valueExistsOnAnotherEndpoint = allValueIds.some(
 			(other) =>
 				// same CC
-				other.commandClass === valueId.commandClass
+				other.commandClass === valueId.commandClass &&
 				// non-root endpoint
-				&& !!other.endpoint
+				!!other.endpoint &&
 				// same property and key
-				&& other.property === valueId.property
-				&& other.propertyKey === valueId.propertyKey,
+				other.property === valueId.property &&
+				other.propertyKey === valueId.propertyKey,
 		);
 		return valueExistsOnAnotherEndpoint;
 	};
@@ -319,19 +307,15 @@ export function filterRootApplicationCCValueIDs<T extends ValueID>(
 
 /** Returns a list of all value names that are defined on all endpoints of this node */
 export function getDefinedValueIDs(
-	ctx:
-		& HostIDs
-		& GetValueDB
-		& GetDeviceConfig
-		& GetSupportedCCVersion
-		& GetNode<
-			NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-		>,
-	node:
-		& NodeId
-		& SupportsCC
-		& ControlsCC
-		& GetEndpoint<EndpointId & SupportsCC & ControlsCC>,
+	ctx: HostIDs &
+		GetValueDB &
+		GetDeviceConfig &
+		GetSupportedCCVersion &
+		GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>,
+	node: NodeId &
+		SupportsCC &
+		ControlsCC &
+		GetEndpoint<EndpointId & SupportsCC & ControlsCC>,
 ): TranslatedValueID[] {
 	return getDefinedValueIDsInternal(ctx, node, false);
 }
@@ -341,43 +325,34 @@ export function getDefinedValueIDs(
  * Returns a list of all value names that are defined on all endpoints of this node
  */
 export function getDefinedValueIDsInternal(
-	ctx:
-		& HostIDs
-		& GetValueDB
-		& GetDeviceConfig
-		& GetSupportedCCVersion
-		& GetNode<
-			NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-		>,
-	node:
-		& NodeId
-		& SupportsCC
-		& ControlsCC
-		& GetEndpoint<EndpointId & SupportsCC & ControlsCC>,
+	ctx: HostIDs &
+		GetValueDB &
+		GetDeviceConfig &
+		GetSupportedCCVersion &
+		GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>,
+	node: NodeId &
+		SupportsCC &
+		ControlsCC &
+		GetEndpoint<EndpointId & SupportsCC & ControlsCC>,
 	includeInternal: boolean = false,
 ): TranslatedValueID[] {
 	// The controller has no values. Even if some ended up in the cache somehow, do not return any.
 	if (node.id === ctx.ownNodeId) return [];
 
 	let ret: ValueID[] = [];
-	const allowControlled = new Set([
-		CommandClasses["Scene Activation"],
-	]);
-	for (
-		const endpoint of getAllEndpoints<EndpointId & SupportsCC & ControlsCC>(
-			ctx,
-			node,
-		)
-	) {
+	const allowControlled = new Set([CommandClasses["Scene Activation"]]);
+	for (const endpoint of getAllEndpoints<
+		EndpointId & SupportsCC & ControlsCC
+	>(ctx, node)) {
 		for (const cc of allCCs) {
 			if (
 				// Create values only for supported CCs
-				endpoint.supportsCC(cc)
+				endpoint.supportsCC(cc) ||
 				// ...and some controlled CCs
-				|| (endpoint.controlsCC(cc) && allowControlled.has(cc))
+				(endpoint.controlsCC(cc) && allowControlled.has(cc)) ||
 				// ...and possibly Basic CC, which has some extra checks to know
 				// whether values should be exposed
-				|| cc === CommandClasses.Basic
+				cc === CommandClasses.Basic
 			) {
 				const ccInstance = CommandClass.createInstanceUnchecked(
 					endpoint,
@@ -385,10 +360,7 @@ export function getDefinedValueIDsInternal(
 				);
 				if (ccInstance) {
 					ret.push(
-						...ccInstance.getDefinedValueIDs(
-							ctx,
-							includeInternal,
-						),
+						...ccInstance.getDefinedValueIDs(ctx, includeInternal),
 					);
 				}
 			}
@@ -409,25 +381,18 @@ export function getDefinedValueIDsInternal(
 }
 
 export function getSupportedNotificationEvents(
-	ctx:
-		& GetValueDB
-		& GetNode<
-			NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-		>,
-	node:
-		& NodeId
-		& SupportsCC
-		& ControlsCC
-		& GetEndpoint<EndpointId & SupportsCC & ControlsCC>,
+	ctx: GetValueDB &
+		GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>,
+	node: NodeId &
+		SupportsCC &
+		ControlsCC &
+		GetEndpoint<EndpointId & SupportsCC & ControlsCC>,
 ): ZWaveNotificationCapability[] {
 	const ret: ZWaveNotificationCapability[] = [];
 	const valueDB = ctx.getValueDB(node.id);
-	for (
-		const endpoint of getAllEndpoints<EndpointId & SupportsCC & ControlsCC>(
-			ctx,
-			node,
-		)
-	) {
+	for (const endpoint of getAllEndpoints<
+		EndpointId & SupportsCC & ControlsCC
+	>(ctx, node)) {
 		// This list is hardcoded since there is just a small list of CCs
 		// that can send notifications
 		if (endpoint.supportsCC(CommandClasses["Entry Control"])) {
@@ -441,11 +406,9 @@ export function getSupportedNotificationEvents(
 					commandClass: CommandClasses["Entry Control"],
 					endpoint: endpoint.index,
 					supportedEventTypes: Object.fromEntries(
-						eventTypes.map((et) =>
-							[
-								et,
-								entryControlEventTypeLabels[et],
-							] as const
+						eventTypes.map(
+							(et) =>
+								[et, entryControlEventTypeLabels[et]] as const,
 						),
 					) as any,
 				};
@@ -454,11 +417,12 @@ export function getSupportedNotificationEvents(
 		}
 
 		if (endpoint.supportsCC(CommandClasses.Notification)) {
-			const notificationTypes = valueDB.getValue<number[]>(
-				NotificationCCValues.supportedNotificationTypes.endpoint(
-					endpoint.index,
-				),
-			) ?? [];
+			const notificationTypes =
+				valueDB.getValue<number[]>(
+					NotificationCCValues.supportedNotificationTypes.endpoint(
+						endpoint.index,
+					),
+				) ?? [];
 
 			const capability: ZWaveNotificationCapability_NotificationCC = {
 				commandClass: CommandClasses.Notification,
@@ -470,11 +434,12 @@ export function getSupportedNotificationEvents(
 				const notification = getNotification(notificationType);
 				if (!notification) continue;
 
-				const notificationEvents = valueDB.getValue<number[]>(
-					NotificationCCValues
-						.supportedNotificationEvents(notificationType)
-						.endpoint(endpoint.index),
-				)
+				const notificationEvents = valueDB
+					.getValue<number[]>(
+						NotificationCCValues.supportedNotificationEvents(
+							notificationType,
+						).endpoint(endpoint.index),
+					)
 					?.map((e) => notification.events.get(e))
 					.filter((e) => e != undefined);
 				if (!notificationEvents || notificationEvents.length === 0) {

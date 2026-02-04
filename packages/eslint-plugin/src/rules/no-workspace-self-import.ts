@@ -1,7 +1,8 @@
-import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -78,8 +79,8 @@ export const noWorkspaceSelfImport = ESLintUtils.RuleCreator.withoutDocs({
 			// Check if the import matches the current package name
 			// Handle both exact matches and subpath imports
 			if (
-				importPath === packageName
-				|| importPath.startsWith(packageName + "/")
+				importPath === packageName ||
+				importPath.startsWith(packageName + "/")
 			) {
 				context.report({
 					node: source,

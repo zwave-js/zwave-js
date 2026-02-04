@@ -6,6 +6,7 @@ import {
 	parseBitMask,
 } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import { type NVM, NVMAccess, type NVMIO } from "./common/definitions.js";
 import { type Route, encodeRoute, parseRoute } from "./common/routeCache.js";
 import {
@@ -74,8 +75,8 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 
 	private async ensureReadable(): Promise<void> {
 		if (
-			this._access === NVMAccess.Read
-			|| this._access === NVMAccess.ReadWrite
+			this._access === NVMAccess.Read ||
+			this._access === NVMAccess.ReadWrite
 		) {
 			return;
 		}
@@ -87,8 +88,8 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 
 	private async ensureWritable(): Promise<void> {
 		if (
-			this._access === NVMAccess.Write
-			|| this._access === NVMAccess.ReadWrite
+			this._access === NVMAccess.Write ||
+			this._access === NVMAccess.ReadWrite
 		) {
 			return;
 		}
@@ -171,9 +172,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 			} else if (entry.type === NVMEntryType.NVMModuleDescriptor) {
 				const entryData = await this.readRawEntry(resolvedEntry);
 				// NVMModuleDescriptor is always a single entry
-				const descriptor = parseNVMModuleDescriptor(
-					entryData[0],
-				);
+				const descriptor = parseNVMModuleDescriptor(entryData[0]);
 				if (descriptor.size !== moduleSize) {
 					throw new ZWaveError(
 						"NVM module descriptor size does not match module size!",
@@ -212,41 +211,45 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 		// Checking if an NVM is valid requires checking multiple bytes at different locations
 		const eeoffset_magic_entry = info.layout.get("EEOFFSET_MAGIC_far");
 		if (!eeoffset_magic_entry) return false;
-		const eeoffset_magic =
-			(await this.readEntry(eeoffset_magic_entry))[0] as number;
+		const eeoffset_magic = (
+			await this.readEntry(eeoffset_magic_entry)
+		)[0] as number;
 
 		const configuration_valid_0_entry = info.layout.get(
 			"NVM_CONFIGURATION_VALID_far",
 		);
 		if (!configuration_valid_0_entry) return false;
-		const configuration_valid_0 =
-			(await this.readEntry(configuration_valid_0_entry))[0] as number;
+		const configuration_valid_0 = (
+			await this.readEntry(configuration_valid_0_entry)
+		)[0] as number;
 
 		const configuration_valid_1_entry = info.layout.get(
 			"NVM_CONFIGURATION_REALLYVALID_far",
 		);
 		if (!configuration_valid_1_entry) return false;
-		const configuration_valid_1 =
-			(await this.readEntry(configuration_valid_1_entry))[0] as number;
+		const configuration_valid_1 = (
+			await this.readEntry(configuration_valid_1_entry)
+		)[0] as number;
 
 		const routecache_valid_entry = info.layout.get(
 			"EX_NVM_ROUTECACHE_MAGIC_far",
 		);
 		if (!routecache_valid_entry) return false;
-		const routecache_valid =
-			(await this.readEntry(routecache_valid_entry))[0] as number;
+		const routecache_valid = (
+			await this.readEntry(routecache_valid_entry)
+		)[0] as number;
 
 		const endMarker_entry = info.layout.get("nvmModuleSizeEndMarker");
 		if (!endMarker_entry) return false;
 		const endMarker = (await this.readEntry(endMarker_entry))[0] as number;
 
 		return (
-			eeoffset_magic === MAGIC_VALUE
-			&& configuration_valid_0 === CONFIGURATION_VALID_0
-			&& configuration_valid_1 === CONFIGURATION_VALID_1
-			&& routecache_valid === ROUTECACHE_VALID
-			&& protocolVersions.includes(info.nvmDescriptor.protocolVersion)
-			&& endMarker === 0
+			eeoffset_magic === MAGIC_VALUE &&
+			configuration_valid_0 === CONFIGURATION_VALID_0 &&
+			configuration_valid_1 === CONFIGURATION_VALID_1 &&
+			routecache_valid === ROUTECACHE_VALID &&
+			protocolVersions.includes(info.nvmDescriptor.protocolVersion) &&
+			endMarker === 0
 		);
 	}
 
@@ -272,9 +275,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 		);
 	}
 
-	private async readRawEntry(
-		entry: ResolvedNVMEntry,
-	): Promise<BytesView[]> {
+	private async readRawEntry(entry: ResolvedNVMEntry): Promise<BytesView[]> {
 		const ret: BytesView[] = [];
 		const nvmData = await nvmReadBuffer(
 			this._io,
@@ -282,9 +283,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 			entry.count * entry.size,
 		);
 		for (let i = 0; i < entry.count; i++) {
-			ret.push(
-				nvmData.subarray(i * entry.size, (i + 1) * entry.size),
-			);
+			ret.push(nvmData.subarray(i * entry.size, (i + 1) * entry.size));
 		}
 		return ret;
 	}
@@ -326,12 +325,10 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 		}
 	}
 
-	private async readEntry(
-		entry: ResolvedNVMEntry,
-	): Promise<NVMData[]> {
+	private async readEntry(entry: ResolvedNVMEntry): Promise<NVMData[]> {
 		const data: BytesView[] = await this.readRawEntry(entry);
 		return data.map((buffer) =>
-			this.parseEntry(entry.type, Bytes.view(buffer))
+			this.parseEntry(entry.type, Bytes.view(buffer)),
 		);
 	}
 
@@ -403,9 +400,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 			case NVMEntryType.Route:
 				return encodeRoute(data as Route);
 			case NVMEntryType.NVMModuleDescriptor:
-				return encodeNVMModuleDescriptor(
-					data as NVMModuleDescriptor,
-				);
+				return encodeNVMModuleDescriptor(data as NVMModuleDescriptor);
 			case NVMEntryType.NVMDescriptor:
 				return encodeNVMDescriptor(data as NVMDescriptor);
 			case NVMEntryType.Buffer:
@@ -435,11 +430,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 		entry: ResolvedNVMEntry,
 		data: BytesView[],
 	): Promise<void> {
-		await nvmWriteBuffer(
-			this._io,
-			entry.offset,
-			Bytes.concat(data),
-		);
+		await nvmWriteBuffer(this._io, entry.offset, Bytes.concat(data));
 	}
 
 	private async writeEntry(
@@ -447,7 +438,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 		data: NVMData[],
 	): Promise<void> {
 		const buffers = data.map((d) =>
-			this.encodeEntry(entry.type, d, entry.size)
+			this.encodeEntry(entry.type, d, entry.size),
 		);
 		await this.writeRawEntry(entry, buffers);
 	}
@@ -529,9 +520,7 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 		);
 	}
 
-	public async erase(
-		options: NVM500EraseOptions,
-	): Promise<void> {
+	public async erase(options: NVM500EraseOptions): Promise<void> {
 		// Blank NVM with 0xff
 		await nvmWriteBuffer(
 			this._io,
@@ -541,39 +530,45 @@ export class NVM500 implements NVM<NVMEntryName, NVMData[]> {
 
 		// Compute module sizes
 		const layoutEntries = Array.from(options.layout.values());
-		const moduleSizeEntries = layoutEntries
-			.filter((entry) => entry.type === NVMEntryType.NVMModuleSize);
-		const moduleDescriptorEntries = layoutEntries
-			.filter((entry) => entry.type === NVMEntryType.NVMModuleDescriptor);
+		const moduleSizeEntries = layoutEntries.filter(
+			(entry) => entry.type === NVMEntryType.NVMModuleSize,
+		);
+		const moduleDescriptorEntries = layoutEntries.filter(
+			(entry) => entry.type === NVMEntryType.NVMModuleDescriptor,
+		);
 		const moduleDescriptors = new Map<NVMEntryName, NVMModuleDescriptor>();
 		// Each module starts with a size marker and ends with a descriptor
 		for (let i = 0; i < moduleSizeEntries.length; i++) {
 			const sizeEntry = moduleSizeEntries[i];
 			const descriptorEntry = moduleDescriptorEntries[i];
-			const size = descriptorEntry.offset
-				+ descriptorEntry.size
-				- sizeEntry.offset;
+			const size =
+				descriptorEntry.offset +
+				descriptorEntry.size -
+				sizeEntry.offset;
 
 			// Write each module size to their NVMModuleSize marker
 			await this.writeEntry(sizeEntry, [size]);
 
 			// Write each module size, type and version to the NVMModuleDescriptor at the end
-			const moduleType = descriptorEntry.name === "nvmZWlibraryDescriptor"
-				? NVMModuleType.ZW_LIBRARY
-				: descriptorEntry.name === "nvmApplicationDescriptor"
-				? NVMModuleType.APPLICATION
-				: descriptorEntry.name === "nvmHostApplicationDescriptor"
-				? NVMModuleType.HOST_APPLICATION
-				: descriptorEntry.name === "nvmDescriptorDescriptor"
-				? NVMModuleType.NVM_DESCRIPTOR
-				: 0;
+			const moduleType =
+				descriptorEntry.name === "nvmZWlibraryDescriptor"
+					? NVMModuleType.ZW_LIBRARY
+					: descriptorEntry.name === "nvmApplicationDescriptor"
+						? NVMModuleType.APPLICATION
+						: descriptorEntry.name ===
+							  "nvmHostApplicationDescriptor"
+							? NVMModuleType.HOST_APPLICATION
+							: descriptorEntry.name === "nvmDescriptorDescriptor"
+								? NVMModuleType.NVM_DESCRIPTOR
+								: 0;
 
 			const moduleDescriptor: NVMModuleDescriptor = {
 				size,
 				type: moduleType,
-				version: descriptorEntry.name === "nvmZWlibraryDescriptor"
-					? options.nvmDescriptor.protocolVersion
-					: options.nvmDescriptor.firmwareVersion,
+				version:
+					descriptorEntry.name === "nvmZWlibraryDescriptor"
+						? options.nvmDescriptor.protocolVersion
+						: options.nvmDescriptor.firmwareVersion,
 			};
 			moduleDescriptors.set(descriptorEntry.name, moduleDescriptor);
 			await this.writeEntry(descriptorEntry, [moduleDescriptor]);

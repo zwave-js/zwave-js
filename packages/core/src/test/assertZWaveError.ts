@@ -1,4 +1,5 @@
 import type { ExpectStatic } from "vitest";
+
 import type { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 
 export interface AssertZWaveErrorOptions {
@@ -27,9 +28,10 @@ export function assertZWaveError<T>(
 	function handleError(e: any): void {
 		_assertZWaveError(e);
 		if (messageMatches != undefined) {
-			const regex = messageMatches instanceof RegExp
-				? messageMatches
-				: new RegExp(messageMatches);
+			const regex =
+				messageMatches instanceof RegExp
+					? messageMatches
+					: new RegExp(messageMatches);
 			expect(e.message).toMatch(regex);
 		}
 		if (errorCode != undefined) expect(e.code).toBe(errorCode);

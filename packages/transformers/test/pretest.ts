@@ -2,10 +2,12 @@
  * Transforms test fixtures prior to running tests.
  */
 
-import { runCodegen } from "@zwave-js/maintenance/runCodegen";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { runCodegen } from "@zwave-js/maintenance/runCodegen";
+
 import {
 	createValidateArgsTransformer,
 	generateValidateArgsFiles,
@@ -42,7 +44,7 @@ async function pretest() {
 		},
 		getTransformers: (_filePath, content) => {
 			// Apply validateArgs transformer to files importing @zwave-js/transformers
-			if (content.includes("from \"@zwave-js/transformers\"")) {
+			if (content.includes('from "@zwave-js/transformers"')) {
 				return [createValidateArgsTransformer()];
 			}
 			return undefined;

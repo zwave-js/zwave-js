@@ -2,6 +2,7 @@ import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import { test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../Testing.js";
 import type { Driver } from "../driver/Driver.js";
 import { createAndStartTestingDriver } from "../driver/DriverMock.js";

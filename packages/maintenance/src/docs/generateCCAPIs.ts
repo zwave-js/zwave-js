@@ -2,14 +2,15 @@
  * This method returns the original source code for an interface or type so it can be put into documentation
  */
 
-import { CommandClasses, getCCName } from "@zwave-js/core";
-import { num2hex } from "@zwave-js/shared";
-import c from "ansi-colors";
-import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
+
+import { CommandClasses, getCCName } from "@zwave-js/core";
+import { num2hex } from "@zwave-js/shared";
+import c from "ansi-colors";
+import esMain from "es-main";
 import { Piscina } from "piscina";
 import {
 	type CommentRange,
@@ -29,15 +30,15 @@ import {
 	type TypeLiteralNode,
 	type ts,
 } from "ts-morph";
-import { formatWithDprint } from "../dprint.js";
+// Support directly loading this file in a worker
+import { register } from "tsx/esm/api";
+
+import { formatWithOxfmt } from "../oxfmt.js";
 import {
 	getCommandClassFromClassDeclaration,
 	projectRoot,
 	tsConfigFilePathForDocs as tsConfigFilePath,
 } from "../tsAPITools.js";
-
-// Support directly loading this file in a worker
-import { register } from "tsx/esm/api";
 register();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -54,12 +55,12 @@ export function findSourceNode(
 ): ExportedDeclarations | undefined {
 	// Scan all source files
 	if (!exportDeclarationCache.has(exportingFile)) {
-		const decls = program.getSourceFile(exportingFile)
+		const decls = program
+			.getSourceFile(exportingFile)
 			?.getExportedDeclarations();
 		if (decls) exportDeclarationCache.set(exportingFile, decls);
 	}
-	return exportDeclarationCache.get(exportingFile)
-		?.get(identifier)?.[0];
+	return exportDeclarationCache.get(exportingFile)?.get(identifier)?.[0];
 }
 
 export function stripComments(
@@ -70,10 +71,10 @@ export function stripComments(
 		// Remove some comments if desired
 		const ranges: { pos: number; end: number }[] = [];
 		const removePredicate = (c: CommentRange) =>
-			(!options.comments
-				&& c.getKind() === SyntaxKind.SingleLineCommentTrivia)
-			|| (!options.jsdoc
-				&& c.getKind() === SyntaxKind.MultiLineCommentTrivia);
+			(!options.comments &&
+				c.getKind() === SyntaxKind.SingleLineCommentTrivia) ||
+			(!options.jsdoc &&
+				c.getKind() === SyntaxKind.MultiLineCommentTrivia);
 
 		const getCommentRangesForNode = (
 			node: Node,
@@ -81,9 +82,10 @@ export function stripComments(
 			const comments = node.getLeadingCommentRanges();
 			const ret = comments.map((c, i) => ({
 				pos: c.getPos(),
-				end: i < comments.length - 1
-					? comments[i + 1].getPos()
-					: Math.max(node.getStart(), c.getEnd()),
+				end:
+					i < comments.length - 1
+						? comments[i + 1].getPos()
+						: Math.max(node.getStart(), c.getEnd()),
 				remove: removePredicate(c),
 			}));
 			// Only use comment ranges that should be removed
@@ -120,8 +122,8 @@ function shouldStripPropertySignature(
 ): boolean {
 	return !!p.docs?.some(
 		(d) =>
-			typeof d !== "string"
-			&& d.tags?.some((t) => /(deprecated|internal)/.test(t.tagName)),
+			typeof d !== "string" &&
+			d.tags?.some((t) => /(deprecated|internal)/.test(t.tagName)),
 	);
 }
 
@@ -133,33 +135,29 @@ function printInterfaceDeclarationStructure(
 	return `
 interface ${struct.name}${
 		struct.typeParameters?.length
-			// oxlint-disable-next-line typescript/no-base-to-string
-			? `<${struct.typeParameters.map((t) => t.toString()).join(", ")}>`
+			? // oxlint-disable-next-line typescript/no-base-to-string
+				`<${struct.typeParameters.map((t) => t.toString()).join(", ")}>`
 			: ""
 	} {
-	${
-		struct.properties
-			?.filter((p) => !shouldStripPropertySignature(p))
-			.map((p) => {
-				return `${p.isReadonly ? "readonly " : ""}${p.name}${
-					p.hasQuestionToken ? "?:" : ":"
-				} ${p.type as string};`;
-			})
-			.join("\n")
-	}
+	${struct.properties
+		?.filter((p) => !shouldStripPropertySignature(p))
+		.map((p) => {
+			return `${p.isReadonly ? "readonly " : ""}${p.name}${
+				p.hasQuestionToken ? "?:" : ":"
+			} ${p.type as string};`;
+		})
+		.join("\n")}
 }`;
 }
 
-export function getTransformedSource(
+export async function getTransformedSource(
 	node: ExportedDeclarations,
 	options: ImportRange["options"],
-): string {
+): Promise<string> {
 	// Create a temporary project with a temporary source file to print the node
 	const project = new Project();
 	const sourceFile = project.createSourceFile("index.ts", node.getText());
-	node = [
-		...sourceFile.getExportedDeclarations().values(),
-	][0][0];
+	node = [...sourceFile.getExportedDeclarations().values()][0][0];
 
 	// Remove @internal and @deprecated members
 	if (Node.isInterfaceDeclaration(node)) {
@@ -172,7 +170,7 @@ export function getTransformedSource(
 					member
 						.getJsDocs()
 						.some((doc) =>
-							/@(deprecated|internal)/.test(doc.getInnerText())
+							/@(deprecated|internal)/.test(doc.getInnerText()),
 						)
 				) {
 					commentsToRemove.push(member);
@@ -212,7 +210,7 @@ export function getTransformedSource(
 	}
 
 	// Format so we get the original formatting back
-	ret = formatWithDprint("index.ts", ret).trim();
+	ret = (await formatWithOxfmt("index.ts", ret)).trim();
 	return ret;
 }
 
@@ -333,18 +331,13 @@ async function processCCDocFile(
 
 ?> CommandClass ID: \`${num2hex((CommandClasses as any)[ccName])}\`
 `;
-	const generatedIndex = `\n- [${ccName} CC](api/CCs/${filename}) · \`${
-		num2hex(
-			(CommandClasses as any)[ccName],
-		)
-	}\``;
+	const generatedIndex = `\n- [${ccName} CC](api/CCs/${filename}) · \`${num2hex(
+		(CommandClasses as any)[ccName],
+	)}\``;
 	const generatedSidebar = `\n\t- [${ccName} CC](api/CCs/${filename})`;
 
 	// Enumerate all useful public methods
-	const ignoredMethods = new Set([
-		"supportsCommand",
-		"isSetValueOptimistic",
-	]);
+	const ignoredMethods = new Set(["supportsCommand", "isSetValueOptimistic"]);
 	const methods = APIClass.getInstanceMethods()
 		.filter((m) => m.hasModifier(SyntaxKind.PublicKeyword))
 		.filter((m) => !ignoredMethods.has(m.getName()));
@@ -359,10 +352,10 @@ async function processCCDocFile(
 		text += `### \`${method.getName()}\`
 \`\`\`ts
 ${
-			signatures.length > 0
-				? signatures.map(printOverload).join("\n\n")
-				: printMethodDeclaration(method)
-		}
+	signatures.length > 0
+		? signatures.map(printOverload).join("\n\n")
+		: printMethodDeclaration(method)
+}
 \`\`\`
 
 `;
@@ -384,8 +377,8 @@ ${
 							t,
 						): t is OptionalKind<JSDocTagStructure> & {
 							text: string;
-						} => t.tagName === "param"
-							&& typeof t.text === "string",
+						} =>
+							t.tagName === "param" && typeof t.text === "string",
 					)
 					.map((t) => {
 						const firstSpace = t.text.indexOf(" ");
@@ -426,12 +419,19 @@ ${
 		let hasPrintedHeader = false;
 
 		const type = valueIDsConst.getType();
-		const formatValueType = (type: Type<ts.Type>): string => {
+		const formatValueType = async (
+			type: Type<ts.Type>,
+		): Promise<string> => {
 			const prefix = "type _ = ";
-			let ret = formatWithDprint(
-				"type.ts",
-				prefix
-					+ type.getText(valueIDsConst, TypeFormatFlags.NoTruncation),
+			let ret = (
+				await formatWithOxfmt(
+					"type.ts",
+					prefix +
+						type.getText(
+							valueIDsConst,
+							TypeFormatFlags.NoTruncation,
+						),
+				)
 			)
 				.trim()
 				.slice(prefix.length, -1);
@@ -471,11 +471,9 @@ ${
 			if (valueType.getCallSignatures().length === 1) {
 				const signature = valueType.getCallSignatures()[0];
 
-				callSignature = `(${
-					signature.compilerSignature
-						.declaration!.parameters.map((p) => p.getText())
-						.join(", ")
-				})`;
+				callSignature = `(${signature.compilerSignature
+					.declaration!.parameters.map((p) => p.getText())
+					.join(", ")})`;
 
 				// This used to be true. leaving it here in case it becomes true again
 				// // The call signature has a single argument
@@ -530,10 +528,11 @@ ${
 				hasPrintedHeader = true;
 			}
 
+			const formattedIdType = await formatValueType(idType);
 			text += `### \`${value.getName()}${callSignature}\`
 
 \`\`\`ts
-${formatValueType(idType)}
+${formattedIdType}
 \`\`\`
 `;
 
@@ -599,7 +598,7 @@ ${formatValueType(idType)}
 	}
 
 	text = text.replaceAll("\r\n", "\n");
-	text = formatWithDprint(filename, text);
+	text = await formatWithOxfmt(filename, text);
 
 	await fsp.writeFile(path.join(ccDocsDir, filename), text, "utf8");
 
@@ -640,7 +639,7 @@ async function generateCCDocs(
 
 	// Process them in parallel
 	const tasks = ccFiles.map((f) =>
-		piscina.run(f.getFilePath(), { name: "processCC" })
+		piscina.run(f.getFilePath(), { name: "processCC" }),
 	);
 	const results = await Promise.all(tasks);
 	for (const result of results) {
@@ -651,11 +650,12 @@ async function generateCCDocs(
 	}
 
 	// Write the generated index file and sidebar
-	indexFileContent = indexFileContent.slice(
-		0,
-		indexAutoGenStart + indexAutoGenToken.length,
-	) + generatedIndex;
-	indexFileContent = formatWithDprint("index.md", indexFileContent);
+	indexFileContent =
+		indexFileContent.slice(
+			0,
+			indexAutoGenStart + indexAutoGenToken.length,
+		) + generatedIndex;
+	indexFileContent = await formatWithOxfmt("index.md", indexFileContent);
 	await fsp.writeFile(indexFilename, indexFileContent, "utf8");
 
 	const sidebarInputFilename = path.join(docsDir, "_sidebar.md");
@@ -668,12 +668,16 @@ async function generateCCDocs(
 		);
 		return false;
 	}
-	sidebarFileContent = sidebarFileContent.slice(0, sidebarAutoGenStart)
-		+ generatedSidebar
-		+ sidebarFileContent.slice(
+	sidebarFileContent =
+		sidebarFileContent.slice(0, sidebarAutoGenStart) +
+		generatedSidebar +
+		sidebarFileContent.slice(
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
-	sidebarFileContent = formatWithDprint("_sidebar.md", sidebarFileContent);
+	sidebarFileContent = await formatWithOxfmt(
+		"_sidebar.md",
+		sidebarFileContent,
+	);
 	await fsp.writeFile(
 		path.join(ccDocsDir, "_sidebar.md"),
 		sidebarFileContent,
@@ -713,10 +717,9 @@ export async function processCC(
 	const program = getProgram();
 	const sourceFile = program.getSourceFileOrThrow(filename);
 	const dtsFile = program.addSourceFileAtPath(
-		filename.replace("/src/", "/build/esm/").replace(
-			/(?<!\.d)\.ts$/,
-			".d.ts",
-		),
+		filename
+			.replace("/src/", "/build/esm/")
+			.replace(/(?<!\.d)\.ts$/, ".d.ts"),
 	);
 	try {
 		return await processCCDocFile(sourceFile, dtsFile);

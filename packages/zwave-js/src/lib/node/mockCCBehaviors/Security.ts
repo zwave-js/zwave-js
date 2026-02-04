@@ -88,8 +88,7 @@ const respondToS0CommandsSupportedGet: MockNodeBehavior = {
 			const supportedCCs = [...self.implementedCCs.entries()]
 				.filter(
 					([cc, info]) =>
-						info.secure === true
-						&& !isEncapsulationCC(cc),
+						info.secure === true && !isEncapsulationCC(cc),
 				)
 				.map(([cc]) => cc);
 
@@ -128,10 +127,10 @@ const encapsulateS0CC: MockNodeBehavior = {
 	async transformResponse(controller, self, receivedCC, response) {
 		// Ensure that responses to S0-encapsulated CCs are also S0-encapsulated
 		if (
-			response.action === "sendCC"
-			&& receivedCC instanceof CommandClass
-			&& receivedCC.isEncapsulatedWith(CommandClasses.Security)
-			&& !response.cc.isEncapsulatedWith(CommandClasses.Security)
+			response.action === "sendCC" &&
+			receivedCC instanceof CommandClass &&
+			receivedCC.isEncapsulatedWith(CommandClasses.Security) &&
+			!response.cc.isEncapsulatedWith(CommandClasses.Security)
 		) {
 			// The mock node does not have the magic for automatically
 			// encapsulating commands, so we have to do it ourselves here.
@@ -151,8 +150,9 @@ const encapsulateS0CC: MockNodeBehavior = {
 				): resp is MockZWaveFrame & {
 					type: MockZWaveFrameType.Request;
 					payload: SecurityCCNonceReport;
-				} => resp.type === MockZWaveFrameType.Request
-					&& resp.payload instanceof SecurityCCNonceReport,
+				} =>
+					resp.type === MockZWaveFrameType.Request &&
+					resp.payload instanceof SecurityCCNonceReport,
 				{ timeout: 1000 },
 			);
 			const receiverNonce = nonceReport.payload.nonce;
@@ -172,9 +172,7 @@ const encapsulateS0CC: MockNodeBehavior = {
 	},
 };
 
-export const SecurityCCHooks = [
-	encapsulateS0CC,
-];
+export const SecurityCCHooks = [encapsulateS0CC];
 
 export const SecurityCCBehaviors = [
 	respondToSchemeGet,

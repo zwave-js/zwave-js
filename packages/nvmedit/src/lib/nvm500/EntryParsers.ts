@@ -4,6 +4,7 @@ import {
 	parseNodeProtocolInfo,
 } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import type { NVMModuleType } from "./shared.js";
 
 export interface NVMDescriptor {
@@ -27,12 +28,9 @@ export function parseNVMDescriptor(
 		productID: buffer.readUInt16BE(offset + 6),
 		firmwareVersion: `${buffer[offset + 8]}.${buffer[offset + 9]}`,
 		// Z-Wave protocol versions are formatted as "6.07" and similar
-		protocolVersion: `${buffer[offset + 10]}.${
-			buffer[offset + 11].toString().padStart(
-				2,
-				"0",
-			)
-		}`,
+		protocolVersion: `${buffer[offset + 10]}.${buffer[offset + 11]
+			.toString()
+			.padStart(2, "0")}`,
 	};
 }
 
@@ -85,9 +83,10 @@ export function encodeNVMModuleDescriptor(
 	return ret;
 }
 
-export interface NVM500NodeInfo
-	extends Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-{
+export interface NVM500NodeInfo extends Omit<
+	NodeProtocolInfo,
+	"hasSpecificDeviceClass"
+> {
 	genericDeviceClass: number;
 	specificDeviceClass: number | null;
 }
@@ -117,9 +116,6 @@ export function encodeNVM500NodeInfo(nodeInfo: NVM500NodeInfo): Bytes {
 			...nodeInfo,
 			hasSpecificDeviceClass: !!nodeInfo.specificDeviceClass,
 		}),
-		[
-			nodeInfo.genericDeviceClass,
-			nodeInfo.specificDeviceClass ?? 0,
-		],
+		[nodeInfo.genericDeviceClass, nodeInfo.specificDeviceClass ?? 0],
 	]);
 }

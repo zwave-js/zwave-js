@@ -325,9 +325,7 @@
 			"description": "Allowable range: 5-100 (increment by 5)",
 			"valueSize": 4,
 			"unit": "°C",
-			"allowed": [
-				{ "range": [5, 100], "step": 5 }
-			],
+			"allowed": [{ "range": [5, 100], "step": 5 }],
 			"defaultValue": 10
 		},
 		{

@@ -1,77 +1,77 @@
 {
-  "name": "@zwave-js/nvmedit",
-  "version": "15.20.0",
-  "description": "zwave-js: library to edit NVM backups",
-  "keywords": [],
-  "publishConfig": {
-    "access": "public"
-  },
-  "type": "module",
-  "exports": {
-    ".": {
-      "@@dev": "./src/index.ts",
-      "browser": "./build/esm/index_browser.js",
-      "import": "./build/esm/index.js",
-      "require": "./build/cjs/index.js"
-    },
-    "./safe": {
-      "@@dev": "./src/index_safe.ts",
-      "import": "./build/esm/index_safe.js",
-      "require": "./build/cjs/index_safe.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "bin/",
-    "build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
-    "build/**/package.json"
-  ],
-  "sideEffects": false,
-  "bin": "bin/nvmedit.mjs",
-  "author": {
-    "name": "AlCalzone",
-    "email": "d.griesel@gmx.net"
-  },
-  "license": "MIT",
-  "homepage": "https://github.com/zwave-js/zwave-js#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zwave-js/zwave-js.git"
-  },
-  "bugs": {
-    "url": "https://github.com/zwave-js/zwave-js/issues"
-  },
-  "funding": {
-    "url": "https://github.com/sponsors/AlCalzone/"
-  },
-  "engines": {
-    "node": ">= 20"
-  },
-  "dependencies": {
-    "@zwave-js/core": "workspace:*",
-    "@zwave-js/shared": "workspace:*",
-    "alcalzone-shared": "^5.0.0",
-    "reflect-metadata": "^0.2.2",
-    "semver": "^7.7.2",
-    "yargs": "^18.0.0"
-  },
-  "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
-    "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "extract-api": "yarn api-extractor run",
-    "test:ts": "vitest",
-    "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
-  },
-  "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.55.1",
-    "@types/node": "^20.19.23",
-    "@types/semver": "^7.7.1",
-    "@types/yargs": "^17.0.34",
-    "del-cli": "^7.0.0",
-    "tsx": "^4.20.5",
-    "typescript": "5.9.3",
-    "vitest": "^4.0.18"
-  }
+	"name": "@zwave-js/nvmedit",
+	"version": "15.20.0",
+	"description": "zwave-js: library to edit NVM backups",
+	"keywords": [],
+	"homepage": "https://github.com/zwave-js/zwave-js#readme",
+	"bugs": {
+		"url": "https://github.com/zwave-js/zwave-js/issues"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "AlCalzone",
+		"email": "d.griesel@gmx.net"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/zwave-js/zwave-js.git"
+	},
+	"funding": {
+		"url": "https://github.com/sponsors/AlCalzone/"
+	},
+	"bin": "bin/nvmedit.mjs",
+	"files": [
+		"bin/",
+		"build/**/*.{js,cjs,mjs,d.ts,d.cts,d.mts,map}",
+		"build/**/package.json"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"@@dev": "./src/index.ts",
+			"browser": "./build/esm/index_browser.js",
+			"import": "./build/esm/index.js",
+			"require": "./build/cjs/index.js"
+		},
+		"./safe": {
+			"@@dev": "./src/index_safe.ts",
+			"import": "./build/esm/index_safe.js",
+			"require": "./build/cjs/index_safe.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
+		"postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
+		"clean": "del-cli build/ \"*.tsbuildinfo\"",
+		"extract-api": "yarn api-extractor run",
+		"test:ts": "vitest",
+		"test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
+	},
+	"dependencies": {
+		"@zwave-js/core": "workspace:*",
+		"@zwave-js/shared": "workspace:*",
+		"alcalzone-shared": "^5.0.0",
+		"reflect-metadata": "^0.2.2",
+		"semver": "^7.7.2",
+		"yargs": "^18.0.0"
+	},
+	"devDependencies": {
+		"@alcalzone/esm2cjs": "^1.4.2",
+		"@microsoft/api-extractor": "^7.55.1",
+		"@types/node": "^20.19.23",
+		"@types/semver": "^7.7.1",
+		"@types/yargs": "^17.0.34",
+		"del-cli": "^7.0.0",
+		"tsx": "^4.20.5",
+		"typescript": "5.9.3",
+		"vitest": "^4.0.18"
+	},
+	"engines": {
+		"node": ">= 20"
+	}
 }

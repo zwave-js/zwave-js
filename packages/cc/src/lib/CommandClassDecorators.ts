@@ -9,6 +9,7 @@ import {
 	createValuelessReflectionDecorator,
 } from "@zwave-js/core/reflection";
 import type { TypedClassDecorator } from "@zwave-js/shared";
+
 import type { APIConstructor, CCAPI } from "./API.js";
 import type {
 	CCConstructor,
@@ -110,10 +111,10 @@ export function getCommandClass(cc: CommandClass | CCAPI): CommandClasses {
 	// get the class constructor
 	const constr = cc.constructor;
 	// retrieve the current metadata
-	const ret = CCAndCommandDecorator.lookupSuperValueStatic(
-		constr as typeof CommandClass,
-	)
-		?? apiDecorator.lookupValueStatic(constr as typeof CCAPI);
+	const ret =
+		CCAndCommandDecorator.lookupSuperValueStatic(
+			constr as typeof CommandClass,
+		) ?? apiDecorator.lookupValueStatic(constr as typeof CCAPI);
 
 	if (ret == undefined) {
 		throw new ZWaveError(
@@ -349,9 +350,9 @@ export function ccValueProperty<
 	...args:
 		| [value: StaticCCValue]
 		| [
-			value: DynamicCCValue<TArgs>,
-			getArgs: (self: InstanceType<Class>) => TArgs,
-		]
+				value: DynamicCCValue<TArgs>,
+				getArgs: (self: InstanceType<Class>) => TArgs,
+		  ]
 ): TypedClassDecorator<Class> {
 	return function decorator_ccValueProperty(constr: Class): void {
 		// retrieve the current metadata

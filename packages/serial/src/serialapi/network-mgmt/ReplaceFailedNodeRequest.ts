@@ -31,8 +31,7 @@ export enum ReplaceFailedNodeStartFlags {
 
 export enum ReplaceFailedNodeStatus {
 	/* ZW_ReplaceFailedNode callback status definitions */
-	NodeOK =
-		0, /* The node cannot be replaced because it is working properly (removed from the failed nodes list ) */
+	NodeOK = 0 /* The node cannot be replaced because it is working properly (removed from the failed nodes list ) */,
 
 	/** The failed node is ready to be replaced and controller is ready to add new node with the nodeID of the failed node. */
 	FailedNodeReplace = 3,
@@ -88,7 +87,8 @@ export interface ReplaceFailedNodeResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.ReplaceFailedNode)
-export class ReplaceFailedNodeResponse extends Message
+export class ReplaceFailedNodeResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -127,9 +127,8 @@ export class ReplaceFailedNodeRequestStatusReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& ReplaceFailedNodeRequestStatusReportOptions
-			& MessageBaseOptions,
+		options: ReplaceFailedNodeRequestStatusReportOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 
@@ -155,8 +154,7 @@ export class ReplaceFailedNodeRequestStatusReport
 
 	public isOK(): boolean {
 		return (
-			this.replaceStatus
-				=== ReplaceFailedNodeStatus.FailedNodeReplaceDone
+			this.replaceStatus === ReplaceFailedNodeStatus.FailedNodeReplaceDone
 		);
 	}
 }

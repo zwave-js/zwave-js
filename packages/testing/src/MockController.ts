@@ -27,6 +27,7 @@ import {
 	isAbortError,
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
+
 import {
 	type MockControllerCapabilities,
 	getDefaultMockControllerCapabilities,
@@ -182,9 +183,9 @@ export class MockController {
 
 		let securityManager2: SecurityManager2 | undefined = undefined;
 		if (
-			this._options.securityKeys?.S2_AccessControl
-			|| this._options.securityKeys?.S2_Authenticated
-			|| this._options.securityKeys?.S2_Unauthenticated
+			this._options.securityKeys?.S2_AccessControl ||
+			this._options.securityKeys?.S2_Authenticated ||
+			this._options.securityKeys?.S2_Unauthenticated
 		) {
 			securityManager2 = await SecurityManager2.create();
 			if (this._options.securityKeys.S2_AccessControl) {
@@ -388,8 +389,8 @@ export class MockController {
 		const ack = new TimedExpectation(
 			timeout,
 			undefined,
-			errorMessage
-				?? "Host did not respond with an ACK within the provided timeout!",
+			errorMessage ??
+				"Host did not respond with an ACK within the provided timeout!",
 		);
 		try {
 			this.expectedHostACKs.push(ack);
@@ -419,8 +420,7 @@ export class MockController {
 		const {
 			timeout = 5000,
 			preventDefault = false,
-			errorMessage =
-				"Host did not send the expected message within the provided timeout!",
+			errorMessage = "Host did not send the expected message within the provided timeout!",
 		} = options ?? {};
 		const expectation = new TimedExpectation<Message, Message>(
 			timeout,
@@ -458,18 +458,12 @@ export class MockController {
 		const {
 			timeout = 5000,
 			preventDefault = false,
-			errorMessage =
-				`Node ${node.id} did not send the expected frame within the provided timeout!`,
+			errorMessage = `Node ${node.id} did not send the expected frame within the provided timeout!`,
 		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
-		>(
-			timeout,
-			predicate,
-			errorMessage,
-			preventDefault,
-		);
+		>(timeout, predicate, errorMessage, preventDefault);
 		try {
 			if (!this.expectedNodeFrames.has(node.id)) {
 				this.expectedNodeFrames.set(node.id, []);
@@ -506,8 +500,8 @@ export class MockController {
 		const ret = await this.expectNodeFrame(
 			node,
 			(msg): msg is MockZWaveRequestFrame & { payload: T } =>
-				msg.type === MockZWaveFrameType.Request
-				&& predicate(msg.payload),
+				msg.type === MockZWaveFrameType.Request &&
+				predicate(msg.payload),
 			options,
 		);
 		return ret.payload;
@@ -585,16 +579,17 @@ export class MockController {
 	): Promise<void> {
 		// Ack the frame if desired
 		if (
-			this.autoAckNodeFrames
-			&& frame.type === MockZWaveFrameType.Request
+			this.autoAckNodeFrames &&
+			frame.type === MockZWaveFrameType.Request
 		) {
 			void this.ackNodeRequestFrame(node, frame);
 		}
 
 		// Handle message buffer. Check for pending expectations first.
-		const handlers = this.expectedNodeFrames
-			.get(node.id)
-			?.filter((e) => !e.predicate || e.predicate(frame)) ?? [];
+		const handlers =
+			this.expectedNodeFrames
+				.get(node.id)
+				?.filter((e) => !e.predicate || e.predicate(frame)) ?? [];
 
 		// Resolve all matching expectations
 		for (const handler of handlers) {

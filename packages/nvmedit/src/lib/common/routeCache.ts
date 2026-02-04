@@ -9,8 +9,9 @@ import { Bytes, type BytesView } from "@zwave-js/shared";
 const ROUTE_SIZE = MAX_REPEATERS + 1;
 export const ROUTECACHE_SIZE = 2 * ROUTE_SIZE;
 export const EMPTY_ROUTECACHE_FILL = 0xff;
-export const emptyRouteCache = new Uint8Array(ROUTECACHE_SIZE)
-	.fill(EMPTY_ROUTECACHE_FILL);
+export const emptyRouteCache = new Uint8Array(ROUTECACHE_SIZE).fill(
+	EMPTY_ROUTECACHE_FILL,
+);
 
 enum Beaming {
 	"1000ms" = 0x40,

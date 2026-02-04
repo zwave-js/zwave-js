@@ -1,6 +1,7 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { type BytesView, num2hex } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
+
 import { SUC_MAX_UPDATES } from "../../consts.js";
 import type { NVM3 } from "../NVM3.js";
 import type {
@@ -12,6 +13,7 @@ import type {
 	NodeNVMProperty,
 } from "../common/definitions.js";
 import type { RouteCache } from "../common/routeCache.js";
+
 import {
 	type ApplicationCCsFile,
 	ApplicationCCsFileID,
@@ -80,23 +82,27 @@ export class NVM3Adapter implements NVMAdapter {
 	private _nvm: NVM3;
 	private _initialized: boolean = false;
 
-	private _protocolInfo: {
-		version: string;
-		format: number;
-	} | undefined;
-	private _applicationInfo: {
-		version: string;
-		format: number;
-	} | undefined;
+	private _protocolInfo:
+		| {
+				version: string;
+				format: number;
+		  }
+		| undefined;
+	private _applicationInfo:
+		| {
+				version: string;
+				format: number;
+		  }
+		| undefined;
 
 	/** A list of pending changes that haven't been written to the NVM yet. `null` indicates a deleted entry. */
 	private _pendingChanges: Map<number, BytesView | null> = new Map();
 
 	private getFileVersion(fileId: number): string {
 		if (
-			fileId === ProtocolVersionFileID
-			|| fileId === ApplicationVersionFileID
-			|| fileId === ApplicationVersionFile800ID
+			fileId === ProtocolVersionFileID ||
+			fileId === ApplicationVersionFileID ||
+			fileId === ApplicationVersionFile800ID
 		) {
 			return DEFAULT_FILE_VERSION;
 		}
@@ -112,15 +118,13 @@ export class NVM3Adapter implements NVMAdapter {
 
 	private async init(): Promise<void> {
 		if (!this._protocolInfo) {
-			const protocolVersionFile = await this._getFile<
-				ProtocolVersionFile
-			>(
-				ProtocolVersionFileID,
-				true,
-			);
+			const protocolVersionFile =
+				await this._getFile<ProtocolVersionFile>(
+					ProtocolVersionFileID,
+					true,
+				);
 			if (protocolVersionFile) {
-				const version =
-					`${protocolVersionFile.major}.${protocolVersionFile.minor}.${protocolVersionFile.patch}`;
+				const version = `${protocolVersionFile.major}.${protocolVersionFile.minor}.${protocolVersionFile.patch}`;
 				this._protocolInfo = {
 					version,
 					format: protocolVersionFile.format,
@@ -129,18 +133,21 @@ export class NVM3Adapter implements NVMAdapter {
 		}
 
 		if (!this._applicationInfo) {
-			const applicationVersionFile700 = await this._getFile<
-				ApplicationVersionFile
-			>(ApplicationVersionFileID, true);
-			const applicationVersionFile800 = await this._getFile<
-				ApplicationVersionFile800
-			>(ApplicationVersionFile800ID, true);
-			const applicationVersionFile = applicationVersionFile700
-				?? applicationVersionFile800;
+			const applicationVersionFile700 =
+				await this._getFile<ApplicationVersionFile>(
+					ApplicationVersionFileID,
+					true,
+				);
+			const applicationVersionFile800 =
+				await this._getFile<ApplicationVersionFile800>(
+					ApplicationVersionFile800ID,
+					true,
+				);
+			const applicationVersionFile =
+				applicationVersionFile700 ?? applicationVersionFile800;
 
 			if (applicationVersionFile) {
-				const version =
-					`${applicationVersionFile.major}.${applicationVersionFile.minor}.${applicationVersionFile.patch}`;
+				const version = `${applicationVersionFile.major}.${applicationVersionFile.minor}.${applicationVersionFile.patch}`;
 				this._applicationInfo = {
 					version,
 					format: applicationVersionFile.format,
@@ -225,8 +232,9 @@ export class NVM3Adapter implements NVMAdapter {
 		property: T,
 		required?: R,
 	): Promise<
-		R extends true ? NVMPropertyToDataType<T>
-			: (NVMPropertyToDataType<T> | undefined)
+		R extends true
+			? NVMPropertyToDataType<T>
+			: NVMPropertyToDataType<T> | undefined
 	> {
 		if (property.domain === "controller") {
 			return this.getControllerNVMProperty(property, !!required) as any;
@@ -320,18 +328,16 @@ export class NVM3Adapter implements NVMAdapter {
 			case "reservedIdLR":
 			case "primaryLongRangeChannelId":
 			case "dcdcConfig": {
-				const file = await getFile<ControllerInfoFile>(
-					ControllerInfoFileID,
-				);
+				const file =
+					await getFile<ControllerInfoFile>(ControllerInfoFileID);
 				return file?.[property.type];
 			}
 
 			case "includedInsecurely":
 			case "includedSecurelyInsecureCCs":
 			case "includedSecurelySecureCCs": {
-				const file = await getFile<ApplicationCCsFile>(
-					ApplicationCCsFileID,
-				);
+				const file =
+					await getFile<ApplicationCCsFile>(ApplicationCCsFileID);
 				return file?.[property.type];
 			}
 
@@ -365,35 +371,29 @@ export class NVM3Adapter implements NVMAdapter {
 			}
 
 			case "appRouteLock": {
-				const file = await getFile<
-					ProtocolAppRouteLockNodeMaskFile
-				>(
+				const file = await getFile<ProtocolAppRouteLockNodeMaskFile>(
 					ProtocolAppRouteLockNodeMaskFileID,
 				);
 				return file?.nodeIds;
 			}
 			case "routeSlaveSUC": {
-				const file = await getFile<
-					ProtocolRouteSlaveSUCNodeMaskFile
-				>(
+				const file = await getFile<ProtocolRouteSlaveSUCNodeMaskFile>(
 					ProtocolRouteSlaveSUCNodeMaskFileID,
 				);
 				return file?.nodeIds;
 			}
 			case "sucPendingUpdate": {
-				const file = await getFile<
-					ProtocolSUCPendingUpdateNodeMaskFile
-				>(
-					ProtocolSUCPendingUpdateNodeMaskFileID,
-				);
+				const file =
+					await getFile<ProtocolSUCPendingUpdateNodeMaskFile>(
+						ProtocolSUCPendingUpdateNodeMaskFileID,
+					);
 				return file?.nodeIds;
 			}
 			case "pendingDiscovery": {
-				const file = await getFile<
-					ProtocolPendingDiscoveryNodeMaskFile
-				>(
-					ProtocolPendingDiscoveryNodeMaskFileID,
-				);
+				const file =
+					await getFile<ProtocolPendingDiscoveryNodeMaskFile>(
+						ProtocolPendingDiscoveryNodeMaskFileID,
+					);
 				return file?.nodeIds;
 			}
 
@@ -433,11 +433,10 @@ export class NVM3Adapter implements NVMAdapter {
 						index += SUC_UPDATES_PER_FILE_V5
 					) {
 						// None of the files are required
-						const file = await this._getFile<
-							SUCUpdateEntriesFileV5
-						>(
-							sucUpdateIndexToSUCUpdateEntriesFileIDV5(index),
-						);
+						const file =
+							await this._getFile<SUCUpdateEntriesFileV5>(
+								sucUpdateIndexToSUCUpdateEntriesFileIDV5(index),
+							);
 						if (!file) break;
 						updateEntries.push(...file.updateEntries);
 					}
@@ -477,28 +476,25 @@ export class NVM3Adapter implements NVMAdapter {
 			case "info": {
 				if (this._protocolInfo!.format < 1) {
 					const file = await getFile<NodeInfoFileV0>(
-						nodeIdToNodeInfoFileIDV0(
-							property.nodeId,
-						),
+						nodeIdToNodeInfoFileIDV0(property.nodeId),
 					);
 					return file?.nodeInfo;
 				} else {
 					const file = await getFile<NodeInfoFileV1>(
-						nodeIdToNodeInfoFileIDV1(
-							property.nodeId,
-						),
+						nodeIdToNodeInfoFileIDV1(property.nodeId),
 					);
-					return file?.nodeInfos.find((info) =>
-						info.nodeId === property.nodeId
+					return file?.nodeInfos.find(
+						(info) => info.nodeId === property.nodeId,
 					);
 				}
 			}
 
 			case "routes": {
 				// The existence of routes is stored separately
-				const nodeMaskFile = await this.getFile<
-					ProtocolRouteCacheExistsNodeMaskFile
-				>(ProtocolRouteCacheExistsNodeMaskFileID);
+				const nodeMaskFile =
+					await this.getFile<ProtocolRouteCacheExistsNodeMaskFile>(
+						ProtocolRouteCacheExistsNodeMaskFileID,
+					);
 
 				// If the node is not marked as having routes, don't try to read them
 				if (!nodeMaskFile) return;
@@ -514,8 +510,8 @@ export class NVM3Adapter implements NVMAdapter {
 					const file = await getFile<RouteCacheFileV1>(
 						nodeIdToRouteCacheFileIDV1(property.nodeId),
 					);
-					routeCache = file?.routeCaches.find((route) =>
-						route.nodeId === property.nodeId
+					routeCache = file?.routeCaches.find(
+						(route) => route.nodeId === property.nodeId,
 					);
 				}
 				if (!routeCache) return;
@@ -547,8 +543,8 @@ export class NVM3Adapter implements NVMAdapter {
 				const file = await getFile<LRNodeInfoFileV5>(
 					nodeIdToLRNodeInfoFileIDV5(property.nodeId),
 				);
-				return file?.nodeInfos.find((info) =>
-					info.nodeId === property.nodeId
+				return file?.nodeInfos.find(
+					(info) => info.nodeId === property.nodeId,
 				);
 			}
 
@@ -599,7 +595,8 @@ export class NVM3Adapter implements NVMAdapter {
 				const file = await expectFile<ProtocolVersionFile>(
 					ProtocolVersionFileID,
 				);
-				const [major, minor, patch] = (value as string).split(".")
+				const [major, minor, patch] = (value as string)
+					.split(".")
 					.map((part) => parseInt(part, 10));
 				file.major = major;
 				file.minor = minor;
@@ -630,7 +627,8 @@ export class NVM3Adapter implements NVMAdapter {
 					);
 				}
 
-				const [major, minor, patch] = (value as string).split(".")
+				const [major, minor, patch] = (value as string)
+					.split(".")
 					.map((part) => parseInt(part, 10));
 				file.major = major;
 				file.minor = minor;
@@ -681,9 +679,8 @@ export class NVM3Adapter implements NVMAdapter {
 			case "reservedIdLR":
 			case "primaryLongRangeChannelId":
 			case "dcdcConfig": {
-				const file = await expectFile<ControllerInfoFile>(
-					ControllerInfoFileID,
-				);
+				const file =
+					await expectFile<ControllerInfoFile>(ControllerInfoFileID);
 				file[property.type] = value;
 				changedFiles.push(file);
 				break;
@@ -692,9 +689,8 @@ export class NVM3Adapter implements NVMAdapter {
 			case "includedInsecurely":
 			case "includedSecurelyInsecureCCs":
 			case "includedSecurelySecureCCs": {
-				const file = await expectFile<ApplicationCCsFile>(
-					ApplicationCCsFileID,
-				);
+				const file =
+					await expectFile<ApplicationCCsFile>(ApplicationCCsFileID);
 				file[property.type] = value;
 				changedFiles.push(file);
 				break;
@@ -727,38 +723,48 @@ export class NVM3Adapter implements NVMAdapter {
 			}
 
 			case "nodeIds": {
-				const file = await this._getFile<ProtocolNodeListFile>(
-					ProtocolNodeListFileID,
-				) ?? new ProtocolNodeListFile({
-					nodeIds: [],
-					fileVersion: this.getFileVersion(ProtocolNodeListFileID),
-				});
+				const file =
+					(await this._getFile<ProtocolNodeListFile>(
+						ProtocolNodeListFileID,
+					)) ??
+					new ProtocolNodeListFile({
+						nodeIds: [],
+						fileVersion: this.getFileVersion(
+							ProtocolNodeListFileID,
+						),
+					});
 				file.nodeIds = value;
 				changedFiles.push(file);
 				break;
 			}
 
 			case "lrNodeIds": {
-				const file = await this._getFile<ProtocolLRNodeListFile>(
-					ProtocolLRNodeListFileID,
-				) ?? new ProtocolLRNodeListFile({
-					nodeIds: [],
-					fileVersion: this.getFileVersion(ProtocolLRNodeListFileID),
-				});
+				const file =
+					(await this._getFile<ProtocolLRNodeListFile>(
+						ProtocolLRNodeListFileID,
+					)) ??
+					new ProtocolLRNodeListFile({
+						nodeIds: [],
+						fileVersion: this.getFileVersion(
+							ProtocolLRNodeListFileID,
+						),
+					});
 				file.nodeIds = value;
 				changedFiles.push(file);
 				break;
 			}
 
 			case "virtualNodeIds": {
-				const file = await this._getFile<ProtocolVirtualNodeMaskFile>(
-					ProtocolVirtualNodeMaskFileID,
-				) ?? new ProtocolVirtualNodeMaskFile({
-					nodeIds: [],
-					fileVersion: this.getFileVersion(
+				const file =
+					(await this._getFile<ProtocolVirtualNodeMaskFile>(
 						ProtocolVirtualNodeMaskFileID,
-					),
-				});
+					)) ??
+					new ProtocolVirtualNodeMaskFile({
+						nodeIds: [],
+						fileVersion: this.getFileVersion(
+							ProtocolVirtualNodeMaskFileID,
+						),
+					});
 				file.nodeIds = value;
 				changedFiles.push(file);
 				break;
@@ -833,9 +839,8 @@ export class NVM3Adapter implements NVMAdapter {
 						index < SUC_MAX_UPDATES;
 						index += SUC_UPDATES_PER_FILE_V5
 					) {
-						const fileId = sucUpdateIndexToSUCUpdateEntriesFileIDV5(
-							index,
-						);
+						const fileId =
+							sucUpdateIndexToSUCUpdateEntriesFileIDV5(index);
 						const fileExists = await this.hasFile(fileId);
 						const fileVersion = this.getFileVersion(fileId);
 						const slice = value.slice(
@@ -891,9 +896,7 @@ export class NVM3Adapter implements NVMAdapter {
 		switch (property.type) {
 			case "info": {
 				const fileId = nodeIdToLRNodeInfoFileIDV5(property.nodeId);
-				let file = await this._getFile<LRNodeInfoFileV5>(
-					fileId,
-				);
+				let file = await this._getFile<LRNodeInfoFileV5>(fileId);
 				if (value) {
 					// Info added or modified
 					file ??= new LRNodeInfoFileV5({
@@ -968,9 +971,7 @@ export class NVM3Adapter implements NVMAdapter {
 				} else {
 					// V1+, multiple node infos per file
 					const fileId = nodeIdToNodeInfoFileIDV1(property.nodeId);
-					let file = await this._getFile<NodeInfoFileV1>(
-						fileId,
-					);
+					let file = await this._getFile<NodeInfoFileV1>(fileId);
 					if (value) {
 						// Info added or modified
 						file ??= new NodeInfoFileV1({
@@ -1029,12 +1030,12 @@ export class NVM3Adapter implements NVMAdapter {
 				} else {
 					// V1+, multiple routes per file
 					const fileId = nodeIdToRouteCacheFileIDV1(property.nodeId);
-					const file = await this._getFile<RouteCacheFileV1>(
-						fileId,
-					) ?? new RouteCacheFileV1({
-						routeCaches: [],
-						fileVersion: this.getFileVersion(fileId),
-					});
+					const file =
+						(await this._getFile<RouteCacheFileV1>(fileId)) ??
+						new RouteCacheFileV1({
+							routeCaches: [],
+							fileVersion: this.getFileVersion(fileId),
+						});
 					const existingIndex = file.routeCaches.findIndex(
 						(route) => route.nodeId === property.nodeId,
 					);
@@ -1052,10 +1053,11 @@ export class NVM3Adapter implements NVMAdapter {
 				}
 
 				// The existence of routes is stored separately
-				const nodeMaskFile = await this._getFile<
-					ProtocolRouteCacheExistsNodeMaskFile
-				>(ProtocolRouteCacheExistsNodeMaskFileID)
-					?? new ProtocolRouteCacheExistsNodeMaskFile({
+				const nodeMaskFile =
+					(await this._getFile<ProtocolRouteCacheExistsNodeMaskFile>(
+						ProtocolRouteCacheExistsNodeMaskFileID,
+					)) ??
+					new ProtocolRouteCacheExistsNodeMaskFile({
 						nodeIds: [],
 						fileVersion: this.getFileVersion(
 							ProtocolRouteCacheExistsNodeMaskFileID,
@@ -1066,7 +1068,8 @@ export class NVM3Adapter implements NVMAdapter {
 					nodeMaskFile.nodeIdSet.delete(property.nodeId);
 					changedFiles.push(nodeMaskFile);
 				} else if (
-					value && !nodeMaskFile.nodeIdSet.has(property.nodeId)
+					value &&
+					!nodeMaskFile.nodeIdSet.has(property.nodeId)
 				) {
 					nodeMaskFile.nodeIdSet.add(property.nodeId);
 					changedFiles.push(nodeMaskFile);
@@ -1088,9 +1091,7 @@ export class NVM3Adapter implements NVMAdapter {
 		}
 	}
 
-	public async delete(
-		property: NVMProperty,
-	): Promise<void> {
+	public async delete(property: NVMProperty): Promise<void> {
 		if (property.domain === "controller") {
 			switch (property.type) {
 				case "protocolVersion":
@@ -1171,18 +1172,12 @@ export class NVM3Adapter implements NVMAdapter {
 				}
 
 				case "nodeIds": {
-					this._pendingChanges.set(
-						ProtocolNodeListFileID,
-						null,
-					);
+					this._pendingChanges.set(ProtocolNodeListFileID, null);
 					return;
 				}
 
 				case "lrNodeIds": {
-					this._pendingChanges.set(
-						ProtocolLRNodeListFileID,
-						null,
-					);
+					this._pendingChanges.set(ProtocolLRNodeListFileID, null);
 					return;
 				}
 
@@ -1265,15 +1260,11 @@ export class NVM3Adapter implements NVMAdapter {
 				default:
 					assertNever(property);
 			}
-		} else if (
-			property.domain === "lrnode"
-		) {
+		} else if (property.domain === "lrnode") {
 			// Node properties are handled by set(..., undefined) because
 			// it requires both modifying and deleting files
 			return this.setLRNodeNVMProperty(property, undefined);
-		} else if (
-			property.domain === "node"
-		) {
+		} else if (property.domain === "node") {
 			// Node properties are handled by set(..., undefined) because
 			// it requires both modifying and deleting files
 			return this.setNodeNVMProperty(property, undefined);

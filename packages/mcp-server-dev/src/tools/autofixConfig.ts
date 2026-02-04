@@ -1,8 +1,10 @@
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import spawn from "nano-spawn";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import spawn from "nano-spawn";
+
 import type { ToolHandler } from "../types.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -102,9 +104,9 @@ async function handleAutofixConfig(
 			content: [
 				{
 					type: "text",
-					text: `Failed to parse ESLint output: ${
-						String(parseError)
-					}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
+					text: `Failed to parse ESLint output: ${String(
+						parseError,
+					)}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
 				},
 			],
 			isError: true,
@@ -127,9 +129,7 @@ async function handleAutofixConfig(
 	const fileResult = results[0];
 	const errorsWithSuggestions = fileResult.messages.filter(
 		(msg) =>
-			msg.severity === 2
-			&& msg.suggestions
-			&& msg.suggestions.length > 0,
+			msg.severity === 2 && msg.suggestions && msg.suggestions.length > 0,
 	);
 
 	if (errorsWithSuggestions.length === 0) {
@@ -137,8 +137,7 @@ async function handleAutofixConfig(
 			content: [
 				{
 					type: "text",
-					text:
-						`No fixable errors found. Total messages: ${fileResult.messages.length}`,
+					text: `No fixable errors found. Total messages: ${fileResult.messages.length}`,
 				},
 			],
 		};
@@ -165,9 +164,10 @@ async function handleAutofixConfig(
 		const fixText = suggestion.fix.text;
 
 		// Apply the fix
-		modifiedContent = modifiedContent.slice(0, start)
-			+ fixText
-			+ modifiedContent.slice(end);
+		modifiedContent =
+			modifiedContent.slice(0, start) +
+			fixText +
+			modifiedContent.slice(end);
 
 		appliedFixes.push(
 			`Line ${error.line}: ${error.message} -> ${suggestion.desc}`,
@@ -181,10 +181,9 @@ async function handleAutofixConfig(
 		content: [
 			{
 				type: "text",
-				text:
-					`Applied ${appliedFixes.length} automatic fixes to ${filename}:\n\n${
-						appliedFixes.join("\n")
-					}`,
+				text: `Applied ${appliedFixes.length} automatic fixes to ${filename}:\n\n${appliedFixes.join(
+					"\n",
+				)}`,
 			},
 		],
 	};

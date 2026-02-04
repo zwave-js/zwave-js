@@ -70,7 +70,8 @@ export interface SetRFReceiveModeResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.SetRFReceiveMode)
-export class SetRFReceiveModeResponse extends Message
+export class SetRFReceiveModeResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(

@@ -52,8 +52,10 @@ console.log(isUint8Array(new ArrayBuffer(10)));
 ```
 */
 export function isUint8Array(value: unknown): value is Uint8Array<ArrayBuffer> {
-	return isType(value, Uint8Array, uint8ArrayStringified)
-		&& (value.buffer instanceof ArrayBuffer);
+	return (
+		isType(value, Uint8Array, uint8ArrayStringified) &&
+		value.buffer instanceof ArrayBuffer
+	);
 }
 
 function isArrayBuffer(value: unknown): value is ArrayBuffer {
@@ -61,10 +63,12 @@ function isArrayBuffer(value: unknown): value is ArrayBuffer {
 }
 
 function isArrayLike(value: unknown): value is ArrayLike<number> {
-	return typeof value === "object"
-		&& value !== null
-		&& "length" in value
-		&& typeof value.length === "number";
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"length" in value &&
+		typeof value.length === "number"
+	);
 }
 
 export function isUint8ArrayOrArrayBuffer(
@@ -461,9 +465,8 @@ export function base64ToString(base64String: string): string {
 	return uint8ArrayToString(base64ToUint8Array(base64String));
 }
 
-const byteToHexLookupTable = Array.from(
-	{ length: 256 },
-	(_, index) => index.toString(16).padStart(2, "0"),
+const byteToHexLookupTable = Array.from({ length: 256 }, (_, index) =>
+	index.toString(16).padStart(2, "0"),
 );
 
 /**
@@ -543,10 +546,12 @@ export function hexToUint8Array(hexString: string): Uint8Array<ArrayBuffer> {
 	const bytes = new Uint8Array(resultLength);
 
 	for (let index = 0; index < resultLength; index++) {
-		const highNibble: number | undefined =
-			(hexToDecimalLookupTable as any)[hexString[index * 2]];
-		const lowNibble: number | undefined =
-			(hexToDecimalLookupTable as any)[hexString[(index * 2) + 1]];
+		const highNibble: number | undefined = (hexToDecimalLookupTable as any)[
+			hexString[index * 2]
+		];
+		const lowNibble: number | undefined = (hexToDecimalLookupTable as any)[
+			hexString[index * 2 + 1]
+		];
 
 		if (highNibble === undefined || lowNibble === undefined) {
 			throw new Error(
@@ -579,11 +584,11 @@ export function getUintBE(view: DataView): number {
 	const { byteLength } = view;
 
 	if (byteLength === 6) {
-		return (view.getUint16(0) * (2 ** 32)) + view.getUint32(2);
+		return view.getUint16(0) * 2 ** 32 + view.getUint32(2);
 	}
 
 	if (byteLength === 5) {
-		return (view.getUint8(0) * (2 ** 32)) + view.getUint32(1);
+		return view.getUint8(0) * 2 ** 32 + view.getUint32(1);
 	}
 
 	if (byteLength === 4) {
@@ -591,7 +596,7 @@ export function getUintBE(view: DataView): number {
 	}
 
 	if (byteLength === 3) {
-		return (view.getUint8(0) * (2 ** 16)) + view.getUint16(1);
+		return view.getUint8(0) * 2 ** 16 + view.getUint16(1);
 	}
 
 	if (byteLength === 2) {

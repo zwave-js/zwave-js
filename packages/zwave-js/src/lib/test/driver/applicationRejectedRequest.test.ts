@@ -4,6 +4,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -23,8 +24,8 @@ integrationTest(
 			const respondToNotificationSet: MockNodeBehavior = {
 				handleCC(controller, _self, receivedCC) {
 					if (
-						receivedCC instanceof NotificationCCSet
-						&& receivedCC.notificationStatus === false
+						receivedCC instanceof NotificationCCSet &&
+						receivedCC.notificationStatus === false
 					) {
 						const cc = new ApplicationStatusCCRejectedRequest({
 							nodeId: controller.ownNodeId,
@@ -51,9 +52,9 @@ integrationTest(
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof NotificationCCSet
-					&& frame.payload.notificationStatus === false,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof NotificationCCSet &&
+					frame.payload.notificationStatus === false,
 				{
 					errorMessage:
 						"Node should have received a NotificationCCSet with notificationStatus false",
@@ -62,9 +63,8 @@ integrationTest(
 
 			mockNode.assertSentControllerFrame(
 				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof ApplicationStatusCCRejectedRequest,
+					frame.type === MockZWaveFrameType.Request &&
+					frame.payload instanceof ApplicationStatusCCRejectedRequest,
 				{
 					errorMessage:
 						"Node should have sent an ApplicationStatusCCRejectedRequest",

@@ -16,6 +16,7 @@ import {
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import {
 	POLL_VALUE,
 	type PollValueImplementation,
@@ -39,6 +40,7 @@ import {
 	ManufacturerProprietaryCC,
 	ManufacturerProprietaryCCAPI,
 } from "../ManufacturerProprietaryCC.js";
+
 import {
 	fibaroCC,
 	fibaroCCCommand,
@@ -94,9 +96,7 @@ function getSupportedFibaroCCIDs(
 	ctx: GetDeviceConfig,
 	nodeId: number,
 ): FibaroCCIDs[] {
-	const proprietaryConfig = ctx.getDeviceConfig?.(
-		nodeId,
-	)?.proprietary;
+	const proprietaryConfig = ctx.getDeviceConfig?.(nodeId)?.proprietary;
 	if (proprietaryConfig && isArray(proprietaryConfig.fibaroCCs)) {
 		return proprietaryConfig.fibaroCCs as FibaroCCIDs[];
 	}
@@ -116,12 +116,11 @@ export class FibaroCCAPI extends ManufacturerProprietaryCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			FibaroVenetianBlindCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<FibaroVenetianBlindCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, ["position", "tilt"]);
 		}
@@ -148,7 +147,7 @@ export class FibaroCCAPI extends ManufacturerProprietaryCCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: FibaroCCAPI,
 			{ property, propertyKey },
 			value,
@@ -190,7 +189,7 @@ export class FibaroCCAPI extends ManufacturerProprietaryCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: FibaroCCAPI, { property, propertyKey }) {
+		return async function (this: FibaroCCAPI, { property, propertyKey }) {
 			if (property !== "fibaro") {
 				throwUnsupportedProperty(this.ccId, property);
 			} else if (propertyKey == undefined) {
@@ -215,9 +214,7 @@ export class FibaroCCAPI extends ManufacturerProprietaryCCAPI {
 
 @manufacturerId(MANUFACTURERID_FIBARO)
 export class FibaroCC extends ManufacturerProprietaryCC {
-	public constructor(
-		options: CommandClassOptions,
-	) {
+	public constructor(options: CommandClassOptions) {
 		super(options);
 
 		this.fibaroCCId = getFibaroCCId(this);
@@ -248,9 +245,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 	public fibaroCCId?: number;
 	public fibaroCCCommand?: number;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		// Iterate through all supported Fibaro CCs and interview them
@@ -264,9 +259,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 		}
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		// Iterate through all supported Fibaro CCs and let them refresh their values
@@ -311,9 +304,7 @@ export class FibaroVenetianBlindCC extends FibaroCC {
 	declare fibaroCCId: FibaroCCIDs.VenetianBlind;
 	declare fibaroCCCommand: FibaroVenetianBlindCCCommand;
 
-	public constructor(
-		options: CommandClassOptions,
-	) {
+	public constructor(options: CommandClassOptions) {
 		super(options);
 		this.fibaroCCId = FibaroCCIDs.VenetianBlind;
 	}
@@ -359,21 +350,19 @@ tilt:     ${resp.tilt}`;
 // @publicAPI
 export type FibaroVenetianBlindCCSetOptions =
 	| {
-		position: number;
-	}
+			position: number;
+	  }
 	| {
-		tilt: number;
-	}
+			tilt: number;
+	  }
 	| {
-		position: number;
-		tilt: number;
-	};
+			position: number;
+			tilt: number;
+	  };
 
 @fibaroCCCommand(FibaroVenetianBlindCCCommand.Set)
 export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
-	public constructor(
-		options: WithAddress<FibaroVenetianBlindCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<FibaroVenetianBlindCCSetOptions>) {
 		super(options);
 		this.fibaroCCCommand = FibaroVenetianBlindCCCommand.Set;
 
@@ -396,8 +385,9 @@ export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
 	public tilt: number | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const controlByte = (this.position != undefined ? 0b10 : 0)
-			| (this.tilt != undefined ? 0b01 : 0);
+		const controlByte =
+			(this.position != undefined ? 0b10 : 0) |
+			(this.tilt != undefined ? 0b01 : 0);
 		this.payload = Bytes.from([
 			controlByte,
 			this.position ?? 0,
@@ -515,9 +505,7 @@ export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
 export class FibaroVenetianBlindCCGet extends FibaroVenetianBlindCC {
 	// @noLogEntry: This CC has no properties to log
 
-	public constructor(
-		options: CommandClassOptions,
-	) {
+	public constructor(options: CommandClassOptions) {
 		super(options);
 		this.fibaroCCCommand = FibaroVenetianBlindCCCommand.Get;
 	}

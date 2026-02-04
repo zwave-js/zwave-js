@@ -9,6 +9,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -115,9 +116,7 @@ export class ZWavePlusCCAPI extends PhysicalCCAPI {
 export class ZWavePlusCC extends CommandClass {
 	declare ccCommand: ZWavePlusCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -176,9 +175,7 @@ export interface ZWavePlusCCReportOptions {
 @ccValueProperty("installerIcon", ZWavePlusCCValues.installerIcon)
 @ccValueProperty("userIcon", ZWavePlusCCValues.userIcon)
 export class ZWavePlusCCReport extends ZWavePlusCC {
-	public constructor(
-		options: WithAddress<ZWavePlusCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<ZWavePlusCCReportOptions>) {
 		super(options);
 		this.zwavePlusVersion = options.zwavePlusVersion;
 		this.roleType = options.roleType;

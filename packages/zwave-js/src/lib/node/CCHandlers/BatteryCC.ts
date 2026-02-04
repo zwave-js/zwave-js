@@ -4,6 +4,7 @@ import {
 	type PersistValuesContext,
 } from "@zwave-js/cc";
 import { CommandClasses, type LogNode } from "@zwave-js/core";
+
 import type { ZWaveNode } from "../Node.js";
 
 /** Handles the receipt of a BatteryCCReport */
@@ -16,15 +17,9 @@ export function handleBatteryReport(
 
 	if (command.level === 0xff) {
 		// Low battery, treat it as a notification
-		node.emit(
-			"notification",
-			endpoint,
-			CommandClasses.Battery,
-			{
-				eventType: "battery low",
-				urgency: command.rechargeOrReplace
-					|| BatteryReplacementStatus.Soon,
-			},
-		);
+		node.emit("notification", endpoint, CommandClasses.Battery, {
+			eventType: "battery low",
+			urgency: command.rechargeOrReplace || BatteryReplacementStatus.Soon,
+		});
 	}
 }

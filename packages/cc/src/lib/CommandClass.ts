@@ -50,6 +50,7 @@ import {
 	staticExtends,
 } from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import type { CCAPIHost, CCAPINode, ValueIDProperties } from "./API.js";
 import {
 	getCCCommand,
@@ -83,53 +84,47 @@ export interface CommandClassOptions extends CCAddress {
 }
 
 // Defines the necessary traits an endpoint passed to a CC instance must have
-export type CCEndpoint =
-	& EndpointId
-	& SupportsCC
-	& ControlsCC
-	& GetCCs
-	& ModifyCCs;
+export type CCEndpoint = EndpointId &
+	SupportsCC &
+	ControlsCC &
+	GetCCs &
+	ModifyCCs;
 
 // Defines the necessary traits a node passed to a CC instance must have
-export type CCNode =
-	& NodeId
-	& SupportsCC
-	& ControlsCC
-	& GetCCs
-	& GetEndpoint<CCEndpoint>
-	& GetAllEndpoints<CCEndpoint>
-	& QuerySecurityClasses
-	& SetSecurityClass
-	& ListenBehavior
-	& QueryNodeStatus;
+export type CCNode = NodeId &
+	SupportsCC &
+	ControlsCC &
+	GetCCs &
+	GetEndpoint<CCEndpoint> &
+	GetAllEndpoints<CCEndpoint> &
+	QuerySecurityClasses &
+	SetSecurityClass &
+	ListenBehavior &
+	QueryNodeStatus;
 
-export type InterviewContext =
-	& CCAPIHost<
-		& CCAPINode
-		& GetCCs
-		& SupportsCC
-		& ControlsCC
-		& QuerySecurityClasses
-		& SetSecurityClass
-		& GetEndpoint<EndpointId & GetCCs & SupportsCC & ControlsCC & ModifyCCs>
-		& GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>
-	>
-	& GetInterviewOptions
-	& LookupManufacturer;
+export type InterviewContext = CCAPIHost<
+	CCAPINode &
+		GetCCs &
+		SupportsCC &
+		ControlsCC &
+		QuerySecurityClasses &
+		SetSecurityClass &
+		GetEndpoint<EndpointId & GetCCs & SupportsCC & ControlsCC & ModifyCCs> &
+		GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>
+> &
+	GetInterviewOptions &
+	LookupManufacturer;
 
 export type RefreshValuesContext = CCAPIHost<
 	CCAPINode & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
 >;
 
-export type PersistValuesContext =
-	& HostIDs
-	& GetValueDB
-	& GetSupportedCCVersion
-	& GetDeviceConfig
-	& GetNode<
-		NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-	>
-	& LogNode;
+export type PersistValuesContext = HostIDs &
+	GetValueDB &
+	GetSupportedCCVersion &
+	GetDeviceConfig &
+	GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>> &
+	LogNode;
 
 export function getEffectiveCCVersion(
 	ctx: GetSupportedCCVersion,
@@ -139,15 +134,17 @@ export function getEffectiveCCVersion(
 	// For multicast and broadcast CCs, just use the highest implemented version to serialize
 	// Older nodes will ignore the additional fields
 	if (
-		typeof cc.nodeId !== "number"
-		|| cc.nodeId === NODE_ID_BROADCAST
-		|| cc.nodeId === NODE_ID_BROADCAST_LR
+		typeof cc.nodeId !== "number" ||
+		cc.nodeId === NODE_ID_BROADCAST ||
+		cc.nodeId === NODE_ID_BROADCAST_LR
 	) {
 		return getImplementedVersion(cc.ccId);
 	}
 	// For singlecast CCs, set the CC version as high as possible
-	return ctx.getSupportedCCVersion(cc.ccId, cc.nodeId, cc.endpointIndex)
-		|| (defaultVersion ?? getImplementedVersion(cc.ccId));
+	return (
+		ctx.getSupportedCCVersion(cc.ccId, cc.nodeId, cc.endpointIndex) ||
+		(defaultVersion ?? getImplementedVersion(cc.ccId))
+	);
 }
 
 export class CCRaw {
@@ -168,18 +165,12 @@ export class CCRaw {
 		if (ccId === CommandClasses["Transport Service"]) {
 			// Transport Service only uses the higher 5 bits for the command
 			// and re-uses the lower 3 bits of the ccCommand as payload
-			payload = Bytes.concat([
-				[ccCommand & 0b111],
-				payload,
-			]);
+			payload = Bytes.concat([[ccCommand & 0b111], payload]);
 			ccCommand = ccCommand & 0b11111_000;
 		} else if (ccId === CommandClasses["Manufacturer Proprietary"]) {
 			// ManufacturerProprietaryCC has no CC command, so the first
 			// payload byte is stored in ccCommand.
-			payload = Bytes.concat([
-				[ccCommand],
-				payload,
-			]);
+			payload = Bytes.concat([[ccCommand], payload]);
 			ccCommand = undefined;
 		}
 
@@ -237,18 +228,18 @@ export class CommandClass implements CCId {
 		} catch (e) {
 			// Indicate invalid payloads with a special CC type
 			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.PacketFormat_InvalidPayload
+				isZWaveError(e) &&
+				e.code === ZWaveErrorCodes.PacketFormat_InvalidPayload
 			) {
-				const ccName = CommandConstructor?.name
-					?? `${getCCName(raw.ccId)} CC`;
+				const ccName =
+					CommandConstructor?.name ?? `${getCCName(raw.ccId)} CC`;
 
 				// Preserve why the command was invalid
 				let reason: string | ZWaveErrorCodes | undefined;
 				if (
-					typeof e.context === "string"
-					|| (typeof e.context === "number"
-						&& ZWaveErrorCodes[e.context] != undefined)
+					typeof e.context === "string" ||
+					(typeof e.context === "number" &&
+						ZWaveErrorCodes[e.context] != undefined)
 				) {
 					reason = e.context;
 				}
@@ -334,10 +325,7 @@ export class CommandClass implements CCId {
 	}
 
 	/** Marks the interview for this CC as complete or not */
-	public setInterviewComplete(
-		host: GetValueDB,
-		complete: boolean,
-	): void {
+	public setInterviewComplete(host: GetValueDB, complete: boolean): void {
 		this.getValueDB(host).setValue(
 			{
 				commandClass: this.ccId,
@@ -402,12 +390,10 @@ export class CommandClass implements CCId {
 		let tag = this.constructor.name;
 		const message: MessageRecord = {};
 		if (this.constructor === CommandClass) {
-			tag = `${
-				getEnumMemberName(
-					CommandClasses,
-					this.ccId,
-				)
-			} CC (not implemented)`;
+			tag = `${getEnumMemberName(
+				CommandClasses,
+				this.ccId,
+			)} CC (not implemented)`;
 			if (this.ccCommand != undefined) {
 				message.command = num2hex(this.ccCommand);
 			}
@@ -467,13 +453,10 @@ export class CommandClass implements CCId {
 	 */
 	public shouldRefreshValues(
 		this: SinglecastCC<this>,
-		_ctx:
-			& GetValueDB
-			& GetSupportedCCVersion
-			& GetDeviceConfig
-			& GetNode<
-				NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-			>,
+		_ctx: GetValueDB &
+			GetSupportedCCVersion &
+			GetDeviceConfig &
+			GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>,
 	): boolean {
 		// This needs to be overwritten per command class.
 		// In the default implementation, don't require a refresh
@@ -504,10 +487,7 @@ export class CommandClass implements CCId {
 	 * Maps a BasicCC value to a more specific CC implementation. Returns true if the value was mapped, false otherwise.
 	 * @param _value The value of the received BasicCC
 	 */
-	public setMappedBasicValue(
-		_ctx: GetValueDB,
-		_value: number,
-	): boolean {
+	public setMappedBasicValue(_ctx: GetValueDB, _value: number): boolean {
 		// By default, don't map
 		return false;
 	}
@@ -515,41 +495,39 @@ export class CommandClass implements CCId {
 	public isSinglecast(): this is SinglecastCC<this> {
 		return (
 			// received
-			this.frameType === "singlecast"
+			this.frameType === "singlecast" ||
 			// transmitted
-			|| (this.frameType == undefined
-				&& typeof this.nodeId === "number"
-				&& this.nodeId !== NODE_ID_BROADCAST
-				&& this.nodeId !== NODE_ID_BROADCAST_LR)
+			(this.frameType == undefined &&
+				typeof this.nodeId === "number" &&
+				this.nodeId !== NODE_ID_BROADCAST &&
+				this.nodeId !== NODE_ID_BROADCAST_LR)
 		);
 	}
 
 	public isMulticast(): this is MulticastCC<this> {
 		return (
 			// received
-			this.frameType === "multicast"
+			this.frameType === "multicast" ||
 			// transmitted
-			|| (this.frameType == undefined && isArray(this.nodeId))
+			(this.frameType == undefined && isArray(this.nodeId))
 		);
 	}
 
 	public isBroadcast(): this is BroadcastCC<this> {
 		return (
 			// received
-			this.frameType === "broadcast"
+			this.frameType === "broadcast" ||
 			// transmitted
-			|| (this.frameType == undefined
-				&& (this.nodeId === NODE_ID_BROADCAST
-					|| this.nodeId === NODE_ID_BROADCAST_LR))
+			(this.frameType == undefined &&
+				(this.nodeId === NODE_ID_BROADCAST ||
+					this.nodeId === NODE_ID_BROADCAST_LR))
 		);
 	}
 
 	/**
 	 * Returns the node this CC is linked to. Throws if the controller is not yet ready.
 	 */
-	public getNode<T extends NodeId>(
-		ctx: GetNode<T>,
-	): T | undefined {
+	public getNode<T extends NodeId>(ctx: GetNode<T>): T | undefined {
 		if (this.isSinglecast()) {
 			return ctx.getNode(this.nodeId);
 		}
@@ -559,9 +537,7 @@ export class CommandClass implements CCId {
 	 * @internal
 	 * Returns the node this CC is linked to (or undefined if the node doesn't exist)
 	 */
-	public tryGetNode<T extends NodeId>(
-		ctx: GetNode<T>,
-	): T | undefined {
+	public tryGetNode<T extends NodeId>(ctx: GetNode<T>): T | undefined {
 		try {
 			return this.getNode(ctx);
 		} catch (e) {
@@ -619,10 +595,7 @@ export class CommandClass implements CCId {
 	 * Removes the metadata for the given CC value from the value DB.
 	 * The endpoint index of the current CC instance is automatically taken into account.
 	 */
-	protected removeMetadata(
-		ctx: GetValueDB,
-		ccValue: CCValue,
-	): void {
+	protected removeMetadata(ctx: GetValueDB, ccValue: CCValue): void {
 		const valueDB = this.getValueDB(ctx);
 		const valueId = ccValue.endpoint(this.endpointIndex);
 		valueDB.setMetadata(valueId, undefined);
@@ -674,10 +647,7 @@ export class CommandClass implements CCId {
 	 * Removes the value for the given CC value from the value DB.
 	 * The endpoint index of the current CC instance is automatically taken into account.
 	 */
-	protected removeValue(
-		ctx: GetValueDB,
-		ccValue: CCValue,
-	): void {
+	protected removeValue(ctx: GetValueDB, ccValue: CCValue): void {
 		const valueDB = this.getValueDB(ctx);
 		const valueId = ccValue.endpoint(this.endpointIndex);
 		valueDB.removeValue(valueId);
@@ -687,10 +657,7 @@ export class CommandClass implements CCId {
 	 * Reads the value stored for the value ID of the given CC value from the value DB.
 	 * The endpoint index of the current CC instance is automatically taken into account.
 	 */
-	protected getValue<T>(
-		ctx: GetValueDB,
-		ccValue: CCValue,
-	): T | undefined {
+	protected getValue<T>(ctx: GetValueDB, ccValue: CCValue): T | undefined {
 		const valueDB = this.getValueDB(ctx);
 		const valueId = ccValue.endpoint(this.endpointIndex);
 		return valueDB.getValue(valueId);
@@ -737,7 +704,7 @@ export class CommandClass implements CCId {
 			value.is({
 				commandClass: this.ccId,
 				...properties,
-			})
+			}),
 		);
 	}
 
@@ -746,28 +713,22 @@ export class CommandClass implements CCId {
 		value: StaticCCValue,
 	): boolean {
 		return (
-			value.options.autoCreate === true
-			|| (typeof value.options.autoCreate === "function"
-				&& value.options.autoCreate(
-					ctx,
-					{
-						virtual: false,
-						nodeId: this.nodeId as number,
-						index: this.endpointIndex,
-					},
-				))
+			value.options.autoCreate === true ||
+			(typeof value.options.autoCreate === "function" &&
+				value.options.autoCreate(ctx, {
+					virtual: false,
+					nodeId: this.nodeId as number,
+					index: this.endpointIndex,
+				}))
 		);
 	}
 
 	/** Returns a list of all value names that are defined for this CommandClass */
 	public getDefinedValueIDs(
-		ctx:
-			& GetValueDB
-			& GetSupportedCCVersion
-			& GetDeviceConfig
-			& GetNode<
-				NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-			>,
+		ctx: GetValueDB &
+			GetSupportedCCVersion &
+			GetDeviceConfig &
+			GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>,
 		includeInternal: boolean = false,
 	): ValueID[] {
 		// In order to compare value ids, we need them to be strings
@@ -797,17 +758,18 @@ export class CommandClass implements CCId {
 
 		// To determine which value IDs to expose, we need to know the CC version
 		// that we're doing this for
-		const supportedVersion = typeof this.nodeId === "number"
-				&& this.nodeId !== NODE_ID_BROADCAST
-				&& this.nodeId !== NODE_ID_BROADCAST_LR
-			// On singlecast CCs, use the version the node reported support for,
-			? ctx.getSupportedCCVersion(
-				this.ccId,
-				this.nodeId,
-				this.endpointIndex,
-			)
-			// on multicast/broadcast, use the highest version we implement
-			: getImplementedVersion(this.ccId);
+		const supportedVersion =
+			typeof this.nodeId === "number" &&
+			this.nodeId !== NODE_ID_BROADCAST &&
+			this.nodeId !== NODE_ID_BROADCAST_LR
+				? // On singlecast CCs, use the version the node reported support for,
+					ctx.getSupportedCCVersion(
+						this.ccId,
+						this.nodeId,
+						this.endpointIndex,
+					)
+				: // on multicast/broadcast, use the highest version we implement
+					getImplementedVersion(this.ccId);
 
 		// ...or which are statically defined using @ccValues(...)
 		for (const value of Object.values(getCCValues(this) ?? {})) {
@@ -816,8 +778,8 @@ export class CommandClass implements CCId {
 
 			// Skip those values that are only supported in higher versions of the CC
 			if (
-				value.options.minVersion != undefined
-				&& value.options.minVersion > supportedVersion
+				value.options.minVersion != undefined &&
+				value.options.minVersion > supportedVersion
 			) {
 				continue;
 			}
@@ -886,13 +848,14 @@ export class CommandClass implements CCId {
 
 		// To determine which value IDs to expose, we need to know the CC version
 		// that we're doing this for
-		const supportedVersion = ctx.getSupportedCCVersion(
-			this.ccId,
-			// Values are only persisted for singlecast, so we know nodeId is a number
-			this.nodeId as number,
-			this.endpointIndex,
-			// If the version isn't known yet, limit the created values to V1
-		) || 1;
+		const supportedVersion =
+			ctx.getSupportedCCVersion(
+				this.ccId,
+				// Values are only persisted for singlecast, so we know nodeId is a number
+				this.nodeId as number,
+				this.endpointIndex,
+				// If the version isn't known yet, limit the created values to V1
+			) || 1;
 
 		// Get all properties of this CC which are annotated with a @ccValue decorator and store them.
 		for (const [prop, _value] of getCCValueProperties(this)) {
@@ -901,8 +864,8 @@ export class CommandClass implements CCId {
 
 			// Skip those values that are only supported in higher versions of the CC
 			if (
-				value.options.minVersion != undefined
-				&& value.options.minVersion > supportedVersion
+				value.options.minVersion != undefined &&
+				value.options.minVersion > supportedVersion
 			) {
 				continue;
 			}
@@ -911,13 +874,14 @@ export class CommandClass implements CCId {
 			const sourceValue = this[prop as keyof this];
 
 			// Metadata gets created for non-internal values...
-			const createMetadata = !value.options.internal
+			const createMetadata =
+				!value.options.internal &&
 				// ... but only if the value is included in the report we are persisting
-				&& (sourceValue != undefined
+				(sourceValue != undefined ||
 					// ... or if we know which CC version the node supports
 					// and the value may be automatically created
-					|| (supportedVersion >= value.options.minVersion
-						&& this.shouldAutoCreateValue(ctx, value)));
+					(supportedVersion >= value.options.minVersion &&
+						this.shouldAutoCreateValue(ctx, value)));
 
 			if (createMetadata && !valueDB.hasMetadata(valueId)) {
 				valueDB.setMetadata(valueId, value.meta);
@@ -968,8 +932,8 @@ export class CommandClass implements CCId {
 
 		// Evaluate dynamic CC responses
 		if (
-			typeof expected === "function"
-			&& !staticExtends(expected, CommandClass)
+			typeof expected === "function" &&
+			!staticExtends(expected, CommandClass)
 		) {
 			expected = expected(ctx, this);
 		}
@@ -993,8 +957,8 @@ export class CommandClass implements CCId {
 
 		// Evaluate dynamic CC responses
 		if (
-			typeof expected === "function"
-			&& !staticExtends(expected, CommandClass)
+			typeof expected === "function" &&
+			!staticExtends(expected, CommandClass)
 		) {
 			expected = expected(ctx, this);
 		}
@@ -1003,8 +967,8 @@ export class CommandClass implements CCId {
 			// Fallback, should not happen if the expected response is defined correctly
 			return false;
 		} else if (
-			isArray(expected)
-			&& expected.every((cc) => staticExtends(cc, CommandClass))
+			isArray(expected) &&
+			expected.every((cc) => staticExtends(cc, CommandClass))
 		) {
 			// The CC always expects a response from the given list, check if the received
 			// message is in that list
@@ -1022,8 +986,8 @@ export class CommandClass implements CCId {
 
 		if (ret === "checkEncapsulated") {
 			if (
-				isEncapsulatingCommandClass(this)
-				&& isEncapsulatingCommandClass(received)
+				isEncapsulatingCommandClass(this) &&
+				isEncapsulatingCommandClass(received)
 			) {
 				return this.encapsulated.isExpectedCCResponse(
 					ctx,
@@ -1095,8 +1059,8 @@ export class CommandClass implements CCId {
 		while (cc.encapsulatingCC) {
 			cc = cc.encapsulatingCC;
 			if (
-				cc.ccId === ccId
-				&& (ccCommand === undefined || cc.ccCommand === ccCommand)
+				cc.ccId === ccId &&
+				(ccCommand === undefined || cc.ccCommand === ccCommand)
 			) {
 				return true;
 			}
@@ -1113,8 +1077,8 @@ export class CommandClass implements CCId {
 		while (cc.encapsulatingCC) {
 			cc = cc.encapsulatingCC;
 			if (
-				cc.ccId === ccId
-				&& (ccCommand === undefined || cc.ccCommand === ccCommand)
+				cc.ccId === ccId &&
+				(ccCommand === undefined || cc.ccCommand === ccCommand)
 			) {
 				return cc;
 			}
@@ -1127,8 +1091,8 @@ export class CommandClass implements CCId {
 		ccCommand?: number,
 	): CommandClass | undefined {
 		const predicate = (cc: CommandClass): boolean =>
-			cc.ccId === ccId
-			&& (ccCommand === undefined || cc.ccCommand === ccCommand);
+			cc.ccId === ccId &&
+			(ccCommand === undefined || cc.ccCommand === ccCommand);
 
 		if (isEncapsulatingCommandClass(this)) {
 			if (predicate(this.encapsulated)) return this.encapsulated;
@@ -1166,16 +1130,18 @@ export class InvalidCC extends CommandClass {
 	public toLogEntry(_ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			tags: [this.ccName, "INVALID"],
-			message: this.reason != undefined
-				? {
-					error: typeof this.reason === "string"
-						? this.reason
-						: getEnumMemberName(
-							ZWaveErrorCodes,
-							this.reason,
-						),
-				}
-				: undefined,
+			message:
+				this.reason != undefined
+					? {
+							error:
+								typeof this.reason === "string"
+									? this.reason
+									: getEnumMemberName(
+											ZWaveErrorCodes,
+											this.reason,
+										),
+						}
+					: undefined,
 		};
 	}
 }

@@ -160,9 +160,11 @@ import {
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import path from "pathe";
+
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
+
 import { handleApplicationBusy } from "./CCHandlers/ApplicationStatusCC.js";
 import {
 	handleAssociationGet,
@@ -271,13 +273,11 @@ import {
 import { ZWaveNodeMixins } from "./mixins/index.js";
 import * as nodeUtils from "./utils.js";
 
-type AllNodeEvents =
-	& ZWaveNodeEventCallbacks
-	& StatisticsEventCallbacksWithSelf<ZWaveNode, NodeStatistics>;
+type AllNodeEvents = ZWaveNodeEventCallbacks &
+	StatisticsEventCallbacksWithSelf<ZWaveNode, NodeStatistics>;
 
 export interface ZWaveNode
-	extends TypedEventTarget<AllNodeEvents>, NodeStatisticsHost
-{}
+	extends TypedEventTarget<AllNodeEvents>, NodeStatisticsHost {}
 
 /**
  * A ZWaveNode represents a node in a Z-Wave network. It is also an instance
@@ -312,13 +312,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 */
 	public destroy(): void {
 		// Remove all timeouts
-		for (
-			const timeout of [
-				this.centralSceneHandlerStore.keyHeldDownContext?.timeout,
-				...this.notificationHandlerStore.idleTimeouts.values(),
-				...this.soundSwitchHandlerStore.autoResetTimers.values(),
-			]
-		) {
+		for (const timeout of [
+			this.centralSceneHandlerStore.keyHeldDownContext?.timeout,
+			...this.notificationHandlerStore.idleTimeouts.values(),
+			...this.soundSwitchHandlerStore.autoResetTimers.values(),
+		]) {
 			timeout?.clear();
 		}
 
@@ -495,8 +493,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			if (!endpointInstance) {
 				return {
 					status: SetValueStatus.EndpointNotFound,
-					message:
-						`Endpoint ${valueId.endpoint} does not exist on Node ${this.id}`,
+					message: `Endpoint ${valueId.endpoint} does not exist on Node ${this.id}`,
 				};
 			}
 			let api = (endpointInstance.commandClasses as any)[
@@ -506,19 +503,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			if (!api.setValue) {
 				return {
 					status: SetValueStatus.NotImplemented,
-					message: `The ${
-						getCCName(
-							valueId.commandClass,
-						)
-					} CC does not support setting values`,
+					message: `The ${getCCName(
+						valueId.commandClass,
+					)} CC does not support setting values`,
 				};
 			}
 
 			if (loglevel === "silly") {
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: valueId.endpoint,
-					message:
-						`[setValue] calling SET_VALUE API ${api.constructor.name}:
+					message: `[setValue] calling SET_VALUE API ${api.constructor.name}:
   property:     ${valueId.property}
   property key: ${valueId.propertyKey}
   optimistic:   ${api.isSetValueOptimistic(valueId)}`,
@@ -573,8 +567,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			);
 
 			if (loglevel === "silly") {
-				let message =
-					`[setValue] result of SET_VALUE API call for ${api.constructor.name}:`;
+				let message = `[setValue] result of SET_VALUE API call for ${api.constructor.name}:`;
 				if (result) {
 					if (isSupervisionResult(result)) {
 						message += ` (SupervisionResult)
@@ -584,8 +577,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
   duration: ${result.remainingDuration.toString()}`;
 						}
 					} else {
-						message += " (other) "
-							+ JSON.stringify(result, null, 2);
+						message +=
+							" (other) " + JSON.stringify(result, null, 2);
 					}
 				} else {
 					message += " undefined";
@@ -600,38 +593,40 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			// Figure out if optimistic value updates, both for the actual value
 			// and related values, should be performed:
 			// Whether updating optimistically is even an option for this value/API/device
-			const canUpdateOptimistically = api.isSetValueOptimistic(valueId)
+			const canUpdateOptimistically =
+				api.isSetValueOptimistic(valueId) &&
 				// Check if the device class supports optimistic value updates
-				&& (endpointInstance.deviceClass?.specific
-					.supportsOptimisticValueUpdate
-					?? true);
+				(endpointInstance.deviceClass?.specific
+					.supportsOptimisticValueUpdate ??
+					true);
 			// Whether the device has at least started executing the command
 			const supervisedAndAccepted = supervisedCommandSucceeded(result);
 			// Whether the device has completed the command successfully
 			const supervisedAndCompletedSuccessfully =
-				isSupervisionResult(result)
-				&& result.status === SupervisionStatus.Success;
+				isSupervisionResult(result) &&
+				result.status === SupervisionStatus.Success;
 			// For unsupervised commands that did not fail, we let the application decide whether
 			// to update the (related) value optimistically
 			const unsupervisedAndOptimisticValueUpdateEnabled =
-				!this.driver.options.disableOptimisticValueUpdate
-				&& result == undefined;
+				!this.driver.options.disableOptimisticValueUpdate &&
+				result == undefined;
 
 			// The actual value may be updated optimistically once the command has started
 			const shouldUpdateActualValueOptimistically =
-				canUpdateOptimistically
-				&& (supervisedAndAccepted
-					|| unsupervisedAndOptimisticValueUpdateEnabled);
+				canUpdateOptimistically &&
+				(supervisedAndAccepted ||
+					unsupervisedAndOptimisticValueUpdateEnabled);
 			// Related values may only be updated optimistically once the command has completed successfully
 			const shouldUpdateRelatedValuesOptimistically =
-				canUpdateOptimistically
-				&& (supervisedAndCompletedSuccessfully
-					|| unsupervisedAndOptimisticValueUpdateEnabled);
+				canUpdateOptimistically &&
+				(supervisedAndCompletedSuccessfully ||
+					unsupervisedAndOptimisticValueUpdateEnabled);
 
 			// If optimistic value updats are desired, update the value in the value DB now
 			if (shouldUpdateActualValueOptimistically) {
-				const emitEvent = !!result
-					|| !!this.driver.options.emitValueUpdateAfterSetValue;
+				const emitEvent =
+					!!result ||
+					!!this.driver.options.emitValueUpdateAfterSetValue;
 
 				if (loglevel === "silly") {
 					const message = emitEvent
@@ -675,17 +670,18 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 					);
 				}
 
-				const isSlowDeviceClass = endpointInstance.deviceClass?.specific
-					.supportsOptimisticValueUpdate === false;
+				const isSlowDeviceClass =
+					endpointInstance.deviceClass?.specific
+						.supportsOptimisticValueUpdate === false;
 
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
 				//    ... and this is not a slow device class
 				// ...and the CC API decides not to verify anyways
 				if (
-					!supervisedCommandSucceeded(result)
-					|| isSlowDeviceClass
-					|| hooks.forceVerifyChanges?.()
+					!supervisedCommandSucceeded(result) ||
+					isSlowDeviceClass ||
+					hooks.forceVerifyChanges?.()
 				) {
 					// Let the CC API implementation handle the verification.
 					// It may still decide not to do it.
@@ -726,12 +722,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 						endpoint: valueId.endpoint,
 						message: `[setValue] raised ZWaveError (${
 							!!result ? "handled" : "not handled"
-						}, code ${
-							getEnumMemberName(
-								ZWaveErrorCodes,
-								e.code,
-							)
-						}): ${e.message}`,
+						}, code ${getEnumMemberName(
+							ZWaveErrorCodes,
+							e.code,
+						)}): ${e.message}`,
 						level: "silly",
 					});
 				}
@@ -747,8 +741,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 */
 	private handleSetValueSideEffects(valueId: ValueID, value: unknown): void {
 		if (
-			SoundSwitchCCValues.toneId.is(valueId)
-			&& typeof value === "number"
+			SoundSwitchCCValues.toneId.is(valueId) &&
+			typeof value === "number"
 		) {
 			handleSoundSwitchSetValue(
 				this.driver,
@@ -805,11 +799,9 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		// Check if the pollValue method is implemented
 		if (!api.pollValue) {
 			throw new ZWaveError(
-				`The pollValue API is not implemented for CC ${
-					getCCName(
-						valueId.commandClass,
-					)
-				}!`,
+				`The pollValue API is not implemented for CC ${getCCName(
+					valueId.commandClass,
+				)}!`,
 				ZWaveErrorCodes.CC_NoAPI,
 			);
 		}
@@ -882,10 +874,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		let didWakeUp = false;
 		const wasAwake = this.status === NodeStatus.Awake;
 		if (
-			waitForWakeup
-			&& this.canSleep
-			&& !wasAwake
-			&& this.supportsCC(CommandClasses["Wake Up"])
+			waitForWakeup &&
+			this.canSleep &&
+			!wasAwake &&
+			this.supportsCC(CommandClasses["Wake Up"])
 		) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -904,13 +896,13 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		const preservedValues: (ValueID & { value: unknown })[] = [];
 		const preservedMetadata: (ValueID & { metadata: ValueMetadata })[] = [];
 		if (
-			this.supportsCC(CommandClasses["User Code"])
-			&& !this.driver.options.interview.queryAllUserCodes
+			this.supportsCC(CommandClasses["User Code"]) &&
+			!this.driver.options.interview.queryAllUserCodes
 		) {
 			const mustBackup = (v: ValueID) =>
-				UserCodeCCValues.userCode.is(v)
-				|| UserCodeCCValues.userIdStatus.is(v)
-				|| UserCodeCCValues.userCodeChecksum.is(v);
+				UserCodeCCValues.userCode.is(v) ||
+				UserCodeCCValues.userIdStatus.is(v) ||
+				UserCodeCCValues.userCodeChecksum.is(v);
 
 			const values = this.valueDB
 				.getValues(CommandClasses["User Code"])
@@ -1040,11 +1032,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		if (!this.isControllerNode) {
 			if (
-				(this.isListening || this.isFrequentListening)
-				&& this.status !== NodeStatus.Alive
+				(this.isListening || this.isFrequentListening) &&
+				this.status !== NodeStatus.Alive
 			) {
 				// Ping non-sleeping nodes to determine their status
-				if (!await this.ping()) {
+				if (!(await this.ping())) {
 					// Not alive, abort the interview
 					return false;
 				}
@@ -1071,10 +1063,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		}
 
 		if (
-			(this.isControllerNode
-				&& this.interviewStage === InterviewStage.ProtocolInfo)
-			|| (!this.isControllerNode
-				&& this.interviewStage === InterviewStage.CommandClasses)
+			(this.isControllerNode &&
+				this.interviewStage === InterviewStage.ProtocolInfo) ||
+			(!this.isControllerNode &&
+				this.interviewStage === InterviewStage.CommandClasses)
 		) {
 			// Load a config file for this node if it exists and overwrite the previously reported information
 			await this.overwriteConfig();
@@ -1136,9 +1128,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		);
 
 		const logMessage = `received response for protocol info:
-basic device class:    ${
-			getEnumMemberName(BasicDeviceClass, this.deviceClass.basic)
-		}
+basic device class:    ${getEnumMemberName(
+			BasicDeviceClass,
+			this.deviceClass.basic,
+		)}
 generic device class:  ${this.deviceClass.generic.label}
 specific device class: ${this.deviceClass.specific.label}
 node type:             ${getEnumMemberName(NodeType, this.nodeType)}
@@ -1251,10 +1244,10 @@ protocol version:      ${this.protocolVersion}`;
 			} catch (e) {
 				if (isZWaveError(e)) {
 					if (
-						attempts === 1
-						&& this.canSleep
-						&& this.status !== NodeStatus.Asleep
-						&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
+						attempts === 1 &&
+						this.canSleep &&
+						this.status !== NodeStatus.Asleep &&
+						e.code === ZWaveErrorCodes.Controller_CallbackNOK
 					) {
 						this.driver.controllerLog.logNode(
 							this.id,
@@ -1268,8 +1261,8 @@ protocol version:      ${this.protocolVersion}`;
 					}
 
 					if (
-						e.code === ZWaveErrorCodes.Controller_ResponseNOK
-						|| e.code === ZWaveErrorCodes.Controller_CallbackNOK
+						e.code === ZWaveErrorCodes.Controller_ResponseNOK ||
+						e.code === ZWaveErrorCodes.Controller_CallbackNOK
 					) {
 						this.driver.controllerLog.logNode(
 							this.id,
@@ -1353,8 +1346,8 @@ protocol version:      ${this.protocolVersion}`;
 				}
 			} catch (e) {
 				if (
-					isZWaveError(e)
-					&& e.code === ZWaveErrorCodes.CC_NotSupported
+					isZWaveError(e) &&
+					e.code === ZWaveErrorCodes.CC_NotSupported
 				) {
 					// The CC is no longer supported. This can happen if the node tells us
 					// something different in the Version interview than it did in its NIF
@@ -1364,19 +1357,17 @@ protocol version:      ${this.protocolVersion}`;
 				throw e;
 			}
 			if (
-				endpoint.isCCSecure(cc)
-				&& !this.driver.securityManager
-				&& !securityManager2
+				endpoint.isCCSecure(cc) &&
+				!this.driver.securityManager &&
+				!securityManager2
 			) {
 				// The CC is only supported securely, but the network key is not set up
 				// Skip the CC
 				this.driver.controllerLog.logNode(
 					this.id,
-					`Skipping interview for secure CC ${
-						getCCName(
-							cc,
-						)
-					} because no network key is configured!`,
+					`Skipping interview for secure CC ${getCCName(
+						cc,
+					)} because no network key is configured!`,
 					"error",
 				);
 				return "continue";
@@ -1406,8 +1397,8 @@ protocol version:      ${this.protocolVersion}`;
 			// Query supported CCs unless we know for sure that the node wasn't assigned a S2 security class
 			const securityClass = this.getHighestSecurityClass();
 			if (
-				securityClass == undefined
-				|| securityClassIsS2(securityClass)
+				securityClass == undefined ||
+				securityClassIsS2(securityClass)
 			) {
 				this.driver.controllerLog.logNode(
 					this.id,
@@ -1418,8 +1409,7 @@ protocol version:      ${this.protocolVersion}`;
 				if (!securityManager2) {
 					if (!this._hasEmittedNoS2NetworkKeyError) {
 						// Cannot interview a secure device securely without a network key
-						const errorMessage =
-							`supports Security S2, but no S2 network keys were configured. The interview might not include all functionality.`;
+						const errorMessage = `supports Security S2, but no S2 network keys were configured. The interview might not include all functionality.`;
 						this.driver.controllerLog.logNode(
 							this.id,
 							errorMessage,
@@ -1428,14 +1418,10 @@ protocol version:      ${this.protocolVersion}`;
 						this.driver.emit(
 							"error",
 							new ZWaveError(
-								`Node ${
-									this.id.toString().padStart(
-										3,
-										"0",
-									)
-								} ${errorMessage}`,
-								ZWaveErrorCodes
-									.Controller_NodeInsecureCommunication,
+								`Node ${this.id
+									.toString()
+									.padStart(3, "0")} ${errorMessage}`,
+								ZWaveErrorCodes.Controller_NodeInsecureCommunication,
 							),
 						);
 						this._hasEmittedNoS2NetworkKeyError = true;
@@ -1450,13 +1436,11 @@ protocol version:      ${this.protocolVersion}`;
 			}
 		} else {
 			// If there is any doubt about granted S2 security classes, we now know they are not granted
-			for (
-				const secClass of [
-					SecurityClass.S2_AccessControl,
-					SecurityClass.S2_Authenticated,
-					SecurityClass.S2_Unauthenticated,
-				] as const
-			) {
+			for (const secClass of [
+				SecurityClass.S2_AccessControl,
+				SecurityClass.S2_Authenticated,
+				SecurityClass.S2_Unauthenticated,
+			] as const) {
 				if (this.hasSecurityClass(secClass) === NOT_KNOWN) {
 					this.securityClasses.set(secClass, false);
 				}
@@ -1478,8 +1462,7 @@ protocol version:      ${this.protocolVersion}`;
 				if (!this.driver.securityManager) {
 					if (!this._hasEmittedNoS0NetworkKeyError) {
 						// Cannot interview a secure device securely without a network key
-						const errorMessage =
-							`supports Security S0, but the S0 network key was not configured. The interview might not include all functionality.`;
+						const errorMessage = `supports Security S0, but the S0 network key was not configured. The interview might not include all functionality.`;
 						this.driver.controllerLog.logNode(
 							this.id,
 							errorMessage,
@@ -1488,14 +1471,10 @@ protocol version:      ${this.protocolVersion}`;
 						this.driver.emit(
 							"error",
 							new ZWaveError(
-								`Node ${
-									this.id.toString().padStart(
-										3,
-										"0",
-									)
-								} ${errorMessage}`,
-								ZWaveErrorCodes
-									.Controller_NodeInsecureCommunication,
+								`Node ${this.id
+									.toString()
+									.padStart(3, "0")} ${errorMessage}`,
+								ZWaveErrorCodes.Controller_NodeInsecureCommunication,
 							),
 						);
 						this._hasEmittedNoS0NetworkKeyError = true;
@@ -1558,9 +1537,9 @@ protocol version:      ${this.protocolVersion}`;
 
 			for (const [ccId, info] of this.getCCs()) {
 				if (
-					info.isSupported
+					info.isSupported ||
 					// The support status of Basic CC is not known yet at this point
-					|| ccId === CommandClasses.Basic
+					ccId === CommandClasses.Basic
 				) {
 					this.addCC(ccId, { version: getImplementedVersion(ccId) });
 				}
@@ -1627,21 +1606,17 @@ protocol version:      ${this.protocolVersion}`;
 
 		this.driver.controllerLog.logNode(
 			this.id,
-			`Root device interviews before endpoints: ${
-				rootInterviewOrderBeforeEndpoints
-					.map((cc) => `\n· ${getCCName(cc)}`)
-					.join("")
-			}`,
+			`Root device interviews before endpoints: ${rootInterviewOrderBeforeEndpoints
+				.map((cc) => `\n· ${getCCName(cc)}`)
+				.join("")}`,
 			"silly",
 		);
 
 		this.driver.controllerLog.logNode(
 			this.id,
-			`Root device interviews after endpoints: ${
-				rootInterviewOrderAfterEndpoints
-					.map((cc) => `\n· ${getCCName(cc)}`)
-					.join("")
-			}`,
+			`Root device interviews after endpoints: ${rootInterviewOrderAfterEndpoints
+				.map((cc) => `\n· ${getCCName(cc)}`)
+				.join("")}`,
 			"silly",
 		);
 
@@ -1679,9 +1654,10 @@ protocol version:      ${this.protocolVersion}`;
 
 			// This means we need to explicitly add S2 to the list of supported CCs of the endpoint, if the node is using S2.
 			// Otherwise the communication will incorrectly use no encryption.
-			const endpointMissingS2 = securityClassIsS2(securityClass)
-				&& this.supportsCC(CommandClasses["Security 2"])
-				&& !endpoint.supportsCC(CommandClasses["Security 2"]);
+			const endpointMissingS2 =
+				securityClassIsS2(securityClass) &&
+				this.supportsCC(CommandClasses["Security 2"]) &&
+				!endpoint.supportsCC(CommandClasses["Security 2"]);
 			if (endpointMissingS2) {
 				endpoint.addCC(
 					CommandClasses["Security 2"],
@@ -1698,14 +1674,10 @@ protocol version:      ${this.protocolVersion}`;
 				endpoint.addCC(CommandClasses["Security 2"], { secure: true });
 
 				// If S2 is the highest security class, interview it for the endpoint
-				if (
-					securityClassIsS2(securityClass)
-					&& !!securityManager2
-				) {
+				if (securityClassIsS2(securityClass) && !!securityManager2) {
 					this.driver.controllerLog.logNode(this.id, {
 						endpoint: endpoint.index,
-						message:
-							`Endpoint ${endpoint.index} interview: Security S2`,
+						message: `Endpoint ${endpoint.index} interview: Security S2`,
 						level: "silly",
 					});
 
@@ -1723,13 +1695,12 @@ protocol version:      ${this.protocolVersion}`;
 
 				// If S0 is the highest security class, interview it for the endpoint
 				if (
-					securityClass === SecurityClass.S0_Legacy
-					&& !!this.driver.securityManager
+					securityClass === SecurityClass.S0_Legacy &&
+					!!this.driver.securityManager
 				) {
 					this.driver.controllerLog.logNode(this.id, {
 						endpoint: endpoint.index,
-						message:
-							`Endpoint ${endpoint.index} interview: Security S0`,
+						message: `Endpoint ${endpoint.index} interview: Security S0`,
 						level: "silly",
 					});
 
@@ -1746,9 +1717,10 @@ protocol version:      ${this.protocolVersion}`;
 			// A controlling node SHOULD try to control End Points with S0 encapsulation even if S0 is not
 			// listed in the Multi Channel Capability Report.
 
-			const endpointMissingS0 = securityClass === SecurityClass.S0_Legacy
-				&& this.supportsCC(CommandClasses.Security)
-				&& !endpoint.supportsCC(CommandClasses.Security);
+			const endpointMissingS0 =
+				securityClass === SecurityClass.S0_Legacy &&
+				this.supportsCC(CommandClasses.Security) &&
+				!endpoint.supportsCC(CommandClasses.Security);
 
 			if (endpointMissingS0) {
 				// Define which CCs we can use to test this - and if supported, how
@@ -1786,13 +1758,12 @@ protocol version:      ${this.protocolVersion}`;
 				];
 
 				const foundTest = possibleTests.find((t) =>
-					endpoint.supportsCC(t.ccId)
+					endpoint.supportsCC(t.ccId),
 				);
 				if (foundTest) {
 					this.driver.controllerLog.logNode(this.id, {
 						endpoint: endpoint.index,
-						message:
-							`is included using Security S0, but endpoint ${endpoint.index} does not list the CC. Testing if it accepts secure commands anyways.`,
+						message: `is included using Security S0, but endpoint ${endpoint.index} does not list the CC. Testing if it accepts secure commands anyways.`,
 						level: "silly",
 					});
 
@@ -1807,8 +1778,7 @@ protocol version:      ${this.protocolVersion}`;
 					if (success) {
 						this.driver.controllerLog.logNode(this.id, {
 							endpoint: endpoint.index,
-							message:
-								`Endpoint ${endpoint.index} accepts/expects secure commands`,
+							message: `Endpoint ${endpoint.index} accepts/expects secure commands`,
 							level: "silly",
 						});
 						// Mark all endpoint CCs as secure
@@ -1818,8 +1788,7 @@ protocol version:      ${this.protocolVersion}`;
 					} else {
 						this.driver.controllerLog.logNode(this.id, {
 							endpoint: endpoint.index,
-							message:
-								`Endpoint ${endpoint.index} is actually not using S0`,
+							message: `Endpoint ${endpoint.index} is actually not using S0`,
 							level: "silly",
 						});
 						// Mark the CC as not secure again
@@ -1828,8 +1797,7 @@ protocol version:      ${this.protocolVersion}`;
 				} else {
 					this.driver.controllerLog.logNode(this.id, {
 						endpoint: endpoint.index,
-						message:
-							`is included using Security S0, but endpoint ${endpoint.index} does not list the CC. Found no way to test if accepts secure commands anyways.`,
+						message: `is included using Security S0, but endpoint ${endpoint.index} does not list the CC. Found no way to test if accepts secure commands anyways.`,
 						level: "silly",
 					});
 				}
@@ -1841,11 +1809,9 @@ protocol version:      ${this.protocolVersion}`;
 			if (this.supportsCC(CommandClasses.Version)) {
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: endpoint.index,
-					message: `Endpoint ${endpoint.index} interview: ${
-						getCCName(
-							CommandClasses.Version,
-						)
-					}`,
+					message: `Endpoint ${endpoint.index} interview: ${getCCName(
+						CommandClasses.Version,
+					)}`,
 					level: "silly",
 				});
 
@@ -1865,9 +1831,9 @@ protocol version:      ${this.protocolVersion}`;
 
 				for (const [ccId, info] of endpoint.getCCs()) {
 					if (
-						info.isSupported
+						info.isSupported ||
 						// The support status of Basic CC is not known yet at this point
-						|| ccId === CommandClasses.Basic
+						ccId === CommandClasses.Basic
 					) {
 						endpoint.addCC(ccId, {
 							version: getImplementedVersion(ccId),
@@ -1904,11 +1870,9 @@ protocol version:      ${this.protocolVersion}`;
 
 			this.driver.controllerLog.logNode(this.id, {
 				endpoint: endpoint.index,
-				message: `Endpoint ${endpoint.index} interview order: ${
-					endpointInterviewOrder
-						.map((cc) => `\n· ${getCCName(cc)}`)
-						.join("")
-				}`,
+				message: `Endpoint ${endpoint.index} interview order: ${endpointInterviewOrder
+					.map((cc) => `\n· ${getCCName(cc)}`)
+					.join("")}`,
 				level: "silly",
 			});
 
@@ -1916,11 +1880,9 @@ protocol version:      ${this.protocolVersion}`;
 			for (const cc of endpointInterviewOrder) {
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: endpoint.index,
-					message: `Endpoint ${endpoint.index} interview: ${
-						getCCName(
-							cc,
-						)
-					}`,
+					message: `Endpoint ${endpoint.index} interview: ${getCCName(
+						cc,
+					)}`,
 					level: "silly",
 				});
 
@@ -1947,12 +1909,12 @@ protocol version:      ${this.protocolVersion}`;
 		// First on the root device
 		const compat = this.deviceConfig?.compat;
 		if (
-			!this.wasCCRemovedViaConfig(CommandClasses.Basic)
-			&& this.getCCVersion(CommandClasses.Basic) > 0
+			!this.wasCCRemovedViaConfig(CommandClasses.Basic) &&
+			this.getCCVersion(CommandClasses.Basic) > 0
 		) {
 			if (
-				this.wasCCSupportAddedViaConfig(CommandClasses.Basic)
-				|| this.maySupportBasicCC()
+				this.wasCCSupportAddedViaConfig(CommandClasses.Basic) ||
+				this.maySupportBasicCC()
 			) {
 				// Either the device probably supports Basic CC and is allowed to.
 				// Or we force-added support through a config file.
@@ -1972,8 +1934,8 @@ protocol version:      ${this.protocolVersion}`;
 			} else {
 				// Consider the device to control Basic CC, but only if we want to expose the currentValue
 				if (
-					compat?.mapBasicReport === false
-					|| compat?.mapBasicSet === "report"
+					compat?.mapBasicReport === false ||
+					compat?.mapBasicSet === "report"
 				) {
 					// TODO: Figure out if we need to consider mapBasicSet === "auto" in the case where it falls back to Basic CC currentValue
 					this.addCC(CommandClasses.Basic, { isControlled: true });
@@ -1989,8 +1951,8 @@ protocol version:      ${this.protocolVersion}`;
 			if (endpoint.getCCVersion(CommandClasses.Basic) === 0) continue;
 
 			if (
-				endpoint.wasCCSupportAddedViaConfig(CommandClasses.Basic)
-				|| endpoint.maySupportBasicCC()
+				endpoint.wasCCSupportAddedViaConfig(CommandClasses.Basic) ||
+				endpoint.maySupportBasicCC()
 			) {
 				// The endpoint probably supports Basic CC and is allowed to.
 				// Or we force-added support through a config file.
@@ -2010,8 +1972,8 @@ protocol version:      ${this.protocolVersion}`;
 			} else {
 				// Consider the device to control Basic CC, but only if we want to expose the currentValue
 				if (
-					compat?.mapBasicReport === false
-					|| compat?.mapBasicSet === "report"
+					compat?.mapBasicReport === false ||
+					compat?.mapBasicSet === "report"
 				) {
 					// TODO: Figure out if we need to consider mapBasicSet === "auto" in the case where it falls back to Basic CC currentValue
 					endpoint.addCC(CommandClasses.Basic, {
@@ -2050,21 +2012,20 @@ protocol version:      ${this.protocolVersion}`;
 		// message whenever there's an update and want to be polled.
 		// We do this unless we know for certain that the device sends unsolicited reports for its actuator or sensor CCs
 		if (
-			this.interviewStage === InterviewStage.Complete
-			&& !this.supportsCC(CommandClasses["Z-Wave Plus Info"])
-			&& (!this.valueDB.getValue(AssociationCCValues.hasLifeline.id)
-				|| !ccUtils.doesAnyLifelineSendActuatorOrSensorReports(
+			this.interviewStage === InterviewStage.Complete &&
+			!this.supportsCC(CommandClasses["Z-Wave Plus Info"]) &&
+			(!this.valueDB.getValue(AssociationCCValues.hasLifeline.id) ||
+				!ccUtils.doesAnyLifelineSendActuatorOrSensorReports(
 					this.driver,
 					this,
 				))
 		) {
-			const delay = this.deviceConfig?.compat?.manualValueRefreshDelayMs
-				|| 0;
+			const delay =
+				this.deviceConfig?.compat?.manualValueRefreshDelayMs || 0;
 			this.driver.controllerLog.logNode(this.id, {
-				message:
-					`Node does not send unsolicited updates; refreshing actuator and sensor values${
-						delay > 0 ? ` in ${delay} ms` : ""
-					}...`,
+				message: `Node does not send unsolicited updates; refreshing actuator and sensor values${
+					delay > 0 ? ` in ${delay} ms` : ""
+				}...`,
 			});
 			setTimeout(() => this.refreshValues(), delay);
 		}
@@ -2088,9 +2049,9 @@ protocol version:      ${this.protocolVersion}`;
 				} catch (e) {
 					this.driver.controllerLog.logNode(
 						this.id,
-						`failed to interview CC ${
-							getCCName(cc)
-						}, endpoint ${endpoint.index}: ${getErrorMessage(e)}`,
+						`failed to interview CC ${getCCName(
+							cc,
+						)}, endpoint ${endpoint.index}: ${getErrorMessage(e)}`,
 						"error",
 					);
 				}
@@ -2111,11 +2072,9 @@ protocol version:      ${this.protocolVersion}`;
 				} catch (e) {
 					this.driver.controllerLog.logNode(
 						this.id,
-						`failed to refresh values for ${
-							getCCName(
-								cc,
-							)
-						}, endpoint ${endpoint.index}: ${getErrorMessage(e)}`,
+						`failed to refresh values for ${getCCName(
+							cc,
+						)}, endpoint ${endpoint.index}: ${getErrorMessage(e)}`,
 						"error",
 					);
 				}
@@ -2132,8 +2091,8 @@ protocol version:      ${this.protocolVersion}`;
 			for (const cc of endpoint.getSupportedCCInstances()) {
 				// Only query actuator and sensor CCs
 				if (
-					!actuatorCCs.includes(cc.ccId)
-					&& !sensorCCs.includes(cc.ccId)
+					!actuatorCCs.includes(cc.ccId) &&
+					!sensorCCs.includes(cc.ccId)
 				) {
 					continue;
 				}
@@ -2142,11 +2101,9 @@ protocol version:      ${this.protocolVersion}`;
 				} catch (e) {
 					this.driver.controllerLog.logNode(
 						this.id,
-						`failed to refresh values for ${
-							getCCName(
-								cc.ccId,
-							)
-						}, endpoint ${endpoint.index}: ${getErrorMessage(e)}`,
+						`failed to refresh values for ${getCCName(
+							cc.ccId,
+						)}, endpoint ${endpoint.index}: ${getErrorMessage(e)}`,
 						"error",
 					);
 				}
@@ -2163,20 +2120,13 @@ protocol version:      ${this.protocolVersion}`;
 		if (this.status === NodeStatus.Dead) return;
 
 		for (const endpoint of this.getAllEndpoints()) {
-			for (
-				const cc of endpoint
-					.getSupportedCCInstances() as readonly SinglecastCC<
-						CommandClass
-					>[]
-			) {
+			for (const cc of endpoint.getSupportedCCInstances() as readonly SinglecastCC<CommandClass>[]) {
 				if (!cc.shouldRefreshValues(this.driver)) continue;
 
 				this.driver.controllerLog.logNode(this.id, {
-					message: `${
-						getCCName(
-							cc.ccId,
-						)
-					} CC values may be stale, refreshing...`,
+					message: `${getCCName(
+						cc.ccId,
+					)} CC values may be stale, refreshing...`,
 					endpoint: endpoint.index,
 					direction: "outbound",
 				});
@@ -2185,11 +2135,9 @@ protocol version:      ${this.protocolVersion}`;
 					await cc.refreshValues(this.driver);
 				} catch (e) {
 					this.driver.controllerLog.logNode(this.id, {
-						message: `failed to refresh values for ${
-							getCCName(
-								cc.ccId,
-							)
-						} CC: ${getErrorMessage(e)}`,
+						message: `failed to refresh values for ${getCCName(
+							cc.ccId,
+						)} CC: ${getErrorMessage(e)}`,
 						endpoint: endpoint.index,
 						level: "error",
 					});
@@ -2257,8 +2205,8 @@ protocol version:      ${this.protocolVersion}`;
 		// Multilevel Switch Command Class for a node (or endpoint) supporting the Window Covering CC, as it is a fully
 		// redundant and less precise application functionality.
 		if (
-			endpoint.supportsCC(CommandClasses["Multilevel Switch"])
-			&& endpoint.supportsCC(CommandClasses["Window Covering"])
+			endpoint.supportsCC(CommandClasses["Multilevel Switch"]) &&
+			endpoint.supportsCC(CommandClasses["Window Covering"])
 		) {
 			endpoint.removeCC(CommandClasses["Multilevel Switch"]);
 		}
@@ -2319,11 +2267,11 @@ protocol version:      ${this.protocolVersion}`;
 		// we need to map it to endpoint 1. Either it does not support multi channel associations or
 		// it is misbehaving. In any case, we would hide this report if we didn't map it
 		if (
-			command.endpointIndex === 0
-			&& command.constructor.name.endsWith("Report")
-			&& this.getEndpointCount() >= 1
+			command.endpointIndex === 0 &&
+			command.constructor.name.endsWith("Report") &&
+			this.getEndpointCount() >= 1 &&
 			// Only map reports from the root device to an endpoint if we know which one
-			&& this.deviceConfig?.compat?.mapRootReportsToEndpoint != undefined
+			this.deviceConfig?.compat?.mapRootReportsToEndpoint != undefined
 		) {
 			const endpoint = this.getEndpoint(
 				this.deviceConfig?.compat?.mapRootReportsToEndpoint,
@@ -2341,10 +2289,10 @@ protocol version:      ${this.protocolVersion}`;
 
 		// If we're being queried by another node, treat this as a sign that the other node is awake
 		if (
-			command.constructor.name.endsWith("Get")
+			command.constructor.name.endsWith("Get") &&
 			// Nonces can be sent while asleep though
-			&& !(command instanceof SecurityCCNonceGet)
-			&& !(command instanceof Security2CCNonceGet)
+			!(command instanceof SecurityCCNonceGet) &&
+			!(command instanceof Security2CCNonceGet)
 		) {
 			this.markAsAwake();
 		}
@@ -2352,15 +2300,11 @@ protocol version:      ${this.protocolVersion}`;
 		// If the received CC was force-removed via config file, ignore it completely
 		const endpoint = this.getEndpoint(command.endpointIndex);
 		if (endpoint?.wasCCRemovedViaConfig(command.ccId)) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				{
-					endpoint: endpoint.index,
-					direction: "inbound",
-					message:
-						`Ignoring ${command.constructor.name} because CC support was removed via config file`,
-				},
-			);
+			this.driver.controllerLog.logNode(this.id, {
+				endpoint: endpoint.index,
+				direction: "inbound",
+				message: `Ignoring ${command.constructor.name} because CC support was removed via config file`,
+			});
 			return;
 		}
 
@@ -2542,11 +2486,7 @@ protocol version:      ${this.protocolVersion}`;
 				command,
 			);
 		} else if (command instanceof IndicatorCCSupportedGet) {
-			return handleIndicatorSupportedGet(
-				this.driver,
-				this,
-				command,
-			);
+			return handleIndicatorSupportedGet(this.driver, this, command);
 		} else if (command instanceof IndicatorCCSet) {
 			return handleIndicatorSet(
 				this.driver,
@@ -2562,11 +2502,7 @@ protocol version:      ${this.protocolVersion}`;
 				command,
 			);
 		} else if (command instanceof IndicatorCCDescriptionGet) {
-			return handleIndicatorDescriptionGet(
-				this.driver,
-				this,
-				command,
-			);
+			return handleIndicatorDescriptionGet(this.driver, this, command);
 		} else if (command instanceof PowerlevelCCSet) {
 			return handlePowerlevelSet(this.driver, this, command);
 		} else if (command instanceof PowerlevelCCGet) {
@@ -2748,23 +2684,23 @@ protocol version:      ${this.protocolVersion}`;
 			const report = await this.driver
 				.waitForCommand<PowerlevelCCTestNodeReport>(
 					(cc) =>
-						cc.nodeId === this.id
-						&& cc instanceof PowerlevelCCTestNodeReport,
+						cc.nodeId === this.id &&
+						cc instanceof PowerlevelCCTestNodeReport,
 					pollFrequencyMs,
 				)
 				.catch(() => undefined);
 
 			const status = report
 				? pick(report, ["status", "acknowledgedFrames"])
-				// If it didn't come in the wait time, poll for an update
-				: await api.getNodeTestStatus().catch(() => undefined);
+				: // If it didn't come in the wait time, poll for an update
+					await api.getNodeTestStatus().catch(() => undefined);
 
 			// Safeguard against infinite loop:
 			// If we didn't get a result, or there was no progress, try again next iteration
 			if (
-				!status
-				|| (status.status === PowerlevelTestStatus["In Progress"]
-					&& status.acknowledgedFrames === previousProgress)
+				!status ||
+				(status.status === PowerlevelTestStatus["In Progress"] &&
+					status.acknowledgedFrames === previousProgress)
 			) {
 				if (continuousErrors > 5) return result(0);
 				continuousErrors++;
@@ -2935,10 +2871,9 @@ protocol version:      ${this.protocolVersion}`;
 			// Determine the number of repeating neighbors for Z-Wave Classic
 			let numNeighbors: number | undefined;
 			if (this.protocol === Protocols.ZWave) {
-				numNeighbors = (await this.driver.controller.getNodeNeighbors(
-					this.id,
-					true,
-				)).length;
+				numNeighbors = (
+					await this.driver.controller.getNodeNeighbors(this.id, true)
+				).length;
 			}
 
 			// Ping the node 10x, measuring the RSSI
@@ -2953,8 +2888,8 @@ protocol version:      ${this.protocolVersion}`;
 				// Don't change the node status when the ACK is missing. We're likely testing the limits here.
 				changeNodeStatusOnMissingACK: false,
 				// Avoid using explorer frames, because they can create a ton of delay
-				transmitOptions: TransmitOptions.ACK
-					| TransmitOptions.AutoRoute,
+				transmitOptions:
+					TransmitOptions.ACK | TransmitOptions.AutoRoute,
 				// And remember the transmit report, so we can evaluate it
 				onTXReport: (report) => {
 					txReport = report;
@@ -2985,20 +2920,20 @@ protocol version:      ${this.protocolVersion}`;
 					}
 
 					if (
-						txReport.ackRSSI != undefined
-						&& !isRssiError(txReport.ackRSSI)
+						txReport.ackRSSI != undefined &&
+						!isRssiError(txReport.ackRSSI)
 					) {
 						// If possible, determine the SNR margin from the report
 						if (
-							txReport.measuredNoiseFloor != undefined
-							&& !isRssiError(txReport.measuredNoiseFloor)
+							txReport.measuredNoiseFloor != undefined &&
+							!isRssiError(txReport.measuredNoiseFloor)
 						) {
-							const currentSNRMargin = txReport.ackRSSI
-								- txReport.measuredNoiseFloor;
+							const currentSNRMargin =
+								txReport.ackRSSI - txReport.measuredNoiseFloor;
 							// And remember it if it's the lowest we've seen so far
 							if (
-								snrMargin == undefined
-								|| currentSNRMargin < snrMargin
+								snrMargin == undefined ||
+								currentSNRMargin < snrMargin
 							) {
 								snrMargin = currentSNRMargin;
 							}
@@ -3015,13 +2950,13 @@ protocol version:      ${this.protocolVersion}`;
 			// If possible, compute the SNR margin from the test results,
 			// unless it could already be determined from the transmit reports
 			if (
-				snrMargin == undefined
-				&& rssi != undefined
-				&& rssi < RssiError.NoSignalDetected
-				&& channel != undefined
+				snrMargin == undefined &&
+				rssi != undefined &&
+				rssi < RssiError.NoSignalDetected &&
+				channel != undefined
 			) {
-				const backgroundRSSI = await this.driver.controller
-					.getBackgroundRSSI();
+				const backgroundRSSI =
+					await this.driver.controller.getBackgroundRSSI();
 				if (`rssiChannel${channel}` in backgroundRSSI) {
 					const bgRSSI = (backgroundRSSI as any)[
 						`rssiChannel${channel}`
@@ -3062,12 +2997,10 @@ protocol version:      ${this.protocolVersion}`;
 
 					this.driver.controllerLog.logNode(
 						this.id,
-						`Sending ${healthCheckTestFrameCount} pings to controller at ${
-							getEnumMemberName(
-								Powerlevel,
-								powerlevel,
-							)
-						}...`,
+						`Sending ${healthCheckTestFrameCount} pings to controller at ${getEnumMemberName(
+							Powerlevel,
+							powerlevel,
+						)}...`,
 					);
 					const result = await this.testPowerlevel(
 						this.driver.controller.ownNodeId!,
@@ -3077,12 +3010,10 @@ protocol version:      ${this.protocolVersion}`;
 					failedPingsController = healthCheckTestFrameCount - result;
 					this.driver.controllerLog.logNode(
 						this.id,
-						`At ${
-							getEnumMemberName(
-								Powerlevel,
-								powerlevel,
-							)
-						}, ${result}/${healthCheckTestFrameCount} pings were acknowledged...`,
+						`At ${getEnumMemberName(
+							Powerlevel,
+							powerlevel,
+						)}, ${result}/${healthCheckTestFrameCount} pings were acknowledged...`,
 					);
 
 					// Wait a second for things to settle down
@@ -3107,8 +3038,8 @@ protocol version:      ${this.protocolVersion}`;
 					}
 				} catch (e) {
 					if (
-						isZWaveError(e)
-						&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
+						isZWaveError(e) &&
+						e.code === ZWaveErrorCodes.Controller_CallbackNOK
 					) {
 						// The node is dead, treat this as a failure
 						ret.minPowerlevel = Powerlevel["Normal Power"];
@@ -3211,16 +3142,16 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		} else if (
-			this.canSleep
-			&& !this.supportsCC(CommandClasses.Powerlevel)
+			this.canSleep &&
+			!this.supportsCC(CommandClasses.Powerlevel)
 		) {
 			throw new ZWaveError(
 				"For a route health check, nodes which can sleep must support Powerlevel CC!",
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		} else if (
-			!this.supportsCC(CommandClasses.Powerlevel)
-			&& !otherNode.supportsCC(CommandClasses.Powerlevel)
+			!this.supportsCC(CommandClasses.Powerlevel) &&
+			!otherNode.supportsCC(CommandClasses.Powerlevel)
 		) {
 			throw new ZWaveError(
 				"For a route health check, at least one of the nodes must support Powerlevel CC!",
@@ -3301,12 +3232,8 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 			// Determine the minimum number of repeating neighbors between the
 			// source and target node
 			const numNeighbors = Math.min(
-				(
-					await this.driver.controller.getNodeNeighbors(
-						this.id,
-						true,
-					)
-				).length,
+				(await this.driver.controller.getNodeNeighbors(this.id, true))
+					.length,
 				(
 					await this.driver.controller.getNodeNeighbors(
 						targetNodeId,
@@ -3328,9 +3255,10 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 
 					this.driver.controllerLog.logNode(
 						node.id,
-						`Sending ${healthCheckTestFrameCount} pings to node ${otherNode.id} at ${
-							getEnumMemberName(Powerlevel, powerlevel)
-						}...`,
+						`Sending ${healthCheckTestFrameCount} pings to node ${otherNode.id} at ${getEnumMemberName(
+							Powerlevel,
+							powerlevel,
+						)}...`,
 					);
 					const result = await node.testPowerlevel(
 						otherNode.id,
@@ -3340,12 +3268,10 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 					failedPings = healthCheckTestFrameCount - result;
 					this.driver.controllerLog.logNode(
 						node.id,
-						`At ${
-							getEnumMemberName(
-								Powerlevel,
-								powerlevel,
-							)
-						}, ${result}/${healthCheckTestFrameCount} pings were acknowledged by node ${otherNode.id}...`,
+						`At ${getEnumMemberName(
+							Powerlevel,
+							powerlevel,
+						)}, ${result}/${healthCheckTestFrameCount} pings were acknowledged by node ${otherNode.id}...`,
 					);
 
 					// Wait a second for things to settle down
@@ -3377,8 +3303,8 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 					}
 				} catch (e) {
 					if (
-						isZWaveError(e)
-						&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
+						isZWaveError(e) &&
+						e.code === ZWaveErrorCodes.Controller_CallbackNOK
 					) {
 						// The node is dead, treat this as a failure
 						minPowerlevelSource = Powerlevel["Normal Power"];
@@ -3393,8 +3319,8 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 
 			// And do the same with the other node - unless the current node is a sleeping node, then this doesn't make sense
 			if (
-				!this.canSleep
-				&& otherNode.supportsCC(CommandClasses.Powerlevel)
+				!this.canSleep &&
+				otherNode.supportsCC(CommandClasses.Powerlevel)
 			) {
 				try {
 					const powerlevel = await discreteLinearSearch(
@@ -3412,8 +3338,8 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 					}
 				} catch (e) {
 					if (
-						isZWaveError(e)
-						&& e.code === ZWaveErrorCodes.Controller_CallbackNOK
+						isZWaveError(e) &&
+						e.code === ZWaveErrorCodes.Controller_CallbackNOK
 					) {
 						// The node is dead, treat this as a failure
 						minPowerlevelTarget = Powerlevel["Normal Power"];
@@ -3546,10 +3472,10 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			},
 			responseRSSI: useSupervision
 				? {
-					min: 0,
-					max: Number.NEGATIVE_INFINITY,
-					average: Number.NEGATIVE_INFINITY,
-				}
+						min: 0,
+						max: Number.NEGATIVE_INFINITY,
+						average: Number.NEGATIVE_INFINITY,
+					}
 				: undefined,
 		};
 
@@ -3590,8 +3516,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			// Don't change the node status when the ACK is missing. We're likely testing the limits here.
 			changeNodeStatusOnMissingACK: false,
 			// Avoid using explorer frames, because they can create a ton of delay
-			transmitOptions: TransmitOptions.ACK
-				| TransmitOptions.AutoRoute,
+			transmitOptions: TransmitOptions.ACK | TransmitOptions.AutoRoute,
 			// Do not wait for SOS NonceReports, as it slows down the test
 			s2VerifyDelivery: false,
 			// And remember the transmit report, so we can evaluate it
@@ -3615,9 +3540,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			txReport = undefined as any;
 
 			try {
-				await basicSetAPI.set(
-					round % 2 === 1 ? 0xff : 0x00,
-				);
+				await basicSetAPI.set(round % 2 === 1 ? 0xff : 0x00);
 				// The command was sent successfully (and possibly got a response)
 				result.commandsSent++;
 
@@ -3641,8 +3564,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 						);
 						// incrementally update the average RTT
 						result.latency.average +=
-							(latency - result.latency.average)
-							/ round;
+							(latency - result.latency.average) / round;
 					} else {
 						result.latency = {
 							min: latency,
@@ -3654,8 +3576,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			} catch (e) {
 				if (isZWaveError(e)) {
 					if (
-						e.code === ZWaveErrorCodes.Controller_ResponseNOK
-						|| e.code === ZWaveErrorCodes.Controller_CallbackNOK
+						e.code === ZWaveErrorCodes.Controller_ResponseNOK ||
+						e.code === ZWaveErrorCodes.Controller_CallbackNOK
 					) {
 						// The command could not be sent or was not acknowledged
 						result.commandErrors++;
@@ -3671,8 +3593,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			}
 
 			if (
-				txReport?.ackRSSI != undefined
-				&& !isRssiError(txReport.ackRSSI)
+				txReport?.ackRSSI != undefined &&
+				!isRssiError(txReport.ackRSSI)
 			) {
 				result.ackRSSI.min = Math.min(
 					result.ackRSSI.min,
@@ -3685,8 +3607,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				// incrementally update the average RSSI
 				if (Number.isFinite(result.ackRSSI.average)) {
 					result.ackRSSI.average +=
-						(txReport.ackRSSI - result.ackRSSI.average)
-						/ round;
+						(txReport.ackRSSI - result.ackRSSI.average) / round;
 				} else {
 					result.ackRSSI.average = txReport.ackRSSI;
 				}
@@ -3719,9 +3640,10 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			const rttMs = sentMessage.rtt / 1e6;
 			this.updateStatistics((current) => ({
 				...current,
-				rtt: current.rtt != undefined
-					? roundTo(current.rtt * 0.75 + rttMs * 0.25, 1)
-					: roundTo(rttMs, 1),
+				rtt:
+					current.rtt != undefined
+						? roundTo(current.rtt * 0.75 + rttMs * 0.25, 1)
+						: roundTo(rttMs, 1),
 			}));
 		}
 	}
@@ -3735,8 +3657,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			const ret = { ...current };
 			// Update ACK RSSI
 			if (
-				txReport.ackRSSI != undefined
-				&& txReport.ackRSSI !== RssiError.NotAvailable
+				txReport.ackRSSI != undefined &&
+				txReport.ackRSSI !== RssiError.NotAvailable
 			) {
 				ret.rssi =
 					ret.rssi == undefined || isRssiError(txReport.ackRSSI)
@@ -3754,8 +3676,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				newStats.repeaterRSSI = txReport.ackRepeaterRSSI as number[];
 			}
 			if (
-				txReport.failedRouteLastFunctionalNodeId
-				&& txReport.failedRouteFirstNonFunctionalNodeId
+				txReport.failedRouteLastFunctionalNodeId &&
+				txReport.failedRouteFirstNonFunctionalNodeId
 			) {
 				newStats.routeFailedBetween = [
 					txReport.failedRouteLastFunctionalNodeId,
@@ -3787,8 +3709,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		const scheduleEntryLockAPI = this.commandClasses["Schedule Entry Lock"];
 
 		if (
-			timeParametersAPI.isSupported()
-			&& timeParametersAPI.supportsCommand(TimeParametersCommand.Set)
+			timeParametersAPI.isSupported() &&
+			timeParametersAPI.supportsCommand(TimeParametersCommand.Set)
 		) {
 			try {
 				const result = await timeParametersAPI.set(now);
@@ -3797,8 +3719,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				return false;
 			}
 		} else if (
-			clockAPI.isSupported()
-			&& clockAPI.supportsCommand(ClockCommand.Set)
+			clockAPI.isSupported() &&
+			clockAPI.supportsCommand(ClockCommand.Set)
 		) {
 			try {
 				// Get desired time in local time
@@ -3814,9 +3736,9 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				return false;
 			}
 		} else if (
-			timeAPI.isSupported()
-			&& timeAPI.supportsCommand(TimeCommand.DateReport)
-			&& timeAPI.supportsCommand(TimeCommand.TimeReport)
+			timeAPI.isSupported() &&
+			timeAPI.supportsCommand(TimeCommand.DateReport) &&
+			timeAPI.supportsCommand(TimeCommand.TimeReport)
 		) {
 			// According to https://github.com/zwave-js/zwave-js/issues/6032#issuecomment-1641945555
 			// some devices update their date and time when they receive an unsolicited Time CC report.
@@ -3834,10 +3756,10 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 				const verification = await api.getDate();
 				if (
-					!verification
-					|| verification.year !== year
-					|| verification.month !== month
-					|| verification.day !== day
+					!verification ||
+					verification.year !== year ||
+					verification.month !== month ||
+					verification.day !== day
 				) {
 					// Didn't work
 					return false;
@@ -3860,15 +3782,16 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				const expected = hour * 60 * 60 + minute * 60 + second;
 				const expectedMin = expected - 30;
 				const expectedMax = expected + 30;
-				const actual = verification.hour * 60 * 60
-					+ verification.minute * 60
-					+ verification.second;
+				const actual =
+					verification.hour * 60 * 60 +
+					verification.minute * 60 +
+					verification.second;
 				// The time may have wrapped around midnight since we set the date
 				if (actual >= expectedMin && actual <= expectedMax) {
 					// ok
 				} else if (
-					actual + secondsPerDay >= expectedMin
-					&& actual + secondsPerDay <= expectedMax
+					actual + secondsPerDay >= expectedMin &&
+					actual + secondsPerDay <= expectedMax
 				) {
 					// ok
 				} else {
@@ -3884,8 +3807,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		// Or in really strange cases using the Schedule Entry Lock CC
 		const timezone = getDSTInfo(now);
 		if (
-			timeAPI.isSupported()
-			&& timeAPI.supportsCommand(TimeCommand.TimeOffsetSet)
+			timeAPI.isSupported() &&
+			timeAPI.supportsCommand(TimeCommand.TimeOffsetSet)
 		) {
 			try {
 				const result = await timeAPI.setTimezone(timezone);
@@ -3894,8 +3817,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				return false;
 			}
 		} else if (
-			scheduleEntryLockAPI.isSupported()
-			&& scheduleEntryLockAPI.supportsCommand(
+			scheduleEntryLockAPI.isSupported() &&
+			scheduleEntryLockAPI.supportsCommand(
 				ScheduleEntryLockCommand.TimeOffsetSet,
 			)
 		) {
@@ -3922,8 +3845,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		const response: DateAndTime = {};
 
 		if (
-			timeParametersAPI.isSupported()
-			&& timeParametersAPI.supportsCommand(TimeParametersCommand.Get)
+			timeParametersAPI.isSupported() &&
+			timeParametersAPI.supportsCommand(TimeParametersCommand.Get)
 		) {
 			try {
 				const result = await timeParametersAPI.get();
@@ -3947,96 +3870,81 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		}
 
 		if (
-			clockAPI.isSupported()
-			&& clockAPI.supportsCommand(ClockCommand.Get)
+			clockAPI.isSupported() &&
+			clockAPI.supportsCommand(ClockCommand.Get)
 		) {
 			try {
 				const result = await clockAPI.get();
 				if (result) {
-					Object.assign(
-						response,
-						{
-							hour: result.hour,
-							minute: result.minute,
-							weekday: result.weekday,
-						} satisfies DateAndTime,
-					);
+					Object.assign(response, {
+						hour: result.hour,
+						minute: result.minute,
+						weekday: result.weekday,
+					} satisfies DateAndTime);
 				}
 			} catch {}
 		}
 
 		if (
-			timeAPI.isSupported()
-			&& timeAPI.supportsCommand(TimeCommand.TimeGet)
+			timeAPI.isSupported() &&
+			timeAPI.supportsCommand(TimeCommand.TimeGet)
 		) {
 			try {
 				const result = await timeAPI.getTime();
 				if (result) {
-					Object.assign(
-						response,
-						{
-							hour: result.hour,
-							minute: result.minute,
-							second: result.second,
-						} satisfies DateAndTime,
-					);
+					Object.assign(response, {
+						hour: result.hour,
+						minute: result.minute,
+						second: result.second,
+					} satisfies DateAndTime);
 				}
 			} catch {}
 		}
 
 		if (
-			timeAPI.isSupported()
-			&& timeAPI.supportsCommand(TimeCommand.DateGet)
+			timeAPI.isSupported() &&
+			timeAPI.supportsCommand(TimeCommand.DateGet)
 		) {
 			try {
 				const result = await timeAPI.getDate();
 				if (result) {
-					Object.assign(
-						response,
-						{
-							day: result.day,
-							month: result.month,
-							year: result.year,
-						} satisfies DateAndTime,
-					);
+					Object.assign(response, {
+						day: result.day,
+						month: result.month,
+						year: result.year,
+					} satisfies DateAndTime);
 				}
 			} catch {}
 		}
 
 		if (
-			timeAPI.isSupported()
-			&& timeAPI.supportsCommand(TimeCommand.TimeOffsetGet)
+			timeAPI.isSupported() &&
+			timeAPI.supportsCommand(TimeCommand.TimeOffsetGet)
 		) {
 			try {
 				const result = await timeAPI.getTimezone();
 				if (result) {
-					Object.assign(
-						response,
-						{
-							standardOffset: result.standardOffset,
-							dstOffset: result.dstOffset,
-						} satisfies DateAndTime,
-					);
+					Object.assign(response, {
+						standardOffset: result.standardOffset,
+						dstOffset: result.dstOffset,
+					} satisfies DateAndTime);
 				}
 			} catch {}
 		}
 
 		if (
-			scheduleEntryLockAPI.isSupported()
-			&& scheduleEntryLockAPI.supportsCommand(
+			scheduleEntryLockAPI.isSupported() &&
+			scheduleEntryLockAPI.supportsCommand(
 				ScheduleEntryLockCommand.TimeOffsetGet,
 			)
 		) {
 			try {
 				const result = await scheduleEntryLockAPI.getTimezone();
 				if (result) {
-					Object.assign(
-						response,
-						{
-							standardOffset: result.standardOffset,
-							dstOffset: result.dstOffset,
-						} satisfies DateAndTime,
-					);
+					Object.assign(response, {
+						standardOffset: result.standardOffset,
+						dstOffset: result.dstOffset,
+					} satisfies DateAndTime);
 				}
 			} catch {}
 		}
@@ -4063,15 +3971,18 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			label: this.label,
 			description: this.deviceConfig?.description,
 			fingerprint: {
-				manufacturerId: this.manufacturerId != undefined
-					? formatId(this.manufacturerId)
-					: "unknown",
-				productType: this.productType != undefined
-					? formatId(this.productType)
-					: "unknown",
-				productId: this.productId != undefined
-					? formatId(this.productId)
-					: "unknown",
+				manufacturerId:
+					this.manufacturerId != undefined
+						? formatId(this.manufacturerId)
+						: "unknown",
+				productType:
+					this.productType != undefined
+						? formatId(this.productType)
+						: "unknown",
+				productId:
+					this.productId != undefined
+						? formatId(this.productId)
+						: "unknown",
 				firmwareVersion: this.firmwareVersion ?? "unknown",
 			},
 			interviewStage: getEnumMemberName(
@@ -4090,12 +4001,15 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			supportsBeaming: this.supportsBeaming ?? "unknown",
 			supportsSecurity: this.supportsSecurity ?? "unknown",
 			protocol: getEnumMemberName(Protocols, this.protocol),
-			supportedProtocols: this.driver.controller.getProvisioningEntry(
-				this.id,
-			)?.supportedProtocols?.map((p) => getEnumMemberName(Protocols, p)),
-			protocolVersion: this.protocolVersion != undefined
-				? getEnumMemberName(ProtocolVersion, this.protocolVersion)
-				: "unknown",
+			supportedProtocols: this.driver.controller
+				.getProvisioningEntry(this.id)
+				?.supportedProtocols?.map((p) =>
+					getEnumMemberName(Protocols, p),
+				),
+			protocolVersion:
+				this.protocolVersion != undefined
+					? getEnumMemberName(ProtocolVersion, this.protocolVersion)
+					: "unknown",
 			sdkVersion: this.sdkVersion ?? "unknown",
 			supportedDataRates: this.supportedDataRates
 				? [...this.supportedDataRates]
@@ -4110,8 +4024,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 		for (const secClass of securityClassOrder) {
 			if (
-				this.protocol === Protocols.ZWaveLongRange
-				&& !securityClassIsLongRange(secClass)
+				this.protocol === Protocols.ZWaveLongRange &&
+				!securityClassIsLongRange(secClass)
 			) {
 				continue;
 			}
@@ -4146,10 +4060,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				const isInternalValue = ccInstance?.isInternalValue(valueId);
 
 				const valueDump: ValueDump = {
-					...pick(valueId, [
-						"property",
-						"propertyKey",
-					]),
+					...pick(valueId, ["property", "propertyKey"]),
 					metadata,
 					value: metadata?.secret
 						? "(redacted)"

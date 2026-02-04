@@ -12,6 +12,7 @@ import {
 } from "@zwave-js/core";
 import { getErrorMessage } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
+
 import type { ZWaveNode } from "../Node.js";
 
 export interface WakeUpHandlerStore {
@@ -61,8 +62,8 @@ export function handleWakeUpNotification(
 		// unnecessary queries since there might be some delay. A wakeup interval of 0 means manual wakeup,
 		// so the interval shouldn't be verified
 		if (
-			wakeUpInterval > 0
-			&& (now - store.lastWakeUp) / 1000 > wakeUpInterval + 5 * 60
+			wakeUpInterval > 0 &&
+			(now - store.lastWakeUp) / 1000 > wakeUpInterval + 5 * 60
 		) {
 			node.commandClasses["Wake Up"].getInterval().catch(() => {
 				// Don't throw if there's an error
@@ -92,25 +93,19 @@ async function compatDoWakeupQueries(
 		direction: "none",
 	});
 
-	for (
-		const [ccName, apiMethod, ...args] of node.deviceConfig.compat
-			.queryOnWakeup
-	) {
+	for (const [ccName, apiMethod, ...args] of node.deviceConfig.compat
+		.queryOnWakeup) {
 		ctx.logNode(node.id, {
-			message: `compat query "${ccName}"::${apiMethod}(${
-				args
-					.map((arg) => JSON.stringify(arg))
-					.join(", ")
-			})`,
+			message: `compat query "${ccName}"::${apiMethod}(${args
+				.map((arg) => JSON.stringify(arg))
+				.join(", ")})`,
 			direction: "none",
 		});
 
 		// Try to access the API - if it doesn't work, skip this option
 		let API: CCAPI;
 		try {
-			API = (
-				(node.commandClasses as any)[ccName] as CCAPI
-			).withOptions({
+			API = ((node.commandClasses as any)[ccName] as CCAPI).withOptions({
 				// Tag the resulting transactions as compat queries
 				tag: "compat",
 				// Do not retry them or they may cause congestion if the node is asleep again
@@ -171,8 +166,8 @@ async function compatDoWakeupQueries(
 				level: "warn",
 			});
 			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Controller_MessageExpired
+				isZWaveError(e) &&
+				e.code === ZWaveErrorCodes.Controller_MessageExpired
 			) {
 				// A compat query expired - no point in trying the others too
 				return;

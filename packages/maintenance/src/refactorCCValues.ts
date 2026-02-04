@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -7,19 +8,19 @@ async function main() {
 	});
 	// project.addSourceFilesAtPaths("packages/cc/src/cc/**/*CC.ts");
 
-	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getBaseNameWithoutExtension().endsWith("CC")
-	);
+	const sourceFiles = project
+		.getSourceFiles()
+		.filter((file) => file.getBaseNameWithoutExtension().endsWith("CC"));
 	for (const file of sourceFiles) {
 		// const filePath = path.relative(process.cwd(), file.getFilePath());
 
-		const ccValuesDeclaration = file.getDescendantsOfKind(
-			SyntaxKind.VariableDeclaration,
-		).find((decl) => decl.getName().endsWith("CCValues"));
+		const ccValuesDeclaration = file
+			.getDescendantsOfKind(SyntaxKind.VariableDeclaration)
+			.find((decl) => decl.getName().endsWith("CCValues"));
 
-		const objectDotFreeze = ccValuesDeclaration?.getInitializerIfKind(
-			SyntaxKind.CallExpression,
-		)?.getExpressionIfKind(SyntaxKind.PropertyAccessExpression);
+		const objectDotFreeze = ccValuesDeclaration
+			?.getInitializerIfKind(SyntaxKind.CallExpression)
+			?.getExpressionIfKind(SyntaxKind.PropertyAccessExpression);
 		if (objectDotFreeze?.getText() !== "Object.freeze") {
 			continue;
 		}
@@ -31,48 +32,52 @@ async function main() {
 
 		const defineCalls = ccValuesDeclaration
 			?.getDescendantsOfKind(SyntaxKind.CallExpression)
-			.filter((node) =>
-				node.getExpression().getText() === "V.defineStaticCCValues"
-				|| node.getExpression().getText()
-					=== "V.defineDynamicCCValues"
+			.filter(
+				(node) =>
+					node.getExpression().getText() ===
+						"V.defineStaticCCValues" ||
+					node.getExpression().getText() ===
+						"V.defineDynamicCCValues",
 			);
 		if (!defineCalls?.length) continue;
 
 		const firstDefineCallArg = defineCalls[0].getArguments()[0];
 		const ccEnum =
 			// CommandClasses.XYZ
-			firstDefineCallArg?.asKind(SyntaxKind.PropertyAccessExpression)
+			firstDefineCallArg?.asKind(SyntaxKind.PropertyAccessExpression) ||
 			// CommandClasses["XYZ"]
-			|| firstDefineCallArg?.asKind(SyntaxKind.ElementAccessExpression);
+			firstDefineCallArg?.asKind(SyntaxKind.ElementAccessExpression);
 		if (ccEnum?.getExpression().getText() !== "CommandClasses") {
 			continue;
 		}
 
 		const spreadsInDefineCalls = defineCalls
 			.map((call) =>
-				call.getArguments()[1].asKind(
-					SyntaxKind.ObjectLiteralExpression,
-				)
+				call
+					.getArguments()[1]
+					.asKind(SyntaxKind.ObjectLiteralExpression),
 			)
 			.filter((obj) => obj != undefined)
 			.flatMap((obj) =>
-				obj.getDescendantsOfKind(SyntaxKind.SpreadAssignment)
+				obj
+					.getDescendantsOfKind(SyntaxKind.SpreadAssignment)
 					.filter((s) =>
-						s.getExpressionIfKind(SyntaxKind.CallExpression)
-							?.getText().startsWith("V.")
-					)
+						s
+							.getExpressionIfKind(SyntaxKind.CallExpression)
+							?.getText()
+							.startsWith("V."),
+					),
 			);
 
-		topLevelCallExpr.insertArgument(
-			0,
-			ccEnum.getText(),
-		);
+		topLevelCallExpr.insertArgument(0, ccEnum.getText());
 
-		topLevelCallExpr.getArguments()[1].replaceWithText(
-			`{${
-				spreadsInDefineCalls.map((s) => `\n${s.getText()}`).join(",")
-			}\n}`,
-		);
+		topLevelCallExpr
+			.getArguments()[1]
+			.replaceWithText(
+				`{${spreadsInDefineCalls
+					.map((s) => `\n${s.getText()}`)
+					.join(",")}\n}`,
+			);
 
 		objectDotFreeze.replaceWithText("V.defineCCValues");
 

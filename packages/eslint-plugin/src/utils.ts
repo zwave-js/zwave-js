@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import {
 	AST_NODE_TYPES,
 	type TSESLint,
@@ -6,8 +9,6 @@ import {
 import { type AllowedConfigValue, CommandClasses } from "@zwave-js/core";
 import type { Rule as ESLintRule } from "eslint";
 import type { AST as JSONC_AST, RuleListener } from "jsonc-eslint-parser";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,10 +25,11 @@ export function findDecorator(
 	node: TSESTree.ClassDeclaration,
 	name: string,
 ): TSESTree.Decorator | undefined {
-	return node.decorators.find((d) =>
-		d.expression.type === AST_NODE_TYPES.CallExpression
-		&& d.expression.callee.type === AST_NODE_TYPES.Identifier
-		&& d.expression.callee.name === name
+	return node.decorators.find(
+		(d) =>
+			d.expression.type === AST_NODE_TYPES.CallExpression &&
+			d.expression.callee.type === AST_NODE_TYPES.Identifier &&
+			d.expression.callee.name === name,
 	);
 }
 
@@ -36,23 +38,23 @@ export function findDecoratorContainingCCId(
 	node: TSESTree.ClassDeclaration,
 	possibleNames: string[] = ["API", "commandClass"],
 ): TSESTree.Decorator | undefined {
-	return node.decorators.find((d) =>
-		d.expression.type === AST_NODE_TYPES.CallExpression
-		&& d.expression.callee.type === AST_NODE_TYPES.Identifier
-		&& possibleNames.includes(d.expression.callee.name)
-		&& d.expression.arguments.length === 1
-		&& d.expression.arguments[0].type
-			=== AST_NODE_TYPES.MemberExpression
-		&& d.expression.arguments[0].object.type
-			=== AST_NODE_TYPES.Identifier
-		&& d.expression.arguments[0].object.name
-			=== "CommandClasses"
-		&& (d.expression.arguments[0].property.type
-				=== AST_NODE_TYPES.Identifier
-			|| (d.expression.arguments[0].property.type
-					=== AST_NODE_TYPES.Literal
-				&& typeof d.expression.arguments[0].property.value
-					=== "string"))
+	return node.decorators.find(
+		(d) =>
+			d.expression.type === AST_NODE_TYPES.CallExpression &&
+			d.expression.callee.type === AST_NODE_TYPES.Identifier &&
+			possibleNames.includes(d.expression.callee.name) &&
+			d.expression.arguments.length === 1 &&
+			d.expression.arguments[0].type ===
+				AST_NODE_TYPES.MemberExpression &&
+			d.expression.arguments[0].object.type ===
+				AST_NODE_TYPES.Identifier &&
+			d.expression.arguments[0].object.name === "CommandClasses" &&
+			(d.expression.arguments[0].property.type ===
+				AST_NODE_TYPES.Identifier ||
+				(d.expression.arguments[0].property.type ===
+					AST_NODE_TYPES.Literal &&
+					typeof d.expression.arguments[0].property.value ===
+						"string")),
 	);
 }
 
@@ -61,10 +63,8 @@ export function getCCNameFromExpression(
 	expression: TSESTree.MemberExpression,
 ): string | undefined {
 	if (
-		expression.object.type
-			!== AST_NODE_TYPES.Identifier
-		|| expression.object.name
-			!== "CommandClasses"
+		expression.object.type !== AST_NODE_TYPES.Identifier ||
+		expression.object.name !== "CommandClasses"
 	) {
 		return;
 	}
@@ -72,8 +72,8 @@ export function getCCNameFromExpression(
 	if (expression.property.type === AST_NODE_TYPES.Identifier) {
 		return expression.property.name;
 	} else if (
-		expression.property.type === AST_NODE_TYPES.Literal
-		&& typeof expression.property.value === "string"
+		expression.property.type === AST_NODE_TYPES.Literal &&
+		typeof expression.property.value === "string"
 	) {
 		return expression.property.value;
 	}
@@ -89,9 +89,7 @@ export function getCCIdFromExpression(
 }
 
 /** Takes a decorator found using {@link findDecoratorContainingCCId} and returns the CC name */
-export function getCCNameFromDecorator(
-	decorator: TSESTree.Decorator,
-): string {
+export function getCCNameFromDecorator(decorator: TSESTree.Decorator): string {
 	return getCCNameFromExpression((decorator.expression as any).arguments[0])!;
 }
 
@@ -126,9 +124,9 @@ export namespace JSONCRule {
 				| boolean
 				| string
 				| {
-					plugin: string;
-					url: string;
-				};
+						plugin: string;
+						url: string;
+				  };
 			layout: boolean;
 		};
 		messages: { [messageId: string]: string };
@@ -157,15 +155,15 @@ export namespace JSONCRule {
 				| boolean
 				| string
 				| {
-					plugin: string;
-					url: string;
-				};
+						plugin: string;
+						url: string;
+				  };
 			layout: boolean;
 		};
 		messages: { [messageId: string]: string };
 		fixable?: "code" | "whitespace";
 		hasSuggestions?: boolean;
-		schema: false; /* | JSONSchema4 | JSONSchema4[]*/
+		schema: false /* | JSONSchema4 | JSONSchema4[]*/;
 		deprecated?: boolean;
 		replacedBy?: [];
 		type: "problem" | "suggestion" | "layout";
@@ -182,8 +180,8 @@ function getPropertyStartIncludingComments(
 	// Trailing comments of the previous property may get attributed to this one
 	let leadingComments = context.sourceCode.getCommentsBefore(property as any);
 	if (prevProp) {
-		leadingComments = leadingComments.filter((c) =>
-			c.loc?.start.line !== prevProp.loc.end.line
+		leadingComments = leadingComments.filter(
+			(c) => c.loc?.start.line !== prevProp.loc.end.line,
 		);
 	}
 
@@ -202,15 +200,13 @@ function getPropertyEndIncludingComments(
 
 	// Trailing comments may get attributed to the next property
 	const trailingComments = [
-		...context.sourceCode.getCommentsAfter(
-			property as any,
-		),
+		...context.sourceCode.getCommentsAfter(property as any),
 	];
 	if (nextProp) {
 		trailingComments.push(
-			...context.sourceCode.getCommentsBefore(
-				nextProp as any,
-			).filter((c) => c.loc?.start.line === property.loc.end.line),
+			...context.sourceCode
+				.getCommentsBefore(nextProp as any)
+				.filter((c) => c.loc?.start.line === property.loc.end.line),
 		);
 	}
 
@@ -330,11 +326,11 @@ export function insertBeforeJSONProperty(
 		suffix = "\n" + suffix;
 	}
 
-	return function*(fixer) {
-		yield fixer.insertTextBeforeRange([
-			actualStart,
-			actualStart,
-		], text + suffix);
+	return function* (fixer) {
+		yield fixer.insertTextBeforeRange(
+			[actualStart, actualStart],
+			text + suffix,
+		);
 	};
 }
 
@@ -353,9 +349,10 @@ export function insertAfterJSONProperty(
 		context,
 		property,
 	);
-	const nextProp = property.parent.properties[
-		property.parent.properties.indexOf(property) + 1
-	];
+	const nextProp =
+		property.parent.properties[
+			property.parent.properties.indexOf(property) + 1
+		];
 	let prefix = "";
 	let suffix = "";
 
@@ -377,14 +374,14 @@ export function insertAfterJSONProperty(
 		}
 	}
 
-	return function*(fixer) {
+	return function* (fixer) {
 		if (insertComma && !nextProp) {
 			yield fixer.insertTextAfter(property as any, ",");
 		}
-		yield fixer.insertTextAfterRange([
-			actualEnd,
-			actualEnd,
-		], prefix + text + suffix);
+		yield fixer.insertTextAfterRange(
+			[actualEnd, actualEnd],
+			prefix + text + suffix,
+		);
 	};
 }
 
@@ -393,19 +390,19 @@ export function getJSONNumber(
 	key: string,
 ):
 	| {
-		node: JSONC_AST.JSONProperty & { value: JSONC_AST.JSONNumberLiteral };
-		value: number;
-	}
-	| undefined
-{
-	const prop = obj.properties.find((p) =>
-		p.key.type === "JSONLiteral"
-		&& p.key.value === key
+			node: JSONC_AST.JSONProperty & {
+				value: JSONC_AST.JSONNumberLiteral;
+			};
+			value: number;
+	  }
+	| undefined {
+	const prop = obj.properties.find(
+		(p) => p.key.type === "JSONLiteral" && p.key.value === key,
 	);
 	if (!prop) return;
 	if (
-		prop.value.type === "JSONLiteral"
-		&& typeof prop.value.value === "number"
+		prop.value.type === "JSONLiteral" &&
+		typeof prop.value.value === "number"
 	) {
 		return {
 			// @ts-expect-error The JSONNumberLiteral has non-optional properties that we don't care for
@@ -420,23 +417,21 @@ export function getJSONBoolean(
 	key: string,
 ):
 	| {
-		node: JSONC_AST.JSONProperty & {
-			value: JSONC_AST.JSONKeywordLiteral & {
-				value: boolean;
+			node: JSONC_AST.JSONProperty & {
+				value: JSONC_AST.JSONKeywordLiteral & {
+					value: boolean;
+				};
 			};
-		};
-		value: boolean;
-	}
-	| undefined
-{
-	const prop = obj.properties.find((p) =>
-		p.key.type === "JSONLiteral"
-		&& p.key.value === key
+			value: boolean;
+	  }
+	| undefined {
+	const prop = obj.properties.find(
+		(p) => p.key.type === "JSONLiteral" && p.key.value === key,
 	);
 	if (!prop) return;
 	if (
-		prop.value.type === "JSONLiteral"
-		&& typeof prop.value.value === "boolean"
+		prop.value.type === "JSONLiteral" &&
+		typeof prop.value.value === "boolean"
 	) {
 		return {
 			// @ts-expect-error The JSONKeywordLiteral has non-optional properties that we don't care for
@@ -451,19 +446,19 @@ export function getJSONString(
 	key: string,
 ):
 	| {
-		node: JSONC_AST.JSONProperty & { value: JSONC_AST.JSONStringLiteral };
-		value: string;
-	}
-	| undefined
-{
-	const prop = obj.properties.find((p) =>
-		p.key.type === "JSONLiteral"
-		&& p.key.value === key
+			node: JSONC_AST.JSONProperty & {
+				value: JSONC_AST.JSONStringLiteral;
+			};
+			value: string;
+	  }
+	| undefined {
+	const prop = obj.properties.find(
+		(p) => p.key.type === "JSONLiteral" && p.key.value === key,
 	);
 	if (!prop) return;
 	if (
-		prop.value.type === "JSONLiteral"
-		&& typeof prop.value.value === "string"
+		prop.value.type === "JSONLiteral" &&
+		typeof prop.value.value === "string"
 	) {
 		return {
 			// @ts-expect-error The JSONStringLiteral has non-optional properties that we don't care for
@@ -478,11 +473,8 @@ export function getJSONIndentationAtNode(
 	node: JSONC_AST.JSONNode,
 ): string {
 	return context.sourceCode
-		.getLines()[node.loc.start.line - 1]
-		.slice(
-			0,
-			node.loc.start.column,
-		);
+		.getLines()
+		[node.loc.start.line - 1].slice(0, node.loc.start.column);
 }
 
 export const paramInfoPropertyOrder: string[] = [
@@ -516,9 +508,9 @@ export function parseAllowedField(
 ): AllowedConfigValue[] | undefined {
 	const allowedProp = node.properties.find(
 		(p) =>
-			p.key.type === "JSONLiteral"
-			&& p.key.value === "allowed"
-			&& p.value.type === "JSONArrayExpression",
+			p.key.type === "JSONLiteral" &&
+			p.key.value === "allowed" &&
+			p.value.type === "JSONArrayExpression",
 	);
 
 	if (!allowedProp || allowedProp.value.type !== "JSONArrayExpression") {
@@ -535,9 +527,9 @@ export function parseAllowedField(
 			(p) => p.key.type === "JSONLiteral" && p.key.value === "value",
 		);
 		if (
-			valueProp
-			&& valueProp.value.type === "JSONLiteral"
-			&& typeof valueProp.value.value === "number"
+			valueProp &&
+			valueProp.value.type === "JSONLiteral" &&
+			typeof valueProp.value.value === "number"
 		) {
 			entries.push({ value: valueProp.value.value });
 			continue;
@@ -548,16 +540,16 @@ export function parseAllowedField(
 			(p) => p.key.type === "JSONLiteral" && p.key.value === "range",
 		);
 		if (
-			rangeProp
-			&& rangeProp.value.type === "JSONArrayExpression"
-			&& rangeProp.value.elements.length === 2
+			rangeProp &&
+			rangeProp.value.type === "JSONArrayExpression" &&
+			rangeProp.value.elements.length === 2
 		) {
 			const [fromElem, toElem] = rangeProp.value.elements;
 			if (
-				fromElem?.type === "JSONLiteral"
-				&& typeof fromElem.value === "number"
-				&& toElem?.type === "JSONLiteral"
-				&& typeof toElem.value === "number"
+				fromElem?.type === "JSONLiteral" &&
+				typeof fromElem.value === "number" &&
+				toElem?.type === "JSONLiteral" &&
+				typeof toElem.value === "number"
 			) {
 				const stepProp = element.properties.find(
 					(p) =>
@@ -565,9 +557,9 @@ export function parseAllowedField(
 				);
 				let step: number | undefined;
 				if (
-					stepProp
-					&& stepProp.value.type === "JSONLiteral"
-					&& typeof stepProp.value.value === "number"
+					stepProp &&
+					stepProp.value.type === "JSONLiteral" &&
+					typeof stepProp.value.value === "number"
 				) {
 					step = stepProp.value.value;
 				}

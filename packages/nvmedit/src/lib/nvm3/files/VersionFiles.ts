@@ -1,5 +1,7 @@
 import { Bytes } from "@zwave-js/shared";
+
 import type { NVM3Object } from "../object.js";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,

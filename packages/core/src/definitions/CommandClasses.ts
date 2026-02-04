@@ -370,9 +370,9 @@ export function isCCInfoEqual(
 	b: CommandClassInfo,
 ): boolean {
 	return (
-		a.isSupported === b.isSupported
-		&& a.isControlled === b.isControlled
-		&& a.secure === b.secure
-		&& a.version === b.version
+		a.isSupported === b.isSupported &&
+		a.isControlled === b.isControlled &&
+		a.secure === b.secure &&
+		a.version === b.version
 	);
 }

@@ -10,6 +10,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -41,16 +42,11 @@ import type { CCParsingContext } from "../lib/traits.js";
 export const HumidityControlOperatingStateCCValues = V.defineCCValues(
 	CommandClasses["Humidity Control Operating State"],
 	{
-		...V.staticProperty(
-			"state",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				states: enumValuesToMetadataStates(
-					HumidityControlOperatingState,
-				),
-				label: "Humidity control operating state",
-			} as const,
-		),
+		...V.staticProperty("state", {
+			...ValueMetadata.ReadOnlyUInt8,
+			states: enumValuesToMetadataStates(HumidityControlOperatingState),
+			label: "Humidity control operating state",
+		} as const),
 	},
 );
 
@@ -67,7 +63,7 @@ export class HumidityControlOperatingStateCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: HumidityControlOperatingStateCCAPI,
 			{ property },
 		) {
@@ -91,12 +87,11 @@ export class HumidityControlOperatingStateCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			HumidityControlOperatingStateCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<HumidityControlOperatingStateCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return response?.state;
 		}
@@ -109,9 +104,7 @@ export class HumidityControlOperatingStateCCAPI extends CCAPI {
 export class HumidityControlOperatingStateCC extends CommandClass {
 	declare ccCommand: HumidityControlOperatingStateCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -126,9 +119,7 @@ export class HumidityControlOperatingStateCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -149,8 +140,9 @@ export class HumidityControlOperatingStateCC extends CommandClass {
 		if (currentStatus) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: "received current humidity control operating state: "
-					+ getEnumMemberName(
+				message:
+					"received current humidity control operating state: " +
+					getEnumMemberName(
 						HumidityControlOperatingState,
 						currentStatus,
 					),
@@ -167,9 +159,7 @@ export interface HumidityControlOperatingStateCCReportOptions {
 
 @CCCommand(HumidityControlOperatingStateCommand.Report)
 @ccValueProperty("state", HumidityControlOperatingStateCCValues.state)
-export class HumidityControlOperatingStateCCReport
-	extends HumidityControlOperatingStateCC
-{
+export class HumidityControlOperatingStateCCReport extends HumidityControlOperatingStateCC {
 	public constructor(
 		options: WithAddress<HumidityControlOperatingStateCCReportOptions>,
 	) {
@@ -209,6 +199,4 @@ export class HumidityControlOperatingStateCCReport
 
 @CCCommand(HumidityControlOperatingStateCommand.Get)
 @expectedCCResponse(HumidityControlOperatingStateCCReport)
-export class HumidityControlOperatingStateCCGet
-	extends HumidityControlOperatingStateCC
-{}
+export class HumidityControlOperatingStateCCGet extends HumidityControlOperatingStateCC {}

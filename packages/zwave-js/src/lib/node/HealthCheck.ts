@@ -1,5 +1,6 @@
 import { Powerlevel } from "@zwave-js/cc";
 import { getEnumMemberName } from "@zwave-js/shared";
+
 import type {
 	LifelineHealthCheckResult,
 	LifelineHealthCheckSummary,
@@ -13,12 +14,12 @@ export function healthCheckRatingToWord(rating: number): string {
 	return rating >= 10
 		? "perfect"
 		: rating >= 6
-		? "good"
-		: rating >= 4
-		? "acceptable"
-		: rating >= 1
-		? "bad"
-		: "dead";
+			? "good"
+			: rating >= 4
+				? "acceptable"
+				: rating >= 1
+					? "bad"
+					: "dead";
 }
 
 export function formatLifelineHealthCheckRound(
@@ -27,16 +28,14 @@ export function formatLifelineHealthCheckRound(
 	result: LifelineHealthCheckResult,
 ): string {
 	const ret = [
-		`· round ${
-			round.toString().padStart(
+		`· round ${round
+			.toString()
+			.padStart(
 				Math.floor(Math.log10(numRounds) + 1),
 				" ",
-			)
-		} - rating: ${result.rating} (${
-			healthCheckRatingToWord(
-				result.rating,
-			)
-		})`,
+			)} - rating: ${result.rating} (${healthCheckRatingToWord(
+			result.rating,
+		)})`,
 		`  failed pings → node:             ${result.failedPingsNode}/${healthCheckTestFrameCount}`,
 		`  max. latency:                    ${result.latency.toFixed(1)} ms`,
 		result.routeChanges != undefined
@@ -48,13 +47,11 @@ export function formatLifelineHealthCheckRound(
 		result.failedPingsController != undefined
 			? `  failed pings → controller:       ${result.failedPingsController}/${healthCheckTestFrameCount} at normal power`
 			: result.minPowerlevel != undefined
-			? `  min. node powerlevel w/o errors: ${
-				getEnumMemberName(
-					Powerlevel,
-					result.minPowerlevel,
-				)
-			}`
-			: "",
+				? `  min. node powerlevel w/o errors: ${getEnumMemberName(
+						Powerlevel,
+						result.minPowerlevel,
+					)}`
+				: "",
 	]
 		.filter((line) => !!line)
 		.join("\n");
@@ -65,11 +62,9 @@ export function formatLifelineHealthCheckSummary(
 	summary: LifelineHealthCheckSummary,
 ): string {
 	let ret = `
-rating:                   ${summary.rating} (${
-		healthCheckRatingToWord(
-			summary.rating,
-		)
-	})`;
+rating:                   ${summary.rating} (${healthCheckRatingToWord(
+		summary.rating,
+	)})`;
 	const numNeighbors = summary.results.at(-1)!.numNeighbors;
 	if (numNeighbors != undefined) {
 		ret += `
@@ -79,13 +74,11 @@ no. of routing neighbors: ${summary.results.at(-1)!.numNeighbors}`;
 	ret += `
 
 Check rounds:
-${
-		summary.results
-			.map((r, i) =>
-				formatLifelineHealthCheckRound(i + 1, summary.results.length, r)
-			)
-			.join("\n \n")
-	}`;
+${summary.results
+	.map((r, i) =>
+		formatLifelineHealthCheckRound(i + 1, summary.results.length, r),
+	)
+	.join("\n \n")}`;
 
 	return ret.trim();
 }
@@ -98,36 +91,30 @@ export function formatRouteHealthCheckRound(
 	result: RouteHealthCheckResult,
 ): string {
 	const ret = [
-		`· round ${
-			round.toString().padStart(
+		`· round ${round
+			.toString()
+			.padStart(
 				Math.floor(Math.log10(numRounds) + 1),
 				" ",
-			)
-		} - rating: ${result.rating} (${
-			healthCheckRatingToWord(
-				result.rating,
-			)
-		})`,
+			)} - rating: ${result.rating} (${healthCheckRatingToWord(
+			result.rating,
+		)})`,
 		result.failedPingsToTarget != undefined
 			? `  failed pings ${sourceNodeId} → ${targetNodeId}:      ${result.failedPingsToTarget}/${healthCheckTestFrameCount}`
 			: result.minPowerlevelSource != undefined
-			? `  Node ${sourceNodeId} min. powerlevel w/o errors: ${
-				getEnumMemberName(
-					Powerlevel,
-					result.minPowerlevelSource,
-				)
-			}`
-			: "",
+				? `  Node ${sourceNodeId} min. powerlevel w/o errors: ${getEnumMemberName(
+						Powerlevel,
+						result.minPowerlevelSource,
+					)}`
+				: "",
 		result.failedPingsToSource != undefined
 			? `  failed pings ${targetNodeId} → ${sourceNodeId}:      ${result.failedPingsToSource}/${healthCheckTestFrameCount}`
 			: result.minPowerlevelTarget != undefined
-			? `  Node ${targetNodeId} min. powerlevel w/o errors: ${
-				getEnumMemberName(
-					Powerlevel,
-					result.minPowerlevelTarget,
-				)
-			}`
-			: "",
+				? `  Node ${targetNodeId} min. powerlevel w/o errors: ${getEnumMemberName(
+						Powerlevel,
+						result.minPowerlevelTarget,
+					)}`
+				: "",
 	]
 		.filter((line) => !!line)
 		.join("\n");
@@ -140,11 +127,9 @@ export function formatRouteHealthCheckSummary(
 	summary: RouteHealthCheckSummary,
 ): string {
 	let ret = `
-rating:                   ${summary.rating} (${
-		healthCheckRatingToWord(
-			summary.rating,
-		)
-	})`;
+rating:                   ${summary.rating} (${healthCheckRatingToWord(
+		summary.rating,
+	)})`;
 	const numNeighbors = summary.results.at(-1)!.numNeighbors;
 	if (numNeighbors != undefined) {
 		ret += `
@@ -154,19 +139,17 @@ no. of routing neighbors: ${summary.results.at(-1)!.numNeighbors}`;
 	ret += `
 
 Check rounds:
-${
-		summary.results
-			.map((r, i) =>
-				formatRouteHealthCheckRound(
-					sourceNodeId,
-					targetNodeId,
-					i + 1,
-					summary.results.length,
-					r,
-				)
-			)
-			.join("\n \n")
-	}`;
+${summary.results
+	.map((r, i) =>
+		formatRouteHealthCheckRound(
+			sourceNodeId,
+			targetNodeId,
+			i + 1,
+			summary.results.length,
+			r,
+		),
+	)
+	.join("\n \n")}`;
 
 	return ret.trim();
 }

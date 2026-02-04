@@ -22,6 +22,7 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -142,10 +143,10 @@ integrationTest(
 				async handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof InvalidCC) {
 						if (
-							receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_CannotDecode
-							|| receivedCC.reason
-								=== ZWaveErrorCodes.Security2CC_NoSPAN
+							receivedCC.reason ===
+								ZWaveErrorCodes.Security2CC_CannotDecode ||
+							receivedCC.reason ===
+								ZWaveErrorCodes.Security2CC_NoSPAN
 						) {
 							const nonce = await smNode.generateNonce(
 								controller.ownNodeId,
@@ -167,13 +168,13 @@ integrationTest(
 			const respondToS2CommandsSupportedGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
-						&& receivedCC.encapsulated
-							instanceof Security2CCCommandsSupportedGet
+						receivedCC instanceof Security2CCMessageEncapsulation &&
+						receivedCC.encapsulated instanceof
+							Security2CCCommandsSupportedGet
 					) {
-						const isHighestGranted = receivedCC.securityClass
-							=== self.encodingContext.getHighestSecurityClass(
+						const isHighestGranted =
+							receivedCC.securityClass ===
+							self.encodingContext.getHighestSecurityClass(
 								self.id,
 							);
 
@@ -182,15 +183,15 @@ integrationTest(
 								nodeId: controller.ownNodeId,
 								supportedCCs: isHighestGranted
 									? [...mockNode.implementedCCs.entries()]
-										.filter(
-											([ccId, info]) =>
-												info.secure
-												&& ccId
-													!== CommandClasses[
-														"Security 2"
-													],
-										)
-										.map(([ccId]) => ccId)
+											.filter(
+												([ccId, info]) =>
+													info.secure &&
+													ccId !==
+														CommandClasses[
+															"Security 2"
+														],
+											)
+											.map(([ccId]) => ccId)
 									: [],
 							}),
 							self.id,
@@ -205,10 +206,9 @@ integrationTest(
 			const respondToS2MultiChannelCCEndPointGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
-						&& receivedCC.encapsulated
-							instanceof MultiChannelCCEndPointGet
+						receivedCC instanceof Security2CCMessageEncapsulation &&
+						receivedCC.encapsulated instanceof
+							MultiChannelCCEndPointGet
 					) {
 						const cc = Security2CC.encapsulate(
 							new MultiChannelCCEndPointReport({
@@ -229,10 +229,9 @@ integrationTest(
 			const respondToS2MultiChannelCCEndPointFind: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
-						&& receivedCC.encapsulated
-							instanceof MultiChannelCCEndPointFind
+						receivedCC instanceof Security2CCMessageEncapsulation &&
+						receivedCC.encapsulated instanceof
+							MultiChannelCCEndPointFind
 					) {
 						const request = receivedCC.encapsulated;
 						const cc = Security2CC.encapsulate(
@@ -255,10 +254,9 @@ integrationTest(
 			const respondToS2MultiChannelCCCapabilityGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
-						&& receivedCC.encapsulated
-							instanceof MultiChannelCCCapabilityGet
+						receivedCC instanceof Security2CCMessageEncapsulation &&
+						receivedCC.encapsulated instanceof
+							MultiChannelCCCapabilityGet
 					) {
 						const endpoint = self.endpoints.get(
 							receivedCC.encapsulated.requestedEndpoint,
@@ -268,11 +266,12 @@ integrationTest(
 								nodeId: controller.ownNodeId,
 								endpointIndex: endpoint.index,
 								genericDeviceClass:
-									endpoint?.capabilities.genericDeviceClass
-										?? self.capabilities.genericDeviceClass,
-								specificDeviceClass: endpoint?.capabilities
-									.specificDeviceClass
-									?? self.capabilities.specificDeviceClass,
+									endpoint?.capabilities.genericDeviceClass ??
+									self.capabilities.genericDeviceClass,
+								specificDeviceClass:
+									endpoint?.capabilities
+										.specificDeviceClass ??
+									self.capabilities.specificDeviceClass,
 								isDynamic: false,
 								wasRemoved: false,
 								supportedCCs: [
@@ -293,13 +292,13 @@ integrationTest(
 			// The interview should request Z-Wave+ info from both endpoints securely
 			mockNode.assertReceivedControllerFrame(
 				(msg) =>
-					msg.type === MockZWaveFrameType.Request
-					&& msg.payload instanceof Security2CCMessageEncapsulation
-					&& msg.payload.encapsulated
-						instanceof MultiChannelCCCommandEncapsulation
-					&& msg.payload.encapsulated.destination === 1
-					&& msg.payload.encapsulated.encapsulated
-						instanceof ZWavePlusCCGet,
+					msg.type === MockZWaveFrameType.Request &&
+					msg.payload instanceof Security2CCMessageEncapsulation &&
+					msg.payload.encapsulated instanceof
+						MultiChannelCCCommandEncapsulation &&
+					msg.payload.encapsulated.destination === 1 &&
+					msg.payload.encapsulated.encapsulated instanceof
+						ZWavePlusCCGet,
 				{
 					errorMessage:
 						"Expected communication with endpoint 1 to be secure",
@@ -307,13 +306,13 @@ integrationTest(
 			);
 			mockNode.assertReceivedControllerFrame(
 				(msg) =>
-					msg.type === MockZWaveFrameType.Request
-					&& msg.payload instanceof Security2CCMessageEncapsulation
-					&& msg.payload.encapsulated
-						instanceof MultiChannelCCCommandEncapsulation
-					&& msg.payload.encapsulated.destination === 2
-					&& msg.payload.encapsulated.encapsulated
-						instanceof ZWavePlusCCGet,
+					msg.type === MockZWaveFrameType.Request &&
+					msg.payload instanceof Security2CCMessageEncapsulation &&
+					msg.payload.encapsulated instanceof
+						MultiChannelCCCommandEncapsulation &&
+					msg.payload.encapsulated.destination === 2 &&
+					msg.payload.encapsulated.encapsulated instanceof
+						ZWavePlusCCGet,
 				{
 					errorMessage:
 						"Expected communication with endpoint 2 to be secure",

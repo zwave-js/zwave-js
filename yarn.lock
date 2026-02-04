@@ -457,111 +457,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dprint/darwin-arm64@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/darwin-arm64@npm:0.51.1"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@dprint/darwin-x64@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/darwin-x64@npm:0.51.1"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@dprint/formatter@npm:^0.5.1":
-  version: 0.5.1
-  resolution: "@dprint/formatter@npm:0.5.1"
-  checksum: 10/02900ce66d0226abd57035fa70fc1c6c5f8dd31ede3fd7acf2eb5860a99acec7994488557a8ce9c93269c8e40e07e0405ca7c475bb8fe8f038caf0483d55edba
-  languageName: node
-  linkType: hard
-
-"@dprint/json@npm:^0.21.1":
-  version: 0.21.1
-  resolution: "@dprint/json@npm:0.21.1"
-  checksum: 10/dcb9e524b3fa05f5c8fd96f69579fb105a7f6097f1374c1564c5fe04fcdd6674556c74b618256aa81017956b109f43f3de512015d292428b3505044a8d12bfff
-  languageName: node
-  linkType: hard
-
-"@dprint/linux-arm64-glibc@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/linux-arm64-glibc@npm:0.51.1"
-  conditions: os=linux & cpu=arm64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@dprint/linux-arm64-musl@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/linux-arm64-musl@npm:0.51.1"
-  conditions: os=linux & cpu=arm64 & libc=musl
-  languageName: node
-  linkType: hard
-
-"@dprint/linux-loong64-glibc@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/linux-loong64-glibc@npm:0.51.1"
-  conditions: os=linux & cpu=loong64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@dprint/linux-loong64-musl@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/linux-loong64-musl@npm:0.51.1"
-  conditions: os=linux & cpu=loong64 & libc=musl
-  languageName: node
-  linkType: hard
-
-"@dprint/linux-riscv64-glibc@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/linux-riscv64-glibc@npm:0.51.1"
-  conditions: os=linux & cpu=riscv64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@dprint/linux-x64-glibc@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/linux-x64-glibc@npm:0.51.1"
-  conditions: os=linux & cpu=x64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@dprint/linux-x64-musl@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/linux-x64-musl@npm:0.51.1"
-  conditions: os=linux & cpu=x64 & libc=musl
-  languageName: node
-  linkType: hard
-
-"@dprint/markdown@npm:^0.20.0":
-  version: 0.20.0
-  resolution: "@dprint/markdown@npm:0.20.0"
-  checksum: 10/ae7b0b3ef5f600a1a63706d6c45529b99448ba493694671ec29c90c46bb103048eedc25c9d83e9ce74fbb989e8a7fdfb6019af05e0c9b466993688fd65801bd5
-  languageName: node
-  linkType: hard
-
-"@dprint/typescript@npm:^0.95.13":
-  version: 0.95.13
-  resolution: "@dprint/typescript@npm:0.95.13"
-  checksum: 10/19c5a2d5672997243fdde6b360355dc3731f5fa3db4bfeb009a663c3d2692045f7c6c3e8274a1f0831e2f61e60f34a74dadba2ab0c7e1d0521daddc236f245f8
-  languageName: node
-  linkType: hard
-
-"@dprint/win32-arm64@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/win32-arm64@npm:0.51.1"
-  conditions: os=win32 & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@dprint/win32-x64@npm:0.51.1":
-  version: 0.51.1
-  resolution: "@dprint/win32-x64@npm:0.51.1"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@esbuild/aix-ppc64@npm:0.25.11":
   version: 0.25.11
   resolution: "@esbuild/aix-ppc64@npm:0.25.11"
@@ -1383,6 +1278,62 @@ __metadata:
   dependencies:
     "@octokit/openapi-types": "npm:^23.0.1"
   checksum: 10/7f260cd3f98887626e791cc0e71ae718b689f359ff6546ed0343364bb213c70807f71135956659470ecdf2b4a5a0c32b6437bd5a3af412883ef3a62f41e811f8
+  languageName: node
+  linkType: hard
+
+"@oxfmt/darwin-arm64@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/darwin-arm64@npm:0.28.0"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oxfmt/darwin-x64@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/darwin-x64@npm:0.28.0"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oxfmt/linux-arm64-gnu@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/linux-arm64-gnu@npm:0.28.0"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@oxfmt/linux-arm64-musl@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/linux-arm64-musl@npm:0.28.0"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@oxfmt/linux-x64-gnu@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/linux-x64-gnu@npm:0.28.0"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@oxfmt/linux-x64-musl@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/linux-x64-musl@npm:0.28.0"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@oxfmt/win32-arm64@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/win32-arm64@npm:0.28.0"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oxfmt/win32-x64@npm:0.28.0":
+  version: 0.28.0
+  resolution: "@oxfmt/win32-x64@npm:0.28.0"
+  conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
@@ -2477,20 +2428,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@zwave-js/fmt@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "@zwave-js/fmt@npm:1.0.6"
-  dependencies:
-    json5: "npm:^2.2.3"
-  peerDependencies:
-    "@dprint/formatter": ^0.4.1
-    "@dprint/json": ^0.21.0
-    "@dprint/markdown": ^0.20.0
-    "@dprint/typescript": ^0.95.11
-  checksum: 10/737299644b1b4d7568e1e7d79f5239fba46e824cc7a03c9ac775fe4a55b3f253ef4c035f59c0e849b40da3ccc6b3aa02a96c0e6ee645572e142e1972173d920b
-  languageName: node
-  linkType: hard
-
 "@zwave-js/host@workspace:*, @zwave-js/host@workspace:packages/host":
   version: 0.0.0-use.local
   resolution: "@zwave-js/host@workspace:packages/host"
@@ -2512,24 +2449,19 @@ __metadata:
   resolution: "@zwave-js/maintenance@workspace:packages/maintenance"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@dprint/formatter": "npm:^0.5.1"
-    "@dprint/json": "npm:^0.21.1"
-    "@dprint/markdown": "npm:^0.20.0"
-    "@dprint/typescript": "npm:^0.95.13"
     "@types/globrex": "npm:^0.1.4"
     "@types/node": "npm:^20.19.23"
     "@types/yargs": "npm:^17.0.34"
     "@zwave-js/core": "workspace:*"
-    "@zwave-js/fmt": "npm:^1.0.6"
     "@zwave-js/shared": "workspace:*"
     ansi-colors: "npm:^4.1.3"
     cli-highlight: "npm:^2.1.11"
     del-cli: "npm:^7.0.0"
-    dprint: "npm:^0.51.1"
     es-main: "npm:^1.4.0"
     globrex: "npm:^0.1.2"
     json5: "npm:^2.2.3"
     nano-spawn: "npm:^2.0.0"
+    oxfmt: "npm:^0.28.0"
     piscina: "npm:^5.1.3"
     reflect-metadata: "npm:^0.2.2"
     ts-morph: "npm:^27.0.2"
@@ -2589,10 +2521,6 @@ __metadata:
     "@alcalzone/release-script": "npm:~5.0.0"
     "@commitlint/cli": "npm:^20.1.0"
     "@commitlint/config-conventional": "npm:^20.0.0"
-    "@dprint/formatter": "npm:^0.5.1"
-    "@dprint/json": "npm:^0.21.1"
-    "@dprint/markdown": "npm:^0.20.0"
-    "@dprint/typescript": "npm:^0.95.13"
     "@microsoft/api-extractor": "npm:^7.55.1"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
     "@tsconfig/node20": "npm:^20.1.8"
@@ -2608,7 +2536,6 @@ __metadata:
     "@zwave-js/core": "workspace:*"
     "@zwave-js/eslint-plugin": "workspace:*"
     "@zwave-js/flash": "workspace:*"
-    "@zwave-js/fmt": "npm:^1.0.6"
     "@zwave-js/host": "workspace:*"
     "@zwave-js/maintenance": "workspace:*"
     "@zwave-js/nvmedit": "workspace:*"
@@ -2622,7 +2549,6 @@ __metadata:
     commitizen: "npm:^4.3.1"
     cz-conventional-changelog: "npm:^3.3.0"
     del-cli: "npm:^7.0.0"
-    dprint: "npm:^0.51.1"
     eslint: "npm:^9.39.2"
     eslint-plugin-oxlint: "npm:^1.42.0"
     eslint-plugin-unicorn: "npm:^62.0.0"
@@ -2634,6 +2560,7 @@ __metadata:
     lint-staged: "npm:^16.2.7"
     nano-spawn: "npm:^2.0.0"
     openai: "npm:^5.12.2"
+    oxfmt: "npm:^0.28.0"
     oxlint: "npm:^1.42.0"
     oxlint-tsgolint: "npm:^0.11.4"
     p-queue: "npm:^8.1.0"
@@ -4048,50 +3975,6 @@ __metadata:
   dependencies:
     is-obj: "npm:^2.0.0"
   checksum: 10/33b2561617bd5c73cf9305368ba4638871c5dbf9c8100c8335acd2e2d590a81ec0e75c11cfaea5cc3cf8c2f668cad4beddb52c11856d0c9e666348eee1baf57a
-  languageName: node
-  linkType: hard
-
-"dprint@npm:^0.51.1":
-  version: 0.51.1
-  resolution: "dprint@npm:0.51.1"
-  dependencies:
-    "@dprint/darwin-arm64": "npm:0.51.1"
-    "@dprint/darwin-x64": "npm:0.51.1"
-    "@dprint/linux-arm64-glibc": "npm:0.51.1"
-    "@dprint/linux-arm64-musl": "npm:0.51.1"
-    "@dprint/linux-loong64-glibc": "npm:0.51.1"
-    "@dprint/linux-loong64-musl": "npm:0.51.1"
-    "@dprint/linux-riscv64-glibc": "npm:0.51.1"
-    "@dprint/linux-x64-glibc": "npm:0.51.1"
-    "@dprint/linux-x64-musl": "npm:0.51.1"
-    "@dprint/win32-arm64": "npm:0.51.1"
-    "@dprint/win32-x64": "npm:0.51.1"
-  dependenciesMeta:
-    "@dprint/darwin-arm64":
-      optional: true
-    "@dprint/darwin-x64":
-      optional: true
-    "@dprint/linux-arm64-glibc":
-      optional: true
-    "@dprint/linux-arm64-musl":
-      optional: true
-    "@dprint/linux-loong64-glibc":
-      optional: true
-    "@dprint/linux-loong64-musl":
-      optional: true
-    "@dprint/linux-riscv64-glibc":
-      optional: true
-    "@dprint/linux-x64-glibc":
-      optional: true
-    "@dprint/linux-x64-musl":
-      optional: true
-    "@dprint/win32-arm64":
-      optional: true
-    "@dprint/win32-x64":
-      optional: true
-  bin:
-    dprint: bin.js
-  checksum: 10/620fa08311cb81dfcd2b089f0c2ef39da7b5298c55346c417d0a30ed3f840a28499eeabe594dbafb350b9010a0ba50ac98215527b208c1345748a55fb04f1c0a
   languageName: node
   linkType: hard
 
@@ -6878,6 +6761,42 @@ __metadata:
   languageName: node
   linkType: hard
 
+"oxfmt@npm:^0.28.0":
+  version: 0.28.0
+  resolution: "oxfmt@npm:0.28.0"
+  dependencies:
+    "@oxfmt/darwin-arm64": "npm:0.28.0"
+    "@oxfmt/darwin-x64": "npm:0.28.0"
+    "@oxfmt/linux-arm64-gnu": "npm:0.28.0"
+    "@oxfmt/linux-arm64-musl": "npm:0.28.0"
+    "@oxfmt/linux-x64-gnu": "npm:0.28.0"
+    "@oxfmt/linux-x64-musl": "npm:0.28.0"
+    "@oxfmt/win32-arm64": "npm:0.28.0"
+    "@oxfmt/win32-x64": "npm:0.28.0"
+    tinypool: "npm:2.1.0"
+  dependenciesMeta:
+    "@oxfmt/darwin-arm64":
+      optional: true
+    "@oxfmt/darwin-x64":
+      optional: true
+    "@oxfmt/linux-arm64-gnu":
+      optional: true
+    "@oxfmt/linux-arm64-musl":
+      optional: true
+    "@oxfmt/linux-x64-gnu":
+      optional: true
+    "@oxfmt/linux-x64-musl":
+      optional: true
+    "@oxfmt/win32-arm64":
+      optional: true
+    "@oxfmt/win32-x64":
+      optional: true
+  bin:
+    oxfmt: bin/oxfmt
+  checksum: 10/30f6f93831a994594f00934de9cc9be1b22500efd6eb704dfc7405e61110d118083788a81f3b269412b028d010b78c421d07b2d42a80dd161c81bbdeb77ad6be
+  languageName: node
+  linkType: hard
+
 "oxlint-tsgolint@npm:^0.11.4":
   version: 0.11.4
   resolution: "oxlint-tsgolint@npm:0.11.4"
@@ -8409,6 +8328,13 @@ __metadata:
     fdir: "npm:^6.5.0"
     picomatch: "npm:^4.0.3"
   checksum: 10/d72bd826a8b0fa5fa3929e7fe5ba48fceb2ae495df3a231b6c5408cd7d8c00b58ab5a9c2a76ba56a62ee9b5e083626f1f33599734bed1ffc4b792406408f0ca2
+  languageName: node
+  linkType: hard
+
+"tinypool@npm:2.1.0":
+  version: 2.1.0
+  resolution: "tinypool@npm:2.1.0"
+  checksum: 10/c11cfe84e8147d5bf198fe04ea789c068dfa8656c7f3483c76a7408c02d108b2e07d7301458021a0a98952d4a760efb6212ab49a01bac085c4aed3d6ee40ab2d
   languageName: node
   linkType: hard
 

@@ -13,10 +13,12 @@ import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import colors from "ansi-colors";
 import MockDate from "mockdate";
 import { beforeEach, test as baseTest } from "vitest";
+
 import type { Driver } from "../driver/Driver.js";
 import { createAndStartTestingDriver } from "../driver/DriverMock.js";
 import { TransactionQueue } from "../driver/Queue.js";
 import { Transaction } from "../driver/Transaction.js";
+
 import { DriverLogger } from "./Driver.js";
 
 interface LocalTestContext {
@@ -103,7 +105,10 @@ function createTransaction(
 	return trns;
 }
 
-test.sequential("print() logs short messages correctly", ({ context, expect }) => {
+test.sequential("print() logs short messages correctly", ({
+	context,
+	expect,
+}) => {
 	const { driverLogger, spyTransport } = context;
 	driverLogger.print("Test");
 	assertMessage(expect, spyTransport, {
@@ -111,44 +116,55 @@ test.sequential("print() logs short messages correctly", ({ context, expect }) =
 	});
 });
 
-test.sequential("print() logs long messages correctly", ({ context, expect }) => {
+test.sequential("print() logs long messages correctly", ({
+	context,
+	expect,
+}) => {
 	const { driverLogger, spyTransport } = context;
 	driverLogger.print(
 		"This is a very long message that should be broken into multiple lines maybe sometimes...",
 	);
 	assertMessage(expect, spyTransport, {
-		message:
-			`  This is a very long message that should be broken into multiple lines maybe so
+		message: `  This is a very long message that should be broken into multiple lines maybe so
   metimes...`,
 	});
 });
 
-test.sequential("print() logs with the given loglevel", ({ context, expect }) => {
+test.sequential("print() logs with the given loglevel", ({
+	context,
+	expect,
+}) => {
 	const { driverLogger, spyTransport } = context;
 	driverLogger.print("Test", "warn");
 	assertLogInfo(expect, spyTransport, { level: "warn" });
 });
 
-test.sequential("print() has a default loglevel of verbose", ({ context, expect }) => {
+test.sequential("print() has a default loglevel of verbose", ({
+	context,
+	expect,
+}) => {
 	const { driverLogger, spyTransport } = context;
 	driverLogger.print("Test");
 	assertLogInfo(expect, spyTransport, { level: "verbose" });
 });
 
-test.sequential(
-	"print() prefixes the messages with the current timestamp and channel name",
-	({ context, expect }) => {
-		const { driverLogger, spyTransport } = context;
-		driverLogger.print("Whatever");
-		assertMessage(expect, spyTransport, {
-			message: `00:00:00.000 DRIVER   Whatever`,
-			ignoreTimestamp: false,
-			ignoreChannel: false,
-		});
-	},
-);
+test.sequential("print() prefixes the messages with the current timestamp and channel name", ({
+	context,
+	expect,
+}) => {
+	const { driverLogger, spyTransport } = context;
+	driverLogger.print("Whatever");
+	assertMessage(expect, spyTransport, {
+		message: `00:00:00.000 DRIVER   Whatever`,
+		ignoreTimestamp: false,
+		ignoreChannel: false,
+	});
+});
 
-test.sequential("print() the timestamp is in a dim color", ({ context, expect }) => {
+test.sequential("print() the timestamp is in a dim color", ({
+	context,
+	expect,
+}) => {
 	const { driverLogger, spyTransport } = context;
 	driverLogger.print("Whatever");
 	assertMessage(expect, spyTransport, {
@@ -159,7 +175,10 @@ test.sequential("print() the timestamp is in a dim color", ({ context, expect })
 	});
 });
 
-test.sequential("print() the channel name is in inverted gray color", ({ context, expect }) => {
+test.sequential("print() the channel name is in inverted gray color", ({
+	context,
+	expect,
+}) => {
 	const { driverLogger, spyTransport } = context;
 	driverLogger.print("Whatever");
 	assertMessage(expect, spyTransport, {
@@ -169,131 +188,134 @@ test.sequential("print() the channel name is in inverted gray color", ({ context
 	});
 });
 
-test.sequential(
-	"transaction() (for outbound messages) contains the direction",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		driverLogger.transaction(createTransaction(driver, {}));
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.startsWith(getDirectionPrefix("outbound")),
-		});
-	},
-);
-test.sequential(
-	"transaction() (for outbound messages) contains the message type as a tag",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		driverLogger.transaction(
-			createTransaction(driver, { type: MessageType.Request }),
-		);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[REQ]"),
-		});
+test.sequential("transaction() (for outbound messages) contains the direction", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	driverLogger.transaction(createTransaction(driver, {}));
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.startsWith(getDirectionPrefix("outbound")),
+	});
+});
+test.sequential("transaction() (for outbound messages) contains the message type as a tag", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	driverLogger.transaction(
+		createTransaction(driver, { type: MessageType.Request }),
+	);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[REQ]"),
+	});
 
-		driverLogger.transaction(
-			createTransaction(driver, { type: MessageType.Response }),
-		);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[RES]"),
-			callNumber: 1,
-		});
-	},
-);
+	driverLogger.transaction(
+		createTransaction(driver, { type: MessageType.Response }),
+	);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[RES]"),
+		callNumber: 1,
+	});
+});
 
-test.sequential(
-	"transaction() (for outbound messages) contains the function type as a tag",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		driverLogger.transaction(
-			createTransaction(driver, {
-				functionType: FunctionType.GetSerialApiInitData,
-			}),
-		);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[GetSerialApiInitData]"),
-		});
-	},
-);
+test.sequential("transaction() (for outbound messages) contains the function type as a tag", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	driverLogger.transaction(
+		createTransaction(driver, {
+			functionType: FunctionType.GetSerialApiInitData,
+		}),
+	);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[GetSerialApiInitData]"),
+	});
+});
 
-test.sequential(
-	"transaction() (for outbound messages) contains the message priority",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		driverLogger.transaction(
-			createTransaction(driver, {
-				priority: MessagePriority.Controller,
-			}),
-		);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[P: Controller]"),
-		});
-	},
-);
+test.sequential("transaction() (for outbound messages) contains the message priority", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	driverLogger.transaction(
+		createTransaction(driver, {
+			priority: MessagePriority.Controller,
+		}),
+	);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[P: Controller]"),
+	});
+});
 
-test.sequential(
-	"transactionResponse() (for inbound messages) contains the direction",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		const msg = createMessage(driver, {});
-		driverLogger.transactionResponse(msg, undefined, null as any);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.startsWith(getDirectionPrefix("inbound")),
-		});
-	},
-);
+test.sequential("transactionResponse() (for inbound messages) contains the direction", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	const msg = createMessage(driver, {});
+	driverLogger.transactionResponse(msg, undefined, null as any);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.startsWith(getDirectionPrefix("inbound")),
+	});
+});
 
-test.sequential(
-	"transactionResponse() (for inbound messages) contains the message type as a tag",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		let msg = createMessage(driver, {
-			type: MessageType.Request,
-		});
-		driverLogger.transactionResponse(msg, undefined, null as any);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[REQ]"),
-		});
+test.sequential("transactionResponse() (for inbound messages) contains the message type as a tag", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	let msg = createMessage(driver, {
+		type: MessageType.Request,
+	});
+	driverLogger.transactionResponse(msg, undefined, null as any);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[REQ]"),
+	});
 
-		msg = createMessage(driver, {
-			type: MessageType.Response,
-		});
-		driverLogger.transactionResponse(msg, undefined, null as any);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[RES]"),
-			callNumber: 1,
-		});
-	},
-);
+	msg = createMessage(driver, {
+		type: MessageType.Response,
+	});
+	driverLogger.transactionResponse(msg, undefined, null as any);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[RES]"),
+		callNumber: 1,
+	});
+});
 
-test.sequential(
-	"transactionResponse() (for inbound messages) contains the function type as a tag",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		const msg = createMessage(driver, {
-			functionType: FunctionType.HardReset,
-		});
-		driverLogger.transactionResponse(msg, undefined, null as any);
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[HardReset]"),
-		});
-	},
-);
+test.sequential("transactionResponse() (for inbound messages) contains the function type as a tag", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	const msg = createMessage(driver, {
+		functionType: FunctionType.HardReset,
+	});
+	driverLogger.transactionResponse(msg, undefined, null as any);
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[HardReset]"),
+	});
+});
 
-test.sequential(
-	"transactionResponse() (for inbound messages) contains the role (regarding the transaction) of the received message as a tag",
-	({ context, expect }) => {
-		const { driver, driverLogger, spyTransport } = context;
-		const msg = createMessage(driver, {
-			functionType: FunctionType.HardReset,
-		});
-		driverLogger.transactionResponse(msg, undefined, "fatal_controller");
-		assertMessage(expect, spyTransport, {
-			predicate: (msg) => msg.includes("[fatal_controller]"),
-		});
-	},
-);
+test.sequential("transactionResponse() (for inbound messages) contains the role (regarding the transaction) of the received message as a tag", ({
+	context,
+	expect,
+}) => {
+	const { driver, driverLogger, spyTransport } = context;
+	const msg = createMessage(driver, {
+		functionType: FunctionType.HardReset,
+	});
+	driverLogger.transactionResponse(msg, undefined, "fatal_controller");
+	assertMessage(expect, spyTransport, {
+		predicate: (msg) => msg.includes("[fatal_controller]"),
+	});
+});
 
-test.sequential("sendQueue() prints the send queue length", ({ context, expect }) => {
+test.sequential("sendQueue() prints the send queue length", ({
+	context,
+	expect,
+}) => {
 	const { driver, driverLogger, spyTransport } = context;
 	const queue = new TransactionQueue();
 	driverLogger.sendQueue(queue);
@@ -324,7 +346,10 @@ test.sequential("sendQueue() prints the send queue length", ({ context, expect }
 	});
 });
 
-test.sequential("sendQueue() prints the function type for each message", ({ context, expect }) => {
+test.sequential("sendQueue() prints the function type for each message", ({
+	context,
+	expect,
+}) => {
 	const { driver, driverLogger, spyTransport } = context;
 	const queue = new TransactionQueue();
 	queue.add(
@@ -345,7 +370,10 @@ test.sequential("sendQueue() prints the function type for each message", ({ cont
 	});
 });
 
-test.sequential("sendQueue() prints the message type for each message", ({ context, expect }) => {
+test.sequential("sendQueue() prints the message type for each message", ({
+	context,
+	expect,
+}) => {
 	const { driver, driverLogger, spyTransport } = context;
 	const queue = new TransactionQueue();
 	queue.add(
@@ -370,7 +398,10 @@ test.sequential("sendQueue() prints the message type for each message", ({ conte
 	});
 });
 
-test.sequential("primary tags are printed in inverse colors", ({ context, expect }) => {
+test.sequential("primary tags are printed in inverse colors", ({
+	context,
+	expect,
+}) => {
 	const { driver, driverLogger, spyTransport } = context;
 	const msg = createMessage(driver, {
 		functionType: FunctionType.HardReset,
@@ -379,13 +410,13 @@ test.sequential("primary tags are printed in inverse colors", ({ context, expect
 	driverLogger.transactionResponse(msg, undefined, null as any);
 
 	const expected1 = colors.cyan(
-		colors.bgCyan("[")
-			+ colors.inverse("RES")
-			+ colors.bgCyan("]")
-			+ " "
-			+ colors.bgCyan("[")
-			+ colors.inverse("HardReset")
-			+ colors.bgCyan("]"),
+		colors.bgCyan("[") +
+			colors.inverse("RES") +
+			colors.bgCyan("]") +
+			" " +
+			colors.bgCyan("[") +
+			colors.inverse("HardReset") +
+			colors.bgCyan("]"),
 	);
 
 	assertMessage(expect, spyTransport, {
@@ -394,17 +425,21 @@ test.sequential("primary tags are printed in inverse colors", ({ context, expect
 	});
 });
 
-test.sequential("inline tags are printed in inverse colors", ({ context, expect }) => {
+test.sequential("inline tags are printed in inverse colors", ({
+	context,
+	expect,
+}) => {
 	const { driverLogger, spyTransport } = context;
 	driverLogger.print(`This is a message [with] [inline] tags...`);
 
-	const expected1 = colors.bgCyan("[")
-		+ colors.inverse("with")
-		+ colors.bgCyan("]")
-		+ " "
-		+ colors.bgCyan("[")
-		+ colors.inverse("inline")
-		+ colors.bgCyan("]");
+	const expected1 =
+		colors.bgCyan("[") +
+		colors.inverse("with") +
+		colors.bgCyan("]") +
+		" " +
+		colors.bgCyan("[") +
+		colors.inverse("inline") +
+		colors.bgCyan("]");
 
 	assertMessage(expect, spyTransport, {
 		predicate: (msg) => msg.includes(expected1),

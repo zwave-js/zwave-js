@@ -1,6 +1,8 @@
+import type { Transformer } from "node:stream/web";
+
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
-import type { Transformer } from "node:stream/web";
+
 import { ESPHomeMessage } from "../ESPHomeMessage.js";
 
 export interface ESPHomeMessageParserOptions {
@@ -11,9 +13,10 @@ export interface ESPHomeMessageParserOptions {
 	noiseMode?: boolean;
 }
 
-class ESPHomeMessageParserTransformer
-	implements Transformer<BytesView, ESPHomeMessage>
-{
+class ESPHomeMessageParserTransformer implements Transformer<
+	BytesView,
+	ESPHomeMessage
+> {
 	private receiveBuffer = new Bytes();
 	private noiseMode: boolean;
 
@@ -37,8 +40,8 @@ class ESPHomeMessageParserTransformer
 			} catch (error) {
 				// If we can't decode a complete frame yet, wait for more data
 				if (
-					error instanceof ZWaveError
-					&& error.code === ZWaveErrorCodes.PacketFormat_Truncated
+					error instanceof ZWaveError &&
+					error.code === ZWaveErrorCodes.PacketFormat_Truncated
 				) {
 					break;
 				}

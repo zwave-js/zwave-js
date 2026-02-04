@@ -14,6 +14,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -45,14 +46,11 @@ import { LockCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const LockCCValues = V.defineCCValues(CommandClasses.Lock, {
-	...V.staticProperty(
-		"locked",
-		{
-			...ValueMetadata.Boolean,
-			label: "Locked",
-			description: "Whether the lock is locked",
-		} as const,
-	),
+	...V.staticProperty("locked", {
+		...ValueMetadata.Boolean,
+		label: "Locked",
+		description: "Whether the lock is locked",
+	} as const),
 });
 
 @API(CommandClasses.Lock)
@@ -97,7 +95,7 @@ export class LockCCAPI extends PhysicalCCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: LockCCAPI, { property }, value) {
+		return async function (this: LockCCAPI, { property }, value) {
 			if (property !== "locked") {
 				throwUnsupportedProperty(this.ccId, property);
 			}
@@ -121,7 +119,7 @@ export class LockCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: LockCCAPI, { property }) {
+		return async function (this: LockCCAPI, { property }) {
 			if (property === "locked") return this.get();
 			throwUnsupportedProperty(this.ccId, property);
 		};
@@ -134,9 +132,7 @@ export class LockCCAPI extends PhysicalCCAPI {
 export class LockCC extends CommandClass {
 	declare ccCommand: LockCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -151,9 +147,7 @@ export class LockCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -185,9 +179,7 @@ export interface LockCCSetOptions {
 @CCCommand(LockCommand.Set)
 @useSupervision()
 export class LockCCSet extends LockCC {
-	public constructor(
-		options: WithAddress<LockCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<LockCCSetOptions>) {
 		super(options);
 		this.locked = options.locked;
 	}
@@ -227,9 +219,7 @@ export interface LockCCReportOptions {
 @CCCommand(LockCommand.Report)
 @ccValueProperty("locked", LockCCValues.locked)
 export class LockCCReport extends LockCC {
-	public constructor(
-		options: WithAddress<LockCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<LockCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:

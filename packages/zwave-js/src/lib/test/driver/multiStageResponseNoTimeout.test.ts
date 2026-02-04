@@ -14,6 +14,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -103,8 +104,7 @@ integrationTest(
 						const configCC = new ConfigurationCCNameReport({
 							nodeId: controller.ownNodeId,
 							parameter: receivedCC.parameter,
-							name:
-								"Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooong parameter name",
+							name: "Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooong parameter name",
 							reportsToFollow: 0,
 						});
 						const serialized = await configCC.serialize(

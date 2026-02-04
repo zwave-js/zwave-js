@@ -45,12 +45,13 @@ const respondToEnergyProductionGet: MockNodeBehavior = {
 				),
 			};
 
-			const result = capabilities.values[
-				getEnumMemberName(
-					EnergyProductionParameter,
-					receivedCC.parameter,
-				) as unknown as keyof typeof capabilities.values
-			];
+			const result =
+				capabilities.values[
+					getEnumMemberName(
+						EnergyProductionParameter,
+						receivedCC.parameter,
+					) as unknown as keyof typeof capabilities.values
+				];
 
 			const cc = new EnergyProductionCCReport({
 				nodeId: controller.ownNodeId,

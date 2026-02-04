@@ -60,10 +60,10 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 		while (this.backlog.length > 0) {
 			const removed = this.backlog.pop();
 			if (
-				typeof removed === "object"
-				&& removed !== null
-				&& Symbol.dispose in removed
-				&& typeof removed[Symbol.dispose] === "function"
+				typeof removed === "object" &&
+				removed !== null &&
+				Symbol.dispose in removed &&
+				typeof removed[Symbol.dispose] === "function"
 			) {
 				console.log("dispose");
 				(removed as any)[Symbol.dispose]();

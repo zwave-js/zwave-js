@@ -7,6 +7,7 @@ import {
 	type MockNodeBehavior,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro for https://github.com/home-assistant/core/issues/98491
@@ -25,11 +26,14 @@ integrationTest(
 				},
 				CommandClasses.Basic,
 			],
-			endpoints: [{
-				commandClasses: [CommandClasses.Basic],
-			}, {
-				commandClasses: [CommandClasses.Basic],
-			}],
+			endpoints: [
+				{
+					commandClasses: [CommandClasses.Basic],
+				},
+				{
+					commandClasses: [CommandClasses.Basic],
+				},
+			],
 		},
 
 		async customSetup(driver, mockController, mockNode) {
@@ -37,9 +41,9 @@ integrationTest(
 			const respondToBasicGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof MultiChannelCCCommandEncapsulation
-						&& receivedCC.encapsulated instanceof BasicCCGet
+						receivedCC instanceof
+							MultiChannelCCCommandEncapsulation &&
+						receivedCC.encapsulated instanceof BasicCCGet
 					) {
 						// Do not respond if BasicCC is not explicitly listed as supported
 						if (!self.implementedCCs.has(CommandClasses.Basic)) {
@@ -82,31 +86,37 @@ integrationTest(
 				BasicCCValues.targetValue.endpoint(0),
 				0,
 			);
-			basicSetPromise0.then(() => {
-				driver.driverLog.print("basicSetPromise0 resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicSetPromise0 rejected");
-			});
+			basicSetPromise0
+				.then(() => {
+					driver.driverLog.print("basicSetPromise0 resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicSetPromise0 rejected");
+				});
 
 			const basicSetPromise1 = node2.setValue(
 				BasicCCValues.targetValue.endpoint(1),
 				1,
 			);
-			basicSetPromise1.then(() => {
-				driver.driverLog.print("basicSetPromise1 resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicSetPromise1 rejected");
-			});
+			basicSetPromise1
+				.then(() => {
+					driver.driverLog.print("basicSetPromise1 resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicSetPromise1 rejected");
+				});
 
 			const basicSetPromise2 = node2.setValue(
 				BasicCCValues.targetValue.endpoint(2),
 				2,
 			);
-			basicSetPromise2.then(() => {
-				driver.driverLog.print("basicSetPromise2 resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicSetPromise2 rejected");
-			});
+			basicSetPromise2
+				.then(() => {
+					driver.driverLog.print("basicSetPromise2 resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicSetPromise2 rejected");
+				});
 
 			// The first and second commands succeeds immediately
 			await basicSetPromise0;

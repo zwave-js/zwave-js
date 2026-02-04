@@ -29,9 +29,7 @@ test("the Get command should serialize correctly (no sensor type)", async (t) =>
 			BinarySensorType.Any, // sensor type
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Get command should serialize correctly", async (t) => {
@@ -42,9 +40,7 @@ test("the Get command should serialize correctly", async (t) => {
 	const expected = buildCCBuffer(
 		Uint8Array.from([BinarySensorCommand.Get, BinarySensorType.CO]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command (v1) should be deserialized correctly", async (t) => {
@@ -54,10 +50,9 @@ test("the Report command (v1) should be deserialized correctly", async (t) => {
 			0xff, // current value
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as BinarySensorCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as BinarySensorCCReport;
 	t.expect(cc.constructor).toBe(BinarySensorCCReport);
 
 	t.expect(cc.value).toBe(true);
@@ -71,10 +66,9 @@ test("the Report command (v2) should be deserialized correctly", async (t) => {
 			BinarySensorType.CO2,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as BinarySensorCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as BinarySensorCCReport;
 	t.expect(cc.constructor).toBe(BinarySensorCCReport);
 
 	t.expect(cc.value).toBe(false);
@@ -88,9 +82,7 @@ test("the SupportedGet command should serialize correctly", async (t) => {
 			BinarySensorCommand.SupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the SupportedReport command should be deserialized correctly", async (t) => {
@@ -101,10 +93,9 @@ test("the SupportedReport command should be deserialized correctly", async (t) =
 			0b10,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as BinarySensorCCSupportedReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as BinarySensorCCSupportedReport;
 	t.expect(cc.constructor).toBe(BinarySensorCCSupportedReport);
 
 	t.expect(cc.supportedSensorTypes).toStrictEqual([
@@ -120,10 +111,9 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as BinarySensorCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as BinarySensorCC;
 	t.expect(cc.constructor).toBe(BinarySensorCC);
 });
 

@@ -50,9 +50,7 @@ export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 
 				// Check if the type is marked with @publicAPI
 				const comments = context.sourceCode.getCommentsBefore(fullNode);
-				if (
-					!comments.some((c) => c.value.includes("@publicAPI"))
-				) {
+				if (!comments.some((c) => c.value.includes("@publicAPI"))) {
 					nonMarkedTypes.add(node.id.name);
 				}
 			},
@@ -69,10 +67,11 @@ export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 				// Ignore @internal methods
 				const comments = context.sourceCode.getCommentsBefore(node);
 				if (
-					comments.some((c) =>
-						c.type === AST_TOKEN_TYPES.Block
-						&& c.value.startsWith("*")
-						&& c.value.includes("@internal")
+					comments.some(
+						(c) =>
+							c.type === AST_TOKEN_TYPES.Block &&
+							c.value.startsWith("*") &&
+							c.value.includes("@internal"),
 					)
 				) {
 					return;
@@ -89,8 +88,8 @@ export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 				// ...that are the implementation of a public method
 				if (!isInMethodDefinition) return;
 				if (
-					node.parent.type !== AST_NODE_TYPES.MethodDefinition
-					|| node.parent.value !== node
+					node.parent.type !== AST_NODE_TYPES.MethodDefinition ||
+					node.parent.value !== node
 				) {
 					return;
 				}
@@ -118,8 +117,8 @@ export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 				if (isInFunctionBody) return;
 
 				if (
-					node.parent.type === AST_NODE_TYPES.FunctionExpression
-					&& node.parent.returnType === node
+					node.parent.type === AST_NODE_TYPES.FunctionExpression &&
+					node.parent.returnType === node
 				) {
 					isInReturnType = true;
 				} else {
@@ -151,42 +150,48 @@ export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 						loc: node.loc,
 						messageId: "public-type-missing-export",
 						data: { type: typeName },
-						suggest: [{
-							messageId: "add-export",
-							data: { type: typeName },
-							fix: (fixer) =>
-								fixer.insertTextBefore(typeNode, "export "),
-						}],
+						suggest: [
+							{
+								messageId: "add-export",
+								data: { type: typeName },
+								fix: (fixer) =>
+									fixer.insertTextBefore(typeNode, "export "),
+							},
+						],
 					});
 				} else if (missingMarker && !missingExport) {
 					context.report({
 						loc: node.loc,
 						messageId: "public-type-missing-marker",
 						data: { type: typeName },
-						suggest: [{
-							messageId: "add-marker",
-							data: { type: typeName },
-							fix: (fixer) =>
-								fixer.insertTextBefore(
-									typeNode,
-									"// @publicAPI\n",
-								),
-						}],
+						suggest: [
+							{
+								messageId: "add-marker",
+								data: { type: typeName },
+								fix: (fixer) =>
+									fixer.insertTextBefore(
+										typeNode,
+										"// @publicAPI\n",
+									),
+							},
+						],
 					});
 				} else if (missingExport && missingMarker) {
 					context.report({
 						loc: node.loc,
 						messageId: "public-type-missing-export-and-marker",
 						data: { type: typeName },
-						suggest: [{
-							messageId: "add-export-and-marker",
-							data: { type: typeName },
-							fix: (fixer) =>
-								fixer.insertTextBefore(
-									typeNode,
-									"// @publicAPI\nexport ",
-								),
-						}],
+						suggest: [
+							{
+								messageId: "add-export-and-marker",
+								data: { type: typeName },
+								fix: (fixer) =>
+									fixer.insertTextBefore(
+										typeNode,
+										"// @publicAPI\nexport ",
+									),
+							},
+						],
 					});
 				}
 			},

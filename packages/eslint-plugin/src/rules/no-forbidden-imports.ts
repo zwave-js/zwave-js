@@ -1,6 +1,7 @@
-import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import fs from "node:fs";
 import path from "node:path";
+
+import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import ts, { SyntaxKind } from "typescript";
 
 // Whitelist some imports that are known not to import forbidden modules
@@ -37,8 +38,8 @@ const ignoredImportsRegex: RegExp[] = [
 
 function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 	if (
-		ts.isImportEqualsDeclaration(node)
-		&& ts.isExternalModuleReference(node.moduleReference)
+		ts.isImportEqualsDeclaration(node) &&
+		ts.isExternalModuleReference(node.moduleReference)
 	) {
 		return node.moduleReference.expression;
 	} else if (ts.isImportDeclaration(node)) {
@@ -47,14 +48,14 @@ function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 			// import "bar"
 			return node.moduleSpecifier;
 		} else if (
-			node.importClause.phaseModifier !== SyntaxKind.TypeKeyword
+			node.importClause.phaseModifier !== SyntaxKind.TypeKeyword &&
 			// import foo from "bar"
-			&& (!node.importClause.namedBindings
+			(!node.importClause.namedBindings ||
 				// import * as foo from "bar"
-				|| ts.isNamespaceImport(node.importClause.namedBindings)
+				ts.isNamespaceImport(node.importClause.namedBindings) ||
 				// import {foo, type baz} from "bar"
-				|| (ts.isNamedImports(node.importClause.namedBindings)
-					&& node.importClause.namedBindings.elements.some(
+				(ts.isNamedImports(node.importClause.namedBindings) &&
+					node.importClause.namedBindings.elements.some(
 						(e) => !e.isTypeOnly,
 					)))
 		) {
@@ -63,14 +64,14 @@ function getExternalModuleName(node: ts.Node): ts.Expression | undefined {
 	} else if (ts.isExportDeclaration(node)) {
 		// Only return export declarations where there is at least one non-typeonly export specifier
 		if (
-			!node.isTypeOnly
+			!node.isTypeOnly &&
 			// export * from "bar"
-			&& (!node.exportClause
+			(!node.exportClause ||
 				// export * as foo from "bar"
-				|| ts.isNamespaceExport(node.exportClause)
+				ts.isNamespaceExport(node.exportClause) ||
 				// export {foo, type baz} from "bar"
-				|| (ts.isNamedExports(node.exportClause)
-					&& node.exportClause.elements.some((e) => !e.isTypeOnly)))
+				(ts.isNamedExports(node.exportClause) &&
+					node.exportClause.elements.some((e) => !e.isTypeOnly)))
 		) {
 			return node.moduleSpecifier;
 		}
@@ -93,8 +94,8 @@ function getImports(
 		const moduleNameExpr = getExternalModuleName(node);
 		// if they have a name, that is a string, i.e. not alias definition `import x = y`
 		if (
-			moduleNameExpr
-			&& moduleNameExpr.kind === ts.SyntaxKind.StringLiteral
+			moduleNameExpr &&
+			moduleNameExpr.kind === ts.SyntaxKind.StringLiteral
 		) {
 			// Ask the checker about the "symbol: for this module name
 			// it would be undefined if the module was not found (i.e. error)
@@ -103,10 +104,11 @@ function getImports(
 			if (file) {
 				output.push({
 					name: moduleNameExpr.getText(sourceFile),
-					line: ts.getLineAndCharacterOfPosition(
-						sourceFile,
-						moduleNameExpr.getStart(),
-					).line + 1,
+					line:
+						ts.getLineAndCharacterOfPosition(
+							sourceFile,
+							moduleNameExpr.getStart(),
+						).line + 1,
 					sourceFile: file,
 				});
 			}
@@ -123,10 +125,7 @@ function resolveImport(
 
 	const moduleNameExpr = getExternalModuleName(node);
 	// if they have a name, that is a string, i.e. not alias definition `import x = y`
-	if (
-		moduleNameExpr
-		&& moduleNameExpr.kind === ts.SyntaxKind.StringLiteral
-	) {
+	if (moduleNameExpr && moduleNameExpr.kind === ts.SyntaxKind.StringLiteral) {
 		// Ask the checker about the "symbol: for this module name
 		// it would be undefined if the module was not found (i.e. error)
 		const moduleSymbol = checker.getSymbolAtLocation(moduleNameExpr);
@@ -134,10 +133,11 @@ function resolveImport(
 		if (file) {
 			return {
 				name: moduleNameExpr.getText(sourceFile),
-				line: ts.getLineAndCharacterOfPosition(
-					sourceFile,
-					moduleNameExpr.getStart(),
-				).line + 1,
+				line:
+					ts.getLineAndCharacterOfPosition(
+						sourceFile,
+						moduleNameExpr.getStart(),
+					).line + 1,
 				sourceFile: file,
 			};
 		}
@@ -203,10 +203,12 @@ const forbiddenImportsRegex = /^@forbiddenImports (?<forbidden>.*?)$/;
 export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 	create(context) {
 		// And only those with at least one /* @forbiddenImports ... */ comment
-		const comments = context.sourceCode.getAllComments()
+		const comments = context.sourceCode
+			.getAllComments()
 			.filter((c) => c.type === "Block")
 			.map((c) => c.value.trim());
-		const forbidden = comments.map((c) => c.match(forbiddenImportsRegex))
+		const forbidden = comments
+			.map((c) => c.match(forbiddenImportsRegex))
 			.filter((match) => !!match)
 			.map((match) => match.groups?.forbidden?.trim())
 			.filter((forbidden): forbidden is string => !!forbidden)
@@ -220,10 +222,9 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 		const projectRoot = services.program.getCurrentDirectory();
 
 		function relativeToProject(filename: string): string {
-			return path.relative(projectRoot, filename).replaceAll(
-				/[\\/]/g,
-				path.sep,
-			);
+			return path
+				.relative(projectRoot, filename)
+				.replaceAll(/[\\/]/g, path.sep);
 		}
 
 		// Remember which source files we have already visited
@@ -236,12 +237,11 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 
 		function addTodo(imp: ResolvedImport, importStack: string[]) {
 			// try to resolve the original source file for declaration files
-			const next: ts.SourceFile = imp.sourceFile
-					.isDeclarationFile
+			const next: ts.SourceFile = imp.sourceFile.isDeclarationFile
 				? resolveSourceFileFromDefinition(
-					resolverContext,
-					imp.sourceFile,
-				)
+						resolverContext,
+						imp.sourceFile,
+					)
 				: imp.sourceFile;
 
 			if (!visitedSourceFiles.has(next.fileName)) {
@@ -271,14 +271,11 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 					messageId: "forbidden-import-transitive",
 					data: {
 						name: imp.name,
-						stack: [
-							...importStack,
-							`❌ ${imp.name}`,
-						]
+						stack: [...importStack, `❌ ${imp.name}`]
 							.map((file, indent) =>
 								indent === 0
 									? file
-									: `${"   ".repeat(indent - 1)}└─ ${file}`
+									: `${"   ".repeat(indent - 1)}└─ ${file}`,
 							)
 							.map((line) => `\n${line}`)
 							.join(""),
@@ -290,23 +287,22 @@ export const noForbiddenImports = ESLintUtils.RuleCreator.withoutDocs({
 		function checkImport(
 			imp: ResolvedImport,
 		): "ignored" | "forbidden" | "ok" {
-			const trimmedImport = imp.name.replaceAll("\"", "");
+			const trimmedImport = imp.name.replaceAll('"', "");
 			if (
-				ignoredImports.has(trimmedImport)
-				|| ignoredImportsRegex.some((regex) =>
-					regex.test(trimmedImport)
-				)
-			) return "ignored";
+				ignoredImports.has(trimmedImport) ||
+				ignoredImportsRegex.some((regex) => regex.test(trimmedImport))
+			)
+				return "ignored";
 
 			if (forbidden.includes("external")) {
 				// The special import name "external" forbids all external imports
 				// from outside the monorepo except whitelisted ones
 
 				if (
-					imp.sourceFile.fileName.includes("node_modules")
-					&& !whitelistedImports.has(trimmedImport)
-					&& !whitelistedImportsRegex.some((regex) =>
-						regex.test(trimmedImport)
+					imp.sourceFile.fileName.includes("node_modules") &&
+					!whitelistedImports.has(trimmedImport) &&
+					!whitelistedImportsRegex.some((regex) =>
+						regex.test(trimmedImport),
 					)
 				) {
 					return "forbidden";

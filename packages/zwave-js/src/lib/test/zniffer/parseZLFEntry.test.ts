@@ -2,6 +2,7 @@ import { ZWaveProtocolCCSetNWIMode } from "@zwave-js/cc";
 import { ZnifferDataMessage } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import { parseZLFEntry } from "../../zniffer/ZLFEntry.js";
 import { Zniffer } from "../../zniffer/Zniffer.js";
 
@@ -9,7 +10,7 @@ test("parse complete command frame", async (t) => {
 	const rawMsg = Bytes.from("1f95cd4d13addd888103000000230500fe", "hex");
 	const parsed = parseZLFEntry(rawMsg, 0);
 	t.expect(parsed.complete).toBe(true);
-	const rawData = [...parsed.entries[0]?.capture?.rawData ?? []];
+	const rawData = [...(parsed.entries[0]?.capture?.rawData ?? [])];
 	t.expect(rawData).toEqual([0x23, 0x5, 0x00]);
 });
 
@@ -18,13 +19,13 @@ test("parse incomplete command frame", async (t) => {
 	let parsed = parseZLFEntry(rawMsg, 0);
 	t.expect(parsed.complete).toBe(false);
 	t.expect(parsed.bytesRead).toBe(rawMsg.length);
-	const accumulated = [...parsed.accumulator?.rawData ?? []];
+	const accumulated = [...(parsed.accumulator?.rawData ?? [])];
 	t.expect(accumulated).toEqual([0x23]);
 
 	rawMsg = Bytes.from("3b0ace4d13addd8801020000000500fe", "hex");
 	parsed = parseZLFEntry(rawMsg, 0, parsed.accumulator);
 	t.expect(parsed.complete).toBe(true);
-	const rawData = [...parsed.entries[0]?.capture?.rawData ?? []];
+	const rawData = [...(parsed.entries[0]?.capture?.rawData ?? [])];
 	t.expect(rawData).toEqual([0x23, 0x5, 0x00]);
 });
 
@@ -43,7 +44,7 @@ test("parse incomplete data frame", async (t) => {
 	let parsed = parseZLFEntry(rawMsg, 0);
 	t.expect(parsed.complete).toBe(false);
 	t.expect(parsed.bytesRead).toBe(rawMsg.length);
-	const accumulated = [...parsed.accumulator?.rawData ?? []];
+	const accumulated = [...(parsed.accumulator?.rawData ?? [])];
 	t.expect(accumulated).toEqual([0x21]);
 
 	rawMsg = Bytes.from(
@@ -52,7 +53,7 @@ test("parse incomplete data frame", async (t) => {
 	);
 	parsed = parseZLFEntry(rawMsg, 0, parsed.accumulator);
 	t.expect(parsed.complete).toBe(true);
-	const rawData = [...parsed.entries[0]?.capture?.rawData ?? []];
+	const rawData = [...(parsed.entries[0]?.capture?.rawData ?? [])];
 	t.expect(rawData.at(-1)).toBe(0x54);
 
 	const mockZniffer = new Zniffer("/dev/mock");

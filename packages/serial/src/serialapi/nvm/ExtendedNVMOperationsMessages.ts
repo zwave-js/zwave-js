@@ -50,10 +50,7 @@ export class ExtendedNVMOperationsRequest extends Message {
 	public command!: ExtendedNVMOperationsCommand;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([
-			[this.command],
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[this.command], this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -74,9 +71,7 @@ export class ExtendedNVMOperationsRequest extends Message {
 
 // =============================================================================
 
-export class ExtendedNVMOperationsOpenRequest
-	extends ExtendedNVMOperationsRequest
-{
+export class ExtendedNVMOperationsOpenRequest extends ExtendedNVMOperationsRequest {
 	public constructor(options: MessageBaseOptions = {}) {
 		super(options);
 		this.command = ExtendedNVMOperationsCommand.Open;
@@ -85,9 +80,7 @@ export class ExtendedNVMOperationsOpenRequest
 
 // =============================================================================
 
-export class ExtendedNVMOperationsCloseRequest
-	extends ExtendedNVMOperationsRequest
-{
+export class ExtendedNVMOperationsCloseRequest extends ExtendedNVMOperationsRequest {
 	public constructor(options: MessageBaseOptions = {}) {
 		super(options);
 		this.command = ExtendedNVMOperationsCommand.Close;
@@ -101,9 +94,7 @@ export interface ExtendedNVMOperationsReadRequestOptions {
 	offset: number;
 }
 
-export class ExtendedNVMOperationsReadRequest
-	extends ExtendedNVMOperationsRequest
-{
+export class ExtendedNVMOperationsReadRequest extends ExtendedNVMOperationsRequest {
 	public constructor(
 		options: ExtendedNVMOperationsReadRequestOptions & MessageBaseOptions,
 	) {
@@ -170,9 +161,7 @@ export interface ExtendedNVMOperationsWriteRequestOptions {
 	buffer: BytesView;
 }
 
-export class ExtendedNVMOperationsWriteRequest
-	extends ExtendedNVMOperationsRequest
-{
+export class ExtendedNVMOperationsWriteRequest extends ExtendedNVMOperationsRequest {
 	public constructor(
 		options: ExtendedNVMOperationsWriteRequestOptions & MessageBaseOptions,
 	) {
@@ -242,7 +231,8 @@ export interface ExtendedNVMOperationsResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.ExtendedNVMOperations)
-export class ExtendedNVMOperationsResponse extends Message
+export class ExtendedNVMOperationsResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -276,10 +266,7 @@ export class ExtendedNVMOperationsResponse extends Message
 		// - Open command: bit mask of supported sub-commands
 		let bufferOrBitmask: BytesView;
 		if (dataLength > 0 && raw.payload.length >= offset + dataLength) {
-			bufferOrBitmask = raw.payload.subarray(
-				offset,
-				offset + dataLength,
-			);
+			bufferOrBitmask = raw.payload.subarray(offset, offset + dataLength);
 		} else {
 			bufferOrBitmask = new Uint8Array();
 		}
@@ -293,8 +280,8 @@ export class ExtendedNVMOperationsResponse extends Message
 
 	isOK(): boolean {
 		return (
-			this.status === ExtendedNVMOperationStatus.OK
-			|| this.status === ExtendedNVMOperationStatus.EndOfFile
+			this.status === ExtendedNVMOperationStatus.OK ||
+			this.status === ExtendedNVMOperationStatus.EndOfFile
 		);
 	}
 

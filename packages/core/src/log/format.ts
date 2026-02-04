@@ -1,5 +1,7 @@
 import { MESSAGE } from "triple-beam";
+
 import { formatDate } from "../util/date.js";
+
 import {
 	CONTROL_CHAR_WIDTH,
 	LOG_WIDTH,
@@ -55,8 +57,9 @@ export const formatLogMessage: LogFormat = {
 	transform: (info: ZWaveLogInfo) => {
 		const messageLines = messageToLines(info.message);
 		const firstMessageLineLength = messageLines[0].length;
-		info.multiline = messageLines.length > 1
-			|| !messageFitsIntoOneLine(info, info.message.length);
+		info.multiline =
+			messageLines.length > 1 ||
+			!messageFitsIntoOneLine(info, info.message.length);
 		// Align postfixes to the right
 		if (info.secondaryTags) {
 			// Calculate how many spaces are needed to right-align the postfix
@@ -65,9 +68,9 @@ export const formatLogMessage: LogFormat = {
 				// -1 has the special meaning that we don't print any padding,
 				// because the message takes all the available space
 				-1,
-				LOG_WIDTH
-					- 1
-					- calculateFirstLineLength(info, firstMessageLineLength),
+				LOG_WIDTH -
+					1 -
+					calculateFirstLineLength(info, firstMessageLineLength),
 			);
 		}
 
@@ -121,8 +124,7 @@ export function printLogMessage(shortTimestamps: boolean): LogFormat {
 				.join(" ");
 			// The directional arrows and the optional grouping lines must be prepended
 			// without adding spaces
-			firstLine =
-				`${info.timestamp} ${info.label} ${info.direction}${firstLine}`;
+			firstLine = `${info.timestamp} ${info.label} ${info.direction}${firstLine}`;
 			const lines = [firstLine];
 			if (info.multiline) {
 				// Format all message lines but the first
@@ -132,11 +134,11 @@ export function printLogMessage(shortTimestamps: boolean): LogFormat {
 							// Skip the columns for the timestamp and the channel name
 							(shortTimestamps
 								? timestampPaddingShort
-								: timestampPadding)
-							+ channelPadding
+								: timestampPadding) +
+							channelPadding +
 							// Skip the columns for directional arrows
-							+ directionPrefixPadding
-							+ line,
+							directionPrefixPadding +
+							line,
 					),
 				);
 			}

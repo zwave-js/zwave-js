@@ -7,6 +7,7 @@ import {
 import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
 import { test } from "vitest";
+
 import { type CreateTestNodeOptions, createTestNode } from "../test/mocks.js";
 
 test("associations between insecure nodes are allowed", (t) => {

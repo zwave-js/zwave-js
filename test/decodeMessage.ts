@@ -1,6 +1,7 @@
 // @ts-check
 
 import "zwave-js";
+
 import { ConfigManager } from "@zwave-js/config";
 import {
 	NodeIDType,
@@ -23,10 +24,7 @@ import { CommandClass, containsCC } from "zwave-js";
 	await configManager.loadAll();
 
 	// The data to decode
-	const data = Buffer.from(
-		"011100a800000100820343050200a7007f7f25",
-		"hex",
-	);
+	const data = Buffer.from("011100a800000100820343050200a7007f7f25", "hex");
 	// The nonce needed to decode it
 	const nonce = Buffer.from("478d7aa05d83f3ea", "hex");
 	// The network key needed to decode it
@@ -103,14 +101,11 @@ import { CommandClass, containsCC } from "zwave-js";
 
 	// Parse embedded CCs
 	if (isCommandRequest(msg) && containsSerializedCC(msg)) {
-		msg.command = await CommandClass.parse(
-			msg.serializedCC,
-			{
-				...ctx,
-				sourceNodeId: msg.getNodeId()!,
-				frameType: msg.frameType,
-			},
-		);
+		msg.command = await CommandClass.parse(msg.serializedCC, {
+			...ctx,
+			sourceNodeId: msg.getNodeId()!,
+			frameType: msg.frameType,
+		});
 	}
 	if (containsCC(msg)) {
 		await msg.command.mergePartialCCs([], {} as any);

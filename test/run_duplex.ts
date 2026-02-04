@@ -1,7 +1,8 @@
-import { Bytes } from "@zwave-js/shared";
-import { wait as _wait } from "alcalzone-shared/async";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { Bytes } from "@zwave-js/shared";
+import { wait as _wait } from "alcalzone-shared/async";
 import { Driver, RFRegion } from "zwave-js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,24 +42,12 @@ const driver_primary = new Driver(port_primary, {
 			"5369389EFA18EE2A4894C7FB48347FEA",
 			"hex",
 		),
-		S2_Authenticated: Bytes.from(
-			"656EF5C0F020F3C14238C04A1748B7E1",
-			"hex",
-		),
-		S2_AccessControl: Bytes.from(
-			"31132050077310B6F7032F91C79C2EB8",
-			"hex",
-		),
+		S2_Authenticated: Bytes.from("656EF5C0F020F3C14238C04A1748B7E1", "hex"),
+		S2_AccessControl: Bytes.from("31132050077310B6F7032F91C79C2EB8", "hex"),
 	},
 	securityKeysLongRange: {
-		S2_Authenticated: Bytes.from(
-			"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-			"hex",
-		),
-		S2_AccessControl: Bytes.from(
-			"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-			"hex",
-		),
+		S2_Authenticated: Bytes.from("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "hex"),
+		S2_AccessControl: Bytes.from("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "hex"),
 	},
 	rf: {
 		// preferLRRegion: false,
@@ -125,24 +114,12 @@ const driver_secondary = new Driver(port_secondary, {
 			"5369389EFA18EE2A4894C7FB48347FEA",
 			"hex",
 		),
-		S2_Authenticated: Bytes.from(
-			"656EF5C0F020F3C14238C04A1748B7E1",
-			"hex",
-		),
-		S2_AccessControl: Bytes.from(
-			"31132050077310B6F7032F91C79C2EB8",
-			"hex",
-		),
+		S2_Authenticated: Bytes.from("656EF5C0F020F3C14238C04A1748B7E1", "hex"),
+		S2_AccessControl: Bytes.from("31132050077310B6F7032F91C79C2EB8", "hex"),
 	},
 	securityKeysLongRange: {
-		S2_Authenticated: Bytes.from(
-			"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-			"hex",
-		),
-		S2_AccessControl: Bytes.from(
-			"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-			"hex",
-		),
+		S2_Authenticated: Bytes.from("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "hex"),
+		S2_AccessControl: Bytes.from("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "hex"),
 	},
 	rf: {
 		// preferLRRegion: false,

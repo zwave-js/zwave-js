@@ -52,12 +52,10 @@ export async function checkForConfigUpdates(
 	const allVersions = Object.keys(registry.versions)
 		.filter((v) => !!semverValid(v))
 		.filter((v) => /-\d{8}$/.test(v));
-	const updateRange = `>${currentVersion} <${
-		semverInc(
-			currentVersion,
-			"patch",
-		)
-	}`;
+	const updateRange = `>${currentVersion} <${semverInc(
+		currentVersion,
+		"patch",
+	)}`;
 	const updateVersion = semverMaxSatisfying(allVersions, updateRange, {
 		includePrerelease: true,
 	});
@@ -69,13 +67,12 @@ export async function checkForConfigUpdates(
  * This only works if an external configuation directory is used.
  */
 export async function installConfigUpdate(
-	fs:
-		& ManageDirectory
-		& ReadFileSystemInfo
-		& WriteFile
-		& CopyFile
-		& OpenFile
-		& MakeTempDirectory,
+	fs: ManageDirectory &
+		ReadFileSystemInfo &
+		WriteFile &
+		CopyFile &
+		OpenFile &
+		MakeTempDirectory,
 	newVersion: string,
 	external: {
 		configDir: string;
@@ -105,16 +102,12 @@ export async function installConfigUpdate(
 
 	let tarballData: BytesView;
 	try {
-		tarballData = new Uint8Array(
-			await ky.get(url).arrayBuffer(),
-		);
+		tarballData = new Uint8Array(await ky.get(url).arrayBuffer());
 	} catch (e) {
 		throw new ZWaveError(
-			`Config update failed: Could not download tarball. Reason: ${
-				getErrorMessage(
-					e,
-				)
-			}`,
+			`Config update failed: Could not download tarball. Reason: ${getErrorMessage(
+				e,
+			)}`,
 			ZWaveErrorCodes.Config_Update_InstallFailed,
 		);
 	}
@@ -129,8 +122,8 @@ export async function installConfigUpdate(
 		const prefix = "package/config/";
 		for (const file of tarFiles) {
 			if (
-				!file.filename.startsWith(prefix)
-				|| !file.filename.endsWith(".json")
+				!file.filename.startsWith(prefix) ||
+				!file.filename.endsWith(".json")
 			) {
 				continue;
 			}

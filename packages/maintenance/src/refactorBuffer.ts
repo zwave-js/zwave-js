@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -6,16 +7,22 @@ async function main() {
 		tsConfigFilePath: "packages/zwave-js/tsconfig.json",
 	});
 
-	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getFilePath().includes("/serialapi/")
-	);
+	const sourceFiles = project
+		.getSourceFiles()
+		.filter((file) => file.getFilePath().includes("/serialapi/"));
 	for (const file of sourceFiles) {
-		const hasBytesImport = file.getImportDeclarations().some((i) =>
-			i.getModuleSpecifierValue().startsWith("@zwave-js/shared")
-			&& i.getNamedImports().some((n) => n.getName() === "Bytes")
-		);
+		const hasBytesImport = file
+			.getImportDeclarations()
+			.some(
+				(i) =>
+					i
+						.getModuleSpecifierValue()
+						.startsWith("@zwave-js/shared") &&
+					i.getNamedImports().some((n) => n.getName() === "Bytes"),
+			);
 
-		const usesBytesImport = file.getDescendantsOfKind(SyntaxKind.Identifier)
+		const usesBytesImport = file
+			.getDescendantsOfKind(SyntaxKind.Identifier)
 			.some((i) => i.getText() === "Bytes");
 
 		if (file.getBaseName().includes("DeleteSUCReturnRouteMessages")) {
@@ -27,14 +34,16 @@ async function main() {
 		}
 
 		const existing = file.getImportDeclaration((decl) =>
-			decl.getModuleSpecifierValue().startsWith("@zwave-js/shared")
+			decl.getModuleSpecifierValue().startsWith("@zwave-js/shared"),
 		);
 		if (!existing) {
 			file.addImportDeclaration({
 				moduleSpecifier: "@zwave-js/shared",
-				namedImports: [{
-					name: "Bytes",
-				}],
+				namedImports: [
+					{
+						name: "Bytes",
+					},
+				],
 			});
 		} else {
 			existing.addNamedImport({

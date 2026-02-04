@@ -17,6 +17,7 @@ import {
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp } from "alcalzone-shared/math";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -49,47 +50,35 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 export const SoundSwitchCCValues = V.defineCCValues(
 	CommandClasses["Sound Switch"],
 	{
-		...V.staticProperty(
-			"volume",
-			{
-				...ValueMetadata.UInt8,
-				min: 0,
-				max: 100,
-				unit: "%",
-				label: "Volume",
-				allowManualEntry: true,
-				states: {
-					0: "default",
-				},
-			} as const,
-		),
-		...V.staticProperty(
-			"toneId",
-			{
-				...ValueMetadata.UInt8,
-				label: "Play Tone",
-				valueChangeOptions: ["volume"],
-			} as const,
-		),
-		...V.staticProperty(
-			"defaultVolume",
-			{
-				...ValueMetadata.Number,
-				min: 0,
-				max: 100,
-				unit: "%",
-				label: "Default volume",
-			} as const,
-		),
-		...V.staticProperty(
-			"defaultToneId",
-			{
-				...ValueMetadata.Number,
-				min: 1,
-				max: 254,
-				label: "Default tone ID",
-			} as const,
-		),
+		...V.staticProperty("volume", {
+			...ValueMetadata.UInt8,
+			min: 0,
+			max: 100,
+			unit: "%",
+			label: "Volume",
+			allowManualEntry: true,
+			states: {
+				0: "default",
+			},
+		} as const),
+		...V.staticProperty("toneId", {
+			...ValueMetadata.UInt8,
+			label: "Play Tone",
+			valueChangeOptions: ["volume"],
+		} as const),
+		...V.staticProperty("defaultVolume", {
+			...ValueMetadata.Number,
+			min: 0,
+			max: 100,
+			unit: "%",
+			label: "Default volume",
+		} as const),
+		...V.staticProperty("defaultToneId", {
+			...ValueMetadata.Number,
+			min: 1,
+			max: 254,
+			label: "Default tone ID",
+		} as const),
 	},
 );
 
@@ -119,12 +108,11 @@ export class SoundSwitchCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			SoundSwitchCCTonesNumberReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SoundSwitchCCTonesNumberReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.toneCount;
 	}
 
@@ -141,12 +129,11 @@ export class SoundSwitchCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			toneId,
 		});
-		const response = await this.host.sendCommand<
-			SoundSwitchCCToneInfoReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SoundSwitchCCToneInfoReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) return pick(response, ["duration", "name"]);
 	}
 
@@ -188,12 +175,11 @@ export class SoundSwitchCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			SoundSwitchCCConfigurationReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SoundSwitchCCConfigurationReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, ["defaultToneId", "defaultVolume"]);
 		}
@@ -251,19 +237,18 @@ export class SoundSwitchCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			SoundSwitchCCTonePlayReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SoundSwitchCCTonePlayReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, ["toneId", "volume"]);
 		}
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: SoundSwitchCCAPI,
 			{ property },
 			value,
@@ -280,7 +265,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 				}
 				return this.setConfiguration(
 					value,
-					0xff, /* keep current volume */
+					0xff /* keep current volume */,
 				);
 			} else if (property === "defaultVolume") {
 				if (typeof value !== "number") {
@@ -292,7 +277,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 					);
 				}
 				return this.setConfiguration(
-					0x00, /* keep current tone */
+					0x00 /* keep current tone */,
 					value,
 				);
 			} else if (property === "volume") {
@@ -306,9 +291,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 				}
 				// Allow playing a tone by first setting the volume, then the tone ID
 				this.tryGetValueDB()?.setValue(
-					SoundSwitchCCValues.volume.endpoint(
-						this.endpoint.index,
-					),
+					SoundSwitchCCValues.volume.endpoint(this.endpoint.index),
 					value,
 					{ source: "driver", updateTimestamp: false },
 				);
@@ -324,20 +307,21 @@ export class SoundSwitchCCAPI extends CCAPI {
 				let result: SupervisionResult | undefined;
 				if (value > 0) {
 					// Use provided volume or try to use the current volume if it exists
-					const volume = options?.volume !== undefined
-						? options.volume
-						: this.tryGetValueDB()?.getValue<number>(
-							SoundSwitchCCValues.volume.endpoint(
-								this.endpoint.index,
-							),
-						);
+					const volume =
+						options?.volume !== undefined
+							? options.volume
+							: this.tryGetValueDB()?.getValue<number>(
+									SoundSwitchCCValues.volume.endpoint(
+										this.endpoint.index,
+									),
+								);
 					result = await this.play(value, volume);
 				} else {
 					result = await this.stopPlaying();
 				}
 				if (
-					this.isSinglecast()
-					&& !supervisedCommandSucceeded(result)
+					this.isSinglecast() &&
+					!supervisedCommandSucceeded(result)
 				) {
 					// Verify the current value after a (short) delay, unless the command was supervised and successful
 					this.schedulePoll({ property }, value, {
@@ -353,7 +337,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: SoundSwitchCCAPI, { property }) {
+		return async function (this: SoundSwitchCCAPI, { property }) {
 			switch (property) {
 				case "defaultToneId":
 				case "defaultVolume":
@@ -376,9 +360,7 @@ export class SoundSwitchCCAPI extends CCAPI {
 export class SoundSwitchCC extends CommandClass {
 	declare ccCommand: SoundSwitchCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -586,9 +568,7 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
 		const nameLength = raw.payload[3];
 
 		validatePayload(raw.payload.length >= 4 + nameLength);
-		const name = raw.payload.subarray(4, 4 + nameLength).toString(
-			"utf8",
-		);
+		const name = raw.payload.subarray(4, 4 + nameLength).toString("utf8");
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -641,9 +621,7 @@ export interface SoundSwitchCCToneInfoGetOptions {
 	testResponseForSoundSwitchToneInfoGet,
 )
 export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
-	public constructor(
-		options: WithAddress<SoundSwitchCCToneInfoGetOptions>,
-	) {
+	public constructor(options: WithAddress<SoundSwitchCCToneInfoGetOptions>) {
 		super(options);
 		this.toneId = options.toneId;
 	}
@@ -677,13 +655,15 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 }
 
 // @publicAPI
-export type SoundSwitchCCConfigurationSetOptions = {
-	defaultVolume: number;
-	defaultToneId?: number;
-} | {
-	defaultVolume?: number;
-	defaultToneId: number;
-};
+export type SoundSwitchCCConfigurationSetOptions =
+	| {
+			defaultVolume: number;
+			defaultToneId?: number;
+	  }
+	| {
+			defaultVolume?: number;
+			defaultToneId: number;
+	  };
 
 @CCCommand(SoundSwitchCommand.ConfigurationSet)
 @useSupervision()
@@ -801,9 +781,7 @@ export interface SoundSwitchCCTonePlaySetOptions {
 @CCCommand(SoundSwitchCommand.TonePlaySet)
 @useSupervision()
 export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
-	public constructor(
-		options: WithAddress<SoundSwitchCCTonePlaySetOptions>,
-	) {
+	public constructor(options: WithAddress<SoundSwitchCCTonePlaySetOptions>) {
 		super(options);
 		this.toneId = options.toneId;
 		this.volume = options.volume;

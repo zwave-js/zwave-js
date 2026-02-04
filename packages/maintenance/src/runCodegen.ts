@@ -5,6 +5,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
+
 import { Project, type SourceFile } from "ts-morph";
 import ts from "typescript";
 
@@ -88,12 +89,14 @@ export async function runCodegen(config: CodegenConfig): Promise<void> {
 	});
 
 	// Get source files from the project and filter to srcDir
-	const fileFilter = config.fileFilter
-		?? ((relativePath: string) =>
-			!relativePath.endsWith(".test.ts")
-			&& !relativePath.includes("/test/"));
+	const fileFilter =
+		config.fileFilter ??
+		((relativePath: string) =>
+			!relativePath.endsWith(".test.ts") &&
+			!relativePath.includes("/test/"));
 
-	const sourceFiles = project.getSourceFiles()
+	const sourceFiles = project
+		.getSourceFiles()
 		.filter((sf) => {
 			const filePath = sf.getFilePath();
 			// Only include files within srcDir
@@ -110,7 +113,7 @@ export async function runCodegen(config: CodegenConfig): Promise<void> {
 	if (config.generateAuxiliaryFiles?.length) {
 		const results = await Promise.all(
 			config.generateAuxiliaryFiles.map((generator) =>
-				generator(sourceFiles, srcDir)
+				generator(sourceFiles, srcDir),
 			),
 		);
 		for (const auxiliaryFiles of results) {

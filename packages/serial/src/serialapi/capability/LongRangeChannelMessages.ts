@@ -129,7 +129,8 @@ export interface SetLongRangeChannelResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.SetLongRangeChannel)
-export class SetLongRangeChannelResponse extends Message
+export class SetLongRangeChannelResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(

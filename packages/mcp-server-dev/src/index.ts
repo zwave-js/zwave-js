@@ -6,6 +6,7 @@ import {
 	CallToolRequestSchema,
 	ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+
 import { McpToolRegistry } from "./registry.js";
 import {
 	autofixConfigTool,

@@ -89,9 +89,7 @@ export class FirmwareUpdateNVMRequest extends Message {
 		const command: FirmwareUpdateNVMCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
-		const CommandConstructor = getSubCommandRequestConstructor(
-			command,
-		);
+		const CommandConstructor = getSubCommandRequestConstructor(command);
 		if (CommandConstructor) {
 			return CommandConstructor.from(
 				raw.withPayload(payload),
@@ -109,10 +107,7 @@ export class FirmwareUpdateNVMRequest extends Message {
 	public command: FirmwareUpdateNVMCommand;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([
-			[this.command],
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[this.command], this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -151,9 +146,7 @@ export class FirmwareUpdateNVMResponse extends Message {
 		const command: FirmwareUpdateNVMCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
-		const CommandConstructor = getSubCommandResponseConstructor(
-			command,
-		);
+		const CommandConstructor = getSubCommandResponseConstructor(command);
 		if (CommandConstructor) {
 			return CommandConstructor.from(
 				raw.withPayload(payload),
@@ -232,13 +225,10 @@ export interface FirmwareUpdateNVM_SetNewImageRequestOptions {
 }
 
 @subCommandRequest(FirmwareUpdateNVMCommand.SetNewImage)
-export class FirmwareUpdateNVM_SetNewImageRequest
-	extends FirmwareUpdateNVMRequest
-{
+export class FirmwareUpdateNVM_SetNewImageRequest extends FirmwareUpdateNVMRequest {
 	public constructor(
-		options:
-			& FirmwareUpdateNVM_SetNewImageRequestOptions
-			& MessageBaseOptions,
+		options: FirmwareUpdateNVM_SetNewImageRequestOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 
@@ -278,13 +268,10 @@ export interface FirmwareUpdateNVM_SetNewImageResponseOptions {
 }
 
 @subCommandResponse(FirmwareUpdateNVMCommand.SetNewImage)
-export class FirmwareUpdateNVM_SetNewImageResponse
-	extends FirmwareUpdateNVMResponse
-{
+export class FirmwareUpdateNVM_SetNewImageResponse extends FirmwareUpdateNVMResponse {
 	public constructor(
-		options:
-			& FirmwareUpdateNVM_SetNewImageResponseOptions
-			& MessageBaseOptions,
+		options: FirmwareUpdateNVM_SetNewImageResponseOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 
@@ -316,22 +303,17 @@ export class FirmwareUpdateNVM_SetNewImageResponse
 // =============================================================================
 
 @subCommandRequest(FirmwareUpdateNVMCommand.GetNewImage)
-export class FirmwareUpdateNVM_GetNewImageRequest
-	extends FirmwareUpdateNVMRequest
-{}
+export class FirmwareUpdateNVM_GetNewImageRequest extends FirmwareUpdateNVMRequest {}
 
 export interface FirmwareUpdateNVM_GetNewImageResponseOptions {
 	newImage: boolean;
 }
 
 @subCommandResponse(FirmwareUpdateNVMCommand.GetNewImage)
-export class FirmwareUpdateNVM_GetNewImageResponse
-	extends FirmwareUpdateNVMResponse
-{
+export class FirmwareUpdateNVM_GetNewImageResponse extends FirmwareUpdateNVMResponse {
 	public constructor(
-		options:
-			& FirmwareUpdateNVM_GetNewImageResponseOptions
-			& MessageBaseOptions,
+		options: FirmwareUpdateNVM_GetNewImageResponseOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 
@@ -369,13 +351,10 @@ export interface FirmwareUpdateNVM_UpdateCRC16RequestOptions {
 }
 
 @subCommandRequest(FirmwareUpdateNVMCommand.UpdateCRC16)
-export class FirmwareUpdateNVM_UpdateCRC16Request
-	extends FirmwareUpdateNVMRequest
-{
+export class FirmwareUpdateNVM_UpdateCRC16Request extends FirmwareUpdateNVMRequest {
 	public constructor(
-		options:
-			& FirmwareUpdateNVM_UpdateCRC16RequestOptions
-			& MessageBaseOptions,
+		options: FirmwareUpdateNVM_UpdateCRC16RequestOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 		this.command = FirmwareUpdateNVMCommand.UpdateCRC16;
@@ -434,13 +413,10 @@ export interface FirmwareUpdateNVM_UpdateCRC16ResponseOptions {
 }
 
 @subCommandResponse(FirmwareUpdateNVMCommand.UpdateCRC16)
-export class FirmwareUpdateNVM_UpdateCRC16Response
-	extends FirmwareUpdateNVMResponse
-{
+export class FirmwareUpdateNVM_UpdateCRC16Response extends FirmwareUpdateNVMResponse {
 	public constructor(
-		options:
-			& FirmwareUpdateNVM_UpdateCRC16ResponseOptions
-			& MessageBaseOptions,
+		options: FirmwareUpdateNVM_UpdateCRC16ResponseOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 
@@ -473,9 +449,7 @@ export class FirmwareUpdateNVM_UpdateCRC16Response
 // =============================================================================
 
 @subCommandRequest(FirmwareUpdateNVMCommand.IsValidCRC16)
-export class FirmwareUpdateNVM_IsValidCRC16Request
-	extends FirmwareUpdateNVMRequest
-{
+export class FirmwareUpdateNVM_IsValidCRC16Request extends FirmwareUpdateNVMRequest {
 	public override getResponseTimeout(): number | undefined {
 		// Computing the CRC-16 of a couple hundred KB can take a while on slow sticks
 		return 30000;
@@ -487,13 +461,10 @@ export interface FirmwareUpdateNVM_IsValidCRC16ResponseOptions {
 }
 
 @subCommandResponse(FirmwareUpdateNVMCommand.IsValidCRC16)
-export class FirmwareUpdateNVM_IsValidCRC16Response
-	extends FirmwareUpdateNVMResponse
-{
+export class FirmwareUpdateNVM_IsValidCRC16Response extends FirmwareUpdateNVMResponse {
 	public constructor(
-		options:
-			& FirmwareUpdateNVM_IsValidCRC16ResponseOptions
-			& MessageBaseOptions,
+		options: FirmwareUpdateNVM_IsValidCRC16ResponseOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 

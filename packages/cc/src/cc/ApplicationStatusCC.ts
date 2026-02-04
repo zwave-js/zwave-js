@@ -8,6 +8,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+
 import { CCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -35,7 +36,8 @@ export class ApplicationStatusCCAPI extends CCAPI {
 
 @commandClass(CommandClasses["Application Status"])
 @implementedVersion(1)
-export class ApplicationStatusCC extends CommandClass
+export class ApplicationStatusCC
+	extends CommandClass
 	implements SinglecastCC<ApplicationStatusCC>
 {
 	declare ccCommand: ApplicationStatusCommand;
@@ -50,9 +52,7 @@ export interface ApplicationStatusCCBusyOptions {
 
 @CCCommand(ApplicationStatusCommand.Busy)
 export class ApplicationStatusCCBusy extends ApplicationStatusCC {
-	public constructor(
-		options: WithAddress<ApplicationStatusCCBusyOptions>,
-	) {
+	public constructor(options: WithAddress<ApplicationStatusCCBusyOptions>) {
 		super(options);
 		this.status = options.status;
 		this.waitTime = options.waitTime;
@@ -66,8 +66,8 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 		const status: ApplicationStatus = raw.payload[0];
 		let waitTime: number | undefined;
 		if (
-			status === ApplicationStatus.TryAgainInWaitTimeSeconds
-			&& raw.payload.length >= 2
+			status === ApplicationStatus.TryAgainInWaitTimeSeconds &&
+			raw.payload.length >= 2
 		) {
 			waitTime = raw.payload[1];
 		}
@@ -91,9 +91,7 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 		const message: MessageRecord = {
 			status: getEnumMemberName(ApplicationStatus, this.status),
 		};
-		if (
-			this.status === ApplicationStatus.TryAgainInWaitTimeSeconds
-		) {
+		if (this.status === ApplicationStatus.TryAgainInWaitTimeSeconds) {
 			message["wait time"] = `${this.waitTime} seconds`;
 		}
 		return {

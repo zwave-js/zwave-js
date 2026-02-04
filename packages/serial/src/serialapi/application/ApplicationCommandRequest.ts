@@ -21,6 +21,7 @@ import {
 	priority,
 } from "@zwave-js/serial";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import type { MessageWithCC } from "../utils.js";
 
 export enum ApplicationCommandStatusFlags {
@@ -38,26 +39,25 @@ export enum ApplicationCommandStatusFlags {
 	ForeignHomeId = 0b1000_0000, // The received frame is received from a foreign HomeID. Only Controllers in Smart Start AddNode mode can receive this status.
 }
 
-export type ApplicationCommandRequestOptions =
-	& (
-		| { command: CommandClass }
-		| {
+export type ApplicationCommandRequestOptions = (
+	| { command: CommandClass }
+	| {
 			nodeId: number;
 			serializedCC: BytesView;
-		}
-	)
-	& {
-		frameType?: ApplicationCommandRequest["frameType"];
-		routedBusy?: boolean;
-		isExploreFrame?: boolean;
-		isForeignFrame?: boolean;
-		fromForeignHomeId?: boolean;
-	};
+	  }
+) & {
+	frameType?: ApplicationCommandRequest["frameType"];
+	routedBusy?: boolean;
+	isExploreFrame?: boolean;
+	isForeignFrame?: boolean;
+	fromForeignHomeId?: boolean;
+};
 
 @messageTypes(MessageType.Request, FunctionType.ApplicationCommand)
 // This does not expect a response. The controller sends us this when a node sends a command
 @priority(MessagePriority.Normal)
-export class ApplicationCommandRequest extends Message
+export class ApplicationCommandRequest
+	extends Message
 	implements MessageWithCC
 {
 	public constructor(
@@ -100,8 +100,9 @@ export class ApplicationCommandRequest extends Message
 			default:
 				frameType = "singlecast";
 		}
-		const isExploreFrame: boolean = frameType === "broadcast"
-			&& !!(status & ApplicationCommandStatusFlags.Explore);
+		const isExploreFrame: boolean =
+			frameType === "broadcast" &&
+			!!(status & ApplicationCommandStatusFlags.Explore);
 		const isForeignFrame = !!(
 			status & ApplicationCommandStatusFlags.ForeignFrame
 		);
@@ -168,12 +169,13 @@ export class ApplicationCommandRequest extends Message
 	}
 
 	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		const statusByte = (this.frameType === "broadcast"
-			? ApplicationCommandStatusFlags.TypeBroad
-			: this.frameType === "multicast"
-			? ApplicationCommandStatusFlags.TypeMulti
-			: 0)
-			| (this.routedBusy ? ApplicationCommandStatusFlags.RoutedBusy : 0);
+		const statusByte =
+			(this.frameType === "broadcast"
+				? ApplicationCommandStatusFlags.TypeBroad
+				: this.frameType === "multicast"
+					? ApplicationCommandStatusFlags.TypeMulti
+					: 0) |
+			(this.routedBusy ? ApplicationCommandStatusFlags.RoutedBusy : 0);
 
 		const serializedCC = await this.serializeCC(ctx);
 		const nodeId = encodeNodeID(

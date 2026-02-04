@@ -5,6 +5,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
+
 import { NodeStatusMixin } from "./20_Status.js";
 
 /**
@@ -21,7 +22,8 @@ export interface NodeWakeup {
 	sendNoMoreInformation(): Promise<boolean>;
 }
 
-export abstract class NodeWakeupMixin extends NodeStatusMixin
+export abstract class NodeWakeupMixin
+	extends NodeStatusMixin
 	implements NodeWakeup
 {
 	public waitForWakeup(): Promise<void> {
@@ -50,8 +52,8 @@ export abstract class NodeWakeupMixin extends NodeStatusMixin
 
 		let msgSent = false;
 		if (
-			this.status === NodeStatus.Awake
-			&& this.interviewStage === InterviewStage.Complete
+			this.status === NodeStatus.Awake &&
+			this.interviewStage === InterviewStage.Complete
 		) {
 			this.driver.controllerLog.logNode(this.id, {
 				message: "Sending node back to sleep...",

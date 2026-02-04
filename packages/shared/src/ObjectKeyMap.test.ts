@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { ObjectKeyMap, type ReadonlyObjectKeyMap } from "./ObjectKeyMap.js";
 
 const fixtures = {
@@ -120,16 +121,14 @@ test("set(): should overwrite previous values", (t) => {
 
 test("values(): works like on the original Map class", (t) => {
 	const map = fixtures.createMapWithEntries();
-	t.expect(
-		[...map.values()],
-	).toStrictEqual(fixtures.entries.map(([, v]) => v));
+	t.expect([...map.values()]).toStrictEqual(
+		fixtures.entries.map(([, v]) => v),
+	);
 });
 
 test("keys(): works like on the original Map class", (t) => {
 	const map = fixtures.createMapWithEntries();
-	t.expect(
-		[...map.keys()],
-	).toStrictEqual(fixtures.entries.map(([k]) => k));
+	t.expect([...map.keys()]).toStrictEqual(fixtures.entries.map(([k]) => k));
 });
 
 test("required key properties should automatically be filled in", (t) => {
@@ -139,9 +138,7 @@ test("required key properties should automatically be filled in", (t) => {
 	>(undefined, { propertyKey: "5" });
 	map.set({ property: "foo" }, 1);
 	map.set({ property: "foo", propertyKey: "1" }, 2);
-	t.expect(
-		[...map.keys()],
-	).toStrictEqual([
+	t.expect([...map.keys()]).toStrictEqual([
 		{ property: "foo", propertyKey: "5" },
 		{ property: "foo", propertyKey: "1" },
 	]);

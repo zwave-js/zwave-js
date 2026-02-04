@@ -4,10 +4,23 @@ const repoRoot = path.join(__dirname, "../..");
 /**
  * @param {string} filename
  * @param {string} sourceText
+ * @returns {Promise<string>}
  */
-function formatWithDprint(filename, sourceText) {
-	const { formatWithDprint: format } = require("@zwave-js/fmt");
-	return format(repoRoot, filename, sourceText);
+async function formatWithOxfmt(filename, sourceText) {
+	const { format } = await import("oxfmt");
+	const { code } = await format(filename, sourceText, {
+		printWidth: 120,
+		tabWidth: 4,
+		useTabs: true,
+		semi: true,
+		singleQuote: false,
+		quoteProps: "as-needed",
+		trailingComma: "all",
+		bracketSpacing: true,
+		arrowParens: "always",
+		endOfLine: "lf",
+	});
+	return code;
 }
 
 const urls = {
@@ -89,10 +102,7 @@ async function wasPRModifiedAfterComment(
 	// Check 2: Are there any modification events with created_at >= comment time?
 	// This is a backup check in case the timeline ordering is not reliable
 	for (const event of events) {
-		if (
-			modificationEvents.includes(event.event)
-			&& "created_at" in event
-		) {
+		if (modificationEvents.includes(event.event) && "created_at" in event) {
 			const eventTime = new Date(event.created_at);
 			if (eventTime >= commentTime) {
 				return true;
@@ -179,7 +189,7 @@ async function extractLogfileContent(logfileSection) {
 }
 
 module.exports = {
-	formatWithDprint,
+	formatWithOxfmt,
 	urls,
 	wasPRModifiedAfterComment,
 	extractLogfileSection,

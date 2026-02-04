@@ -109,9 +109,8 @@ export class RemoveFailedNodeRequestStatusReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& RemoveFailedNodeRequestStatusReportOptions
-			& MessageBaseOptions,
+		options: RemoveFailedNodeRequestStatusReportOptions &
+			MessageBaseOptions,
 	) {
 		super(options);
 
@@ -145,7 +144,8 @@ export interface RemoveFailedNodeResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.RemoveFailedNode)
-export class RemoveFailedNodeResponse extends Message
+export class RemoveFailedNodeResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(

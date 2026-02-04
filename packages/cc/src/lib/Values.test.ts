@@ -1,5 +1,6 @@
 import { CommandClasses } from "@zwave-js/core";
 import { test } from "vitest";
+
 import {
 	AlarmSensorCCValues,
 	BasicCCValues,

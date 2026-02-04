@@ -30,9 +30,7 @@ import { Bytes } from "@zwave-js/shared";
 @priority(MessagePriority.Controller)
 export class GetSerialApiInitDataRequest extends Message {}
 
-export interface GetSerialApiInitDataResponseOptions
-	extends SerialApiInitData
-{}
+export interface GetSerialApiInitDataResponseOptions extends SerialApiInitData {}
 
 @messageTypes(MessageType.Response, FunctionType.GetSerialApiInitData)
 export class GetSerialApiInitDataResponse extends Message {
@@ -74,9 +72,8 @@ export class GetSerialApiInitDataResponse extends Message {
 		// The new "official" Host API specs incorrectly switched the meaning of some flags
 		// Apparently this was never intended, and the firmware correctly uses the "old" encoding.
 		// https://community.silabs.com/s/question/0D58Y00009qjEghSAE/bug-in-firmware-7191-get-init-data-response-does-not-match-host-api-specification?language=en_US
-		const nodeType: NodeType = capabilities & 0b0001
-			? NodeType["End Node"]
-			: NodeType.Controller;
+		const nodeType: NodeType =
+			capabilities & 0b0001 ? NodeType["End Node"] : NodeType.Controller;
 		const supportsTimers = !!(capabilities & 0b0010);
 		const isPrimary = !(capabilities & 0b0100);
 		const isSIS = !!(capabilities & 0b1000);
@@ -86,8 +83,8 @@ export class GetSerialApiInitDataResponse extends Message {
 			const nodeListLength = raw.payload[offset];
 			// Controller Nodes MUST set this field to 29
 			if (
-				nodeListLength === NUM_NODEMASK_BYTES
-				&& raw.payload.length >= offset + 1 + nodeListLength
+				nodeListLength === NUM_NODEMASK_BYTES &&
+				raw.payload.length >= offset + 1 + nodeListLength
 			) {
 				const nodeBitMask = raw.payload.subarray(
 					offset + 1,
@@ -137,9 +134,7 @@ export class GetSerialApiInitDataResponse extends Message {
 			chipType = this.zwaveChipType;
 		}
 
-		this.payload = new Bytes(
-			3 + NUM_NODEMASK_BYTES + (chipType ? 2 : 0),
-		);
+		this.payload = new Bytes(3 + NUM_NODEMASK_BYTES + (chipType ? 2 : 0));
 
 		let capabilities = 0;
 		if (this.supportsTimers) capabilities |= 0b0010;

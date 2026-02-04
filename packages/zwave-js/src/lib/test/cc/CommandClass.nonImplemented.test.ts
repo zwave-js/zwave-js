@@ -1,5 +1,6 @@
 import { CommandClass } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

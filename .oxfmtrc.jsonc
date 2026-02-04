@@ -1,0 +1,64 @@
+{
+	"printWidth": 80,
+	"tabWidth": 4,
+	"useTabs": true,
+	"semi": true,
+	"singleQuote": false,
+	"quoteProps": "as-needed",
+	"jsxSingleQuote": false,
+	"trailingComma": "all",
+	"bracketSpacing": true,
+	"arrowParens": "always",
+	"endOfLine": "lf",
+	"proseWrap": "preserve",
+
+	"experimentalSortImports": {
+		"ignoreCase": false,
+		"order": "asc",
+		"groups": [
+			["side-effect"],
+			["builtin"],
+			["external", "type-external"],
+			["internal", "type-internal"],
+			["parent", "type-parent"],
+			["sibling", "type-sibling"],
+			["index", "type-index"],
+		],
+	},
+
+	"experimentalSortPackageJson": true,
+
+	"ignorePatterns": [
+		"**/build/**",
+		"**/node_modules/**",
+		"**/*-lock.json",
+		".github/workflows/**",
+		".github/prompts/**",
+		".yarn/plugins/**",
+		".yarn/releases/**",
+		".tmp/**",
+		".vscode/extensions/**",
+		"cache/**",
+		"packages/*/*.api.md",
+		"CHANGELOG*.md",
+		".yarnrc.yml",
+		"**/_sidebar.md",
+	],
+
+	"overrides": [
+		{
+			"files": ["packages/config/config/**/*.json"],
+			"options": {
+				"printWidth": 120,
+			},
+		},
+		{
+			"files": ["**/*.yml", "**/*.yaml"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2,
+				"singleQuote": true,
+			},
+		},
+	],
+}

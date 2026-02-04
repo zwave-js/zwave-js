@@ -25,6 +25,7 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -56,6 +57,7 @@ import {
 } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { UserCodeCC } from "./UserCodeCC.js";
 
 export const ScheduleEntryLockCCValues = V.defineCCValues(
@@ -134,14 +136,10 @@ function setUserCodeScheduleKindCached(
 	userId: number,
 	scheduleKind: ScheduleEntryLockScheduleKind,
 ): void {
-	ctx
-		.getValueDB(endpoint.nodeId)
-		.setValue(
-			ScheduleEntryLockCCValues.scheduleKind(userId).endpoint(
-				endpoint.index,
-			),
-			scheduleKind,
-		);
+	ctx.getValueDB(endpoint.nodeId).setValue(
+		ScheduleEntryLockCCValues.scheduleKind(userId).endpoint(endpoint.index),
+		scheduleKind,
+	);
 }
 
 /** Updates whether scheduling is active for one or all user(s) in the cache */
@@ -152,20 +150,17 @@ function setUserCodeScheduleEnabledCached(
 	enabled: boolean,
 ): void {
 	const setEnabled = (userId: number) => {
-		ctx
-			.getValueDB(endpoint.nodeId)
-			.setValue(
-				ScheduleEntryLockCCValues.userEnabled(userId).endpoint(
-					endpoint.index,
-				),
-				enabled,
-			);
+		ctx.getValueDB(endpoint.nodeId).setValue(
+			ScheduleEntryLockCCValues.userEnabled(userId).endpoint(
+				endpoint.index,
+			),
+			enabled,
+		);
 	};
 
 	if (userId == undefined) {
 		// Enable/disable all users
-		const numUsers = UserCodeCC.getSupportedUsersCached(ctx, endpoint)
-			?? 0;
+		const numUsers = UserCodeCC.getSupportedUsersCached(ctx, endpoint) ?? 0;
 
 		for (let userId = 1; userId <= numUsers; userId++) {
 			setEnabled(userId);
@@ -266,12 +261,11 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 		});
 
-		const result = await this.host.sendCommand<
-			ScheduleEntryLockCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const result =
+			await this.host.sendCommand<ScheduleEntryLockCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (result) {
 			return pick(result, [
@@ -308,9 +302,9 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 
 		if (schedule) {
 			if (
-				schedule.stopHour < schedule.startHour
-				|| schedule.stopHour === schedule.startHour
-					&& schedule.stopMinute <= schedule.startMinute
+				schedule.stopHour < schedule.startHour ||
+				(schedule.stopHour === schedule.startHour &&
+					schedule.stopMinute <= schedule.startMinute)
 			) {
 				throw new ZWaveError(
 					`The stop time must be after the start time.`,
@@ -325,12 +319,12 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			...slot,
 			...(schedule
 				? {
-					action: ScheduleEntryLockSetAction.Set,
-					...schedule,
-				}
+						action: ScheduleEntryLockSetAction.Set,
+						...schedule,
+					}
 				: {
-					action: ScheduleEntryLockSetAction.Erase,
-				}),
+						action: ScheduleEntryLockSetAction.Erase,
+					}),
 		});
 
 		const result = await this.host.sendCommand(cc, this.commandOptions);
@@ -381,12 +375,11 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			...slot,
 		});
-		const result = await this.host.sendCommand<
-			ScheduleEntryLockCCWeekDayScheduleReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const result =
+			await this.host.sendCommand<ScheduleEntryLockCCWeekDayScheduleReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (result?.weekday != undefined) {
 			return {
@@ -452,12 +445,12 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			...slot,
 			...(schedule
 				? {
-					action: ScheduleEntryLockSetAction.Set,
-					...schedule,
-				}
+						action: ScheduleEntryLockSetAction.Set,
+						...schedule,
+					}
 				: {
-					action: ScheduleEntryLockSetAction.Erase,
-				}),
+						action: ScheduleEntryLockSetAction.Erase,
+					}),
 		});
 
 		const result = await this.host.sendCommand(cc, this.commandOptions);
@@ -508,12 +501,11 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			...slot,
 		});
-		const result = await this.host.sendCommand<
-			ScheduleEntryLockCCYearDayScheduleReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const result =
+			await this.host.sendCommand<ScheduleEntryLockCCYearDayScheduleReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (result?.startYear != undefined) {
 			return {
@@ -542,8 +534,8 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 		);
 
 		if (this.isSinglecast()) {
-			const numSlots = ScheduleEntryLockCC
-				.getNumDailyRepeatingSlotsCached(
+			const numSlots =
+				ScheduleEntryLockCC.getNumDailyRepeatingSlotsCached(
 					this.host,
 					this.endpoint,
 				);
@@ -562,12 +554,12 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			...slot,
 			...(schedule
 				? {
-					action: ScheduleEntryLockSetAction.Set,
-					...schedule,
-				}
+						action: ScheduleEntryLockSetAction.Set,
+						...schedule,
+					}
 				: {
-					action: ScheduleEntryLockSetAction.Erase,
-				}),
+						action: ScheduleEntryLockSetAction.Erase,
+					}),
 		});
 
 		const result = await this.host.sendCommand(cc, this.commandOptions);
@@ -618,12 +610,11 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			...slot,
 		});
-		const result = await this.host.sendCommand<
-			ScheduleEntryLockCCDailyRepeatingScheduleReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const result =
+			await this.host.sendCommand<ScheduleEntryLockCCDailyRepeatingScheduleReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (result?.weekdays != undefined) {
 			return {
@@ -646,12 +637,11 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const result = await this.host.sendCommand<
-			ScheduleEntryLockCCTimeOffsetReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const result =
+			await this.host.sendCommand<ScheduleEntryLockCCTimeOffsetReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (result) {
 			return pick(result, ["standardOffset", "dstOffset"]);
@@ -683,9 +673,7 @@ export class ScheduleEntryLockCCAPI extends CCAPI {
 export class ScheduleEntryLockCC extends CommandClass {
 	declare ccCommand: ScheduleEntryLockCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -725,9 +713,9 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 
 		// If the timezone is not configured with the Time CC, do it here
 		if (
-			api.supportsCommand(ScheduleEntryLockCommand.TimeOffsetSet)
-			&& (!endpoint.supportsCC(CommandClasses.Time)
-				|| endpoint.getCCVersion(CommandClasses.Time) < 2)
+			api.supportsCommand(ScheduleEntryLockCommand.TimeOffsetSet) &&
+			(!endpoint.supportsCC(CommandClasses.Time) ||
+				endpoint.getCCVersion(CommandClasses.Time) < 2)
 		) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
@@ -751,13 +739,15 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 	): number {
-		return ctx
-			.getValueDB(endpoint.nodeId)
-			.getValue(
-				ScheduleEntryLockCCValues.numWeekDaySlots.endpoint(
-					endpoint.index,
-				),
-			) || 0;
+		return (
+			ctx
+				.getValueDB(endpoint.nodeId)
+				.getValue(
+					ScheduleEntryLockCCValues.numWeekDaySlots.endpoint(
+						endpoint.index,
+					),
+				) || 0
+		);
 	}
 
 	/**
@@ -768,13 +758,15 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 	): number {
-		return ctx
-			.getValueDB(endpoint.nodeId)
-			.getValue(
-				ScheduleEntryLockCCValues.numYearDaySlots.endpoint(
-					endpoint.index,
-				),
-			) || 0;
+		return (
+			ctx
+				.getValueDB(endpoint.nodeId)
+				.getValue(
+					ScheduleEntryLockCCValues.numYearDaySlots.endpoint(
+						endpoint.index,
+					),
+				) || 0
+		);
 	}
 
 	/**
@@ -785,13 +777,15 @@ daily repeating: ${slotsResp.numDailyRepeatingSlots}`;
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 	): number {
-		return ctx
-			.getValueDB(endpoint.nodeId)
-			.getValue(
-				ScheduleEntryLockCCValues.numDailyRepeatingSlots.endpoint(
-					endpoint.index,
-				),
-			) || 0;
+		return (
+			ctx
+				.getValueDB(endpoint.nodeId)
+				.getValue(
+					ScheduleEntryLockCCValues.numDailyRepeatingSlots.endpoint(
+						endpoint.index,
+					),
+				) || 0
+		);
 	}
 
 	/**
@@ -1085,15 +1079,15 @@ export class ScheduleEntryLockCCSupportedGet extends ScheduleEntryLockCC {}
 
 /** @publicAPI */
 export type ScheduleEntryLockCCWeekDayScheduleSetOptions =
-	& ScheduleEntryLockSlotId
-	& (
-		| {
-			action: ScheduleEntryLockSetAction.Erase;
-		}
-		| ({
-			action: ScheduleEntryLockSetAction.Set;
-		} & ScheduleEntryLockWeekDaySchedule)
-	);
+	ScheduleEntryLockSlotId &
+		(
+			| {
+					action: ScheduleEntryLockSetAction.Erase;
+			  }
+			| ({
+					action: ScheduleEntryLockSetAction.Set;
+			  } & ScheduleEntryLockWeekDaySchedule)
+		);
 
 @CCCommand(ScheduleEntryLockCommand.WeekDayScheduleSet)
 @useSupervision()
@@ -1122,8 +1116,8 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 		const action: ScheduleEntryLockSetAction = raw.payload[0];
 
 		validatePayload(
-			action === ScheduleEntryLockSetAction.Set
-				|| action === ScheduleEntryLockSetAction.Erase,
+			action === ScheduleEntryLockSetAction.Set ||
+				action === ScheduleEntryLockSetAction.Erase,
 		);
 		const userId = raw.payload[1];
 		const slotId = raw.payload[2];
@@ -1221,13 +1215,10 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 
 // @publicAPI
 export type ScheduleEntryLockCCWeekDayScheduleReportOptions =
-	& ScheduleEntryLockSlotId
-	& AllOrNone<ScheduleEntryLockWeekDaySchedule>;
+	ScheduleEntryLockSlotId & AllOrNone<ScheduleEntryLockWeekDaySchedule>;
 
 @CCCommand(ScheduleEntryLockCommand.WeekDayScheduleReport)
-export class ScheduleEntryLockCCWeekDayScheduleReport
-	extends ScheduleEntryLockCC
-{
+export class ScheduleEntryLockCCWeekDayScheduleReport extends ScheduleEntryLockCC {
 	public constructor(
 		options: WithAddress<ScheduleEntryLockCCWeekDayScheduleReportOptions>,
 	) {
@@ -1279,11 +1270,11 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 		}
 
 		if (
-			weekday != undefined
-			&& startHour != undefined
-			&& startMinute != undefined
-			&& stopHour != undefined
-			&& stopMinute != undefined
+			weekday != undefined &&
+			startHour != undefined &&
+			startMinute != undefined &&
+			stopHour != undefined &&
+			stopMinute != undefined
 		) {
 			ccOptions = {
 				...ccOptions,
@@ -1320,12 +1311,12 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 			this.slotId,
 			this.weekday != undefined
 				? {
-					weekday: this.weekday,
-					startHour: this.startHour!,
-					startMinute: this.startMinute!,
-					stopHour: this.stopHour!,
-					stopMinute: this.stopMinute!,
-				}
+						weekday: this.weekday,
+						startHour: this.startHour!,
+						startMinute: this.startMinute!,
+						stopHour: this.stopHour!,
+						stopMinute: this.stopMinute!,
+					}
 				: false,
 		);
 
@@ -1429,15 +1420,15 @@ export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
 
 /** @publicAPI */
 export type ScheduleEntryLockCCYearDayScheduleSetOptions =
-	& ScheduleEntryLockSlotId
-	& (
-		| {
-			action: ScheduleEntryLockSetAction.Erase;
-		}
-		| ({
-			action: ScheduleEntryLockSetAction.Set;
-		} & ScheduleEntryLockYearDaySchedule)
-	);
+	ScheduleEntryLockSlotId &
+		(
+			| {
+					action: ScheduleEntryLockSetAction.Erase;
+			  }
+			| ({
+					action: ScheduleEntryLockSetAction.Set;
+			  } & ScheduleEntryLockYearDaySchedule)
+		);
 
 @CCCommand(ScheduleEntryLockCommand.YearDayScheduleSet)
 @useSupervision()
@@ -1471,8 +1462,8 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 		const action: ScheduleEntryLockSetAction = raw.payload[0];
 
 		validatePayload(
-			action === ScheduleEntryLockSetAction.Set
-				|| action === ScheduleEntryLockSetAction.Erase,
+			action === ScheduleEntryLockSetAction.Set ||
+				action === ScheduleEntryLockSetAction.Erase,
 		);
 		const userId = raw.payload[1];
 		const slotId = raw.payload[2];
@@ -1567,20 +1558,16 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 				"user ID": this.userId,
 				"slot #": this.slotId,
 				action: "set",
-				"start date": `${
-					formatDate(
-						this.startYear ?? 0,
-						this.startMonth ?? 0,
-						this.startDay ?? 0,
-					)
-				} ${formatTime(this.startHour ?? 0, this.startMinute ?? 0)}`,
-				"end date": `${
-					formatDate(
-						this.stopYear ?? 0,
-						this.stopMonth ?? 0,
-						this.stopDay ?? 0,
-					)
-				} ${formatTime(this.stopHour ?? 0, this.stopMinute ?? 0)}`,
+				"start date": `${formatDate(
+					this.startYear ?? 0,
+					this.startMonth ?? 0,
+					this.startDay ?? 0,
+				)} ${formatTime(this.startHour ?? 0, this.startMinute ?? 0)}`,
+				"end date": `${formatDate(
+					this.stopYear ?? 0,
+					this.stopMonth ?? 0,
+					this.stopDay ?? 0,
+				)} ${formatTime(this.stopHour ?? 0, this.stopMinute ?? 0)}`,
 			};
 		}
 		return {
@@ -1592,13 +1579,10 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 
 // @publicAPI
 export type ScheduleEntryLockCCYearDayScheduleReportOptions =
-	& ScheduleEntryLockSlotId
-	& AllOrNone<ScheduleEntryLockYearDaySchedule>;
+	ScheduleEntryLockSlotId & AllOrNone<ScheduleEntryLockYearDaySchedule>;
 
 @CCCommand(ScheduleEntryLockCommand.YearDayScheduleReport)
-export class ScheduleEntryLockCCYearDayScheduleReport
-	extends ScheduleEntryLockCC
-{
+export class ScheduleEntryLockCCYearDayScheduleReport extends ScheduleEntryLockCC {
 	public constructor(
 		options: WithAddress<ScheduleEntryLockCCYearDayScheduleReportOptions>,
 	) {
@@ -1675,16 +1659,16 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 		}
 
 		if (
-			startYear != undefined
-			&& startMonth != undefined
-			&& startDay != undefined
-			&& startHour != undefined
-			&& startMinute != undefined
-			&& stopYear != undefined
-			&& stopMonth != undefined
-			&& stopDay != undefined
-			&& stopHour != undefined
-			&& stopMinute != undefined
+			startYear != undefined &&
+			startMonth != undefined &&
+			startDay != undefined &&
+			startHour != undefined &&
+			startMinute != undefined &&
+			stopYear != undefined &&
+			stopMonth != undefined &&
+			stopDay != undefined &&
+			stopHour != undefined &&
+			stopMinute != undefined
 		) {
 			ccOptions = {
 				...ccOptions,
@@ -1731,17 +1715,17 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 			this.slotId,
 			this.startYear != undefined
 				? {
-					startYear: this.startYear,
-					startMonth: this.startMonth!,
-					startDay: this.startDay!,
-					startHour: this.startHour!,
-					startMinute: this.startMinute!,
-					stopYear: this.stopYear!,
-					stopMonth: this.stopMonth!,
-					stopDay: this.stopDay!,
-					stopHour: this.stopHour!,
-					stopMinute: this.stopMinute!,
-				}
+						startYear: this.startYear,
+						startMonth: this.startMonth!,
+						startDay: this.startDay!,
+						startHour: this.startHour!,
+						startMinute: this.startMinute!,
+						stopYear: this.stopYear!,
+						stopMonth: this.stopMonth!,
+						stopDay: this.stopDay!,
+						stopHour: this.stopHour!,
+						stopMinute: this.stopMinute!,
+					}
 				: false,
 		);
 
@@ -1779,20 +1763,16 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 				"user ID": this.userId,
 				"slot #": this.slotId,
 				action: "set",
-				"start date": `${
-					formatDate(
-						this.startYear ?? 0,
-						this.startMonth ?? 0,
-						this.startDay ?? 0,
-					)
-				} ${formatTime(this.startHour ?? 0, this.startMinute ?? 0)}`,
-				"end date": `${
-					formatDate(
-						this.stopYear ?? 0,
-						this.stopMonth ?? 0,
-						this.stopDay ?? 0,
-					)
-				} ${formatTime(this.stopHour ?? 0, this.stopMinute ?? 0)}`,
+				"start date": `${formatDate(
+					this.startYear ?? 0,
+					this.startMonth ?? 0,
+					this.startDay ?? 0,
+				)} ${formatTime(this.startHour ?? 0, this.startMinute ?? 0)}`,
+				"end date": `${formatDate(
+					this.stopYear ?? 0,
+					this.stopMonth ?? 0,
+					this.stopDay ?? 0,
+				)} ${formatTime(this.stopHour ?? 0, this.stopMinute ?? 0)}`,
 			};
 		}
 		return {
@@ -1960,25 +1940,21 @@ export class ScheduleEntryLockCCTimeOffsetGet extends ScheduleEntryLockCC {}
 
 /** @publicAPI */
 export type ScheduleEntryLockCCDailyRepeatingScheduleSetOptions =
-	& ScheduleEntryLockSlotId
-	& (
-		| {
-			action: ScheduleEntryLockSetAction.Erase;
-		}
-		| ({
-			action: ScheduleEntryLockSetAction.Set;
-		} & ScheduleEntryLockDailyRepeatingSchedule)
-	);
+	ScheduleEntryLockSlotId &
+		(
+			| {
+					action: ScheduleEntryLockSetAction.Erase;
+			  }
+			| ({
+					action: ScheduleEntryLockSetAction.Set;
+			  } & ScheduleEntryLockDailyRepeatingSchedule)
+		);
 
 @CCCommand(ScheduleEntryLockCommand.DailyRepeatingScheduleSet)
 @useSupervision()
-export class ScheduleEntryLockCCDailyRepeatingScheduleSet
-	extends ScheduleEntryLockCC
-{
+export class ScheduleEntryLockCCDailyRepeatingScheduleSet extends ScheduleEntryLockCC {
 	public constructor(
-		options: WithAddress<
-			ScheduleEntryLockCCDailyRepeatingScheduleSetOptions
-		>,
+		options: WithAddress<ScheduleEntryLockCCDailyRepeatingScheduleSetOptions>,
 	) {
 		super(options);
 		this.userId = options.userId;
@@ -2001,8 +1977,8 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 		const action: ScheduleEntryLockSetAction = raw.payload[0];
 
 		validatePayload(
-			action === ScheduleEntryLockSetAction.Set
-				|| action === ScheduleEntryLockSetAction.Erase,
+			action === ScheduleEntryLockSetAction.Set ||
+				action === ScheduleEntryLockSetAction.Erase,
 		);
 		const userId = raw.payload[1];
 		const slotId = raw.payload[2];
@@ -2089,7 +2065,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 				"slot #": this.slotId,
 				action: "set",
 				weekdays: this.weekdays!.map((w) =>
-					getEnumMemberName(ScheduleEntryLockWeekday, w)
+					getEnumMemberName(ScheduleEntryLockWeekday, w),
 				).join(", "),
 				"start time": formatTime(
 					this.startHour ?? 0,
@@ -2110,17 +2086,13 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 
 // @publicAPI
 export type ScheduleEntryLockCCDailyRepeatingScheduleReportOptions =
-	& ScheduleEntryLockSlotId
-	& AllOrNone<ScheduleEntryLockDailyRepeatingSchedule>;
+	ScheduleEntryLockSlotId &
+		AllOrNone<ScheduleEntryLockDailyRepeatingSchedule>;
 
 @CCCommand(ScheduleEntryLockCommand.DailyRepeatingScheduleReport)
-export class ScheduleEntryLockCCDailyRepeatingScheduleReport
-	extends ScheduleEntryLockCC
-{
+export class ScheduleEntryLockCCDailyRepeatingScheduleReport extends ScheduleEntryLockCC {
 	public constructor(
-		options: WithAddress<
-			ScheduleEntryLockCCDailyRepeatingScheduleReportOptions
-		>,
+		options: WithAddress<ScheduleEntryLockCCDailyRepeatingScheduleReportOptions>,
 	) {
 		super(options);
 		this.userId = options.userId;
@@ -2190,12 +2162,12 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 			this.slotId,
 			this.weekdays?.length
 				? {
-					weekdays: this.weekdays,
-					startHour: this.startHour!,
-					startMinute: this.startMinute!,
-					durationHour: this.durationHour!,
-					durationMinute: this.durationMinute!,
-				}
+						weekdays: this.weekdays,
+						startHour: this.startHour!,
+						startMinute: this.startMinute!,
+						durationHour: this.durationHour!,
+						durationMinute: this.durationMinute!,
+					}
 				: false,
 		);
 
@@ -2266,13 +2238,9 @@ export type ScheduleEntryLockCCDailyRepeatingScheduleGetOptions =
 
 @CCCommand(ScheduleEntryLockCommand.DailyRepeatingScheduleGet)
 @expectedCCResponse(ScheduleEntryLockCCDailyRepeatingScheduleReport)
-export class ScheduleEntryLockCCDailyRepeatingScheduleGet
-	extends ScheduleEntryLockCC
-{
+export class ScheduleEntryLockCCDailyRepeatingScheduleGet extends ScheduleEntryLockCC {
 	public constructor(
-		options: WithAddress<
-			ScheduleEntryLockCCDailyRepeatingScheduleGetOptions
-		>,
+		options: WithAddress<ScheduleEntryLockCCDailyRepeatingScheduleGetOptions>,
 	) {
 		super(options);
 		this.userId = options.userId;

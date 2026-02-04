@@ -48,14 +48,14 @@ export interface ColorSwitchCCCapabilities {
 }
 
 export interface IndicatorCCCapabilities {
-	indicators: Record<number, {
-		properties: number[];
-		manufacturerSpecificDescription?: string;
-	}>;
-	getValue?: (
-		indicatorId: number,
-		propertyId: number,
-	) => number | undefined;
+	indicators: Record<
+		number,
+		{
+			properties: number[];
+			manufacturerSpecificDescription?: string;
+		}
+	>;
+	getValue?: (indicatorId: number, propertyId: number) => number | undefined;
 }
 
 export interface NotificationCCCapabilities {
@@ -71,24 +71,28 @@ export interface MeterCCCapabilities {
 	getValue?: (
 		scale: number,
 		rateType: number,
-	) => number | {
-		value: number;
-		deltaTime: number;
-		prevValue?: number;
-	} | undefined;
-	onReset?: (
-		options?: {
-			scale: number;
-			rateType: number;
-			targetValue: number;
-		},
-	) => void;
+	) =>
+		| number
+		| {
+				value: number;
+				deltaTime: number;
+				prevValue?: number;
+		  }
+		| undefined;
+	onReset?: (options?: {
+		scale: number;
+		rateType: number;
+		targetValue: number;
+	}) => void;
 }
 
 export interface MultilevelSensorCCCapabilities {
-	sensors: Record<number, {
-		supportedScales: number[];
-	}>;
+	sensors: Record<
+		number,
+		{
+			supportedScales: number[];
+		}
+	>;
 	getValue?: (
 		sensorType: number | undefined,
 		scale: number | undefined,

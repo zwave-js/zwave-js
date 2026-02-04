@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { SecurityCCNonceGet, SecurityCCNonceReport } from "@zwave-js/cc";
 import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import {
@@ -7,7 +9,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -46,8 +48,8 @@ integrationTest(
 			// The driver should send a Nonce Report command
 			await mockNode.expectControllerFrame(
 				(f): f is MockZWaveRequestFrame =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof SecurityCCNonceReport,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof SecurityCCNonceReport,
 				{
 					timeout: 200,
 					errorMessage: "Expected a Nonce Report to be sent",
@@ -60,8 +62,8 @@ integrationTest(
 			// No further Nonce Report should have been sent
 			mockNode.assertReceivedControllerFrame(
 				(f) =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof SecurityCCNonceReport,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof SecurityCCNonceReport,
 				{
 					noMatch: true,
 					errorMessage: "Expected NO further Nonce Report to be sent",
@@ -83,8 +85,8 @@ integrationTest(
 
 			await mockNode.expectControllerFrame(
 				(f): f is MockZWaveRequestFrame =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof SecurityCCNonceReport,
+					f.type === MockZWaveFrameType.Request &&
+					f.payload instanceof SecurityCCNonceReport,
 				{
 					timeout: 200,
 					errorMessage: "Expected a Nonce Report to be sent",

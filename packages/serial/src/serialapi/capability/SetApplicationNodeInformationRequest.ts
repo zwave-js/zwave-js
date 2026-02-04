@@ -16,9 +16,7 @@ import {
 } from "@zwave-js/serial";
 import { Bytes, num2hex } from "@zwave-js/shared";
 
-export interface SetApplicationNodeInformationRequestOptions
-	extends MessageBaseOptions
-{
+export interface SetApplicationNodeInformationRequestOptions extends MessageBaseOptions {
 	isListening: boolean;
 	genericDeviceClass: number;
 	specificDeviceClass: number;
@@ -29,9 +27,7 @@ export interface SetApplicationNodeInformationRequestOptions
 @messageTypes(MessageType.Request, FunctionType.SetApplicationNodeInformation)
 @priority(MessagePriority.Controller)
 export class SetApplicationNodeInformationRequest extends Message {
-	public constructor(
-		options: SetApplicationNodeInformationRequestOptions,
-	) {
+	public constructor(options: SetApplicationNodeInformationRequestOptions) {
 		super(options);
 		this.isListening = options.isListening;
 		this.genericDeviceClass = options.genericDeviceClass;

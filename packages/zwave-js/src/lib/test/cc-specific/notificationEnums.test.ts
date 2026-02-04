@@ -5,6 +5,7 @@ import {
 import { CommandClasses, type ValueMetadataNumeric } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -215,8 +216,8 @@ integrationTest("The 'simple' Door state value works correctly", {
 		const valueIDs = node.getDefinedValueIDs();
 		const simpleVID = valueIDs.find(
 			(vid) =>
-				vid.commandClass === CommandClasses.Notification
-				&& vid.propertyKey === "Door state (simple)",
+				vid.commandClass === CommandClasses.Notification &&
+				vid.propertyKey === "Door state (simple)",
 		);
 		t.expect(simpleVID).toBeTruthy();
 
@@ -339,9 +340,9 @@ integrationTest("The synthetic 'Door tilt state' value works correctly", {
 		const tiltVID = NotificationCCValues.doorTiltState.id;
 
 		const hasTiltVID = () =>
-			node.getDefinedValueIDs().some(
-				(vid) => NotificationCCValues.doorTiltState.is(vid),
-			);
+			node
+				.getDefinedValueIDs()
+				.some((vid) => NotificationCCValues.doorTiltState.is(vid));
 		// Before receiving any notifications with the tilt enum, the synthetic value should not exist
 		t.expect(hasTiltVID()).toBe(false);
 

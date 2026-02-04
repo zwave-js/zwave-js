@@ -130,79 +130,77 @@ export interface IndicatorProperty extends IndicatorPropertyDefinition {
 	readonly id: number;
 }
 
-const indicatorProperties = Object.freeze(
-	{
-		[0x01]: {
-			label: "Multilevel",
-			exposeAsValue: true,
-		},
-		[0x02]: {
-			label: "Binary",
-			type: "boolean",
-			exposeAsValue: true,
-		},
-		[0x03]: {
-			label: "On/Off Period: Duration",
-			description:
-				"Sets the duration of an on/off period in 1/10th seconds. Must be set together with \"On/Off Cycle Count\"",
-		},
-		[0x04]: {
-			label: "On/Off Cycle Count",
-			description:
-				"Sets the number of on/off periods. 0xff means infinite. Must be set together with \"On/Off Period duration\"",
-		},
-		[0x05]: {
-			label: "On/Off Period: On time",
-			description:
-				"This property is used to set the length of the On time during an On/Off period. It allows asymmetric On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
-		},
-		[0x0a]: {
-			label: "Timeout: Hours",
-			description:
-				"Turns the indicator of after this amount of hours. Can be used together with other timeout properties",
-		},
-		[0x06]: {
-			label: "Timeout: Minutes",
-			description:
-				"Turns the indicator of after this amount of minutes. Can be used together with other timeout properties",
-		},
-		[0x07]: {
-			label: "Timeout: Seconds",
-			description:
-				"Turns the indicator of after this amount of seconds. Can be used together with other timeout properties",
-		},
-		[0x08]: {
-			label: "Timeout: 1/100th seconds",
-			description:
-				"Turns the indicator of after this amount of 1/100th seconds. Can be used together with other timeout properties",
-		},
-		[0x09]: {
-			label: "Sound level",
-			description:
-				"This property is used to set the volume of a indicator. 0 means off/mute.",
-			max: 100,
-			exposeAsValue: true,
-		},
-		[0x10]: {
-			label: "Low power",
-			description:
-				"This property MAY be used to by a supporting node advertise that the indicator can continue working in sleep mode.",
-			readonly: true,
-			type: "boolean",
-		},
-	} as const satisfies Record<number, IndicatorPropertyDefinition>,
-);
+const indicatorProperties = Object.freeze({
+	[0x01]: {
+		label: "Multilevel",
+		exposeAsValue: true,
+	},
+	[0x02]: {
+		label: "Binary",
+		type: "boolean",
+		exposeAsValue: true,
+	},
+	[0x03]: {
+		label: "On/Off Period: Duration",
+		description:
+			'Sets the duration of an on/off period in 1/10th seconds. Must be set together with "On/Off Cycle Count"',
+	},
+	[0x04]: {
+		label: "On/Off Cycle Count",
+		description:
+			'Sets the number of on/off periods. 0xff means infinite. Must be set together with "On/Off Period duration"',
+	},
+	[0x05]: {
+		label: "On/Off Period: On time",
+		description:
+			"This property is used to set the length of the On time during an On/Off period. It allows asymmetric On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
+	},
+	[0x0a]: {
+		label: "Timeout: Hours",
+		description:
+			"Turns the indicator of after this amount of hours. Can be used together with other timeout properties",
+	},
+	[0x06]: {
+		label: "Timeout: Minutes",
+		description:
+			"Turns the indicator of after this amount of minutes. Can be used together with other timeout properties",
+	},
+	[0x07]: {
+		label: "Timeout: Seconds",
+		description:
+			"Turns the indicator of after this amount of seconds. Can be used together with other timeout properties",
+	},
+	[0x08]: {
+		label: "Timeout: 1/100th seconds",
+		description:
+			"Turns the indicator of after this amount of 1/100th seconds. Can be used together with other timeout properties",
+	},
+	[0x09]: {
+		label: "Sound level",
+		description:
+			"This property is used to set the volume of a indicator. 0 means off/mute.",
+		max: 100,
+		exposeAsValue: true,
+	},
+	[0x10]: {
+		label: "Low power",
+		description:
+			"This property MAY be used to by a supporting node advertise that the indicator can continue working in sleep mode.",
+		readonly: true,
+		type: "boolean",
+	},
+} as const satisfies Record<number, IndicatorPropertyDefinition>);
 export type IndicatorProperties = typeof indicatorProperties;
 
 /** Returns the indicator property definition for the given id */
 export function getIndicatorProperty<ID extends number>(
 	id: ID,
 ): ID extends keyof IndicatorProperties
-	? ({ id: ID } & (IndicatorProperties[ID]))
-	: (IndicatorProperty | undefined)
-{
-	const property: IndicatorPropertyDefinition | undefined =
-		(indicatorProperties as any)[id];
+	? { id: ID } & IndicatorProperties[ID]
+	: IndicatorProperty | undefined {
+	const property: IndicatorPropertyDefinition | undefined = (
+		indicatorProperties as any
+	)[id];
 	// @ts-expect-error Undefined is valid if the property is not found
 	if (!property) return;
 
@@ -214,6 +212,8 @@ export function getIndicatorProperty<ID extends number>(
 
 /** Returns all defined indicator properties */
 export function getAllIndicatorProperties(): readonly IndicatorProperty[] {
-	return Object.entries(indicatorProperties)
-		.map(([id, value]) => ({ id: parseInt(id, 10), ...value }));
+	return Object.entries(indicatorProperties).map(([id, value]) => ({
+		id: parseInt(id, 10),
+		...value,
+	}));
 }

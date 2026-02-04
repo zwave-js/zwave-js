@@ -1,8 +1,8 @@
-import { Bytes, type BytesView } from "@zwave-js/shared";
-import { BLOCK_SIZE, leftShift1, xor, zeroPad } from "./shared.js";
-
 // Import the correct primitives based on the environment
 import { primitives } from "#crypto_primitives";
+import { Bytes, type BytesView } from "@zwave-js/shared";
+
+import { BLOCK_SIZE, leftShift1, xor, zeroPad } from "./shared.js";
 const {
 	decryptAES128OFB,
 	encryptAES128CBC,
@@ -76,8 +76,8 @@ export async function computeCMAC(
 	const blockSize = 16;
 	const numBlocks = Math.ceil(message.length / blockSize);
 	let lastBlock = message.subarray((numBlocks - 1) * blockSize);
-	const lastBlockIsComplete = message.length > 0
-		&& message.length % blockSize === 0;
+	const lastBlockIsComplete =
+		message.length > 0 && message.length % blockSize === 0;
 	if (!lastBlockIsComplete) {
 		lastBlock = zeroPad(
 			Bytes.concat([lastBlock, [0x80]]),
@@ -113,18 +113,9 @@ export function computePRK(
 export async function deriveTempKeys(
 	PRK: BytesView,
 ): Promise<{ tempKeyCCM: BytesView; tempPersonalizationString: BytesView }> {
-	const T1 = await computeCMAC(
-		Bytes.concat([constantTE, [0x01]]),
-		PRK,
-	);
-	const T2 = await computeCMAC(
-		Bytes.concat([T1, constantTE, [0x02]]),
-		PRK,
-	);
-	const T3 = await computeCMAC(
-		Bytes.concat([T2, constantTE, [0x03]]),
-		PRK,
-	);
+	const T1 = await computeCMAC(Bytes.concat([constantTE, [0x01]]), PRK);
+	const T2 = await computeCMAC(Bytes.concat([T1, constantTE, [0x02]]), PRK);
+	const T3 = await computeCMAC(Bytes.concat([T2, constantTE, [0x03]]), PRK);
 	return {
 		tempKeyCCM: T1,
 		tempPersonalizationString: Bytes.concat([T2, T3]),
@@ -132,31 +123,15 @@ export async function deriveTempKeys(
 }
 
 /** Derives the CCM, MPAN keys and the personalization string from the permanent network key (PNK) */
-export async function deriveNetworkKeys(
-	PNK: BytesView,
-): Promise<
-	{
-		keyCCM: BytesView;
-		keyMPAN: BytesView;
-		personalizationString: BytesView;
-	}
-> {
-	const T1 = await computeCMAC(
-		Bytes.concat([constantNK, [0x01]]),
-		PNK,
-	);
-	const T2 = await computeCMAC(
-		Bytes.concat([T1, constantNK, [0x02]]),
-		PNK,
-	);
-	const T3 = await computeCMAC(
-		Bytes.concat([T2, constantNK, [0x03]]),
-		PNK,
-	);
-	const T4 = await computeCMAC(
-		Bytes.concat([T3, constantNK, [0x04]]),
-		PNK,
-	);
+export async function deriveNetworkKeys(PNK: BytesView): Promise<{
+	keyCCM: BytesView;
+	keyMPAN: BytesView;
+	personalizationString: BytesView;
+}> {
+	const T1 = await computeCMAC(Bytes.concat([constantNK, [0x01]]), PNK);
+	const T2 = await computeCMAC(Bytes.concat([T1, constantNK, [0x02]]), PNK);
+	const T3 = await computeCMAC(Bytes.concat([T2, constantNK, [0x03]]), PNK);
+	const T4 = await computeCMAC(Bytes.concat([T3, constantNK, [0x04]]), PNK);
 	return {
 		keyCCM: T1,
 		keyMPAN: T4,
@@ -176,12 +151,7 @@ export function computeNoncePRK(
 /** Derives the MEI from the nonce PRK */
 export async function deriveMEI(noncePRK: BytesView): Promise<BytesView> {
 	const T1 = await computeCMAC(
-		Bytes.concat([
-			constantEI,
-			[0x00],
-			constantEI,
-			[0x01],
-		]),
+		Bytes.concat([constantEI, [0x00], constantEI, [0x01]]),
 		noncePRK,
 	);
 	const T2 = await computeCMAC(

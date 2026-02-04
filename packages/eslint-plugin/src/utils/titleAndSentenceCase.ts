@@ -26,7 +26,7 @@ const titleCaseExceptions = [
 	"LEDs",
 ];
 
-const sentenceCaseIgnored: (RegExp)[] = [
+const sentenceCaseIgnored: RegExp[] = [
 	// emphasis:
 	/^NOT$/,
 	// Units:
@@ -79,9 +79,7 @@ const alwaysUppercase: RegExp[] = [
 	/^[AP]M$/i,
 ];
 
-const alwaysLowercase: RegExp[] = [
-	/^\d+-in-\d+$/i,
-];
+const alwaysLowercase: RegExp[] = [/^\d+-in-\d+$/i];
 
 function titleCaseWord(
 	word: string,
@@ -138,21 +136,20 @@ export function toTitleCase(str: string, allowFinalSuffix = true): string {
 		// Forbid "The" at the start of titles
 		.filter(({ word }, i) => i > 0 || word.toLowerCase() !== "the");
 
-	const titleCased = words
-		.map(({ word, suffix }, i, words) => {
-			const isFirstWord = i === 0
-				|| isEndOfSentence(words[i - 1].suffix, false);
+	const titleCased = words.map(({ word, suffix }, i, words) => {
+		const isFirstWord =
+			i === 0 || isEndOfSentence(words[i - 1].suffix, false);
 
-			let fixedSuffix = suffix;
-			if (!allowFinalSuffix && i === words.length - 1) {
-				// When allowFinalSuffix is false, the last word may not have any suffix, except ")"
-				fixedSuffix = suffix.includes(")") ? ")" : "";
-			}
-			return {
-				word: titleCaseWord(word, isFirstWord),
-				suffix: fixedSuffix,
-			};
-		});
+		let fixedSuffix = suffix;
+		if (!allowFinalSuffix && i === words.length - 1) {
+			// When allowFinalSuffix is false, the last word may not have any suffix, except ")"
+			fixedSuffix = suffix.includes(")") ? ")" : "";
+		}
+		return {
+			word: titleCaseWord(word, isFirstWord),
+			suffix: fixedSuffix,
+		};
+	});
 	const ret = joinWords(titleCased);
 	titleCaseCache.set(cacheKey, ret);
 	return ret;
@@ -180,8 +177,8 @@ function sentenceCaseWord(word: string, isFirstWord: boolean): string {
 		if (exception) return exception;
 	}
 	if (
-		titleCaseIgnored.some((re) => re.test(word))
-		|| sentenceCaseIgnored.some((re) => re.test(word))
+		titleCaseIgnored.some((re) => re.test(word)) ||
+		sentenceCaseIgnored.some((re) => re.test(word))
 	) {
 		return word;
 	}
@@ -210,11 +207,13 @@ function sentenceCaseWord(word: string, isFirstWord: boolean): string {
 	}
 
 	// Sentence case the rest
-	return (isFirstWord
-		// First word Uppercase
-		? word[0].toUpperCase()
-		// Other words lowercase
-		: word[0].toLowerCase()) + word.slice(1);
+	return (
+		(isFirstWord
+			? // First word Uppercase
+				word[0].toUpperCase()
+			: // Other words lowercase
+				word[0].toLowerCase()) + word.slice(1)
+	);
 }
 
 const sentenceCaseCache = new Map<string, string>();
@@ -231,20 +230,19 @@ export function toSentenceCase(str: string, allowFinalSuffix = true): string {
 		// Disallow punctuation before the first word
 		.filter(({ word }, i) => i > 0 || word.length > 0);
 
-	const sentenceCased = words
-		.map(({ word, suffix }, i, words) => {
-			const isFirstWord = i === 0
-				|| isEndOfSentence(words[i - 1].suffix, false);
-			let fixedSuffix = suffix;
-			if (!allowFinalSuffix && i === words.length - 1) {
-				// When allowFinalSuffix is false, the last word may not have any suffix, except ")"
-				fixedSuffix = suffix.includes(")") ? ")" : "";
-			}
-			return {
-				word: sentenceCaseWord(word, isFirstWord),
-				suffix: fixedSuffix,
-			};
-		});
+	const sentenceCased = words.map(({ word, suffix }, i, words) => {
+		const isFirstWord =
+			i === 0 || isEndOfSentence(words[i - 1].suffix, false);
+		let fixedSuffix = suffix;
+		if (!allowFinalSuffix && i === words.length - 1) {
+			// When allowFinalSuffix is false, the last word may not have any suffix, except ")"
+			fixedSuffix = suffix.includes(")") ? ")" : "";
+		}
+		return {
+			word: sentenceCaseWord(word, isFirstWord),
+			suffix: fixedSuffix,
+		};
+	});
 	const ret = joinWords(sentenceCased);
 	sentenceCaseCache.set(cacheKey, ret);
 	return ret;

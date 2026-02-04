@@ -8,11 +8,8 @@ export enum AttachmentTypes {
 }
 
 export type ZLFAttachmentConstructor<T extends ZLFAttachment> =
-	& typeof ZLFAttachment
-	& {
-		new (
-			options: ZLFAttachmentOptions,
-		): T;
+	typeof ZLFAttachment & {
+		new (options: ZLFAttachmentOptions): T;
 	};
 
 export interface ZLFAttachmentBaseOptions {
@@ -82,17 +79,13 @@ function getZLFAttachmentConstructor(
  * Represents a ZLF attachment for parsing data from a Zniffer trace
  */
 export class ZLFAttachment {
-	public constructor(
-		options: ZLFAttachmentOptions,
-	) {
+	public constructor(options: ZLFAttachmentOptions) {
 		this.type = options.type;
 		this.version = options.version;
 		this.data = options.data || new Bytes();
 	}
 
-	public static parse(
-		buffer: BytesView,
-	): {
+	public static parse(buffer: BytesView): {
 		attachment: ZLFAttachment;
 		bytesRead: number;
 	} {
@@ -119,25 +112,18 @@ export class ZLFAttachment {
 
 	/** Serializes this attachment into a Buffer */
 	public serialize(): Bytes {
-		return Bytes.concat([
-			[this.type, this.version],
-			this.data,
-		]);
+		return Bytes.concat([[this.type, this.version], this.data]);
 	}
 }
 
-export interface ZLFNetworkKeysAttachmentOptions
-	extends ZLFAttachmentBaseOptions
-{
+export interface ZLFNetworkKeysAttachmentOptions extends ZLFAttachmentBaseOptions {
 	homeId: number;
 	keys: BytesView[];
 	tempKeys: BytesView[];
 }
 
 export class ZLFNetworkKeysAttachment extends ZLFAttachment {
-	public constructor(
-		options: ZLFNetworkKeysAttachmentOptions,
-	) {
+	public constructor(options: ZLFNetworkKeysAttachmentOptions) {
 		super({
 			type: AttachmentTypes.NetworkKeys,
 			version: 1,
@@ -223,9 +209,7 @@ export class ZLFNetworkKeysAttachment extends ZLFAttachment {
 	public readonly tempKeys: Bytes[];
 }
 
-export interface ZLFFrameCommentAttachmentOptions
-	extends ZLFAttachmentBaseOptions
-{
+export interface ZLFFrameCommentAttachmentOptions extends ZLFAttachmentBaseOptions {
 	comment: string;
 	version?: number;
 	data?: Bytes;
@@ -233,9 +217,7 @@ export interface ZLFFrameCommentAttachmentOptions
 }
 
 export class ZLFFrameCommentAttachment extends ZLFAttachment {
-	public constructor(
-		options: ZLFFrameCommentAttachmentOptions,
-	) {
+	public constructor(options: ZLFFrameCommentAttachmentOptions) {
 		super({
 			type: AttachmentTypes.FrameComment,
 			version: options.version || 1,
@@ -264,9 +246,7 @@ export interface ZLFSessionAttachmentOptions extends ZLFAttachmentBaseOptions {
 }
 
 export class ZLFSessionAttachment extends ZLFAttachment {
-	public constructor(
-		options: ZLFSessionAttachmentOptions,
-	) {
+	public constructor(options: ZLFSessionAttachmentOptions) {
 		super({
 			type: AttachmentTypes.Session,
 			version: options.version || 1,

@@ -23,9 +23,7 @@ async function main(param) {
 	// Only use the sanitized env variable for the merge commit sha
 	const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
 	if (!mergeCommitSha) {
-		throw new Error(
-			"Missing env variable MERGE_COMMIT_SHA",
-		);
+		throw new Error("Missing env variable MERGE_COMMIT_SHA");
 	}
 
 	let success = false;
@@ -42,12 +40,10 @@ async function main(param) {
 		await exec.exec("yarn", ["config", "set", "npmAuthToken", npmToken]);
 
 		// Figure out the next version
-		newVersion = `${
-			semver.inc(
-				require(`${process.env.GITHUB_WORKSPACE}/package.json`).version,
-				"prerelease",
-			)
-		}-pr-${pr}-${mergeCommitSha.slice(0, 7)}`;
+		newVersion = `${semver.inc(
+			require(`${process.env.GITHUB_WORKSPACE}/package.json`).version,
+			"prerelease",
+		)}-pr-${pr}-${mergeCommitSha.slice(0, 7)}`;
 
 		// Bump versions
 		await exec.exec(
@@ -61,10 +57,9 @@ async function main(param) {
 		// and release changed packages
 		await exec.exec(
 			"yarn",
-			`workspaces foreach --all -vti --no-private npm publish --tolerate-republish --tag next`
-				.split(
-					" ",
-				),
+			`workspaces foreach --all -vti --no-private npm publish --tolerate-republish --tag next`.split(
+				" ",
+			),
 		);
 		success = true;
 	} catch (e) {
@@ -85,8 +80,7 @@ yarn add zwave-js@${newVersion}
 		github.rest.issues.createComment({
 			...options,
 			issue_number: pr,
-			body:
-				`😥 Unfortunately I could not publish the new packages. Check out the logs to see what went wrong.`,
+			body: `😥 Unfortunately I could not publish the new packages. Check out the logs to see what went wrong.`,
 		});
 	}
 }

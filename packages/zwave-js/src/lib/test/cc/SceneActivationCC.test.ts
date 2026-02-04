@@ -29,9 +29,7 @@ test("the Set command (without Duration) should serialize correctly", async (t) 
 			0xff, // default duration
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command (with Duration) should serialize correctly", async (t) => {
@@ -47,9 +45,7 @@ test("the Set command (with Duration) should serialize correctly", async (t) => 
 			0x80, // 1 minute
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should be deserialized correctly", async (t) => {
@@ -60,10 +56,9 @@ test("the Set command should be deserialized correctly", async (t) => {
 			0x00, // 0 seconds
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as SceneActivationCCSet;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as SceneActivationCCSet;
 	t.expect(cc.constructor).toBe(SceneActivationCCSet);
 
 	t.expect(cc.sceneId).toBe(15);
@@ -74,10 +69,9 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 2 } as any,
-	) as SceneActivationCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 2,
+	} as any)) as SceneActivationCC;
 	t.expect(cc.constructor).toBe(SceneActivationCC);
 });
 

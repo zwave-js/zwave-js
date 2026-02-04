@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	NotificationCCReport,
 	NotificationCCValues,
@@ -5,17 +7,14 @@ import {
 import { ValueMetadata } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"When receiving an NotificationCC::Report with known typa but an unknown event, the resulting value metadata should contain the ccSpecific field",
 	{
 		// debug: true,
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/notificationCC",
-		),
+		provisioningDirectory: path.join(__dirname, "fixtures/notificationCC"),
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const cc = new NotificationCCReport({

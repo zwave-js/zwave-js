@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import { CONFIG_PARAM } from "../jsonSelectors.js";
 import type { JSONCRule } from "../utils.js";
 
@@ -24,12 +25,12 @@ const correctUnits = new Set(fixableUnits.map(({ correct }) => correct));
 // Create a map of lowercase variants of wrong units to the correct ones
 const fixes = new Map(
 	fixableUnits.flatMap(({ wrong, correct }) =>
-		wrong.map((w) => [w, correct])
+		wrong.map((w) => [w, correct]),
 	),
 );
 // Also add the correct ones themselves, as they may be written with the wrong case
 fixableUnits.forEach(({ correct }) =>
-	fixes.set(correct.toLowerCase(), correct)
+	fixes.set(correct.toLowerCase(), correct),
 );
 
 export const consistentParamUnits: JSONCRule.RuleModule = {
@@ -90,8 +91,7 @@ export const consistentParamUnits: JSONCRule.RuleModule = {
 		fixable: "code",
 		schema: false,
 		messages: {
-			"forbidden-unit":
-				`The unit "{{unit}}" is not allowed. Use "{{correct}}" instead.`,
+			"forbidden-unit": `The unit "{{unit}}" is not allowed. Use "{{correct}}" instead.`,
 		},
 		type: "problem",
 	},

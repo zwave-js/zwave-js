@@ -7,6 +7,7 @@ import {
 	EncapsulationFlags,
 	type LogNode,
 } from "@zwave-js/core";
+
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../Node.js";
 
@@ -23,8 +24,8 @@ export async function handleManufacturerSpecificGet(
 		.withOptions({
 			// Answer with the same encapsulation as asked, but omit
 			// Supervision as it shouldn't be used for Get-Report flows
-			encapsulationFlags: command.encapsulationFlags
-				& ~EncapsulationFlags.Supervision,
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
 	await api.sendReport({

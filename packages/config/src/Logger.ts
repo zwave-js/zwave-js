@@ -3,6 +3,7 @@ import {
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 } from "@zwave-js/core";
+
 import {
 	CONFIG_LABEL,
 	CONFIG_LOGLEVEL,

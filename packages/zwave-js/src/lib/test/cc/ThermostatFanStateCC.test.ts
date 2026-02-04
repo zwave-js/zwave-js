@@ -26,9 +26,7 @@ test("the Get command should serialize correctly", async (t) => {
 			ThermostatFanStateCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command (v1 - v2) should be deserialized correctly", async (t) => {
@@ -38,10 +36,9 @@ test("the Report command (v1 - v2) should be deserialized correctly", async (t) 
 			ThermostatFanState["Idle / off"], // state
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatFanStateCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatFanStateCCReport;
 	t.expect(cc.constructor).toBe(ThermostatFanStateCCReport);
 
 	t.expect(cc.state).toBe(ThermostatFanState["Idle / off"]);
@@ -51,10 +48,9 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatFanStateCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatFanStateCC;
 	t.expect(cc.constructor).toBe(ThermostatFanStateCC);
 });
 

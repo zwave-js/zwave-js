@@ -46,8 +46,11 @@ export class GetNodeProtocolInfoRequest extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): GetNodeProtocolInfoRequest {
-		const requestedNodeId =
-			parseNodeID(raw.payload, ctx.nodeIdType, 0).nodeId;
+		const requestedNodeId = parseNodeID(
+			raw.payload,
+			ctx.nodeIdType,
+			0,
+		).nodeId;
 
 		return new this({
 			requestedNodeId,
@@ -64,9 +67,7 @@ export class GetNodeProtocolInfoRequest extends Message {
 	}
 }
 
-export interface GetNodeProtocolInfoResponseOptions
-	extends NodeProtocolInfoAndDeviceClass
-{}
+export interface GetNodeProtocolInfoResponseOptions extends NodeProtocolInfoAndDeviceClass {}
 
 @messageTypes(MessageType.Response, FunctionType.GetNodeProtocolInfo)
 export class GetNodeProtocolInfoResponse extends Message {
@@ -100,9 +101,9 @@ export class GetNodeProtocolInfoResponse extends Message {
 			FunctionType.GetNodeProtocolInfo,
 		);
 		if (
-			isObject(requestContext)
-			&& "nodeId" in requestContext
-			&& typeof requestContext.nodeId === "number"
+			isObject(requestContext) &&
+			"nodeId" in requestContext &&
+			typeof requestContext.nodeId === "number"
 		) {
 			isLongRange = isLongRangeNodeId(requestContext.nodeId);
 		}

@@ -1,8 +1,10 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { ObjectKeyMap } from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import { evaluate } from "../Logic.js";
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import type { DeviceID } from "./shared.js";
 
 /** A conditional config item */
@@ -16,8 +18,8 @@ export function isConditionalItem<T>(val: any): val is ConditionalItem<T> {
 	if (typeof val !== "object" || val == undefined) return false;
 	// Conditional items may have a string-valued condition
 	if (
-		typeof val.condition !== "string"
-		&& typeof val.condition !== "undefined"
+		typeof val.condition !== "string" &&
+		typeof val.condition !== "undefined"
 	) {
 		return false;
 	}
@@ -63,19 +65,25 @@ ${errorPrefix} invalid $if condition`,
 export type EvaluateDeepReturnType<
 	T,
 	PreserveArray extends boolean = false,
-> = T extends undefined ? undefined
+> = T extends undefined
+	? undefined
 	: T extends ConditionalItem<infer R>[]
-		? [PreserveArray] extends [true] ? R[]
-		: R
-	: T extends ConditionalItem<infer R> ? R
-	: T extends ObjectKeyMap<infer K, infer V>
-		? ObjectKeyMap<K, EvaluateDeepReturnType<V, false>>
-	: T extends ReadonlyMap<infer K, infer V>
-		? Map<K, EvaluateDeepReturnType<V, false>>
-	: T extends Map<infer K, infer V> ? Map<K, EvaluateDeepReturnType<V, false>>
-	: T extends unknown[] ? [PreserveArray] extends [true] ? T
-		: T[number]
-	: T;
+		? [PreserveArray] extends [true]
+			? R[]
+			: R
+		: T extends ConditionalItem<infer R>
+			? R
+			: T extends ObjectKeyMap<infer K, infer V>
+				? ObjectKeyMap<K, EvaluateDeepReturnType<V, false>>
+				: T extends ReadonlyMap<infer K, infer V>
+					? Map<K, EvaluateDeepReturnType<V, false>>
+					: T extends Map<infer K, infer V>
+						? Map<K, EvaluateDeepReturnType<V, false>>
+						: T extends unknown[]
+							? [PreserveArray] extends [true]
+								? T
+								: T[number]
+							: T;
 
 export function evaluateDeep<T, PA extends boolean>(
 	obj: T,

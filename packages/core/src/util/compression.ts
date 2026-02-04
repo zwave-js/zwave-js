@@ -7,17 +7,11 @@ import {
 	inflateSync as infflateSync,
 } from "fflate";
 
-export function deflateSync(
-	data: BytesView,
-	opts?: DeflateOptions,
-): BytesView {
+export function deflateSync(data: BytesView, opts?: DeflateOptions): BytesView {
 	return defflateSync(data, opts) as BytesView;
 }
 
-export function inflateSync(
-	data: BytesView,
-	opts?: InflateOptions,
-): BytesView {
+export function inflateSync(data: BytesView, opts?: InflateOptions): BytesView {
 	return infflateSync(data, opts) as BytesView;
 }
 

@@ -1,5 +1,7 @@
-import { JsonlDB } from "@alcalzone/jsonl-db";
 import fs from "node:fs/promises";
+
+import { JsonlDB } from "@alcalzone/jsonl-db";
+
 import { highResTimestamp } from "../packages/core/src/util/date";
 import { ValueDB, indexDBsByNode } from "../packages/core/src/values/ValueDB";
 

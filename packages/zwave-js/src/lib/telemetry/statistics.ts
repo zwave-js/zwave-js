@@ -1,6 +1,7 @@
 import { digest } from "@zwave-js/core";
 import { Bytes, formatId } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
+
 import type { Driver } from "../driver/Driver.js";
 
 const apiToken = "ef58278d935ccb26307800279458484d";
@@ -29,15 +30,14 @@ export async function compileStatistics(
 		id: hash,
 		...appInfo,
 		devices: [...driver.controller.nodes.values()].map((node) => ({
-			manufacturerId: node.manufacturerId != undefined
-				? formatId(node.manufacturerId)
-				: "",
-			productType: node.productType != undefined
-				? formatId(node.productType)
-				: "",
-			productId: node.productId != undefined
-				? formatId(node.productId)
-				: "",
+			manufacturerId:
+				node.manufacturerId != undefined
+					? formatId(node.manufacturerId)
+					: "",
+			productType:
+				node.productType != undefined ? formatId(node.productType) : "",
+			productId:
+				node.productId != undefined ? formatId(node.productId) : "",
 			firmwareVersion: node.firmwareVersion ?? "",
 		})),
 	};
@@ -69,8 +69,8 @@ export async function sendStatistics(
 		if (isObject(e.response) && e.response.status === 429) {
 			// We've hit the rate limiter. Figure out when we may try again.
 			if (
-				isObject(e.response.headers)
-				&& "retry-after" in e.response.headers
+				isObject(e.response.headers) &&
+				"retry-after" in e.response.headers
 			) {
 				const retryAfter = parseInt(e.response.headers["retry-after"]);
 				if (Number.isInteger(retryAfter)) return retryAfter;

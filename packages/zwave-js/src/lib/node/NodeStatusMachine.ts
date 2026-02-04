@@ -4,6 +4,7 @@ import {
 	StateMachine,
 	type StateMachineTransition,
 } from "@zwave-js/core";
+
 import type { NodeNetworkRole } from "./mixins/01_NetworkRole.js";
 
 export type NodeStatusState = {

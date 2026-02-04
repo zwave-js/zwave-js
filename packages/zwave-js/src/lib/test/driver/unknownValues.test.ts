@@ -19,6 +19,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(`Basic Reports with the UNKNOWN state are correctly handled`, {
@@ -96,12 +97,14 @@ integrationTest(
 		// ),
 
 		nodeCapabilities: {
-			commandClasses: [ccCaps({
-				ccId: CommandClasses["Multilevel Switch"],
-				isSupported: true,
-				version: 4,
-				defaultValue: UNKNOWN_STATE,
-			})],
+			commandClasses: [
+				ccCaps({
+					ccId: CommandClasses["Multilevel Switch"],
+					isSupported: true,
+					version: 4,
+					defaultValue: UNKNOWN_STATE,
+				}),
+			],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {

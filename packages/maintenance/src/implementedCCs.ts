@@ -1,11 +1,12 @@
 import "reflect-metadata";
 
-import { CommandClasses } from "@zwave-js/core";
-import { num2hex } from "@zwave-js/shared";
-import c from "ansi-colors";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { CommandClasses } from "@zwave-js/core";
+import { num2hex } from "@zwave-js/shared";
+import c from "ansi-colors";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -67,16 +68,19 @@ interface CCInfo {
 		try {
 			const ccName = ccRegex.exec(fileContent)![1];
 			const ccVersion = +versionRegex.exec(fileContent)![1];
-			const hasAPI = apiRegex.test(fileContent)
-				|| noApiRegex.test(fileContent);
-			const setValue = (hasAPI && setValueApiRegex.test(fileContent))
-				|| noApiRegex.test(fileContent)
-				|| noSetValueApiRegex.test(fileContent);
-			const pollValue = (hasAPI && pollValueApiRegex.test(fileContent))
-				|| noApiRegex.test(fileContent)
-				|| noPollValueApiRegex.test(fileContent);
-			const interview = interviewRegex.test(fileContent)
-				|| noInterviewRegex.test(fileContent);
+			const hasAPI =
+				apiRegex.test(fileContent) || noApiRegex.test(fileContent);
+			const setValue =
+				(hasAPI && setValueApiRegex.test(fileContent)) ||
+				noApiRegex.test(fileContent) ||
+				noSetValueApiRegex.test(fileContent);
+			const pollValue =
+				(hasAPI && pollValueApiRegex.test(fileContent)) ||
+				noApiRegex.test(fileContent) ||
+				noPollValueApiRegex.test(fileContent);
+			const interview =
+				interviewRegex.test(fileContent) ||
+				noInterviewRegex.test(fileContent);
 			allCCs.set(ccName, {
 				version: ccVersion,
 				API: hasAPI,
@@ -100,12 +104,10 @@ interface CCInfo {
 	];
 	const rows: string[][] = [];
 
-	for (
-		const [
-			name,
-			{ version, interview, API, setValue, pollValue },
-		] of allCCs.entries()
-	) {
+	for (const [
+		name,
+		{ version, interview, API, setValue, pollValue },
+	] of allCCs.entries()) {
 		const {
 			version: latest,
 			deprecated,
@@ -116,22 +118,24 @@ interface CCInfo {
 			version === latest && interview && API && setValue
 				? "done"
 				: version > 0
-				? "in progress"
-				: "none";
-		const overallColor = implementationStatus === "done"
-			? c.green
-			: implementationStatus === "in progress"
-			? c.yellow
-			: deprecated
-			? c.reset
-			: c.red;
-		const versionColor = version === latest
-			? c.green
-			: version > 0
-			? c.yellow
-			: deprecated
-			? c.reset
-			: c.red;
+					? "in progress"
+					: "none";
+		const overallColor =
+			implementationStatus === "done"
+				? c.green
+				: implementationStatus === "in progress"
+					? c.yellow
+					: deprecated
+						? c.reset
+						: c.red;
+		const versionColor =
+			version === latest
+				? c.green
+				: version > 0
+					? c.yellow
+					: deprecated
+						? c.reset
+						: c.red;
 		const implementedVersion = versionColor(
 			version > 0 ? version.toString() : "-",
 		);
@@ -139,11 +143,12 @@ interface CCInfo {
 		const hasAPI = API ? c.green(" ✔ ") : c.red(" ❌ ");
 		const hasSetValue = setValue ? c.green(" ✔ ") : c.red(" ❌ ");
 		const hasPollValue = pollValue ? c.green(" ✔ ") : c.red(" ❌ ");
-		const prefix = implementationStatus === "done"
-			? "✔"
-			: implementationStatus === "in progress"
-			? "✍🏻"
-			: "❌";
+		const prefix =
+			implementationStatus === "done"
+				? "✔"
+				: implementationStatus === "in progress"
+					? "✍🏻"
+					: "❌";
 		const postfix = deprecated ? " " + c.reset("(deprecated)") : "";
 		if (implementationStatus !== "done" || !onlyIncomplete) {
 			rows.push([
@@ -172,17 +177,19 @@ function writeTable(rows: string[][], flavor: "console" | "github"): void {
 				Math.max(...rows.map((row) => getSafeLength(row[col]))),
 			);
 		}
-		const HR = "|-"
-			+ columnLenghts.map((len) => "-".repeat(len)).join("-|-")
-			+ "-|";
+		const HR =
+			"|-" +
+			columnLenghts.map((len) => "-".repeat(len)).join("-|-") +
+			"-|";
 
 		console.log(HR);
 		for (let i = 0; i < rows.length; i++) {
-			const row = "| "
-				+ rows[i]
+			const row =
+				"| " +
+				rows[i]
 					.map((r, ri) => padEnd(r, columnLenghts[ri]))
-					.join(" | ")
-				+ " |";
+					.join(" | ") +
+				" |";
 			console.log(row);
 			if (i === 0) console.log(HR);
 		}

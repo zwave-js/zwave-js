@@ -2,6 +2,7 @@ import { CommandClass } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -10,10 +11,7 @@ integrationTest(
 		// debug: true,
 
 		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				CommandClasses.Basic,
-			],
+			commandClasses: [CommandClasses.Version, CommandClasses.Basic],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {

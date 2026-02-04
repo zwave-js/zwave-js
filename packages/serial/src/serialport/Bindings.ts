@@ -1,18 +1,22 @@
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
-export type EnumeratedPort = {
-	type: "link";
-	path: string;
-} | {
-	type: "tty";
-	path: string;
-} | {
-	type: "socket";
-	path: string;
-} | {
-	type: "custom";
-	factory: ZWaveSerialBindingFactory;
-};
+export type EnumeratedPort =
+	| {
+			type: "link";
+			path: string;
+	  }
+	| {
+			type: "tty";
+			path: string;
+	  }
+	| {
+			type: "socket";
+			path: string;
+	  }
+	| {
+			type: "custom";
+			factory: ZWaveSerialBindingFactory;
+	  };
 
 /** Abstractions to interact with serial ports on different platforms */
 export interface Serial {

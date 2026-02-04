@@ -14,6 +14,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -36,20 +37,14 @@ import { LanguageCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
-	...V.staticProperty(
-		"language",
-		{
-			...ValueMetadata.ReadOnlyString,
-			label: "Language code",
-		} as const,
-	),
-	...V.staticProperty(
-		"country",
-		{
-			...ValueMetadata.ReadOnlyString,
-			label: "Country code",
-		} as const,
-	),
+	...V.staticProperty("language", {
+		...ValueMetadata.ReadOnlyString,
+		label: "Language code",
+	} as const),
+	...V.staticProperty("country", {
+		...ValueMetadata.ReadOnlyString,
+		label: "Country code",
+	} as const),
 });
 
 // @noSetValueAPI It doesn't make sense
@@ -106,9 +101,7 @@ export class LanguageCCAPI extends CCAPI {
 export class LanguageCC extends CommandClass {
 	declare ccCommand: LanguageCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -123,9 +116,7 @@ export class LanguageCC extends CommandClass {
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(
-		ctx: RefreshValuesContext,
-	): Promise<void> {
+	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -163,9 +154,7 @@ export interface LanguageCCSetOptions {
 @CCCommand(LanguageCommand.Set)
 @useSupervision()
 export class LanguageCCSet extends LanguageCC {
-	public constructor(
-		options: WithAddress<LanguageCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<LanguageCCSetOptions>) {
 		super(options);
 		// Populate properties from options object
 		this._language = options.language;
@@ -204,8 +193,8 @@ export class LanguageCCSet extends LanguageCC {
 	}
 	public set country(value: MaybeNotKnown<string>) {
 		if (
-			typeof value === "string"
-			&& (value.length !== 2 || value.toUpperCase() !== value)
+			typeof value === "string" &&
+			(value.length !== 2 || value.toUpperCase() !== value)
 		) {
 			throw new ZWaveError(
 				"country must be a 2 digit (uppercase) code according to ISO 3166-1",
@@ -248,9 +237,7 @@ export interface LanguageCCReportOptions {
 @ccValueProperty("language", LanguageCCValues.language)
 @ccValueProperty("country", LanguageCCValues.country)
 export class LanguageCCReport extends LanguageCC {
-	public constructor(
-		options: WithAddress<LanguageCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<LanguageCCReportOptions>) {
 		super(options);
 		this.language = options.language;
 		this.country = options.country;

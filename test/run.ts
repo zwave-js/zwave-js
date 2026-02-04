@@ -1,8 +1,9 @@
-import { Bytes } from "@zwave-js/shared";
-import { wait as _wait } from "alcalzone-shared/async";
 import _os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { Bytes } from "@zwave-js/shared";
+import { wait as _wait } from "alcalzone-shared/async";
 import { Driver } from "zwave-js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -44,24 +45,12 @@ const driver = new Driver(port, {
 			"5369389EFA18EE2A4894C7FB48347FEA",
 			"hex",
 		),
-		S2_Authenticated: Bytes.from(
-			"656EF5C0F020F3C14238C04A1748B7E1",
-			"hex",
-		),
-		S2_AccessControl: Bytes.from(
-			"31132050077310B6F7032F91C79C2EB8",
-			"hex",
-		),
+		S2_Authenticated: Bytes.from("656EF5C0F020F3C14238C04A1748B7E1", "hex"),
+		S2_AccessControl: Bytes.from("31132050077310B6F7032F91C79C2EB8", "hex"),
 	},
 	securityKeysLongRange: {
-		S2_Authenticated: Bytes.from(
-			"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-			"hex",
-		),
-		S2_AccessControl: Bytes.from(
-			"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-			"hex",
-		),
+		S2_Authenticated: Bytes.from("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "hex"),
+		S2_AccessControl: Bytes.from("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "hex"),
 	},
 	rf: {
 		preferLRRegion: false,

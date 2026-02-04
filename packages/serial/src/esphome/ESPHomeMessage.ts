@@ -1,5 +1,6 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import { decodeVarInt, encodeVarInt } from "./ProtobufHelpers.js";
 
 /**
@@ -34,9 +35,10 @@ export class ESPHomeMessageRaw {
 	 * Parses a raw plaintext ESPHome frame into a MessageRaw instance.
 	 * Format: [0x00][VarInt size][VarInt type][payload]
 	 */
-	public static parse(
-		data: BytesView,
-	): { message: ESPHomeMessageRaw; bytesRead: number } {
+	public static parse(data: BytesView): {
+		message: ESPHomeMessageRaw;
+		bytesRead: number;
+	} {
 		if (data.length < 3) {
 			throw new ZWaveError(
 				"Frame too short",
@@ -49,9 +51,9 @@ export class ESPHomeMessageRaw {
 		// Check indicator byte
 		if (data[offset] !== 0x00) {
 			throw new ZWaveError(
-				`Invalid frame indicator: expected 0x00, got 0x${
-					data[offset].toString(16).padStart(2, "0")
-				}`,
+				`Invalid frame indicator: expected 0x00, got 0x${data[offset]
+					.toString(16)
+					.padStart(2, "0")}`,
 				ZWaveErrorCodes.PacketFormat_Invalid,
 			);
 		}
@@ -87,9 +89,10 @@ export class ESPHomeMessageRaw {
 	 * Parses a raw Noise-decrypted ESPHome message into a MessageRaw instance.
 	 * Format: [2-byte BE type][2-byte BE len][payload]
 	 */
-	public static parseFromNoise(
-		data: Bytes,
-	): { message: ESPHomeMessageRaw; bytesRead: number } {
+	public static parseFromNoise(data: Bytes): {
+		message: ESPHomeMessageRaw;
+		bytesRead: number;
+	} {
 		if (data.length < 4) {
 			throw new ZWaveError(
 				"Noise message too short",
@@ -130,8 +133,7 @@ export interface ESPHomeMessageOptions extends ESPHomeMessageBaseOptions {
 }
 
 export type ESPHomeMessageConstructor<T extends ESPHomeMessage> =
-	& typeof ESPHomeMessage
-	& {
+	typeof ESPHomeMessage & {
 		new (options: ESPHomeMessageBaseOptions): T;
 	};
 
@@ -159,12 +161,13 @@ export class ESPHomeMessage {
 	/**
 	 * Parses a raw ESPHome message and returns the appropriate message instance
 	 */
-	public static parse(
-		data: BytesView,
-	): { message: ESPHomeMessage; bytesRead: number } {
+	public static parse(data: BytesView): {
+		message: ESPHomeMessage;
+		bytesRead: number;
+	} {
 		const { message: raw, bytesRead } = ESPHomeMessageRaw.parse(data);
-		const Constructor = getESPHomeMessageConstructor(raw.messageType)
-			?? ESPHomeMessage;
+		const Constructor =
+			getESPHomeMessageConstructor(raw.messageType) ?? ESPHomeMessage;
 		return { message: Constructor.from(raw), bytesRead };
 	}
 
@@ -205,14 +208,14 @@ export class ESPHomeMessage {
 	 * Parses a message from Noise-decrypted data.
 	 * Format: [2-byte BE type][2-byte BE len][payload]
 	 */
-	public static parseFromNoise(
-		data: Bytes,
-	): { message: ESPHomeMessage; bytesRead: number } {
-		const { message: raw, bytesRead } = ESPHomeMessageRaw.parseFromNoise(
-			data,
-		);
-		const Constructor = getESPHomeMessageConstructor(raw.messageType)
-			?? ESPHomeMessage;
+	public static parseFromNoise(data: Bytes): {
+		message: ESPHomeMessage;
+		bytesRead: number;
+	} {
+		const { message: raw, bytesRead } =
+			ESPHomeMessageRaw.parseFromNoise(data);
+		const Constructor =
+			getESPHomeMessageConstructor(raw.messageType) ?? ESPHomeMessage;
 		return { message: Constructor.from(raw), bytesRead };
 	}
 }
@@ -228,7 +231,7 @@ const MESSAGE_CONSTRUCTOR_STORAGE = new Map<
  * Decorator to set the message type for a message class
  */
 export function messageType(type: ESPHomeMessageType) {
-	return function(target: any): any {
+	return function (target: any): any {
 		MESSAGE_TYPE_STORAGE.set(target, type);
 		MESSAGE_CONSTRUCTOR_STORAGE.set(type, target);
 		return target;

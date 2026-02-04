@@ -5,7 +5,7 @@
 const { ConfigManager } = require("@zwave-js/config");
 const JSONC = require("comment-json");
 const fs = require("node:fs/promises");
-const { formatWithDprint } = require("./utils.cjs");
+const { formatWithOxfmt } = require("./utils.cjs");
 
 /**
  * @param {{github: Github, context: Context}} param
@@ -25,7 +25,7 @@ async function main(param) {
 	// Parse the given flags while preserving comments
 	// We need to format the flags because someone might have forgotten quotes
 	const flags = JSONC.parse(
-		formatWithDprint("file.json", `{${process.env.flag}}`),
+		await formatWithOxfmt("file.json", `{${process.env.flag}}`),
 	);
 
 	const device = await cm.lookupDevice(
@@ -46,7 +46,7 @@ async function main(param) {
 
 		// And save it again
 		content = JSONC.stringify(json, undefined, "\t");
-		content = formatWithDprint(filename, content);
+		content = await formatWithOxfmt(filename, content);
 		await fs.writeFile(filename, content, "utf8");
 	}
 }

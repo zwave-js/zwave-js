@@ -24,9 +24,9 @@ export function securityClassIsS2(
 	secClass: SecurityClass | undefined,
 ): secClass is S2SecurityClass {
 	return (
-		secClass != undefined
-		&& secClass >= SecurityClass.S2_Unauthenticated
-		&& secClass <= SecurityClass.S2_AccessControl
+		secClass != undefined &&
+		secClass >= SecurityClass.S2_Unauthenticated &&
+		secClass <= SecurityClass.S2_AccessControl
 	);
 }
 
@@ -35,8 +35,8 @@ export function securityClassIsLongRange(
 	secClass: SecurityClass | undefined,
 ): secClass is S2SecurityClass {
 	return (
-		secClass === SecurityClass.S2_AccessControl
-		|| secClass === SecurityClass.S2_Authenticated
+		secClass === SecurityClass.S2_AccessControl ||
+		secClass === SecurityClass.S2_Authenticated
 	);
 }
 

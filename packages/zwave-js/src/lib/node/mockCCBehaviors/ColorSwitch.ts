@@ -39,9 +39,7 @@ const respondToColorSwitchSupportedGet: MockNodeBehavior = {
 				nodeId: controller.ownNodeId,
 				supportedColorComponents: Object.keys(
 					capabilities.colorComponents,
-				).map(
-					(c) => parseInt(c),
-				),
+				).map((c) => parseInt(c)),
 			});
 			return { action: "sendCC", cc };
 		}
@@ -52,9 +50,10 @@ const respondToColorSwitchSet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof ColorSwitchCCSet) {
 			for (const [key, value] of Object.entries(receivedCC.colorTable)) {
-				const component = ColorComponentMap[
-					key as any as keyof typeof ColorComponentMap
-				];
+				const component =
+					ColorComponentMap[
+						key as any as keyof typeof ColorComponentMap
+					];
 				self.state.set(StateKeys.component(component), value);
 			}
 			return { action: "ok" };
@@ -77,10 +76,11 @@ const respondToColorSwitchGet: MockNodeBehavior = {
 				const cc = new ColorSwitchCCReport({
 					nodeId: controller.ownNodeId,
 					colorComponent: component,
-					currentValue:
-						(self.state.get(StateKeys.component(component))
-							?? capabilities.colorComponents[component]
-							?? 0) as number,
+					currentValue: (self.state.get(
+						StateKeys.component(component),
+					) ??
+						capabilities.colorComponents[component] ??
+						0) as number,
 				});
 				return { action: "sendCC", cc };
 			} else {
