@@ -234,13 +234,6 @@
 			"defaultValue": 0
 		},
 		{
-			"#": "24",
-			"$if": "firmwareVersion >= 10.30 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
-			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
-			"label": "Scene Control (Relay)",
-			"defaultValue": 0
-		},
-		{
 			"#": "25[0x01]",
 			"$if": "firmwareVersion >= 10.40 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
 			"$import": "~/templates/master_template.json#base_enable_disable",
@@ -273,6 +266,13 @@
 			"defaultValue": 1
 		},
 		{
+			"#": "24",
+			"$if": "firmwareVersion >= 10.30 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control (Relay)",
+			"defaultValue": 0
+		},
+		{
 			"#": "26",
 			"$if": "firmwareVersion >= 10.40 || firmwareVersion >= 2.10 && firmwareVersion < 10.0",
 			"$import": "templates/zooz_template.json#enable_scene_control_3way"
@@ -283,14 +283,6 @@
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "LED Indicator (Scene Control)",
 			"description": "When enabled, LED indicator will flash to confirm scene activation.",
-			"defaultValue": 0
-		},
-		{
-			"#": "28",
-			"$if": "firmwareVersion >= 3.20 && firmwareVersion < 10.0",
-			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
-			"label": "Scene Control Multi-Tap",
-			"description": "When disabled, only single taps report via central scene.",
 			"defaultValue": 0
 		},
 		{
