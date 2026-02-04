@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/cc",
-  "version": "15.20.0",
+  "version": "15.20.1",
   "description": "zwave-js: Command Classes",
   "keywords": [],
   "publishConfig": {
@@ -60,10 +60,10 @@
     "codegen": "yarn task codegen && yarn lint:codegen:fix",
     "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
     "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
-    "clean": "del-cli build/ \"*.tsbuildinfo\"",
+    "clean": "del-cli build/ src_gen/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "ts": "tsx --conditions=@@dev",
-    "lint:codegen:fix": "oxlint --type-aware -c ../../.oxlintrc.json --fix \"src/cc/_CCValues.generated.ts\"",
+    "lint:codegen:fix": "oxlint --type-aware -c ../../.oxlintrc.json --fix \"src/cc/_CCValues.generated.ts\" \"src/lib/_CCAPI.generated.ts\"",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
@@ -83,10 +83,10 @@
     "@zwave-js/transformers": "workspace:*",
     "del-cli": "^7.0.0",
     "es-main": "^1.4.0",
-    "oxlint": "^1.28.0",
-    "oxlint-tsgolint": "^0.10.0",
+    "oxlint": "^1.42.0",
+    "oxlint-tsgolint": "^0.11.4",
     "tsx": "^4.20.5",
     "typescript": "5.9.3",
-    "vitest": "^4.0.0"
+    "vitest": "^4.0.18"
   }
 }

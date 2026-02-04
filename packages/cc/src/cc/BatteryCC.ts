@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -58,6 +57,7 @@ import {
 	BatteryCommand,
 	BatteryReplacementStatus,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { NotificationCCValues } from "./NotificationCC.js";
 
 export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {

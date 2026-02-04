@@ -112,6 +112,8 @@
 	"chat.tools.terminal.autoApprove": {
 		"git show": true,
 		"yarn fmt": true,
+		"yarn test:ts": true,
+		"yarn vitest --run": true,
 		"yarn vitest run": true,
 		"rm": false,
 		"rmdir": false,

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
@@ -50,6 +49,7 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { SecurityCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { CRC16CC } from "./CRC16CC.js";
 import { Security2CC } from "./Security2CC.js";
 import { TransportServiceCC } from "./TransportServiceCC.js";

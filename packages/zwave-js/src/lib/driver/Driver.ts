@@ -5663,13 +5663,9 @@ ${handlers.length} left`,
 				// The message we're currently sending is still in progress but expects this message in response,
 				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
 
-				// A S0/S2 nonce report is treated like an expected node update,
-				// but it is not considered a valid result of the ongoing transaction.
-				if (isNonceReport) {
-					// Due to how the message generators are architected, it is currently not possible to short-circuit
-					// waiting for the transmit report, so we remember the Nonce Report for later processing.
-					currentMessage.prematureNodeUpdate = msg;
-				}
+				// Due to how the message generators are architected, it is currently not possible to short-circuit
+				// waiting for the transmit report, so we remember the premature response for later processing.
+				currentMessage.prematureNodeUpdate = msg;
 
 				if (isSendData(currentMessage)) {
 					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
@@ -5683,9 +5679,21 @@ ${handlers.length} left`,
 					void this.abortSendData();
 				}
 
+				// A S0/S2 nonce report is treated like an expected node update,
+				// but it is not considered a valid result of the ongoing transaction.
+				// Calling abortSendData will allow the message generator to continue normally,
+				// eventually resulting in a NoAck transmit report, at which point
+				// simpleMessageGenerator returns the premature nonce report as if it was received
+				// normally.
+
 				// If this is a valid result of the current transaction, abort the
 				// transaction with the received message as the result.
-				if (!isNonceReport) currentTransaction!.abort(msg);
+				// This will short-circuit all the way to the catch block in
+				// Driver.executeTransaction, where prematureNodeUpdate is returned
+				// as the result.
+				if (!isNonceReport) {
+					currentTransaction!.abort(msg);
+				}
 
 				return;
 			}

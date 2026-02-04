@@ -1950,8 +1950,12 @@ protocol version:      ${this.protocolVersion}`;
 			!this.wasCCRemovedViaConfig(CommandClasses.Basic)
 			&& this.getCCVersion(CommandClasses.Basic) > 0
 		) {
-			if (this.maySupportBasicCC()) {
-				// The device probably supports Basic CC and is allowed to.
+			if (
+				this.wasCCSupportAddedViaConfig(CommandClasses.Basic)
+				|| this.maySupportBasicCC()
+			) {
+				// Either the device probably supports Basic CC and is allowed to.
+				// Or we force-added support through a config file.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(
 					this.id,
@@ -1984,8 +1988,12 @@ protocol version:      ${this.protocolVersion}`;
 			if (endpoint.wasCCRemovedViaConfig(CommandClasses.Basic)) continue;
 			if (endpoint.getCCVersion(CommandClasses.Basic) === 0) continue;
 
-			if (endpoint.maySupportBasicCC()) {
+			if (
+				endpoint.wasCCSupportAddedViaConfig(CommandClasses.Basic)
+				|| endpoint.maySupportBasicCC()
+			) {
 				// The endpoint probably supports Basic CC and is allowed to.
+				// Or we force-added support through a config file.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: endpoint.index,

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -56,6 +55,7 @@ import {
 	type Timezone,
 } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { UserCodeCC } from "./UserCodeCC.js";
 
 export const ScheduleEntryLockCCValues = V.defineCCValues(

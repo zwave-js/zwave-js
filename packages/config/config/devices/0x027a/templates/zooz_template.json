@@ -299,6 +299,35 @@
 		"description": "Disable this feature when using the LED indicators in automations.",
 		"defaultValue": 0
 	},
+	"led_indicator_multi_color": {
+		"label": "LED Indicator Multi-Color",
+		"description": "Selects the LED indicator color in the opposite switch state when parameter 2 is set to value 0 or 1.",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "White",
+				"value": 1
+			},
+			{
+				"label": "Blue",
+				"value": 2
+			},
+			{
+				"label": "Green",
+				"value": 3
+			},
+			{
+				"label": "Red",
+				"value": 4
+			}
+		]
+	},
 	"led_button_press": {
 		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 		"label": "LED Indicator: Button Press",
@@ -645,6 +674,14 @@
 			}
 		]
 	},
+	"gamma_factor": {
+		"label": "Gamma Factor",
+		"description": "A higher gamma makes dimming more gradual at low levels, while a lower gamma results in a more linear or abrupt transition (10-50 = 1.0–5.0 gamma).",
+		"valueSize": 1,
+		"minValue": 10,
+		"maxValue": 50,
+		"defaultValue": 10
+	},
 	"local_dimming_speed": {
 		"label": "Local Dimming Speed",
 		"description": "The time it takes to get from 0% to 100% brightness when pressing and holding the paddle.",
@@ -729,6 +766,56 @@
 			{
 				"label": "Garage door mode (momentary)",
 				"value": 4
+			}
+		]
+	},
+	"external_switch_type_0-10": {
+		"$import": "#external_switch_type_0-3",
+		"maxValue": 10,
+		"options": [
+			{
+				"label": "Automatic detection",
+				"value": 0
+			},
+			{
+				"label": "Toggle switch",
+				"value": 1
+			},
+			{
+				"label": "Momentary switch",
+				"value": 2
+			},
+			{
+				"label": "Toggle switch (reversed)",
+				"value": 3
+			},
+			{
+				"label": "Leak alarm (water sensor)",
+				"value": 4
+			},
+			{
+				"label": "Heat alarm",
+				"value": 5
+			},
+			{
+				"label": "Motion alert",
+				"value": 6
+			},
+			{
+				"label": "Open/Close alert (door sensor)",
+				"value": 7
+			},
+			{
+				"label": "CO alarm",
+				"value": 8
+			},
+			{
+				"label": "CO2 alarm",
+				"value": 9
+			},
+			{
+				"label": "On/Off Report Only",
+				"value": 10
 			}
 		]
 	},
