@@ -47,6 +47,7 @@
 		},
 		{
 			"#": "5",
+			"$if": "firmwareVersion < 2.20",
 			"label": "Group 2: Basic Set Commands",
 			"valueSize": 1,
 			"defaultValue": 1,
@@ -57,12 +58,42 @@
 					"value": 0
 				},
 				{
-					"label": "0xff (On) when water detected; 0x00 (Off) when cleared",
+					"label": "0x00 (Off) when water detected; 0xff (On) when cleared",
 					"value": 1
 				},
 				{
-					"label": "0x00 (Off) when water detected; 0xff (On) when cleared",
+					"label": "0xff (On) when water detected; 0x00 (Off) when cleared",
 					"value": 2
+				}
+			]
+		},
+		{
+			"#": "5",
+			"$if": "firmwareVersion >= 2.20",
+			"label": "Group 2: Basic Set Commands",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "0x00 (Off) when water detected; 0xff (On) when cleared",
+					"value": 1
+				},
+				{
+					"label": "0xff (On) when water detected; 0x00 (Off) when cleared",
+					"value": 2
+				},
+				{
+					"label": "0xff (On) when water cleared; No report when detected",
+					"value": 3
+				},
+				{
+					"label": "0x00 (Off) when water detected; No report when cleared",
+					"value": 4
 				}
 			]
 		}
