@@ -669,6 +669,7 @@
 		"$import": "~/templates/master_template.json#base_enable_disable"
 	},
 	"temperature_offset": {
+		"$kind": "calibration.temperature",
 		"label": "Temperature Offset",
 		"valueSize": 1,
 		"minValue": -3,
@@ -707,6 +708,7 @@
 		]
 	},
 	"humidity_offset": {
+		"$kind": "calibration.humidity",
 		"label": "Humidity Offset",
 		"valueSize": 1,
 		"minValue": -12,

@@ -61,6 +61,7 @@
 	},
 	"primary_power_periodic_report": {
 		// param 7
+		"$kind": "reporting_interval.power",
 		"label": "Primary Power Periodic Report",
 		"unit": "seconds",
 		"valueSize": 2,
@@ -71,6 +72,7 @@
 	},
 	"primary_power_change_report": {
 		// param 8
+		"$kind": "reporting_threshold_delta.power",
 		"label": "Primary Power Change Report",
 		"unit": "W",
 		"valueSize": 2,
@@ -285,6 +287,7 @@
 	},
 	"secondary_power_periodic_report": {
 		// param 30
+		"$kind": "reporting_interval.power",
 		"label": "Secondary Power Periodic Report",
 		"unit": "seconds",
 		"valueSize": 2,
@@ -295,6 +298,7 @@
 	},
 	"secondary_power_change_report": {
 		// param 31
+		"$kind": "reporting_threshold_delta.power",
 		"label": "Secondary Power Change Report",
 		"unit": "W",
 		"valueSize": 2,
@@ -450,10 +454,12 @@
 	"motion_sensitivity_level": {
 		// param 48
 		"$import": "~/templates/master_template.json#base_0-100_nounit",
+		"$kind": "motion_sensitivity",
 		"label": "Motion Sensitivity Level"
 	},
 	"motion_renotification_delay": {
 		// param 49
+		"$kind": "motion_retrigger_interval",
 		"label": "Motion Renotification Delay",
 		"valueSize": 2,
 		"minValue": 0,
@@ -463,6 +469,7 @@
 	},
 	"motion_reset_delay": {
 		// param 50
+		"$kind": "motion_clear_delay",
 		"label": "Motion Reset Delay",
 		"valueSize": 2,
 		"minValue": 1,
@@ -716,6 +723,7 @@
 	},
 	"temperature_periodic_report": {
 		// param 86
+		"$kind": "reporting_interval.temperature",
 		"label": "Temperature Periodic Report",
 		"unit": "seconds",
 		"valueSize": 2,
@@ -726,6 +734,7 @@
 	},
 	"temperature_change_report": {
 		// param 87
+		"$kind": "reporting_threshold_delta.temperature",
 		"label": "Temperature Change Report",
 		"unit": "0.1 °(C/F)",
 		"valueSize": 1,
@@ -959,6 +968,7 @@
 	},
 	"humidity_periodic_report": {
 		// param 134
+		"$kind": "reporting_interval.humidity",
 		"label": "Humidity Periodic Report",
 		"unit": "seconds",
 		"valueSize": 2,
@@ -969,6 +979,7 @@
 	},
 	"humidity_change_report": {
 		// param 135
+		"$kind": "reporting_threshold_delta.humidity",
 		"label": "Humidity Change Report",
 		"unit": "%",
 		"valueSize": 1,
@@ -1199,6 +1210,7 @@
 	},
 	"dimmer_minimum_brightness": {
 		// param 192
+		"$kind": "minimum_brightness",
 		"label": "Dimmer Minimum Brightness",
 		"unit": "%",
 		"valueSize": 1,
@@ -1209,6 +1221,7 @@
 	},
 	"dimmer_maximum_brightness": {
 		// param 193
+		"$kind": "maximum_brightness",
 		"label": "Dimmer Maximum Brightness",
 		"unit": "%",
 		"valueSize": 1,

@@ -229,6 +229,7 @@
 	},
 	"dimming_speed_1-99_seconds": {
 		"$import": "#base_1-99_nounit",
+		"$kind": "dimming_duration",
 		"label": "Dimming Speed",
 		"unit": "seconds",
 		"defaultValue": 5
@@ -239,31 +240,37 @@
 	},
 	"minimum_dim_level_0-99": {
 		"$import": "#base_0-99_nounit",
+		"$kind": "minimum_brightness",
 		"label": "Minimum Dim Level",
 		"defaultValue": 1
 	},
 	"minimum_dim_level_1-99": {
 		"$import": "#base_1-99_nounit",
+		"$kind": "minimum_brightness",
 		"label": "Minimum Dim Level",
 		"defaultValue": 1
 	},
 	"maximum_dim_level_0-99": {
 		"$import": "#base_0-99_nounit",
+		"$kind": "maximum_brightness",
 		"label": "Maximum Dim Level",
 		"defaultValue": 99
 	},
 	"maximum_dim_level_0-100": {
 		"$import": "#base_0-100_nounit",
+		"$kind": "maximum_brightness",
 		"label": "Maximum Dim Level",
 		"defaultValue": 100
 	},
 	"maximum_dim_level_1-99": {
 		"$import": "#base_1-99_nounit",
+		"$kind": "maximum_brightness",
 		"label": "Maximum Dim Level",
 		"defaultValue": 99
 	},
 	"maximum_dim_level_1-100": {
 		"$import": "#base_1-100_nounit",
+		"$kind": "maximum_brightness",
 		"label": "Maximum Dim Level",
 		"defaultValue": 100
 	},
@@ -279,9 +286,11 @@
 	},
 	"orientation": {
 		"$import": "#base_enable_disable",
+		"$kind": "orientation",
 		"label": "Inverted Orientation"
 	},
 	"orientation_momentary": {
+		"$kind": "orientation.momentary",
 		"label": "Inverted Orientation",
 		"valueSize": 1,
 		"defaultValue": 0,
@@ -403,6 +412,7 @@
 		]
 	},
 	"state_after_power_failure_off_on_prev": {
+		"$kind": "state_after_power_failure",
 		"label": "State After Power Failure",
 		"valueSize": 1,
 		"defaultValue": 2,
@@ -423,6 +433,7 @@
 		]
 	},
 	"state_after_power_failure_off_prev_on": {
+		"$kind": "state_after_power_failure",
 		"label": "State After Power Failure",
 		"valueSize": 1,
 		"defaultValue": 1,
@@ -443,6 +454,7 @@
 		]
 	},
 	"state_after_power_failure_prev_off_on": {
+		"$kind": "state_after_power_failure",
 		"label": "State After Power Failure",
 		"valueSize": 1,
 		"defaultValue": 0,
@@ -463,6 +475,7 @@
 		]
 	},
 	"state_after_power_failure_prev_on_off": {
+		"$kind": "state_after_power_failure",
 		"label": "State After Power Failure",
 		"valueSize": 1,
 		"defaultValue": 0,
@@ -483,6 +496,7 @@
 		]
 	},
 	"state_after_power_failure_off_prev": {
+		"$kind": "state_after_power_failure",
 		"label": "State After Power Failure",
 		"valueSize": 1,
 		"defaultValue": 1,
@@ -499,6 +513,7 @@
 		]
 	},
 	"state_after_power_failure_prev_off": {
+		"$kind": "state_after_power_failure",
 		"label": "State After Power Failure",
 		"valueSize": 1,
 		"defaultValue": 0,
@@ -515,6 +530,7 @@
 		]
 	},
 	"state_after_power_failure_prev_on_off_schedule": {
+		"$kind": "state_after_power_failure",
 		"label": "State After Power Failure",
 		"valueSize": 1,
 		"defaultValue": 3,
