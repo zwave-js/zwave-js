@@ -494,6 +494,7 @@ export const paramInfoPropertyOrder: string[] = [
 	"#",
 	"$if",
 	"$import",
+	"$kind",
 	"label",
 	"description",
 	"valueSize",

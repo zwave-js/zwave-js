@@ -329,6 +329,7 @@ function configParamInfoToMetadata(
 			description: info.description,
 			isFromConfig: true,
 			destructive: info.destructive,
+			kind: info.kind,
 		} satisfies ConfigurationMetadata,
 	) as unknown as ConfigurationMetadata;
 }

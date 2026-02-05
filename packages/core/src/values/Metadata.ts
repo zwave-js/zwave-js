@@ -193,6 +193,7 @@ export interface ConfigurationMetadata extends ValueMetadataNumeric {
 	requiresReInclusion?: boolean;
 	isFromConfig?: boolean;
 	destructive?: boolean;
+	kind?: string;
 }
 
 export type ValueMetadata =
