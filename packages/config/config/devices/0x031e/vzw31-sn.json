@@ -815,7 +815,7 @@
 		},
 		{
 			"#": "158",
-			"$if": "firmwareVersion <= 1.4",
+			"$if": "firmwareVersion <= 2.0",
 			"label": "Dimmer Mode",
 			"valueSize": 1,
 			"defaultValue": 1,
