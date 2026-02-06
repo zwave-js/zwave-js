@@ -92,8 +92,7 @@
 			"label": "Dimming Speed - Up (Remote)",
 			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 254,
+			"allowed": [{"value": 0}, {"range": [5, 254]}],
 			"defaultValue": 25,
 			"unsigned": true,
 			"options": [
@@ -250,8 +249,7 @@
 			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [{"value": 0}, {"range": [30, 32767]}],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -815,7 +813,7 @@
 		},
 		{
 			"#": "158",
-			"$if": "firmwareVersion <= 1.4",
+			"$if": "firmwareVersion <= 2.0",
 			"label": "Dimmer Mode",
 			"valueSize": 1,
 			"defaultValue": 1,
@@ -897,7 +895,18 @@
 		},
 		{
 			"#": "240",
-			"$if": "firmwareVersion > 1.4",
+			"$if": "firmwareVersion <= 2.0",
+			"label": "Factory Reset",
+			"description": "Set to 120935937 to perform a factory reset",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 4294967295,
+			"defaultValue": 0,
+			"unsigned": true,
+			"hidden": true
+		},
+		{
+			"#": "240",
 			"label": "Factory Reset",
 			"description": "Set to 120935937 to perform a factory reset",
 			"valueSize": 4,
