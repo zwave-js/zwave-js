@@ -175,6 +175,7 @@ interface ConditionalParamInformation {
 	readonly label: string;
 	readonly description?: string;
 	readonly valueSize: number;
+	readonly allowed?: readonly AllowedConfigValue[];
 	readonly minValue?: number;
 	readonly maxValue?: number;
 	readonly unsigned?: boolean;
