@@ -35,6 +35,7 @@
 		},
 		{
 			"#": "11",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Reporting",
 			"valueSize": 1,
 			"minValue": 0,
@@ -49,6 +50,7 @@
 		},
 		{
 			"#": "12",
+			"$kind": "reporting_threshold.energy",
 			"label": "Energy Reporting Threshold",
 			"valueSize": 2,
 			"minValue": 0,
@@ -63,6 +65,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
 			"minValue": 0,
@@ -77,6 +80,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy Reporting Interval",
 			"valueSize": 2,
 			"minValue": 0,

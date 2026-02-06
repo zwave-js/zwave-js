@@ -36,6 +36,7 @@
 		},
 		{
 			"#": "19",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 1,
 			"unit": "1/10 minutes",

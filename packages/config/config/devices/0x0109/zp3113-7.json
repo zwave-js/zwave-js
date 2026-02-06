@@ -32,6 +32,7 @@
 		},
 		{
 			"#": "2",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -41,6 +42,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"description": "Allowable range: 5%-50%",
 			"valueSize": 1,
@@ -57,6 +59,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Light Reporting Threshold",
 			"description": "Allowable range: 5%-50%",
 			"valueSize": 1,
@@ -72,6 +75,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "motion_retrigger_interval",
 			"label": "Motion Trigger Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -81,6 +85,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"valueSize": 1,
 			"minValue": 1,

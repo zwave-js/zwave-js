@@ -220,7 +220,7 @@
 		"defaultValue": 600
 	},
 	"power_report_threshold_relative": {
-		"$kind": "reporting_threshold_delta.power",
+		"$kind": "reporting_threshold.power",
 		"label": "Power Reports: Relative Change Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -239,23 +239,11 @@
 		"maxValue": 500
 	},
 	"energy_report_threshold": {
-		"$kind": "reporting_threshold_delta.energy",
+		"$kind": "reporting_threshold.energy",
 		"label": "Energy Reports: Threshold",
 		"valueSize": 2,
 		"unit": "0.01 kWh",
 		"minValue": 0,
-		"options": [
-			{
-				"label": "Disable",
-				"value": 0
-			}
-		]
-	},
-	"reports_periodic": {
-		"valueSize": 2,
-		"unit": "seconds",
-		"minValue": 0,
-		"defaultValue": 3600,
 		"options": [
 			{
 				"label": "Disable",

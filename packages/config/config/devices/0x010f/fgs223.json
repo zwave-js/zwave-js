@@ -450,15 +450,35 @@
 		},
 		{
 			"#": "58",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$kind": "reporting_interval.power",
 			"label": "Periodic Active Power Reports",
-			"maxValue": 32000
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32000,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "59",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$kind": "reporting_interval.energy",
 			"label": "Periodic Energy Reports",
-			"maxValue": 32000
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32000,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "60",
