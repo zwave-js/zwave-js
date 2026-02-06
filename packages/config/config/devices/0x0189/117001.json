@@ -29,6 +29,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "motion_retrigger_interval",
 			"label": "Motion Retrigger Timeout",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -62,6 +63,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "motion_clear_delay",
 			"label": "Motion Reset Timeout",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -77,6 +79,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "low_battery_threshold",
 			"label": "Low Battery Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -86,6 +89,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -101,6 +105,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Luminance Change Threshold",
 			"valueSize": 1,
 			"unit": "lux",
@@ -116,6 +121,7 @@
 		},
 		{
 			"#": "7",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C/°F",
@@ -125,6 +131,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 1,
 			"unit": "30 minutes",

@@ -57,6 +57,7 @@
 		},
 		{
 			"#": "39",
+			"$kind": "low_battery_threshold",
 			"label": "Low Battery Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -66,6 +67,7 @@
 		},
 		{
 			"#": "111",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",

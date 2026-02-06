@@ -53,6 +53,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 1,
 			"unit": "10 minutes",
