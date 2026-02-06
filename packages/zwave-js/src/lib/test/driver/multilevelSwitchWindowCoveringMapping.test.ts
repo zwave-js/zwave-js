@@ -2,11 +2,10 @@ import {
 	MultilevelSwitchCCReport,
 	MultilevelSwitchCCValues,
 	WindowCoveringCCValues,
-	WindowCoveringCCSupportedReport,
 	WindowCoveringParameter,
 } from "@zwave-js/cc";
-import { CommandClasses, UNKNOWN_STATE } from "@zwave-js/core";
-import { createMockZWaveRequestFrame } from "@zwave-js/testing";
+import { CommandClasses } from "@zwave-js/core";
+import { ccCaps, createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -22,38 +21,25 @@ integrationTest(
 					isSupported: true,
 					version: 4,
 				},
-				{
+				ccCaps({
 					ccId: CommandClasses["Window Covering"],
 					isSupported: true,
-					version: 1,
-				},
+					supportedParameters: [
+						WindowCoveringParameter["Outbound Left"],
+					],
+				}),
 			],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Simulate Window Covering CC having been interviewed with supported parameters
-			// Parameter 1 = "Outbound Left" (odd, has position support)
-			const supportedParamsReport = new WindowCoveringCCSupportedReport({
-				nodeId: mockController.ownNodeId,
-				supportedParameters: [WindowCoveringParameter["Outbound Left"]],
-			});
-			await mockNode.sendToController(
-				createMockZWaveRequestFrame(supportedParamsReport, {
-					ackRequested: false,
-				}),
-			);
-			await wait(100);
-
-			// Initial values should be undefined (not yet known)
 			const mlsCurrentValueId = MultilevelSwitchCCValues.currentValue.id;
 			const mlsTargetValueId = MultilevelSwitchCCValues.targetValue.id;
-			const wcCurrentValueId = WindowCoveringCCValues.currentValue(WindowCoveringParameter["Outbound Left"]).id;
-			const wcTargetValueId = WindowCoveringCCValues.targetValue(WindowCoveringParameter["Outbound Left"]).id;
-
-			t.expect(node.getValue(mlsCurrentValueId)).toBeUndefined();
-			t.expect(node.getValue(mlsTargetValueId)).toBeUndefined();
-			t.expect(node.getValue(wcCurrentValueId)).toBeUndefined();
-			t.expect(node.getValue(wcTargetValueId)).toBeUndefined();
+			const wcCurrentValueId = WindowCoveringCCValues.currentValue(
+				WindowCoveringParameter["Outbound Left"],
+			).id;
+			const wcTargetValueId = WindowCoveringCCValues.targetValue(
+				WindowCoveringParameter["Outbound Left"],
+			).id;
 
 			// Send a MultilevelSwitchCCReport
 			const cc = new MultilevelSwitchCCReport({
@@ -66,8 +52,6 @@ integrationTest(
 					ackRequested: false,
 				}),
 			);
-
-			// wait a bit for the change to propagate
 			await wait(100);
 
 			// MultilevelSwitch values should NOT be set (mapped to Window Covering instead)
@@ -93,45 +77,28 @@ integrationTest(
 					isSupported: true,
 					version: 4,
 				},
-				{
+				ccCaps({
 					ccId: CommandClasses["Window Covering"],
 					isSupported: true,
-					version: 1,
-				},
+					supportedParameters: [
+						WindowCoveringParameter["Outbound Left (no position)"],
+						WindowCoveringParameter["Outbound Right"],
+						WindowCoveringParameter["Inbound Left"],
+					],
+				}),
 			],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Simulate Window Covering CC having been interviewed with multiple supported parameters
-			// Parameter 0 = "Outbound Left (no position)" (even, no position support)
-			// Parameter 3 = "Outbound Right" (odd, has position support) - should be selected
-			// Parameter 5 = "Inbound Left" (odd, has position support)
-			const supportedParamsReport = new WindowCoveringCCSupportedReport({
-				nodeId: mockController.ownNodeId,
-				supportedParameters: [
-					WindowCoveringParameter["Outbound Left (no position)"],
-					WindowCoveringParameter["Outbound Right"],
-					WindowCoveringParameter["Inbound Left"],
-				],
-			});
-			await mockNode.sendToController(
-				createMockZWaveRequestFrame(supportedParamsReport, {
-					ackRequested: false,
-				}),
-			);
-			await wait(100);
-
-			// Initial values should be undefined (not yet known)
 			const mlsCurrentValueId = MultilevelSwitchCCValues.currentValue.id;
 			const mlsTargetValueId = MultilevelSwitchCCValues.targetValue.id;
 			// Should map to parameter 3 (first odd parameter)
-			const wcCurrentValueId = WindowCoveringCCValues.currentValue(WindowCoveringParameter["Outbound Right"]).id;
-			const wcTargetValueId = WindowCoveringCCValues.targetValue(WindowCoveringParameter["Outbound Right"]).id;
-
-			t.expect(node.getValue(mlsCurrentValueId)).toBeUndefined();
-			t.expect(node.getValue(mlsTargetValueId)).toBeUndefined();
-			t.expect(node.getValue(wcCurrentValueId)).toBeUndefined();
-			t.expect(node.getValue(wcTargetValueId)).toBeUndefined();
+			const wcCurrentValueId = WindowCoveringCCValues.currentValue(
+				WindowCoveringParameter["Outbound Right"],
+			).id;
+			const wcTargetValueId = WindowCoveringCCValues.targetValue(
+				WindowCoveringParameter["Outbound Right"],
+			).id;
 
 			// Send a MultilevelSwitchCCReport
 			const cc = new MultilevelSwitchCCReport({
@@ -144,8 +111,6 @@ integrationTest(
 					ackRequested: false,
 				}),
 			);
-
-			// wait a bit for the change to propagate
 			await wait(100);
 
 			// MultilevelSwitch values should NOT be set (mapped to Window Covering instead)
@@ -171,41 +136,27 @@ integrationTest(
 					isSupported: true,
 					version: 4,
 				},
-				{
+				ccCaps({
 					ccId: CommandClasses["Window Covering"],
 					isSupported: true,
-					version: 1,
-				},
+					supportedParameters: [
+						WindowCoveringParameter[
+							"Inbound Left (no position)"
+						],
+					],
+				}),
 			],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Simulate Window Covering CC having been interviewed with only even parameters
-			// Parameter 4 = "Inbound Left (no position)" (even, no position support) - should be selected as fallback
-			const supportedParamsReport = new WindowCoveringCCSupportedReport({
-				nodeId: mockController.ownNodeId,
-				supportedParameters: [
-					WindowCoveringParameter["Inbound Left (no position)"],
-				],
-			});
-			await mockNode.sendToController(
-				createMockZWaveRequestFrame(supportedParamsReport, {
-					ackRequested: false,
-				}),
-			);
-			await wait(100);
-
-			// Initial values should be undefined (not yet known)
 			const mlsCurrentValueId = MultilevelSwitchCCValues.currentValue.id;
 			const mlsTargetValueId = MultilevelSwitchCCValues.targetValue.id;
-			// Should map to parameter 4 (first parameter since no odd ones exist)
-			const wcCurrentValueId = WindowCoveringCCValues.currentValue(WindowCoveringParameter["Inbound Left (no position)"]).id;
-			const wcTargetValueId = WindowCoveringCCValues.targetValue(WindowCoveringParameter["Inbound Left (no position)"]).id;
-
-			t.expect(node.getValue(mlsCurrentValueId)).toBeUndefined();
-			t.expect(node.getValue(mlsTargetValueId)).toBeUndefined();
-			t.expect(node.getValue(wcCurrentValueId)).toBeUndefined();
-			t.expect(node.getValue(wcTargetValueId)).toBeUndefined();
+			const wcCurrentValueId = WindowCoveringCCValues.currentValue(
+				WindowCoveringParameter["Inbound Left (no position)"],
+			).id;
+			const wcTargetValueId = WindowCoveringCCValues.targetValue(
+				WindowCoveringParameter["Inbound Left (no position)"],
+			).id;
 
 			// Send a MultilevelSwitchCCReport
 			const cc = new MultilevelSwitchCCReport({
@@ -218,8 +169,6 @@ integrationTest(
 					ackRequested: false,
 				}),
 			);
-
-			// wait a bit for the change to propagate
 			await wait(100);
 
 			// MultilevelSwitch values should NOT be set (mapped to Window Covering instead)
@@ -245,17 +194,12 @@ integrationTest(
 					isSupported: true,
 					version: 4,
 				},
-				// No Window Covering CC support
 			],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Get initial values (might be set during interview)
 			const mlsCurrentValueId = MultilevelSwitchCCValues.currentValue.id;
 			const mlsTargetValueId = MultilevelSwitchCCValues.targetValue.id;
-
-			const initialCurrentValue = node.getValue(mlsCurrentValueId);
-			const initialTargetValue = node.getValue(mlsTargetValueId);
 
 			// Send a MultilevelSwitchCCReport
 			const cc = new MultilevelSwitchCCReport({
@@ -268,8 +212,6 @@ integrationTest(
 					ackRequested: false,
 				}),
 			);
-
-			// wait a bit for the change to propagate
 			await wait(100);
 
 			// MultilevelSwitch values should be set normally
