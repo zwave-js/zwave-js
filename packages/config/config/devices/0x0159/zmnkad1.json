@@ -130,6 +130,7 @@
 		},
 		{
 			"#": "40",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Change Reporting Threshold",
 			"valueSize": 2,
 			"unit": "%",
@@ -145,6 +146,7 @@
 		},
 		{
 			"#": "42",
+			"$kind": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",

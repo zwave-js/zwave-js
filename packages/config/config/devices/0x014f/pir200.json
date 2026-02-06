@@ -16,6 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "5",
+			"$kind": "motion_retrigger_interval",
 			"label": "Trigger Re-Activation Delay",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -26,6 +27,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"valueSize": 1,
 			"defaultValue": 4,

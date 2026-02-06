@@ -118,7 +118,7 @@
 	},
 	"temperature_reporting_threshold": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
-		"$kind": "reporting_threshold_delta.temperature",
+		"$kind": "reporting_threshold.temperature",
 		"label": "Temperature Reporting Threshold",
 		"description": "Valid range: 3-255; Variation in temperature to induce automatic report",
 		"valueSize": 2,
@@ -141,7 +141,7 @@
 	},
 	"humidity_reporting_threshold": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
-		"$kind": "reporting_threshold_delta.humidity",
+		"$kind": "reporting_threshold.humidity",
 		"label": "Humidity Reporting Threshold",
 		"description": "Variation in humidity to induce automatic report",
 		"defaultValue": 6,

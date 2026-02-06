@@ -178,6 +178,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"valueSize": 1,
 			"minValue": 1,

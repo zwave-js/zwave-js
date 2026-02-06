@@ -50,6 +50,7 @@
 		},
 		{
 			"#": "40",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Consumption Reporting Threshold",
 			"valueSize": 1,
 			"minValue": 0,
@@ -58,6 +59,7 @@
 		},
 		{
 			"#": "42",
+			"$kind": "reporting_interval.power",
 			"label": "Power Consumption Reporting(Time)",
 			"valueSize": 2,
 			"minValue": 0,
@@ -157,6 +159,7 @@
 		},
 		{
 			"#": "110",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"minValue": -270,
@@ -165,6 +168,7 @@
 		},
 		{
 			"#": "120",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Sensor Reporting Threshold",
 			"valueSize": 2,
 			"minValue": 0,

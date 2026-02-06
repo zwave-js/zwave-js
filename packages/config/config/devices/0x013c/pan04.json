@@ -117,6 +117,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",

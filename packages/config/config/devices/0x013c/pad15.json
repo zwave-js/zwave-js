@@ -69,6 +69,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "maximum_brightness",
 			"label": "Maximum Level",
 			"valueSize": 1,
 			"minValue": 1,
@@ -77,6 +78,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Level",
 			"valueSize": 1,
 			"minValue": 0,

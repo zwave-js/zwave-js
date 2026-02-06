@@ -140,6 +140,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"description": "The time interval upon which to report the temperature.",
 			"valueSize": 1,
@@ -155,6 +156,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "reporting_interval.humidity",
 			"label": "Auto Report Humidity Time",
 			"description": "The time interval upon which to report the humidity.",
 			"valueSize": 1,

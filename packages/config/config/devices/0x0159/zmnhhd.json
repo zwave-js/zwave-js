@@ -87,6 +87,7 @@
 		},
 		{
 			"#": "11",
+			"$kind": "timer.auto_off",
 			"label": "Turn Load 1 Off Automatically with Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -102,6 +103,7 @@
 		},
 		{
 			"#": "12",
+			"$kind": "timer.auto_on",
 			"label": "Turn Load 1 On Automatically with Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -126,6 +128,7 @@
 		},
 		{
 			"#": "40",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Change Reporting Threshold for Load",
 			"valueSize": 1,
 			"unit": "%",
@@ -141,6 +144,7 @@
 		},
 		{
 			"#": "42",
+			"$kind": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -156,6 +160,7 @@
 		},
 		{
 			"#": "60",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Dimming Level",
 			"valueSize": 1,
 			"minValue": 0,
@@ -164,6 +169,7 @@
 		},
 		{
 			"#": "61",
+			"$kind": "maximum_brightness",
 			"label": "Maximum Dimming Level",
 			"valueSize": 1,
 			"minValue": 2,
