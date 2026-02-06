@@ -337,6 +337,10 @@ export function refreshMetadataStringsFromConfigFile(
 			existing.recommended = info.recommendedValue;
 			didChange = true;
 		}
+		if (info.kind !== existing.kind) {
+			existing.kind = info.kind;
+			didChange = true;
+		}
 		if (existing.states) {
 			for (const option of info.options) {
 				if (
@@ -1686,6 +1690,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				description: info.description,
 				isFromConfig: true,
 				destructive: info.destructive,
+				kind: info.kind,
 			});
 			this.extendParamInformation(
 				ctx,

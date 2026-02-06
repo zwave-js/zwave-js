@@ -203,6 +203,7 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
 	allowManualEntry?: boolean;
 	isFromConfig?: boolean;
 	destructive?: boolean;
+	kind?: string;
 }
 
 export type ValueMetadata =

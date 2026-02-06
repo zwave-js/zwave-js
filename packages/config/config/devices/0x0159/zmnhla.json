@@ -199,6 +199,7 @@
 		},
 		{
 			"#": "40",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"valueSize": 1,
 			"minValue": 0,
@@ -207,6 +208,7 @@
 		},
 		{
 			"#": "42",
+			"$kind": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Timer Interval",
 			"valueSize": 2,
 			"minValue": 0,

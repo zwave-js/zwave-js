@@ -45,6 +45,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"description": "The interval time for auto reporting the temperature state.",
 			"valueSize": 1,
@@ -54,6 +55,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "reporting_interval.humidity",
 			"label": "Auto Report Humidity Time",
 			"description": "The interval time for auto reporting the humidity state.",
 			"valueSize": 1,

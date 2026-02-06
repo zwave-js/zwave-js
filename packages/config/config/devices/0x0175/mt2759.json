@@ -95,6 +95,7 @@
 		},
 		{
 			"#": "11",
+			"$kind": "timer.auto_off",
 			"label": "Automatic Turning Off",
 			"description": "Automatic turning off output after set time",
 			"valueSize": 2,
@@ -146,6 +147,7 @@
 		},
 		{
 			"#": "40",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Reporting (W) on Power Change",
 			"valueSize": 1,
 			"unit": "%",
@@ -161,6 +163,7 @@
 		},
 		{
 			"#": "42",
+			"$kind": "reporting_interval.power",
 			"label": "Power Reporting (W) by Time Interval",
 			"valueSize": 2,
 			"minValue": 0,

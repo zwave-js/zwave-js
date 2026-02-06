@@ -49,6 +49,7 @@
 		},
 		{
 			"#": "11",
+			"$kind": "timer.auto_off",
 			"label": "Automatic Turning Off Output After Set Time",
 			"valueSize": 2,
 			"minValue": 0,
@@ -57,6 +58,7 @@
 		},
 		{
 			"#": "12",
+			"$kind": "timer.auto_on",
 			"label": "Automatic Turning on Output After Set Time",
 			"valueSize": 2,
 			"minValue": 0,
@@ -134,6 +136,7 @@
 		},
 		{
 			"#": "60",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Dimming Value",
 			"valueSize": 1,
 			"minValue": 1,
@@ -142,6 +145,7 @@
 		},
 		{
 			"#": "61",
+			"$kind": "maximum_brightness",
 			"label": "Maximum Dimming Value",
 			"valueSize": 1,
 			"minValue": 2,
@@ -183,6 +187,7 @@
 		},
 		{
 			"#": "110",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"minValue": 1,

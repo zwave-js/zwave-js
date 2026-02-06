@@ -62,8 +62,7 @@
 		{
 			"#": "3[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Sound",
-			"valueSize": 1
+			"label": "Sound"
 		},
 		{
 			"#": "3[0x04]",
@@ -71,7 +70,8 @@
 		},
 		{
 			"#": "4",
-			"label": "Temperature Reporting Threshold: Interval",
+			"$kind": "reporting_interval.temperature",
+			"label": "Temperature Reporting Interval",
 			"valueSize": 1,
 			"unit": "30 seconds",
 			"minValue": 0,
@@ -90,6 +90,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"valueSize": 1,
 			"minValue": 0,

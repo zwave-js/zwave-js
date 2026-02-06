@@ -35,6 +35,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"description": "8 = high; 255 = low",
 			"valueSize": 1,
@@ -45,10 +46,11 @@
 		},
 		{
 			"#": "2",
+			"$kind": "motion_clear_delay",
 			"label": "Trigger ON Duration",
 			"description": "delay after motion before turning OFF",
 			"valueSize": 2,
-			"unit": "integer",
+			"unit": "seconds",
 			"minValue": 5,
 			"maxValue": 600,
 			"defaultValue": 30
@@ -83,6 +85,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "motion_retrigger_interval",
 			"label": "Motion Trigger Interval",
 			"description": "Minimum time between motion triggers.",
 			"valueSize": 1,
@@ -92,6 +95,7 @@
 		},
 		{
 			"#": "7",
+			"$kind": "reporting_interval.brightness",
 			"label": "Light Polling Interval",
 			"description": "Interval between light level reporting",
 			"valueSize": 2,
@@ -112,6 +116,7 @@
 		},
 		{
 			"#": "9",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Light Report",
 			"description": "Light level change to be reported.",
 			"valueSize": 1,

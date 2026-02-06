@@ -125,6 +125,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "0.1 °C",

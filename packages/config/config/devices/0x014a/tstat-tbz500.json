@@ -516,6 +516,7 @@
 		},
 		{
 			"#": "48",
+			"$kind": "calibration.temperature",
 			"label": "Internal Sensor Temp Offset",
 			"valueSize": 1,
 			"unit": "°F",
@@ -525,6 +526,7 @@
 		},
 		{
 			"#": "49",
+			"$kind": "calibration.temperature",
 			"label": "Remote Sensor Temperature Offset",
 			"valueSize": 1,
 			"unit": "°F",
@@ -615,6 +617,7 @@
 		},
 		{
 			"#": "183",
+			"$kind": "low_battery_threshold",
 			"label": "Battery LOWBATT Indicator Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -648,6 +651,7 @@
 		},
 		{
 			"#": "186",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"description": "Required change to trigger update",
 			"valueSize": 1,
@@ -658,6 +662,7 @@
 		},
 		{
 			"#": "187",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",

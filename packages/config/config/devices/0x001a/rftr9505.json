@@ -51,6 +51,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "state_after_power_failure",
 			"label": "State After Power Loss",
 			"valueSize": 1,
 			"defaultValue": 3,

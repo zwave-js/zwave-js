@@ -44,6 +44,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "motion_clear_delay",
 			"label": "PIR Sensor Timeout",
 			"valueSize": 2,
 			"minValue": 10,
@@ -52,6 +53,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -87,6 +89,7 @@
 		{
 			"#": "41[0xffff]",
 			"$if": "firmwareVersion <= 1.6",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 2,
 			"minValue": 10,
@@ -110,6 +113,7 @@
 		{
 			"#": "41[0xffff00]",
 			"$if": "firmwareVersion > 1.6 && firmwareVersion <= 1.9",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 3,
 			"unit": "0.1 °C/°F",
@@ -120,6 +124,7 @@
 		{
 			"#": "41[0xffff00]",
 			"$if": "firmwareVersion >= 1.10",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 4,
 			"unit": "0.1 °C/°F",
@@ -130,12 +135,14 @@
 		{
 			"#": "42",
 			"$import": "~/templates/master_template.json#base_1-100_nounit",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Change Threshold",
 			"unit": "%",
 			"defaultValue": 10
 		},
 		{
 			"#": "43",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Luminance Change Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -146,6 +153,7 @@
 		{
 			"#": "44",
 			"$import": "~/templates/master_template.json#base_1-100_nounit",
+			"$kind": "reporting_threshold.battery",
 			"label": "Battery Level Threshold",
 			"unit": "%",
 			"defaultValue": 10
@@ -485,6 +493,7 @@
 		{
 			"#": "201[0xff00]",
 			"$if": "firmwareVersion >= 1.6",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration Offset",
 			"valueSize": 2,
 			"unit": "0.1 °C/°F",
@@ -495,6 +504,7 @@
 		{
 			"#": "202",
 			"$if": "firmwareVersion >= 1.6",
+			"$kind": "calibration.humidity",
 			"label": "Humidity Sensor Calibration",
 			"valueSize": 1,
 			"unit": "% rH",
@@ -505,6 +515,7 @@
 		{
 			"#": "203",
 			"$if": "firmwareVersion >= 1.6",
+			"$kind": "calibration.brightness",
 			"label": "Luminance Sensor Calibration",
 			"valueSize": 2,
 			"unit": "lux",

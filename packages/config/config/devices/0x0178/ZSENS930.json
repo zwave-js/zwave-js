@@ -17,6 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"valueSize": 1,
 			"unit": "hours",
@@ -42,6 +43,7 @@
 		},
 		{
 			"#": "9",
+			"$kind": "reporting_interval.temperature",
 			"label": "Periodic Temperature Report Interval (Group 1)",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -66,6 +68,7 @@
 		},
 		{
 			"#": "11",
+			"$kind": "reporting_interval.temperature",
 			"label": "Periodic Temperature Report Interval (Group 2)",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -90,6 +93,7 @@
 		},
 		{
 			"#": "17",
+			"$kind": "reporting_interval.humidity",
 			"label": "Humidity Report Interval (Group 1)",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -114,6 +118,7 @@
 		},
 		{
 			"#": "19",
+			"$kind": "reporting_interval.humidity",
 			"label": "Humidity Report Interval (Group 3)",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -295,6 +300,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Offset Correction",
 			"description": "Correct deviations in the device's temperature reading.",
 			"valueSize": 1,
@@ -306,6 +312,7 @@
 		},
 		{
 			"#": "22",
+			"$kind": "calibration.humidity",
 			"label": "Humidity Offset Correction",
 			"description": "Correct deviations in the device's humidity reading.",
 			"valueSize": 1,
