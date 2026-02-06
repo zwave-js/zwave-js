@@ -11,9 +11,7 @@ import { BroadcastCC } from '@zwave-js/core';
 import { Bytes } from '@zwave-js/shared';
 import { BytesView } from '@zwave-js/shared';
 import { CCAddress } from '@zwave-js/core';
-import type { CCEncodingContext as CCEncodingContext_2 } from '@zwave-js/cc';
 import { CCId } from '@zwave-js/core';
-import type { CCParsingContext as CCParsingContext_2 } from '@zwave-js/cc';
 import { CommandClasses } from '@zwave-js/core';
 import { ConfigurationMetadata } from '@zwave-js/core';
 import { ConfigValue } from '@zwave-js/core';
@@ -65,7 +63,6 @@ import { Scale } from '@zwave-js/core';
 import { SecurityClass } from '@zwave-js/core';
 import { SecurityManager } from '@zwave-js/core';
 import { SecurityManagers } from '@zwave-js/core';
-import type { SendCommand as SendCommand_2 } from '@zwave-js/cc';
 import { SendCommandOptions } from '@zwave-js/core';
 import type { SendCommandReturnType } from '@zwave-js/core';
 import { SetSecurityClass } from '@zwave-js/core';
@@ -115,11 +112,11 @@ export class AlarmSensorCC extends CommandClass {
 export class AlarmSensorCCGet extends AlarmSensorCC {
     constructor(options: WithAddress<AlarmSensorCCGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): AlarmSensorCCGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): AlarmSensorCCGet;
     // (undocumented)
     sensorType: AlarmSensorType;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -140,7 +137,7 @@ export class AlarmSensorCCReport extends AlarmSensorCC {
     // (undocumented)
     readonly duration: number | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AlarmSensorCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AlarmSensorCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -179,7 +176,7 @@ export class AlarmSensorCCSupportedGet extends AlarmSensorCC {
 export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
     constructor(options: WithAddress<AlarmSensorCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AlarmSensorCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AlarmSensorCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -416,9 +413,9 @@ export class ApplicationStatusCC extends CommandClass implements SinglecastCC<Ap
 export class ApplicationStatusCCBusy extends ApplicationStatusCC {
     constructor(options: WithAddress<ApplicationStatusCCBusyOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ApplicationStatusCCBusy;
+    static from(raw: CCRaw, ctx: CCParsingContext): ApplicationStatusCCBusy;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly status: ApplicationStatus;
     // (undocumented)
@@ -442,9 +439,9 @@ export interface ApplicationStatusCCBusyOptions {
 // @public (undocumented)
 export class ApplicationStatusCCRejectedRequest extends ApplicationStatusCC {
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ApplicationStatusCCRejectedRequest;
+    static from(raw: CCRaw, ctx: CCParsingContext): ApplicationStatusCCRejectedRequest;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ApplicationStatusCCRejectedRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -503,11 +500,11 @@ export class AssociationCC extends CommandClass {
 export class AssociationCCGet extends AssociationCC {
     constructor(options: WithAddress<AssociationCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationCCGet;
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -526,13 +523,13 @@ export interface AssociationCCGetOptions {
 export class AssociationCCRemove extends AssociationCC {
     constructor(options: WithAddress<AssociationCCRemoveOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationCCRemove;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationCCRemove;
     // (undocumented)
     groupId?: number;
     // (undocumented)
     nodeIds?: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -553,7 +550,7 @@ export class AssociationCCReport extends AssociationCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationCCReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
@@ -561,13 +558,13 @@ export class AssociationCCReport extends AssociationCC {
     // (undocumented)
     maxNodes: number;
     // (undocumented)
-    mergePartialCCs(partials: AssociationCCReport[], _ctx: CCParsingContext_2): Promise<void>;
+    mergePartialCCs(partials: AssociationCCReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -592,13 +589,13 @@ export interface AssociationCCReportOptions {
 export class AssociationCCSet extends AssociationCC {
     constructor(options: WithAddress<AssociationCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationCCSet;
     // (undocumented)
     groupId: number;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -625,11 +622,11 @@ export class AssociationCCSpecificGroupGet extends AssociationCC {
 export class AssociationCCSpecificGroupReport extends AssociationCC {
     constructor(options: WithAddress<AssociationCCSpecificGroupReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationCCSpecificGroupReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationCCSpecificGroupReport;
     // (undocumented)
     group: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -654,11 +651,11 @@ export class AssociationCCSupportedGroupingsGet extends AssociationCC {
 export class AssociationCCSupportedGroupingsReport extends AssociationCC {
     constructor(options: WithAddress<AssociationCCSupportedGroupingsReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationCCSupportedGroupingsReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationCCSupportedGroupingsReport;
     // (undocumented)
     groupCount: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -858,11 +855,11 @@ export class AssociationGroupInfoCCCommandListGet extends AssociationGroupInfoCC
     // (undocumented)
     allowCache: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationGroupInfoCCCommandListGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationGroupInfoCCCommandListGet;
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -885,11 +882,11 @@ export class AssociationGroupInfoCCCommandListReport extends AssociationGroupInf
     // (undocumented)
     readonly commands: ReadonlyMap<CommandClasses, readonly number[]>;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationGroupInfoCCCommandListReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationGroupInfoCCCommandListReport;
     // (undocumented)
     readonly groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -910,7 +907,7 @@ export interface AssociationGroupInfoCCCommandListReportOptions {
 export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
     constructor(options: WithAddress<AssociationGroupInfoCCInfoGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationGroupInfoCCInfoGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationGroupInfoCCInfoGet;
     // (undocumented)
     groupId?: number;
     // (undocumented)
@@ -918,7 +915,7 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
     // (undocumented)
     refreshCache: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -940,7 +937,7 @@ export type AssociationGroupInfoCCInfoGetOptions = {
 export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
     constructor(options: WithAddress<AssociationGroupInfoCCInfoReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationGroupInfoCCInfoReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationGroupInfoCCInfoReport;
     // Warning: (ae-forgotten-export) The symbol "AssociationGroupInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -952,7 +949,7 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -975,11 +972,11 @@ export interface AssociationGroupInfoCCInfoReportOptions {
 export class AssociationGroupInfoCCNameGet extends AssociationGroupInfoCC {
     constructor(options: WithAddress<AssociationGroupInfoCCNameGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationGroupInfoCCNameGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationGroupInfoCCNameGet;
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -998,7 +995,7 @@ export interface AssociationGroupInfoCCNameGetOptions {
 export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
     constructor(options: WithAddress<AssociationGroupInfoCCNameReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): AssociationGroupInfoCCNameReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): AssociationGroupInfoCCNameReport;
     // (undocumented)
     readonly groupId: number;
     // (undocumented)
@@ -1006,7 +1003,7 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -1524,9 +1521,9 @@ export class BarrierOperatorCC extends CommandClass {
 export class BarrierOperatorCCEventSignalingGet extends BarrierOperatorCC {
     constructor(options: WithAddress<BarrierOperatorCCEventSignalingGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): BarrierOperatorCCEventSignalingGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): BarrierOperatorCCEventSignalingGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     subsystemType: SubsystemType;
     // (undocumented)
@@ -1547,7 +1544,7 @@ export interface BarrierOperatorCCEventSignalingGetOptions {
 export class BarrierOperatorCCEventSignalingReport extends BarrierOperatorCC {
     constructor(options: WithAddress<BarrierOperatorCCEventSignalingReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BarrierOperatorCCEventSignalingReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BarrierOperatorCCEventSignalingReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -1574,9 +1571,9 @@ export interface BarrierOperatorCCEventSignalingReportOptions {
 export class BarrierOperatorCCEventSignalingSet extends BarrierOperatorCC {
     constructor(options: WithAddress<BarrierOperatorCCEventSignalingSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): BarrierOperatorCCEventSignalingSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): BarrierOperatorCCEventSignalingSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     subsystemState: SubsystemState;
     // (undocumented)
@@ -1609,7 +1606,7 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
     // (undocumented)
     readonly currentState: MaybeUnknown<BarrierState>;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BarrierOperatorCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BarrierOperatorCCReport;
     // (undocumented)
     readonly position: MaybeUnknown<number>;
     // (undocumented)
@@ -1632,9 +1629,9 @@ export interface BarrierOperatorCCReportOptions {
 export class BarrierOperatorCCSet extends BarrierOperatorCC {
     constructor(options: WithAddress<BarrierOperatorCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): BarrierOperatorCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): BarrierOperatorCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetState: BarrierState.Open | BarrierState.Closed;
     // (undocumented)
@@ -1661,7 +1658,7 @@ export class BarrierOperatorCCSignalingCapabilitiesGet extends BarrierOperatorCC
 export class BarrierOperatorCCSignalingCapabilitiesReport extends BarrierOperatorCC {
     constructor(options: WithAddress<BarrierOperatorCCSignalingCapabilitiesReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BarrierOperatorCCSignalingCapabilitiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BarrierOperatorCCSignalingCapabilitiesReport;
     // (undocumented)
     readonly supportedSubsystemTypes: readonly SubsystemType[];
     // (undocumented)
@@ -1894,11 +1891,11 @@ export class BasicCCReport extends BasicCC {
     // (undocumented)
     readonly duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BasicCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BasicCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: MaybeUnknown<number> | undefined;
     // (undocumented)
@@ -1923,9 +1920,9 @@ export interface BasicCCReportOptions {
 export class BasicCCSet extends BasicCC {
     constructor(options: WithAddress<BasicCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BasicCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): BasicCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetValue: number;
     // (undocumented)
@@ -2242,11 +2239,11 @@ export class BatteryCCHealthGet extends BatteryCC {
 export class BatteryCCHealthReport extends BatteryCC {
     constructor(options: WithAddress<BatteryCCHealthReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BatteryCCHealthReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BatteryCCHealthReport;
     // (undocumented)
     readonly maximumCapacity: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly temperature: number | undefined;
     // (undocumented)
@@ -2277,7 +2274,7 @@ export class BatteryCCReport extends BatteryCC {
     // (undocumented)
     readonly disconnected: boolean | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BatteryCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BatteryCCReport;
     // (undocumented)
     readonly level: number;
     // (undocumented)
@@ -2293,7 +2290,7 @@ export class BatteryCCReport extends BatteryCC {
     // (undocumented)
     readonly rechargeOrReplace: BatteryReplacementStatus | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -2681,11 +2678,11 @@ export class BinarySensorCC extends CommandClass {
 export class BinarySensorCCGet extends BinarySensorCC {
     constructor(options: WithAddress<BinarySensorCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySensorCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): BinarySensorCCGet;
     // (undocumented)
     sensorType: BinarySensorType | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -2704,11 +2701,11 @@ export interface BinarySensorCCGetOptions {
 export class BinarySensorCCReport extends BinarySensorCC {
     constructor(options: WithAddress<BinarySensorCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySensorCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BinarySensorCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -2739,9 +2736,9 @@ export class BinarySensorCCSupportedGet extends BinarySensorCC {
 export class BinarySensorCCSupportedReport extends BinarySensorCC {
     constructor(options: WithAddress<BinarySensorCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySensorCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BinarySensorCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     supportedSensorTypes: BinarySensorType[];
     // (undocumented)
@@ -2904,9 +2901,9 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
     // (undocumented)
     readonly duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySwitchCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): BinarySwitchCCReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: MaybeUnknown<boolean> | undefined;
     // (undocumented)
@@ -2933,9 +2930,9 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): BinarySwitchCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): BinarySwitchCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetValue: boolean;
     // (undocumented)
@@ -3114,7 +3111,7 @@ export type CCAPIEndpoint = ((EndpointId & ControlsCC) | (VirtualEndpointId & {
 // Warning: (ae-missing-release-tag) "CCAPIHost" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type CCAPIHost<TNode extends CCAPINode = CCAPINode> = HostIDs & GetNode<TNode> & GetValueDB & GetSupportedCCVersion & GetSafeCCVersion & SecurityManagers & GetDeviceConfig & SendCommand_2 & GetRefreshValueTimeouts & GetUserPreferences & SchedulePoll & LogNode;
+export type CCAPIHost<TNode extends CCAPINode = CCAPINode> = HostIDs & GetNode<TNode> & GetValueDB & GetSupportedCCVersion & GetSafeCCVersion & SecurityManagers & GetDeviceConfig & SendCommand & GetRefreshValueTimeouts & GetUserPreferences & SchedulePoll & LogNode;
 
 // Warning: (ae-missing-release-tag) "CCAPINode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3425,6 +3422,76 @@ export interface CCEncodingContext extends Readonly<SecurityManagers>, GetDevice
 // @public (undocumented)
 export type CCEndpoint = EndpointId & SupportsCC & ControlsCC & GetCCs & ModifyCCs;
 
+// Warning: (ae-missing-release-tag) "CCNameMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type CCNameMap = {
+    "Alarm Sensor": typeof CommandClasses["Alarm Sensor"];
+    "Application Status": typeof CommandClasses["Application Status"];
+    "Association Group Information": typeof CommandClasses["Association Group Information"];
+    "Barrier Operator": typeof CommandClasses["Barrier Operator"];
+    "Basic Window Covering": typeof CommandClasses["Basic Window Covering"];
+    "Binary Sensor": typeof CommandClasses["Binary Sensor"];
+    "Binary Switch": typeof CommandClasses["Binary Switch"];
+    "Central Scene": typeof CommandClasses["Central Scene"];
+    "Climate Control Schedule": typeof CommandClasses["Climate Control Schedule"];
+    "Color Switch": typeof CommandClasses["Color Switch"];
+    "CRC-16 Encapsulation": typeof CommandClasses["CRC-16 Encapsulation"];
+    "Device Reset Locally": typeof CommandClasses["Device Reset Locally"];
+    "Door Lock Logging": typeof CommandClasses["Door Lock Logging"];
+    "Door Lock": typeof CommandClasses["Door Lock"];
+    "Energy Production": typeof CommandClasses["Energy Production"];
+    "Entry Control": typeof CommandClasses["Entry Control"];
+    "Firmware Update Meta Data": typeof CommandClasses["Firmware Update Meta Data"];
+    "Humidity Control Mode": typeof CommandClasses["Humidity Control Mode"];
+    "Humidity Control Operating State": typeof CommandClasses["Humidity Control Operating State"];
+    "Humidity Control Setpoint": typeof CommandClasses["Humidity Control Setpoint"];
+    "Inclusion Controller": typeof CommandClasses["Inclusion Controller"];
+    "Manufacturer Proprietary": typeof CommandClasses["Manufacturer Proprietary"];
+    "Manufacturer Specific": typeof CommandClasses["Manufacturer Specific"];
+    "Multi Channel Association": typeof CommandClasses["Multi Channel Association"];
+    "Multi Channel": typeof CommandClasses["Multi Channel"];
+    "Multi Command": typeof CommandClasses["Multi Command"];
+    "Multilevel Sensor": typeof CommandClasses["Multilevel Sensor"];
+    "Multilevel Switch": typeof CommandClasses["Multilevel Switch"];
+    "No Operation": typeof CommandClasses["No Operation"];
+    "Node Naming and Location": typeof CommandClasses["Node Naming and Location"];
+    "Scene Activation": typeof CommandClasses["Scene Activation"];
+    "Scene Actuator Configuration": typeof CommandClasses["Scene Actuator Configuration"];
+    "Scene Controller Configuration": typeof CommandClasses["Scene Controller Configuration"];
+    "Schedule Entry Lock": typeof CommandClasses["Schedule Entry Lock"];
+    "Security 2": typeof CommandClasses["Security 2"];
+    "Sound Switch": typeof CommandClasses["Sound Switch"];
+    "Thermostat Fan Mode": typeof CommandClasses["Thermostat Fan Mode"];
+    "Thermostat Fan State": typeof CommandClasses["Thermostat Fan State"];
+    "Thermostat Mode": typeof CommandClasses["Thermostat Mode"];
+    "Thermostat Operating State": typeof CommandClasses["Thermostat Operating State"];
+    "Thermostat Setback": typeof CommandClasses["Thermostat Setback"];
+    "Thermostat Setpoint": typeof CommandClasses["Thermostat Setpoint"];
+    "Time Parameters": typeof CommandClasses["Time Parameters"];
+    "User Code": typeof CommandClasses["User Code"];
+    "Wake Up": typeof CommandClasses["Wake Up"];
+    "Window Covering": typeof CommandClasses["Window Covering"];
+    "Z-Wave Plus Info": typeof CommandClasses["Z-Wave Plus Info"];
+    Association: typeof CommandClasses["Association"];
+    Basic: typeof CommandClasses["Basic"];
+    Battery: typeof CommandClasses["Battery"];
+    Clock: typeof CommandClasses["Clock"];
+    Configuration: typeof CommandClasses["Configuration"];
+    Indicator: typeof CommandClasses["Indicator"];
+    Irrigation: typeof CommandClasses["Irrigation"];
+    Language: typeof CommandClasses["Language"];
+    Lock: typeof CommandClasses["Lock"];
+    Meter: typeof CommandClasses["Meter"];
+    Notification: typeof CommandClasses["Notification"];
+    Powerlevel: typeof CommandClasses["Powerlevel"];
+    Protection: typeof CommandClasses["Protection"];
+    Security: typeof CommandClasses["Security"];
+    Supervision: typeof CommandClasses["Supervision"];
+    Time: typeof CommandClasses["Time"];
+    Version: typeof CommandClasses["Version"];
+};
+
 // Warning: (ae-missing-release-tag) "CCNameOrId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -3486,7 +3553,6 @@ export type CCResponseRole = boolean | "checkEncapsulated";
 // @public (undocumented)
 export type CCToAPI<CC extends CCNameOrId> = CC extends CommandClasses ? CCToName<CC> extends keyof CCAPIs ? CCAPIs[CCToName<CC>] : never : CC extends keyof CCAPIs ? CCAPIs[CC] : never;
 
-// Warning: (ae-forgotten-export) The symbol "CCNameMap" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "CCToName" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -3555,7 +3621,7 @@ export class CentralSceneCCConfigurationGet extends CentralSceneCC {
 export class CentralSceneCCConfigurationReport extends CentralSceneCC {
     constructor(options: WithAddress<CentralSceneCCConfigurationReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): CentralSceneCCConfigurationReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): CentralSceneCCConfigurationReport;
     // (undocumented)
     readonly slowRefresh: boolean;
     // (undocumented)
@@ -3576,9 +3642,9 @@ export interface CentralSceneCCConfigurationReportOptions {
 export class CentralSceneCCConfigurationSet extends CentralSceneCC {
     constructor(options: WithAddress<CentralSceneCCConfigurationSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): CentralSceneCCConfigurationSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): CentralSceneCCConfigurationSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slowRefresh: boolean;
     // (undocumented)
@@ -3599,7 +3665,7 @@ export interface CentralSceneCCConfigurationSetOptions {
 export class CentralSceneCCNotification extends CentralSceneCC {
     constructor(options: WithAddress<CentralSceneCCNotificationOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): CentralSceneCCNotification;
+    static from(raw: CCRaw, ctx: CCParsingContext): CentralSceneCCNotification;
     // (undocumented)
     readonly keyAttribute: CentralSceneKeys;
     // (undocumented)
@@ -3640,7 +3706,7 @@ export class CentralSceneCCSupportedGet extends CentralSceneCC {
 export class CentralSceneCCSupportedReport extends CentralSceneCC {
     constructor(options: WithAddress<CentralSceneCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): CentralSceneCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): CentralSceneCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -3869,7 +3935,7 @@ export class ClimateControlScheduleCCChangedReport extends ClimateControlSchedul
     // (undocumented)
     readonly changeCounter: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ClimateControlScheduleCCChangedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ClimateControlScheduleCCChangedReport;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -3888,9 +3954,9 @@ export interface ClimateControlScheduleCCChangedReportOptions {
 export class ClimateControlScheduleCCGet extends ClimateControlScheduleCC {
     constructor(options: WithAddress<ClimateControlScheduleCCGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ClimateControlScheduleCCGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ClimateControlScheduleCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -3917,7 +3983,7 @@ export class ClimateControlScheduleCCOverrideGet extends ClimateControlScheduleC
 export class ClimateControlScheduleCCOverrideReport extends ClimateControlScheduleCC {
     constructor(options: WithAddress<ClimateControlScheduleCCOverrideReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ClimateControlScheduleCCOverrideReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ClimateControlScheduleCCOverrideReport;
     // (undocumented)
     readonly overrideState: SetbackState;
     // (undocumented)
@@ -3942,13 +4008,13 @@ export interface ClimateControlScheduleCCOverrideReportOptions {
 export class ClimateControlScheduleCCOverrideSet extends ClimateControlScheduleCC {
     constructor(options: WithAddress<ClimateControlScheduleCCOverrideSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ClimateControlScheduleCCOverrideSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ClimateControlScheduleCCOverrideSet;
     // (undocumented)
     overrideState: SetbackState;
     // (undocumented)
     overrideType: ScheduleOverrideType;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -3969,7 +4035,7 @@ export interface ClimateControlScheduleCCOverrideSetOptions {
 export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
     constructor(options: WithAddress<ClimateControlScheduleCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ClimateControlScheduleCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ClimateControlScheduleCCReport;
     // (undocumented)
     readonly schedule: readonly Switchpoint[];
     // (undocumented)
@@ -3994,9 +4060,9 @@ export interface ClimateControlScheduleCCReportOptions {
 export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
     constructor(options: WithAddress<ClimateControlScheduleCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ClimateControlScheduleCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ClimateControlScheduleCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     switchPoints: Switchpoint[];
     // (undocumented)
@@ -4150,7 +4216,7 @@ export class ClockCCGet extends ClockCC {
 export class ClockCCReport extends ClockCC {
     constructor(options: WithAddress<ClockCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ClockCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ClockCCReport;
     // (undocumented)
     readonly hour: number;
     // (undocumented)
@@ -4179,13 +4245,13 @@ export interface ClockCCReportOptions {
 export class ClockCCSet extends ClockCC {
     constructor(options: WithAddress<ClockCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ClockCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ClockCCSet;
     // (undocumented)
     hour: number;
     // (undocumented)
     minute: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -4283,9 +4349,9 @@ export class ColorSwitchCCGet extends ColorSwitchCC {
     get colorComponent(): ColorComponent;
     set colorComponent(value: ColorComponent);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -4310,11 +4376,11 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
     // (undocumented)
     readonly duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: number | undefined;
     // (undocumented)
@@ -4345,9 +4411,9 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -4373,11 +4439,11 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCStartLevelChange;
+    static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCStartLevelChange;
     // (undocumented)
     ignoreStartLevel: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     startLevel: number;
     // (undocumented)
@@ -4408,9 +4474,9 @@ export class ColorSwitchCCStopLevelChange extends ColorSwitchCC {
     // (undocumented)
     readonly colorComponent: ColorComponent;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCStopLevelChange;
+    static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCStopLevelChange;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -4435,9 +4501,9 @@ export class ColorSwitchCCSupportedGet extends ColorSwitchCC {
 export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
     constructor(options: WithAddress<ColorSwitchCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ColorSwitchCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedColorComponents: readonly ColorComponent[];
     // (undocumented)
@@ -4730,7 +4796,7 @@ export class CommandClass implements CCId {
     expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean;
     readonly frameType?: FrameType;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): CommandClass | Promise<CommandClass>;
+    static from(raw: CCRaw, ctx: CCParsingContext): CommandClass | Promise<CommandClass>;
     protected getCCValue(valueId: ValueID): StaticCCValue | DynamicCCValue | undefined;
     getDefinedValueIDs(ctx: GetValueDB & GetSupportedCCVersion & GetDeviceConfig & GetNode<NodeId & GetEndpoint<EndpointId & SupportsCC & ControlsCC>>, includeInternal?: boolean): ValueID[];
     getEncapsulatedCC(ccId: CommandClasses, ccCommand?: number): CommandClass | undefined;
@@ -4759,10 +4825,10 @@ export class CommandClass implements CCId {
     // (undocumented)
     isSinglecast(): this is SinglecastCC<this>;
     isStatefulValue(properties: ValueIDProperties): boolean;
-    mergePartialCCs(_partials: CommandClass[], _ctx: CCParsingContext_2): Promise<void>;
+    mergePartialCCs(_partials: CommandClass[], _ctx: CCParsingContext): Promise<void>;
     nodeId: number | MulticastDestination;
     // (undocumented)
-    static parse(data: BytesView, ctx: CCParsingContext_2): Promise<CommandClass>;
+    static parse(data: BytesView, ctx: CCParsingContext): Promise<CommandClass>;
     // (undocumented)
     payload: Bytes;
     // Warning: (tsdoc-characters-after-block-tag) The token "@ccValue" looks like a TSDoc tag but contains an invalid character "."; if it is not a tag, use a backslash to escape the "@"
@@ -4772,7 +4838,7 @@ export class CommandClass implements CCId {
     refreshValues(_ctx: RefreshValuesContext): Promise<void>;
     protected removeMetadata(ctx: GetValueDB, ccValue: CCValue): void;
     protected removeValue(ctx: GetValueDB, ccValue: CCValue): void;
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     setInterviewComplete(host: GetValueDB, complete: boolean): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     setMappedBasicValue(_ctx: GetValueDB, _value: number): boolean;
@@ -4864,11 +4930,11 @@ export type ConfigurationCCAPISetOptions = {
 export class ConfigurationCCBulkGet extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCBulkGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ConfigurationCCBulkGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ConfigurationCCBulkGet;
     // (undocumented)
     get parameters(): number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -4891,7 +4957,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCBulkReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCBulkReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
@@ -4930,7 +4996,7 @@ export interface ConfigurationCCBulkReportOptions {
 export class ConfigurationCCBulkSet extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCBulkSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ConfigurationCCBulkSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ConfigurationCCBulkSet;
     // (undocumented)
     get handshake(): boolean;
     // (undocumented)
@@ -4938,7 +5004,7 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
     // (undocumented)
     get resetToDefault(): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -4978,11 +5044,11 @@ export class ConfigurationCCGet extends ConfigurationCC {
     // (undocumented)
     allowUnexpectedResponse: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCGet;
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -5002,11 +5068,11 @@ export interface ConfigurationCCGetOptions {
 export class ConfigurationCCInfoGet extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCInfoGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCInfoGet;
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -5019,13 +5085,13 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCInfoReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCInfoReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
     info: string;
     // (undocumented)
-    mergePartialCCs(partials: ConfigurationCCInfoReport[], _ctx: CCParsingContext_2): Promise<void>;
+    mergePartialCCs(partials: ConfigurationCCInfoReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     readonly parameter: number;
     // (undocumented)
@@ -5033,7 +5099,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
     // (undocumented)
     readonly reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -5057,11 +5123,11 @@ export interface ConfigurationCCInfoReportOptions {
 export class ConfigurationCCNameGet extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCNameGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCNameGet;
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -5074,11 +5140,11 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCNameReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCNameReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    mergePartialCCs(partials: ConfigurationCCNameReport[], _ctx: CCParsingContext_2): Promise<void>;
+    mergePartialCCs(partials: ConfigurationCCNameReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     name: string;
     // (undocumented)
@@ -5088,7 +5154,7 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
     // (undocumented)
     readonly reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -5112,11 +5178,11 @@ export interface ConfigurationCCNameReportOptions {
 export class ConfigurationCCPropertiesGet extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCPropertiesGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCPropertiesGet;
     // (undocumented)
     parameter: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -5131,7 +5197,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
     // (undocumented)
     defaultValue: MaybeNotKnown<ConfigValue>;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCPropertiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCPropertiesReport;
     // (undocumented)
     isAdvanced: MaybeNotKnown<boolean>;
     // (undocumented)
@@ -5149,7 +5215,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -5193,13 +5259,13 @@ export interface ConfigurationCCPropertiesReportOptions {
 export class ConfigurationCCReport extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCReport;
     // (undocumented)
     parameter: number;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -5229,13 +5295,13 @@ export interface ConfigurationCCReportOptions {
 export class ConfigurationCCSet extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ConfigurationCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCSet;
     // (undocumented)
     parameter: number;
     // (undocumented)
     resetToDefault: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -5378,9 +5444,9 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<CRC16CCCommandEncapsulation>;
+    static from(raw: CCRaw, ctx: CCParsingContext): Promise<CRC16CCCommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -5461,7 +5527,7 @@ export class DeviceResetLocallyCC extends CommandClass {
 // @public (undocumented)
 export class DeviceResetLocallyCCNotification extends DeviceResetLocallyCC {
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): DeviceResetLocallyCCNotification;
+    static from(raw: CCRaw, ctx: CCParsingContext): DeviceResetLocallyCCNotification;
 }
 
 // Warning: (ae-missing-release-tag) "DeviceResetLocallyCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5520,7 +5586,7 @@ export class DoorLockCCCapabilitiesReport extends DoorLockCC {
     // (undocumented)
     readonly doorSupported: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): DoorLockCCCapabilitiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): DoorLockCCCapabilitiesReport;
     // (undocumented)
     readonly holdAndReleaseSupported: boolean;
     // (undocumented)
@@ -5583,7 +5649,7 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
     // (undocumented)
     readonly blockToBlock?: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): DoorLockCCConfigurationReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): DoorLockCCConfigurationReport;
     // (undocumented)
     readonly holdAndReleaseTime?: number;
     // (undocumented)
@@ -5634,7 +5700,7 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
     // (undocumented)
     blockToBlock?: boolean;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): DoorLockCCConfigurationSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): DoorLockCCConfigurationSet;
     // (undocumented)
     holdAndReleaseTime?: number;
     // (undocumented)
@@ -5646,7 +5712,7 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
     // (undocumented)
     outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -5691,7 +5757,7 @@ export class DoorLockCCOperationReport extends DoorLockCC {
     // (undocumented)
     readonly duration?: Duration;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): DoorLockCCOperationReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): DoorLockCCOperationReport;
     // (undocumented)
     readonly insideHandlesCanOpenDoor: DoorHandleStatus;
     // (undocumented)
@@ -5738,11 +5804,11 @@ export interface DoorLockCCOperationReportOptions {
 export class DoorLockCCOperationSet extends DoorLockCC {
     constructor(options: WithAddress<DoorLockCCOperationSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): DoorLockCCOperationSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): DoorLockCCOperationSet;
     // (undocumented)
     mode: DoorLockMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -6132,7 +6198,7 @@ export const DoorLockCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateAutoRelockConfigValue;
         };
     };
     holdAndReleaseSupported: {
@@ -6185,7 +6251,7 @@ export const DoorLockCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateHoldAndReleaseConfigValue;
         };
     };
     twistAssistSupported: {
@@ -6236,7 +6302,7 @@ export const DoorLockCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateTwistAssistConfigValue;
         };
     };
     blockToBlockSupported: {
@@ -6287,7 +6353,7 @@ export const DoorLockCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateBlockToBlockConfigValue;
         };
     };
     latchSupported: {
@@ -6338,7 +6404,7 @@ export const DoorLockCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateLatchStatusValue;
         };
     };
     boltSupported: {
@@ -6389,7 +6455,7 @@ export const DoorLockCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateBoltStatusValue;
         };
     };
     doorSupported: {
@@ -6440,7 +6506,7 @@ export const DoorLockCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateDoorStatusValue;
         };
     };
 }>;
@@ -6485,11 +6551,11 @@ export class DoorLockLoggingCC extends CommandClass {
 export class DoorLockLoggingCCRecordGet extends DoorLockLoggingCC {
     constructor(options: WithAddress<DoorLockLoggingCCRecordGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): DoorLockLoggingCCRecordGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): DoorLockLoggingCCRecordGet;
     // (undocumented)
     recordNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -6508,7 +6574,7 @@ export interface DoorLockLoggingCCRecordGetOptions {
 export class DoorLockLoggingCCRecordReport extends DoorLockLoggingCC {
     constructor(options: WithAddress<DoorLockLoggingCCRecordReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): DoorLockLoggingCCRecordReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): DoorLockLoggingCCRecordReport;
     // (undocumented)
     readonly record?: DoorLockLoggingRecord;
     // (undocumented)
@@ -6539,7 +6605,7 @@ export class DoorLockLoggingCCRecordsSupportedGet extends DoorLockLoggingCC {
 export class DoorLockLoggingCCRecordsSupportedReport extends DoorLockLoggingCC {
     constructor(options: WithAddress<DoorLockLoggingCCRecordsSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): DoorLockLoggingCCRecordsSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): DoorLockLoggingCCRecordsSupportedReport;
     // (undocumented)
     readonly recordsCount: number;
     // (undocumented)
@@ -6784,11 +6850,11 @@ export class EnergyProductionCC extends CommandClass {
 export class EnergyProductionCCGet extends EnergyProductionCC {
     constructor(options: WithAddress<EnergyProductionCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): EnergyProductionCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): EnergyProductionCCGet;
     // (undocumented)
     parameter: EnergyProductionParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -6807,7 +6873,7 @@ export interface EnergyProductionCCGetOptions {
 export class EnergyProductionCCReport extends EnergyProductionCC {
     constructor(options: WithAddress<EnergyProductionCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): EnergyProductionCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): EnergyProductionCCReport;
     // (undocumented)
     readonly parameter: EnergyProductionParameter;
     // (undocumented)
@@ -6815,7 +6881,7 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
     // (undocumented)
     readonly scale: EnergyProductionScale;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -6929,7 +6995,7 @@ export class EntryControlCCConfigurationGet extends EntryControlCC {
 export class EntryControlCCConfigurationReport extends EntryControlCC {
     constructor(options: WithAddress<EntryControlCCConfigurationReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): EntryControlCCConfigurationReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): EntryControlCCConfigurationReport;
     // (undocumented)
     readonly keyCacheSize: number;
     // (undocumented)
@@ -6954,13 +7020,13 @@ export interface EntryControlCCConfigurationReportOptions {
 export class EntryControlCCConfigurationSet extends EntryControlCC {
     constructor(options: WithAddress<EntryControlCCConfigurationSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): EntryControlCCConfigurationSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): EntryControlCCConfigurationSet;
     // (undocumented)
     readonly keyCacheSize: number;
     // (undocumented)
     readonly keyCacheTimeout: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -6987,7 +7053,7 @@ export class EntryControlCCEventSupportedGet extends EntryControlCC {
 export class EntryControlCCEventSupportedReport extends EntryControlCC {
     constructor(options: WithAddress<EntryControlCCEventSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): EntryControlCCEventSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): EntryControlCCEventSupportedReport;
     // (undocumented)
     readonly maxKeyCacheSize: number;
     // (undocumented)
@@ -7036,7 +7102,7 @@ export class EntryControlCCKeySupportedGet extends EntryControlCC {
 export class EntryControlCCKeySupportedReport extends EntryControlCC {
     constructor(options: WithAddress<EntryControlCCKeySupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): EntryControlCCKeySupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): EntryControlCCKeySupportedReport;
     // (undocumented)
     readonly supportedKeys: readonly number[];
     // (undocumented)
@@ -7063,7 +7129,7 @@ export class EntryControlCCNotification extends EntryControlCC {
     // (undocumented)
     readonly eventType: EntryControlEventTypes;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): EntryControlCCNotification;
+    static from(raw: CCRaw, ctx: CCParsingContext): EntryControlCCNotification;
     // (undocumented)
     readonly sequenceNumber: number;
     // (undocumented)
@@ -7345,13 +7411,13 @@ export class FibaroCC extends ManufacturerProprietaryCC {
     // (undocumented)
     fibaroCCId?: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FibaroCC;
+    static from(raw: CCRaw, ctx: CCParsingContext): FibaroCC;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
@@ -7391,7 +7457,7 @@ export class FibaroVenetianBlindCC extends FibaroCC {
 export class FibaroVenetianBlindCCGet extends FibaroVenetianBlindCC {
     constructor(options: CommandClassOptions);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FibaroVenetianBlindCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): FibaroVenetianBlindCCGet;
 }
 
 // Warning: (ae-missing-release-tag) "FibaroVenetianBlindCCReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -7400,7 +7466,7 @@ export class FibaroVenetianBlindCCGet extends FibaroVenetianBlindCC {
 export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
     constructor(options: WithAddress<FibaroVenetianBlindCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FibaroVenetianBlindCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): FibaroVenetianBlindCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -7427,11 +7493,11 @@ export interface FibaroVenetianBlindCCReportOptions {
 export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
     constructor(options: WithAddress<FibaroVenetianBlindCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): FibaroVenetianBlindCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): FibaroVenetianBlindCCSet;
     // (undocumented)
     position: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     tilt: number | undefined;
     // (undocumented)
@@ -7558,13 +7624,13 @@ export class FirmwareUpdateMetaDataCCActivationReport extends FirmwareUpdateMeta
     // (undocumented)
     readonly firmwareTarget: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCActivationReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCActivationReport;
     // (undocumented)
     readonly hardwareVersion?: number;
     // (undocumented)
     readonly manufacturerId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -7599,13 +7665,13 @@ export class FirmwareUpdateMetaDataCCActivationSet extends FirmwareUpdateMetaDat
     // (undocumented)
     firmwareTarget: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCActivationSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCActivationSet;
     // (undocumented)
     hardwareVersion?: number;
     // (undocumented)
     manufacturerId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -7632,13 +7698,13 @@ export interface FirmwareUpdateMetaDataCCActivationSetOptions {
 export class FirmwareUpdateMetaDataCCGet extends FirmwareUpdateMetaDataCC {
     constructor(options: WithAddress<FirmwareUpdateMetaDataCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCGet;
     // (undocumented)
     readonly numReports: number;
     // (undocumented)
     readonly reportNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -7675,7 +7741,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport extends FirmwareUpdateMetaDa
     // (undocumented)
     readonly firmwareUpgradable: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCMetaDataReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCMetaDataReport;
     // (undocumented)
     readonly hardwareVersion?: number;
     // (undocumented)
@@ -7683,7 +7749,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport extends FirmwareUpdateMetaDa
     // (undocumented)
     readonly maxFragmentSize?: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportsActivation: MaybeNotKnown<boolean>;
     // (undocumented)
@@ -7734,13 +7800,13 @@ export class FirmwareUpdateMetaDataCCPrepareGet extends FirmwareUpdateMetaDataCC
     // (undocumented)
     fragmentSize: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCPrepareGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCPrepareGet;
     // (undocumented)
     hardwareVersion: number;
     // (undocumented)
     manufacturerId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -7769,9 +7835,9 @@ export class FirmwareUpdateMetaDataCCPrepareReport extends FirmwareUpdateMetaDat
     // (undocumented)
     readonly checksum: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCPrepareReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCPrepareReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly status: FirmwareDownloadStatus;
     // (undocumented)
@@ -7796,13 +7862,13 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
     // (undocumented)
     firmwareData: BytesView;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCReport;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): FirmwareUpdateMetaDataCCReport;
     // (undocumented)
     isLast: boolean;
     // (undocumented)
     reportNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -7835,7 +7901,7 @@ export class FirmwareUpdateMetaDataCCRequestGet extends FirmwareUpdateMetaDataCC
     // (undocumented)
     fragmentSize?: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCRequestGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCRequestGet;
     // (undocumented)
     hardwareVersion?: number;
     // (undocumented)
@@ -7845,7 +7911,7 @@ export class FirmwareUpdateMetaDataCCRequestGet extends FirmwareUpdateMetaDataCC
     // (undocumented)
     resume?: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -7872,13 +7938,13 @@ export type FirmwareUpdateMetaDataCCRequestGetOptions = {
 export class FirmwareUpdateMetaDataCCRequestReport extends FirmwareUpdateMetaDataCC {
     constructor(options: WithAddress<FirmwareUpdateMetaDataCCRequestReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCRequestReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCRequestReport;
     // (undocumented)
     nonSecureTransfer?: boolean;
     // (undocumented)
     resume?: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly status: FirmwareUpdateRequestStatus;
     // (undocumented)
@@ -7903,9 +7969,9 @@ export interface FirmwareUpdateMetaDataCCRequestReportOptions {
 export class FirmwareUpdateMetaDataCCStatusReport extends FirmwareUpdateMetaDataCC {
     constructor(options: WithAddress<FirmwareUpdateMetaDataCCStatusReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): FirmwareUpdateMetaDataCCStatusReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): FirmwareUpdateMetaDataCCStatusReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly status: FirmwareUpdateStatus;
     // (undocumented)
@@ -8445,7 +8511,7 @@ export class HumidityControlModeCCGet extends HumidityControlModeCC {
 export class HumidityControlModeCCReport extends HumidityControlModeCC {
     constructor(options: WithAddress<HumidityControlModeCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): HumidityControlModeCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): HumidityControlModeCCReport;
     // (undocumented)
     readonly mode: HumidityControlMode;
     // (undocumented)
@@ -8466,11 +8532,11 @@ export interface HumidityControlModeCCReportOptions {
 export class HumidityControlModeCCSet extends HumidityControlModeCC {
     constructor(options: WithAddress<HumidityControlModeCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlModeCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): HumidityControlModeCCSet;
     // (undocumented)
     mode: HumidityControlMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -8495,7 +8561,7 @@ export class HumidityControlModeCCSupportedGet extends HumidityControlModeCC {
 export class HumidityControlModeCCSupportedReport extends HumidityControlModeCC {
     constructor(options: WithAddress<HumidityControlModeCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): HumidityControlModeCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): HumidityControlModeCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -8624,7 +8690,7 @@ export class HumidityControlOperatingStateCCGet extends HumidityControlOperating
 export class HumidityControlOperatingStateCCReport extends HumidityControlOperatingStateCC {
     constructor(options: WithAddress<HumidityControlOperatingStateCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): HumidityControlOperatingStateCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): HumidityControlOperatingStateCCReport;
     // (undocumented)
     readonly state: HumidityControlOperatingState;
     // (undocumented)
@@ -8718,9 +8784,9 @@ export class HumidityControlSetpointCC extends CommandClass {
 export class HumidityControlSetpointCCCapabilitiesGet extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCCapabilitiesGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlSetpointCCCapabilitiesGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): HumidityControlSetpointCCCapabilitiesGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
@@ -8741,7 +8807,7 @@ export interface HumidityControlSetpointCCCapabilitiesGetOptions {
 export class HumidityControlSetpointCCCapabilitiesReport extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCCapabilitiesReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): HumidityControlSetpointCCCapabilitiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): HumidityControlSetpointCCCapabilitiesReport;
     // (undocumented)
     maxValue: number;
     // (undocumented)
@@ -8780,9 +8846,9 @@ export interface HumidityControlSetpointCCCapabilitiesReportOptions {
 export class HumidityControlSetpointCCGet extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlSetpointCCGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): HumidityControlSetpointCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
@@ -8803,7 +8869,7 @@ export interface HumidityControlSetpointCCGetOptions {
 export class HumidityControlSetpointCCReport extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): HumidityControlSetpointCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): HumidityControlSetpointCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -8834,9 +8900,9 @@ export interface HumidityControlSetpointCCReportOptions {
 export class HumidityControlSetpointCCScaleSupportedGet extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCScaleSupportedGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlSetpointCCScaleSupportedGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): HumidityControlSetpointCCScaleSupportedGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
@@ -8857,7 +8923,7 @@ export interface HumidityControlSetpointCCScaleSupportedGetOptions {
 export class HumidityControlSetpointCCScaleSupportedReport extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCScaleSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): HumidityControlSetpointCCScaleSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): HumidityControlSetpointCCScaleSupportedReport;
     // (undocumented)
     readonly supportedScales: readonly number[];
     // (undocumented)
@@ -8878,11 +8944,11 @@ export interface HumidityControlSetpointCCScaleSupportedReportOptions {
 export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): HumidityControlSetpointCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): HumidityControlSetpointCCSet;
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     setpointType: HumidityControlSetpointType;
     // (undocumented)
@@ -8915,7 +8981,7 @@ export class HumidityControlSetpointCCSupportedGet extends HumidityControlSetpoi
 export class HumidityControlSetpointCCSupportedReport extends HumidityControlSetpointCC {
     constructor(options: WithAddress<HumidityControlSetpointCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): HumidityControlSetpointCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): HumidityControlSetpointCCSupportedReport;
     // (undocumented)
     readonly supportedSetpointTypes: readonly HumidityControlSetpointType[];
     // (undocumented)
@@ -9101,9 +9167,9 @@ export class InclusionControllerCC extends CommandClass {
 export class InclusionControllerCCComplete extends InclusionControllerCC {
     constructor(options: WithAddress<InclusionControllerCCCompleteOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): InclusionControllerCCComplete;
+    static from(raw: CCRaw, ctx: CCParsingContext): InclusionControllerCCComplete;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     status: InclusionControllerStatus;
     // (undocumented)
@@ -9128,11 +9194,11 @@ export interface InclusionControllerCCCompleteOptions {
 export class InclusionControllerCCInitiate extends InclusionControllerCC {
     constructor(options: WithAddress<InclusionControllerCCInitiateOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): InclusionControllerCCInitiate;
+    static from(raw: CCRaw, ctx: CCParsingContext): InclusionControllerCCInitiate;
     // (undocumented)
     includedNodeId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     step: InclusionControllerStep;
     // (undocumented)
@@ -9233,11 +9299,11 @@ export class IndicatorCC extends CommandClass {
 export class IndicatorCCDescriptionGet extends IndicatorCC {
     constructor(options: WithAddress<IndicatorCCDescriptionGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IndicatorCCDescriptionGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCDescriptionGet;
     // (undocumented)
     indicatorId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -9258,13 +9324,13 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
     // (undocumented)
     description: string;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IndicatorCCDescriptionReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCDescriptionReport;
     // (undocumented)
     indicatorId: number;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -9285,11 +9351,11 @@ export interface IndicatorCCDescriptionReportOptions {
 export class IndicatorCCGet extends IndicatorCC {
     constructor(options: WithAddress<IndicatorCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IndicatorCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCGet;
     // (undocumented)
     indicatorId: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -9308,13 +9374,13 @@ export interface IndicatorCCGetOptions {
 export class IndicatorCCReport extends IndicatorCC {
     constructor(options: WithAddress<IndicatorCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IndicatorCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCReport;
     // (undocumented)
     readonly indicator0Value: number | undefined;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -9336,11 +9402,11 @@ export type IndicatorCCReportOptions = {
 export class IndicatorCCSet extends IndicatorCC {
     constructor(options: WithAddress<IndicatorCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IndicatorCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCSet;
     // (undocumented)
     indicator0Value: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -9362,11 +9428,11 @@ export type IndicatorCCSetOptions = {
 export class IndicatorCCSupportedGet extends IndicatorCC {
     constructor(options: WithAddress<IndicatorCCSupportedGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IndicatorCCSupportedGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCSupportedGet;
     // (undocumented)
     indicatorId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -9385,7 +9451,7 @@ export interface IndicatorCCSupportedGetOptions {
 export class IndicatorCCSupportedReport extends IndicatorCC {
     constructor(options: WithAddress<IndicatorCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IndicatorCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCSupportedReport;
     // (undocumented)
     readonly indicatorId: number;
     // (undocumented)
@@ -9393,7 +9459,7 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedProperties: readonly number[];
     // (undocumented)
@@ -9737,7 +9803,7 @@ export class IrrigationCCSystemConfigGet extends IrrigationCC {
 export class IrrigationCCSystemConfigReport extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCSystemConfigReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IrrigationCCSystemConfigReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IrrigationCCSystemConfigReport;
     // (undocumented)
     readonly highPressureThreshold: number;
     // (undocumented)
@@ -9774,7 +9840,7 @@ export interface IrrigationCCSystemConfigReportOptions {
 export class IrrigationCCSystemConfigSet extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCSystemConfigSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCSystemConfigSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCSystemConfigSet;
     // (undocumented)
     highPressureThreshold: number;
     // (undocumented)
@@ -9786,7 +9852,7 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
     // (undocumented)
     rainSensorPolarity?: IrrigationSensorPolarity;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -9814,7 +9880,7 @@ export class IrrigationCCSystemInfoGet extends IrrigationCC {
 export class IrrigationCCSystemInfoReport extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCSystemInfoReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IrrigationCCSystemInfoReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IrrigationCCSystemInfoReport;
     // (undocumented)
     readonly maxValveTableSize: number;
     // (undocumented)
@@ -9849,9 +9915,9 @@ export class IrrigationCCSystemShutoff extends IrrigationCC {
     // (undocumented)
     duration?: number;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCSystemShutoff;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCSystemShutoff;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -9891,7 +9957,7 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
     // (undocumented)
     flowSensorActive: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IrrigationCCSystemStatusReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IrrigationCCSystemStatusReport;
     // (undocumented)
     masterValveOpen: boolean;
     // (undocumented)
@@ -11140,9 +11206,9 @@ export const IrrigationCCValues: Readonly<{
 export class IrrigationCCValveConfigGet extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCValveConfigGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveConfigGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCValveConfigGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -11163,7 +11229,7 @@ export interface IrrigationCCValveConfigGetOptions {
 export class IrrigationCCValveConfigReport extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCValveConfigReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IrrigationCCValveConfigReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IrrigationCCValveConfigReport;
     // (undocumented)
     highFlowThreshold: number;
     // (undocumented)
@@ -11214,7 +11280,7 @@ export interface IrrigationCCValveConfigReportOptions {
 export class IrrigationCCValveConfigSet extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCValveConfigSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveConfigSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCValveConfigSet;
     // (undocumented)
     highFlowThreshold: number;
     // (undocumented)
@@ -11226,7 +11292,7 @@ export class IrrigationCCValveConfigSet extends IrrigationCC {
     // (undocumented)
     nominalCurrentLowThreshold: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -11257,9 +11323,9 @@ export type IrrigationCCValveConfigSetOptions = {
 export class IrrigationCCValveInfoGet extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCValveInfoGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveInfoGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCValveInfoGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -11294,7 +11360,7 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
     // (undocumented)
     readonly errorShortCircuit: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IrrigationCCValveInfoReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IrrigationCCValveInfoReport;
     // (undocumented)
     readonly nominalCurrent: number;
     // (undocumented)
@@ -11337,9 +11403,9 @@ export class IrrigationCCValveRun extends IrrigationCC {
     // (undocumented)
     duration: number;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveRun;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCValveRun;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -11362,9 +11428,9 @@ export interface IrrigationCCValveRunOptions {
 export class IrrigationCCValveTableGet extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCValveTableGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveTableGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCValveTableGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     tableId: number;
     // (undocumented)
@@ -11387,7 +11453,7 @@ export class IrrigationCCValveTableReport extends IrrigationCC {
     // (undocumented)
     readonly entries: ValveTableEntry[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): IrrigationCCValveTableReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): IrrigationCCValveTableReport;
     // (undocumented)
     readonly tableId: number;
     // (undocumented)
@@ -11410,9 +11476,9 @@ export interface IrrigationCCValveTableReportOptions {
 export class IrrigationCCValveTableRun extends IrrigationCC {
     constructor(options: WithAddress<IrrigationCCValveTableRunOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveTableRun;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCValveTableRun;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     tableIDs: number[];
     // (undocumented)
@@ -11435,9 +11501,9 @@ export class IrrigationCCValveTableSet extends IrrigationCC {
     // (undocumented)
     entries: ValveTableEntry[];
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): IrrigationCCValveTableSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): IrrigationCCValveTableSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     tableId: number;
     // (undocumented)
@@ -11598,7 +11664,7 @@ export class LanguageCCReport extends LanguageCC {
     // (undocumented)
     readonly country: MaybeNotKnown<string>;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): LanguageCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): LanguageCCReport;
     // (undocumented)
     readonly language: string;
     // (undocumented)
@@ -11624,12 +11690,12 @@ export class LanguageCCSet extends LanguageCC {
     get country(): MaybeNotKnown<string>;
     set country(value: MaybeNotKnown<string>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): LanguageCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): LanguageCCSet;
     // (undocumented)
     get language(): string;
     set language(value: string);
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -11760,7 +11826,7 @@ export class LockCCGet extends LockCC {
 export class LockCCReport extends LockCC {
     constructor(options: WithAddress<LockCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): LockCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): LockCCReport;
     // (undocumented)
     readonly locked: boolean;
     // (undocumented)
@@ -11781,11 +11847,11 @@ export interface LockCCReportOptions {
 export class LockCCSet extends LockCC {
     constructor(options: WithAddress<LockCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): LockCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): LockCCSet;
     // (undocumented)
     locked: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -11865,7 +11931,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
     // (undocumented)
     createSpecificInstance(): ManufacturerProprietaryCC | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ManufacturerProprietaryCC;
+    static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerProprietaryCC;
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
@@ -11873,7 +11939,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
     // (undocumented)
     refreshValues(ctx: RefreshValuesContext): Promise<void>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ManufacturerProprietaryCCOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -11908,9 +11974,9 @@ export class ManufacturerSpecificCCDeviceSpecificGet extends ManufacturerSpecifi
     // (undocumented)
     deviceIdType: DeviceIdType;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ManufacturerSpecificCCDeviceSpecificGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -11931,7 +11997,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpec
     // (undocumented)
     readonly deviceId: string;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ManufacturerSpecificCCDeviceSpecificReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificReport;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -11960,7 +12026,7 @@ export class ManufacturerSpecificCCGet extends ManufacturerSpecificCC {
 export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
     constructor(options: WithAddress<ManufacturerSpecificCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ManufacturerSpecificCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerSpecificCCReport;
     // (undocumented)
     readonly manufacturerId: number;
     // (undocumented)
@@ -11968,7 +12034,7 @@ export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
     // (undocumented)
     readonly productType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12144,13 +12210,13 @@ export class MeterCC extends CommandClass {
 export class MeterCCGet extends MeterCC {
     constructor(options: WithAddress<MeterCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MeterCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): MeterCCGet;
     // (undocumented)
     rateType: RateType | undefined;
     // (undocumented)
     scale: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12173,7 +12239,7 @@ export class MeterCCReport extends MeterCC {
     // (undocumented)
     deltaTime: MaybeUnknown<number>;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MeterCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MeterCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -12183,7 +12249,7 @@ export class MeterCCReport extends MeterCC {
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -12216,13 +12282,13 @@ export interface MeterCCReportOptions {
 export class MeterCCReset extends MeterCC {
     constructor(options: WithAddress<MeterCCResetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MeterCCReset;
+    static from(raw: CCRaw, ctx: CCParsingContext): MeterCCReset;
     // (undocumented)
     rateType: RateType | undefined;
     // (undocumented)
     scale: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetValue: number | undefined;
     // (undocumented)
@@ -12253,11 +12319,11 @@ export class MeterCCSupportedGet extends MeterCC {
 export class MeterCCSupportedReport extends MeterCC {
     constructor(options: WithAddress<MeterCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MeterCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MeterCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedRateTypes: readonly RateType[];
     // (undocumented)
@@ -12620,11 +12686,11 @@ export class MultiChannelAssociationCC extends CommandClass {
 export class MultiChannelAssociationCCGet extends MultiChannelAssociationCC {
     constructor(options: WithAddress<MultiChannelAssociationCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelAssociationCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelAssociationCCGet;
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12645,13 +12711,13 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
     // (undocumented)
     endpoints?: EndpointAddress[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelAssociationCCRemove;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelAssociationCCRemove;
     // (undocumented)
     groupId?: number;
     // (undocumented)
     nodeIds?: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12675,7 +12741,7 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelAssociationCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelAssociationCCReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
@@ -12683,13 +12749,13 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
     // (undocumented)
     maxNodes: number;
     // (undocumented)
-    mergePartialCCs(partials: MultiChannelAssociationCCReport[], _ctx: CCParsingContext_2): Promise<void>;
+    mergePartialCCs(partials: MultiChannelAssociationCCReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12718,13 +12784,13 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
     // (undocumented)
     endpoints: EndpointAddress[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelAssociationCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelAssociationCCSet;
     // (undocumented)
     groupId: number;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12755,11 +12821,11 @@ export class MultiChannelAssociationCCSupportedGroupingsGet extends MultiChannel
 export class MultiChannelAssociationCCSupportedGroupingsReport extends MultiChannelAssociationCC {
     constructor(options: WithAddress<MultiChannelAssociationCCSupportedGroupingsReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelAssociationCCSupportedGroupingsReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelAssociationCCSupportedGroupingsReport;
     // (undocumented)
     readonly groupCount: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12926,11 +12992,11 @@ export class MultiChannelCC extends CommandClass {
 export class MultiChannelCCAggregatedMembersGet extends MultiChannelCC {
     constructor(options: WithAddress<MultiChannelCCAggregatedMembersGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): MultiChannelCCAggregatedMembersGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): MultiChannelCCAggregatedMembersGet;
     // (undocumented)
     requestedEndpoint: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12951,7 +13017,7 @@ export class MultiChannelCCAggregatedMembersReport extends MultiChannelCC {
     // (undocumented)
     readonly aggregatedEndpointIndex: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCAggregatedMembersReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCAggregatedMembersReport;
     // (undocumented)
     readonly members: readonly number[];
     // (undocumented)
@@ -12974,11 +13040,11 @@ export interface MultiChannelCCAggregatedMembersReportOptions {
 export class MultiChannelCCCapabilityGet extends MultiChannelCC {
     constructor(options: WithAddress<MultiChannelCCCapabilityGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCCapabilityGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCCapabilityGet;
     // (undocumented)
     requestedEndpoint: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -12997,7 +13063,7 @@ export interface MultiChannelCCCapabilityGetOptions {
 export class MultiChannelCCCapabilityReport extends MultiChannelCC implements ApplicationNodeInformation {
     constructor(options: WithAddress<MultiChannelCCCapabilityReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCCapabilityReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCCapabilityReport;
     // (undocumented)
     readonly genericDeviceClass: number;
     // (undocumented)
@@ -13005,7 +13071,7 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC implements Ap
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly specificDeviceClass: number;
     // (undocumented)
@@ -13046,9 +13112,9 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<MultiChannelCCCommandEncapsulation>;
+    static from(raw: CCRaw, ctx: CCParsingContext): Promise<MultiChannelCCCommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13069,11 +13135,11 @@ export interface MultiChannelCCCommandEncapsulationOptions {
 export class MultiChannelCCEndPointFind extends MultiChannelCC {
     constructor(options: WithAddress<MultiChannelCCEndPointFindOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCEndPointFind;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCEndPointFind;
     // (undocumented)
     genericClass: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     specificClass: number;
     // (undocumented)
@@ -13100,17 +13166,17 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
     // (undocumented)
     foundEndpoints: number[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCEndPointFindReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCEndPointFindReport;
     // (undocumented)
     genericClass: number;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    mergePartialCCs(partials: MultiChannelCCEndPointFindReport[], _ctx: CCParsingContext_2): Promise<void>;
+    mergePartialCCs(partials: MultiChannelCCEndPointFindReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     specificClass: number;
     // (undocumented)
@@ -13147,13 +13213,13 @@ export class MultiChannelCCEndPointReport extends MultiChannelCC {
     // (undocumented)
     countIsDynamic: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCEndPointReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCEndPointReport;
     // (undocumented)
     identicalCapabilities: boolean;
     // (undocumented)
     individualCount: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13182,9 +13248,9 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<MultiChannelCCV1CommandEncapsulation>;
+    static from(raw: CCRaw, ctx: CCParsingContext): Promise<MultiChannelCCV1CommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13203,11 +13269,11 @@ export interface MultiChannelCCV1CommandEncapsulationOptions {
 export class MultiChannelCCV1Get extends MultiChannelCC {
     constructor(options: WithAddress<MultiChannelCCV1GetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCV1Get;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCV1Get;
     // (undocumented)
     requestedCC: CommandClasses;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13228,11 +13294,11 @@ export class MultiChannelCCV1Report extends MultiChannelCC {
     // (undocumented)
     readonly endpointCount: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultiChannelCCV1Report;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCV1Report;
     // (undocumented)
     readonly requestedCC: CommandClasses;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13505,9 +13571,9 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
     // (undocumented)
     encapsulated: CommandClass[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<MultiCommandCCCommandEncapsulation>;
+    static from(raw: CCRaw, ctx: CCParsingContext): Promise<MultiCommandCCCommandEncapsulation>;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13560,13 +13626,13 @@ export class MultilevelSensorCC extends CommandClass {
 export class MultilevelSensorCCGet extends MultilevelSensorCC {
     constructor(options: WithAddress<MultilevelSensorCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSensorCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSensorCCGet;
     // (undocumented)
     scale: number | undefined;
     // (undocumented)
     sensorType: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13585,11 +13651,11 @@ export type MultilevelSensorCCGetOptions = AllOrNone<{
 export class MultilevelSensorCCGetSupportedScale extends MultilevelSensorCC {
     constructor(options: WithAddress<MultilevelSensorCCGetSupportedScaleOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSensorCCGetSupportedScale;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSensorCCGetSupportedScale;
     // (undocumented)
     sensorType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -13614,13 +13680,13 @@ export class MultilevelSensorCCGetSupportedSensor extends MultilevelSensorCC {
 export class MultilevelSensorCCReport extends MultilevelSensorCC {
     constructor(options: WithAddress<MultilevelSensorCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSensorCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSensorCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -13647,11 +13713,11 @@ export interface MultilevelSensorCCReportOptions {
 export class MultilevelSensorCCSupportedScaleReport extends MultilevelSensorCC {
     constructor(options: WithAddress<MultilevelSensorCCSupportedScaleReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSensorCCSupportedScaleReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSensorCCSupportedScaleReport;
     // (undocumented)
     readonly sensorType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedScales: readonly number[];
     // (undocumented)
@@ -13674,9 +13740,9 @@ export interface MultilevelSensorCCSupportedScaleReportOptions {
 export class MultilevelSensorCCSupportedSensorReport extends MultilevelSensorCC {
     constructor(options: WithAddress<MultilevelSensorCCSupportedSensorReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSensorCCSupportedSensorReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSensorCCSupportedSensorReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     supportedSensorTypes: readonly number[];
     // (undocumented)
@@ -13847,9 +13913,11 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSwitchCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSwitchCCReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    persistValues(ctx: PersistValuesContext): boolean;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetValue: MaybeUnknown<number> | undefined;
     // (undocumented)
@@ -13876,9 +13944,9 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSwitchCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSwitchCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetValue: number;
     // (undocumented)
@@ -13905,11 +13973,11 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSwitchCCStartLevelChange;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSwitchCCStartLevelChange;
     // (undocumented)
     ignoreStartLevel: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     startLevel: number;
     // (undocumented)
@@ -13949,11 +14017,11 @@ export class MultilevelSwitchCCSupportedGet extends MultilevelSwitchCC {
 export class MultilevelSwitchCCSupportedReport extends MultilevelSwitchCC {
     constructor(options: WithAddress<MultilevelSwitchCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): MultilevelSwitchCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSwitchCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly switchType: SwitchType;
     // (undocumented)
@@ -14309,7 +14377,7 @@ export class NodeNamingAndLocationCCLocationGet extends NodeNamingAndLocationCC 
 export class NodeNamingAndLocationCCLocationReport extends NodeNamingAndLocationCC {
     constructor(options: WithAddress<NodeNamingAndLocationCCLocationReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NodeNamingAndLocationCCLocationReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): NodeNamingAndLocationCCLocationReport;
     // (undocumented)
     readonly location: string;
     // (undocumented)
@@ -14330,11 +14398,11 @@ export interface NodeNamingAndLocationCCLocationReportOptions {
 export class NodeNamingAndLocationCCLocationSet extends NodeNamingAndLocationCC {
     constructor(options: WithAddress<NodeNamingAndLocationCCLocationSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): NodeNamingAndLocationCCLocationSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): NodeNamingAndLocationCCLocationSet;
     // (undocumented)
     location: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -14359,7 +14427,7 @@ export class NodeNamingAndLocationCCNameGet extends NodeNamingAndLocationCC {
 export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
     constructor(options: WithAddress<NodeNamingAndLocationCCNameReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NodeNamingAndLocationCCNameReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): NodeNamingAndLocationCCNameReport;
     // (undocumented)
     readonly name: string;
     // (undocumented)
@@ -14380,11 +14448,11 @@ export interface NodeNamingAndLocationCCNameReportOptions {
 export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
     constructor(options: WithAddress<NodeNamingAndLocationCCNameSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): NodeNamingAndLocationCCNameSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): NodeNamingAndLocationCCNameSet;
     // (undocumented)
     name: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -14509,11 +14577,11 @@ export class NotificationCC extends CommandClass {
 export class NotificationCCEventSupportedGet extends NotificationCC {
     constructor(options: WithAddress<NotificationCCEventSupportedGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCEventSupportedGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): NotificationCCEventSupportedGet;
     // (undocumented)
     notificationType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -14532,13 +14600,13 @@ export interface NotificationCCEventSupportedGetOptions {
 export class NotificationCCEventSupportedReport extends NotificationCC {
     constructor(options: WithAddress<NotificationCCEventSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCEventSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): NotificationCCEventSupportedReport;
     // (undocumented)
     notificationType: number;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     supportedEvents: number[];
     // (undocumented)
@@ -14562,12 +14630,12 @@ export class NotificationCCGet extends NotificationCC {
     constructor(options: WithAddress<NotificationCCGetOptions>);
     alarmType: number | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): NotificationCCGet;
     // (undocumented)
     notificationEvent: number | undefined;
     notificationType: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -14594,7 +14662,7 @@ export class NotificationCCReport extends NotificationCC {
     // (undocumented)
     eventParameters: BytesView | Duration | Record<string, number> | number | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): NotificationCCReport;
     // (undocumented)
     notificationEvent: number | undefined;
     // (undocumented)
@@ -14606,7 +14674,7 @@ export class NotificationCCReport extends NotificationCC {
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -14630,13 +14698,13 @@ export type NotificationCCReportOptions = {
 export class NotificationCCSet extends NotificationCC {
     constructor(options: WithAddress<NotificationCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): NotificationCCSet;
     // (undocumented)
     notificationStatus: boolean;
     // (undocumented)
     notificationType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -14663,9 +14731,9 @@ export class NotificationCCSupportedGet extends NotificationCC {
 export class NotificationCCSupportedReport extends NotificationCC {
     constructor(options: WithAddress<NotificationCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): NotificationCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): NotificationCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     supportedNotificationTypes: number[];
     // (undocumented)
@@ -14878,7 +14946,7 @@ export const NotificationCCValues: Readonly<{
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
-            readonly autoCreate: (ctx: GetValueDB, endpoint: EndpointId) => boolean;
+            readonly autoCreate: typeof shouldAutoCreateSimpleDoorSensorValue;
         };
     };
     doorTiltState: {
@@ -15161,11 +15229,11 @@ export class PowerlevelCCGet extends PowerlevelCC {
 export class PowerlevelCCReport extends PowerlevelCC {
     constructor(options: WithAddress<PowerlevelCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): PowerlevelCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): PowerlevelCCReport;
     // (undocumented)
     readonly powerlevel: Powerlevel;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly timeout?: number;
     // (undocumented)
@@ -15189,11 +15257,11 @@ export type PowerlevelCCReportOptions = {
 export class PowerlevelCCSet extends PowerlevelCC {
     constructor(options: WithAddress<PowerlevelCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): PowerlevelCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): PowerlevelCCSet;
     // (undocumented)
     powerlevel: Powerlevel;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     timeout?: number;
     // (undocumented)
@@ -15225,9 +15293,9 @@ export class PowerlevelCCTestNodeReport extends PowerlevelCC {
     // (undocumented)
     acknowledgedFrames: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): PowerlevelCCTestNodeReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): PowerlevelCCTestNodeReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     status: PowerlevelTestStatus;
     // (undocumented)
@@ -15254,11 +15322,11 @@ export interface PowerlevelCCTestNodeReportOptions {
 export class PowerlevelCCTestNodeSet extends PowerlevelCC {
     constructor(options: WithAddress<PowerlevelCCTestNodeSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): PowerlevelCCTestNodeSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): PowerlevelCCTestNodeSet;
     // (undocumented)
     powerlevel: Powerlevel;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     testFrameCount: number;
     // (undocumented)
@@ -15335,7 +15403,7 @@ export class ProtectionCCExclusiveControlReport extends ProtectionCC {
     // (undocumented)
     readonly exclusiveControlNodeId: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ProtectionCCExclusiveControlReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCExclusiveControlReport;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -15356,9 +15424,9 @@ export class ProtectionCCExclusiveControlSet extends ProtectionCC {
     // (undocumented)
     exclusiveControlNodeId: number;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ProtectionCCExclusiveControlSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ProtectionCCExclusiveControlSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -15383,7 +15451,7 @@ export class ProtectionCCGet extends ProtectionCC {
 export class ProtectionCCReport extends ProtectionCC {
     constructor(options: WithAddress<ProtectionCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ProtectionCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCReport;
     // (undocumented)
     readonly local: LocalProtectionState;
     // (undocumented)
@@ -15408,13 +15476,13 @@ export interface ProtectionCCReportOptions {
 export class ProtectionCCSet extends ProtectionCC {
     constructor(options: WithAddress<ProtectionCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ProtectionCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ProtectionCCSet;
     // (undocumented)
     local: LocalProtectionState;
     // (undocumented)
     rf?: RFProtectionState;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -15441,7 +15509,7 @@ export class ProtectionCCSupportedGet extends ProtectionCC {
 export class ProtectionCCSupportedReport extends ProtectionCC {
     constructor(options: WithAddress<ProtectionCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ProtectionCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -15482,7 +15550,7 @@ export class ProtectionCCTimeoutGet extends ProtectionCC {
 export class ProtectionCCTimeoutReport extends ProtectionCC {
     constructor(options: WithAddress<ProtectionCCTimeoutReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ProtectionCCTimeoutReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCTimeoutReport;
     // (undocumented)
     readonly timeout: Timeout;
     // (undocumented)
@@ -15503,9 +15571,9 @@ export interface ProtectionCCTimeoutReportOptions {
 export class ProtectionCCTimeoutSet extends ProtectionCC {
     constructor(options: WithAddress<ProtectionCCTimeoutSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ProtectionCCTimeoutSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ProtectionCCTimeoutSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     timeout: Timeout;
     // (undocumented)
@@ -15830,11 +15898,11 @@ export class SceneActivationCCSet extends SceneActivationCC {
     // (undocumented)
     dimmingDuration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SceneActivationCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): SceneActivationCCSet;
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -15934,11 +16002,11 @@ export class SceneActuatorConfigurationCC extends CommandClass {
 export class SceneActuatorConfigurationCCGet extends SceneActuatorConfigurationCC {
     constructor(options: WithAddress<SceneActuatorConfigurationCCGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): SceneActuatorConfigurationCCGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): SceneActuatorConfigurationCCGet;
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -15959,7 +16027,7 @@ export class SceneActuatorConfigurationCCReport extends SceneActuatorConfigurati
     // (undocumented)
     readonly dimmingDuration?: Duration;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SceneActuatorConfigurationCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SceneActuatorConfigurationCCReport;
     // (undocumented)
     readonly level?: number;
     // (undocumented)
@@ -15990,13 +16058,13 @@ export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationC
     // (undocumented)
     dimmingDuration: Duration;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): SceneActuatorConfigurationCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): SceneActuatorConfigurationCCSet;
     // (undocumented)
     level?: number;
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -16113,11 +16181,11 @@ export class SceneControllerConfigurationCC extends CommandClass {
 export class SceneControllerConfigurationCCGet extends SceneControllerConfigurationCC {
     constructor(options: WithAddress<SceneControllerConfigurationCCGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): SceneControllerConfigurationCCGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): SceneControllerConfigurationCCGet;
     // (undocumented)
     groupId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -16138,7 +16206,7 @@ export class SceneControllerConfigurationCCReport extends SceneControllerConfigu
     // (undocumented)
     readonly dimmingDuration: Duration;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SceneControllerConfigurationCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SceneControllerConfigurationCCReport;
     // (undocumented)
     readonly groupId: number;
     // (undocumented)
@@ -16169,13 +16237,13 @@ export class SceneControllerConfigurationCCSet extends SceneControllerConfigurat
     // (undocumented)
     dimmingDuration: Duration;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): SceneControllerConfigurationCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): SceneControllerConfigurationCCSet;
     // (undocumented)
     groupId: number;
     // (undocumented)
     sceneId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -16300,9 +16368,9 @@ export class ScheduleEntryLockCC extends CommandClass {
 export class ScheduleEntryLockCCDailyRepeatingScheduleGet extends ScheduleEntryLockCC {
     constructor(options: WithAddress<ScheduleEntryLockCCDailyRepeatingScheduleGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCDailyRepeatingScheduleGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCDailyRepeatingScheduleGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16326,11 +16394,11 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport extends ScheduleEnt
     // (undocumented)
     durationMinute?: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCDailyRepeatingScheduleReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCDailyRepeatingScheduleReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16362,9 +16430,9 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet extends ScheduleEntryL
     // (undocumented)
     durationMinute?: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCDailyRepeatingScheduleSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCDailyRepeatingScheduleSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16397,9 +16465,9 @@ export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
     // (undocumented)
     enabled: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCEnableAllSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCEnableAllSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -16420,9 +16488,9 @@ export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
     // (undocumented)
     enabled: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCEnableSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCEnableSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -16451,7 +16519,7 @@ export class ScheduleEntryLockCCSupportedGet extends ScheduleEntryLockCC {
 export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
     constructor(options: WithAddress<ScheduleEntryLockCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCSupportedReport;
     // (undocumented)
     numDailyRepeatingSlots: number | undefined;
     // (undocumented)
@@ -16459,7 +16527,7 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
     // (undocumented)
     numYearDaySlots: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -16490,9 +16558,9 @@ export class ScheduleEntryLockCCTimeOffsetReport extends ScheduleEntryLockCC {
     // (undocumented)
     dstOffset: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCTimeOffsetReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCTimeOffsetReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
@@ -16517,9 +16585,9 @@ export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
     // (undocumented)
     dstOffset: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCTimeOffsetSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCTimeOffsetSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
@@ -16707,9 +16775,9 @@ export const ScheduleEntryLockCCValues: Readonly<{
 export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
     constructor(options: WithAddress<ScheduleEntryLockCCWeekDayScheduleGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCWeekDayScheduleGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCWeekDayScheduleGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16729,11 +16797,11 @@ export type ScheduleEntryLockCCWeekDayScheduleGetOptions = ScheduleEntryLockSlot
 export class ScheduleEntryLockCCWeekDayScheduleReport extends ScheduleEntryLockCC {
     constructor(options: WithAddress<ScheduleEntryLockCCWeekDayScheduleReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCWeekDayScheduleReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCWeekDayScheduleReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16765,9 +16833,9 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
     // (undocumented)
     action: ScheduleEntryLockSetAction;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCWeekDayScheduleSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCWeekDayScheduleSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16802,9 +16870,9 @@ export type ScheduleEntryLockCCWeekDayScheduleSetOptions = ScheduleEntryLockSlot
 export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
     constructor(options: WithAddress<ScheduleEntryLockCCYearDayScheduleGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCYearDayScheduleGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCYearDayScheduleGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16824,11 +16892,11 @@ export type ScheduleEntryLockCCYearDayScheduleGetOptions = ScheduleEntryLockSlot
 export class ScheduleEntryLockCCYearDayScheduleReport extends ScheduleEntryLockCC {
     constructor(options: WithAddress<ScheduleEntryLockCCYearDayScheduleReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCYearDayScheduleReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCYearDayScheduleReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -16870,9 +16938,9 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
     // (undocumented)
     action: ScheduleEntryLockSetAction;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ScheduleEntryLockCCYearDayScheduleSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ScheduleEntryLockCCYearDayScheduleSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     slotId: number;
     // (undocumented)
@@ -17116,9 +17184,9 @@ export class Security2CCCommandsSupportedGet extends Security2CC {
 export class Security2CCCommandsSupportedReport extends Security2CC {
     constructor(options: WithAddress<Security2CCCommandsSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCCommandsSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCCommandsSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedCCs: CommandClasses[];
     // (undocumented)
@@ -17141,9 +17209,9 @@ export class Security2CCKEXFail extends Security2CC {
     // (undocumented)
     failType: KEXFailType;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCKEXFail;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCKEXFail;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17170,7 +17238,7 @@ export class Security2CCKEXReport extends Security2CC {
     // (undocumented)
     readonly echo: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCKEXReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCKEXReport;
     // (undocumented)
     readonly requestCSA: boolean;
     // (undocumented)
@@ -17178,7 +17246,7 @@ export class Security2CCKEXReport extends Security2CC {
     // (undocumented)
     readonly _reserved: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedECDHProfiles: readonly ECDHProfiles[];
     // (undocumented)
@@ -17213,7 +17281,7 @@ export class Security2CCKEXSet extends Security2CC {
     // (undocumented)
     echo: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCKEXSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCKEXSet;
     // (undocumented)
     grantedKeys: SecurityClass[];
     // (undocumented)
@@ -17225,7 +17293,7 @@ export class Security2CCKEXSet extends Security2CC {
     // (undocumented)
     selectedKEXScheme: KEXSchemes;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17260,7 +17328,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
     // (undocumented)
     extensions: Security2Extension[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<Security2CCMessageEncapsulation>;
+    static from(raw: CCRaw, ctx: CCParsingContext): Promise<Security2CCMessageEncapsulation>;
     getMulticastGroupId(): number | undefined;
     getSenderEI(): BytesView | undefined;
     // (undocumented)
@@ -17272,7 +17340,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -17300,11 +17368,11 @@ export interface Security2CCMessageEncapsulationOptions {
 export class Security2CCNetworkKeyGet extends Security2CC {
     constructor(options: WithAddress<Security2CCNetworkKeyGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCNetworkKeyGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCNetworkKeyGet;
     // (undocumented)
     requestedKey: SecurityClass;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17323,13 +17391,13 @@ export interface Security2CCNetworkKeyGetOptions {
 export class Security2CCNetworkKeyReport extends Security2CC {
     constructor(options: WithAddress<Security2CCNetworkKeyReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCNetworkKeyReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCNetworkKeyReport;
     // (undocumented)
     grantedKey: SecurityClass;
     // (undocumented)
     networkKey: BytesView;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17356,11 +17424,11 @@ export class Security2CCNetworkKeyVerify extends Security2CC {
 export class Security2CCNonceGet extends Security2CC {
     constructor(options: WithAddress<Security2CCNonceGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCNonceGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCNonceGet;
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17379,7 +17447,7 @@ export interface Security2CCNonceGetOptions {
 export class Security2CCNonceReport extends Security2CC {
     constructor(options: WithAddress<Security2CCNonceReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCNonceReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCNonceReport;
     // (undocumented)
     readonly MOS: boolean;
     // (undocumented)
@@ -17387,7 +17455,7 @@ export class Security2CCNonceReport extends Security2CC {
     // (undocumented)
     sequenceNumber: number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly SOS: boolean;
     // (undocumented)
@@ -17415,13 +17483,13 @@ export type Security2CCNonceReportOptions = {
 export class Security2CCPublicKeyReport extends Security2CC {
     constructor(options: WithAddress<Security2CCPublicKeyReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCPublicKeyReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCPublicKeyReport;
     // (undocumented)
     includingNode: boolean;
     // (undocumented)
     publicKey: BytesView;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17442,13 +17510,13 @@ export interface Security2CCPublicKeyReportOptions {
 export class Security2CCTransferEnd extends Security2CC {
     constructor(options: WithAddress<Security2CCTransferEndOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Security2CCTransferEnd;
+    static from(raw: CCRaw, ctx: CCParsingContext): Security2CCTransferEnd;
     // (undocumented)
     keyRequestComplete: boolean;
     // (undocumented)
     keyVerified: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17553,17 +17621,17 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<SecurityCCCommandEncapsulation>;
+    static from(raw: CCRaw, ctx: CCParsingContext): Promise<SecurityCCCommandEncapsulation>;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
-    mergePartialCCs(partials: SecurityCCCommandEncapsulation[], ctx: CCParsingContext_2): Promise<void>;
+    mergePartialCCs(partials: SecurityCCCommandEncapsulation[], ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     nonce: BytesView | undefined;
     // (undocumented)
     get nonceId(): number | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17604,7 +17672,7 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCCommandsSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SecurityCCCommandsSupportedReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
@@ -17612,7 +17680,7 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
     // (undocumented)
     reportsToFollow: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     supportedCCs: CommandClasses[];
     // (undocumented)
@@ -17637,11 +17705,11 @@ export interface SecurityCCCommandsSupportedReportOptions {
 export class SecurityCCNetworkKeySet extends SecurityCC {
     constructor(options: WithAddress<SecurityCCNetworkKeySetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCNetworkKeySet;
+    static from(raw: CCRaw, ctx: CCParsingContext): SecurityCCNetworkKeySet;
     // (undocumented)
     networkKey: BytesView;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17673,11 +17741,11 @@ export class SecurityCCNonceReport extends SecurityCC {
     // Warning: (ae-forgotten-export) The symbol "SecurityCCNonceReportOptions" needs to be exported by the entry point index.d.ts
     constructor(options: WithAddress<SecurityCCNonceReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCNonceReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SecurityCCNonceReport;
     // (undocumented)
     nonce: BytesView;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17687,9 +17755,9 @@ export class SecurityCCNonceReport extends SecurityCC {
 // @public (undocumented)
 export class SecurityCCSchemeGet extends SecurityCC {
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): SecurityCCSchemeGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17699,9 +17767,9 @@ export class SecurityCCSchemeGet extends SecurityCC {
 // @public (undocumented)
 export class SecurityCCSchemeInherit extends SecurityCC {
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeInherit;
+    static from(raw: CCRaw, ctx: CCParsingContext): SecurityCCSchemeInherit;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17711,9 +17779,9 @@ export class SecurityCCSchemeInherit extends SecurityCC {
 // @public (undocumented)
 export class SecurityCCSchemeReport extends SecurityCC {
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SecurityCCSchemeReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SecurityCCSchemeReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17905,9 +17973,9 @@ export class SoundSwitchCCConfigurationReport extends SoundSwitchCC {
     // (undocumented)
     defaultVolume: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCConfigurationReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SoundSwitchCCConfigurationReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17932,9 +18000,9 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
     // (undocumented)
     defaultVolume: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCConfigurationSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): SoundSwitchCCConfigurationSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -17956,9 +18024,9 @@ export type SoundSwitchCCConfigurationSetOptions = {
 export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
     constructor(options: WithAddress<SoundSwitchCCToneInfoGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCToneInfoGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): SoundSwitchCCToneInfoGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -17981,11 +18049,11 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
     // (undocumented)
     readonly duration: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCToneInfoReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SoundSwitchCCToneInfoReport;
     // (undocumented)
     readonly name: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -18016,9 +18084,9 @@ export class SoundSwitchCCTonePlayGet extends SoundSwitchCC {
 export class SoundSwitchCCTonePlayReport extends SoundSwitchCC {
     constructor(options: WithAddress<SoundSwitchCCTonePlayReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCTonePlayReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SoundSwitchCCTonePlayReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -18043,9 +18111,9 @@ export interface SoundSwitchCCTonePlayReportOptions {
 export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
     constructor(options: WithAddress<SoundSwitchCCTonePlaySetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCTonePlaySet;
+    static from(raw: CCRaw, ctx: CCParsingContext): SoundSwitchCCTonePlaySet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -18076,9 +18144,9 @@ export class SoundSwitchCCTonesNumberGet extends SoundSwitchCC {
 export class SoundSwitchCCTonesNumberReport extends SoundSwitchCC {
     constructor(options: WithAddress<SoundSwitchCCTonesNumberReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SoundSwitchCCTonesNumberReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SoundSwitchCCTonesNumberReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -18308,11 +18376,11 @@ export class SupervisionCCGet extends SupervisionCC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): Promise<SupervisionCCGet>;
+    static from(raw: CCRaw, ctx: CCParsingContext): Promise<SupervisionCCGet>;
     // (undocumented)
     requestStatusUpdates: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
@@ -18339,13 +18407,13 @@ export class SupervisionCCReport extends SupervisionCC {
     // (undocumented)
     readonly duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): SupervisionCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): SupervisionCCReport;
     // (undocumented)
     readonly moreUpdatesFollow: boolean;
     // (undocumented)
     readonly requestWakeUpOnDemand: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly sessionId: number;
     // (undocumented)
@@ -18507,7 +18575,7 @@ export class ThermostatFanModeCCGet extends ThermostatFanModeCC {
 export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
     constructor(options: WithAddress<ThermostatFanModeCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatFanModeCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatFanModeCCReport;
     // (undocumented)
     readonly mode: ThermostatFanMode;
     // (undocumented)
@@ -18532,13 +18600,13 @@ export interface ThermostatFanModeCCReportOptions {
 export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
     constructor(options: WithAddress<ThermostatFanModeCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): ThermostatFanModeCCSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): ThermostatFanModeCCSet;
     // (undocumented)
     mode: ThermostatFanMode;
     // (undocumented)
     off: boolean | undefined;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -18565,7 +18633,7 @@ export class ThermostatFanModeCCSupportedGet extends ThermostatFanModeCC {
 export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
     constructor(options: WithAddress<ThermostatFanModeCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatFanModeCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatFanModeCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -18732,7 +18800,7 @@ export class ThermostatFanStateCCGet extends ThermostatFanStateCC {
 export class ThermostatFanStateCCReport extends ThermostatFanStateCC {
     constructor(options: WithAddress<ThermostatFanStateCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatFanStateCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatFanStateCCReport;
     // (undocumented)
     readonly state: ThermostatFanState;
     // (undocumented)
@@ -18854,7 +18922,7 @@ export class ThermostatModeCCGet extends ThermostatModeCC {
 export class ThermostatModeCCReport extends ThermostatModeCC {
     constructor(options: WithAddress<ThermostatModeCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatModeCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatModeCCReport;
     // (undocumented)
     readonly manufacturerData: BytesView | undefined;
     // (undocumented)
@@ -18862,7 +18930,7 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -18884,13 +18952,13 @@ export type ThermostatModeCCReportOptions = {
 export class ThermostatModeCCSet extends ThermostatModeCC {
     constructor(options: WithAddress<ThermostatModeCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatModeCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatModeCCSet;
     // (undocumented)
     manufacturerData?: BytesView;
     // (undocumented)
     mode: ThermostatMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -18917,11 +18985,11 @@ export class ThermostatModeCCSupportedGet extends ThermostatModeCC {
 export class ThermostatModeCCSupportedReport extends ThermostatModeCC {
     constructor(options: WithAddress<ThermostatModeCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatModeCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatModeCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedModes: ThermostatMode[];
     // (undocumented)
@@ -19092,7 +19160,7 @@ export class ThermostatOperatingStateCCGet extends ThermostatOperatingStateCC {
 export class ThermostatOperatingStateCCReport extends ThermostatOperatingStateCC {
     constructor(options: WithAddress<ThermostatOperatingStateCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatOperatingStateCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatOperatingStateCCReport;
     // (undocumented)
     readonly state: ThermostatOperatingState;
     // (undocumented)
@@ -19176,9 +19244,9 @@ export class ThermostatSetbackCCGet extends ThermostatSetbackCC {
 export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
     constructor(options: WithAddress<ThermostatSetbackCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetbackCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetbackCCReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     readonly setbackState: SetbackState;
     // (undocumented)
     readonly setbackType: SetbackType;
@@ -19202,9 +19270,9 @@ export interface ThermostatSetbackCCReportOptions {
 export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
     constructor(options: WithAddress<ThermostatSetbackCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetbackCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetbackCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     setbackState: SetbackState;
     // (undocumented)
     setbackType: SetbackType;
@@ -19268,9 +19336,9 @@ export class ThermostatSetpointCC extends CommandClass {
 export class ThermostatSetpointCCCapabilitiesGet extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCCapabilitiesGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCCapabilitiesGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCCapabilitiesGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     setpointType: ThermostatSetpointType;
     // (undocumented)
@@ -19291,7 +19359,7 @@ export interface ThermostatSetpointCCCapabilitiesGetOptions {
 export class ThermostatSetpointCCCapabilitiesReport extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCCapabilitiesReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCCapabilitiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCCapabilitiesReport;
     // (undocumented)
     maxValue: number;
     // (undocumented)
@@ -19303,7 +19371,7 @@ export class ThermostatSetpointCCCapabilitiesReport extends ThermostatSetpointCC
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -19332,9 +19400,9 @@ export interface ThermostatSetpointCCCapabilitiesReportOptions {
 export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     setpointType: ThermostatSetpointType;
     // (undocumented)
@@ -19355,13 +19423,13 @@ export interface ThermostatSetpointCCGetOptions {
 export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -19388,11 +19456,11 @@ export interface ThermostatSetpointCCReportOptions {
 export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCSet;
     // (undocumented)
     scale: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     setpointType: ThermostatSetpointType;
     // (undocumented)
@@ -19425,9 +19493,9 @@ export class ThermostatSetpointCCSupportedGet extends ThermostatSetpointCC {
 export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ThermostatSetpointCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedSetpointTypes: readonly ThermostatSetpointType[];
     // (undocumented)
@@ -19646,11 +19714,11 @@ export class TimeCCDateReport extends TimeCC {
     // (undocumented)
     day: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TimeCCDateReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): TimeCCDateReport;
     // (undocumented)
     month: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -19693,9 +19761,9 @@ export class TimeCCTimeOffsetReport extends TimeCC {
     // (undocumented)
     dstStartDate: Date;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TimeCCTimeOffsetReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): TimeCCTimeOffsetReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
@@ -19728,9 +19796,9 @@ export class TimeCCTimeOffsetSet extends TimeCC {
     // (undocumented)
     dstStartDate: Date;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): TimeCCTimeOffsetSet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): TimeCCTimeOffsetSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     standardOffset: number;
     // (undocumented)
@@ -19757,7 +19825,7 @@ export interface TimeCCTimeOffsetSetOptions {
 export class TimeCCTimeReport extends TimeCC {
     constructor(options: WithAddress<TimeCCTimeReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TimeCCTimeReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): TimeCCTimeReport;
     // (undocumented)
     hour: number;
     // (undocumented)
@@ -19765,7 +19833,7 @@ export class TimeCCTimeReport extends TimeCC {
     // (undocumented)
     second: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -19826,7 +19894,7 @@ export class TimeParametersCCReport extends TimeParametersCC {
     // (undocumented)
     dateAndTime: Date;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TimeParametersCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): TimeParametersCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -19849,11 +19917,11 @@ export class TimeParametersCCSet extends TimeParametersCC {
     // (undocumented)
     dateAndTime: Date;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TimeParametersCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): TimeParametersCCSet;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -19956,7 +20024,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
     // (undocumented)
     expectMoreMessages(): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TransportServiceCCFirstSegment;
+    static from(raw: CCRaw, ctx: CCParsingContext): TransportServiceCCFirstSegment;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
@@ -19964,7 +20032,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
     // (undocumented)
     partialDatagram: BytesView;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
@@ -19991,9 +20059,9 @@ export interface TransportServiceCCFirstSegmentOptions {
 export class TransportServiceCCSegmentComplete extends TransportServiceCC {
     constructor(options: WithAddress<TransportServiceCCSegmentCompleteOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TransportServiceCCSegmentComplete;
+    static from(raw: CCRaw, ctx: CCParsingContext): TransportServiceCCSegmentComplete;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
@@ -20016,9 +20084,9 @@ export class TransportServiceCCSegmentRequest extends TransportServiceCC {
     // (undocumented)
     datagramOffset: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TransportServiceCCSegmentRequest;
+    static from(raw: CCRaw, ctx: CCParsingContext): TransportServiceCCSegmentRequest;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
@@ -20041,11 +20109,11 @@ export interface TransportServiceCCSegmentRequestOptions {
 export class TransportServiceCCSegmentWait extends TransportServiceCC {
     constructor(options: WithAddress<TransportServiceCCSegmentWaitOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TransportServiceCCSegmentWait;
+    static from(raw: CCRaw, ctx: CCParsingContext): TransportServiceCCSegmentWait;
     // (undocumented)
     pendingSegments: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -20077,7 +20145,7 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
     ...TransportServiceCCSubsequentSegment[]
     ]): boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): TransportServiceCCSubsequentSegment;
+    static from(raw: CCRaw, ctx: CCParsingContext): TransportServiceCCSubsequentSegment;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
@@ -20086,11 +20154,11 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
     mergePartialCCs(partials: [
     TransportServiceCCFirstSegment,
     ...TransportServiceCCSubsequentSegment[]
-    ], ctx: CCParsingContext_2): Promise<void>;
+    ], ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     partialDatagram: BytesView;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     sessionId: number;
     // (undocumented)
@@ -20171,9 +20239,9 @@ export class UserCodeCCAdminCodeReport extends UserCodeCC {
     // (undocumented)
     readonly adminCode: string;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCAdminCodeReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCAdminCodeReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -20194,9 +20262,9 @@ export class UserCodeCCAdminCodeSet extends UserCodeCC {
     // (undocumented)
     adminCode: string;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCAdminCodeSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCAdminCodeSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -20221,9 +20289,9 @@ export class UserCodeCCCapabilitiesGet extends UserCodeCC {
 export class UserCodeCCCapabilitiesReport extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCCapabilitiesReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCCapabilitiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCCapabilitiesReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedASCIIChars: string;
     // (undocumented)
@@ -20272,11 +20340,11 @@ export interface UserCodeCCCapabilitiesReportOptions {
 export class UserCodeCCExtendedUserCodeGet extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCExtendedUserCodeGetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext_2): UserCodeCCExtendedUserCodeGet;
+    static from(_raw: CCRaw, _ctx: CCParsingContext): UserCodeCCExtendedUserCodeGet;
     // (undocumented)
     reportMore: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -20299,7 +20367,7 @@ export interface UserCodeCCExtendedUserCodeGetOptions {
 export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCExtendedUserCodeReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCExtendedUserCodeReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCExtendedUserCodeReport;
     // (undocumented)
     readonly nextUserId: number;
     // (undocumented)
@@ -20328,9 +20396,9 @@ export interface UserCodeCCExtendedUserCodeReportOptions {
 export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCExtendedUserCodeSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCExtendedUserCodeSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCExtendedUserCodeSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -20351,9 +20419,9 @@ export interface UserCodeCCExtendedUserCodeSetOptions {
 export class UserCodeCCGet extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCGet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -20380,13 +20448,13 @@ export class UserCodeCCKeypadModeGet extends UserCodeCC {
 export class UserCodeCCKeypadModeReport extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCKeypadModeReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCKeypadModeReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCKeypadModeReport;
     // (undocumented)
     readonly keypadMode: KeypadMode;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -20405,11 +20473,11 @@ export interface UserCodeCCKeypadModeReportOptions {
 export class UserCodeCCKeypadModeSet extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCKeypadModeSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCKeypadModeSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCKeypadModeSet;
     // (undocumented)
     keypadMode: KeypadMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -20429,11 +20497,11 @@ export interface UserCodeCCKeypadModeSetOptions {
 export class UserCodeCCReport extends UserCodeCC implements NotificationEventPayload {
     constructor(options: WithAddress<UserCodeCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -20466,9 +20534,9 @@ export interface UserCodeCCReportOptions {
 export class UserCodeCCSet extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCSetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -20508,9 +20576,9 @@ export class UserCodeCCUserCodeChecksumGet extends UserCodeCC {
 export class UserCodeCCUserCodeChecksumReport extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCUserCodeChecksumReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCUserCodeChecksumReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCUserCodeChecksumReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -20537,9 +20605,9 @@ export class UserCodeCCUsersNumberGet extends UserCodeCC {
 export class UserCodeCCUsersNumberReport extends UserCodeCC {
     constructor(options: WithAddress<UserCodeCCUsersNumberReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): UserCodeCCUsersNumberReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCodeCCUsersNumberReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedUsers: number;
     // (undocumented)
@@ -21116,9 +21184,9 @@ export class VersionCCCapabilitiesGet extends VersionCC {
 export class VersionCCCapabilitiesReport extends VersionCC {
     constructor(options: WithAddress<VersionCCCapabilitiesReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): VersionCCCapabilitiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): VersionCCCapabilitiesReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     supportsZWaveSoftwareGet: boolean;
     // (undocumented)
@@ -21139,11 +21207,11 @@ export interface VersionCCCapabilitiesReportOptions {
 export class VersionCCCommandClassGet extends VersionCC {
     constructor(options: WithAddress<VersionCCCommandClassGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): VersionCCCommandClassGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): VersionCCCommandClassGet;
     // (undocumented)
     requestedCC: CommandClasses;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -21164,11 +21232,11 @@ export class VersionCCCommandClassReport extends VersionCC {
     // (undocumented)
     ccVersion: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): VersionCCCommandClassReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): VersionCCCommandClassReport;
     // (undocumented)
     requestedCC: CommandClasses;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -21197,7 +21265,7 @@ export class VersionCCReport extends VersionCC {
     // (undocumented)
     readonly firmwareVersions: string[];
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): VersionCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): VersionCCReport;
     // (undocumented)
     readonly hardwareVersion: number | undefined;
     // (undocumented)
@@ -21205,7 +21273,7 @@ export class VersionCCReport extends VersionCC {
     // (undocumented)
     readonly protocolVersion: string;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -21614,7 +21682,7 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
     // (undocumented)
     readonly applicationVersion: string;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): VersionCCZWaveSoftwareReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): VersionCCZWaveSoftwareReport;
     // (undocumented)
     readonly hostInterfaceBuildNumber: number;
     // (undocumented)
@@ -21704,7 +21772,7 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
     // (undocumented)
     readonly defaultWakeUpInterval: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WakeUpCCIntervalCapabilitiesReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): WakeUpCCIntervalCapabilitiesReport;
     // (undocumented)
     readonly maxWakeUpInterval: number;
     // (undocumented)
@@ -21749,7 +21817,7 @@ export class WakeUpCCIntervalReport extends WakeUpCC {
     // (undocumented)
     readonly controllerNodeId: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WakeUpCCIntervalReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): WakeUpCCIntervalReport;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -21774,9 +21842,9 @@ export class WakeUpCCIntervalSet extends WakeUpCC {
     // (undocumented)
     controllerNodeId: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WakeUpCCIntervalSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): WakeUpCCIntervalSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -21969,11 +22037,11 @@ export class WindowCoveringCC extends CommandClass {
 export class WindowCoveringCCGet extends WindowCoveringCC {
     constructor(options: WithAddress<WindowCoveringCCGetOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCGet;
     // (undocumented)
     parameter: WindowCoveringParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -21996,11 +22064,11 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
     // (undocumented)
     readonly duration: Duration;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCReport;
     // (undocumented)
     readonly parameter: WindowCoveringParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly targetValue: number;
     // (undocumented)
@@ -22029,9 +22097,9 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCSet;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetValues: {
         parameter: WindowCoveringParameter;
@@ -22064,11 +22132,11 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCStartLevelChange;
+    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCStartLevelChange;
     // (undocumented)
     parameter: WindowCoveringParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -22091,11 +22159,11 @@ export interface WindowCoveringCCStartLevelChangeOptions {
 export class WindowCoveringCCStopLevelChange extends WindowCoveringCC {
     constructor(options: WithAddress<WindowCoveringCCStopLevelChangeOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCStopLevelChange;
+    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCStopLevelChange;
     // (undocumented)
     parameter: WindowCoveringParameter;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
@@ -22120,9 +22188,9 @@ export class WindowCoveringCCSupportedGet extends WindowCoveringCC {
 export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
     constructor(options: WithAddress<WindowCoveringCCSupportedReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): WindowCoveringCCSupportedReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): WindowCoveringCCSupportedReport;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedParameters: readonly WindowCoveringParameter[];
     // (undocumented)
@@ -22470,7 +22538,7 @@ export class ZWavePlusCCGet extends ZWavePlusCC {
 export class ZWavePlusCCReport extends ZWavePlusCC {
     constructor(options: WithAddress<ZWavePlusCCReportOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWavePlusCCReport;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWavePlusCCReport;
     // (undocumented)
     installerIcon: number;
     // (undocumented)
@@ -22478,7 +22546,7 @@ export class ZWavePlusCCReport extends ZWavePlusCC {
     // (undocumented)
     roleType: ZWavePlusRoleType;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -22694,9 +22762,9 @@ export class ZWaveProtocolCCAcceptLost extends ZWaveProtocolCC {
     // (undocumented)
     accepted: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAcceptLost;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAcceptLost;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCAcceptLostOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22715,11 +22783,11 @@ export class ZWaveProtocolCCAssignIDs extends ZWaveProtocolCC {
     // (undocumented)
     assignedNodeId: number;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAssignIDs;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAssignIDs;
     // (undocumented)
     homeId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCAssignIDsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22744,13 +22812,13 @@ export class ZWaveProtocolCCAssignReturnRoute extends ZWaveProtocolCC {
     // (undocumented)
     destinationWakeUp: WakeUpTime;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAssignReturnRoute;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAssignReturnRoute;
     // (undocumented)
     repeaters: number[];
     // (undocumented)
     routeIndex: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCAssignReturnRouteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22775,11 +22843,11 @@ export interface ZWaveProtocolCCAssignReturnRouteOptions {
 export class ZWaveProtocolCCAssignReturnRoutePriority extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCAssignReturnRoutePriorityOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCAssignReturnRoutePriority;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCAssignReturnRoutePriority;
     // (undocumented)
     routeNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     targetNodeId: number;
 }
@@ -22818,11 +22886,11 @@ export class ZWaveProtocolCCAutomaticControllerUpdateStart extends ZWaveProtocol
 export class ZWaveProtocolCCCommandComplete extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCCommandCompleteOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCCommandComplete;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCCommandComplete;
     // (undocumented)
     sequenceNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCCommandCompleteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22849,9 +22917,9 @@ export class ZWaveProtocolCCFindNodesInRange extends ZWaveProtocolCC {
     // (undocumented)
     dataRate: ZWaveDataRate;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCFindNodesInRange;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCFindNodesInRange;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     wakeUpTime: WakeUpTime;
 }
@@ -22880,11 +22948,11 @@ export class ZWaveProtocolCCGetNodesInRange extends ZWaveProtocolCC {
 export class ZWaveProtocolCCLost extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCLostOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCLost;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCLost;
     // (undocumented)
     lostNodeId: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCLostOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -22903,7 +22971,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC implements
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNewNodeRegistered;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNewNodeRegistered;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
@@ -22921,7 +22989,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC implements
     // (undocumented)
     protocolVersion: ProtocolVersion;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     specificDeviceClass: number;
     // (undocumented)
@@ -22948,11 +23016,11 @@ export interface ZWaveProtocolCCNewNodeRegisteredOptions extends NodeInformation
 export class ZWaveProtocolCCNewRangeRegistered extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCNewRangeRegisteredOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNewRangeRegistered;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNewRangeRegistered;
     // (undocumented)
     neighborNodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     testedNodeId: number;
 }
@@ -22975,7 +23043,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC impleme
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNodeInformationFrame;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNodeInformationFrame;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
@@ -22991,7 +23059,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC impleme
     // (undocumented)
     protocolVersion: ProtocolVersion;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     specificDeviceClass: number;
     // (undocumented)
@@ -23016,13 +23084,13 @@ export interface ZWaveProtocolCCNodeInformationFrameOptions extends NodeInformat
 export class ZWaveProtocolCCNodesExist extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCNodesExistOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNodesExist;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNodesExist;
     // (undocumented)
     nodeIDs: number[];
     // (undocumented)
     nodeMaskType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCNodesExistOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23041,13 +23109,13 @@ export interface ZWaveProtocolCCNodesExistOptions {
 export class ZWaveProtocolCCNodesExistReply extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCNodesExistReplyOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNodesExistReply;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNodesExistReply;
     // (undocumented)
     nodeListUpdated: boolean;
     // (undocumented)
     nodeMaskType: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCNodesExistReplyOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23066,11 +23134,11 @@ export interface ZWaveProtocolCCNodesExistReplyOptions {
 export class ZWaveProtocolCCNOPPower extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCNOPPowerOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCNOPPower;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNOPPower;
     // (undocumented)
     powerDampening: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCNOPPowerOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23087,11 +23155,11 @@ export interface ZWaveProtocolCCNOPPowerOptions {
 export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCRangeInfoOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCRangeInfo;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCRangeInfo;
     // (undocumented)
     neighborNodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     wakeUpTime?: WakeUpTime;
 }
@@ -23118,11 +23186,11 @@ export class ZWaveProtocolCCRequestNodeInformationFrame extends ZWaveProtocolCC 
 export class ZWaveProtocolCCReservedIDs extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCReservedIDsOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCReservedIDs;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCReservedIDs;
     // (undocumented)
     reservedNodeIDs: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCReservedIDsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23139,11 +23207,11 @@ export interface ZWaveProtocolCCReservedIDsOptions {
 export class ZWaveProtocolCCReserveNodeIDs extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCReserveNodeIDsOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCReserveNodeIDs;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCReserveNodeIDs;
     // (undocumented)
     numNodeIDs: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCReserveNodeIDsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23162,9 +23230,9 @@ export class ZWaveProtocolCCSetNWIMode extends ZWaveProtocolCC {
     // (undocumented)
     enabled: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSetNWIMode;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSetNWIMode;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     timeoutMinutes?: number;
 }
@@ -23187,9 +23255,9 @@ export class ZWaveProtocolCCSetSUC extends ZWaveProtocolCC {
     // (undocumented)
     enableSIS: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSetSUC;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSetSUC;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSetSUCAck" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23200,11 +23268,11 @@ export class ZWaveProtocolCCSetSUCAck extends ZWaveProtocolCC {
     // (undocumented)
     accepted: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSetSUCAck;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSetSUCAck;
     // (undocumented)
     isSIS: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSetSUCAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23231,11 +23299,11 @@ export interface ZWaveProtocolCCSetSUCOptions {
 export class ZWaveProtocolCCSmartStartIncludedNodeInformation extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCSmartStartIncludedNodeInformationOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSmartStartIncludedNodeInformation;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSmartStartIncludedNodeInformation;
     // (undocumented)
     nwiHomeId: BytesView;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCSmartStartIncludedNodeInformationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23264,11 +23332,11 @@ export class ZWaveProtocolCCSmartStartPrime extends ZWaveProtocolCCNodeInformati
 export class ZWaveProtocolCCStaticRouteRequest extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCStaticRouteRequestOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCStaticRouteRequest;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCStaticRouteRequest;
     // (undocumented)
     nodeIds: number[];
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCStaticRouteRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23285,11 +23353,11 @@ export interface ZWaveProtocolCCStaticRouteRequestOptions {
 export class ZWaveProtocolCCSUCNodeID extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCSUCNodeIDOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCSUCNodeID;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCSUCNodeID;
     // (undocumented)
     isSIS: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     sucNodeId: number;
 }
@@ -23310,9 +23378,9 @@ export interface ZWaveProtocolCCSUCNodeIDOptions {
 export class ZWaveProtocolCCTransferEnd extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCTransferEndOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferEnd;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferEnd;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     status: NetworkTransferStatus;
 }
@@ -23331,11 +23399,11 @@ export interface ZWaveProtocolCCTransferEndOptions {
 export class ZWaveProtocolCCTransferNewPrimaryControllerComplete extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCTransferNewPrimaryControllerCompleteOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferNewPrimaryControllerComplete;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferNewPrimaryControllerComplete;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveProtocolCCTransferNewPrimaryControllerCompleteOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -23354,7 +23422,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC impl
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferNodeInformation;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferNodeInformation;
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
@@ -23372,7 +23440,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC impl
     // (undocumented)
     sequenceNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     sourceNodeId: number;
     // (undocumented)
@@ -23403,11 +23471,11 @@ export class ZWaveProtocolCCTransferPresentation extends ZWaveProtocolCC {
     // (undocumented)
     excludeNode: boolean;
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferPresentation;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferPresentation;
     // (undocumented)
     includeNode: boolean;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     supportsNWI: boolean;
 }
@@ -23430,13 +23498,13 @@ export interface ZWaveProtocolCCTransferPresentationOptions {
 export class ZWaveProtocolCCTransferRangeInformation extends ZWaveProtocolCC {
     constructor(options: WithAddress<ZWaveProtocolCCTransferRangeInformationOptions>);
     // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext_2): ZWaveProtocolCCTransferRangeInformation;
+    static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCTransferRangeInformation;
     // (undocumented)
     neighborNodeIds: number[];
     // (undocumented)
     sequenceNumber: number;
     // (undocumented)
-    serialize(ctx: CCEncodingContext_2): Promise<Bytes>;
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     testedNodeId: number;
 }
@@ -23531,8 +23599,16 @@ export enum ZWaveProtocolCommand {
 
 // Warnings were encountered during analysis:
 //
-// src/cc/TransportServiceCC.ts:38:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
-// src/cc/TransportServiceCC.ts:40:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
+// src_gen/cc/TransportServiceCC.ts:21:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
+// src_gen/cc/TransportServiceCC.ts:23:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/cc" does not have an export "RELAXED_TIMING_THRESHOLD"
+// src_gen/cc/_CCValues.generated.ts:2478:5 - (ae-forgotten-export) The symbol "shouldAutoCreateAutoRelockConfigValue" needs to be exported by the entry point index.d.ts
+// src_gen/cc/_CCValues.generated.ts:2535:5 - (ae-forgotten-export) The symbol "shouldAutoCreateHoldAndReleaseConfigValue" needs to be exported by the entry point index.d.ts
+// src_gen/cc/_CCValues.generated.ts:2590:5 - (ae-forgotten-export) The symbol "shouldAutoCreateTwistAssistConfigValue" needs to be exported by the entry point index.d.ts
+// src_gen/cc/_CCValues.generated.ts:2647:5 - (ae-forgotten-export) The symbol "shouldAutoCreateBlockToBlockConfigValue" needs to be exported by the entry point index.d.ts
+// src_gen/cc/_CCValues.generated.ts:2704:5 - (ae-forgotten-export) The symbol "shouldAutoCreateLatchStatusValue" needs to be exported by the entry point index.d.ts
+// src_gen/cc/_CCValues.generated.ts:2761:5 - (ae-forgotten-export) The symbol "shouldAutoCreateBoltStatusValue" needs to be exported by the entry point index.d.ts
+// src_gen/cc/_CCValues.generated.ts:2818:5 - (ae-forgotten-export) The symbol "shouldAutoCreateDoorStatusValue" needs to be exported by the entry point index.d.ts
+// src_gen/cc/_CCValues.generated.ts:6956:5 - (ae-forgotten-export) The symbol "shouldAutoCreateSimpleDoorSensorValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

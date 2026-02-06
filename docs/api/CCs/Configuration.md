@@ -130,23 +130,3 @@ WARNING: On nodes implementing V1 and V2, this process may take
 **up to an hour**, depending on the configured timeout.
 
 WARNING: On nodes implementing V2, all parameters after 255 will be ignored.
-
-## Configuration CC values
-
-### `paramInformation(parameter: number, bitMask?: number)`
-
-```ts
-{
-	commandClass: CommandClasses.Configuration,
-	endpoint: number,
-	property: number,
-	propertyKey: number | undefined,
-}
-```
-
-- **min. CC version:** 1
-- **readable:** true
-- **writeable:** true
-- **stateful:** true
-- **secret:** false
-- **value type:** `"any"`
