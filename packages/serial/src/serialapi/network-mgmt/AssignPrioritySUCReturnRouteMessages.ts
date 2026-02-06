@@ -97,14 +97,14 @@ export class AssignPrioritySUCReturnRouteRequest
 		const nodeId = encodeNodeID(this.nodeId, ctx.nodeIdType);
 		this.payload = Bytes.concat([
 			nodeId,
-			Bytes.from([
+			[
 				this.repeaters[0] ?? 0,
 				this.repeaters[1] ?? 0,
 				this.repeaters[2] ?? 0,
 				this.repeaters[3] ?? 0,
 				this.routeSpeed,
 				this.callbackId,
-			]),
+			],
 		]);
 
 		return super.serialize(ctx);

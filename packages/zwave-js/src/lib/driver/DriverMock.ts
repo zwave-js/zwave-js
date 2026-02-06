@@ -14,7 +14,6 @@ export interface CreateAndStartDriverWithMockPortResult {
 	serial: ZWaveSerialStream;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CreateAndStartDriverWithMockPortOptions {
 	// portAddress: string;
 }
@@ -26,8 +25,7 @@ export function createAndStartDriverWithMockPort(
 		& PartialZWaveOptions = {},
 ): Promise<CreateAndStartDriverWithMockPortResult> {
 	const { ...driverOptions } = options;
-	return new Promise(async (resolve, _reject) => {
-		// eslint-disable-next-line prefer-const
+	return new Promise((resolve, reject) => {
 		let driver: Driver;
 		const mockPort = new MockPort();
 		const bindingFactory = mockPort.factory();
@@ -76,7 +74,7 @@ export function createAndStartDriverWithMockPort(
 			...driverOptions,
 			testingHooks,
 		});
-		await driver.start();
+		driver.start().catch(reject);
 	});
 }
 

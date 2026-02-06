@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -36,6 +35,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { SupervisionCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const SupervisionCCValues = V.defineCCValues(
 	CommandClasses.Supervision,
@@ -238,7 +238,7 @@ export class SupervisionCC extends CommandClass {
 		// Supervision may only be used for singlecast CCs that expect no response
 		// The specs mention that Supervision CAN be used for S2 multicast, but conveniently fail to explain how to respond to that.
 		if (!command.isSinglecast()) return false;
-		if (command.expectsCCResponse()) return false;
+		if (command.expectsCCResponse(ctx)) return false;
 
 		// with a valid node and endpoint
 		const node = command.getNode(ctx);
@@ -337,18 +337,18 @@ export class SupervisionCCReport extends SupervisionCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				(this.moreUpdatesFollow ? 0b1_0_000000 : 0)
 				| (this.requestWakeUpOnDemand ? 0b0_1_000000 : 0)
 				| (this.sessionId & 0b111111),
 				this.status,
-			]),
+			],
 		]);
 
 		if (this.duration) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([this.duration.serializeReport()]),
+				[this.duration.serializeReport()],
 			]);
 		}
 		return super.serialize(ctx);
@@ -439,11 +439,11 @@ export class SupervisionCCGet extends SupervisionCC {
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encapCC = await this.encapsulated.serialize(ctx);
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				(this.requestStatusUpdates ? 0b10_000000 : 0)
 				| (this.sessionId & 0b111111),
 				encapCC.length,
-			]),
+			],
 			encapCC,
 		]);
 		return super.serialize(ctx);

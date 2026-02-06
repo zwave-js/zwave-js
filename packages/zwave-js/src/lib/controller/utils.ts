@@ -86,3 +86,24 @@ export function isRebuildRoutesTask(t: Task<unknown>): boolean {
 	return t.tag?.id === "rebuild-routes"
 		|| t.tag?.id === "rebuild-node-routes";
 }
+
+export function getInitial500SeriesNVMBackupChunkSize(
+	manufacturerId: number | undefined,
+	productType: number | undefined,
+	productId: number | undefined,
+): number {
+	// Some 500 series controllers choke when trying to read from the NVM
+	// with a chunk size that is too big.
+	if (
+		manufacturerId === 0x86
+		&& productType === 0x01
+		&& productId === 0x5a
+	) {
+		// Aeotec Z-Stick Gen5 (some revisions at least)
+		return 48;
+	}
+
+	// Use the maximum chunk size the Z-Wave stack supports.
+	// All other known controllers are fine with that.
+	return 168;
+}

@@ -20,7 +20,7 @@ export * from "./security/ctr_drbg.js";
 export type * from "./traits/index.js";
 export type * from "./util/_Types.js";
 export * from "./util/compareVersions.js";
-export { deflateSync, gunzipSync } from "./util/compression.js";
+export { deflateSync, gunzipSync, inflateSync } from "./util/compression.js";
 export * from "./util/config.js";
 export * from "./util/crc.js";
 export * from "./util/date.js";

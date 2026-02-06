@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -57,6 +56,7 @@ import {
 	type ValveTableEntry,
 	ValveType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 	...V.staticProperty("numValves", undefined, { internal: true }),
@@ -552,7 +552,7 @@ export class IrrigationCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSystemInfo() {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -579,7 +579,7 @@ export class IrrigationCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSystemStatus() {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -617,7 +617,7 @@ export class IrrigationCCAPI extends CCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getSystemConfig() {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -664,7 +664,7 @@ export class IrrigationCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getValveInfo(valveId: ValveId) {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -715,7 +715,7 @@ export class IrrigationCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getValveConfig(valveId: ValveId) {
 		this.assertSupportsCommand(
 			IrrigationCommand,
@@ -1639,10 +1639,10 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 			polarity |= 0b1000_0000;
 		}
 		this.payload = Bytes.concat([
-			Bytes.from([this.masterValveDelay]),
+			[this.masterValveDelay],
 			encodeFloatWithScale(this.highPressureThreshold, 0 /* kPa */),
 			encodeFloatWithScale(this.lowPressureThreshold, 0 /* kPa */),
-			Bytes.from([polarity]),
+			[polarity],
 		]);
 		return super.serialize(ctx);
 	}
@@ -2091,19 +2091,19 @@ export class IrrigationCCValveConfigSet extends IrrigationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.valveId === "master" ? 1 : 0,
 				this.valveId === "master" ? 1 : this.valveId || 1,
 				Math.floor(this.nominalCurrentHighThreshold / 10),
 				Math.floor(this.nominalCurrentLowThreshold / 10),
-			]),
+			],
 			encodeFloatWithScale(this.maximumFlow, 0 /* l/h */),
 			encodeFloatWithScale(this.highFlowThreshold, 0 /* l/h */),
 			encodeFloatWithScale(this.lowFlowThreshold, 0 /* l/h */),
-			Bytes.from([
+			[
 				(this.useRainSensor ? 0b1 : 0)
 				| (this.useMoistureSensor ? 0b10 : 0),
-			]),
+			],
 		]);
 		return super.serialize(ctx);
 	}

@@ -137,7 +137,7 @@
 			"unit": "0.1 °C/°F",
 			"minValue": 5,
 			"maxValue": 100,
-			"defaultValue": 1
+			"defaultValue": 20
 		},
 		{
 			"#": "28",

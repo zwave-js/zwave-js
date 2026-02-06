@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -30,6 +29,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ManufacturerSpecificCCValues = V.defineCCValues(
 	CommandClasses["Manufacturer Specific"],
@@ -93,7 +93,7 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(
 			ManufacturerSpecificCommand,

@@ -143,7 +143,7 @@ async function compatDoWakeupQueries(
 		}
 
 		// Retrieve the method
-		// eslint-disable-next-line
+
 		const method = (API as any)[apiMethod].bind(API) as Function;
 		// And replace "smart" arguments with their corresponding value
 		const methodArgs = args.map<unknown>((arg) => {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-exports */
 /* @forbiddenImports external */
 
 export * from "./definitions/index.js";
@@ -15,7 +14,7 @@ export * from "./registries/Scales.js";
 export * from "./registries/Sensors.js";
 export type * from "./traits/index.js";
 export * from "./util/_Types.js";
-export { deflateSync, gunzipSync } from "./util/compression.js";
+export { deflateSync, gunzipSync, inflateSync } from "./util/compression.js";
 export * from "./util/config.js";
 export * from "./util/crc.js";
 export * from "./util/graph.js";

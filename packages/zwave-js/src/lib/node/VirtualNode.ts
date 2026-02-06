@@ -8,6 +8,7 @@ import {
 	supervisionResultToSetValueResult,
 } from "@zwave-js/cc";
 import {
+	type Protocols,
 	SecurityClass,
 	SupervisionStatus,
 	type TranslatedValueID,
@@ -36,10 +37,33 @@ export interface VirtualValueID extends TranslatedValueID {
 	ccVersion: number;
 }
 
-function groupNodesBySecurityClass(
+export enum CommunicationProfile {
+	Mesh_S2_Unauthenticated = 0x00,
+	Mesh_S2_Authenticated = 0x01,
+	Mesh_S2_AccessControl = 0x02,
+	Mesh_S0_Legacy = 0x07,
+	LR_S2_Authenticated = 0x11,
+	LR_S2_AccessControl = 0x12,
+}
+
+export function getCommunicationProfile(
+	protocol: Protocols,
+	securityClass: SecurityClass,
+): CommunicationProfile {
+	// We assume that only valid combinations are passed
+	return (protocol << 4) | (securityClass & 0x0f);
+}
+
+export function getSecurityClassFromCommunicationProfile(
+	profile: CommunicationProfile,
+): SecurityClass {
+	return profile & 0x0f;
+}
+
+function groupNodesByCommunicationProfile(
 	nodes: Iterable<ZWaveNode>,
-): Map<SecurityClass, ZWaveNode[]> {
-	const ret = new Map<SecurityClass, ZWaveNode[]>();
+): Map<CommunicationProfile, ZWaveNode[]> {
+	const ret = new Map<CommunicationProfile, ZWaveNode[]>();
 
 	for (const node of nodes) {
 		const secClass = node.getHighestSecurityClass();
@@ -47,10 +71,11 @@ function groupNodesBySecurityClass(
 			continue;
 		}
 
-		if (!ret.has(secClass)) {
-			ret.set(secClass, []);
+		const profile = getCommunicationProfile(node.protocol, secClass);
+		if (!ret.has(profile)) {
+			ret.set(profile, []);
 		}
-		ret.get(secClass)!.push(node);
+		ret.get(profile)!.push(node);
 	}
 
 	return ret;
@@ -74,22 +99,22 @@ export class VirtualNode extends VirtualEndpoint {
 				// And omit nodes using Security S0 which does not support broadcast / multicast
 				&& n.getHighestSecurityClass() !== SecurityClass.S0_Legacy,
 		);
-		this.nodesBySecurityClass = groupNodesBySecurityClass(
+		this.nodesByCommunicationProfile = groupNodesByCommunicationProfile(
 			this.physicalNodes,
 		);
 
-		// If broadcasting is attempted with mixed security classes, automatically fall back to multicast
-		if (this.hasMixedSecurityClasses) this.id = undefined;
+		// If broadcasting is attempted with mixed security classes or protocols, automatically fall back to multicast
+		if (this.hasMixedCommunicationProfiles) this.id = undefined;
 	}
 
 	public readonly physicalNodes: readonly ZWaveNode[];
-	public readonly nodesBySecurityClass: ReadonlyMap<
-		SecurityClass,
-		readonly ZWaveNode[]
+	public readonly nodesByCommunicationProfile: ReadonlyMap<
+		CommunicationProfile,
+		ZWaveNode[]
 	>;
 
-	public get hasMixedSecurityClasses(): boolean {
-		return this.nodesBySecurityClass.size > 1;
+	public get hasMixedCommunicationProfiles(): boolean {
+		return this.nodesByCommunicationProfile.size > 1;
 	}
 
 	/**
@@ -197,7 +222,7 @@ export class VirtualNode extends VirtualEndpoint {
 					api.isSetValueOptimistic(valueId)
 					// For successful supervised commands, we know that an optimistic update is ok
 					&& (supervisedAndSuccessful
-						// For unsupervised commands that did not fail, we let the applciation decide whether
+						// For unsupervised commands that did not fail, we let the application decide whether
 						// to update related value optimistically
 						|| (!this.driver.options.disableOptimisticValueUpdate
 							&& result == undefined));
@@ -211,7 +236,7 @@ export class VirtualNode extends VirtualEndpoint {
 
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
-				// ...and the CC API decides not to verify anyways
+				// ...and the CC API decides not to verify anyway
 				if (
 					!supervisedCommandSucceeded(result)
 					|| hooks.forceVerifyChanges?.()

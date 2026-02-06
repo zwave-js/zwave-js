@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { num2hex } from "@zwave-js/shared";
+import { type BytesView, num2hex } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
 import { SUC_MAX_UPDATES } from "../../consts.js";
 import type { NVM3 } from "../NVM3.js";
@@ -90,7 +90,7 @@ export class NVM3Adapter implements NVMAdapter {
 	} | undefined;
 
 	/** A list of pending changes that haven't been written to the NVM yet. `null` indicates a deleted entry. */
-	private _pendingChanges: Map<number, Uint8Array | null> = new Map();
+	private _pendingChanges: Map<number, BytesView | null> = new Map();
 
 	private getFileVersion(fileId: number): string {
 		if (
@@ -174,7 +174,7 @@ export class NVM3Adapter implements NVMAdapter {
 		if (!skipInit && !this._initialized) await this.init();
 
 		// Prefer pending changes over the actual NVM, so changes can be composed
-		let data: Uint8Array | null | undefined;
+		let data: BytesView | null | undefined;
 		if (this._pendingChanges.has(fileId)) {
 			data = this._pendingChanges.get(fileId);
 		} else {

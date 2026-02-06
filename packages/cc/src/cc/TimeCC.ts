@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type DSTInfo,
@@ -32,6 +31,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { TimeCommand } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // @noSetValueAPI
 // Only the timezone information can be set and that accepts a non-primitive value
@@ -54,7 +54,7 @@ export class TimeCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getTime() {
 		this.assertSupportsCommand(TimeCommand, TimeCommand.TimeGet);
 
@@ -89,7 +89,7 @@ export class TimeCCAPI extends CCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getDate() {
 		this.assertSupportsCommand(TimeCommand, TimeCommand.DateGet);
 
@@ -404,14 +404,14 @@ export class TimeCCTimeOffsetSet extends TimeCC {
 				standardOffset: this.standardOffset,
 				dstOffset: this.dstOffset,
 			}),
-			Bytes.from([
+			[
 				this.dstStartDate.getUTCMonth() + 1,
 				this.dstStartDate.getUTCDate(),
 				this.dstStartDate.getUTCHours(),
 				this.dstEndDate.getUTCMonth() + 1,
 				this.dstEndDate.getUTCDate(),
 				this.dstEndDate.getUTCHours(),
-			]),
+			],
 		]);
 		return super.serialize(ctx);
 	}
@@ -493,14 +493,14 @@ export class TimeCCTimeOffsetReport extends TimeCC {
 				standardOffset: this.standardOffset,
 				dstOffset: this.dstOffset,
 			}),
-			Bytes.from([
+			[
 				this.dstStartDate.getUTCMonth() + 1,
 				this.dstStartDate.getUTCDate(),
 				this.dstStartDate.getUTCHours(),
 				this.dstEndDate.getUTCMonth() + 1,
 				this.dstEndDate.getUTCDate(),
 				this.dstEndDate.getUTCHours(),
-			]),
+			],
 		]);
 		return super.serialize(ctx);
 	}

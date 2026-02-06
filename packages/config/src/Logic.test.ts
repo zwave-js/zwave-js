@@ -35,6 +35,31 @@ const tests = [
 		context: {},
 		expected: false,
 	},
+	{
+		logic: "sdkVersion >= 7.0",
+		context: { sdkVersion: "7.19.0" },
+		expected: true,
+	},
+	{
+		logic: "sdkVersion < 7.19.0",
+		context: { sdkVersion: "7.18.0" },
+		expected: true,
+	},
+	{
+		logic: "sdkVersion >= 7.19.1",
+		context: { sdkVersion: "7.19.0" },
+		expected: false,
+	},
+	{
+		logic: "sdkVersion === 7.19.0",
+		context: { sdkVersion: "7.19.0" },
+		expected: true,
+	},
+	{
+		logic: "sdkVersion >= 7.0 && firmwareVersion >= 1.0",
+		context: { sdkVersion: "7.19.0", firmwareVersion: "1.5" },
+		expected: true,
+	},
 ] as const;
 
 for (let i = 1; i <= tests.length; i++) {

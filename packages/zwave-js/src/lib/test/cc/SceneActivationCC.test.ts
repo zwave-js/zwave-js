@@ -8,7 +8,7 @@ import { CommandClasses, Duration } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
-function buildCCBuffer(payload: Uint8Array): Uint8Array {
+function buildCCBuffer(payload: BytesView): BytesView {
 	return Bytes.concat([
 		Uint8Array.from([
 			CommandClasses["Scene Activation"], // CC

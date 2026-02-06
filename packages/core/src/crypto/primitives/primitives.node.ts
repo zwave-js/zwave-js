@@ -1,4 +1,4 @@
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
 import crypto from "node:crypto";
 import {
@@ -13,7 +13,7 @@ import {
 // for some algorithms Z-Wave needs than the Web Crypto API, so we can implement
 // those without additional operations.
 
-function randomBytes(length: number): Uint8Array {
+function randomBytes(length: number): BytesView {
 	return crypto.randomBytes(length);
 }
 
@@ -21,10 +21,10 @@ function encrypt(
 	algorithm: string,
 	blockSize: number,
 	trimToInputLength: boolean,
-	input: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Uint8Array {
+	input: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): BytesView {
 	const cipher = crypto.createCipheriv(algorithm, key, iv);
 	cipher.setAutoPadding(false);
 
@@ -42,10 +42,10 @@ function decrypt(
 	algorithm: string,
 	blockSize: number,
 	trimToInputLength: boolean,
-	input: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Uint8Array {
+	input: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): BytesView {
 	const cipher = crypto.createDecipheriv(algorithm, key, iv);
 	cipher.setAutoPadding(false);
 
@@ -61,9 +61,9 @@ function decrypt(
 
 /** Encrypts a payload using AES-128-ECB (as described in SDS10865) */
 function encryptAES128ECB(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-): Promise<Uint8Array> {
+	plaintext: BytesView,
+	key: BytesView,
+): Promise<BytesView> {
 	return Promise.resolve(
 		encrypt(
 			"aes-128-ecb",
@@ -78,10 +78,10 @@ function encryptAES128ECB(
 
 /** Encrypts a payload using AES-OFB (as described in SDS10865) */
 function encryptAES128OFB(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	return Promise.resolve(
 		encrypt(
 			"aes-128-ofb",
@@ -96,10 +96,10 @@ function encryptAES128OFB(
 
 /** Decrypts a payload using AES-OFB */
 function decryptAES128OFB(
-	ciphertext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	return Promise.resolve(
 		decrypt(
 			"aes-128-ofb",
@@ -113,10 +113,10 @@ function decryptAES128OFB(
 }
 
 function encryptAES128CBC(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	return Promise.resolve(
 		encrypt(
 			"aes-128-cbc",
@@ -131,10 +131,10 @@ function encryptAES128CBC(
 
 /** Decrypts a payload using AES-256-CBC */
 function decryptAES256CBC(
-	ciphertext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-): Promise<Uint8Array> {
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
 	return Promise.resolve(
 		decrypt(
 			"aes-256-cbc",
@@ -148,12 +148,12 @@ function decryptAES256CBC(
 }
 
 function encryptAES128CCM(
-	plaintext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-	additionalData: Uint8Array,
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+	additionalData: BytesView,
 	authTagLength: number,
-): Promise<{ ciphertext: Uint8Array; authTag: Uint8Array }> {
+): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
 	// prepare encryption
 	const algorithm = `aes-128-ccm`;
 	const cipher = crypto.createCipheriv(algorithm, key, iv, { authTagLength });
@@ -168,12 +168,12 @@ function encryptAES128CCM(
 }
 
 function decryptAES128CCM(
-	ciphertext: Uint8Array,
-	key: Uint8Array,
-	iv: Uint8Array,
-	additionalData: Uint8Array,
-	authTag: Uint8Array,
-): Promise<{ plaintext: Uint8Array; authOK: boolean }> {
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+	additionalData: BytesView,
+	authTag: BytesView,
+): Promise<{ plaintext: BytesView; authOK: boolean }> {
 	// prepare decryption
 	const algorithm = `aes-128-ccm`;
 	const decipher = crypto.createDecipheriv(algorithm, key, iv, {
@@ -197,8 +197,8 @@ function decryptAES128CCM(
 
 function digest(
 	algorithm: "md5" | "sha-1" | "sha-256",
-	data: Uint8Array,
-): Promise<Uint8Array> {
+	data: BytesView,
+): Promise<BytesView> {
 	// Node.js uses slightly different algorithm names than WebCrypto
 	const nodeAlgorithm = algorithm === "sha-1"
 		? "sha1"
@@ -210,10 +210,70 @@ function digest(
 	return Promise.resolve(hash.digest());
 }
 
+function hmacSHA256(
+	key: BytesView,
+	data: BytesView,
+): Promise<BytesView> {
+	const hmac = crypto.createHmac("sha256", key);
+	hmac.update(data);
+	return Promise.resolve(hmac.digest());
+}
+
+function encryptChaCha20Poly1305(
+	key: BytesView,
+	nonce: BytesView,
+	additionalData: BytesView,
+	plaintext: BytesView,
+): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
+	const cipher = crypto.createCipheriv(
+		"chacha20-poly1305",
+		key,
+		nonce,
+		{ authTagLength: 16 },
+	);
+	cipher.setAAD(additionalData, { plaintextLength: plaintext.length });
+
+	const ciphertext = Bytes.concat([cipher.update(plaintext), cipher.final()]);
+	const authTag = cipher.getAuthTag();
+
+	return Promise.resolve({ ciphertext, authTag });
+}
+
+function decryptChaCha20Poly1305(
+	key: BytesView,
+	nonce: BytesView,
+	additionalData: BytesView,
+	ciphertext: BytesView,
+	authTag: BytesView,
+): Promise<{ plaintext: BytesView; authOK: boolean }> {
+	const decipher = crypto.createDecipheriv(
+		"chacha20-poly1305",
+		key,
+		nonce,
+		{ authTagLength: 16 },
+	);
+	decipher.setAAD(additionalData, { plaintextLength: ciphertext.length });
+	decipher.setAuthTag(authTag);
+
+	let authOK = false;
+	let plaintext: BytesView;
+	try {
+		plaintext = Bytes.concat([
+			decipher.update(ciphertext),
+			decipher.final(),
+		]);
+		authOK = true;
+	} catch {
+		plaintext = new Uint8Array();
+	}
+
+	return Promise.resolve({ plaintext, authOK });
+}
+
 /** Takes an ECDH public KeyObject and returns the raw key as a buffer */
 function extractRawECDHPublicKey(
 	publicKey: crypto.KeyObject,
-): Uint8Array {
+): BytesView {
 	return decodeX25519KeyDER(
 		publicKey.export({
 			type: "spki",
@@ -224,10 +284,10 @@ function extractRawECDHPublicKey(
 
 /** Converts a raw public key to an ECDH KeyObject */
 function importRawECDHPublicKey(
-	publicKey: Uint8Array,
+	publicKey: BytesView,
 ): crypto.KeyObject {
 	return crypto.createPublicKey({
-		// eslint-disable-next-line no-restricted-globals -- crypto API requires Buffer instances
+		// oxlint-disable-next-line eslint/no-restricted-globals -- crypto API requires Buffer instances
 		key: Buffer.from(encodeX25519KeyDERSPKI(publicKey).buffer),
 		format: "der",
 		type: "spki",
@@ -237,7 +297,7 @@ function importRawECDHPublicKey(
 /** Takes an ECDH private KeyObject and returns the raw key as a buffer */
 function extractRawECDHPrivateKey(
 	privateKey: crypto.KeyObject,
-): Uint8Array {
+): BytesView {
 	return decodeX25519KeyDER(
 		privateKey.export({
 			type: "pkcs8",
@@ -248,10 +308,10 @@ function extractRawECDHPrivateKey(
 
 /** Converts a raw private key to an ECDH KeyObject */
 function importRawECDHPrivateKey(
-	privateKey: Uint8Array,
+	privateKey: BytesView,
 ): crypto.KeyObject {
 	return crypto.createPrivateKey({
-		// eslint-disable-next-line no-restricted-globals -- crypto API requires Buffer instances
+		// oxlint-disable-next-line eslint/no-restricted-globals -- crypto API requires Buffer instances
 		key: Buffer.from(encodeX25519KeyDERPKCS8(privateKey).buffer),
 		format: "der",
 		type: "pkcs8",
@@ -268,7 +328,7 @@ function generateECDHKeyPair(): Promise<KeyPair> {
 }
 
 function keyPairFromRawECDHPrivateKey(
-	privateKey: Uint8Array,
+	privateKey: BytesView,
 ): Promise<KeyPair> {
 	const privateKeyObject = importRawECDHPrivateKey(privateKey);
 	const publicKeyObject = crypto.createPublicKey(privateKeyObject);
@@ -279,7 +339,7 @@ function keyPairFromRawECDHPrivateKey(
 	});
 }
 
-function deriveSharedECDHSecret(keyPair: KeyPair): Promise<Uint8Array> {
+function deriveSharedECDHSecret(keyPair: KeyPair): Promise<BytesView> {
 	const publicKey = importRawECDHPublicKey(keyPair.publicKey);
 	const privateKey = importRawECDHPrivateKey(keyPair.privateKey);
 	const ret = crypto.diffieHellman({ publicKey, privateKey });
@@ -296,6 +356,9 @@ export const primitives = {
 	decryptAES128CCM,
 	decryptAES256CBC,
 	digest,
+	hmacSHA256,
+	encryptChaCha20Poly1305,
+	decryptChaCha20Poly1305,
 	generateECDHKeyPair,
 	keyPairFromRawECDHPrivateKey,
 	deriveSharedECDHSecret,

@@ -55,6 +55,12 @@ export interface NodeWithStatus {
 	 * Which interview stage was last completed
 	 */
 	interviewStage: InterviewStage;
+
+	/**
+	 * @internal
+	 * Whether the node has been fully interviewed at least once
+	 */
+	bootstrapped: boolean;
 }
 
 export abstract class NodeStatusMixin extends NodeEventsMixin
@@ -206,5 +212,21 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 	}
 	public set interviewStage(value: InterviewStage) {
 		this.driver.cacheSet(cacheKeys.node(this.id).interviewStage, value);
+		// Mark the node as bootstrapped once the interview is complete
+		if (value === InterviewStage.Complete) {
+			this.bootstrapped = true;
+		}
+	}
+
+	public get bootstrapped(): boolean {
+		return (
+			this.driver.cacheGet(cacheKeys.node(this.id).bootstrapped)
+				// When the cache entry is missing, we assume the node is bootstrapped
+				// only if the interview is complete
+				?? this.interviewStage === InterviewStage.Complete
+		);
+	}
+	public set bootstrapped(value: boolean) {
+		this.driver.cacheSet(cacheKeys.node(this.id).bootstrapped, value);
 	}
 }

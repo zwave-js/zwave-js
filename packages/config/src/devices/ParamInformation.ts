@@ -1,4 +1,5 @@
-import { tryParseParamNumber } from "@zwave-js/core";
+/* oxlint-disable typescript/no-unnecessary-type-assertion */
+import { type AllowedConfigValue, tryParseParamNumber } from "@zwave-js/core";
 import {
 	type JSONObject,
 	ObjectKeyMap,
@@ -151,6 +152,18 @@ Parameter #${parameterNumber} has a non-numeric property defaultValue`,
 		this.defaultValue = definition.defaultValue;
 
 		if (
+			definition.recommendedValue != undefined
+			&& typeof definition.recommendedValue !== "number"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-numeric property recommendedValue`,
+			);
+		}
+		this.recommendedValue = definition.recommendedValue;
+
+		if (
 			definition.allowManualEntry != undefined
 			&& definition.allowManualEntry !== false
 		) {
@@ -161,8 +174,19 @@ Parameter #${parameterNumber}: allowManualEntry must be false or omitted!`,
 			);
 		}
 		// Default to allowing manual entry, except if the param is readonly
-		this.allowManualEntry = definition.allowManualEntry
-			?? (this.readOnly ? false : true);
+		this.allowManualEntry = definition.allowManualEntry ?? !this.readOnly;
+
+		if (
+			definition.destructive != undefined
+			&& typeof definition.destructive !== "boolean"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-boolean property destructive`,
+			);
+		}
+		this.destructive = definition.destructive;
 
 		if (
 			isArray(definition.options)
@@ -184,7 +208,146 @@ Parameter #${parameterNumber}: options is malformed!`,
 			(opt: any) =>
 				new ConditionalConfigOption(opt.value, opt.label, opt.$if),
 		) ?? [];
+
+		if (
+			definition.hidden != undefined
+			&& typeof definition.hidden !== "boolean"
+		) {
+			throwInvalidConfig(
+				"devices",
+				`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber} has a non-boolean property hidden`,
+			);
+		}
+		this.hidden = definition.hidden;
+
+		// Parse and validate the allowed field
+		if (definition.allowed != undefined) {
+			// Validate mutual exclusivity with minValue/maxValue
+			if (this.minValue != undefined || this.maxValue != undefined) {
+				throwInvalidConfig(
+					"devices",
+					`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: "allowed" cannot be used together with "minValue" or "maxValue"!`,
+				);
+			}
+
+			// Validate mutual exclusivity with allowManualEntry: false
+			if (this.allowManualEntry === false) {
+				throwInvalidConfig(
+					"devices",
+					`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: "allowed" cannot be used with "allowManualEntry: false"!`,
+				);
+			}
+
+			// Validate it's an array
+			if (!isArray(definition.allowed)) {
+				throwInvalidConfig(
+					"devices",
+					`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: "allowed" must be an array!`,
+				);
+			}
+
+			// Validate array is not empty
+			if (definition.allowed.length === 0) {
+				throwInvalidConfig(
+					"devices",
+					`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: "allowed" array must contain at least one entry!`,
+				);
+			}
+
+			// Parse each value definition
+			const parsedValues: AllowedConfigValue[] = [];
+			for (let i = 0; i < definition.allowed.length; i++) {
+				const def = definition.allowed[i];
+
+				if (!isObject(def)) {
+					throwInvalidConfig(
+						"devices",
+						`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: allowed[${i}] must be an object!`,
+					);
+				}
+
+				// Check for single value
+				if ("value" in def) {
+					if (typeof def.value !== "number") {
+						throwInvalidConfig(
+							"devices",
+							`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: allowed[${i}].value must be a number!`,
+						);
+					}
+					parsedValues.push({ value: def.value });
+				} // Check for range
+				else if ("range" in def) {
+					if (!isArray(def.range)) {
+						throwInvalidConfig(
+							"devices",
+							`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: allowed[${i}].range must be an array!`,
+						);
+					}
+
+					if (def.range.length !== 2) {
+						throwInvalidConfig(
+							"devices",
+							`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: allowed[${i}].range must have exactly 2 elements [from, to]!`,
+						);
+					}
+
+					const [from, to] = def.range;
+					const step = def.step;
+
+					if (typeof from !== "number" || typeof to !== "number") {
+						throwInvalidConfig(
+							"devices",
+							`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: allowed[${i}].range elements must be numbers!`,
+						);
+					}
+
+					if (step !== undefined && typeof step !== "number") {
+						throwInvalidConfig(
+							"devices",
+							`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: allowed[${i}].step must be a number if provided!`,
+						);
+					}
+
+					parsedValues.push({
+						from,
+						to,
+						...(step !== undefined && { step }),
+					});
+				} else {
+					throwInvalidConfig(
+						"devices",
+						`packages/config/config/devices/${parent.filename}:
+Parameter #${parameterNumber}: allowed[${i}] must have either "value" or "range" property!`,
+					);
+				}
+			}
+
+			this.allowed = parsedValues;
+		}
 	}
+
+	// IMPORTANT: Changes to these properties can affect the device config hash,
+	// which may prompt users to re-interview their devices.
+	//
+	// Whenever adding, removing or changing properties of this class,
+	// make sure that these changes do not cause the hash to change unintentionally.
+	// For example, adding a new optional property with a default value of `undefined`
+	// is fine, unless the constructor always sets it to a concrete value.
+	//
+	// In all other case, make sure to increase the `maxHashVersion` in DeviceConfig.ts
+	// and add appropriate, backwards-compatible handling for the new version
+	// in `areHashesEqual`
 
 	private parent: ConditionalDeviceConfig;
 	public readonly parameterNumber: number;
@@ -192,15 +355,19 @@ Parameter #${parameterNumber}: options is malformed!`,
 	public readonly label: string;
 	public readonly description?: string;
 	public readonly valueSize: number;
+	public readonly allowed?: readonly AllowedConfigValue[];
 	public readonly minValue?: number;
 	public readonly maxValue?: number;
 	public readonly unsigned?: boolean;
 	public readonly defaultValue: number;
+	public readonly recommendedValue?: number;
 	public readonly unit?: string;
 	public readonly readOnly?: true;
 	public readonly writeOnly?: true;
 	public readonly allowManualEntry: boolean;
+	public readonly destructive?: boolean;
 	public readonly options: readonly ConditionalConfigOption[];
+	public readonly hidden?: boolean;
 
 	public readonly condition?: string;
 
@@ -216,19 +383,41 @@ Parameter #${parameterNumber}: options is malformed!`,
 				"label",
 				"description",
 				"valueSize",
+				"allowed",
 				"minValue",
 				"maxValue",
 				"unsigned",
 				"defaultValue",
+				"recommendedValue",
 				"unit",
 				"readOnly",
 				"writeOnly",
 				"allowManualEntry",
+				"destructive",
+				"hidden",
 			]),
 			options: evaluateDeep(this.options, deviceId, true),
 		};
-		// Infer minValue from options if possible
-		if (ret.minValue == undefined) {
+
+		// If allowed is defined, compute the envelope (minValue/maxValue) for backwards compatibility
+		if (ret.allowed && ret.allowed.length > 0) {
+			let globalMin = Infinity;
+			let globalMax = -Infinity;
+
+			for (const def of ret.allowed) {
+				if ("value" in def) {
+					globalMin = Math.min(globalMin, def.value);
+					globalMax = Math.max(globalMax, def.value);
+				} else {
+					globalMin = Math.min(globalMin, def.from);
+					globalMax = Math.max(globalMax, def.to);
+				}
+			}
+
+			ret.minValue = globalMin;
+			ret.maxValue = globalMax;
+		} // Infer minValue from options if possible
+		else if (ret.minValue == undefined) {
 			if (ret.allowManualEntry === false && ret.options.length > 0) {
 				ret.minValue = Math.min(...ret.options.map((o) => o.value));
 			} else {
@@ -239,7 +428,7 @@ Parameter #${this.parameterNumber} is missing required property "minValue"!`,
 				);
 			}
 		}
-		if (ret.maxValue == undefined) {
+		if (ret.allowed == undefined && ret.maxValue == undefined) {
 			if (ret.allowManualEntry === false && ret.options.length > 0) {
 				ret.maxValue = Math.max(...ret.options.map((o) => o.value));
 			} else {
@@ -251,7 +440,12 @@ Parameter #${this.parameterNumber} is missing required property "maxValue"!`,
 			}
 		}
 
-		// @ts-expect-error TS doesn't seem to understand that we do set min/maxValue
+		// After inferring minValue/maxValue, create the allowed array if not already set
+		if (ret.allowed == undefined) {
+			ret.allowed = [{ from: ret.minValue!, to: ret.maxValue! }];
+		}
+
+		// @ts-expect-error TS doesn't understand that we set min/maxValue and allowed
 		return ret;
 	}
 }
@@ -259,12 +453,18 @@ Parameter #${this.parameterNumber} is missing required property "maxValue"!`,
 export type ParamInformation =
 	& Omit<
 		ConditionalParamInformation,
-		"condition" | "evaluateCondition" | "options" | "minValue" | "maxValue"
+		| "condition"
+		| "evaluateCondition"
+		| "options"
+		| "minValue"
+		| "maxValue"
+		| "allowed"
 	>
 	& {
 		options: readonly ConfigOption[];
 		minValue: NonNullable<ConditionalParamInformation["minValue"]>;
 		maxValue: NonNullable<ConditionalParamInformation["maxValue"]>;
+		allowed: NonNullable<ConditionalParamInformation["allowed"]>;
 	};
 
 export class ConditionalConfigOption implements ConditionalItem<ConfigOption> {

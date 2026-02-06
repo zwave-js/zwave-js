@@ -280,7 +280,9 @@ import {
 } from "@zwave-js/serial/serialapi";
 import {
 	Bytes,
+	type BytesView,
 	Mixin,
+	ObjectKeyMap,
 	type ReadonlyObjectKeyMap,
 	type ReadonlyThrowingMap,
 	type ThrowingMap,
@@ -321,7 +323,7 @@ import {
 import { ZWaveFeature, minFeatureVersions } from "./Features.js";
 import {
 	downloadFirmwareUpdate,
-	getAvailableFirmwareUpdates,
+	getAvailableFirmwareUpdatesBulk,
 } from "./FirmwareUpdateService.js";
 import {
 	type ExclusionOptions,
@@ -366,7 +368,11 @@ import type {
 	RebuildRoutesStatus,
 	SDKVersion,
 } from "./_Types.js";
-import { assertProvisioningEntry, isRebuildRoutesTask } from "./utils.js";
+import {
+	assertProvisioningEntry,
+	getInitial500SeriesNVMBackupChunkSize,
+	isRebuildRoutesTask,
+} from "./utils.js";
 
 // Strongly type the event emitter events
 interface ControllerEventCallbacks
@@ -399,7 +405,6 @@ interface ControllerEventCallbacks
 
 export type ControllerEvents = Extract<keyof ControllerEventCallbacks, string>;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ZWaveController extends ControllerStatisticsHost {}
 
 @Mixin([ControllerStatisticsHost])
@@ -466,11 +471,11 @@ export class ZWaveController
 		return this._ownNodeId;
 	}
 
-	private _dsk: Uint8Array | undefined;
+	private _dsk: BytesView | undefined;
 	/**
 	 * The device specific key (DSK) of the controller in binary format.
 	 */
-	public async getDSK(): Promise<Uint8Array> {
+	public async getDSK(): Promise<BytesView> {
 		if (this._dsk == undefined) {
 			const { publicKey } = await this.driver
 				.getLearnModeAuthenticatedKeyPair();
@@ -769,7 +774,7 @@ export class ZWaveController
 	}
 
 	/** Returns the node with the given DSK */
-	public getNodeByDSK(dsk: Uint8Array | string): ZWaveNode | undefined {
+	public getNodeByDSK(dsk: BytesView | string): ZWaveNode | undefined {
 		try {
 			if (typeof dsk === "string") dsk = dskFromString(dsk);
 		} catch (e) {
@@ -892,14 +897,6 @@ export class ZWaveController
 		if (nodeIDs.length === 0) {
 			throw new ZWaveError(
 				"Cannot create an empty multicast group",
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
-		const firstNodeIsLR = isLongRangeNodeId(nodeIDs[0]);
-		if (nodeIDs.some((id) => isLongRangeNodeId(id) !== firstNodeIsLR)) {
-			throw new ZWaveError(
-				"Cannot create a multicast group with mixed Z-Wave Classic and Z-Wave Long Range nodes",
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -1272,6 +1269,26 @@ export class ZWaveController
 		);
 	}
 
+	/**
+	 * Helper function to determine whether the controller is capable of EU Long Range,
+	 * possibly without advertising it
+	 */
+	private isEULongRangeCapable(): MaybeNotKnown<boolean> {
+		// EU Long Range was added in SDK 7.22 for 800 series chips
+		// 7.22.1 adds support for querying the supported regions, so the following
+		// is really only necessary for 7.22.0.
+		//
+		// However, there seem to be cases where the new command is missing from
+		// later SDK versions too:
+		// https://github.com/zwave-js/zwave-js/issues/8174
+		return (
+			this.isLongRangeCapable()
+			&& typeof this._zwaveChipType === "string"
+			&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
+			&& this.sdkVersionGte("7.22")
+		);
+	}
+
 	/** Tries to determine the LR capable replacement of the given region. If none is found, the given region is returned. */
 	private tryGetLRCapableRegion(region: RFRegion): RFRegion {
 		if (this._supportedRegions) {
@@ -1291,6 +1308,10 @@ export class ZWaveController
 		// US_LR is the first supported LR region, so if the controller supports LR, US_LR is supported
 		if (region === RFRegion.USA && this.isLongRangeCapable()) {
 			return RFRegion["USA (Long Range)"];
+		}
+
+		if (region === RFRegion.Europe && this.isEULongRangeCapable()) {
+			return RFRegion["Europe (Long Range)"];
 		}
 
 		return region;
@@ -2193,7 +2214,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();
@@ -2301,7 +2321,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();
@@ -2624,11 +2643,10 @@ export class ZWaveController
 				) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
-			} else if (
-				opts.strategy
-					=== InclusionStrategy.SmartStart
-			) {
-				smartStartFailed = true;
+			} else {
+				smartStartFailed =
+					opts.strategy === InclusionStrategy.SmartStart;
+				newNode.failedS2Bootstrapping = true;
 			}
 
 			if (
@@ -3251,7 +3269,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();
@@ -3782,6 +3799,12 @@ export class ZWaveController
 				return;
 			}
 
+			// It can also happen that this is received while we're including that node ourselves.
+			// In this case, we also ignore the message, otherwise we'd fail security bootstrapping.
+			if (this.inclusionState === InclusionState.Including) {
+				return;
+			}
+
 			const deviceClass = new DeviceClass(
 				nodeInfo.basicDeviceClass,
 				nodeInfo.genericDeviceClass,
@@ -3920,7 +3943,6 @@ export class ZWaveController
 				newNode.updateNodeInfo(requestedNodeInfo);
 
 				// TODO: Check if this stuff works for a normal replace too
-				// eslint-disable-next-line @typescript-eslint/dot-notation
 				newNode["deviceClass"] = new DeviceClass(
 					requestedNodeInfo.basicDeviceClass,
 					requestedNodeInfo.genericDeviceClass,
@@ -3989,6 +4011,9 @@ export class ZWaveController
 				) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
+			}
+			if (bootstrapFailure != undefined) {
+				newNode.failedS2Bootstrapping = true;
 			}
 		} else if (
 			newNode.supportsCC(CommandClasses.Security)
@@ -5306,7 +5331,11 @@ export class ZWaveController
 						.filter((id) => id !== self._ownNodeId!)
 						// ...and the node itself
 						.filter((id) => id !== node.id)
-						.sort();
+						// Filter out invalid node IDs (must be in range 1-232)
+						.filter((id) => id >= 1 && id <= MAX_NODES)
+						// Filter out non-existing nodes
+						.filter((id) => self.nodes.has(id))
+						.toSorted((a, b) => a - b);
 				} catch {
 					// ignore
 				}
@@ -5345,11 +5374,11 @@ export class ZWaveController
 							if (attempt === maxAttempts) {
 								self.driver.controllerLog.logNode(node.id, {
 									message:
-										`rebuilding routes failed: failed to assign return route after ${maxAttempts} attempts`,
+										`failed to assign return route to node ${destinationNodeId} after ${maxAttempts} attempts, continuing with other targets...`,
 									level: "warn",
 									direction: "none",
 								});
-								return false;
+								// Don't fail the entire process, just continue with the next target
 							}
 						}
 					}
@@ -5546,7 +5575,9 @@ export class ZWaveController
 		const MAX_ROUTES = 4;
 
 		// Keep track of which routes have been assigned
-		const assignedRoutes = new Array(MAX_ROUTES).fill(EMPTY_ROUTE);
+		const assignedRoutes = Array
+			.from<Route>({ length: MAX_ROUTES })
+			.fill(EMPTY_ROUTE);
 
 		let priorityRouteIndex = -1;
 		// If a priority route is given, add it to the end of the routes array to mimick what the Z-Wave controller does
@@ -5613,7 +5644,7 @@ export class ZWaveController
 		// if an assignment fails.
 		while (
 			assignedRoutes.length > 0
-			&& isEmptyRoute(assignedRoutes.at(-1))
+			&& isEmptyRoute(assignedRoutes.at(-1)!)
 		) {
 			assignedRoutes.pop();
 		}
@@ -5855,7 +5886,9 @@ export class ZWaveController
 		const MAX_ROUTES = 4;
 
 		// Keep track of which routes have been assigned
-		const assignedRoutes = new Array(MAX_ROUTES).fill(EMPTY_ROUTE);
+		const assignedRoutes = Array
+			.from<Route>({ length: MAX_ROUTES })
+			.fill(EMPTY_ROUTE);
 
 		let priorityRouteIndex = -1;
 		// If a priority route is given, add it to the end of the routes array to mimick what the Z-Wave controller does
@@ -5922,7 +5955,7 @@ export class ZWaveController
 		// if an assignment fails.
 		while (
 			assignedRoutes.length > 0
-			&& isEmptyRoute(assignedRoutes.at(-1))
+			&& isEmptyRoute(assignedRoutes.at(-1)!)
 		) {
 			assignedRoutes.pop();
 		}
@@ -6458,7 +6491,7 @@ export class ZWaveController
 	 * * the source node, endpoint or association group does not exist,
 	 * * the source node is a ZWLR node and the destination is not the SIS
 	 * * the destination node is a ZWLR node
-	 * * the association is not allowed for other reasons. In this case, the error's
+	 * * the association is not allowed for other reasons (unless `force` is set). In this case, the error's
 	 * `context` property will contain an array with all forbidden destinations, each with an added `checkResult` property
 	 * which contains the reason why the association is forbidden:
 	 *     ```ts
@@ -6473,6 +6506,13 @@ export class ZWaveController
 		source: AssociationAddress,
 		group: number,
 		destinations: AssociationAddress[],
+		options?: {
+			/**
+			 * Whether to force creating associations even if they are not allowed.
+			 * **Note:** Invalid associations will most likely not work
+			 */
+			force?: boolean;
+		},
 	): Promise<void> {
 		const node = this.nodes.getOrThrow(source.nodeId);
 		const endpoint = node.getEndpointOrThrow(source.endpoint ?? 0);
@@ -6482,6 +6522,7 @@ export class ZWaveController
 			endpoint,
 			group,
 			destinations,
+			options,
 		);
 
 		if (isLongRangeNodeId(source.nodeId)) return;
@@ -6744,7 +6785,6 @@ export class ZWaveController
 					}
 				}
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			cleanup: async () => {
 				// When SmartStart failed, this is called from inside the inclusion handler
 				// so we do not want to set the inclusion state back to idle. In all other
@@ -6812,7 +6852,6 @@ export class ZWaveController
 					abortWaiting.signal,
 				);
 			},
-			// eslint-disable-next-line @typescript-eslint/require-await
 			async cleanup() {
 				// If this task gets dropped, abort all pending wait operations
 				abortWaiting.abort();
@@ -7053,9 +7092,18 @@ export class ZWaveController
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
 			}
+			if (bootstrapFailure != undefined) {
+				newNode.failedS2Bootstrapping = true;
+			}
 		} else if (strategy === InclusionStrategy.Security_S0) {
 			bootstrapFailure = await this.secureBootstrapS0(
 				newNode,
+				// When replacing a node, we don't receive NIF, so we have to make
+				// some assumptions, just like we do for Security S2 above.
+				// We don't know if the node is a controller, so just assume it is not.
+				false,
+				// Also we must assume that the node supports S0, because we
+				// don't know any better at this point.
 				true,
 			);
 			if (bootstrapFailure == undefined) {
@@ -7225,7 +7273,7 @@ export class ZWaveController
 					}
 				}
 			}
-			return [...allRegions].sort((a, b) => a - b);
+			return [...allRegions].toSorted((a, b) => a - b);
 		}
 
 		// Fallback: Hardcoded list of known supported regions
@@ -7248,21 +7296,14 @@ export class ZWaveController
 			// All LR capable controllers support USA Long Range
 			ret.add(RFRegion["USA (Long Range)"]);
 			if (filterSubsets) ret.delete(RFRegion.USA);
-
-			// EU Long Range was added in SDK 7.22 for 800 series chips
-			// 7.22.1 adds support for querying the supported regions, so the following
-			// is really only necessary for 7.22.0.
-			if (
-				typeof this._zwaveChipType === "string"
-				&& getChipTypeAndVersion(this._zwaveChipType)?.type === 8
-				&& this.sdkVersionGte("7.22")
-			) {
-				ret.add(RFRegion["Europe (Long Range)"]);
-				if (filterSubsets) ret.delete(RFRegion.Europe);
-			}
 		}
 
-		return [...ret].sort((a, b) => a - b);
+		if (this.isEULongRangeCapable()) {
+			ret.add(RFRegion["Europe (Long Range)"]);
+			if (filterSubsets) ret.delete(RFRegion.Europe);
+		}
+
+		return [...ret].toSorted((a, b) => a - b);
 	}
 
 	private async applyLegalPowerlevelLimits(
@@ -8008,7 +8049,7 @@ export class ZWaveController
 	 */
 	public async firmwareUpdateNVMWrite(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<void> {
 		await this.driver.sendMessage<FirmwareUpdateNVM_WriteResponse>(
 			new FirmwareUpdateNVM_WriteRequest({
@@ -8084,7 +8125,7 @@ export class ZWaveController
 	public async externalNVMReadBuffer(
 		offset: number,
 		length: number,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		const ret = await this.driver.sendMessage<ExtNVMReadLongBufferResponse>(
 			new ExtNVMReadLongBufferRequest({
 				offset,
@@ -8104,7 +8145,7 @@ export class ZWaveController
 	public async externalNVMReadBuffer700(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
 			new NVMOperationsReadRequest({
 				offset,
@@ -8142,7 +8183,7 @@ export class ZWaveController
 	public async externalNVMReadBufferExt(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<
 			ExtendedNVMOperationsResponse
 		>(
@@ -8187,7 +8228,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBuffer(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<boolean> {
 		const ret = await this.driver.sendMessage<
 			ExtNVMWriteLongBufferResponse
@@ -8212,7 +8253,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBuffer700(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<{ endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<NVMOperationsResponse>(
 			new NVMOperationsWriteRequest({
@@ -8253,7 +8294,7 @@ export class ZWaveController
 	 */
 	public async externalNVMWriteBufferExt(
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	): Promise<{ endOfFile: boolean }> {
 		const ret = await this.driver.sendMessage<
 			ExtendedNVMOperationsResponse
@@ -8393,7 +8434,7 @@ export class ZWaveController
 	 */
 	public async backupNVMRaw(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		this.driver.controllerLog.print("Backing up NVM...");
 
 		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
@@ -8407,7 +8448,7 @@ export class ZWaveController
 		// Disable watchdog to prevent resets during NVM access
 		await this.stopWatchdog();
 
-		let ret: Uint8Array;
+		let ret: BytesView;
 		try {
 			if (this.sdkVersionGte("7.0")) {
 				ret = await this.backupNVMRaw700(onProgress);
@@ -8433,7 +8474,7 @@ export class ZWaveController
 
 	private async backupNVMRaw500(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
 		if (!size) {
 			throw new ZWaveError(
@@ -8447,13 +8488,13 @@ export class ZWaveController
 		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
 		//
-		// However, the Aeotec Z-Stick 5 (at least some revisions) go haywire when doing so,
-		// so we start with a smaller chunk size for that device
-		const initialChunkSize = this._manufacturerId === 0x86
-				&& this._productType === 0x01
-				&& this._productId === 0x5a
-			? 48
-			: 0xffff;
+		// However, some sticks go haywire if we use a chunk size that is too large,
+		// so we figure out if we need to start small.
+		const initialChunkSize = getInitial500SeriesNVMBackupChunkSize(
+			this._manufacturerId,
+			this._productType,
+			this._productId,
+		);
 		let chunkSize: number = Math.min(initialChunkSize, ret.length);
 		while (offset < ret.length) {
 			const chunk = await this.externalNVMReadBuffer(
@@ -8478,12 +8519,12 @@ export class ZWaveController
 
 	private async backupNVMRaw700(
 		onProgress?: (bytesRead: number, total: number) => void,
-	): Promise<Uint8Array> {
+	): Promise<BytesView> {
 		let open: () => Promise<number>;
 		let read: (
 			offset: number,
 			length: number,
-		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+		) => Promise<{ buffer: BytesView; endOfFile: boolean }>;
 		let close: () => Promise<void>;
 
 		if (
@@ -8556,7 +8597,7 @@ export class ZWaveController
 	 * @param migrateOptions Influence which data should be preserved during a migration
 	 */
 	public async restoreNVM(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		convertProgress?: (bytesRead: number, total: number) => void,
 		restoreProgress?: (bytesWritten: number, total: number) => void,
 		migrateOptions?: MigrateNVMOptions,
@@ -8580,8 +8621,8 @@ export class ZWaveController
 		this.driver.controllerLog.print(
 			"Converting NVM to target format...",
 		);
-		let targetNVM: Uint8Array;
-		let convertedNVM: Uint8Array;
+		let targetNVM: BytesView;
+		let convertedNVM: BytesView;
 		try {
 			if (this.sdkVersionGte("7.0")) {
 				targetNVM = await this.backupNVMRaw700(convertProgress);
@@ -8646,7 +8687,7 @@ export class ZWaveController
 	 * @param onProgress Can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size
 	 */
 	public async restoreNVMRaw(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		this.driver.controllerLog.print("Restoring NVM...");
@@ -8706,7 +8747,7 @@ export class ZWaveController
 	}
 
 	private async restoreNVMRaw500(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		const size = nvmSizeToBufferSize((await this.getNVMId()).memorySize);
@@ -8740,11 +8781,19 @@ export class ZWaveController
 			}
 		}
 
-		// Figure out the maximum chunk size the Serial API supports
+		// Try reading the maximum size at first, the Serial API should return chunks in a size it supports
 		// For some reason, there is no documentation and no official command for this
+		//
+		// However, some sticks go haywire if we use a chunk size that is too large,
+		// so we figure out if we need to start small.
+		const initialChunkSize = getInitial500SeriesNVMBackupChunkSize(
+			this._manufacturerId,
+			this._productType,
+			this._productId,
+		);
 		// The write requests need 5 bytes more than the read response, so subtract 5 from the returned length
-		const chunkSize = (await this.externalNVMReadBuffer(0, 0xffff)).length
-			- 5;
+		const chunkSize =
+			(await this.externalNVMReadBuffer(0, initialChunkSize)).length - 5;
 
 		for (let offset = 0; offset < nvmData.length; offset += chunkSize) {
 			await this.externalNVMWriteBuffer(
@@ -8759,17 +8808,17 @@ export class ZWaveController
 	}
 
 	private async restoreNVMRaw700(
-		nvmData: Uint8Array,
+		nvmData: BytesView,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
 		let open: () => Promise<number>;
 		let read: (
 			offset: number,
 			length: number,
-		) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+		) => Promise<{ buffer: BytesView; endOfFile: boolean }>;
 		let write: (
 			offset: number,
-			buffer: Uint8Array,
+			buffer: BytesView,
 		) => Promise<{ endOfFile: boolean }>;
 		let close: () => Promise<void>;
 
@@ -8919,10 +8968,7 @@ export class ZWaveController
 	/**
 	 * Retrieves the available firmware updates for the given node from the Z-Wave JS firmware update service.
 	 *
-	 * **Note:** Sleeping nodes need to be woken up for this to work. This method will throw when called for a sleeping node
-	 * which did not wake up within a minute.
-	 *
-	 * **Note:** This requires an API key to be set in the driver options, or passed .
+	 * **Note:** This requires an API key to be set in the driver options, or passed using the `options` parameter.
 	 */
 	public async getAvailableFirmwareUpdates(
 		nodeId: number,
@@ -8945,33 +8991,122 @@ export class ZWaveController
 			);
 		}
 
-		// Now invoke the service
+		// Use the bulk method and extract the result for this specific node
 		try {
-			return await getAvailableFirmwareUpdates(
-				{
-					manufacturerId,
-					productType,
-					productId,
-					firmwareVersion,
-					// Prefer the actual region...
-					rfRegion: this.rfRegion
-						// ...over the specified one,
-						?? options?.rfRegion
-						// ... and fall back to the configured region on 500 series controllers as a last resort.
-						?? this.driver.options.rf?.region,
-				},
+			const allUpdates = await this.getAllAvailableFirmwareUpdates(
+				options,
+			);
+			return allUpdates.get(nodeId) || [];
+		} catch (e: any) {
+			let message =
+				`Cannot check for firmware updates for node ${nodeId}: `;
+			if (e.response) {
+				if (isObject(e.response.data)) {
+					if (typeof e.response.data.error === "string") {
+						message += `${e.response.data.error} `;
+					} else if (typeof e.response.data.message === "string") {
+						message += `${e.response.data.message} `;
+					}
+				}
+				message += `[${e.response.status} ${e.response.statusText}]`;
+			} else if (typeof e.message === "string") {
+				message += e.message;
+			} else {
+				message += `Failed to download update information!`;
+			}
+
+			throw new ZWaveError(
+				message,
+				ZWaveErrorCodes.FWUpdateService_RequestError,
+			);
+		}
+	}
+
+	/**
+	 * Retrieves the available firmware updates for all ready nodes from the Z-Wave JS firmware update service.
+	 *
+	 * **Note:** This requires an API key to be set in the driver options, or passed using the `options` parameter.
+	 *
+	 * @returns A map where the keys are node IDs and the values are available firmware updates. Devices missing from the map are unknown to the firmware update service.
+	 */
+	public async getAllAvailableFirmwareUpdates(
+		options?: GetFirmwareUpdatesOptions,
+	): Promise<Map<number, FirmwareUpdateInfo[]>> {
+		// Collect device fingerprints for all ready nodes
+		const deviceIds: FirmwareUpdateDeviceID[] = [];
+		const nodeIdMap = new ObjectKeyMap<FirmwareUpdateDeviceID, number[]>();
+
+		for (const node of this.nodes.values()) {
+			const { manufacturerId, productType, productId, firmwareVersion } =
+				node;
+
+			// Skip nodes without complete fingerprint information
+			if (
+				typeof manufacturerId !== "number"
+				|| typeof productType !== "number"
+				|| typeof productId !== "number"
+				|| typeof firmwareVersion !== "string"
+			) {
+				continue;
+			}
+
+			const deviceId: FirmwareUpdateDeviceID = {
+				manufacturerId,
+				productType,
+				productId,
+				firmwareVersion,
+			};
+
+			deviceIds.push(deviceId);
+
+			// Create a cache key to map back to node ID
+			if (!nodeIdMap.has(deviceId)) {
+				nodeIdMap.set(deviceId, []);
+			}
+			nodeIdMap.get(deviceId)!.push(node.id);
+		}
+
+		if (deviceIds.length === 0) {
+			return new Map();
+		}
+
+		const rfRegion = // Prefer the actual region...
+			this.rfRegion
+				// ...over the specified one,
+				?? options?.rfRegion
+				// ... and fall back to the configured region on 500 series controllers as a last resort.
+				?? this.driver.options.rf?.region;
+
+		// Perform bulk request
+		try {
+			const bulkResult = await getAvailableFirmwareUpdatesBulk(
+				deviceIds,
 				{
 					userAgent: this.driver.getUserAgentStringWithComponents(
 						options?.additionalUserAgentComponents,
 					),
 					apiKey: options?.apiKey
 						?? this.driver.options.apiKeys?.firmwareUpdateService,
-					includePrereleases: options?.includePrereleases,
+					rfRegion,
 				},
 			);
+
+			// Map results back to node IDs
+			const result = new Map<number, FirmwareUpdateInfo[]>();
+			for (const [deviceKey, updates] of bulkResult) {
+				const nodeIds = nodeIdMap.get(deviceKey) ?? [];
+				// Filter out prerelease updates if desired
+				const filteredUpdates = options?.includePrereleases
+					? updates
+					: updates.filter((u) => u.channel === "stable");
+				// Apply the updates to all nodes that match this fingerprint
+				for (const nodeId of nodeIds) {
+					result.set(nodeId, filteredUpdates);
+				}
+			}
+			return result;
 		} catch (e: any) {
-			let message =
-				`Cannot check for firmware updates for node ${nodeId}: `;
+			let message = `Cannot check for firmware updates: `;
 			if (e.response) {
 				if (isObject(e.response.data)) {
 					if (typeof e.response.data.error === "string") {
@@ -9583,7 +9718,7 @@ export class ZWaveController
 			return SecurityBootstrapFailure.NoKeysConfigured;
 		}
 
-		const receivedKeys = new Map<SecurityClass, Uint8Array>();
+		const receivedKeys = new Map<SecurityClass, BytesView>();
 
 		const deleteTempKey = () => {
 			// Whatever happens, no further communication needs the temporary key

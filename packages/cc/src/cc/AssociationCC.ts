@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -37,6 +36,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { type AssociationAddress, AssociationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 
 export const AssociationCCValues = V.defineCCValues(
@@ -127,7 +127,7 @@ export class AssociationCCAPI extends PhysicalCCAPI {
 	 * Returns information about an association group.
 	 */
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getGroup(groupId: number) {
 		this.assertSupportsCommand(AssociationCommand, AssociationCommand.Get);
 

@@ -326,18 +326,30 @@
 			"label": "Alarm Threshold: Current",
 			"valueSize": 2,
 			"unit": "0.01 A",
-			"minValue": 1,
+			"minValue": 0,
 			"maxValue": 5000,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "33",
 			"label": "Alarm Threshold: Voltage",
 			"valueSize": 2,
 			"unit": "0.1 V",
-			"minValue": 1,
+			"minValue": 0,
 			"maxValue": 10000,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "34",

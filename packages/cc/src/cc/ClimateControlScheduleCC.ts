@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -40,6 +39,7 @@ import {
 	encodeSetbackState,
 	encodeSwitchpoint,
 } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ClimateControlScheduleCCValues = V.defineCCValues(
 	CommandClasses["Climate Control Schedule"],
@@ -155,7 +155,7 @@ export class ClimateControlScheduleCCAPI extends CCAPI {
 		return response?.changeCounter;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getOverride() {
 		this.assertSupportsCommand(
 			ClimateControlScheduleCommand,
@@ -252,7 +252,7 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 			});
 		}
 		this.payload = Bytes.concat([
-			Bytes.from([this.weekday & 0b111]),
+			[this.weekday & 0b111],
 			...allSwitchPoints.map((sp) => encodeSwitchpoint(sp)),
 		]);
 		return super.serialize(ctx);
@@ -263,19 +263,17 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 			...super.toLogEntry(ctx),
 			message: {
 				weekday: getEnumMemberName(Weekday, this.weekday),
-				switchpoints: `${
-					this.switchPoints
-						.map(
-							(sp) => `
+				switchpoints: this.switchPoints
+					.map(
+						(sp) => `
 · ${sp.hour.toString().padStart(2, "0")}:${
-								sp.minute.toString().padStart(
-									2,
-									"0",
-								)
-							} --> ${sp.state}`,
-						)
-						.join("")
-				}`,
+							sp.minute.toString().padStart(
+								2,
+								"0",
+							)
+						} --> ${sp.state}`,
+					)
+					.join(""),
 			},
 		};
 	}
@@ -337,19 +335,17 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 			...super.toLogEntry(ctx),
 			message: {
 				weekday: getEnumMemberName(Weekday, this.weekday),
-				schedule: `${
-					this.schedule
-						.map(
-							(sp) => `
+				schedule: this.schedule
+					.map(
+						(sp) => `
 · ${sp.hour.toString().padStart(2, "0")}:${
-								sp.minute.toString().padStart(
-									2,
-									"0",
-								)
-							} --> ${sp.state}`,
-						)
-						.join("")
-				}`,
+							sp.minute.toString().padStart(
+								2,
+								"0",
+							)
+						} --> ${sp.state}`,
+					)
+					.join(""),
 			},
 		};
 	}

@@ -23,7 +23,10 @@ import { staticExtends } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
 import type { Driver } from "../driver/Driver.js";
 import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper.js";
-import { VirtualNode } from "./VirtualNode.js";
+import {
+	VirtualNode,
+	getSecurityClassFromCommunicationProfile,
+} from "./VirtualNode.js";
 
 /**
  * Represents an endpoint of a virtual (broadcast, multicast) Z-Wave node.
@@ -114,22 +117,29 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 				return CCAPI.create(ccId, this.driver, endpoint);
 			}
 		};
-		// For mixed security classes, we need to create a wrapper
+		// For mixed security classes and/or mixed protocols (LR and non-LR), we need to create a wrapper
 		// that handles calling multiple API instances
-		if (this.node.hasMixedSecurityClasses) {
+
+		if (this.node.hasMixedCommunicationProfiles) {
 			const apiInstances = [
-				...this.node.nodesBySecurityClass.entries(),
-			].map(([secClass, nodes]) => {
-				// We need a separate virtual endpoint for each security class, so the API instances
-				// access the correct nodes.
+				...this.node.nodesByCommunicationProfile.entries(),
+			].map(([profile, nodes]) => {
+				// We need a separate virtual endpoint for each security class and protocol,
+				// so the API instances access the correct nodes.
 				const node = new VirtualNode(this.node.id, this.driver, nodes);
 				const endpoint = node.getEndpoint(this.index) ?? node;
+				const secClass = getSecurityClassFromCommunicationProfile(
+					profile,
+				);
 				return createCCAPI(endpoint, secClass);
 			});
 			return createMultiCCAPIWrapper(apiInstances);
 		} else {
-			// The node has a single security class, just reuse it
-			const securityClass = [...this.node.nodesBySecurityClass.keys()][0];
+			const profile =
+				[...this.node.nodesByCommunicationProfile.keys()][0];
+			const securityClass = getSecurityClassFromCommunicationProfile(
+				profile,
+			);
 			return createCCAPI(this, securityClass);
 		}
 	}

@@ -132,17 +132,18 @@ integrationTest(
 
 			const pingPromise = node.ping();
 
-			await wait(2000);
-
 			// The abort should have been issued
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SendDataAbort,
-			);
-
-			// And the stick should have been soft-reset
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SoftReset,
-			);
+			await Promise.all([
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SendDataAbort,
+					{ timeout: 2000 },
+				),
+				// And the stick should have been soft-reset
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SoftReset,
+					{ timeout: 2000 },
+				),
+			]);
 
 			// And the ping should eventually succeed
 			t.expect(await pingPromise).toBe(true);
@@ -225,17 +226,18 @@ integrationTest(
 
 			const pingPromise = node.ping();
 
-			await wait(2000);
-
 			// The abort should have been issued
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SendDataAbort,
-			);
-
-			// And the stick should have been soft-reset
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SoftReset,
-			);
+			await Promise.all([
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SendDataAbort,
+					{ timeout: 2000 },
+				),
+				// And the stick should have been soft-reset
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SoftReset,
+					{ timeout: 2000 },
+				),
+			]);
 
 			// The ping should eventually fail and the node be marked dead
 			t.expect(await pingPromise).toBe(false);
@@ -336,17 +338,18 @@ integrationTest(
 			const firstCommand = node.commandClasses.Basic.set(99);
 			const followupCommand = node.commandClasses.Basic.set(0);
 
-			await wait(2000);
-
 			// The abort should have been issued
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SendDataAbort,
-			);
-
-			// And the stick should have been soft-reset
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SoftReset,
-			);
+			await Promise.all([
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SendDataAbort,
+					{ timeout: 2000 },
+				),
+				// And the stick should have been soft-reset
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SoftReset,
+					{ timeout: 2000 },
+				),
+			]);
 
 			// The ping and the followup command should eventually succeed
 			await firstCommand;
@@ -484,12 +487,12 @@ integrationTest(
 			);
 			const followupCommand = node.commandClasses.Basic.set(0);
 
-			await wait(2500);
-
 			// Transmission should have been aborted
-			mockController.assertReceivedHostMessage(
+			await mockController.expectHostMessage(
 				(msg) => msg.functionType === FunctionType.SendDataAbort,
+				{ timeout: 2500 },
 			);
+
 			// but the stick should NOT have been soft-reset
 			t.expect(() =>
 				mockController.assertReceivedHostMessage(
@@ -713,16 +716,18 @@ integrationTestMulti(
 				priority: MessagePriority.Immediate,
 			}).set(0).catch((e) => e.code);
 
-			await wait(2500);
+			// Transmission should have been aborted and the stick should have been soft-reset
+			await Promise.all([
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SendDataAbort,
+					{ timeout: 2500 },
+				),
+				mockController.expectHostMessage(
+					(msg) => msg.functionType === FunctionType.SoftReset,
+					{ timeout: 2500 },
+				),
+			]);
 
-			// Transmission should have been aborted
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SendDataAbort,
-			);
-			// And the stick should have been soft-reset
-			mockController.assertReceivedHostMessage(
-				(msg) => msg.functionType === FunctionType.SoftReset,
-			);
 			mockController.clearReceivedHostMessages();
 
 			const followupCommand = node3.commandClasses.Basic.set(0).catch((

@@ -206,7 +206,7 @@ fileInput.addEventListener("change", async (event) => {
 		try {
 			const rawFile = new Uint8Array(await file.arrayBuffer());
 
-			let firmwareFile: Uint8Array;
+			let firmwareFile: BytesView;
 			let firmwareFilename: string;
 
 			// Check if the file is a ZIP archive and try to extract a single firmware file
@@ -234,7 +234,7 @@ fileInput.addEventListener("change", async (event) => {
 			);
 			const firmware = await extractFirmware(firmwareFile, format);
 
-			// Convert Uint8Array to ArrayBuffer
+			// Convert BytesView to ArrayBuffer
 			const arrayBuffer = new ArrayBuffer(firmware.data.length);
 			const view = new Uint8Array(arrayBuffer);
 			view.set(firmware.data);

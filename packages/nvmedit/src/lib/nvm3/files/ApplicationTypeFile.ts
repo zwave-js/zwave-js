@@ -53,7 +53,7 @@ export class ApplicationTypeFile extends NVMFile {
 		return super.serialize();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public toJSON() {
 		return {
 			...super.toJSON(),

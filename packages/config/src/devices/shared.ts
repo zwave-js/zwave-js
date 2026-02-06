@@ -8,4 +8,5 @@ export interface DeviceID {
 	productType: number;
 	productId: number;
 	firmwareVersion?: string;
+	sdkVersion?: string;
 }

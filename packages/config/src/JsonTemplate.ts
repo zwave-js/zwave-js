@@ -7,7 +7,7 @@ import path from "pathe";
 
 const IMPORT_KEY = "$import";
 const importSpecifierRegex =
-	/^(?<filename>(?:~\/)?[\w\d\/\\\._-]+\.json)?(?:#(?<selector>[\w\d\/\._-]+(?:\[0x[0-9a-fA-F]+\])?))?$/i;
+	/^(?<filename>(?:~\/)?[\w\d/\\._-]+\.json)?(?:#(?<selector>[\w\d/._-]+(?:\[0x[0-9a-fA-F]+\])?))?$/i;
 
 type FileCache = Map<string, Record<string, unknown>>;
 
@@ -119,7 +119,7 @@ function getImportStack(
 	selector: string | undefined,
 ): string {
 	const source = [...visited, selector ? `#${selector}` : undefined]
-		.reverse()
+		.toReversed()
 		.filter((s) => !!s) as string[];
 	if (source.length > 0) {
 		return `\nImport stack: ${source.map((s) => `\n  in ${s}`).join("")}`;

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -55,6 +54,7 @@ import {
 	HumidityControlSetpointType,
 	type HumidityControlSetpointValue,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const HumidityControlSetpointCCValues = V.defineCCValues(
 	CommandClasses["Humidity Control Setpoint"],
@@ -547,7 +547,7 @@ export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.setpointType & 0b1111]),
+			[this.setpointType & 0b1111],
 			encodeFloatWithScale(this.value, this.scale),
 		]);
 		return super.serialize(ctx);

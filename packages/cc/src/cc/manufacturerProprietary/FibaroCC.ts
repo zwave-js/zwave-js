@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -35,6 +34,7 @@ import type {
 	RefreshValuesContext,
 } from "../../lib/CommandClass.js";
 import { expectedCCResponse } from "../../lib/CommandClassDecorators.js";
+import type { CCEncodingContext, CCParsingContext } from "../../lib/traits.js";
 import {
 	ManufacturerProprietaryCC,
 	ManufacturerProprietaryCCAPI,
@@ -110,7 +110,7 @@ export enum FibaroCCIDs {
 
 @manufacturerProprietaryAPI(MANUFACTURERID_FIBARO)
 export class FibaroCCAPI extends ManufacturerProprietaryCCAPI {
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async fibaroVenetianBlindsGet() {
 		const cc = new FibaroVenetianBlindCCGet({
 			nodeId: this.endpoint.nodeId,
@@ -293,7 +293,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 			);
 		}
 		this.payload = Bytes.concat([
-			Bytes.from([this.fibaroCCId, this.fibaroCCCommand]),
+			[this.fibaroCCId, this.fibaroCCCommand],
 			this.payload,
 		]);
 		return super.serialize(ctx);

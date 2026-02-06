@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
 import "reflect-metadata";
 
 import { CommandClasses } from "@zwave-js/core";

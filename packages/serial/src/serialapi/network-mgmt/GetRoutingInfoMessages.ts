@@ -48,10 +48,10 @@ export class GetRoutingInfoRequest extends Message {
 			| (this.removeNonRepeaters ? 0b0100_0000 : 0);
 		this.payload = Bytes.concat([
 			nodeId,
-			Bytes.from([
+			[
 				optionsByte,
 				0, // callbackId - this must be 0 as per the docs
-			]),
+			],
 		]);
 		return super.serialize(ctx);
 	}
@@ -104,7 +104,7 @@ export class GetRoutingInfoResponse extends Message {
 	public toLogEntry(): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(),
-			message: { "node ids": `${this.nodeIds.join(", ")}` },
+			message: { "node ids": this.nodeIds.join(", ") },
 		};
 	}
 }

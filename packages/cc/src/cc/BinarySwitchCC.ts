@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -49,6 +48,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { BinarySwitchCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const BinarySwitchCCValues = V.defineCCValues(
 	CommandClasses["Binary Switch"],
@@ -91,7 +91,7 @@ export class BinarySwitchCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(
 			BinarySwitchCommand,
@@ -429,10 +429,10 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 		if (this.targetValue !== undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
-				Bytes.from([
+				[
 					encodeMaybeBoolean(this.targetValue),
 					(this.duration ?? Duration.default()).serializeReport(),
-				]),
+				],
 			]);
 		}
 		return super.serialize(ctx);

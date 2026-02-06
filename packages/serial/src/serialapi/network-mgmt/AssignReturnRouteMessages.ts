@@ -86,7 +86,7 @@ export class AssignReturnRouteRequest extends AssignReturnRouteRequestBase {
 		this.payload = Bytes.concat([
 			nodeId,
 			destinationNodeId,
-			Bytes.from([this.callbackId]),
+			[this.callbackId],
 		]);
 
 		return super.serialize(ctx);

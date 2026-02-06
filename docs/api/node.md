@@ -396,7 +396,7 @@ This method an array of firmware updates, each of which contains the following p
 
 ```ts
 interface Firmware {
-	data: Uint8Array;
+	data: BytesView;
 	firmwareTarget?: number;
 	firmwareId?: number;
 }
@@ -1017,6 +1017,7 @@ interface GenericDeviceClass {
 	readonly zwavePlusDeviceType?: string;
 	readonly requiresSecurity: boolean;
 	readonly maySupportBasicCC: boolean;
+	readonly supportsOptimisticValueUpdate: boolean;
 }
 ```
 
@@ -1532,7 +1533,7 @@ interface ZWaveNotificationCallbackArgs_EntryControlCC {
 	dataType: EntryControlDataTypes;
 	/** A human-readable label for the data type */
 	dataTypeLabel: string;
-	eventData?: Uint8Array | string;
+	eventData?: BytesView | string;
 }
 ```
 
@@ -1596,7 +1597,9 @@ interface ZWaveNotificationCallbackArgs_NotificationCC {
 	/** The human-readable label for the notification event */
 	eventLabel: string;
 	/** Additional information related to the event */
-	parameters?: NotificationCCReport["eventParameters"];
+	parameters?:
+		| NotificationCCReport["eventParameters"]
+		| Record<string, number | string | BytesView>;
 }
 ```
 

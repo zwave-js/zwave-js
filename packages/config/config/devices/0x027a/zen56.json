@@ -1,0 +1,238 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZEN56",
+	"description": "RGBW Dimmer",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0250"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "2",
+			"label": "Switch Type (S1)",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary",
+					"value": 1
+				},
+				{
+					"label": "Toggle",
+					"value": 2
+				},
+				{
+					"label": "Toggle (on up, off down)",
+					"value": 3
+				},
+				{
+					"label": "3-Way",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "3",
+			"label": "Switch Type (S2)",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary",
+					"value": 1
+				},
+				{
+					"label": "Toggle",
+					"value": 2
+				},
+				{
+					"label": "Toggle (on up, off down)",
+					"value": 3
+				},
+				{
+					"label": "3-Way",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Scene Control (S1)",
+			"defaultValue": 1
+		},
+		{
+			"#": "5",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Scene Control (S2)",
+			"defaultValue": 1
+		},
+		{
+			"#": "6",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "S2 Input"
+		},
+		{
+			"#": "7",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "S2 Controls White Channel",
+			"description": "Assign the S2 input to control the white channel."
+		},
+		{
+			"#": "8",
+			"label": "Color Cross-Fade Transition",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 99,
+			"defaultValue": 3,
+			"options": [
+				{
+					"label": "Instant",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "9",
+			"$import": "templates/zooz_template.json#dimmer_on_ramp_rate",
+			"defaultValue": 5
+		},
+		{
+			"#": "10",
+			"$import": "templates/zooz_template.json#dimmer_off_ramp_rate",
+			"defaultValue": 5
+		},
+		{
+			"#": "11",
+			"$import": "templates/zooz_template.json#zwave_on_dimmer_ramp_rate_match_manual",
+			"defaultValue": 100
+		},
+		{
+			"#": "12",
+			"$import": "templates/zooz_template.json#zwave_off_dimmer_ramp_rate_match_manual",
+			"defaultValue": 100
+		},
+		{
+			"#": "13",
+			"$import": "templates/zooz_template.json#auto_off_timer_5x"
+		},
+		{
+			"#": "14",
+			"$import": "templates/zooz_template.json#auto_on_timer_5x"
+		},
+		{
+			"#": "15",
+			"$import": "templates/zooz_template.json#auto_timer_unit_select_min_sec"
+		},
+		{
+			"#": "16",
+			"label": "Channel Endpoints Visibility",
+			"description": "Show or hide individual RGBW channel endpoints.",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Displayed",
+					"value": 0
+				},
+				{
+					"label": "Hidden",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "17",
+			"label": "Color Animation Presets",
+			"description": "Enable one of the color animation presets to set the mood.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Fireplace",
+					"value": 1
+				},
+				{
+					"label": "Storm",
+					"value": 2
+				},
+				{
+					"label": "Rainbow",
+					"value": 3
+				},
+				{
+					"label": "Polar lights",
+					"value": 4
+				},
+				{
+					"label": "Police",
+					"value": 5
+				}
+			]
+		},
+		{
+			"#": "18",
+			"label": "LED Indicator",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 0
+				},
+				{
+					"label": "On when dimmer is on",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Inclusion From Switch",
+			"description": "Enable or disable the ability to put the device into inclusion/exclusion mode from the wall switch.",
+			"defaultValue": 1
+		},
+		{
+			"#": "20",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Scene Control Multi-Tap",
+			"description": "Enable or disable multi-tap scene control functionality.",
+			"defaultValue": 1
+		}
+	],
+	"metadata": {
+		"inclusion": "Tap the Z-Wave button 3 times quickly. The LED indicator will blink green to indicate communication. It will turn green for 3 seconds if inclusion is successful or red for 3 seconds if inclusion fails.",
+		"exclusion": "Tap the Z-Wave button 3 times quickly. The LED indicator will blink green. It will turn green for 3 seconds when exclusion is complete.",
+		"reset": "Press and hold the Z-Wave button for 20 seconds. The LED indicator will flash during the process and turn red for 3 seconds to confirm successful reset.",
+		"manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-z-wave-long-range-rgbw-dimmer-zen56-manual.pdf"
+	}
+}

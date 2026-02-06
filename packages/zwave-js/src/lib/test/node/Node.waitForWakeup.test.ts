@@ -29,8 +29,8 @@ const test = baseTest.extend<LocalTestContext>({
 			const { driver } = await createAndStartTestingDriver({
 				skipNodeInterview: true,
 				loadConfiguration: false,
-				beforeStartup(mockPort, serial) {
-					const controller = new MockController({
+				async beforeStartup(mockPort, serial) {
+					const controller = await MockController.create({
 						mockPort,
 						serial,
 					});

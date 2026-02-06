@@ -43,7 +43,7 @@ integrationTest(
 				handleCC(controller, self, receivedCC) {
 					if (receivedCC instanceof SupervisionCCGet) {
 						const cc = new SupervisionCCReport({
-							nodeId: self.id,
+							nodeId: controller.ownNodeId,
 							sessionId: receivedCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,

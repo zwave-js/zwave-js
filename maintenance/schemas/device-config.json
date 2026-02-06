@@ -423,6 +423,10 @@
 					"type": "number",
 					"description": "The factory default value of this parameter."
 				},
+				"recommendedValue": {
+					"type": "number",
+					"description": "An optional recommended value for this parameter that may provide better device performance or behavior than the factory default."
+				},
 				"readOnly": {
 					"const": true,
 					"description": "Whether this parameter can only be read"
@@ -434,6 +438,49 @@
 				"allowManualEntry": {
 					"const": false,
 					"description": "Whether this parameter accepts any value between minValue and maxValue. If false, minValue and maxValue are optional, but options must be used to specify the allowed values."
+				},
+				"destructive": {
+					"type": "boolean",
+					"description": "Whether this parameter is destructive and should require confirmation before setting"
+				},
+				"allowed": {
+					"type": "array",
+					"description": "Defines the allowed values for this parameter as a combination of single values and ranges. Cannot be used together with minValue/maxValue or allowManualEntry: false.",
+					"minItems": 1,
+					"items": {
+						"oneOf": [
+							{
+								"type": "object",
+								"properties": {
+									"value": {
+										"type": "number",
+										"description": "A single allowed value"
+									}
+								},
+								"required": ["value"],
+								"additionalProperties": false
+							},
+							{
+								"type": "object",
+								"properties": {
+									"range": {
+										"type": "array",
+										"description": "A range of allowed values [from, to]",
+										"items": { "type": "number" },
+										"minItems": 2,
+										"maxItems": 2
+									},
+									"step": {
+										"type": "number",
+										"description": "Optional step size within the range (default: 1)",
+										"minimum": 1
+									}
+								},
+								"required": ["range"],
+								"additionalProperties": false
+							}
+						]
+					}
 				},
 				"options": {
 					"type": "array",
@@ -466,6 +513,10 @@
 						],
 						"additionalProperties": false
 					}
+				},
+				"hidden": {
+					"type": "boolean",
+					"description": "Whether this parameter should be hidden in UIs and outputs"
 				}
 			},
 			"additionalProperties": false,

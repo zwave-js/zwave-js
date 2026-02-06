@@ -2,6 +2,7 @@ import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { NVMAccess, type NVMIO } from "@zwave-js/nvmedit";
 import { FunctionType } from "@zwave-js/serial";
 import { nvmSizeToBufferSize } from "@zwave-js/serial/serialapi";
+import type { BytesView } from "@zwave-js/shared";
 import type { ZWaveController } from "./Controller.js";
 
 /** NVM IO over serial for 500 series controllers */
@@ -70,7 +71,7 @@ export class SerialNVMIO500 implements NVMIO {
 	async read(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		// Ensure we're not reading out of bounds
 		const size = this.size;
 		if (offset < 0 || offset >= size) {
@@ -96,7 +97,7 @@ export class SerialNVMIO500 implements NVMIO {
 
 	async write(
 		offset: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<{ bytesWritten: number; endOfFile: boolean }> {
 		// Ensure we're not writing out of bounds
 		const size = this.size;
@@ -162,10 +163,10 @@ export class SerialNVMIO700 implements NVMIO {
 	private _read: (
 		offset: number,
 		length: number,
-	) => Promise<{ buffer: Uint8Array; endOfFile: boolean }>;
+	) => Promise<{ buffer: BytesView; endOfFile: boolean }>;
 	private _write: (
 		offset: number,
-		buffer: Uint8Array,
+		buffer: BytesView,
 	) => Promise<{ endOfFile: boolean }>;
 	private _close: () => Promise<void>;
 
@@ -209,7 +210,7 @@ export class SerialNVMIO700 implements NVMIO {
 	async read(
 		offset: number,
 		length: number,
-	): Promise<{ buffer: Uint8Array; endOfFile: boolean }> {
+	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
 		// Ensure we're not reading out of bounds
 		const size = this.size;
 		if (offset < 0 || offset >= size) {
@@ -229,7 +230,7 @@ export class SerialNVMIO700 implements NVMIO {
 
 	async write(
 		offset: number,
-		data: Uint8Array,
+		data: BytesView,
 	): Promise<{ bytesWritten: number; endOfFile: boolean }> {
 		// Ensure we're not writing out of bounds
 		const size = this.size;

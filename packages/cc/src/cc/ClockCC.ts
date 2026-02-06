@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -29,6 +28,7 @@ import {
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
 import { ClockCommand, Weekday } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // @noSetValueAPI - This CC has no simple value to set
 
@@ -44,7 +44,7 @@ export class ClockCCAPI extends CCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(ClockCommand, ClockCommand.Get);
 

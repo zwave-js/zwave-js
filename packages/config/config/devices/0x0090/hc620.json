@@ -11,6 +11,10 @@
 		},
 		{
 			"productType": "0x0811",
+			"productId": "0x06a8"
+		},
+		{
+			"productType": "0x0811",
 			"productId": "0x13a8",
 			"zwaveAllianceId": 4081
 		},
@@ -18,6 +22,19 @@
 			"productType": "0x0811",
 			"productId": "0x23a8",
 			"zwaveAllianceId": 4184
+		},
+		{
+			"productType": "0x0811",
+			"productId": "0x23a9"
+		},
+		{
+			"productType": "0x0811",
+			"productId": "0x23b9"
+		},
+		{
+			"productType": "0x0811",
+			"productId": "0x00a9",
+			"zwaveAllianceId": 5046
 		}
 	],
 	"firmwareVersion": {

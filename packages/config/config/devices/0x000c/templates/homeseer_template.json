@@ -40,6 +40,63 @@
 			}
 		]
 	},
+	"status_mode_choices_ext": {
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 11,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "Red",
+				"value": 1
+			},
+			{
+				"label": "Green",
+				"value": 2
+			},
+			{
+				"label": "Blue",
+				"value": 3
+			},
+			{
+				"label": "Magenta",
+				"value": 4
+			},
+			{
+				"label": "Yellow",
+				"value": 5
+			},
+			{
+				"label": "Cyan",
+				"value": 6
+			},
+			{
+				"label": "White",
+				"value": 7
+			},
+			{
+				"label": "Orange",
+				"value": 8
+			},
+			{
+				"label": "Teal",
+				"value": 9
+			},
+			{
+				"label": "Pink",
+				"value": 10
+			},
+			{
+				"label": "Custom",
+				"value": 11
+			}
+		]
+	},
 	"led_colors": {
 		"valueSize": 1,
 		"minValue": 0,
@@ -74,6 +131,59 @@
 			{
 				"label": "Cyan",
 				"value": 6
+			}
+		]
+	},
+	"led_colors_ext": {
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 10,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "White",
+				"value": 0
+			},
+			{
+				"label": "Red",
+				"value": 1
+			},
+			{
+				"label": "Green",
+				"value": 2
+			},
+			{
+				"label": "Blue",
+				"value": 3
+			},
+			{
+				"label": "Magenta",
+				"value": 4
+			},
+			{
+				"label": "Yellow",
+				"value": 5
+			},
+			{
+				"label": "Cyan",
+				"value": 6
+			},
+			{
+				"label": "Pink",
+				"value": 7
+			},
+			{
+				"label": "Orange",
+				"value": 8
+			},
+			{
+				"label": "Teal",
+				"value": 9
+			},
+			{
+				"label": "Custom",
+				"value": 10
 			}
 		]
 	},
@@ -187,6 +297,13 @@
 		"label": "Blink Frequency",
 		"description": "Sets the blink frequency for LEDs; 0 for off",
 		"defaultValue": 0
+	},
+	"led_brightness_level": {
+		"label": "LED Brightness Level",
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 6,
+		"defaultValue": 5
 	},
 	"pir_trigger_off": {
 		"label": "PIR Trigger Off Period",
@@ -360,24 +477,6 @@
 			{
 				"label": "Last",
 				"value": 2
-			}
-		]
-	},
-	"load_state": {
-		"label": "Load State",
-		"description": "Last state of the switch load",
-		"valueSize": 1,
-		"defaultValue": 0,
-		"allowManualEntry": false,
-		"readonly": true,
-		"options": [
-			{
-				"label": "Off",
-				"value": 0
-			},
-			{
-				"label": "On",
-				"value": 1
 			}
 		]
 	}

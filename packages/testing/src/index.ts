@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-exports */
 export * from "./CCSpecificCapabilities.js";
 export * from "./MockController.js";
 export {

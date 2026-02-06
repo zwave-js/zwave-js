@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated */
 import { isObject } from "alcalzone-shared/typeguards";
 import type { EventEmitter } from "node:events";
 import type { Duplex } from "node:stream";

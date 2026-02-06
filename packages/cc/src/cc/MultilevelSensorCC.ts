@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -65,6 +64,7 @@ import {
 	MultilevelSensorCommand,
 	type MultilevelSensorValue,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import type { GetUserPreferences } from "../lib/traits.js";
 
 export const MultilevelSensorCCValues = V.defineCCValues(
@@ -251,7 +251,7 @@ export class MultilevelSensorCCAPI extends PhysicalCCAPI {
 	): Promise<MaybeNotKnown<number>>;
 
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get(sensorType?: number, scale?: number) {
 		this.assertSupportsCommand(
 			MultilevelSensorCommand,
@@ -744,7 +744,7 @@ export class MultilevelSensorCCReport extends MultilevelSensorCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.type]),
+			[this.type],
 			encodeFloatWithScale(this.value, this.scale),
 		]);
 		return super.serialize(ctx);
@@ -957,7 +957,7 @@ export class MultilevelSensorCCSupportedScaleReport extends MultilevelSensorCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.sensorType]),
+			[this.sensorType],
 			encodeBitMask(this.supportedScales, 4, 0),
 		]);
 		return super.serialize(ctx);

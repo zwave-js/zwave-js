@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, type BytesView } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
 import type {
 	SetbackSpecialState,
@@ -37,7 +37,7 @@ export function encodeSetbackState(state: SetbackState): Bytes {
  * Decodes a setback state used in a ThermostatSetbackCC
  */
 export function decodeSetbackState(
-	data: Uint8Array,
+	data: BytesView,
 	offset: number = 0,
 ): SetbackState | undefined {
 	const val = Bytes.view(data).readInt8(offset);
@@ -57,7 +57,7 @@ export function decodeSetbackState(
  * @publicAPI
  * Decodes a switch point used in a ClimateControlScheduleCC
  */
-export function decodeSwitchpoint(data: Uint8Array): Switchpoint {
+export function decodeSwitchpoint(data: BytesView): Switchpoint {
 	return {
 		hour: data[0] & 0b000_11111,
 		minute: data[1] & 0b00_111111,
@@ -89,7 +89,7 @@ export function encodeSwitchpoint(point: Switchpoint): Bytes {
  * @publicAPI
  * Decodes timezone information used in time related CCs
  */
-export function parseTimezone(data: Uint8Array): Timezone {
+export function parseTimezone(data: BytesView): Timezone {
 	const hourSign = !!(data[0] & 0b1000_0000);
 	const hour = data[0] & 0b0111_1111;
 	const minute = data[1];

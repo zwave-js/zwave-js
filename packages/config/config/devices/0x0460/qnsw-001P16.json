@@ -36,6 +36,12 @@
 			"label": "SW1 Switch Type"
 		},
 		{
+			"#": "7",
+			"$if": "firmwareVersion >= 13.00",
+			"$import": "templates/wave_template.json#detached_mode",
+			"label": "Detach O Output"
+		},
+		{
 			"#": "17",
 			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off",
 			"label": "O1: State After Power Failure"
@@ -72,23 +78,32 @@
 		},
 		{
 			"#": "91",
+			"$if": "firmwareVersion < 13.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Water"
 		},
 		{
 			"#": "92",
+			"$if": "firmwareVersion < 13.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Smoke"
 		},
 		{
 			"#": "93",
+			"$if": "firmwareVersion < 13.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: CO"
 		},
 		{
 			"#": "94",
+			"$if": "firmwareVersion < 13.00",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Heat"
+		},
+		{
+			"#": "117",
+			"$if": "firmwareVersion >= 13.00",
+			"$import": "templates/wave_template.json#remote_reboot"
 		},
 		{
 			"#": "120",

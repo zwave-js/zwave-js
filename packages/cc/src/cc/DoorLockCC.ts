@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -55,6 +54,7 @@ import {
 	DoorLockMode,
 	DoorLockOperationType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 	...V.staticProperty(
@@ -438,7 +438,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCapabilities() {
 		this.assertSupportsCommand(
 			DoorLockCommand,
@@ -472,7 +472,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(
 			DoorLockCommand,
@@ -538,7 +538,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getConfiguration() {
 		this.assertSupportsCommand(
 			DoorLockCommand,

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -14,6 +13,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	stringToUint8ArrayUTF16BE,
 	uint8ArrayToStringUTF16BE,
 } from "@zwave-js/shared";
@@ -46,6 +46,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { NodeNamingAndLocationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const NodeNamingAndLocationCCValues = V.defineCCValues(
 	CommandClasses["Node Naming and Location"],
@@ -306,7 +307,7 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 			1 + this.name.length * (encoding === "ascii" ? 1 : 2),
 		);
 		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let nameBuffer: Uint8Array;
+		let nameBuffer: BytesView;
 		if (encoding === "utf16le") {
 			nameBuffer = stringToUint8ArrayUTF16BE(this.name);
 		} else {
@@ -418,7 +419,7 @@ export class NodeNamingAndLocationCCLocationSet
 			1 + this.location.length * (encoding === "ascii" ? 1 : 2),
 		);
 		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let locationBuffer: Uint8Array;
+		let locationBuffer: BytesView;
 		if (encoding === "utf16le") {
 			locationBuffer = stringToUint8ArrayUTF16BE(this.location);
 		} else {

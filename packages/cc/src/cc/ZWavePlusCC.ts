@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -31,6 +30,7 @@ import {
 	ZWavePlusNodeType,
 	ZWavePlusRoleType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // SDS13782 The advertised Z-Wave Plus Version, Role Type and Node Type information values
 // MUST be identical for the Root Device and all Multi Channel End Points
@@ -73,7 +73,7 @@ export class ZWavePlusCCAPI extends PhysicalCCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(ZWavePlusCommand, ZWavePlusCommand.Get);
 

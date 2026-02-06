@@ -3,22 +3,34 @@ import os from "node:os";
 import path from "node:path";
 import { SerialPort } from "serialport";
 import type { EnumeratedPort, Serial } from "../serialport/Bindings.js";
+import { createESPHomeFactory } from "../serialport/ESPHomeSocket.js";
 import { createNodeSerialPortFactory } from "../serialport/NodeSerialPort.js";
 import { createNodeSocketFactory } from "../serialport/NodeSocket.js";
 
 /** An implementation of the Serial bindings for Node.js */
 export const serial: Serial = {
-	createFactoryByPath(path) {
+	async createFactoryByPath(path) {
 		if (path.startsWith("tcp://")) {
 			const url = new URL(path);
-			return Promise.resolve(createNodeSocketFactory({
+			return createNodeSocketFactory({
 				host: url.hostname,
 				port: parseInt(url.port),
-			}));
+			});
+		} else if (path.startsWith("esphome://")) {
+			// ESPHome connection: esphome://host:port or esphome://host:port?key=base64key
+			// If key parameter is present, use encrypted (Noise) connection
+			const url = new URL(path);
+			const encryptionKey = url.searchParams.get("key") ?? undefined;
+
+			return createESPHomeFactory({
+				host: url.hostname,
+				port: url.port ? parseInt(url.port) : undefined,
+				encryptionKey,
+			});
 		} else {
-			return Promise.resolve(createNodeSerialPortFactory(
+			return createNodeSerialPortFactory(
 				path,
-			));
+			);
 		}
 	},
 

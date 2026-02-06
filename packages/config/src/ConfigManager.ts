@@ -66,7 +66,7 @@ export class ConfigManager {
 	private async getLogger(): Promise<ConfigLogger> {
 		if (!this._logContainer) {
 			this._logContainer =
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// oxlint-disable-next-line typescript/ban-ts-comment
 				// @ts-ignore - For some reason, VSCode does not like this import, although tsc is fine with it
 				(await import("#default_bindings/log")).log({
 					enabled: false,
@@ -357,12 +357,14 @@ export class ConfigManager {
 	 * @param productId The product id of the device
 	 * @param firmwareVersion If known, configuration for a specific firmware version can be loaded.
 	 * If this is `undefined` or not given, the first matching file with a defined firmware range will be returned.
+	 * @param sdkVersion If known, the SDK version can be used in conditional settings.
 	 */
 	public async lookupDevice(
 		manufacturerId: number,
 		productType: number,
 		productId: number,
 		firmwareVersion?: string,
+		sdkVersion?: string,
 	): Promise<DeviceConfig | undefined> {
 		const ret = await this.lookupDevicePreserveConditions(
 			manufacturerId,
@@ -375,6 +377,7 @@ export class ConfigManager {
 			productType,
 			productId,
 			firmwareVersion,
+			sdkVersion,
 		});
 	}
 }

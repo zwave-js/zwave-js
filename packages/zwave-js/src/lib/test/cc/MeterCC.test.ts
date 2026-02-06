@@ -21,7 +21,7 @@ import { test } from "vitest";
 import * as nodeUtils from "../../node/utils.js";
 import { createTestNode } from "../mocks.js";
 
-function buildCCBuffer(payload: Uint8Array): Uint8Array {
+function buildCCBuffer(payload: BytesView): BytesView {
 	return Bytes.concat([
 		Uint8Array.from([
 			CommandClasses.Meter, // CC

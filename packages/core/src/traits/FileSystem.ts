@@ -1,11 +1,13 @@
 // FIXME: Get rid of this once the legacy FS bindings are removed
 
+import type { BytesView } from "@zwave-js/shared";
+
 /** Defines which methods must be supported by a replacement filesystem */
 export interface FileSystem {
 	ensureDir(path: string): Promise<void>;
 	writeFile(
 		file: string,
-		data: string | Uint8Array,
+		data: string | BytesView,
 		options?:
 			| { encoding: BufferEncoding }
 			| BufferEncoding,

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -16,7 +15,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, pick } from "@zwave-js/shared";
+import { Bytes, type BytesView, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
@@ -41,6 +40,7 @@ import {
 	type EndpointAddress,
 	MultiChannelAssociationCommand,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 import { AssociationCCValues } from "./AssociationCC.js";
 
@@ -132,7 +132,7 @@ function serializeMultiChannelAssociationDestination(
 	return payload;
 }
 
-function deserializeMultiChannelAssociationDestination(data: Uint8Array): {
+function deserializeMultiChannelAssociationDestination(data: BytesView): {
 	nodeIds: number[];
 	endpoints: EndpointAddress[];
 } {
@@ -222,7 +222,7 @@ export class MultiChannelAssociationCCAPI extends PhysicalCCAPI {
 	 * Returns information about an association group.
 	 */
 	@validateArgs()
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getGroup(groupId: number) {
 		this.assertSupportsCommand(
 			MultiChannelAssociationCommand,
@@ -656,7 +656,7 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.groupId]),
+			[this.groupId],
 			serializeMultiChannelAssociationDestination(
 				this.nodeIds,
 				this.endpoints,
@@ -727,7 +727,7 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.groupId || 0]),
+			[this.groupId || 0],
 			serializeMultiChannelAssociationDestination(
 				this.nodeIds || [],
 				this.endpoints || [],
@@ -855,11 +855,11 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 			this.endpoints,
 		);
 		this.payload = Bytes.concat([
-			Bytes.from([
+			[
 				this.groupId,
 				this.maxNodes,
 				this.reportsToFollow,
-			]),
+			],
 			destinations,
 		]);
 		return super.serialize(ctx);

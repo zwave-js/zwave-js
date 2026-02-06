@@ -137,6 +137,7 @@ When authoring and reviewing configuration files, consistency is key for maintai
 - Use `unsigned: true` for parameters interpreted as unsigned values
 - Mark parameters as `readOnly` or `writeOnly` when applicable
 - Set appropriate `defaultValue` (required unless `readOnly`)
+- Use `recommendedValue` sparingly, only when there's a compelling reason to suggest a value different from the factory default that would provide better device performance or behavior and benefit most users. Note that recommended values are only automatically applied when the `applyRecommendedConfigParamValues` driver option is enabled (disabled by default).
 
 ### Units
 
@@ -254,10 +255,11 @@ The `scenes` property allows defining custom labels and descriptions for Central
 
 - Conditional settings typically apply when reviewing hand-edited config files, not when adding new ones
 - Use `$if` property to make parameters/settings conditional based on firmware version or device variants
-- Available variables: `manufacturerId`, `productType`, `productId`, `firmwareVersion`
+- Available variables: `manufacturerId`, `productType`, `productId`, `firmwareVersion`, `sdkVersion`
 - Supports operators: `<`, `<=`, `>`, `>=`, `===`, `&&`, `||`, `(...)`
 - Version comparisons support patch numbers (1.2.3) with missing patch assumed as 0
 - Convert primitive values to objects with `value` property when making conditional
+- `sdkVersion` is rarely needed; avoid using it unless asked to do so
 
 Example:
 

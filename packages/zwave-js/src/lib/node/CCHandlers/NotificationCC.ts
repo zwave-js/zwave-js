@@ -1,10 +1,13 @@
 import {
 	DoorLockCCValues,
 	DoorLockMode,
+	type GetUserPreferences,
 	LockCCValues,
 	type NotificationCCReport,
 	NotificationCCValues,
 	type PersistValuesContext,
+	UserCodeCC,
+	UserIDStatus,
 	getEffectiveCCVersion,
 } from "@zwave-js/cc";
 import {
@@ -14,7 +17,9 @@ import {
 } from "@zwave-js/cc/NotificationCC";
 import {
 	CommandClasses,
+	type EndpointId,
 	type GetSupportedCCVersion,
+	type GetValueDB,
 	type LogNode,
 	type NodeId,
 	type Notification,
@@ -26,12 +31,16 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import {
+	type BytesView,
 	type Timer,
 	isUint8Array,
 	setTimer,
 	stringify,
 } from "@zwave-js/shared";
 import type { ZWaveNode } from "../Node.js";
+import type {
+	ZWaveNotificationCallbackArgs_NotificationCC,
+} from "../_Types.js";
 import type { NodeValues } from "../mixins/40_Values.js";
 
 export interface NotificationHandlerStore {
@@ -46,7 +55,7 @@ export function getDefaultNotificationHandlerStore(): NotificationHandlerStore {
 
 /** Handles the receipt of a Notification Report */
 export function handleNotificationReport(
-	ctx: PersistValuesContext & LogNode,
+	ctx: PersistValuesContext & LogNode & GetUserPreferences,
 	node: ZWaveNode,
 	command: NotificationCCReport,
 	store: NotificationHandlerStore,
@@ -165,7 +174,7 @@ export function handleNotificationReport(
 		}
 
 		// Perform some heuristics on the known notification
-		handleKnownNotification(node, command);
+		handleKnownNotification(ctx, node, command);
 
 		let allowIdleReset: boolean;
 		if (!valueConfig) {
@@ -177,17 +186,68 @@ export function handleNotificationReport(
 			// This is an event
 			const endpoint = node.getEndpoint(command.endpointIndex)
 				?? node;
+
+			// Build the notification event args
+			const eventArgs: ZWaveNotificationCallbackArgs_NotificationCC = {
+				type: command.notificationType,
+				event: value,
+				label: notification.name,
+				eventLabel: valueConfig.label,
+				parameters: command.eventParameters,
+			};
+
+			// If the lookupUserIdInNotificationEvents preference is enabled and the event contains a userId,
+			// look up the user code and status and add them to the parameters
+			const prefs = ctx.getUserPreferences();
+			if (
+				prefs.lookupUserIdInNotificationEvents
+				&& command.eventParameters != null
+				&& typeof command.eventParameters === "object"
+				&& !isUint8Array(command.eventParameters)
+				&& "userId" in command.eventParameters
+				&& typeof command.eventParameters.userId === "number"
+			) {
+				const userId = command.eventParameters.userId;
+				const nodeEndpoint: EndpointId = {
+					nodeId: node.id,
+					index: command.endpointIndex,
+					virtual: false,
+				};
+
+				// Create a new parameters object with the additional fields
+				const enhancedParameters: Record<
+					string,
+					number | string | BytesView
+				> = {
+					...command.eventParameters,
+				};
+
+				const userIdStatus = UserCodeCC.getUserIdStatusCached(
+					ctx,
+					nodeEndpoint,
+					userId,
+				);
+				if (userIdStatus != null) {
+					enhancedParameters.userIdStatus = userIdStatus;
+				}
+
+				const userCode = UserCodeCC.getUserCodeCached(
+					ctx,
+					nodeEndpoint,
+					userId,
+				);
+				if (userCode != null) {
+					enhancedParameters.userCode = userCode;
+				}
+
+				eventArgs.parameters = enhancedParameters;
+			}
+
 			node.emit(
 				"notification",
 				endpoint,
 				CommandClasses.Notification,
-				{
-					type: command.notificationType,
-					event: value,
-					label: notification.name,
-					eventLabel: valueConfig.label,
-					parameters: command.eventParameters,
-				},
+				eventArgs,
 			);
 
 			// We may need to reset some linked states to idle
@@ -290,11 +350,12 @@ export function handleNotificationReport(
 }
 
 function handleKnownNotification(
+	ctx: GetValueDB,
 	node: ZWaveNode,
 	command: NotificationCCReport,
 ): void {
-	const lockEvents = [0x01, 0x03, 0x05, 0x09];
-	const unlockEvents = [0x02, 0x04, 0x06];
+	const lockEvents = new Set([0x01, 0x03, 0x05, 0x09]);
+	const unlockEvents = new Set([0x02, 0x04, 0x06]);
 	const doorStatusEvents = [
 		// Actual status
 		0x16,
@@ -306,8 +367,8 @@ function handleKnownNotification(
 	if (
 		// Access Control, manual/keypad/rf/auto (un)lock operation
 		command.notificationType === 0x06
-		&& (lockEvents.includes(command.notificationEvent as number)
-			|| unlockEvents.includes(command.notificationEvent as number))
+		&& (lockEvents.has(command.notificationEvent as number)
+			|| unlockEvents.has(command.notificationEvent as number))
 		&& (node.supportsCC(CommandClasses["Door Lock"])
 			|| node.supportsCC(CommandClasses.Lock))
 	) {
@@ -316,7 +377,7 @@ function handleKnownNotification(
 		// different key. This way the device can notify devices which don't belong
 		// to the S2 Access Control key group of changes in its state.
 
-		const isLocked = lockEvents.includes(
+		const isLocked = lockEvents.has(
 			command.notificationEvent as number,
 		);
 
@@ -370,6 +431,30 @@ function handleKnownNotification(
 				tiltValueId,
 				command.eventParameters === 0x01 ? 0x01 : 0x00,
 			);
+		}
+	} else if (
+		// Access Control, all user codes deleted
+		command.notificationType === 0x06
+		&& command.notificationEvent === 0x0c
+		&& node.supportsCC(CommandClasses["User Code"])
+	) {
+		// Clear all user codes from the cache
+		const endpoint: EndpointId = {
+			nodeId: node.id,
+			index: command.endpointIndex,
+			virtual: false,
+		};
+		const numUsers = UserCodeCC.getSupportedUsersCached(ctx, endpoint) ?? 0;
+
+		// Clear each user code by setting status to Available and code to empty
+		for (let userId = 1; userId <= numUsers; userId++) {
+			UserCodeCC.setUserIdStatusCached(
+				ctx,
+				endpoint,
+				userId,
+				UserIDStatus.Available,
+			);
+			UserCodeCC.setUserCodeCached(ctx, endpoint, userId, "");
 		}
 	}
 }

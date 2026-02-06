@@ -5,6 +5,7 @@ import {
 	UserCodeCCAdminCodeSet,
 	UserCodeCCCapabilitiesGet,
 	UserCodeCCCapabilitiesReport,
+	UserCodeCCExtendedUserCodeSet,
 	UserCodeCCGet,
 	UserCodeCCKeypadModeGet,
 	UserCodeCCKeypadModeReport,
@@ -124,6 +125,63 @@ const respondToUserCodeSet: MockNodeBehavior = {
 				return { action: "ok" };
 			}
 			return { action: "fail" };
+		}
+	},
+};
+
+const respondToExtendedUserCodeSet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof UserCodeCCExtendedUserCodeSet) {
+			const capabilities = {
+				...defaultCapabilities,
+				...self.getCCCapabilities(
+					CommandClasses["User Code"],
+					receivedCC.endpointIndex,
+				),
+			};
+
+			// Process each user code in the request
+			for (const userCodeData of receivedCC.userCodes) {
+				const userId = userCodeData.userId;
+				const userIdStatus = userCodeData.userIdStatus;
+
+				// Skip if userId is 0 and we're clearing all codes
+				if (userId === 0 && userIdStatus === UserIDStatus.Available) {
+					// Clear all user codes
+					const numUsers = capabilities.numUsers ?? 0;
+					for (let i = 1; i <= numUsers; i++) {
+						self.state.set(
+							StateKeys.userIdStatus(i),
+							UserIDStatus.Available,
+						);
+						self.state.set(StateKeys.userCode(i), undefined);
+					}
+					continue;
+				}
+
+				if (
+					capabilities.numUsers != undefined
+					&& capabilities.numUsers >= userId
+				) {
+					self.state.set(
+						StateKeys.userIdStatus(userId),
+						userIdStatus,
+					);
+
+					const code = userIdStatus !== UserIDStatus.Available
+							// @ts-expect-error Just making sure that we're not accidentally
+							// passing the wrong status
+							&& userIdStatus !== UserIDStatus.StatusNotAvailable
+						? userCodeData.userCode
+						: undefined;
+
+					self.state.set(StateKeys.userCode(userId), code);
+				} else {
+					return { action: "fail" };
+				}
+			}
+
+			return { action: "ok" };
 		}
 	},
 };
@@ -305,6 +363,7 @@ export const UserCodeCCBehaviors = [
 	respondToUsersNumberGet,
 	respondToUserGet,
 	respondToUserCodeSet,
+	respondToExtendedUserCodeSet,
 	respondToUserCodeCapabilitiesGet,
 	respondToUserCodeKeypadModeGet,
 	respondToUserCodeKeypadModeSet,

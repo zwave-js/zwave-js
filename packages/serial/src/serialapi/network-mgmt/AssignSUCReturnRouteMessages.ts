@@ -85,7 +85,7 @@ export class AssignSUCReturnRouteRequest
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
 		const nodeId = encodeNodeID(this.nodeId, ctx.nodeIdType);
-		this.payload = Bytes.concat([nodeId, Bytes.from([this.callbackId])]);
+		this.payload = Bytes.concat([nodeId, [this.callbackId]]);
 
 		return super.serialize(ctx);
 	}

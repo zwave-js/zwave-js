@@ -26,7 +26,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
-import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import { tryParseRSSI } from "../transport/SendDataShared.js";
 import type { MessageWithCC } from "../utils.js";
 import { ApplicationCommandStatusFlags } from "./ApplicationCommandRequest.js";
@@ -36,7 +36,7 @@ export type BridgeApplicationCommandRequestOptions =
 		| { command: CommandClass }
 		| {
 			nodeId: number;
-			serializedCC: Uint8Array;
+			serializedCC: BytesView;
 		}
 	)
 	& {
@@ -167,8 +167,8 @@ export class BridgeApplicationCommandRequest extends Message
 
 	public readonly ownNodeId: number;
 
-	public serializedCC: Uint8Array | undefined;
-	public async serializeCC(ctx: CCEncodingContext): Promise<Uint8Array> {
+	public serializedCC: BytesView | undefined;
+	public async serializeCC(ctx: CCEncodingContext): Promise<BytesView> {
 		if (!this.serializedCC) {
 			if (!this.command) {
 				throw new ZWaveError(

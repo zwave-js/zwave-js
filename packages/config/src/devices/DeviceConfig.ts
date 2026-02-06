@@ -4,9 +4,11 @@ import {
 	ZWaveErrorCodes,
 	deflateSync,
 	digest,
+	inflateSync,
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	type JSONObject,
 	cloneDeep,
 	enumFilesRecursive,
@@ -786,6 +788,8 @@ scene number ${keyNum} must be between 1 and 255`,
 	}
 }
 
+export type DeviceConfigHashVersion = 0 | 1 | 2 | 3;
+
 export class DeviceConfig {
 	public static async from(
 		fs: ReadFileSystemInfo & ReadFile,
@@ -891,7 +895,7 @@ export class DeviceConfig {
 		}
 	}
 
-	private getHashable(version: 0 | 1 | 2): Record<string, any> {
+	private getHashable(version: DeviceConfigHashVersion): Record<string, any> {
 		// We only need to compare the information that is persisted elsewhere:
 		// - config parameters
 		// - functional association settings
@@ -908,7 +912,7 @@ export class DeviceConfig {
 
 		const sortObject = (obj: Record<string, any>) => {
 			const ret: Record<string, any> = {};
-			for (const key of Object.keys(obj).sort()) {
+			for (const key of Object.keys(obj).toSorted()) {
 				ret[key] = obj[key];
 			}
 			return ret;
@@ -941,7 +945,9 @@ export class DeviceConfig {
 					param.valueBitMask ? `[${num2hex(param.valueBitMask)}]` : ""
 				}`;
 			target.paramInformation = [...map.values()]
-				.sort((a, b) => getParamKey(a).localeCompare(getParamKey(b)))
+				.toSorted((a, b) =>
+					getParamKey(a).localeCompare(getParamKey(b))
+				)
 				.map((p) => cloneDeep(p));
 		};
 
@@ -1018,7 +1024,8 @@ export class DeviceConfig {
 				c.removeCCs = Object.fromEntries(this.compat.removeCCs);
 			}
 			if (this.compat.treatSetAsReport) {
-				c.treatSetAsReport = [...this.compat.treatSetAsReport].sort();
+				c.treatSetAsReport = [...this.compat.treatSetAsReport]
+					.toSorted();
 			}
 
 			c = sortObject(c);
@@ -1027,7 +1034,7 @@ export class DeviceConfig {
 			}
 		}
 
-		if (version > 1) {
+		if (version >= 2) {
 			// From version 2 and on, we ignore labels and descriptions, and load them dynamically
 			for (
 				const ep of Object.values<Record<string, any>>(
@@ -1044,6 +1051,36 @@ export class DeviceConfig {
 			}
 		}
 
+		if (version < 3) {
+			// Version 3 added the `allowed` field. When targeting older versions
+			// and the allowed field only has a single range, replace it with
+			// minValue/maxValue for compatibility
+			for (
+				const ep of Object.values<Record<string, any>>(
+					hashable.endpoints ?? {},
+				)
+			) {
+				for (const param of ep.paramInformation ?? []) {
+					if (
+						isArray(param.allowed)
+						&& param.allowed.length === 1
+						&& isObject(param.allowed[0])
+					) {
+						const allowed = param.allowed[0] as Record<string, any>;
+						if (
+							typeof allowed.from === "number"
+							&& typeof allowed.to === "number"
+							&& (allowed.step == undefined || allowed.step === 1)
+						) {
+							param.minValue = allowed.from;
+							param.maxValue = allowed.to;
+							delete param.allowed;
+						}
+					}
+				}
+			}
+		}
+
 		hashable = sortObject(hashable);
 		return hashable;
 	}
@@ -1052,14 +1089,14 @@ export class DeviceConfig {
 	 * Returns a hash code that can be used to check whether a device config has changed enough to require a re-interview.
 	 */
 	public async getHash(
-		version: 0 | 1 | 2 = DeviceConfig.maxHashVersion,
-	): Promise<Uint8Array> {
+		version: DeviceConfigHashVersion = DeviceConfig.maxHashVersion,
+	): Promise<BytesView> {
 		// Figure out what to hash
 		const hashable = this.getHashable(version);
 
 		// And create a "hash" from it. Older versions used a non-cryptographic hash,
 		// newer versions compress a subset of the config file.
-		let hash: Uint8Array;
+		let hash: BytesView;
 		if (version === 0) {
 			const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
 			return await digest("md5", buffer);
@@ -1079,11 +1116,11 @@ export class DeviceConfig {
 		return Bytes.concat([prefixBytes, hash]);
 	}
 
-	public static get maxHashVersion(): 2 {
-		return 2;
+	public static get maxHashVersion(): 3 {
+		return 3;
 	}
 
-	public static areHashesEqual(hash: Uint8Array, other: Uint8Array): boolean {
+	public static areHashesEqual(hash: BytesView, other: BytesView): boolean {
 		const parsedHash = parseHash(hash);
 		const parsedOther = parseHash(other);
 		// If one of the hashes could not be parsed, they are not equal
@@ -1113,9 +1150,9 @@ export class DeviceConfig {
 	}
 }
 
-function parseHash(hash: Uint8Array): {
+function parseHash(hash: BytesView): {
 	version: number;
-	hashData: Uint8Array;
+	hashData: BytesView;
 } | undefined {
 	const hashString = Bytes.view(hash).toString("utf8");
 	const versionMatch = hashString.match(/^\$v(\d+)\$/);
@@ -1148,4 +1185,57 @@ function parseHash(hash: Uint8Array): {
 			// This is not a valid hash
 			return undefined;
 	}
+}
+
+export { parseHash as parseDeviceConfigHash };
+
+export async function fixBrokenDeviceConfigHash(
+	broken: BytesView,
+): Promise<BytesView> {
+	// Some versions incorrectly included the optional default for the hidden property in v2 hashes.
+	// To fix this, we need to parse the hash back to JSON, remove the property, and re-hash it.
+
+	const parsed = parseHash(broken);
+	if (!parsed) return broken;
+
+	if (parsed.version !== 2) {
+		// Only v2 hashes are affected
+		return broken;
+	}
+
+	let hashable: Record<string, any>;
+	try {
+		hashable = JSON.parse(
+			Bytes.view(inflateSync(
+				Bytes.view(parsed.hashData),
+				{ dictionary: deflateDict },
+			)).toString("utf8"),
+		);
+	} catch {
+		return broken;
+	}
+
+	// Remove the hidden default property from all paramInformation entries if set to default (false)
+	for (
+		const ep of Object.values<Record<string, any>>(
+			hashable.endpoints ?? {},
+		)
+	) {
+		for (const param of ep.paramInformation ?? []) {
+			if (param.hidden === false) {
+				delete param.hidden;
+			}
+		}
+	}
+
+	// Re-hash the fixed object
+	const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
+	const fixedHashData = deflateSync(
+		buffer,
+		// Try to make the hash as small as possible
+		{ level: 9, dictionary: deflateDict },
+	);
+
+	const prefixBytes = Bytes.from(`$v2$`, "utf8");
+	return Bytes.concat([prefixBytes, fixedHashData]);
 }

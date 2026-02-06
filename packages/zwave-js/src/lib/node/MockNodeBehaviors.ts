@@ -2,8 +2,6 @@ import {
 	type CommandClass,
 	Security2CC,
 	Security2CCMessageEncapsulation,
-	SecurityCC,
-	SecurityCCCommandEncapsulation,
 	VersionCCCommandClassGet,
 	VersionCCCommandClassReport,
 	ZWavePlusNodeType,
@@ -34,6 +32,14 @@ import { MultilevelSensorCCBehaviors } from "./mockCCBehaviors/MultilevelSensor.
 import { MultilevelSwitchCCBehaviors } from "./mockCCBehaviors/MultilevelSwitch.js";
 import { NotificationCCBehaviors } from "./mockCCBehaviors/Notification.js";
 import { ScheduleEntryLockCCBehaviors } from "./mockCCBehaviors/ScheduleEntryLock.js";
+import {
+	SecurityCCBehaviors,
+	SecurityCCHooks,
+} from "./mockCCBehaviors/Security.js";
+import {
+	Security2CCBehaviors,
+	Security2CCHooks,
+} from "./mockCCBehaviors/Security2.js";
 import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch.js";
 import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
 import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
@@ -55,6 +61,7 @@ const respondToRequestNodeInfo: MockNodeBehavior = {
 					.filter(([ccId]) => ccId !== CommandClasses.Basic)
 					// Only include supported CCs
 					.filter(([, info]) => info.isSupported)
+					// FIXME: Filter out secure CCs if the node isn't secure
 					.map(([ccId]) => ccId),
 			});
 			return { action: "sendCC", cc };
@@ -87,7 +94,7 @@ const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 			}
 
 			const cc = new VersionCCCommandClassReport({
-				nodeId: self.id,
+				nodeId: controller.ownNodeId,
 				endpointIndex: "index" in endpoint ? endpoint.index : undefined,
 				requestedCC: receivedCC.requestedCC,
 				ccVersion: version,
@@ -112,35 +119,6 @@ const respondToZWavePlusCCGet: MockNodeBehavior = {
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
-			return { action: "sendCC", cc, ackRequested: true };
-		}
-	},
-};
-
-// TODO: We should handle this more generically:
-const respondToS0ZWavePlusCCGet: MockNodeBehavior = {
-	handleCC(controller, self, receivedCC) {
-		if (
-			receivedCC instanceof SecurityCCCommandEncapsulation
-			&& receivedCC.encapsulated instanceof ZWavePlusCCGet
-		) {
-			let cc: CommandClass = new ZWavePlusCCReport({
-				nodeId: controller.ownNodeId,
-				zwavePlusVersion: 2,
-				nodeType: ZWavePlusNodeType.Node,
-				roleType: self.capabilities.isListening
-					? ZWavePlusRoleType.AlwaysOnSlave
-					: self.capabilities.isFrequentListening
-					? ZWavePlusRoleType.SleepingListeningSlave
-					: ZWavePlusRoleType.SleepingReportingSlave,
-				installerIcon: 0x0000,
-				userIcon: 0x0000,
-			});
-			cc = SecurityCC.encapsulate(
-				self.id,
-				self.securityManagers.securityManager!,
-				cc,
-			);
 			return { action: "sendCC", cc, ackRequested: true };
 		}
 	},
@@ -179,13 +157,17 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 	return [
 		respondToRequestNodeInfo,
 
+		...SecurityCCHooks,
+		...SecurityCCBehaviors,
+		...Security2CCHooks,
+		...Security2CCBehaviors,
+
 		...MultiChannelCCHooks,
 		...MultiChannelCCBehaviors,
 
 		respondToVersionCCCommandClassGet,
 
 		respondToZWavePlusCCGet,
-		respondToS0ZWavePlusCCGet,
 		respondToS2ZWavePlusCCGet,
 
 		...BasicCCBehaviors,

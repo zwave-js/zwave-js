@@ -21,10 +21,14 @@ process.on("unhandledRejection", (_r) => {
 // 	: "/dev/ttyACM0";
 // const port = require("os").platform() === "win32" ? "COM5" : "/dev/ttyUSB0";
 // 800 series
-const port = os.platform() === "win32"
-	? "COM5"
-	: "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_D83BDA7524E4-if00";
+// const port = os.platform() === "win32"
+// 	? "COM5"
+// 	: "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_D83BDA7524E4-if00";
 // const port = "tcp://127.0.0.1:5555";
+// const port =
+// 	"esphome://home-assistant-zwa-2-21c5e4.local?key=VE9QX1NFQ1JFVF9FTkNSWVBUSU9OX0tFWV8xMjM0NTY=";
+const port =
+	"esphome://127.0.0.1?key=VE9QX1NFQ1JFVF9FTkNSWVBUSU9OX0tFWV8xMjM0NTY=";
 
 const driver = new Driver(port, {
 	// logConfig: {
@@ -72,21 +76,6 @@ const driver = new Driver(port, {
 	.on("error", console.error)
 	.once("driver ready", async () => {
 		// Test code goes here
-		const node = driver.controller.nodes.getOrThrow(2);
-		node.once("ready", async () => {
-			await wait(500);
-			debugger;
-			void node.commandClasses["Binary Switch"].withOptions({
-				maxSendAttempts: 3,
-			}).set(false);
-
-			await wait(30000);
-			debugger;
-
-			await node.commandClasses["Binary Switch"].withOptions({
-				maxSendAttempts: 3,
-			}).set(false);
-		});
 	})
 	.once("bootloader ready", async () => {
 		// What to do when stuck in the bootloader

@@ -1,3 +1,4 @@
+import type { BytesView } from "@zwave-js/shared";
 import {
 	type DeflateOptions,
 	type InflateOptions,
@@ -7,19 +8,19 @@ import {
 } from "fflate";
 
 export function deflateSync(
-	data: Uint8Array,
+	data: BytesView,
 	opts?: DeflateOptions,
-): Uint8Array {
-	return defflateSync(data, opts);
+): BytesView {
+	return defflateSync(data, opts) as BytesView;
 }
 
 export function inflateSync(
-	data: Uint8Array,
+	data: BytesView,
 	opts?: InflateOptions,
-): Uint8Array {
-	return infflateSync(data, opts);
+): BytesView {
+	return infflateSync(data, opts) as BytesView;
 }
 
-export function gunzipSync(data: Uint8Array): Uint8Array {
-	return fgunzipSync(data);
+export function gunzipSync(data: BytesView): BytesView {
+	return fgunzipSync(data) as BytesView;
 }

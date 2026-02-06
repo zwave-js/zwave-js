@@ -26,7 +26,7 @@ Notifies the target node that the MPAN state is out of sync.
 ```ts
 async sendMPAN(
 	groupId: number,
-	innerMPANState: Uint8Array,
+	innerMPANState: BytesView,
 ): Promise<boolean>;
 ```
 
@@ -115,7 +115,7 @@ Notifies the other node that the ongoing key exchange was aborted.
 
 ```ts
 async sendPublicKey(
-	publicKey: Uint8Array,
+	publicKey: BytesView,
 	includingNode: boolean = true,
 ): Promise<void>;
 ```
@@ -133,7 +133,7 @@ async requestNetworkKey(
 ```ts
 async sendNetworkKey(
 	securityClass: SecurityClass,
-	networkKey: Uint8Array,
+	networkKey: BytesView,
 ): Promise<void>;
 ```
 

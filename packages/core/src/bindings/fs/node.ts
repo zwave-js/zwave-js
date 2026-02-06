@@ -1,4 +1,5 @@
 import {
+	type BytesView,
 	fileHandleToReadableStream,
 	fileHandleToWritableStream,
 } from "@zwave-js/shared";
@@ -16,10 +17,10 @@ export const fs: FileSystem = {
 	readDir(path: string): Promise<string[]> {
 		return fsp.readdir(path);
 	},
-	readFile(path: string): Promise<Uint8Array> {
+	readFile(path: string): Promise<BytesView> {
 		return fsp.readFile(path);
 	},
-	writeFile(path: string, data: Uint8Array): Promise<void> {
+	writeFile(path: string, data: BytesView): Promise<void> {
 		return fsp.writeFile(path, data);
 	},
 	copyFile(source: string, dest: string): Promise<void> {
@@ -89,10 +90,10 @@ export class NodeFileHandle implements FileHandle {
 	private handle: fsp.FileHandle;
 	private flags: { read: boolean; write: boolean };
 
-	private _readable?: ReadableStream<Uint8Array>;
-	private _writable?: WritableStream<Uint8Array>;
+	private _readable?: ReadableStream<BytesView>;
+	private _writable?: WritableStream<BytesView>;
 
-	public get readable(): ReadableStream<Uint8Array> {
+	public get readable(): ReadableStream<BytesView> {
 		if (!this.flags.read) {
 			throw new Error("File is not readable");
 		}
@@ -102,7 +103,7 @@ export class NodeFileHandle implements FileHandle {
 		return this._readable;
 	}
 
-	public get writable(): WritableStream<Uint8Array> {
+	public get writable(): WritableStream<BytesView> {
 		if (!this.flags.write) {
 			throw new Error("File is not writable");
 		}
@@ -121,7 +122,7 @@ export class NodeFileHandle implements FileHandle {
 	async read(
 		position?: number | null,
 		length?: number,
-	): Promise<{ data: Uint8Array; bytesRead: number }> {
+	): Promise<{ data: BytesView; bytesRead: number }> {
 		if (!this.open) throw new Error("File is not open");
 		const ret = await this.handle.read({
 			position,
@@ -134,7 +135,7 @@ export class NodeFileHandle implements FileHandle {
 	}
 
 	async write(
-		data: Uint8Array,
+		data: BytesView,
 		position?: number | null,
 	): Promise<{ bytesWritten: number }> {
 		if (!this.open) throw new Error("File is not open");

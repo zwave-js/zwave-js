@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 import { pathExists } from "@zwave-js/shared";
 import { readFile } from "node:fs/promises";
 import { test, vi } from "vitest";

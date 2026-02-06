@@ -23,7 +23,8 @@ export interface FirmwareUpdateFileInfo {
 
 /** The information sent to the firmware update service to identify which updates are available for a device. */
 export type FirmwareUpdateDeviceID = Expand<
-	DeviceID & {
+	// The firmware update service does not support SDK version
+	Omit<DeviceID, "sdkVersion"> & {
 		firmwareVersion: string;
 		rfRegion?: RFRegion;
 	}
@@ -36,6 +37,16 @@ export interface FirmwareUpdateServiceResponse {
 	files: FirmwareUpdateFileInfo[];
 	downgrade: boolean;
 	normalizedVersion: string;
+	region?: string;
+}
+
+/** Response from API v4 bulk request */
+export interface FirmwareUpdateBulkInfo {
+	manufacturerId: string;
+	productType: string;
+	productId: string;
+	firmwareVersion: string;
+	updates: FirmwareUpdateServiceResponse[];
 }
 
 export type FirmwareUpdateInfo = Expand<

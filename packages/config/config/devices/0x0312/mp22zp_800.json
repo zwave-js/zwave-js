@@ -1,0 +1,99 @@
+// 800 series version
+{
+	"manufacturer": "Minoston",
+	"manufacturerId": "0x0312",
+	"label": "MP22ZP",
+	"description": "Z-Wave Outdoor Smart Plug with Power Meter",
+	"devices": [
+		{
+			"productType": "0xff00",
+			"productId": "0xff0f"
+		}
+	],
+	"firmwareVersion": {
+		"min": "8.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Basic Set",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "templates/minoston_template.json#led_indicator_four_options_inverted"
+		},
+		{
+			"#": "2",
+			"$import": "templates/minoston_template.json#auto_off_timer"
+		},
+		{
+			"#": "4",
+			"$import": "templates/minoston_template.json#auto_on_timer"
+		},
+		{
+			"#": "6",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "7",
+			"$import": "templates/minoston_template.json#led_indicator_brightness",
+			"defaultValue": 2
+		},
+		{
+			"#": "8",
+			"$import": "templates/minoston_template.json#enable_local_control"
+		},
+		{
+			"#": "9",
+			"$import": "templates/minoston_template.json#power_reporting_threshold"
+		},
+		{
+			"#": "10",
+			"$import": "templates/minoston_template.json#power_reporting_interval"
+		},
+		{
+			"#": "11",
+			"$import": "templates/minoston_template.json#current_reporting_threshold"
+		},
+		{
+			"#": "12",
+			"$import": "templates/minoston_template.json#energy_reporting_threshold"
+		},
+		{
+			"#": "13",
+			"$import": "templates/minoston_template.json#power_reporting"
+		},
+		{
+			"#": "14",
+			"$import": "templates/minoston_template.json#current_reporting"
+		},
+		{
+			"#": "15",
+			"$import": "templates/minoston_template.json#current_reporting_interval",
+			"minValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "16",
+			"$import": "templates/minoston_template.json#voltage_reporting_interval"
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the Manual/Program button 3 times quickly. The blue LED will blink quickly.",
+		"exclusion": "Press the Manual/Program button 3 times quickly.",
+		"reset": "Press the button twice quickly, then hold for at least 10 seconds. The light flashes once when reset is successful."
+	}
+}

@@ -1,4 +1,4 @@
-import { type Options as ExecaOptions, execa } from "execa";
+import spawn from "nano-spawn";
 
 const project = process.argv[2] ?? "all";
 const buildArgs = process.argv
@@ -31,14 +31,14 @@ const dependsOnZwaveJs = [
 	// And CLI in the future
 ];
 
-const execOptions: ExecaOptions = {
-	stdio: "inherit",
+const execOptions = {
+	stdio: "inherit" as const,
 };
 
 async function main() {
 	// Always build the maintenance project, so codegen tasks work
 	console.log("Building maintenance project...");
-	await execa(
+	await spawn(
 		"yarn",
 		[
 			"workspace",
@@ -57,7 +57,7 @@ async function main() {
 	}
 
 	console.log("Building transformers...");
-	await execa(
+	await spawn(
 		"yarn",
 		[
 			"workspace",
@@ -75,7 +75,7 @@ async function main() {
 	console.log("Running codegen tasks...");
 	if (hasCodegen.includes(project)) {
 		// Only codegen for the project is enough
-		await execa(
+		await spawn(
 			"yarn",
 			["turbo", "run", "codegen", `--filter=${project}`],
 			{
@@ -87,7 +87,7 @@ async function main() {
 		);
 	} else {
 		// Codegen for all projects that need it
-		await execa(
+		await spawn(
 			"yarn",
 			[
 				"turbo",
@@ -110,7 +110,7 @@ async function main() {
 		for (const project of dependsOnZwaveJs) {
 			console.log();
 			console.log(`Building ${project}...`);
-			await execa(
+			await spawn(
 				"yarn",
 				[
 					"workspace",
@@ -127,7 +127,7 @@ async function main() {
 		// Just build the single project
 		console.log();
 		console.log(`Building ${project}...`);
-		await execa(
+		await spawn(
 			"yarn",
 			["workspace", project, "run", "build", "--verbose", ...buildArgs],
 			execOptions,
@@ -137,7 +137,7 @@ async function main() {
 	// Perform ESM to CJS transformation
 	console.log();
 	console.log(`Transpiling to CommonJS...`);
-	await execa(
+	await spawn(
 		"yarn",
 		["workspaces", "foreach", "--all", "--parallel", "run", "postbuild"],
 		execOptions,

@@ -64,7 +64,6 @@ export class GetNodeProtocolInfoRequest extends Message {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface GetNodeProtocolInfoResponseOptions
 	extends NodeProtocolInfoAndDeviceClass
 {}
@@ -182,11 +181,11 @@ export class GetNodeProtocolInfoResponse extends Message {
 		});
 		this.payload = Bytes.concat([
 			protocolInfo,
-			Bytes.from([
+			[
 				this.basicDeviceClass,
 				this.genericDeviceClass,
 				this.specificDeviceClass,
-			]),
+			],
 		]);
 
 		return super.serialize(ctx);

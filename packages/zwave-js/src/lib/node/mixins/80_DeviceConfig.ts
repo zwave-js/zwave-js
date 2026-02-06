@@ -1,7 +1,11 @@
 import { refreshMetadataStringsFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
-import { DeviceConfig } from "@zwave-js/config";
+import {
+	DeviceConfig,
+	fixBrokenDeviceConfigHash,
+	parseDeviceConfigHash,
+} from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
-import { Bytes, formatId } from "@zwave-js/shared";
+import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
 
@@ -34,13 +38,13 @@ export interface NodeDeviceConfig {
 	 * @internal
 	 * The hash of the device config that was applied during the last interview.
 	 */
-	get cachedDeviceConfigHash(): Uint8Array | undefined;
+	get cachedDeviceConfigHash(): BytesView | undefined;
 
 	/**
 	 * @internal
 	 * The hash of the currently used device config
 	 */
-	get currentDeviceConfigHash(): Uint8Array | undefined;
+	get currentDeviceConfigHash(): BytesView | undefined;
 }
 
 export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
@@ -120,23 +124,23 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 	 * @internal
 	 * The hash of the device config that was applied during the last interview.
 	 */
-	public get cachedDeviceConfigHash(): Uint8Array | undefined {
+	public get cachedDeviceConfigHash(): BytesView | undefined {
 		return this.driver.cacheGet(cacheKeys.node(this.id).deviceConfigHash);
 	}
 
-	protected set cachedDeviceConfigHash(value: Uint8Array | undefined) {
+	protected set cachedDeviceConfigHash(value: BytesView | undefined) {
 		this.driver.cacheSet(cacheKeys.node(this.id).deviceConfigHash, value);
 	}
 
-	private _currentDeviceConfigHash: Uint8Array | undefined;
+	private _currentDeviceConfigHash: BytesView | undefined;
 	/**
 	 * @internal
 	 * The hash of the currently used device config
 	 */
-	public get currentDeviceConfigHash(): Uint8Array | undefined {
+	public get currentDeviceConfigHash(): BytesView | undefined {
 		return this._currentDeviceConfigHash;
 	}
-	protected set currentDeviceConfigHash(value: Uint8Array | undefined) {
+	protected set currentDeviceConfigHash(value: BytesView | undefined) {
 		this._currentDeviceConfigHash = value;
 	}
 
@@ -159,6 +163,7 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 			this.productType,
 			this.productId,
 			this.firmwareVersion,
+			this.sdkVersion,
 		);
 
 		if (!this.deviceConfig) {
@@ -206,30 +211,44 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 			this._currentDeviceConfigHash = await this.deviceConfig
 				.getHash(1);
 		} else {
-			// Variable length prefixed hash - simply use the latest version
-			this._currentDeviceConfigHash = await this.deviceConfig
-				.getHash();
+			// Variable length prefixed hash - determine the hash version from the cache
 			if (this.cachedDeviceConfigHash) {
-				const versionString = Bytes.view(
+				const parsed = parseDeviceConfigHash(
 					this.cachedDeviceConfigHash,
-				).toString("utf8").match(/^\$v(\d+)\$/)?.[1];
-				if (versionString) {
-					cachedHashVersion = parseInt(versionString, 10);
+				);
+				if (parsed) {
+					cachedHashVersion = parsed.version;
+				}
+
+				if (parsed?.version === 2) {
+					// Some Z-Wave JS versions had an issue where the optional "hidden"
+					// property was included in the hashable, causing incorrect hashes.
+					this.cachedDeviceConfigHash =
+						await fixBrokenDeviceConfigHash(
+							this.cachedDeviceConfigHash,
+						);
 				}
 			}
+			// Use that version for comparison purposes if possible
+			this._currentDeviceConfigHash = await this.deviceConfig.getHash(
+				cachedHashVersion as any,
+			);
 			// default to requiring an upgrade if the version cannot be parsed
 			cachedHashVersion ??= 0;
 		}
 
-		// Update the cached device config hash upon restoring, if the node was previously interviewed
-		// and the device config has not changed since then.
+		// Update the cached device config hash to the most recent version upon restoring,
+		// if the node was previously interviewed and the device config has not changed
+		// since then.
 		if (this.interviewStage === InterviewStage.Complete) {
 			if (
 				cachedHashVersion < DeviceConfig.maxHashVersion
 				&& this.hasDeviceConfigChanged() === false
 			) {
-				this.cachedDeviceConfigHash = await this.deviceConfig
-					.getHash();
+				this.cachedDeviceConfigHash = await this.deviceConfig.getHash();
+				// Also update the current hash to the new version, in case
+				// it was previously generated with an older version
+				this._currentDeviceConfigHash = this.cachedDeviceConfigHash;
 			}
 
 			// Starting from version 2, we apply labels and descriptions from the device config dynamically

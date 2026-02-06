@@ -1,0 +1,16 @@
+{
+	"manufacturer": "Namron",
+	"manufacturerId": "0x0438",
+	"label": "Namron 4512774",
+	"description": "Wall Mounted Remote Control",
+	"devices": [
+		{
+			"productType": "0x0200",
+			"productId": "0xd309"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	}
+}

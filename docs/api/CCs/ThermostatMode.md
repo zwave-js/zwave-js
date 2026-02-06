@@ -22,7 +22,7 @@ async set(
 
 async set(
 	mode: (typeof ThermostatMode)["Manufacturer specific"],
-	manufacturerData: Uint8Array | string,
+	manufacturerData: BytesView | string,
 ): Promise<SupervisionResult | undefined>;
 ```
 

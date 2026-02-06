@@ -1,4 +1,3 @@
-import type { CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -38,6 +37,7 @@ import {
 	ThermostatFanState,
 	ThermostatFanStateCommand,
 } from "../lib/_Types.js";
+import type { CCParsingContext } from "../lib/traits.js";
 
 export const ThermostatFanStateCCValues = V.defineCCValues(
 	CommandClasses["Thermostat Fan State"],
@@ -78,7 +78,7 @@ export class ThermostatFanStateCCAPI extends CCAPI {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async get() {
 		this.assertSupportsCommand(
 			ThermostatFanStateCommand,

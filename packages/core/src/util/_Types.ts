@@ -1,3 +1,5 @@
+import type { BytesView } from "@zwave-js/shared";
+
 export type FirmwareFileFormat =
 	| "aeotec"
 	| "otz"
@@ -8,7 +10,7 @@ export type FirmwareFileFormat =
 	| "bin";
 
 export interface Firmware {
-	data: Uint8Array;
+	data: BytesView;
 	firmwareTarget?: number;
 	firmwareId?: number;
 }

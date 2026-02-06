@@ -325,9 +325,10 @@
 			"description": "Allowable range: 5-100 (increment by 5)",
 			"valueSize": 4,
 			"unit": "°C",
-			"minValue": 5,
-			"maxValue": 100,
-			"defaultValue": 0
+			"allowed": [
+				{ "range": [5, 100], "step": 5 }
+			],
+			"defaultValue": 10
 		},
 		{
 			"#": "135",
