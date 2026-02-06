@@ -48,6 +48,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"description": "Set the sensitivity for the PIR (Passive Infrared Sensor).",
 			"valueSize": 1,
@@ -105,6 +106,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "motion_retrigger_interval",
 			"label": "PIR Re-Detect Interval Time",
 			"description": "Setting the re-detect time after motion detected",
 			"valueSize": 1,
@@ -141,6 +143,7 @@
 		},
 		{
 			"#": "12",
+			"$kind": "reporting_interval.brightness",
 			"label": "Auto Report Illumination Time",
 			"description": "The Interval time for auto reporting the illumination state.",
 			"valueSize": 1,
@@ -150,6 +153,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"description": "The interval time for auto reporting the temperature state.",
 			"valueSize": 1,
@@ -169,6 +173,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"valueSize": 1,
 			"minValue": 0,
@@ -177,6 +182,7 @@
 		},
 		{
 			"#": "22",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Illumination Differential Report",
 			"valueSize": 1,
 			"minValue": 0,

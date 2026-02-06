@@ -52,6 +52,7 @@
 		},
 		{
 			"#": "39",
+			"$kind": "low_battery_threshold",
 			"label": "Low Battery Value",
 			"valueSize": 1,
 			"minValue": 0,

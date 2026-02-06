@@ -110,6 +110,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"description": "Auto off timer. 0 will disable the auto off function.",
 			"valueSize": 2,
