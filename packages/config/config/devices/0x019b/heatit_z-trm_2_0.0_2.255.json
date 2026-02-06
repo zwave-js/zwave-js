@@ -275,6 +275,7 @@
 		},
 		{
 			"#": "22",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
