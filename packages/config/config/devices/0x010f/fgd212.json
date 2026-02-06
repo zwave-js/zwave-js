@@ -721,9 +721,18 @@
 		},
 		{
 			"#": "52",
-			"$import": "templates/fibaro_template.json#reports_periodic",
 			"label": "Periodic Active Power and Energy Reports",
-			"maxValue": 32767
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "53",

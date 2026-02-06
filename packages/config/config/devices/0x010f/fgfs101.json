@@ -160,6 +160,7 @@
 		{
 			"#": "10",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Measurement Interval",
 			"description": "Seconds between consecutive measurements of battery level/temperature",
 			"valueSize": 4,

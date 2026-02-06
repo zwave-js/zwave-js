@@ -360,6 +360,7 @@
 		},
 		{
 			"#": "125",
+			"$kind": "dimming_duration",
 			"label": "Set the Default Dimming Rate",
 			"description": "The value range is 1 to 255 seconds",
 			"valueSize": 1,
@@ -434,6 +435,7 @@
 		},
 		{
 			"#": "131",
+			"$kind": "minimum_brightness",
 			"label": "Set the Minimum Brightness",
 			"description": "Set the min brightness level that the load can reach to",
 			"valueSize": 1,
@@ -443,6 +445,7 @@
 		},
 		{
 			"#": "132",
+			"$kind": "maximum_brightness",
 			"label": "Set the Maximum Brightness Level",
 			"description": "Set the max brightness level that the load can reach to",
 			"valueSize": 1,

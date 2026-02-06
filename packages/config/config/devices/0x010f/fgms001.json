@@ -97,6 +97,7 @@
 		{
 			"#": "1",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"description": "The lower the value, the more sensitive the PIR sensor.",
 			"valueSize": 1,
@@ -108,6 +109,7 @@
 		{
 			"#": "1",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"description": "The lower the value, the more sensitive the PIR sensor.",
 			"valueSize": 2,
@@ -118,6 +120,7 @@
 		{
 			"#": "2",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "motion_retrigger_interval",
 			"label": "After Motion Blind Time",
 			"description": "Period of time through which the PIR sensor is \"blind\".",
 			"valueSize": 1,
@@ -128,6 +131,7 @@
 		{
 			"#": "2",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "motion_retrigger_interval",
 			"label": "After Motion Blind Time",
 			"description": "Period of time through which the PIR sensor won't detect motion after detecting motion.",
 			"valueSize": 1,
@@ -191,6 +195,7 @@
 		{
 			"#": "6",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "motion_clear_delay",
 			"label": "Motion Alarm Cancellation Delay",
 			"description": "Period of time after which Motion alarm will be cancelled.",
 			"valueSize": 2,
@@ -203,6 +208,7 @@
 		{
 			"#": "6",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "motion_clear_delay",
 			"label": "Motion Alarm Cancellation Delay",
 			"description": "Amount of time the alarm will be canceled after.",
 			"valueSize": 2,
@@ -544,6 +550,7 @@
 		{
 			"#": "40",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Illumination Report Threshold",
 			"description": "Change in level of light intensity resulting in illumination report.",
 			"valueSize": 2,
@@ -556,6 +563,7 @@
 		{
 			"#": "40",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Illuminance Report Threshold",
 			"description": "Minimum change in light intensity level resulting in illumination report.",
 			"valueSize": 2,
@@ -567,6 +575,7 @@
 		{
 			"#": "42",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "reporting_interval.brightness",
 			"label": "Illumination Report Interval",
 			"description": "Time interval between consecutive illumination reports.",
 			"valueSize": 2,
@@ -579,6 +588,7 @@
 		{
 			"#": "42",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "reporting_interval.brightness",
 			"label": "Illuminance Report Interval",
 			"description": "Time interval between consecutive illumination reports (sent even when there is no change).",
 			"valueSize": 2,
@@ -590,6 +600,7 @@
 		{
 			"#": "60",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"description": "Change in level of temperature resulting in temperature report.",
 			"valueSize": 1,
@@ -602,6 +613,7 @@
 		{
 			"#": "60",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"description": "The change in temperature resulting in temperature report.",
 			"valueSize": 2,
@@ -613,6 +625,7 @@
 		{
 			"#": "62",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Measuring Interval",
 			"description": "The parameter determines how often the temperature will be measured.",
 			"valueSize": 2,
@@ -624,6 +637,7 @@
 		{
 			"#": "62",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Measuring Interval",
 			"description": "How often the temperature will be measured",
 			"valueSize": 2,
@@ -634,6 +648,7 @@
 		{
 			"#": "64",
 			"$if": "firmwareVersion <= 3.1",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"description": "How often temperature reports will be sent to the main controller.",
 			"valueSize": 2,
@@ -646,6 +661,7 @@
 		{
 			"#": "64",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"description": "Time interval between consecutive temperature reports (sent even when there is no change).",
 			"valueSize": 2,
@@ -656,6 +672,7 @@
 		},
 		{
 			"#": "66",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "The value to be added to the actual measured temperature.",
 			"valueSize": 2,

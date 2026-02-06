@@ -87,6 +87,7 @@
 		},
 		{
 			"#": "7",
+			"$kind": "dimming_duration",
 			"label": "Dimmer Ramp Time",
 			"valueSize": 1,
 			"unit": "seconds",

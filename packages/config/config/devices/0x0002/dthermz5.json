@@ -17,6 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"valueSize": 2,
 			"minValue": 1,

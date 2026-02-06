@@ -92,6 +92,7 @@
 		{
 			"#": "12",
 			"$if": "firmwareVersion >= 3.2",
+			"$kind": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"description": "defines the time interval of sending at most 5 standard power reports",
 			"valueSize": 2,
