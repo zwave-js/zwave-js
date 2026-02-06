@@ -41,6 +41,7 @@
 		},
 		{
 			"#": "40",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report (Watts) on Power Change for Q1 or Q2",
 			"valueSize": 1,
 			"minValue": 0,
@@ -49,6 +50,7 @@
 		},
 		{
 			"#": "42",
+			"$kind": "reporting_interval.power",
 			"label": "Power Report (Watts) by Time Interval for Q1 or Q2",
 			"valueSize": 2,
 			"minValue": 0,
@@ -156,6 +158,7 @@
 		},
 		{
 			"#": "110",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"minValue": 1,

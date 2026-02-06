@@ -52,6 +52,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"description": "Automatic OFF after given time.",
 			"valueSize": 2,
