@@ -56,8 +56,10 @@ import {
 	LevelChangeDirection,
 	MultilevelSwitchCommand,
 	SwitchType,
+	type WindowCoveringParameter,
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+import { WindowCoveringCCValues } from "./WindowCoveringCC.js";
 
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],
@@ -735,6 +737,73 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public duration: Duration | undefined;
 
 	public currentValue: MaybeUnknown<number> | undefined;
+
+	public persistValues(ctx: PersistValuesContext): boolean {
+		const node = this.getNode(ctx);
+		if (!node) return false;
+
+		const endpoint = node.getEndpoint(this.endpointIndex ?? 0);
+		if (!endpoint) return false;
+
+		if (!endpoint.supportsCC(CommandClasses["Window Covering"])) {
+			return super.persistValues(ctx);
+		}
+
+		const valueDB = this.getValueDB(ctx);
+
+		// If the Window Covering CC interview hasn't completed yet,
+		// don't persist MLS values — they'll be mapped correctly once
+		// the interview completes and subsequent reports arrive.
+		const wcInterviewComplete = valueDB.getValue<boolean>({
+			commandClass: CommandClasses["Window Covering"],
+			endpoint: this.endpointIndex,
+			property: "interviewComplete",
+		});
+		if (!wcInterviewComplete) return true;
+
+		const supportedParameters = valueDB.getValue<
+			readonly WindowCoveringParameter[]
+		>(
+			WindowCoveringCCValues.supportedParameters.endpoint(
+				this.endpointIndex,
+			),
+		);
+		if (!supportedParameters?.length) return super.persistValues(ctx);
+
+		// Odd parameters have position support, prefer those
+		const windowCoveringParameter =
+			supportedParameters.find((p) => p % 2 === 1)
+				?? supportedParameters[0];
+
+		if (this.currentValue !== undefined) {
+			valueDB.setValue(
+				WindowCoveringCCValues.currentValue(
+					windowCoveringParameter,
+				).endpoint(this.endpointIndex),
+				this.currentValue,
+			);
+		}
+
+		if (this.targetValue !== undefined) {
+			valueDB.setValue(
+				WindowCoveringCCValues.targetValue(
+					windowCoveringParameter,
+				).endpoint(this.endpointIndex),
+				this.targetValue,
+			);
+		}
+
+		if (this.duration !== undefined) {
+			valueDB.setValue(
+				WindowCoveringCCValues.duration(
+					windowCoveringParameter,
+				).endpoint(this.endpointIndex),
+				this.duration,
+			);
+		}
+
+		return true;
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
