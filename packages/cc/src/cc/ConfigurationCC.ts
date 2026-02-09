@@ -299,36 +299,38 @@ function getParamInformationFromConfigFile(
 /** Builds a ConfigurationMetadata object from a ParamInformation entry */
 function configParamInfoToMetadata(
 	info: ParamInformation,
-): Partial<ConfigurationMetadata> {
-	return stripUndefined({
-		// TODO: Make this smarter! (0...1 ==> boolean)
-		type: "number",
-		valueSize: info.valueSize,
-		min: info.minValue,
-		max: info.maxValue,
-		allowed: info.allowed,
-		default: info.defaultValue,
-		recommended: info.recommendedValue,
-		unit: info.unit,
-		format: info.unsigned
-			? ConfigValueFormat.UnsignedInteger
-			: ConfigValueFormat.SignedInteger,
-		readable: !info.writeOnly,
-		writeable: !info.readOnly,
-		allowManualEntry: info.allowManualEntry,
-		states: info.options.length > 0
-			? Object.fromEntries(
-				info.options.map(({ label, value }) => [
-					value.toString(),
-					label,
-				]),
-			)
-			: undefined,
-		label: info.label,
-		description: info.description,
-		isFromConfig: true,
-		destructive: info.destructive,
-	});
+): ConfigurationMetadata {
+	return stripUndefined(
+		{
+			// TODO: Make this smarter! (0...1 ==> boolean)
+			type: "number",
+			valueSize: info.valueSize,
+			min: info.minValue,
+			max: info.maxValue,
+			allowed: info.allowed,
+			default: info.defaultValue,
+			recommended: info.recommendedValue,
+			unit: info.unit,
+			format: info.unsigned
+				? ConfigValueFormat.UnsignedInteger
+				: ConfigValueFormat.SignedInteger,
+			readable: !info.writeOnly,
+			writeable: !info.readOnly,
+			allowManualEntry: info.allowManualEntry,
+			states: info.options.length > 0
+				? Object.fromEntries(
+					info.options.map(({ label, value }) => [
+						value.toString(),
+						label,
+					]),
+				)
+				: undefined,
+			label: info.label,
+			description: info.description,
+			isFromConfig: true,
+			destructive: info.destructive,
+		} satisfies ConfigurationMetadata,
+	) as unknown as ConfigurationMetadata;
 }
 
 /**
@@ -377,12 +379,10 @@ export function refreshConfigParamMetadataFromConfigFile(
 
 			const newMeta = configParamInfoToMetadata(info);
 
-			if (!existing) {
-				// New param - create metadata
-				valueDB.setMetadata(valueId, newMeta as ConfigurationMetadata);
-			} else if (existing.isFromConfig) {
-				// Existing config param - replace with updated metadata
-				valueDB.setMetadata(valueId, newMeta as ConfigurationMetadata);
+			if (!existing || existing.isFromConfig) {
+				// New param, or existing parameter that was previously populated
+				// from the configuration file. Replace it entirely
+				valueDB.setMetadata(valueId, newMeta);
 			} else {
 				// Device-reported param - overwrite informational fields
 				// but preserve the device-reported valueSize and format
@@ -391,7 +391,7 @@ export function refreshConfigParamMetadataFromConfigFile(
 					...newMeta,
 					valueSize: existing.valueSize,
 					format: existing.format,
-				} as ConfigurationMetadata;
+				};
 				valueDB.setMetadata(valueId, merged);
 			}
 		}
