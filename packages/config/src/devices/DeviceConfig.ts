@@ -1140,40 +1140,38 @@ export class DeviceConfig {
 		return 4;
 	}
 
-	public static areHashesEqual(hash: BytesView, other: BytesView): boolean {
-		const parsedHash = parseHash(hash);
-		const parsedOther = parseHash(other);
+	/**
+	 * Compares a cached device config hash against the current one.
+	 * @param currentHash must be at the latest hash version
+	 * @param cachedHash may be at any version and will be normalized for comparison
+	 */
+	public static areHashesEqual(
+		currentHash: BytesView,
+		cachedHash: BytesView,
+	): boolean {
+		const current = parseHash(currentHash);
+		const cached = parseHash(cachedHash);
 		// If one of the hashes could not be parsed, they are not equal
-		if (!parsedHash || !parsedOther) return false;
+		if (!current || !cached) return false;
 
 		// For legacy hashes, we only compare the hash data. We already make sure during
 		// parsing of the cache files that we only need to compare hashes of the same version,
 		// so simply comparing the contents is sufficient.
-		if (parsedHash.version < 2 && parsedOther.version < 2) {
-			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		if (current.version < 2 && cached.version < 2) {
+			return Bytes.view(current.hashData).equals(cached.hashData);
 		}
 		// We take care during loading to downlevel the current config hash to legacy versions if needed.
 		// If we end up with just one legacy hash here, something went wrong. Just bail in that case.
-		if (parsedHash.version < 2 || parsedOther.version < 2) {
+		if (current.version < 2 || cached.version < 2) {
 			return false;
 		}
 
-		// This is a versioned hash.
-		// We need to unpack the original hashable data to be able to compare them for different reasons.
-
-		// Decompress both hashes to their hashable objects
-		let hashableA: Record<string, any>;
-		let hashableB: Record<string, any>;
+		// The cached hash may need normalization (v2 fix, version upgrade)
+		let hashable: Record<string, any>;
 		try {
-			hashableA = JSON.parse(
+			hashable = JSON.parse(
 				Bytes.view(inflateSync(
-					Bytes.view(parsedHash.hashData),
-					{ dictionary: deflateDict },
-				)).toString("utf8"),
-			);
-			hashableB = JSON.parse(
-				Bytes.view(inflateSync(
-					Bytes.view(parsedOther.hashData),
+					Bytes.view(cached.hashData),
 					{ dictionary: deflateDict },
 				)).toString("utf8"),
 			);
@@ -1183,23 +1181,19 @@ export class DeviceConfig {
 
 		// Some Z-Wave JS versions had an issue where the optional "hidden"
 		// property was included in the hashable, causing incorrect hashes.
-		fixBrokenV2Hashable(hashableA, parsedHash.version);
-		fixBrokenV2Hashable(hashableB, parsedOther.version);
+		fixBrokenV2Hashable(hashable, cached.version);
+		// If the cached hash has an older version, we need to upgrade it to
+		// the current version. This is necessary because some of the version upgrades
+		// remove the need for some information to be included in the hash, so
+		// a newer version gets by with less information than an older version.
+		upgradeHashable(hashable, cached.version, current.version);
 
-		if (parsedHash.version !== parsedOther.version) {
-			// If the hashes have different versions, we need to normalize them to
-			// the higher of the two. This is necessary because some of the version upgrades
-			// remove the need for some information to be included in the hash, so
-			// a newer version gets by with less information than an older version.
-			const targetVersion = Math.max(
-				parsedHash.version,
-				parsedOther.version,
-			);
-			upgradeHashable(hashableA, parsedHash.version, targetVersion);
-			upgradeHashable(hashableB, parsedOther.version, targetVersion);
-		}
-
-		return JSON.stringify(hashableA) === JSON.stringify(hashableB);
+		// Recompress and compare against the current hash
+		const normalizedData = deflateSync(
+			Bytes.from(JSON.stringify(hashable), "utf8"),
+			{ level: 9, dictionary: deflateDict },
+		);
+		return Bytes.view(normalizedData).equals(current.hashData);
 	}
 }
 
