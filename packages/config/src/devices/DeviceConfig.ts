@@ -788,7 +788,7 @@ scene number ${keyNum} must be between 1 and 255`,
 	}
 }
 
-export type DeviceConfigHashVersion = 0 | 1 | 2 | 3;
+export type DeviceConfigHashVersion = 0 | 1 | 2 | 3 | 4;
 
 export class DeviceConfig {
 	public static async from(
@@ -1081,6 +1081,26 @@ export class DeviceConfig {
 			}
 		}
 
+		if (version >= 4) {
+			// From version 4 and on, all param information is applied dynamically
+			// so it does not need to be part of the hash anymore.
+			if (hashable.endpoints) {
+				for (
+					const [key, ep] of Object.entries<Record<string, any>>(
+						hashable.endpoints,
+					)
+				) {
+					delete ep.paramInformation;
+					if (Object.keys(ep).length === 0) {
+						delete hashable.endpoints[key];
+					}
+				}
+				if (Object.keys(hashable.endpoints).length === 0) {
+					delete hashable.endpoints;
+				}
+			}
+		}
+
 		hashable = sortObject(hashable);
 		return hashable;
 	}
@@ -1116,8 +1136,8 @@ export class DeviceConfig {
 		return Bytes.concat([prefixBytes, hash]);
 	}
 
-	public static get maxHashVersion(): 3 {
-		return 3;
+	public static get maxHashVersion(): 4 {
+		return 4;
 	}
 
 	public static areHashesEqual(hash: BytesView, other: BytesView): boolean {
@@ -1138,15 +1158,48 @@ export class DeviceConfig {
 			return false;
 		}
 
-		// This is a versioned hash. If both versions are equal, it's simple - just compare the hash data
-		if (parsedHash.version === parsedOther.version) {
-			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		// This is a versioned hash.
+		// We need to unpack the original hashable data to be able to compare them for different reasons.
+
+		// Decompress both hashes to their hashable objects
+		let hashableA: Record<string, any>;
+		let hashableB: Record<string, any>;
+		try {
+			hashableA = JSON.parse(
+				Bytes.view(inflateSync(
+					Bytes.view(parsedHash.hashData),
+					{ dictionary: deflateDict },
+				)).toString("utf8"),
+			);
+			hashableB = JSON.parse(
+				Bytes.view(inflateSync(
+					Bytes.view(parsedOther.hashData),
+					{ dictionary: deflateDict },
+				)).toString("utf8"),
+			);
+		} catch {
+			return false;
 		}
 
-		// For different versions, we have to do some case by case checks. For example, a newer hash version
-		// might remove or add data into the hashable, so we cannot simply convert between versions easily.
-		// Implement when that is actually needed.
-		return false;
+		// Some Z-Wave JS versions had an issue where the optional "hidden"
+		// property was included in the hashable, causing incorrect hashes.
+		fixBrokenV2Hashable(hashableA, parsedHash.version);
+		fixBrokenV2Hashable(hashableB, parsedOther.version);
+
+		if (parsedHash.version !== parsedOther.version) {
+			// If the hashes have different versions, we need to normalize them to
+			// the higher of the two. This is necessary because some of the version upgrades
+			// remove the need for some information to be included in the hash, so
+			// a newer version gets by with less information than an older version.
+			const targetVersion = Math.max(
+				parsedHash.version,
+				parsedOther.version,
+			);
+			upgradeHashable(hashableA, parsedHash.version, targetVersion);
+			upgradeHashable(hashableB, parsedOther.version, targetVersion);
+		}
+
+		return JSON.stringify(hashableA) === JSON.stringify(hashableB);
 	}
 }
 
@@ -1189,33 +1242,16 @@ function parseHash(hash: BytesView): {
 
 export { parseHash as parseDeviceConfigHash };
 
-export async function fixBrokenDeviceConfigHash(
-	broken: BytesView,
-): Promise<BytesView> {
-	// Some versions incorrectly included the optional default for the hidden property in v2 hashes.
-	// To fix this, we need to parse the hash back to JSON, remove the property, and re-hash it.
+/**
+ * Fixes broken v2 hashables that incorrectly included `hidden: false`.
+ * Mutates the hashable in place.
+ */
+function fixBrokenV2Hashable(
+	hashable: Record<string, any>,
+	version: number,
+): void {
+	if (version !== 2) return;
 
-	const parsed = parseHash(broken);
-	if (!parsed) return broken;
-
-	if (parsed.version !== 2) {
-		// Only v2 hashes are affected
-		return broken;
-	}
-
-	let hashable: Record<string, any>;
-	try {
-		hashable = JSON.parse(
-			Bytes.view(inflateSync(
-				Bytes.view(parsed.hashData),
-				{ dictionary: deflateDict },
-			)).toString("utf8"),
-		);
-	} catch {
-		return broken;
-	}
-
-	// Remove the hidden default property from all paramInformation entries if set to default (false)
 	for (
 		const ep of Object.values<Record<string, any>>(
 			hashable.endpoints ?? {},
@@ -1227,15 +1263,33 @@ export async function fixBrokenDeviceConfigHash(
 			}
 		}
 	}
+}
 
-	// Re-hash the fixed object
-	const buffer = Bytes.from(JSON.stringify(hashable), "utf8");
-	const fixedHashData = deflateSync(
-		buffer,
-		// Try to make the hash as small as possible
-		{ level: 9, dictionary: deflateDict },
-	);
+/**
+ * Upgrades a hashable to a newer version by stripping fields that are
+ * now applied dynamically. Mutates the hashable in place.
+ */
+function upgradeHashable(
+	hashable: Record<string, any>,
+	fromVersion: number,
+	targetVersion: number,
+): void {
+	if (fromVersion >= targetVersion) return;
 
-	const prefixBytes = Bytes.from(`$v2$`, "utf8");
-	return Bytes.concat([prefixBytes, fixedHashData]);
+	if (targetVersion >= 4 && fromVersion < 4 && hashable.endpoints) {
+		for (
+			const [key, ep] of Object.entries<Record<string, any>>(
+				hashable.endpoints,
+			)
+		) {
+			delete ep.paramInformation;
+			if (Object.keys(ep).length === 0) {
+				delete hashable.endpoints[key];
+			}
+		}
+		if (Object.keys(hashable.endpoints).length === 0) {
+			delete hashable.endpoints;
+		}
+		fromVersion = 4;
+	}
 }
