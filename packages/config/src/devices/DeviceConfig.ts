@@ -1106,11 +1106,20 @@ export class DeviceConfig {
 	}
 
 	/**
-	 * Returns a hash code that can be used to check whether a device config has changed enough to require a re-interview.
+	 * Returns a hash code that can be used to check whether a device config
+	 * has changed enough to require a re-interview.
 	 */
 	public async getHash(
 		version: DeviceConfigHashVersion = DeviceConfig.maxHashVersion,
 	): Promise<BytesView> {
+		// As of hash version 4, this includes:
+		// - Association settings (maxNodes, isLifeline, multiChannel)
+		// - Compat flags (addCCs, removeCCs, mapBasicSet, etc.)
+		// - Proprietary config
+		//
+		// Configuration parameter metadata is NOT included, as changes
+		// to it are applied dynamically without requiring re-interview.
+
 		// Figure out what to hash
 		const hashable = this.getHashable(version);
 
