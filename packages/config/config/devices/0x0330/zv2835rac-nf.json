@@ -57,6 +57,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Brightness Value",
 			"valueSize": 1,
 			"minValue": 0,
@@ -65,6 +66,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "maximum_brightness",
 			"label": "Maximum Brightness Value",
 			"valueSize": 1,
 			"minValue": 0,
@@ -172,6 +174,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Automatic Report Absolute Threshold",
 			"valueSize": 2,
 			"unit": "W",
@@ -181,6 +184,7 @@
 		},
 		{
 			"#": "15",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Automatic Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -190,6 +194,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_interval.power",
 			"label": "Power Metering Time Cycle",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -199,6 +204,7 @@
 		},
 		{
 			"#": "22",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy Metering Time Cycle",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -208,6 +214,7 @@
 		},
 		{
 			"#": "23",
+			"$kind": "reporting_interval.voltage",
 			"label": "Voltage Metering Time Cycle",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -217,6 +224,7 @@
 		},
 		{
 			"#": "24",
+			"$kind": "reporting_interval.current",
 			"label": "Current Metering Time Cycle",
 			"valueSize": 4,
 			"unit": "seconds",

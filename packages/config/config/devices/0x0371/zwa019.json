@@ -85,6 +85,7 @@
 		},
 		{
 			"#": "16",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Trigger",
 			"valueSize": 1,
 			"unit": "0.1 °(C/F)",
@@ -100,6 +101,7 @@
 		},
 		{
 			"#": "17",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Trigger",
 			"valueSize": 1,
 			"unit": "%",

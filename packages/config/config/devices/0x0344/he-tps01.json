@@ -127,6 +127,7 @@
 		{
 			"#": "141",
 			"$import": "templates/heltun_template.json#report_interval",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy Consumption Report Interval"
 		},
 		{

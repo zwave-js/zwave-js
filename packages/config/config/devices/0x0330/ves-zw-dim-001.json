@@ -27,6 +27,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "dimming_duration",
 			"label": "Dimming Speed",
 			"valueSize": 1,
 			"unit": "seconds",
@@ -36,6 +37,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Dim Level",
 			"valueSize": 1,
 			"minValue": 0,
@@ -132,6 +134,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report: Change Threshold",
 			"valueSize": 2,
 			"unit": "W",
@@ -141,6 +144,7 @@
 		},
 		{
 			"#": "15",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report: Relative Change Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -150,6 +154,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_interval.power",
 			"label": "Power Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -165,6 +170,7 @@
 		},
 		{
 			"#": "22",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -180,6 +186,7 @@
 		},
 		{
 			"#": "23",
+			"$kind": "reporting_interval.voltage",
 			"label": "Voltage Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -195,6 +202,7 @@
 		},
 		{
 			"#": "24",
+			"$kind": "reporting_interval.current",
 			"label": "Current Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",

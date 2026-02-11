@@ -54,6 +54,7 @@
 		},
 		{
 			"#": "2",
+			"$kind": "motion_clear_delay",
 			"label": "Motion Clear Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -63,6 +64,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"description": "Allowable range: 1-11",
 			"valueSize": 1,
@@ -188,6 +190,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 2,
 			"unit": "0.1 °(C/F)",
@@ -197,6 +200,7 @@
 		},
 		{
 			"#": "22",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Light Intensity Change Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -206,6 +210,7 @@
 		},
 		{
 			"#": "23",
+			"$kind": "reporting_interval.temperature",
 			"label": "Timed Temperature Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -219,6 +224,7 @@
 		},
 		{
 			"#": "30",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Offset Value",
 			"valueSize": 2,
 			"unit": "0.1 °(C/F)",
@@ -228,6 +234,7 @@
 		},
 		{
 			"#": "31",
+			"$kind": "calibration.brightness",
 			"label": "Light Intensity Offset Value",
 			"valueSize": 2,
 			"unit": "lux",

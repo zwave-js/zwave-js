@@ -646,6 +646,7 @@
 		},
 		{
 			"#": "141",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy Consumption Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",

@@ -28,6 +28,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",

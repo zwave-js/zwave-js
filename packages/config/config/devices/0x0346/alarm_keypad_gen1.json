@@ -20,6 +20,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"description": "Default heartbeat check in time",
 			"valueSize": 2,
