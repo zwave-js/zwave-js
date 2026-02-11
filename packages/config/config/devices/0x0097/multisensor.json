@@ -52,6 +52,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "motion_sensitivity",
 			"label": "Sensitivity",
 			"description": "The sensitivity of the motion circuit",
 			"valueSize": 1,
@@ -70,6 +71,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "An offset for the temperature.",
 			"valueSize": 2,

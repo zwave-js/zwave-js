@@ -50,6 +50,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"defaultValue": 2,
@@ -167,6 +168,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"valueSize": 1,
 			"defaultValue": 2,

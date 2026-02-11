@@ -66,7 +66,7 @@
 		"description": "Send Basic Set if brightness falls below threshold"
 	},
 	"light_sensor_report_threshold": {
-		"$kind": "reporting_threshold_delta.brightness",
+		"$kind": "reporting_threshold.brightness",
 		"label": "Light Sensor Differential Report Threshold",
 		"unit": "lux",
 		"valueSize": 1,
@@ -76,7 +76,7 @@
 		"unsigned": true
 	},
 	"temperature_report_threshold": {
-		"$kind": "reporting_threshold_delta.temperature",
+		"$kind": "reporting_threshold.temperature",
 		"label": "Temperature Differential Report Threshold",
 		"unit": "0.1 °C",
 		"valueSize": 1,

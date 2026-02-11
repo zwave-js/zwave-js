@@ -241,8 +241,7 @@
 		{
 			"#": "120",
 			"$kind": "reporting_threshold.temperature",
-			"label": "Digital Temperature Sensor Reporting",
-			"description": "Reporting temperature when change is larger than defined by this parameter",
+			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "°C",
 			"minValue": 0,

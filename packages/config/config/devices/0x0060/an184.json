@@ -80,6 +80,7 @@
 		},
 		{
 			"#": "6",
+			"$kind": "reporting_threshold.power",
 			"label": "Wattage Report Threshold",
 			"valueSize": 2,
 			"unit": "W",

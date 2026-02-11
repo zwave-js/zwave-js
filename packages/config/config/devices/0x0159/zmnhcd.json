@@ -191,9 +191,9 @@
 		{
 			"#": "120",
 			"$kind": "reporting_threshold.temperature",
-			"label": "Digital Temperature Sensor Reporting",
-			"description": "Threshold for sending temperature change reports",
+			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
+			"unit": "°C",
 			"minValue": 0,
 			"maxValue": 127,
 			"defaultValue": 5

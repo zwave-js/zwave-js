@@ -490,7 +490,7 @@
 		"defaultValue": 0
 	},
 	"watt_threshold_change": {
-		"$kind": "reporting_threshold_delta.power",
+		"$kind": "reporting_threshold.power",
 		"label": "Power Change Threshold",
 		"valueSize": 2,
 		"unit": "W",

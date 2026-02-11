@@ -368,6 +368,7 @@
 		},
 		{
 			"#": "201[0xff00]",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 2,
 			"minValue": -128,

@@ -78,6 +78,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",

@@ -54,6 +54,7 @@
 		},
 		{
 			"#": "41",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change to Induce Automatic Report",
 			"description": "Formula: (256 * integer + fraction). Ex: 5.0% threshold = (256 * 5) + 0 = 1280",
 			"valueSize": 2,
@@ -64,6 +65,7 @@
 		},
 		{
 			"#": "42",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Change to Induce Automatic Report",
 			"description": "Formula: (256 * integer + fraction). Ex: 5.0% threshold = (256 * 5) + 0 = 1280",
 			"valueSize": 2,
@@ -74,6 +76,7 @@
 		},
 		{
 			"#": "43",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Luminance Change to Induce Automatic Report",
 			"description": "Formula: (256 * value). Ex: 100 lux threshold = (256 * 100) = 25600",
 			"valueSize": 2,
@@ -83,6 +86,7 @@
 		},
 		{
 			"#": "44",
+			"$kind": "reporting_threshold.battery",
 			"label": "Battery Change to Induce Automatic Report",
 			"description": "Formula: (256 * integer + fraction). Ex: 5.0% threshold = (256 * 5) + 0 = 1280",
 			"valueSize": 2,
