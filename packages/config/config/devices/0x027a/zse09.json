@@ -16,6 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"description": "8 = high; 255 = low",
 			"valueSize": 1,
@@ -26,6 +27,7 @@
 		},
 		{
 			"#": "2",
+			"$kind": "motion_retrigger_interval",
 			"label": "Re-Trigger Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -65,6 +67,7 @@
 		},
 		{
 			"#": "7",
+			"$kind": "reporting_interval.brightness",
 			"label": "Light Polling Interval",
 			"description": "Interval between light level reporting",
 			"valueSize": 2,
@@ -95,6 +98,7 @@
 		{
 			"#": "9",
 			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Light Reporting Threshold",
 			"unit": "lux",
 			"defaultValue": 255,

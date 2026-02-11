@@ -23,6 +23,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "motion_clear_delay",
 			"label": "Motion Detection: Timeout",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -131,6 +132,7 @@
 		{
 			"#": "173",
 			"$if": "firmwareVersion >= 2.0",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -148,6 +150,7 @@
 		{
 			"#": "174",
 			"$if": "firmwareVersion >= 2.0",
+			"$kind": "reporting_interval.humidity",
 			"label": "Humidity Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -165,6 +168,7 @@
 		{
 			"#": "175",
 			"$if": "firmwareVersion >= 2.0",
+			"$kind": "reporting_interval.brightness",
 			"label": "Brightness Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -182,6 +186,7 @@
 		{
 			"#": "182",
 			"$import": "~/templates/master_template.json#base_0-99_nounit",
+			"$kind": "reporting_threshold.battery",
 			"label": "Battery Reporting Change Threshold",
 			"unit": "%",
 			"defaultValue": 0,
@@ -194,6 +199,7 @@
 		},
 		{
 			"#": "183",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Change Threshold",
 			"valueSize": 2,
 			"unit": "°F",
@@ -203,6 +209,7 @@
 		},
 		{
 			"#": "184",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Change Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -218,6 +225,7 @@
 		},
 		{
 			"#": "185",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Brightness Reporting Change Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -234,6 +242,7 @@
 		{
 			"#": "201",
 			"$if": "firmwareVersion >= 2.0",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"description": "Value is offset by 100: 0 = -10 °F, 50 = -5 °F, 100 = 0 °F, 150 = +5 °F, 200 = +10 °F",
 			"valueSize": 1,
@@ -246,6 +255,7 @@
 		{
 			"#": "202",
 			"$if": "firmwareVersion >= 2.0",
+			"$kind": "calibration.humidity",
 			"label": "Humidity Calibration",
 			"description": "Value is offset by 100: 0 = -10%, 50 = -5%, 100 = 0%, 150 = +5%, 200 = +10%",
 			"valueSize": 1,
@@ -258,6 +268,7 @@
 		{
 			"#": "203",
 			"$if": "firmwareVersion >= 2.0",
+			"$kind": "calibration.brightness",
 			"label": "Brightness Calibration",
 			"description": "Value is offset by 100: 0 = -10 lux, 50 = -5 lux, 100 = 0 lux, 150 = +5 lux, 200 = +10 lux",
 			"valueSize": 1,

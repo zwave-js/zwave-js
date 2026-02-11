@@ -141,6 +141,7 @@
 		{
 			"#": "33",
 			"$if": "firmwareVersion >= 1.6",
+			"$kind": "timer.auto_on",
 			"label": "Auto-On Timer",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -157,6 +158,7 @@
 		{
 			"#": "34",
 			"$if": "firmwareVersion >= 1.6",
+			"$kind": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -172,6 +174,7 @@
 		},
 		{
 			"#": "151",
+			"$kind": "reporting_threshold.power",
 			"label": "Power (W) Change Report Threshold",
 			"valueSize": 2,
 			"unit": "W",
@@ -188,6 +191,7 @@
 		},
 		{
 			"#": "152",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report Percentage Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -205,6 +209,7 @@
 		{
 			"#": "175",
 			"$if": "firmwareVersion >= 2.10",
+			"$kind": "reporting_threshold.voltage",
 			"label": "Voltage (V) Change Report Threshold",
 			"valueSize": 1,
 			"unit": "V",
@@ -222,6 +227,7 @@
 		{
 			"#": "176",
 			"$if": "firmwareVersion >= 2.10",
+			"$kind": "reporting_threshold.current",
 			"label": "Current (A) Change Report Threshold",
 			"valueSize": 2,
 			"unit": "mA",
@@ -238,6 +244,7 @@
 		},
 		{
 			"#": "171",
+			"$kind": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -253,6 +260,7 @@
 		},
 		{
 			"#": "172",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -268,6 +276,7 @@
 		},
 		{
 			"#": "173",
+			"$kind": "reporting_interval.voltage",
 			"label": "Voltage (V) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -283,6 +292,7 @@
 		},
 		{
 			"#": "174",
+			"$kind": "reporting_interval.current",
 			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",

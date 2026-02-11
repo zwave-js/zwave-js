@@ -235,6 +235,7 @@
 		},
 		{
 			"#": "15",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"valueSize": 1,
 			"unit": "hours",

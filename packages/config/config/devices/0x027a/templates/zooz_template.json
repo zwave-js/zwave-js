@@ -1073,7 +1073,7 @@
 		"unsigned": true
 	},
 	"battery_report_threshold": {
-		"$kind": "reporting_threshold_delta.battery",
+		"$kind": "reporting_threshold.battery",
 		"label": "Battery Report Threshold",
 		"valueSize": 1,
 		"unit": "%",

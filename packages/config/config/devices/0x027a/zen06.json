@@ -73,6 +73,7 @@
 		},
 		{
 			"#": "151",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report Value Threshold",
 			"description": "Minimum change in Watt to report",
 			"valueSize": 2,
@@ -85,12 +86,14 @@
 		{
 			"#": "152",
 			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report Percentage Threshold",
 			"unit": "%",
 			"defaultValue": 10
 		},
 		{
 			"#": "171",
+			"$kind": "reporting_interval.power",
 			"label": "Power (W) Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -100,6 +103,7 @@
 		},
 		{
 			"#": "172",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -109,6 +113,7 @@
 		},
 		{
 			"#": "173",
+			"$kind": "reporting_interval.voltage",
 			"label": "Voltage Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -118,6 +123,7 @@
 		},
 		{
 			"#": "174",
+			"$kind": "reporting_interval.current",
 			"label": "Current (A) Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",

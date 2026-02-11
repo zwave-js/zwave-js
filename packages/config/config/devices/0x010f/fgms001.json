@@ -625,7 +625,6 @@
 		{
 			"#": "62",
 			"$if": "firmwareVersion <= 3.1",
-			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Measuring Interval",
 			"description": "The parameter determines how often the temperature will be measured.",
 			"valueSize": 2,
@@ -637,7 +636,6 @@
 		{
 			"#": "62",
 			"$if": "firmwareVersion >= 3.2",
-			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Measuring Interval",
 			"description": "How often the temperature will be measured",
 			"valueSize": 2,

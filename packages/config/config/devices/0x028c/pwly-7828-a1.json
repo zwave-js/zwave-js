@@ -111,6 +111,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "°F",

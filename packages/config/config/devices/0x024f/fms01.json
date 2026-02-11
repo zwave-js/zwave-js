@@ -62,6 +62,7 @@
 		},
 		{
 			"#": "12",
+			"$kind": "maximum_brightness",
 			"label": "Maximum Level",
 			"valueSize": 1,
 			"minValue": 1,
@@ -70,6 +71,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Level",
 			"valueSize": 1,
 			"minValue": 1,
@@ -174,6 +176,7 @@
 		},
 		{
 			"#": "64",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"description": "Report Interval in seconds",
 			"valueSize": 2,
@@ -184,6 +187,7 @@
 		},
 		{
 			"#": "66",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -210,6 +214,7 @@
 		},
 		{
 			"#": "240",
+			"$kind": "calibration.temperature",
 			"label": "Floor Sensor Temperature Offset",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -219,6 +224,7 @@
 		},
 		{
 			"#": "241",
+			"$kind": "calibration.temperature",
 			"label": "Room Sensor Temperature Offset",
 			"valueSize": 1,
 			"unit": "0.1 °C",

@@ -165,6 +165,7 @@
 		},
 		{
 			"#": "35[0xff]",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Report Offset",
 			"valueSize": 2,
 			"minValue": 0,

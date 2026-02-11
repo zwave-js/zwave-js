@@ -50,6 +50,7 @@
 		},
 		{
 			"#": "2",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °",
@@ -59,6 +60,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -68,6 +70,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Brightness Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -80,6 +83,7 @@
 			// Initial release of HW version 1.0
 			"$if": "firmwareVersion >= 16.9 && firmwareVersion < 17.9",
 			"$import": "~/templates/master_template.json#base_1-255_nounit",
+			"$kind": "motion_retrigger_interval",
 			"label": "Re-Trigger Interval",
 			"unit": "minutes",
 			"defaultValue": 3
@@ -88,6 +92,7 @@
 			"#": "5",
 			// Update 17.9 changed the unit to seconds
 			"$if": "firmwareVersion >= 17.9 && firmwareVersion < 24.16",
+			"$kind": "motion_retrigger_interval",
 			"label": "Re-Trigger Interval",
 			"valueSize": 1,
 			"unit": "seconds",
@@ -97,6 +102,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "motion_retrigger_interval",
 			// Update 24.16 changed the range to 15-255, this also applies to HW version 1.0
 			"label": "Re-Trigger Interval",
 			"valueSize": 1,
@@ -110,6 +116,7 @@
 			"#": "6",
 			// HW version 1.0, first release has default value 3
 			"$if": "firmwareVersion >= 16.9 && firmwareVersion < 17.9",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"description": "Adjust sensitivity of the motion sensor.",
 			"valueSize": 1,
@@ -150,6 +157,7 @@
 			"#": "6",
 			// All other releases have default value 4
 			"$if": "firmwareVersion < 16.9 || firmwareVersion >= 17.9",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"description": "Adjust sensitivity of the motion sensor.",
 			"valueSize": 1,
@@ -247,6 +255,7 @@
 			"#": "9",
 			// Added with the switch to the new firmware versioning scheme
 			"$if": "firmwareVersion >= 1.10 && firmwareVersion < 16.9",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "Set the reporting offset on your temperature sensor. 0=-10, 100=0, 200=+10",
 			"valueSize": 1,
@@ -260,6 +269,7 @@
 			"#": "10",
 			// Added with the switch to the new firmware versioning scheme
 			"$if": "firmwareVersion >= 1.10 && firmwareVersion < 16.9",
+			"$kind": "calibration.humidity",
 			"label": "Humidity Offset",
 			"description": "Set the reporting offset on your humidity sensor. 0=-10%, 100=0%, 200=+10%",
 			"valueSize": 1,

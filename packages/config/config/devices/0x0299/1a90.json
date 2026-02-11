@@ -43,6 +43,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy Meter Report Interval",
 			"description": "Interval of active energy meter reports in minutes; 0 to disable.",
 			"valueSize": 2,
