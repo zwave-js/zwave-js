@@ -461,8 +461,13 @@ duration: ${info.duration} seconds`;
 		// Remember tone count and info on the tone ID metadata
 		this.setMetadata(ctx, SoundSwitchCCValues.toneId, {
 			...SoundSwitchCCValues.toneId.meta,
+			allowed: [
+				{ value: 0 },
+				{ from: 1, to: toneCount },
+				{ value: 0xff },
+			],
 			min: 0,
-			max: toneCount,
+			max: 0xff,
 			states: {
 				0: "off",
 				...metadataStates,

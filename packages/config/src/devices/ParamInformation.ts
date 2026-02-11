@@ -1,5 +1,5 @@
 /* oxlint-disable typescript/no-unnecessary-type-assertion */
-import { type AllowedConfigValue, tryParseParamNumber } from "@zwave-js/core";
+import { type AllowedValue, tryParseParamNumber } from "@zwave-js/core";
 import {
 	type JSONObject,
 	ObjectKeyMap,
@@ -260,7 +260,7 @@ Parameter #${parameterNumber}: "allowed" array must contain at least one entry!`
 			}
 
 			// Parse each value definition
-			const parsedValues: AllowedConfigValue[] = [];
+			const parsedValues: AllowedValue[] = [];
 			for (let i = 0; i < definition.allowed.length; i++) {
 				const def = definition.allowed[i];
 
@@ -355,7 +355,7 @@ Parameter #${parameterNumber}: allowed[${i}] must have either "value" or "range"
 	public readonly label: string;
 	public readonly description?: string;
 	public readonly valueSize: number;
-	public readonly allowed?: readonly AllowedConfigValue[];
+	public readonly allowed?: readonly AllowedValue[];
 	public readonly minValue?: number;
 	public readonly maxValue?: number;
 	public readonly unsigned?: boolean;

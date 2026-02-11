@@ -612,6 +612,130 @@ function stripAsConstAndParentheses(node: Node): Node {
 	return node;
 }
 
+/**
+ * Parses the `allowed` property from a metadata object literal and computes
+ * the min, max, and (if applicable) steps values from it.
+ */
+function inferMinMaxStepsFromAllowedLiteral(
+	node: ObjectLiteralExpression,
+): { min: number; max: number; steps?: number } | undefined {
+	const allowedProp = node.getProperty("allowed")?.asKind(
+		SyntaxKind.PropertyAssignment,
+	);
+	if (!allowedProp) return undefined;
+
+	const allowedArray = allowedProp.getInitializerIfKind(
+		SyntaxKind.ArrayLiteralExpression,
+	);
+	if (!allowedArray) return undefined;
+
+	let min = Infinity;
+	let max = -Infinity;
+	const rangeSteps: (number | undefined)[] = [];
+
+	for (const element of allowedArray.getElements()) {
+		const obj = element.asKind(SyntaxKind.ObjectLiteralExpression);
+		if (!obj) continue;
+
+		// Check for single value: { value: <number> }
+		const valueProp = obj.getProperty("value")?.asKind(
+			SyntaxKind.PropertyAssignment,
+		);
+		if (valueProp) {
+			const init = valueProp.getInitializer();
+			if (init) {
+				const num = parseNumericLiteral(init);
+				if (num != undefined) {
+					min = Math.min(min, num);
+					max = Math.max(max, num);
+				}
+			}
+			continue;
+		}
+
+		// Check for range: { from: <number>, to: <number>, step?: <number> }
+		const fromProp = obj.getProperty("from")?.asKind(
+			SyntaxKind.PropertyAssignment,
+		);
+		const toProp = obj.getProperty("to")?.asKind(
+			SyntaxKind.PropertyAssignment,
+		);
+		if (fromProp && toProp) {
+			const fromNum = fromProp.getInitializer()
+				? parseNumericLiteral(fromProp.getInitializer()!)
+				: undefined;
+			const toNum = toProp.getInitializer()
+				? parseNumericLiteral(toProp.getInitializer()!)
+				: undefined;
+			if (fromNum != undefined && toNum != undefined) {
+				min = Math.min(min, fromNum);
+				max = Math.max(max, toNum);
+			}
+
+			const stepProp = obj.getProperty("step")?.asKind(
+				SyntaxKind.PropertyAssignment,
+			);
+			const stepNum = stepProp?.getInitializer()
+				? parseNumericLiteral(stepProp.getInitializer()!)
+				: undefined;
+			rangeSteps.push(stepNum);
+		}
+	}
+
+	if (min === Infinity || max === -Infinity) return undefined;
+
+	// Only infer steps if there's exactly one range entry with a step
+	const steps = rangeSteps.length === 1 ? rangeSteps[0] : undefined;
+
+	return { min, max, steps };
+}
+
+function parseNumericLiteral(node: Node): number | undefined {
+	const num = Number(node.getText().trim());
+	return Number.isNaN(num) ? undefined : num;
+}
+
+/**
+ * If the metadata object literal contains an `allowed` property,
+ * injects inferred `min`, `max`, and `steps` properties into the text.
+ */
+function injectAllowedDefaults(
+	node: ObjectLiteralExpression,
+	text: string,
+): string {
+	const inferred = inferMinMaxStepsFromAllowedLiteral(node);
+	if (!inferred) return text;
+
+	// Check which properties are already explicitly set (not from spreads)
+	const hasExplicitMin = node.getProperty("min")?.asKind(
+		SyntaxKind.PropertyAssignment,
+	) != undefined;
+	const hasExplicitMax = node.getProperty("max")?.asKind(
+		SyntaxKind.PropertyAssignment,
+	) != undefined;
+	const hasExplicitSteps = node.getProperty("steps")?.asKind(
+		SyntaxKind.PropertyAssignment,
+	) != undefined;
+
+	const additions: string[] = [];
+	if (!hasExplicitMin) additions.push(`min: ${inferred.min}`);
+	if (!hasExplicitMax) additions.push(`max: ${inferred.max}`);
+	if (!hasExplicitSteps && inferred.steps != undefined) {
+		additions.push(`steps: ${inferred.steps}`);
+	}
+
+	if (additions.length === 0) return text;
+
+	// Insert the properties before the closing brace
+	const lastBrace = text.lastIndexOf("}");
+	if (lastBrace === -1) return text;
+
+	return text.slice(0, lastBrace)
+		+ additions.join(",\n")
+		+ ",\n"
+		+ text.slice(lastBrace);
+}
+
 function inferMetaBody(
 	node:
 		| ObjectLiteralExpression
@@ -622,7 +746,8 @@ function inferMetaBody(
 	if (!node) return "return ValueMetadata.Any";
 
 	if (node.isKind(SyntaxKind.ObjectLiteralExpression)) {
-		return `return ${node.getText()} as const`;
+		const text = injectAllowedDefaults(node, node.getText());
+		return `return ${text} as const`;
 	}
 	const body = node.getBody();
 	if (!body) {
@@ -633,18 +758,27 @@ function inferMetaBody(
 
 	// Blocks are special because we need to wrap them. Everything else can be returned as-is
 	if (!body.isKind(SyntaxKind.Block)) {
-		return `return ${stripAsConstAndParentheses(body).getText()} as const`;
+		const stripped = stripAsConstAndParentheses(body);
+		const objLiteral = stripped.asKind(SyntaxKind.ObjectLiteralExpression);
+		const text = objLiteral
+			? injectAllowedDefaults(objLiteral, objLiteral.getText())
+			: stripped.getText();
+		return `return ${text} as const`;
 	}
 	// Blocks that only contain a return are simple
 	if (
 		body.getStatements().length === 1
 		&& body.getStatements()[0].isKind(SyntaxKind.ReturnStatement)
 	) {
-		const ret = stripAsConstAndParentheses(
+		const stripped = stripAsConstAndParentheses(
 			body.getStatements()[0].asKindOrThrow(SyntaxKind.ReturnStatement)
 				.getExpressionOrThrow(),
-		).getText();
-		return `return ${ret} as const`;
+		);
+		const objLiteral = stripped.asKind(SyntaxKind.ObjectLiteralExpression);
+		const text = objLiteral
+			? injectAllowedDefaults(objLiteral, objLiteral.getText())
+			: stripped.getText();
+		return `return ${text} as const`;
 	}
 	// The meta is constructed inside a getter, so no need to wrap anything
 	// However, we need to trim off the surrounding braces
