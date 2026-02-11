@@ -53,6 +53,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Reporting Intervals",
 			"description": "Define the time interval for the temperature report that is sent.",
 			"valueSize": 2,

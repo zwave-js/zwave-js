@@ -82,6 +82,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "ramp_rate.zwave",
 			"label": "Dim Rate Timing (From Z-Wave Controller)",
 			"description": "Timing of steps",
 			"valueSize": 2,
@@ -101,6 +102,7 @@
 		},
 		{
 			"#": "10",
+			"$kind": "ramp_rate.manual",
 			"label": "Dim Rate Timing (When Manually Controlled)",
 			"description": "Timing of steps",
 			"valueSize": 2,

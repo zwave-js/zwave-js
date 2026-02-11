@@ -58,6 +58,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"description": "Configuration of time for time base temperature reporting. (range 31 second to 65534 second)",
 			"valueSize": 2,
@@ -85,6 +86,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Delta Configuration Temperature Report",
 			"description": "Configuration of delta temperature for delta temperature change based reporting. in case of °f scale: minimum value is 0 and maximum value is 500 (in 0.1 °f resolution)",
 			"valueSize": 2,

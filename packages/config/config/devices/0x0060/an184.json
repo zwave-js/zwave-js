@@ -60,6 +60,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "reporting_interval.power",
 			"label": "Wattage Report Interval",
 			"valueSize": 2,
 			"unit": "minutes",
@@ -69,6 +70,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "reporting_interval.energy",
 			"label": "kWh Report Interval",
 			"valueSize": 2,
 			"unit": "minutes",
@@ -93,6 +95,7 @@
 		},
 		{
 			"#": "7",
+			"$kind": "reporting_threshold.power",
 			"label": "Wattage Report Relative Change Threshold",
 			"valueSize": 1,
 			"minValue": 0,
