@@ -88,6 +88,7 @@ interface ValueMetadataNumeric extends ValueMetadataAny {
 	min?: number;
 	max?: number;
 	steps?: number;
+	allowed?: readonly AllowedValue[];
 	default?: number;
 	states?: Record<number, string>;
 	allowManualEntry?: boolean;
@@ -95,9 +96,18 @@ interface ValueMetadataNumeric extends ValueMetadataAny {
 }
 ```
 
+<!-- #import AllowedValue from "zwave-js" with no-jsdoc -->
+
+```ts
+type AllowedValue =
+	| { value: number }
+	| { from: number; to: number; step?: number };
+```
+
 - `min`: The minimum value that can be assigned to this value
 - `max`: The maximum value that can be assigned to this value
 - `steps`: When only certain values between min and max are allowed, this determines the step size
+- `allowed`: Defines the allowed values as a combination of single values and/or ranges. When present, this takes precedence over `min`/`max`/`steps` for determining which values are valid. Each entry is either `{ value: number }` for a single value or `{ from: number, to: number, step?: number }` for a range. The `min`/`max`/`steps` fields are still set for backwards compatibility.
 - `default`: The default value
 - `states`: Human-readable names for numeric values, for example `{0: "off", 1: "on"}`.
 - `unit`: An optional unit for numeric values

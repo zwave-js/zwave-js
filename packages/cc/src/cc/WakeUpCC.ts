@@ -526,10 +526,18 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 			},
 			{
 				...ValueMetadata.WriteOnlyUInt24,
-				min: this.minWakeUpInterval,
+				allowed: [
+					{ value: 0 },
+					{
+						from: this.minWakeUpInterval,
+						to: this.maxWakeUpInterval,
+						step: this.wakeUpIntervalSteps,
+					},
+				],
+				min: 0,
 				max: this.maxWakeUpInterval,
-				steps: this.wakeUpIntervalSteps,
 				default: this.defaultWakeUpInterval,
+				states: { 0: "Disabled" },
 			},
 		);
 

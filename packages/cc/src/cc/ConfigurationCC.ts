@@ -1522,7 +1522,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				ctx,
 				ConfigurationCCValues.paramInformation(parameter, valueBitMask),
 			) ?? {
-				...ValueMetadata.Any,
+				...ValueMetadata.Number,
 			}
 		);
 	}

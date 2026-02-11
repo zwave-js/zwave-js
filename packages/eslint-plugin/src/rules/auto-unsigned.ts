@@ -5,7 +5,7 @@ import {
 	getJSONBoolean,
 	getJSONNumber,
 	getJSONString,
-	inferMinMaxValueFromAllowed,
+	inferMinMaxStepsFromAllowed,
 	insertAfterJSONProperty,
 	insertBeforeJSONProperty,
 	paramInfoPropertyOrder,
@@ -111,7 +111,7 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 
 				const parsedAllowed = parseAllowedField(node);
 				if (parsedAllowed) {
-					const minMax = inferMinMaxValueFromAllowed(parsedAllowed);
+					const minMax = inferMinMaxStepsFromAllowed(parsedAllowed);
 					if (minMax) {
 						// allowedProp must exist if parseAllowedField returned data
 						minValueNode = allowedProp!;
