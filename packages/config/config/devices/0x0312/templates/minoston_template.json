@@ -494,7 +494,7 @@
 		"defaultValue": 1
 	},
 	"power_reporting_threshold": {
-		"$kind": "reporting_threshold_delta.power",
+		"$kind": "reporting_threshold.power",
 		"label": "Power Reporting Threshold",
 		"valueSize": 1,
 		"unit": "W",
@@ -513,7 +513,7 @@
 		"unsigned": true
 	},
 	"current_reporting_threshold": {
-		"$kind": "reporting_threshold_delta.current",
+		"$kind": "reporting_threshold.current",
 		"label": "Current Reporting Threshold",
 		"valueSize": 1,
 		"unit": "0.1 A",
@@ -523,7 +523,7 @@
 		"unsigned": true
 	},
 	"energy_reporting_threshold": {
-		"$kind": "reporting_threshold_delta.energy",
+		"$kind": "reporting_threshold.energy",
 		"label": "Energy Reporting Threshold",
 		"valueSize": 1,
 		"unit": "0.01 kWh",
@@ -538,7 +538,7 @@
 		"defaultValue": 1
 	},
 	"battery_report_threshold": {
-		"$kind": "reporting_threshold_delta.battery",
+		"$kind": "reporting_threshold.battery",
 		"label": "Battery Report Threshold",
 		"valueSize": 1,
 		"unit": "%",

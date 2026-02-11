@@ -44,6 +44,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "reporting_threshold.battery",
 			"label": "Battery Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -53,6 +54,7 @@
 		},
 		{
 			"#": "2",
+			"$kind": "low_battery_threshold",
 			"label": "Low Battery Alarm Threshold",
 			"valueSize": 1,
 			"unit": "%",

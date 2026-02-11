@@ -34,6 +34,7 @@
 		},
 		{
 			"#": "10",
+			"$kind": "ramp_rate",
 			"label": "Dimming Resolution Speed",
 			"description": "Tick length in 10ms units",
 			"valueSize": 1,

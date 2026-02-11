@@ -24,6 +24,7 @@
 	"paramInformation": [
 		{
 			"#": "2",
+			"$kind": "state_after_power_failure",
 			"label": "State After Power Loss",
 			"description": "This state will be chosen when the power is restored",
 			"valueSize": 1,

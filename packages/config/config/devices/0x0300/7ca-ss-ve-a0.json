@@ -28,6 +28,7 @@
 	"paramInformation": [
 		{
 			"#": "10",
+			"$kind": "low_battery_threshold",
 			"label": "Low Battery Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -43,6 +44,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "motion_clear_delay",
 			"label": "PIR Timeout",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -62,6 +64,7 @@
 		},
 		{
 			"#": "16",
+			"$kind": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,

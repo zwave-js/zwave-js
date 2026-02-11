@@ -63,6 +63,7 @@
 		},
 		{
 			"#": "10",
+			"$kind": "low_battery_threshold",
 			"label": "Low Battery Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -88,6 +89,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 1,
 			"unit": "minutes",
