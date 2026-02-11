@@ -161,6 +161,7 @@
 		},
 		{
 			"#": "51",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Reports Threshold",
 			"valueSize": 2,
 			"minValue": 0,

@@ -106,6 +106,7 @@
 		},
 		{
 			"#": "12",
+			"$kind": "reporting_threshold.power",
 			"label": "Minimum Change in Wattage Triggering Report",
 			"valueSize": 1,
 			"minValue": 0,

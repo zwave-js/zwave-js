@@ -33,6 +33,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Delta Report Threshold (Group 1)",
 			"valueSize": 1,
 			"unit": "0.1°",
@@ -59,6 +60,7 @@
 		},
 		{
 			"#": "10",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Delta Report Threshold (Group 2)",
 			"valueSize": 1,
 			"unit": "0.1°",

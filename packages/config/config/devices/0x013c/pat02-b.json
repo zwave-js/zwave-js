@@ -75,6 +75,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"valueSize": 1,
 			"minValue": 0,
@@ -83,6 +84,7 @@
 		},
 		{
 			"#": "23",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Differential Report",
 			"valueSize": 1,
 			"minValue": 0,

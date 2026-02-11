@@ -425,6 +425,7 @@
 		},
 		{
 			"#": "110",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"unit": "°C",

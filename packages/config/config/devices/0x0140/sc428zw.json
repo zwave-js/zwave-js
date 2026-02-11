@@ -56,6 +56,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Change Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -74,6 +75,7 @@
 		},
 		{
 			"#": "23",
+			"$kind": "reporting_threshold.energy",
 			"label": "Energy Reporting Threshold",
 			"valueSize": 2,
 			"unit": "kWh",

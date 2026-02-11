@@ -132,6 +132,7 @@
 		},
 		{
 			"#": "26",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C/°F",
@@ -141,6 +142,7 @@
 		},
 		{
 			"#": "28",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Change Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",

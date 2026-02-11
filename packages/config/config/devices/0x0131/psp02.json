@@ -36,6 +36,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"description": "setting",
 			"valueSize": 1,
@@ -54,6 +55,7 @@
 		},
 		{
 			"#": "8",
+			"$kind": "motion_retrigger_interval",
 			"label": "PIR Motion Re-Trigger Min Interval",
 			"valueSize": 1,
 			"unit": "8s ticks",
@@ -73,6 +75,7 @@
 		},
 		{
 			"#": "10",
+			"$kind": "reporting_interval.battery",
 			"label": "Battery Level Auto-Report Interval",
 			"valueSize": 1,
 			"unit": "ticks",
@@ -100,6 +103,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 1,
 			"unit": "ticks",
@@ -120,6 +124,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Differential to Report",
 			"valueSize": 1,
 			"unit": "Fahrenheit",
@@ -129,6 +134,7 @@
 		},
 		{
 			"#": "22",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Min Illumination Differential",
 			"valueSize": 1,
 			"unit": "%",

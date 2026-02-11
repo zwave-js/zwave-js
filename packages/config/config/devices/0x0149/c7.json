@@ -328,6 +328,7 @@
 		},
 		{
 			"#": "75",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

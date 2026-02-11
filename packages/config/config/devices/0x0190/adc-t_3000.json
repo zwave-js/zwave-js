@@ -2049,6 +2049,7 @@
 		},
 		{
 			"#": "59",
+			"$kind": "reporting_interval.battery",
 			"label": "Minimum Battery Reporting Interval",
 			"description": "Minimum number of hours between battery reports",
 			"valueSize": 1,

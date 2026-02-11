@@ -493,7 +493,7 @@
 		]
 	},
 	"current_threshold": {
-		"$kind": "reporting_threshold_delta.current",
+		"$kind": "reporting_threshold.current",
 		"label": "Current Change Threshold",
 		"valueSize": 1,
 		"unit": "A",
@@ -509,7 +509,7 @@
 		]
 	},
 	"kwh_threshold": {
-		"$kind": "reporting_threshold_delta.energy",
+		"$kind": "reporting_threshold.energy",
 		"label": "Power (kWh) Change Threshold",
 		"valueSize": 2,
 		"unit": "KwH",
@@ -525,7 +525,7 @@
 		]
 	},
 	"power_threshold": {
-		"$kind": "reporting_threshold_delta.power",
+		"$kind": "reporting_threshold.power",
 		"label": "Power Change Threshold",
 		"description": "Threshold change in power consumption to induce an automatic report",
 		"valueSize": 2,
@@ -590,7 +590,7 @@
 		"label": "Power Change Threshold (Whole HEM Export)"
 	},
 	"percent_threshold": {
-		"$kind": "reporting_threshold_delta.power",
+		"$kind": "reporting_threshold.power",
 		"label": "Power Percentage Change Threshold",
 		"description": "Threshold change in power consumption (on a percentage basis) to induce an automatic report",
 		"valueSize": 1,

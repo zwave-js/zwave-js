@@ -269,6 +269,7 @@
 		},
 		{
 			"#": "65",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Internal Temperature Sensor: Reporting Threshold",
 			"valueSize": 2,
 			"unit": "°C",
@@ -300,6 +301,7 @@
 		},
 		{
 			"#": "67",
+			"$kind": "reporting_threshold.temperature",
 			"label": "External Temperature Sensor: Reporting Threshold",
 			"valueSize": 2,
 			"unit": "°C",

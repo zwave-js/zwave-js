@@ -44,6 +44,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "dimming_duration",
 			"label": "Local Dimming Time",
 			"description": "Defines the time spent to switch the controlled load",
 			"valueSize": 1,
@@ -53,6 +54,7 @@
 		},
 		{
 			"#": "10",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Light Level",
 			"description": "Defines which light level will correspond to 1% in the range between 1 and 98%",
 			"valueSize": 1,

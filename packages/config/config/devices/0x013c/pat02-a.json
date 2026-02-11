@@ -204,6 +204,7 @@
 		},
 		{
 			"#": "21",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"description": "Determines the temperature differential that will trigger a report.",
 			"valueSize": 1,
@@ -220,6 +221,7 @@
 		},
 		{
 			"#": "23",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Differential Report",
 			"description": "Determines the humidity differential that will trigger a report.",
 			"valueSize": 1,

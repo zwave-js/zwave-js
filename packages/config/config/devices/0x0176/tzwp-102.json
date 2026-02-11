@@ -65,6 +65,7 @@
 		},
 		{
 			"#": "16",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Consumption Reports: Change Threshold",
 			"valueSize": 2,
 			"unit": "W",
