@@ -12,6 +12,7 @@ export type {
 	ValueMetadataNumeric,
 	ValueMetadataString,
 	ValueType,
+	AllowedValue,
 } from "@zwave-js/core";
 export type {
 	ZWaveNodeMetadataUpdatedArgs,
