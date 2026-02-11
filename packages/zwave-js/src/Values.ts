@@ -4,6 +4,7 @@ export type { SetbackState, Switchpoint } from "@zwave-js/cc";
 export type { Scale, Sensor } from "@zwave-js/core";
 export { Duration, ValueMetadata } from "@zwave-js/core";
 export type {
+	AllowedValue,
 	DurationUnit,
 	TranslatedValueID,
 	ValueID,
@@ -12,7 +13,6 @@ export type {
 	ValueMetadataNumeric,
 	ValueMetadataString,
 	ValueType,
-	AllowedValue,
 } from "@zwave-js/core";
 export type {
 	ZWaveNodeMetadataUpdatedArgs,
