@@ -4,6 +4,8 @@ import {
 	Security2CCMessageEncapsulation,
 	VersionCCCommandClassGet,
 	VersionCCCommandClassReport,
+	VersionCCGet,
+	VersionCCReport,
 	ZWavePlusNodeType,
 	ZWavePlusRoleType,
 } from "@zwave-js/cc";
@@ -12,7 +14,7 @@ import {
 	ZWaveProtocolCCNodeInformationFrame,
 	ZWaveProtocolCCRequestNodeInformationFrame,
 } from "@zwave-js/cc/ZWaveProtocolCC";
-import { CommandClasses } from "@zwave-js/core";
+import { CommandClasses, ZWaveLibraryTypes } from "@zwave-js/core";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 
 import { BasicCCBehaviors } from "./mockCCBehaviors/Basic.js";
@@ -63,6 +65,21 @@ const respondToRequestNodeInfo: MockNodeBehavior = {
 					.filter(([, info]) => info.isSupported)
 					// FIXME: Filter out secure CCs if the node isn't secure
 					.map(([ccId]) => ccId),
+			});
+			return { action: "sendCC", cc };
+		}
+	},
+};
+
+const respondToVersionCCGet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof VersionCCGet) {
+			const cc = new VersionCCReport({
+				nodeId: controller.ownNodeId,
+				libraryType: ZWaveLibraryTypes["Enhanced Slave"],
+				protocolVersion: "7.0",
+				firmwareVersions: [self.capabilities.firmwareVersion],
+				hardwareVersion: 1,
 			});
 			return { action: "sendCC", cc };
 		}
@@ -165,6 +182,7 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...MultiChannelCCHooks,
 		...MultiChannelCCBehaviors,
 
+		respondToVersionCCGet,
 		respondToVersionCCCommandClassGet,
 
 		respondToZWavePlusCCGet,
