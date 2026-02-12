@@ -548,7 +548,7 @@
 		"unsigned": true
 	},
 	"battery_alarm_report": {
-		"$kind": "low_battery_threshold",
+		"$kind": "reporting_threshold.low_battery",
 		"label": "Low Battery Alarm Threshold",
 		"valueSize": 1,
 		"unit": "%",

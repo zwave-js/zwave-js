@@ -555,6 +555,7 @@
 						"reporting_threshold.humidity",
 						"reporting_threshold.brightness",
 						"reporting_threshold.battery",
+						"reporting_threshold.low_battery",
 						"reporting_threshold.current",
 						"reporting_threshold.voltage",
 						"reporting_interval.power",
@@ -564,8 +565,7 @@
 						"reporting_interval.brightness",
 						"reporting_interval.battery",
 						"reporting_interval.current",
-						"reporting_interval.voltage",
-						"low_battery_threshold"
+						"reporting_interval.voltage"
 					]
 				}
 			},

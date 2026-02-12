@@ -125,7 +125,7 @@
 		},
 		{
 			"#": "7",
-			"$kind": "low_battery_threshold",
+			"$kind": "reporting_threshold.low_battery",
 			"label": "Low Battery Threshold",
 			"description": "Below this level a low battery alert will be sent.",
 			"valueSize": 1,

@@ -265,6 +265,7 @@ Threshold for automatic reporting based on value change (delta from previous rea
 | `reporting_threshold.humidity`    | Humidity change threshold         |
 | `reporting_threshold.brightness`  | Light/brightness change threshold |
 | `reporting_threshold.battery`     | Battery level change threshold    |
+| `reporting_threshold.low_battery` | Low battery level threshold (%)   |
 | `reporting_threshold.current`     | Current/amperage change threshold |
 | `reporting_threshold.voltage`     | Voltage change threshold          |
 
@@ -275,6 +276,7 @@ Threshold for automatic reporting based on value change (delta from previous rea
 - "Brightness Change Report Threshold" → `reporting_threshold.brightness`
 - "Power Reporting Threshold" → `reporting_threshold.power`
 - "Battery Change Report Threshold" → `reporting_threshold.battery`
+- "Low Battery Alert Threshold" → `reporting_threshold.low_battery`
 
 **NOT a specific threshold** (do not use a sub-variant for these):
 
@@ -313,18 +315,6 @@ Time interval for periodic automatic reporting.
 - "Temperature & Humidity Reporting Interval" — combined parameter controlling multiple sensor types; don't tag with a single sub-variant
 - "Temperature Check Interval" / "Temperature Measuring Interval" — sensor polling/measurement interval, not a reporting interval. Some devices have separate parameters for how often a sensor is read vs. how often reports are sent
 
----
-
-### `low_battery_threshold`
-
-Battery level (%) that defines when the device is considered to have a low battery. Typically triggers low battery alerts/warnings.
-
-**Example parameters:**
-
-- "Low Battery Threshold"
-- "Low Battery Alert Threshold"
-- "Low Battery Level"
-- "Low Battery Alarm Threshold"
 
 ---
 

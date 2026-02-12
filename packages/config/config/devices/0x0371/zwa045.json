@@ -257,7 +257,7 @@
 		},
 		{
 			"#": "14",
-			"$kind": "low_battery_threshold",
+			"$kind": "reporting_threshold.low_battery",
 			"label": "Low Battery Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

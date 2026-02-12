@@ -27,7 +27,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "low_battery_threshold",
+			"$kind": "reporting_threshold.low_battery",
 			"label": "Low Battery Level",
 			"valueSize": 2,
 			"minValue": 1000,

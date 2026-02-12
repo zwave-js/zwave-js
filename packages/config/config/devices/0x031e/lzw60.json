@@ -17,7 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "10",
-			"$kind": "low_battery_threshold",
+			"$kind": "reporting_threshold.low_battery",
 			"label": "Low Battery Alert Level",
 			"description": "At what battery level should the sensor send a low battery alert",
 			"valueSize": 1,

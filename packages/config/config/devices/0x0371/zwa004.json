@@ -22,7 +22,7 @@
 	"paramInformation": [
 		{
 			"#": "32",
-			"$import": "~/0x0086/templates/aeotec_template.json#low_battery_threshold",
+			"$import": "~/0x0086/templates/aeotec_template.json#reporting_threshold.low_battery",
 			"label": "Level of Low Battery",
 			"defaultValue": 20
 		},
