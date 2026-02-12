@@ -212,6 +212,7 @@
 		},
 		{
 			"#": "17",
+			"$kind": "reporting_interval.humidity",
 			"label": "Automatic Reporting: Humidity Reporting Interval",
 			"description": "Allowable range: 30-28800",
 			"valueSize": 2,

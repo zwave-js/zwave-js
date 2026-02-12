@@ -72,6 +72,7 @@
 		},
 		{
 			"#": "30",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Reporting Threshold",
 			"description": "1 °F = 0.5 °C",
 			"valueSize": 1,
@@ -146,6 +147,7 @@
 		},
 		{
 			"#": "37",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"description": "1 °F = 0.5 °C",
 			"valueSize": 1,
@@ -178,6 +180,7 @@
 		},
 		{
 			"#": "53",
+			"$kind": "calibration.humidity",
 			"label": "Humidity Offset",
 			"valueSize": 1,
 			"unit": "%",

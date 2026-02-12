@@ -46,6 +46,7 @@
 		},
 		{
 			"#": "5",
+			"$kind": "minimum_brightness",
 			"label": "Minimum Brightness Value",
 			"valueSize": 1,
 			"minValue": 0,

@@ -28,6 +28,7 @@
 	"paramInformation": [
 		{
 			"#": "2",
+			"$kind": "reporting_threshold.battery",
 			"label": "Battery Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -37,6 +38,7 @@
 		},
 		{
 			"#": "3",
+			"$kind": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"description": "Allowable range: 8 (high) - 255 (low)",
 			"valueSize": 2,
@@ -52,6 +54,7 @@
 		},
 		{
 			"#": "4",
+			"$kind": "motion_retrigger_interval",
 			"label": "Motion Blind Time",
 			"description": "The amount of time the sensor will not report motion after it has reported motion.",
 			"valueSize": 1,
@@ -178,6 +181,7 @@
 		},
 		{
 			"#": "7",
+			"$kind": "motion_clear_delay",
 			"label": "Motion Clear Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -274,6 +278,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_interval.brightness",
 			"label": "Brightness Report Interval",
 			"description": "Allowable range: 5-2678400",
 			"valueSize": 4,
@@ -290,6 +295,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "reporting_threshold.brightness",
 			"label": "Brightness Change Report Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -327,6 +333,7 @@
 		},
 		{
 			"#": "17",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 2,
 			"unit": "0.1 °C",
@@ -342,6 +349,7 @@
 		},
 		{
 			"#": "18",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 2,
 			"unit": "rh%",
@@ -357,6 +365,7 @@
 		},
 		{
 			"#": "19",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 2,
 			"unit": "0.1 °C",
@@ -366,6 +375,7 @@
 		},
 		{
 			"#": "20",
+			"$kind": "calibration.humidity",
 			"label": "Humidity Calibration",
 			"description": "The value to be added to the actual measured humidity.",
 			"valueSize": 2,

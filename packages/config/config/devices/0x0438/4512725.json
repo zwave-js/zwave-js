@@ -46,6 +46,7 @@
 		},
 		{
 			"#": "9",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -71,6 +72,7 @@
 		},
 		{
 			"#": "11",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Automatic Reporting: Temperature Change Threshold",
 			"description": "Allowable range: 2-50",
 			"valueSize": 1,
@@ -87,6 +89,7 @@
 		},
 		{
 			"#": "12",
+			"$kind": "reporting_interval.temperature",
 			"label": "Automatic Reporting: Temperature Reporting Interval",
 			"description": "Allowable range: 10-65535",
 			"valueSize": 2,
@@ -104,6 +107,7 @@
 		},
 		{
 			"#": "13",
+			"$kind": "reporting_threshold.power",
 			"label": "Automatic Reporting: Power Change Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -120,6 +124,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "reporting_threshold.voltage",
 			"label": "Automatic Reporting: Voltage Change Threshold",
 			"valueSize": 1,
 			"unit": "V",
@@ -136,6 +141,7 @@
 		},
 		{
 			"#": "15",
+			"$kind": "reporting_threshold.current",
 			"label": "Automatic Reporting: Current Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
