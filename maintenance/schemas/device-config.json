@@ -542,6 +542,7 @@
 						"orientation",
 						"orientation.momentary",
 						"motion_sensitivity",
+						"motion_sensitivity.inverted",
 						"motion_clear_delay",
 						"motion_retrigger_interval",
 						"calibration.temperature",

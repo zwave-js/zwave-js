@@ -164,13 +164,14 @@ Inverts physical switch direction (up=on vs up=off).
 
 ### `motion_sensitivity`
 
-Sensitivity level of a motion/PIR sensor.
+Sensitivity level of a motion/PIR sensor. Use the base kind when higher values mean more sensitive.
+
+Use `motion_sensitivity.inverted` when lower values mean **more** sensitive (e.g., the value represents a detection threshold where a lower threshold = easier to trigger = more sensitive).
 
 **Example parameters:**
 
-- "Motion Sensor Sensitivity"
-- "PIR Sensitivity"
-- "Motion Sensitivity Level"
+- "Motion Sensor Sensitivity" (1 = low, 10 = high) → `motion_sensitivity`
+- "PIR Sensitivity" (8 = highest, 255 = lowest) → `motion_sensitivity.inverted`
 
 ---
 

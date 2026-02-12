@@ -97,7 +97,7 @@
 		{
 			"#": "1",
 			"$if": "firmwareVersion <= 3.1",
-			"$kind": "motion_sensitivity",
+			"$kind": "motion_sensitivity.inverted",
 			"label": "Motion Sensor Sensitivity",
 			"description": "The lower the value, the more sensitive the PIR sensor.",
 			"valueSize": 1,
@@ -109,7 +109,7 @@
 		{
 			"#": "1",
 			"$if": "firmwareVersion >= 3.2",
-			"$kind": "motion_sensitivity",
+			"$kind": "motion_sensitivity.inverted",
 			"label": "Motion Sensor Sensitivity",
 			"description": "The lower the value, the more sensitive the PIR sensor.",
 			"valueSize": 2,

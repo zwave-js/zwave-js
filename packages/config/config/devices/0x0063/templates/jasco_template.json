@@ -200,7 +200,7 @@
 		]
 	},
 	"motion_sensitivity": {
-		"$kind": "motion_sensitivity",
+		"$kind": "motion_sensitivity.inverted",
 		"label": "Motion Sensitivity",
 		"valueSize": 1,
 		"defaultValue": 2,

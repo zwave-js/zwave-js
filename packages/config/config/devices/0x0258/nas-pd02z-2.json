@@ -27,7 +27,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "motion_sensitivity",
+			"$kind": "motion_sensitivity.inverted",
 			"label": "Motion Sensor: Sensitivity",
 			"description": "0 = highest; 99 = lowest.",
 			"valueSize": 1,

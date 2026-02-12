@@ -1,6 +1,6 @@
 {
 	"motion_sensitivity": {
-		"$kind": "motion_sensitivity",
+		"$kind": "motion_sensitivity.inverted",
 		"label": "Motion Sensor: Sensitivity",
 		"description": "8 = highest; 255 = lowest",
 		"valueSize": 1,
