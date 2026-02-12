@@ -127,7 +127,7 @@
 		]
 	},
 	"power_change_report_treshold": {
-		"$kind": "reporting_threshold_delta.power",
+		"$kind": "reporting_threshold.power",
 		"valueSize": 1,
 		"unit": "%",
 		"minValue": 0,
