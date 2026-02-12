@@ -7,7 +7,6 @@ import {
 	SupervisionCCReport,
 	WakeUpCCNoMoreInformation,
 	WakeUpCCWakeUpNotification,
-	WakeUpCommand,
 } from "@zwave-js/cc";
 import { type CCId, CommandClasses, SecurityClass } from "@zwave-js/core";
 import { FunctionType, SendDataBridgeRequest } from "@zwave-js/serial";
@@ -24,7 +23,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"When a sleeping node sends a wakeup notification after a supervision report, no SendDataAbort should be sent",
 	{
-		debug: true,
+		// debug: true,
 
 		provisioningDirectory: path.join(
 			__dirname,

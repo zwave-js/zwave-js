@@ -27,7 +27,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"When a sleeping node wakes up while we're busy verifying S2 delivery, do not execute SendDataAbort",
 	{
-		debug: true,
+		// debug: true,
 
 		provisioningDirectory: path.join(
 			__dirname,
