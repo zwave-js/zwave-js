@@ -40,6 +40,7 @@
 			"label": "Temperature Reporting Threshold",
 			"description": "Tenths of a degree Fahrenheit. A value of 10 would be 1.0F.",
 			"valueSize": 2,
+			"unit": "0.1 °F",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 100

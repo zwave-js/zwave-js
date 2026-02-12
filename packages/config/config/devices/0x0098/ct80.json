@@ -31,7 +31,6 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"description": "Reporting threshold for changes in the ambient temperature.",
 			"valueSize": 1,
@@ -88,7 +87,6 @@
 		},
 		{
 			"#": "5",
-			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"description": "Reporting threshold for changes in the relative humidity.",
 			"valueSize": 1,

@@ -307,7 +307,6 @@
 		},
 		{
 			"#": "47",
-			"$kind": "reporting_threshold.energy",
 			"label": "Energy Report Threshold",
 			"valueSize": 1,
 			"defaultValue": 3,

@@ -225,6 +225,7 @@
 			"label": "Power Reporting in Watts on Power Change",
 			"description": "Set value is percentage, set value from 0 - 100 = 0% - 100%.",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 5

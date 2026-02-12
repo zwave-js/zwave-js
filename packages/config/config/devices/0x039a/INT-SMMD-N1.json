@@ -207,7 +207,6 @@
 		},
 		{
 			"#": "11",
-			"$kind": "reporting_threshold.brightness",
 			"label": "Brightness Change Report Threshold",
 			"valueSize": 1,
 			"minValue": 1,
