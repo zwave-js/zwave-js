@@ -52,6 +52,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °(C/F)",
@@ -67,6 +68,7 @@
 		},
 		{
 			"#": "2",
+			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -228,6 +230,7 @@
 		},
 		{
 			"#": "14",
+			"$kind": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 2,
 			"unit": "0.1 °(C/F)",
@@ -237,6 +240,7 @@
 		},
 		{
 			"#": "15",
+			"$kind": "calibration.humidity",
 			"label": "Humidity Calibration",
 			"valueSize": 1,
 			"unit": "%",

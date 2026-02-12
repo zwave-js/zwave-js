@@ -73,6 +73,7 @@
 		},
 		{
 			"#": "40",
+			"$kind": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -88,6 +89,7 @@
 		},
 		{
 			"#": "41",
+			"$kind": "timer.auto_on",
 			"label": "Auto On Timer",
 			"valueSize": 4,
 			"unit": "seconds",

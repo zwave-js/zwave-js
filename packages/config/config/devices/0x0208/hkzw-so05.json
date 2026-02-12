@@ -67,6 +67,7 @@
 		},
 		{
 			"#": "151",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report Threshold",
 			"description": "Power threshold for when to send reports to associated devices",
 			"valueSize": 2,
@@ -78,6 +79,7 @@
 		},
 		{
 			"#": "152",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Report Percentage Threshold",
 			"description": "Percentage threshold for when to send report to associated devices",
 			"valueSize": 1,

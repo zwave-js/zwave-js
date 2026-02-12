@@ -73,6 +73,7 @@
 		},
 		{
 			"#": "151",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 2,
 			"unit": "W",
@@ -89,6 +90,7 @@
 		},
 		{
 			"#": "152",
+			"$kind": "reporting_threshold.power",
 			"label": "Power Change Report Threshold Percentage",
 			"valueSize": 1,
 			"unit": "%",
@@ -105,6 +107,7 @@
 		},
 		{
 			"#": "171",
+			"$kind": "reporting_interval.power",
 			"label": "Power Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -120,6 +123,7 @@
 		},
 		{
 			"#": "172",
+			"$kind": "reporting_interval.energy",
 			"label": "Energy Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -135,6 +139,7 @@
 		},
 		{
 			"#": "173",
+			"$kind": "reporting_interval.voltage",
 			"label": "Voltage Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -150,6 +155,7 @@
 		},
 		{
 			"#": "174",
+			"$kind": "reporting_interval.current",
 			"label": "Current Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
