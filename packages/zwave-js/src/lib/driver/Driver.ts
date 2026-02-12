@@ -2631,12 +2631,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Make sure to handle the pending messages as quickly as possible
 		if (oldStatus === NodeStatus.Asleep) {
-			void this.reduceQueues(({ message }) => {
+			void this.reduceQueues((transaction, source) => {
+				const { message } = transaction;
 				// Ignore messages that are not for this node
 				if (message.getNodeId() !== node.id) return { type: "keep" };
 				// Resolve pings, so we don't need to send them (we know the node is awake)
 				if (messageIsPing(message)) {
 					return { type: "resolve", message: undefined };
+				}
+				// Don't interfere with active transactions where the sending portion
+				// is already complete (e.g. waiting for a response from the node,
+				// or verifying non-supervised S2 delivery)
+				if (
+					source === "active"
+					&& transaction.parts.current?.completedTimestamp
+				) {
+					return { type: "keep" };
 				}
 				// Re-queue all other transactions for this node, so they get added in front of the others
 				return { type: "requeue" };
@@ -8305,21 +8315,23 @@ ${handlers.length} left`,
 
 		// Sends a node to sleep if it has no more messages.
 		const sendNodeToSleep = (
-			node: ZWaveNodeBase & NodeSchedulePoll & NodeWakeup,
+			node: ZWaveNodeBase & NodeSchedulePoll & NodeValues & NodeWakeup,
 		): void => {
 			this.sendNodeToSleepTimers.delete(node.id);
 			if (!this.hasPendingMessages(node)) {
 				void node.sendNoMoreInformation().catch(() => {
 					/* ignore errors */
 				});
+			} else {
+				// There are still pending messages. Retry in a bit,
+				// in case the remaining transactions don't trigger
+				// debounceSendNodeToSleep when they complete.
+				this.debounceSendNodeToSleep(node);
 			}
 		};
 
-		// If a sleeping node has no messages pending (and supports the Wake Up CC), we may send it back to sleep
-		if (
-			node.supportsCC(CommandClasses["Wake Up"])
-			&& !this.hasPendingMessages(node)
-		) {
+		// If a sleeping node supports the Wake Up CC, we may send it back to sleep
+		if (node.supportsCC(CommandClasses["Wake Up"])) {
 			const wakeUpInterval = node.getValue<number>(
 				WakeUpCCValues.wakeUpInterval.id,
 			);
