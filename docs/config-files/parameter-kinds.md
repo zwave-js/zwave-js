@@ -37,7 +37,7 @@ The following semantic kinds are defined. Some kinds support sub-variants using 
 
 Defines what state the device returns to after power is restored.
 
-**Typical options:** Off, On, Previous state, Schedule
+**Typical options:** Off, On, Previous state
 
 **Example parameters:**
 
@@ -73,7 +73,8 @@ Automatic turn-on or turn-off after a delay.
 
 ### `ramp_rate`
 
-Speed or duration of dimming transitions.
+Speed of dimming transitions. This can be expressed as the duration of increments (e.g. time to dim by 1%), or as a qualitative speed (e.g. slow, medium, fast).
+For parameters that specify the whole duration of a full dimming transition (e.g. from off to on), use the `dimming_duration` kind instead.
 
 When a device has a single parameter that applies to both directions, use the base kind. Use `.manual` / `.zwave` variants when separate parameters exist for different control methods.
 
