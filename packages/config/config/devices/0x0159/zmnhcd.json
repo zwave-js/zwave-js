@@ -46,6 +46,7 @@
 			"label": "Power Reporting in Watts on Power Change",
 			"description": "Power consumption change threshold for sending updates",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 1

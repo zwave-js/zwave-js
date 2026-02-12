@@ -44,6 +44,7 @@
 			"$kind": "reporting_threshold.power",
 			"label": "Power Report (Watts) on Power Change for Q1 or Q2",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 1

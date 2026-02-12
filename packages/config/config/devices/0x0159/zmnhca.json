@@ -73,6 +73,7 @@
 			"label": "Reporting in Watts on Power Change for Q1 or Q2",
 			"description": "Power consumption change threshold for sending updates",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 1,
 			"maxValue": 100,
 			"defaultValue": 1

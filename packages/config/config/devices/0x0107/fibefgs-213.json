@@ -443,6 +443,7 @@
 			"label": "Active Power Reports",
 			"description": "Power level reporting threshold.",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 20
@@ -461,6 +462,7 @@
 			"label": "Energy Reports",
 			"description": "Energy level change resulting in sending a new energy report.",
 			"valueSize": 2,
+			"unit": "0.01 kWh",
 			"minValue": 0,
 			"maxValue": 32000,
 			"defaultValue": 100

@@ -99,6 +99,7 @@
 			"$kind": "reporting_threshold.power",
 			"label": "Wattage Report Relative Change Threshold",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 0,

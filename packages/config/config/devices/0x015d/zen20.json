@@ -33,7 +33,6 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_threshold.power",
 			"label": "Power Wattage Report Value Threshold",
 			"description": "Choose how you want your Power Strip to report power consumption to your hub",
 			"valueSize": 2,

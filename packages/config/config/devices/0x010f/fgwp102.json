@@ -107,6 +107,7 @@
 			"label": "Energy Reporting Threshold",
 			"description": "specifies the minimum change in energy consumption",
 			"valueSize": 2,
+			"unit": "0.01 kWh",
 			"minValue": 0,
 			"maxValue": 500,
 			"defaultValue": 10,

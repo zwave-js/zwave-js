@@ -290,6 +290,7 @@
 			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"valueSize": 1,
+			"unit": "°F",
 			"minValue": 0,
 			"maxValue": 127,
 			"defaultValue": 1
@@ -299,6 +300,7 @@
 			"$kind": "reporting_threshold.brightness",
 			"label": "Illumination Differential Report",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 99,
 			"defaultValue": 1

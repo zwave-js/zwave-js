@@ -113,7 +113,6 @@
 		},
 		{
 			"#": "40",
-			"$kind": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change for Q1",
 			"valueSize": 1,
 			"minValue": 0,
@@ -123,7 +122,6 @@
 		},
 		{
 			"#": "41",
-			"$kind": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change for Q2",
 			"valueSize": 1,
 			"minValue": 0,

@@ -78,6 +78,7 @@
 			"$kind": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"valueSize": 1,
+			"unit": "°F",
 			"minValue": 0,
 			"maxValue": 127,
 			"defaultValue": 0
@@ -87,6 +88,7 @@
 			"$kind": "reporting_threshold.humidity",
 			"label": "Humidity Differential Report",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 60,
 			"defaultValue": 5
