@@ -316,7 +316,6 @@ Time interval for periodic automatic reporting.
 - "Temperature & Humidity Reporting Interval" — combined parameter controlling multiple sensor types; don't tag with a single sub-variant
 - "Temperature Check Interval" / "Temperature Measuring Interval" — sensor polling/measurement interval, not a reporting interval. Some devices have separate parameters for how often a sensor is read vs. how often reports are sent
 
-
 ---
 
 ## Guidelines for Contributors
