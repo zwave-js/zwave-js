@@ -167,17 +167,6 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 	),
 
 	...V.staticProperty(
-		"disconnected",
-		{
-			...ValueMetadata.ReadOnlyBoolean,
-			label: "Battery is disconnected",
-		} as const,
-		{
-			minVersion: 2,
-		} as const,
-	),
-
-	...V.staticProperty(
 		"lowTemperatureStatus",
 		{
 			...ValueMetadata.ReadOnlyBoolean,
@@ -214,7 +203,6 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 				case "lowFluid":
 				case "rechargeOrReplace":
 				case "lowTemperatureStatus":
-				case "disconnected":
 					return (await this.get())?.[property];
 
 				case "maximumCapacity":
@@ -317,17 +305,26 @@ export class BatteryCC extends CommandClass {
 
 		const batteryStatus = await api.get();
 		if (batteryStatus) {
-			let logMessage = `received response for battery information:
-level:                           ${
-				batteryStatus.level === 0xff
-					? "low"
-					: (batteryStatus.level + " %")
-			}`;
-			if (api.version >= 2) {
+			let logMessage = "received response for battery information:";
+			if (batteryStatus.disconnected) {
 				logMessage += `
+is disconnected:                 true`;
+			} else {
+				logMessage += `
+level:                           ${
+					batteryStatus.level === 0xff
+						? "low"
+						: (batteryStatus.level + " %")
+				}`;
+			}
+			if (api.version >= 2) {
+				if (!batteryStatus.disconnected) {
+					logMessage += `
 status:                          ${
-					BatteryChargingStatus[batteryStatus.chargingStatus!]
+						BatteryChargingStatus[batteryStatus.chargingStatus!]
+					}`;
 				}
+				logMessage += `
 rechargeable:                    ${batteryStatus.rechargeable}
 is backup:                       ${batteryStatus.backup}
 is overheating:                  ${batteryStatus.overheating}
@@ -335,8 +332,7 @@ fluid is low:                    ${batteryStatus.lowFluid}
 needs to be replaced or charged: ${
 					BatteryReplacementStatus[batteryStatus.rechargeOrReplace!]
 				}
-is low temperature               ${batteryStatus.lowTemperatureStatus}
-is disconnected:                 ${batteryStatus.disconnected}`;
+is low temperature               ${batteryStatus.lowTemperatureStatus}`;
 			}
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
@@ -421,7 +417,6 @@ export type BatteryCCReportOptions =
 @ccValueProperty("overheating", BatteryCCValues.overheating)
 @ccValueProperty("lowFluid", BatteryCCValues.lowFluid)
 @ccValueProperty("rechargeOrReplace", BatteryCCValues.rechargeOrReplace)
-@ccValueProperty("disconnected", BatteryCCValues.disconnected)
 @ccValueProperty("lowTemperatureStatus", BatteryCCValues.lowTemperatureStatus)
 export class BatteryCCReport extends BatteryCC {
 	public constructor(
@@ -490,19 +485,45 @@ export class BatteryCCReport extends BatteryCC {
 	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
-		// This is a bit hacky, but we need to avoid persisting 0xff as the battery level
-		// because the report is meant as a notification in that case.
-		if (this.level === 0xff) {
+		// Setting the values to undefined is a bit hacky, but we need to avoid persisting
+		// them in these special cases, and I don't like copy-pasting what persistValues does.
+
+		if (this.disconnected) {
+			// Level and chargingStatus are meaningless when disconnected.
+			// Suppress persisting them, then remove any previously stored values.
+			const savedLevel = this.level;
+			const savedChargingStatus = this.chargingStatus;
 			// @ts-expect-error
 			this.level = undefined;
-		}
+			// @ts-expect-error
+			this.chargingStatus = undefined;
 
-		if (!super.persistValues(ctx)) return false;
+			const ret = super.persistValues(ctx);
 
-		if (this.level === undefined) {
+			// @ts-expect-error
+			this.level = savedLevel;
+			// @ts-expect-error
+			this.chargingStatus = savedChargingStatus;
+
+			this.removeValue(ctx, BatteryCCValues.level);
+			this.removeValue(ctx, BatteryCCValues.chargingStatus);
+
+			return ret;
+		} else if (this.level === 0xff) {
+			// 0xff is a "low battery" notification, not an actual level
+			// @ts-expect-error
+			this.level = undefined;
+
+			const ret = super.persistValues(ctx);
+
 			// @ts-expect-error
 			this.level = 0xff;
+
+			return ret;
 		}
+
+		// Default behavior for all other cases
+		if (!super.persistValues(ctx)) return false;
 
 		// Naïve heuristic for a full battery
 		if (this.level >= 90) {
@@ -583,11 +604,17 @@ export class BatteryCCReport extends BatteryCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = this.level === 0xff
-			? { "is low": true }
-			: { level: this.level };
+		const message: MessageRecord = {};
 
-		if (this.chargingStatus != undefined) {
+		if (this.disconnected) {
+			message.disconnected = true;
+		} else if (this.level === 0xff) {
+			message["is low"] = true;
+		} else {
+			message.level = this.level;
+		}
+
+		if (!this.disconnected && this.chargingStatus != undefined) {
 			message["charging status"] = getEnumMemberName(
 				BatteryChargingStatus,
 				this.chargingStatus,
@@ -613,9 +640,6 @@ export class BatteryCCReport extends BatteryCC {
 		}
 		if (this.lowTemperatureStatus != undefined) {
 			message.lowTemperatureStatus = this.lowTemperatureStatus;
-		}
-		if (this.disconnected != undefined) {
-			message.disconnected = this.disconnected;
 		}
 		return {
 			...super.toLogEntry(ctx),
