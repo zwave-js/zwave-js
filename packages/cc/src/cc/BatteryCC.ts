@@ -167,6 +167,17 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 	),
 
 	...V.staticProperty(
+		"disconnected",
+		{
+			...ValueMetadata.ReadOnlyBoolean,
+			label: "Battery disconnected",
+		} as const,
+		{
+			minVersion: 2,
+		} as const,
+	),
+
+	...V.staticProperty(
 		"lowTemperatureStatus",
 		{
 			...ValueMetadata.ReadOnlyBoolean,
@@ -417,6 +428,7 @@ export type BatteryCCReportOptions =
 @ccValueProperty("overheating", BatteryCCValues.overheating)
 @ccValueProperty("lowFluid", BatteryCCValues.lowFluid)
 @ccValueProperty("rechargeOrReplace", BatteryCCValues.rechargeOrReplace)
+@ccValueProperty("disconnected", BatteryCCValues.disconnected)
 @ccValueProperty("lowTemperatureStatus", BatteryCCValues.lowTemperatureStatus)
 export class BatteryCCReport extends BatteryCC {
 	public constructor(

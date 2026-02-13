@@ -1209,6 +1209,36 @@ export const BatteryCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
+	disconnected: {
+		id: {
+			commandClass: CommandClasses.Battery,
+			property: "disconnected",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses.Battery,
+			endpoint,
+			property: "disconnected",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses.Battery
+				&& valueId.property === "disconnected"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return {
+				...ValueMetadata.ReadOnlyBoolean,
+				label: "Battery disconnected",
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 2,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
 	lowTemperatureStatus: {
 		id: {
 			commandClass: CommandClasses.Battery,
