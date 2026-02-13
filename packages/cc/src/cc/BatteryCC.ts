@@ -170,7 +170,7 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		"disconnected",
 		{
 			...ValueMetadata.ReadOnlyBoolean,
-			label: "Battery disconnected",
+			label: "Battery is disconnected",
 		} as const,
 		{
 			minVersion: 2,
@@ -214,6 +214,7 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 				case "lowFluid":
 				case "rechargeOrReplace":
 				case "lowTemperatureStatus":
+				case "disconnected":
 					return (await this.get())?.[property];
 
 				case "maximumCapacity":
@@ -512,6 +513,7 @@ export class BatteryCCReport extends BatteryCC {
 
 			const ret = super.persistValues(ctx);
 
+			// Add the values back to the CC instance, so they can be evaluated downstream if needed
 			// @ts-expect-error
 			this.level = savedLevel;
 			// @ts-expect-error
@@ -528,6 +530,7 @@ export class BatteryCCReport extends BatteryCC {
 
 			const ret = super.persistValues(ctx);
 
+			// Add the value back to the CC instance, so it can be evaluated downstream if needed
 			// @ts-expect-error
 			this.level = 0xff;
 
