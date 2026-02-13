@@ -27,7 +27,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -43,7 +43,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%rH",

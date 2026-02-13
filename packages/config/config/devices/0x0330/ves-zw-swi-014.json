@@ -94,7 +94,7 @@
 		},
 		{
 			"#": "10",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -110,7 +110,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "reporting_threshold.current",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -126,7 +126,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "reporting_threshold.voltage",
+			"$purpose": "reporting_threshold.voltage",
 			"label": "Voltage Change Report Threshold",
 			"valueSize": 1,
 			"unit": "V",

@@ -77,7 +77,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "ramp_rate",
+			"$purpose": "ramp_rate",
 			"label": "Dim Up/Down Rate",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -117,7 +117,7 @@
 		},
 		{
 			"#": "30",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dim Threshold",
 			"description": "Set the minimum dimmer threshold when manually or remotely controlled",
 			"valueSize": 1,
@@ -127,7 +127,7 @@
 		},
 		{
 			"#": "31",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness Threshold",
 			"description": "Set the maximum brightness threshold when manually or remotely controlled",
 			"valueSize": 1,

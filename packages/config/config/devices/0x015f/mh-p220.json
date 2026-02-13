@@ -97,7 +97,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness",
 			"valueSize": 1,
 			"minValue": 1,
@@ -106,7 +106,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness",
 			"valueSize": 1,
 			"minValue": 2,
@@ -149,7 +149,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 2,
 			"minValue": 0,

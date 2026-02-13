@@ -56,7 +56,7 @@
 		"defaultValue": 500
 	},
 	"motion_sensor_sensitivity": {
-		"$kind": "motion_sensitivity",
+		"$purpose": "motion_sensitivity",
 		"label": "Motion Sensor Sensitivity",
 		"description": "Moving the potentiometer overwrites the current setting.",
 		"valueSize": 1,

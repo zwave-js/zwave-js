@@ -77,7 +77,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"valueSize": 2,
 			"unit": "minutes",

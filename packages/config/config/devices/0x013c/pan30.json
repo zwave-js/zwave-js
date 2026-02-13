@@ -51,7 +51,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
 			"unit": "5 seconds",
@@ -125,7 +125,7 @@
 		},
 		{
 			"#": "7",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting Threshold: Change",
 			"valueSize": 1,
 			"unit": "%",

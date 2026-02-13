@@ -17,7 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"description": "Allowable range: 255-4200 in increments of 255.",
 			"valueSize": 2,

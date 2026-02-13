@@ -17,7 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "12",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"description": "Higher values increase sensitivity",
 			"valueSize": 1,
@@ -45,7 +45,7 @@
 		},
 		{
 			"#": "18",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Detection Timeout",
 			"valueSize": 2,
 			"unit": "seconds",

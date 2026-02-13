@@ -26,7 +26,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -45,7 +45,7 @@
 		},
 		{
 			"#": "8",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Re-Detection Interval",
 			"description": "Multiples of 8 seconds to wait before re-detection",
 			"valueSize": 1,

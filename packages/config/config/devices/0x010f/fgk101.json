@@ -294,7 +294,7 @@
 		{
 			"#": "12",
 			"$if": "firmwareVersion <= 3.1",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"description": "Parameter / 16 = Celsius value.  Parameter / 80/9 = Fahrenheit value.",
 			"valueSize": 1,
@@ -455,7 +455,7 @@
 		{
 			"#": "50",
 			"$if": "firmwareVersion >= 3.2",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Measurement Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -476,7 +476,7 @@
 		{
 			"#": "52",
 			"$if": "firmwareVersion >= 3.2",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reports Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -487,7 +487,7 @@
 		{
 			"#": "53",
 			"$if": "firmwareVersion >= 3.2",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 4,
 			"unit": "0.1 °C",

@@ -450,7 +450,7 @@
 		},
 		{
 			"#": "58",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Periodic Active Power Reports",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -466,7 +466,7 @@
 		},
 		{
 			"#": "59",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Periodic Energy Reports",
 			"valueSize": 2,
 			"unit": "seconds",

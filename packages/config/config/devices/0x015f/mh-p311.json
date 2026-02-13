@@ -98,7 +98,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Timer Function (Auto-Off)",
 			"valueSize": 2,
 			"minValue": 0,

@@ -65,7 +65,7 @@
 		},
 		{
 			"#": "16",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Threshold Power Report: Wattage",
 			"description": "Minimum change in wattage as watt value for a meter report to be sent",
 			"valueSize": 2,
@@ -83,7 +83,7 @@
 		},
 		{
 			"#": "17",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Threshold Power Report: Percentage",
 			"description": "Minimum change in wattage as percent for a meter report to be sent",
 			"valueSize": 1,
@@ -117,7 +117,7 @@
 		},
 		{
 			"#": "101",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (Watt) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",

@@ -42,7 +42,7 @@
 		},
 		{
 			"#": "40",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"description": "Power consumption change threshold for sending updates",
 			"valueSize": 1,
@@ -53,7 +53,7 @@
 		},
 		{
 			"#": "42",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -181,7 +181,7 @@
 		},
 		{
 			"#": "110",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"description": "Adds or removes an offset from the measured temperature.",
 			"valueSize": 2,
@@ -191,7 +191,7 @@
 		},
 		{
 			"#": "120",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "°C",

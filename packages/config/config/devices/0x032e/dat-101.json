@@ -178,7 +178,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Automatic Reports: Temperature Change Threshold",
 			"valueSize": 2,
 			"unit": "°C",

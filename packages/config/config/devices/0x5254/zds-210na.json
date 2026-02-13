@@ -46,7 +46,7 @@
 		},
 		{
 			"#": "18",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dimmer Level Control",
 			"valueSize": 1,
 			"unit": "%",
@@ -56,7 +56,7 @@
 		},
 		{
 			"#": "19",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dimmer Level Control",
 			"valueSize": 1,
 			"unit": "%",

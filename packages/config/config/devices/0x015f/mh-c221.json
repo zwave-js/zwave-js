@@ -28,7 +28,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"valueSize": 2,
 			"unit": "5 seconds",
@@ -38,7 +38,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 2,
 			"unit": "10 minutes",

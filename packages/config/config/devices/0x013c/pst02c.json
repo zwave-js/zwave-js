@@ -178,7 +178,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"valueSize": 1,
 			"minValue": 1,
@@ -196,7 +196,7 @@
 		},
 		{
 			"#": "21",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"valueSize": 1,
 			"unit": "°F",
@@ -206,7 +206,7 @@
 		},
 		{
 			"#": "22",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Illumination Differential Report",
 			"valueSize": 1,
 			"unit": "%",

@@ -60,7 +60,7 @@
 		},
 		{
 			"#": "27",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 4,
 			"unit": "°C",

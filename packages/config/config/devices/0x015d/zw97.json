@@ -38,7 +38,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer (Left Outlet)",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -49,7 +49,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer (Right Outlet)",
 			"valueSize": 2,
 			"unit": "seconds",

@@ -16,7 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"description": "Higher values = lower sensitivity and lower range.",
 			"valueSize": 1,
@@ -78,7 +78,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Blind Time",
 			"description": "The amount of time the sensor will not report motion after it has reported motion.",
 			"valueSize": 1,
@@ -159,7 +159,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Clear Time",
 			"description": "How long the sensor will wait before reporting no motion",
 			"valueSize": 2,
@@ -234,7 +234,7 @@
 		},
 		{
 			"#": "99",
-			"$kind": "calibration.brightness",
+			"$purpose": "calibration.brightness",
 			"label": "Brightness Calibration Factor",
 			"valueSize": 2,
 			"unit": "1/1000",

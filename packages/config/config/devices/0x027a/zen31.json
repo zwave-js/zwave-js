@@ -94,7 +94,7 @@
 		},
 		{
 			"#": "65",
-			"$kind": "reporting_threshold.energy",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Report Threshold",
 			"description": "Choose how you want your RGBW Dimmer to report energy use (kWh) to your hub. The number entered as value corresponds to decimal values in energy usage change. So if 10 is entered by default, the RGBW Dimmer will report any change in energy use over 0.1 kWh. Energy reports are sent in t least 30-second intervals.",
 			"valueSize": 2,
@@ -133,7 +133,7 @@
 		},
 		{
 			"#": "151",
-			"$kind": "dimming_duration.manual",
+			"$purpose": "dimming_duration.manual",
 			"label": "Ramp Rate (Switch)",
 			"description": "1...127 = seconds, 128...254 = minutes (minus 127)",
 			"valueSize": 2,
@@ -149,7 +149,7 @@
 		},
 		{
 			"#": "152",
-			"$kind": "dimming_duration.zwave",
+			"$purpose": "dimming_duration.zwave",
 			"label": "Ramp Rate (Z-Wave)",
 			"description": "1...127 = seconds, 128...254 = minutes (minus 127)",
 			"valueSize": 2,

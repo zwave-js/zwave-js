@@ -269,7 +269,7 @@
 		},
 		{
 			"#": "65",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Internal Temperature Sensor: Reporting Threshold",
 			"valueSize": 2,
 			"unit": "°C",
@@ -285,7 +285,7 @@
 		},
 		{
 			"#": "66",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Internal Temperature Sensor: Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -301,7 +301,7 @@
 		},
 		{
 			"#": "67",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "External Temperature Sensor: Reporting Threshold",
 			"valueSize": 2,
 			"unit": "°C",
@@ -317,7 +317,7 @@
 		},
 		{
 			"#": "68",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "External Temperature Sensor: Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",

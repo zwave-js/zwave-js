@@ -68,7 +68,7 @@
 		},
 		{
 			"#": "7",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -78,7 +78,7 @@
 		},
 		{
 			"#": "8",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"defaultValue": 0,

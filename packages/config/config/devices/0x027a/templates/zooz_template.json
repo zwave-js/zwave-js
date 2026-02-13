@@ -19,12 +19,12 @@
 	},
 	"auto_off_timer_0x_1x_3x_7x": {
 		"$import": "#auto_timer_base_0x_1x_3x_7x",
-		"$kind": "timer.auto_off",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Turn-Off Timer"
 	},
 	"auto_on_timer_0x_1x_3x_7x": {
 		"$import": "#auto_timer_base_0x_1x_3x_7x",
-		"$kind": "timer.auto_on",
+		"$purpose": "timer.auto_on",
 		"label": "Auto Turn-On Timer"
 	},
 
@@ -45,12 +45,12 @@
 	},
 	"auto_off_timer_5x": {
 		"$import": "#auto_timer_base_5x",
-		"$kind": "timer.auto_off",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Turn-Off Timer"
 	},
 	"auto_on_timer_5x": {
 		"$import": "#auto_timer_base_5x",
-		"$kind": "timer.auto_on",
+		"$purpose": "timer.auto_on",
 		"label": "Auto Turn-On Timer"
 	},
 
@@ -72,12 +72,12 @@
 	},
 	"auto_off_timer_variable_unit_5x_short": {
 		"$import": "#auto_timer_variable_unit_base_5x_short",
-		"$kind": "timer.auto_off",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Turn-Off Timer"
 	},
 	"auto_on_timer_variable_unit_5x_short": {
 		"$import": "#auto_timer_variable_unit_base_5x_short",
-		"$kind": "timer.auto_on",
+		"$purpose": "timer.auto_on",
 		"label": "Auto Turn-On Timer"
 	},
 
@@ -99,12 +99,12 @@
 	},
 	"auto_off_timer_variable_unit_5x_long": {
 		"$import": "#auto_timer_variable_unit_base_5x_long",
-		"$kind": "timer.auto_off",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Turn-Off Timer"
 	},
 	"auto_on_timer_variable_unit_5x_long": {
 		"$import": "#auto_timer_variable_unit_base_5x_long",
-		"$kind": "timer.auto_on",
+		"$purpose": "timer.auto_on",
 		"label": "Auto Turn-On Timer"
 	},
 
@@ -157,12 +157,12 @@
 	},
 	"auto_off_timer_duration": {
 		"$import": "#auto_timer_duration_base",
-		"$kind": "timer.auto_off",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Turn-Off Timer Duration"
 	},
 	"auto_on_timer_duration": {
 		"$import": "#auto_timer_duration_base",
-		"$kind": "timer.auto_on",
+		"$purpose": "timer.auto_on",
 		"label": "Auto Turn-On Timer Duration"
 	},
 
@@ -444,7 +444,7 @@
 	},
 	"dimmer_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
-		"$kind": "dimming_duration.manual",
+		"$purpose": "dimming_duration.manual",
 		"label": "Ramp Rate Off/On (Manual Control)",
 		"unit": "seconds",
 		"options": [
@@ -456,7 +456,7 @@
 	},
 	"dimmer_on_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
-		"$kind": "dimming_duration_up.manual",
+		"$purpose": "dimming_duration_up.manual",
 		"label": "Ramp Rate On (Manual Control)",
 		"unit": "seconds",
 		"defaultValue": 0,
@@ -469,7 +469,7 @@
 	},
 	"dimmer_off_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
-		"$kind": "dimming_duration_down.manual",
+		"$purpose": "dimming_duration_down.manual",
 		"label": "Ramp Rate Off (Manual Control)",
 		"unit": "seconds",
 		"defaultValue": 0,
@@ -482,7 +482,7 @@
 	},
 	"zwave_on_dimmer_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
-		"$kind": "dimming_duration_up.zwave",
+		"$purpose": "dimming_duration_up.zwave",
 		"label": "Ramp Rate On (Z-Wave)",
 		"unit": "seconds",
 		"defaultValue": 0,
@@ -495,7 +495,7 @@
 	},
 	"zwave_off_dimmer_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
-		"$kind": "dimming_duration_down.zwave",
+		"$purpose": "dimming_duration_down.zwave",
 		"label": "Ramp Rate Off (Z-Wave)",
 		"unit": "seconds",
 		"defaultValue": 0,
@@ -508,7 +508,7 @@
 	},
 	"zwave_on_dimmer_ramp_rate_match_manual": {
 		"$import": "~/templates/master_template.json#base_0-100_nounit",
-		"$kind": "dimming_duration_up.zwave",
+		"$purpose": "dimming_duration_up.zwave",
 		"label": "Ramp Rate On (Z-Wave)",
 		"unit": "seconds",
 		"defaultValue": 0,
@@ -525,7 +525,7 @@
 	},
 	"zwave_on_dimmer_ramp_rate_match_manual_255": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
-		"$kind": "dimming_duration_up.zwave",
+		"$purpose": "dimming_duration_up.zwave",
 		"label": "Ramp Rate On (Z-Wave)",
 		"unit": "seconds",
 		"defaultValue": 255,
@@ -542,7 +542,7 @@
 	},
 	"zwave_off_dimmer_ramp_rate_match_manual": {
 		"$import": "~/templates/master_template.json#base_0-100_nounit",
-		"$kind": "dimming_duration_down.zwave",
+		"$purpose": "dimming_duration_down.zwave",
 		"label": "Ramp Rate Off (Z-Wave)",
 		"unit": "seconds",
 		"defaultValue": 0,
@@ -559,7 +559,7 @@
 	},
 	"zwave_off_dimmer_ramp_rate_match_manual_255": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
-		"$kind": "dimming_duration_down.zwave",
+		"$purpose": "dimming_duration_down.zwave",
 		"label": "Ramp Rate Off (Z-Wave)",
 		"unit": "seconds",
 		"defaultValue": 255,
@@ -576,13 +576,13 @@
 	},
 	"min_brightness": {
 		"$import": "~/templates/master_template.json#base_1-99_nounit",
-		"$kind": "minimum_brightness",
+		"$purpose": "minimum_brightness",
 		"label": "Minimum Brightness",
 		"unit": "%"
 	},
 	"max_brightness": {
 		"$import": "~/templates/master_template.json#base_1-99_nounit",
-		"$kind": "maximum_brightness",
+		"$purpose": "maximum_brightness",
 		"label": "Maximum Brightness",
 		"unit": "%",
 		"defaultValue": 99
@@ -1043,7 +1043,7 @@
 		]
 	},
 	"motion_sensitivity_1_8": {
-		"$kind": "motion_sensitivity",
+		"$purpose": "motion_sensitivity",
 		"label": "Motion Sensor Sensitivity",
 		"description": "1 = Low sensitivity, 8 = High sensitivity",
 		"valueSize": 1,
@@ -1073,7 +1073,7 @@
 		"unsigned": true
 	},
 	"battery_report_threshold": {
-		"$kind": "reporting_threshold.battery",
+		"$purpose": "reporting_threshold.battery",
 		"label": "Battery Report Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -1083,7 +1083,7 @@
 		"unsigned": true
 	},
 	"low_battery_alarm_threshold": {
-		"$kind": "reporting_threshold.low_battery",
+		"$purpose": "reporting_threshold.low_battery",
 		"label": "Low Battery Alarm Threshold",
 		"valueSize": 1,
 		"unit": "%",

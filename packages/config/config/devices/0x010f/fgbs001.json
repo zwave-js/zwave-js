@@ -248,7 +248,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"description": "The forced report is sent immediately after ...",
 			"valueSize": 1,

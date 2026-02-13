@@ -17,7 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "10",
-			"$kind": "reporting_threshold.low_battery",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Alert Level",
 			"description": "At what battery level should the sensor send a low battery alert",
 			"valueSize": 1,
@@ -28,7 +28,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -43,7 +43,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "PIR Reset Time",
 			"description": "How long after motion stops should the sensor wait before sending a no-motion report",
 			"valueSize": 2,
@@ -88,7 +88,7 @@
 		},
 		{
 			"#": "101",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"description": "Value will be rounded to the nearest minute",
 			"valueSize": 4,
@@ -105,7 +105,7 @@
 		},
 		{
 			"#": "102",
-			"$kind": "reporting_interval.humidity",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Reporting Interval",
 			"description": "Value will be rounded to the nearest minute",
 			"valueSize": 4,
@@ -122,7 +122,7 @@
 		},
 		{
 			"#": "103",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Luminance Reporting Interval",
 			"description": "Value will be rounded to nearest minute",
 			"valueSize": 4,
@@ -133,7 +133,7 @@
 		},
 		{
 			"#": "104",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"description": "Value will be rounded to nearest minute",
 			"valueSize": 4,
@@ -161,7 +161,7 @@
 		},
 		{
 			"#": "111",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"valueSize": 2,
 			"unit": "0.1 °C",
@@ -171,7 +171,7 @@
 		},
 		{
 			"#": "112",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -181,7 +181,7 @@
 		},
 		{
 			"#": "113",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Luminance Report Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -192,7 +192,7 @@
 		},
 		{
 			"#": "114",
-			"$kind": "reporting_threshold.battery",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

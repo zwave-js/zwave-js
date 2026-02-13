@@ -25,7 +25,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "0.1 (°C/°F)",
@@ -36,7 +36,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "calibration.humidity",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Calibration",
 			"valueSize": 1,
 			"unit": "0.1 %rH",
@@ -47,7 +47,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 (°C/°F)",
@@ -57,7 +57,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 %rH",

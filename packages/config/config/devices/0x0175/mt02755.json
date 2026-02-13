@@ -53,7 +53,7 @@
 		},
 		{
 			"#": "10",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Auto Report Battery Time",
 			"description": "The interval time for auto report the battery level.",
 			"valueSize": 1,
@@ -64,7 +64,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"description": "The interval time for auto report the temperature.",
 			"valueSize": 1,
@@ -75,7 +75,7 @@
 		},
 		{
 			"#": "14",
-			"$kind": "reporting_interval.humidity",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Auto Report Humidity Time",
 			"description": "The interval time for auto report the humidity",
 			"valueSize": 1,
@@ -97,7 +97,7 @@
 		},
 		{
 			"#": "21",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"valueSize": 1,
 			"unit": "°F",
@@ -107,7 +107,7 @@
 		},
 		{
 			"#": "23",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Differential Report",
 			"valueSize": 1,
 			"unit": "%",

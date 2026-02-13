@@ -17,7 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Period",
 			"description": "The period is set in 15 minute increments (multiply the value by 15)",
 			"valueSize": 1,

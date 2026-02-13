@@ -33,7 +33,7 @@
 		{
 			"#": "4",
 			"$if": "firmwareVersion <= 2.255",
-			"$kind": "ramp_rate",
+			"$purpose": "ramp_rate",
 			"label": "Ramp Rate Control",
 			"description": "Choose from 2 ramp rate options (fade-in / fade-out effect)",
 			"valueSize": 1,

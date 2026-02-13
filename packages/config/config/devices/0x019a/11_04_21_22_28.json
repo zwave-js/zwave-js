@@ -82,7 +82,7 @@
 		},
 		{
 			"#": "26",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -175,7 +175,7 @@
 		},
 		{
 			"#": "24",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset Value",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -185,7 +185,7 @@
 		},
 		{
 			"#": "25",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 2,
 			"unit": "minutes",

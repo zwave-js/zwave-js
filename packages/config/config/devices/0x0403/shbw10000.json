@@ -16,7 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "10",
-			"$kind": "reporting_threshold.low_battery",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Alarm Level",
 			"valueSize": 1,
 			"unit": "%",
@@ -26,7 +26,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -41,7 +41,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Waiting Time Between Two PIR Triggers",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -99,7 +99,7 @@
 		},
 		{
 			"#": "101",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Time",
 			"valueSize": 4,
 			"minValue": 0,
@@ -114,7 +114,7 @@
 		},
 		{
 			"#": "102",
-			"$kind": "reporting_interval.humidity",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Report Time",
 			"valueSize": 4,
 			"minValue": 0,
@@ -129,7 +129,7 @@
 		},
 		{
 			"#": "103",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Brightness Report Time",
 			"valueSize": 4,
 			"minValue": 0,
@@ -138,7 +138,7 @@
 		},
 		{
 			"#": "104",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Time",
 			"valueSize": 4,
 			"minValue": 0,
@@ -178,7 +178,7 @@
 		},
 		{
 			"#": "112",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -188,7 +188,7 @@
 		},
 		{
 			"#": "113",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Brightness Report Threshold",
 			"valueSize": 2,
 			"unit": "Lux",
@@ -199,7 +199,7 @@
 		},
 		{
 			"#": "114",
-			"$kind": "reporting_threshold.battery",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

@@ -111,7 +111,7 @@
 		},
 		{
 			"#": "30",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dim Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -121,7 +121,7 @@
 		},
 		{
 			"#": "31",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness Threshold",
 			"valueSize": 1,
 			"unit": "%",

@@ -1,6 +1,6 @@
 {
 	"motion_sensitivity": {
-		"$kind": "motion_sensitivity.inverted",
+		"$purpose": "motion_sensitivity.inverted",
 		"label": "Motion Sensor: Sensitivity",
 		"description": "8 = highest; 255 = lowest",
 		"valueSize": 1,
@@ -42,7 +42,7 @@
 		"defaultValue": 100
 	},
 	"motion_retrigger_interval": {
-		"$kind": "motion_retrigger_interval",
+		"$purpose": "motion_retrigger_interval",
 		"label": "Motion Sensor: Re-trigger Interval",
 		"description": "Must be less than the On/Off Duration",
 		"unit": "seconds",
@@ -66,7 +66,7 @@
 		"description": "Send Basic Set if brightness falls below threshold"
 	},
 	"light_sensor_report_threshold": {
-		"$kind": "reporting_threshold.brightness",
+		"$purpose": "reporting_threshold.brightness",
 		"label": "Light Sensor Differential Report Threshold",
 		"unit": "lux",
 		"valueSize": 1,
@@ -76,7 +76,7 @@
 		"unsigned": true
 	},
 	"temperature_report_threshold": {
-		"$kind": "reporting_threshold.temperature",
+		"$purpose": "reporting_threshold.temperature",
 		"label": "Temperature Differential Report Threshold",
 		"unit": "0.1 °C",
 		"valueSize": 1,
@@ -95,7 +95,7 @@
 		"defaultValue": 1
 	},
 	"light_calibration": {
-		"$kind": "calibration.brightness",
+		"$purpose": "calibration.brightness",
 		"label": "Ambient Light Intensity Calibration",
 		"valueSize": 2,
 		"minValue": 1,

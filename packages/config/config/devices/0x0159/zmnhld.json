@@ -202,7 +202,7 @@
 		},
 		{
 			"#": "40",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"valueSize": 1,
 			"unit": "%",
@@ -218,7 +218,7 @@
 		},
 		{
 			"#": "42",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval",
 			"valueSize": 2,
 			"minValue": 0,
@@ -574,7 +574,7 @@
 		},
 		{
 			"#": "110",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"unit": "°C",
@@ -584,7 +584,7 @@
 		},
 		{
 			"#": "120",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "°C",

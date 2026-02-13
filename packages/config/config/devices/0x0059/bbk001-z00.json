@@ -31,7 +31,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval for Association Group 2",
 			"description": "In minutes, controllers may only allow configuring signed values. in order to set values in the range 128…255, the value sent in the application shall be equal to desired value minus 256. for example, to set delta temperature to 130, it may be needed to set a value 130−256=−126",
 			"valueSize": 1,
@@ -72,7 +72,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval for Lifeline Group",
 			"description": "In degree centigrade. controllers may only allow configuring signed values. in order to set values in the range 128…255, the value sent in the application shall be equal to desired value minus 256. for example, to set delta temperature to 130, it may be needed to set a value 130−256=−126",
 			"valueSize": 1,

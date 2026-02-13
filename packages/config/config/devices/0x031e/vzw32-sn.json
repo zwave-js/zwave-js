@@ -143,7 +143,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -194,7 +194,7 @@
 		},
 		{
 			"#": "18",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -226,7 +226,7 @@
 		},
 		{
 			"#": "20",
-			"$kind": "reporting_threshold.energy",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Change Report Threshold",
 			"valueSize": 2,
 			"unit": "0.01 kWh",
@@ -867,7 +867,7 @@
 		},
 		{
 			"#": "114",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "mmWave Detection Timeout",
 			"description": "Amount of time in seconds after presence detection that a no-presence report is sent.",
 			"valueSize": 4,
@@ -948,7 +948,7 @@
 		},
 		{
 			"#": "118",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Lux Threshold",
 			"valueSize": 2,
 			"minValue": 0,
@@ -957,7 +957,7 @@
 		},
 		{
 			"#": "119",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Lux Interval",
 			"valueSize": 2,
 			"minValue": 0,

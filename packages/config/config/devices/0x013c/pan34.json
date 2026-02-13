@@ -35,7 +35,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
 			"unit": "5 seconds",

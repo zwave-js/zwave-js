@@ -359,7 +359,7 @@
 		},
 		{
 			"#": "62",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reports: Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -381,7 +381,7 @@
 		},
 		{
 			"#": "66",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Reports: Interval",
 			"valueSize": 2,
 			"unit": "seconds",

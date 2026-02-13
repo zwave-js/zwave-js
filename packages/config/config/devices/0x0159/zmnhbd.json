@@ -161,7 +161,7 @@
 		},
 		{
 			"#": "40",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts for Q1",
 			"valueSize": 1,
 			"unit": "%",
@@ -171,7 +171,7 @@
 		},
 		{
 			"#": "41",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts for Q2",
 			"valueSize": 1,
 			"unit": "%",
@@ -181,7 +181,7 @@
 		},
 		{
 			"#": "42",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Time Interval for Q1",
 			"valueSize": 2,
 			"minValue": 0,
@@ -190,7 +190,7 @@
 		},
 		{
 			"#": "43",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Time Interval for Q2",
 			"valueSize": 2,
 			"minValue": 0,
@@ -233,7 +233,7 @@
 		},
 		{
 			"#": "110",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset",
 			"valueSize": 2,
 			"minValue": 0,
@@ -242,7 +242,7 @@
 		},
 		{
 			"#": "120",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "°C",

@@ -27,7 +27,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Re-Trigger Interval Setting (For PIR Sensor Only)",
 			"description": "Seconds",
 			"valueSize": 2,

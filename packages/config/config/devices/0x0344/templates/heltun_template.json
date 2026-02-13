@@ -342,7 +342,7 @@
 		"defaultValue": 500
 	},
 	"temp_sensor_calibration": {
-		"$kind": "calibration.temperature",
+		"$purpose": "calibration.temperature",
 		"label": "Temperature Sensor Calibration",
 		"unit": "0.1 °C",
 		"valueSize": 1,

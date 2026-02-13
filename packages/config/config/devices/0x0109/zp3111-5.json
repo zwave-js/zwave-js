@@ -34,7 +34,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"valueSize": 1,
 			"minValue": 0,
@@ -43,7 +43,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity",
 			"description": "Configure Relative Humidity",
 			"valueSize": 1,
@@ -54,7 +54,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Light Sensor",
 			"valueSize": 1,
 			"unit": "%",
@@ -64,7 +64,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Trigger Interval",
 			"description": "Set the trigger interval for motion sensor re-activation.",
 			"valueSize": 1,
@@ -76,7 +76,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"description": "Adjust sensitivity of the motion sensor.",
 			"valueSize": 1,

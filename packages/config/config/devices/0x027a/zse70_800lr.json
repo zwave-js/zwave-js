@@ -28,7 +28,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"description": "1 = least sensitive, 8 = most sensitive",
 			"valueSize": 1,
@@ -44,7 +44,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Clear Delay",
 			"description": "How long to wait after the last motion detection before reporting no motion",
 			"valueSize": 2,
@@ -125,7 +125,7 @@
 		},
 		{
 			"#": "7",
-			"$kind": "reporting_threshold.low_battery",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Threshold",
 			"description": "Below this level a low battery alert will be sent.",
 			"valueSize": 1,
@@ -152,7 +152,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "reporting_threshold.battery",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Change Report Threshold",
 			"description": "How much the battery level must change before sending a new report",
 			"valueSize": 1,
@@ -185,7 +185,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"description": "How much the temperature must change before sending a new report",
 			"valueSize": 1,
@@ -203,7 +203,7 @@
 		},
 		{
 			"#": "14",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"description": "Value is offset by 100: 0 = -10 °F, 50 = -5 °F, 100 = 0 °F, 150 = +5 °F, 200 = +10 °F",
 			"valueSize": 1,
@@ -215,7 +215,7 @@
 		},
 		{
 			"#": "17",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"description": "The minimum interval in which the sensor will send temperature updates, even if the change threshold is not met.",
 			"valueSize": 2,
@@ -249,7 +249,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Brightness Change Report Threshold",
 			"description": "How much the brightness must change before sending a new report",
 			"valueSize": 2,
@@ -266,7 +266,7 @@
 		},
 		{
 			"#": "15",
-			"$kind": "calibration.brightness",
+			"$purpose": "calibration.brightness",
 			"label": "Brightness Calibration",
 			"description": "Value is offset by 100: 0 = -100 lux, 50 = -50 lux, 100 = 0 lux, 150 = +50 lux, 200 = +100 lux",
 			"valueSize": 1,
@@ -294,7 +294,7 @@
 		},
 		{
 			"#": "18",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Brightness Report Interval",
 			"description": "The minimum interval in which the sensor will send brightness updates, even if the change threshold is not met.",
 			"valueSize": 2,

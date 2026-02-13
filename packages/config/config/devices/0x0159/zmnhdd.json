@@ -169,7 +169,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Automatic Turning Off Output After Set Time",
 			"description": "Auto OFF enabled with defined time, step is 1 second.",
 			"valueSize": 2,
@@ -179,7 +179,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "timer.auto_on",
+			"$purpose": "timer.auto_on",
 			"label": "Automatic Turning on Output After Set Time",
 			"description": "Auto ON enabled with defined time, step is 1 second.",
 			"valueSize": 2,
@@ -221,7 +221,7 @@
 		},
 		{
 			"#": "40",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"description": "Set value is percentage, set value from 0 - 100 = 0% - 100%.",
 			"valueSize": 1,
@@ -232,7 +232,7 @@
 		},
 		{
 			"#": "42",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval",
 			"description": "Set value means time interval (0 – 32767) in seconds.",
 			"valueSize": 2,
@@ -242,7 +242,7 @@
 		},
 		{
 			"#": "60",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dimming Value",
 			"description": "Minimum dimming value is set by entered value.",
 			"valueSize": 1,
@@ -252,7 +252,7 @@
 		},
 		{
 			"#": "61",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dimming Value",
 			"description": "Maximum dimming value is set by entered value.",
 			"valueSize": 1,
@@ -391,7 +391,7 @@
 		},
 		{
 			"#": "110",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"description": "Offset to actual measured value",
 			"valueSize": 2,
@@ -401,7 +401,7 @@
 		},
 		{
 			"#": "120",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "°C",

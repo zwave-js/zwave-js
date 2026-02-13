@@ -37,7 +37,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"description": "Parameter to set the Sensitivity",
 			"valueSize": 1,
@@ -87,7 +87,7 @@
 		},
 		{
 			"#": "8",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "PIR Re-Detect Interval Time",
 			"description": "Re-detect time after motion detected",
 			"valueSize": 1,
@@ -115,7 +115,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Auto Report Illumination Time",
 			"description": "Interval time for auto report the illumination state",
 			"valueSize": 1,
@@ -125,7 +125,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"description": "Interval time for auto report the temperature state",
 			"valueSize": 1,

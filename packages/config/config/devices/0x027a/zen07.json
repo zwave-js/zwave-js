@@ -56,7 +56,7 @@
 		{
 			"#": "6",
 			"$import": "~/templates/master_template.json#base_1-100_nounit",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Report Percentage Threshold",
 			"unit": "%",
 			"defaultValue": 5
@@ -72,7 +72,7 @@
 		},
 		{
 			"#": "9",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Turn-Off Timer Interval",
 			"valueSize": 2,
 			"unit": "minutes",

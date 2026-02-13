@@ -34,7 +34,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 (°C/°F)",
@@ -44,7 +44,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -54,7 +54,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Luminance Report Threshold",
 			"description": "Allowable range: 0, 5-50",
 			"valueSize": 1,

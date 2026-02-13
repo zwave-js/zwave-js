@@ -131,7 +131,7 @@
 		]
 	},
 	"fade_on_time": {
-		"$kind": "dimming_duration_up",
+		"$purpose": "dimming_duration_up",
 		"label": "Fade On Time",
 		"description": "Values 1-127 = seconds; 128-253 = minutes (minus 127)",
 		"valueSize": 1,
@@ -147,7 +147,7 @@
 		]
 	},
 	"fade_off_time": {
-		"$kind": "dimming_duration_down",
+		"$purpose": "dimming_duration_down",
 		"label": "Fade Off Time",
 		"description": "Values 1-127 = seconds; 128-253 = minutes (minus 127)",
 		"valueSize": 1,
@@ -164,7 +164,7 @@
 	},
 	// Templates for the 800 series
 	"fade_on_time_800_series": {
-		"$kind": "dimming_duration_up",
+		"$purpose": "dimming_duration_up",
 		"label": "Fade On Time",
 		"description": "Values 1-127 = seconds; 128-253 = minutes (minus 127)",
 		"valueSize": 4,
@@ -180,7 +180,7 @@
 		]
 	},
 	"fade_off_time_800_series": {
-		"$kind": "dimming_duration_down",
+		"$purpose": "dimming_duration_down",
 		"label": "Fade Off Time",
 		"description": "Values 1-127 = seconds; 128-253 = minutes (minus 127)",
 		"valueSize": 4,
@@ -196,7 +196,7 @@
 		]
 	},
 	"minimum_dim_level_800_series": {
-		"$kind": "minimum_brightness",
+		"$purpose": "minimum_brightness",
 		"label": "Minimum Dim Level",
 		"valueSize": 4,
 		"minValue": 0,
@@ -204,7 +204,7 @@
 		"defaultValue": 10
 	},
 	"maximum_dim_level_800_series": {
-		"$kind": "maximum_brightness",
+		"$purpose": "maximum_brightness",
 		"label": "Maximum Dim Level",
 		"valueSize": 4,
 		"minValue": 0,

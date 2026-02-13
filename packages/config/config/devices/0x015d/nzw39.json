@@ -25,7 +25,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Level",
 			"description": "Minimum dimming level for attached light",
 			"valueSize": 1,
@@ -79,7 +79,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto OFF",
 			"description": "Automatically turn switch off after this number of seconds",
 			"valueSize": 2,

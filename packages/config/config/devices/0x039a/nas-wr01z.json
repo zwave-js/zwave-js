@@ -80,7 +80,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Report Threshold",
 			"description": "Change in power consumption that triggers a report",
 			"valueSize": 1,

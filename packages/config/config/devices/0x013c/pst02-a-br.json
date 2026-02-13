@@ -37,7 +37,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"description": "Pir sensitivity settings.0 means disable the PIR motion.1 means the lowest sensitivity,99 means the highest sensitivity.high sensitivity means can detected long distance, but if there is more noise signal in the environment, it will re-trigger too frequency",
 			"valueSize": 1,
@@ -214,7 +214,7 @@
 		},
 		{
 			"#": "8",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "PIR Re- Detect Interval Time",
 			"description": "Default tick is 3 (24 seconds)",
 			"valueSize": 1,

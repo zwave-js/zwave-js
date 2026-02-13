@@ -53,7 +53,7 @@
 		{
 			"#": "4",
 			"$import": "~/templates/master_template.json#base_1-65535",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"unit": "minutes",
 			"defaultValue": 60
@@ -66,7 +66,7 @@
 		{
 			"#": "6",
 			"$import": "~/templates/master_template.json#base_1-65535",
-			"$kind": "timer.auto_on",
+			"$purpose": "timer.auto_on",
 			"label": "Auto-On Timer",
 			"unit": "minutes",
 			"defaultValue": 60

@@ -455,7 +455,7 @@
 		},
 		{
 			"#": "50",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Active Power Reports",
 			"description": "Power level reporting threshold.",
 			"valueSize": 1,
@@ -474,7 +474,7 @@
 		},
 		{
 			"#": "53",
-			"$kind": "reporting_threshold.energy",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Reports",
 			"description": "Energy level change resulting in sending a new energy report.",
 			"valueSize": 2,
@@ -485,7 +485,7 @@
 		},
 		{
 			"#": "58",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Periodic Power Reports",
 			"description": "Determines time interval for periodic power reports",
 			"valueSize": 2,
@@ -495,7 +495,7 @@
 		},
 		{
 			"#": "59",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Periodic Energy Reports",
 			"description": "Determines time interval for periodic energy reports",
 			"valueSize": 2,

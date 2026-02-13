@@ -68,7 +68,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Sensitivity Level",
 			"valueSize": 1,
 			"minValue": 1,
@@ -77,7 +77,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Re-Trigger Interval Setting",
 			"valueSize": 1,
 			"minValue": 5,

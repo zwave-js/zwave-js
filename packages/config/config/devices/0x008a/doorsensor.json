@@ -81,7 +81,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "An offset for the temperature.",
 			"valueSize": 2,

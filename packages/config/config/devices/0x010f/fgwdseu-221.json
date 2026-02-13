@@ -205,7 +205,7 @@
 		},
 		{
 			"#": "24",
-			"$kind": "orientation",
+			"$purpose": "orientation",
 			"label": "Switch Orientation",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -493,7 +493,7 @@
 		},
 		{
 			"#": "62",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "First Channel - Periodic Power Reports",
 			"description": "Allowable Range: 30-32400",
 			"valueSize": 2,
@@ -516,7 +516,7 @@
 		},
 		{
 			"#": "64",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Second Channel - Periodic Power Reports",
 			"description": "Allowable Range: 30-32400",
 			"valueSize": 2,
@@ -540,7 +540,7 @@
 		},
 		{
 			"#": "66",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "First Channel - Periodic Energy Reports",
 			"description": "Allowable Range: 30-32400",
 			"valueSize": 2,
@@ -564,7 +564,7 @@
 		},
 		{
 			"#": "68",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Second Channel - Periodic Energy Reports",
 			"description": "Allowable Range: 30-32400",
 			"valueSize": 2,

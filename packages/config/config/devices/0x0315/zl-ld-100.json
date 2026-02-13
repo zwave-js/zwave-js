@@ -40,7 +40,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval On Line Power",
 			"valueSize": 1,
 			"unit": "seconds",

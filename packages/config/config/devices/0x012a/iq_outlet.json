@@ -49,7 +49,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Monitoring Reporting Interval",
 			"valueSize": 1,
 			"unit": "minutes",

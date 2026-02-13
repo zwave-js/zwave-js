@@ -26,7 +26,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -146,7 +146,7 @@
 		},
 		{
 			"#": "8",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "PIR Re-Detect Interval Time",
 			"description": "Time period to wait until reporting motion detected again.",
 			"valueSize": 1,
@@ -174,7 +174,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Auto Report Illumination Time",
 			"description": "The interval time for auto reporting the illumination state",
 			"valueSize": 1,
@@ -184,7 +184,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"description": "The interval time for auto reporting the temperature.",
 			"valueSize": 1,
@@ -205,7 +205,7 @@
 		},
 		{
 			"#": "21",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"description": "The temperature differential to report. Not applicable to TSP01.",
 			"valueSize": 1,
@@ -216,7 +216,7 @@
 		},
 		{
 			"#": "22",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Illumination Differential Report",
 			"description": "The illumination differential to report. Not applicable to TSP01.",
 			"valueSize": 1,

@@ -42,7 +42,7 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion <= 1.255",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Turn-Off Timer Duration",
 			"description": "Set the number of seconds to automatically turn off switch once it has been turned on (0 to disable).",
 			"valueSize": 2,

@@ -53,7 +53,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset Value",
 			"valueSize": 1,
 			"unit": "0.1 °C/F",
@@ -64,7 +64,7 @@
 		},
 		{
 			"#": "7",
-			"$kind": "calibration.humidity",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset Value",
 			"valueSize": 1,
 			"unit": "0.1 %",
@@ -75,7 +75,7 @@
 		},
 		{
 			"#": "8",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C/F",
@@ -85,7 +85,7 @@
 		},
 		{
 			"#": "9",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 %",
@@ -95,7 +95,7 @@
 		},
 		{
 			"#": "10",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Luminance Change Report Threshold",
 			"valueSize": 1,
 			"unit": "lux",
@@ -128,7 +128,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Clear Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -156,7 +156,7 @@
 		},
 		{
 			"#": "99",
-			"$kind": "calibration.brightness",
+			"$purpose": "calibration.brightness",
 			"label": "Light Intensity Offset Value",
 			"description": "See manual for details",
 			"valueSize": 2,

@@ -53,7 +53,7 @@
 		{
 			"#": "4",
 			"$if": "firmwareVersion >= 1.10",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness",
 			"valueSize": 1,
 			"minValue": 1,
@@ -63,7 +63,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion >= 1.10",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness",
 			"valueSize": 1,
 			"minValue": 55,

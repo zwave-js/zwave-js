@@ -51,7 +51,7 @@
 		},
 		{
 			"#": "151",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Threshold of Power Report",
 			"description": "Power Threshold at which to send meter report",
 			"valueSize": 2,
@@ -63,7 +63,7 @@
 		},
 		{
 			"#": "152",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Percentage Threshold to Trigger Power Report",
 			"valueSize": 1,
 			"unit": "%",

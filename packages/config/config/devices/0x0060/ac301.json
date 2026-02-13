@@ -33,7 +33,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset for Internal Sensor",
 			"description": "Temperature offset for internal sensor (-80~+80 Offsets the measured temperature by -8.0 °C~+8.0 °C)",
 			"valueSize": 1,

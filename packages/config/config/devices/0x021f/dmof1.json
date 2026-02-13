@@ -86,7 +86,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "reporting_threshold.current",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current Change METER_REPORT Level",
 			"description": "Report of relative change in current flow",
 			"valueSize": 1,

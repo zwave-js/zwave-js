@@ -47,7 +47,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -57,7 +57,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

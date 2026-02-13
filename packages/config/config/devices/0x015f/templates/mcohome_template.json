@@ -1,6 +1,6 @@
 {
 	"w_report_interval": {
-		"$kind": "reporting_interval.power",
+		"$purpose": "reporting_interval.power",
 		"label": "Power (W) Report Interval",
 		"valueSize": 2,
 		"unit": "5 seconds",
@@ -9,7 +9,7 @@
 		"defaultValue": 720
 	},
 	"kwh_report_interval": {
-		"$kind": "reporting_interval.energy",
+		"$purpose": "reporting_interval.energy",
 		"label": "Energy (kWh) Report Interval",
 		"valueSize": 2,
 		"unit": "10 minutes",
@@ -118,7 +118,7 @@
 	},
 	"temperature_reporting_threshold": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
-		"$kind": "reporting_threshold.temperature",
+		"$purpose": "reporting_threshold.temperature",
 		"label": "Temperature Reporting Threshold",
 		"description": "Valid range: 3-255; Variation in temperature to induce automatic report",
 		"valueSize": 2,
@@ -141,7 +141,7 @@
 	},
 	"humidity_reporting_threshold": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
-		"$kind": "reporting_threshold.humidity",
+		"$purpose": "reporting_threshold.humidity",
 		"label": "Humidity Reporting Threshold",
 		"description": "Variation in humidity to induce automatic report",
 		"defaultValue": 6,
@@ -239,7 +239,7 @@
 		]
 	},
 	"indoor_temperature_calibration": {
-		"$kind": "calibration.temperature",
+		"$purpose": "calibration.temperature",
 		"label": "Indoor Temperature Calibration",
 		"valueSize": 1,
 		"unit": "0.1 °F/C",
@@ -248,7 +248,7 @@
 		"defaultValue": 0
 	},
 	"indoor_humidity_calibration": {
-		"$kind": "calibration.humidity",
+		"$purpose": "calibration.humidity",
 		"label": "Indoor Humidity Calibration",
 		"valueSize": 1,
 		"unit": "%",
@@ -257,7 +257,7 @@
 		"defaultValue": 0
 	},
 	"outdoor_temperature_calibration": {
-		"$kind": "calibration.temperature",
+		"$purpose": "calibration.temperature",
 		"label": "Outdoor Temperature Calibration",
 		"valueSize": 1,
 		"unit": "0.1 °F/C",

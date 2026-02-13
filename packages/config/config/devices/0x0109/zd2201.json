@@ -42,7 +42,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Temperature Report Interval",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -52,7 +52,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_interval.humidity",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Auto Humidity Report Interval",
 			"valueSize": 1,
 			"unit": "%",
@@ -62,7 +62,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Auto Light Report Interval",
 			"valueSize": 1,
 			"unit": "%",

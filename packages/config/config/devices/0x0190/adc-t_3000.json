@@ -1249,7 +1249,7 @@
 		},*/
 		{
 			"#": "33[0xffff00]",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"description": "Allowable range: 0.5 to 2 in 0.5 °F increments.",
 			"valueSize": 4,
@@ -2049,7 +2049,7 @@
 		},
 		{
 			"#": "59",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Minimum Battery Reporting Interval",
 			"description": "Minimum number of hours between battery reports",
 			"valueSize": 1,
@@ -2070,7 +2070,7 @@
 		},
 		{
 			"#": "61",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"description": "The minimum percent the relative humidity must change between reported humidity values.",
 			"valueSize": 1,

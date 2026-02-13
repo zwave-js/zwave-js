@@ -222,16 +222,16 @@ Parameter #${parameterNumber} has a non-boolean property hidden`,
 		this.hidden = definition.hidden;
 
 		if (
-			definition["$kind"] != undefined
-			&& typeof definition["$kind"] !== "string"
+			definition["$purpose"] != undefined
+			&& typeof definition["$purpose"] !== "string"
 		) {
 			throwInvalidConfig(
 				"devices",
 				`packages/config/config/devices/${parent.filename}:
-Parameter #${parameterNumber} has a non-string property $kind`,
+Parameter #${parameterNumber} has a non-string property $purpose`,
 			);
 		}
-		this.kind = definition["$kind"];
+		this.purpose = definition["$purpose"];
 
 		// Parse and validate the allowed field
 		if (definition.allowed != undefined) {
@@ -380,7 +380,7 @@ Parameter #${parameterNumber}: allowed[${i}] must have either "value" or "range"
 	public readonly destructive?: boolean;
 	public readonly options: readonly ConditionalConfigOption[];
 	public readonly hidden?: boolean;
-	public readonly kind?: string;
+	public readonly purpose?: string;
 
 	public readonly condition?: string;
 
@@ -408,7 +408,7 @@ Parameter #${parameterNumber}: allowed[${i}] must have either "value" or "range"
 				"allowManualEntry",
 				"destructive",
 				"hidden",
-				"kind",
+				"purpose",
 			]),
 			options: evaluateDeep(this.options, deviceId, true),
 		};

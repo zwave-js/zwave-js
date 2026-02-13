@@ -77,7 +77,7 @@
 	"paramInformation": [
 		{
 			"#": "2",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Retrigger Timeout",
 			"description": "Allowable range: 0, 30-3600. Values 1-29 are equivalent to 30.",
 			"valueSize": 2,
@@ -94,7 +94,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Reset Timeout",
 			"description": "Specifies the interval after which the device will clear its status",
 			"valueSize": 2,
@@ -105,7 +105,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -337,7 +337,7 @@
 		},
 		{
 			"#": "41",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Change Threshold Reporting: Temperature",
 			"description": "Defines the degree of change that will induce a report",
 			"valueSize": 1,
@@ -355,7 +355,7 @@
 		},
 		{
 			"#": "42",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Change Threshold Reporting: Humidity",
 			"description": "Defines the degree of change that will induce a report",
 			"valueSize": 1,
@@ -372,7 +372,7 @@
 		},
 		{
 			"#": "43",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Change Threshold Reporting: Luminance",
 			"description": "Defines the degree of change that will induce a report",
 			"valueSize": 2,
@@ -743,7 +743,7 @@
 		},
 		{
 			"#": "201",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset Value",
 			"valueSize": 2,
 			"unit": "0.1 °C/°F",
@@ -753,7 +753,7 @@
 		},
 		{
 			"#": "202",
-			"$kind": "calibration.humidity",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset Value",
 			"valueSize": 1,
 			"unit": "%",
@@ -763,7 +763,7 @@
 		},
 		{
 			"#": "203",
-			"$kind": "calibration.brightness",
+			"$purpose": "calibration.brightness",
 			"label": "Luminance Offset Value",
 			"valueSize": 2,
 			"unit": "lux",

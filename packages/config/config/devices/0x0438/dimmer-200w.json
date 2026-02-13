@@ -35,7 +35,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "state_after_power_failure",
+			"$purpose": "state_after_power_failure",
 			"label": "State After Power Restore",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -63,7 +63,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "dimming_duration",
+			"$purpose": "dimming_duration",
 			"label": "Default Dimming Speed",
 			"valueSize": 1,
 			"unit": "seconds",

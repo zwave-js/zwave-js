@@ -140,7 +140,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"description": "The time interval upon which to report the temperature.",
 			"valueSize": 1,
@@ -156,7 +156,7 @@
 		},
 		{
 			"#": "14",
-			"$kind": "reporting_interval.humidity",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Auto Report Humidity Time",
 			"description": "The time interval upon which to report the humidity.",
 			"valueSize": 1,
@@ -204,7 +204,7 @@
 		},
 		{
 			"#": "21",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Differential Report",
 			"description": "Determines the temperature differential that will trigger a report.",
 			"valueSize": 1,
@@ -221,7 +221,7 @@
 		},
 		{
 			"#": "23",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Differential Report",
 			"description": "Determines the humidity differential that will trigger a report.",
 			"valueSize": 1,

@@ -65,7 +65,7 @@
 		},
 		{
 			"#": "16",
-			"$kind": "dimming_duration.zwave",
+			"$purpose": "dimming_duration.zwave",
 			"label": "Ramp Rate When Dimming Using Multilevel Switch",
 			"valueSize": 1,
 			"unit": "100ms",

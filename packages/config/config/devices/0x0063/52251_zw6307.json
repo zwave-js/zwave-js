@@ -21,7 +21,7 @@
 		},
 		{
 			"#": "18",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Timeout Duration",
 			"description": "Timeout duration motion detect, when battery operated (1-60), when usb powered it is continually 5 seconds",
 			"valueSize": 1,
@@ -49,7 +49,7 @@
 		},
 		{
 			"#": "23",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"description": "Interval between reports of battery level",
 			"valueSize": 2,

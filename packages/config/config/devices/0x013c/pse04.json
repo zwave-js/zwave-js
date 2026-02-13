@@ -70,7 +70,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 1,
 			"unit": "30 seconds",
@@ -90,7 +90,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"valueSize": 1,
 			"minValue": 0,

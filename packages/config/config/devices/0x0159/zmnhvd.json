@@ -49,7 +49,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Automatic Turning Off Output After Set Time",
 			"valueSize": 2,
 			"minValue": 0,
@@ -58,7 +58,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "timer.auto_on",
+			"$purpose": "timer.auto_on",
 			"label": "Automatic Turning on Output After Set Time",
 			"valueSize": 2,
 			"minValue": 0,
@@ -136,7 +136,7 @@
 		},
 		{
 			"#": "60",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dimming Value",
 			"valueSize": 1,
 			"minValue": 1,
@@ -145,7 +145,7 @@
 		},
 		{
 			"#": "61",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dimming Value",
 			"valueSize": 1,
 			"minValue": 2,
@@ -187,7 +187,7 @@
 		},
 		{
 			"#": "110",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"minValue": 1,
@@ -196,7 +196,7 @@
 		},
 		{
 			"#": "120",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "°C",

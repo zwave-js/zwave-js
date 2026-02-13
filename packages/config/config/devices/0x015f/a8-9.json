@@ -62,7 +62,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Sensor: Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.5 °C",
@@ -78,7 +78,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Sensor: Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%rF",
@@ -109,7 +109,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Brightness Sensor: Change Report Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -239,7 +239,7 @@
 		},
 		{
 			"#": "14",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Sensor: Auto-Report Timer",
 			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
@@ -256,7 +256,7 @@
 		},
 		{
 			"#": "15",
-			"$kind": "reporting_interval.humidity",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Sensor: Auto-Report Timer",
 			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
@@ -289,7 +289,7 @@
 		},
 		{
 			"#": "17",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Brightness Sensor: Auto-Report Timer",
 			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
@@ -339,7 +339,7 @@
 		},
 		{
 			"#": "50",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "Offset = value minus 100. Example: 91 => -0.9 °",
 			"valueSize": 1,
@@ -351,7 +351,7 @@
 		},
 		{
 			"#": "51",
-			"$kind": "calibration.humidity",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset",
 			"description": "Offset = value minus 20. Example: 33 => +13 %",
 			"valueSize": 1,
@@ -383,7 +383,7 @@
 		},
 		{
 			"#": "54",
-			"$kind": "calibration.brightness",
+			"$purpose": "calibration.brightness",
 			"label": "Brightness Offset",
 			"description": "Offset = value minus 5000. Example: 49 => -4951 lux",
 			"valueSize": 2,

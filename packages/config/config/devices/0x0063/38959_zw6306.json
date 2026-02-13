@@ -39,7 +39,7 @@
 		},
 		{
 			"#": "22",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval (When Battery Operated)",
 			"valueSize": 2,
 			"minValue": 5,
@@ -66,7 +66,7 @@
 		},
 		{
 			"#": "23",
-			"$kind": "reporting_interval.battery",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"valueSize": 2,
 			"unit": "minutes",
@@ -108,7 +108,7 @@
 		},
 		{
 			"#": "52",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval (When USB Operated)",
 			"valueSize": 2,
 			"unit": "minutes",

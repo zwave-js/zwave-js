@@ -71,7 +71,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Automatic Reporting: Temperature Change Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -87,7 +87,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Automatic Reporting: Temperature Reporting Interval",
 			"description": "Allowable range: 10-65535",
 			"valueSize": 2,
@@ -105,7 +105,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Automatic Reporting: Power Change Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -122,7 +122,7 @@
 		},
 		{
 			"#": "14",
-			"$kind": "reporting_threshold.voltage",
+			"$purpose": "reporting_threshold.voltage",
 			"label": "Automatic Reporting: Voltage Change Threshold",
 			"valueSize": 1,
 			"unit": "V",
@@ -138,7 +138,7 @@
 		},
 		{
 			"#": "15",
-			"$kind": "reporting_threshold.current",
+			"$purpose": "reporting_threshold.current",
 			"label": "Automatic Reporting: Current Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -155,7 +155,7 @@
 		},
 		{
 			"#": "17",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Automatic Reporting: Energy Reports Interval",
 			"valueSize": 4,
 			"unit": "seconds",

@@ -27,7 +27,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "motion_sensitivity.inverted",
+			"$purpose": "motion_sensitivity.inverted",
 			"label": "Motion Sensor: Sensitivity",
 			"description": "0 = highest; 99 = lowest.",
 			"valueSize": 1,
@@ -90,7 +90,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Sensor: Blind Time",
 			"description": "Time the sensor waits before sending a next motion detected message.",
 			"valueSize": 1,
@@ -172,7 +172,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Sensor: Clear Time",
 			"description": "Time in seconds to wait before sending 'Clear motion detected' since the last detection.",
 			"valueSize": 2,
@@ -218,7 +218,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "reporting_threshold.brightness",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Light Sensor: Illumination Differential Report",
 			"valueSize": 1,
 			"unit": "lux",
@@ -248,7 +248,7 @@
 		},
 		{
 			"#": "15",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",

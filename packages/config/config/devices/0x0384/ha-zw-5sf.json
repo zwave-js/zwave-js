@@ -28,7 +28,7 @@
 	"paramInformation": [
 		{
 			"#": "10",
-			"$kind": "reporting_threshold.low_battery",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

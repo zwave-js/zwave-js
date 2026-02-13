@@ -16,7 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "motion_sensitivity",
+			"$purpose": "motion_sensitivity",
 			"label": "Sensitivity Level Setting",
 			"description": "This parameter defines the sensitivity of PIR detector",
 			"valueSize": 1,
@@ -83,7 +83,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "motion_retrigger_interval",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Retrigger Interval Setting",
 			"description": "Interval of being re-triggered after the PIR detector has been triggered.",
 			"valueSize": 1,

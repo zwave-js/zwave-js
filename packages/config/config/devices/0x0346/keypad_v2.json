@@ -172,7 +172,7 @@
 		},
 		{
 			"#": "17",
-			"$kind": "reporting_threshold.low_battery",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Battery Low Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -278,7 +278,7 @@
 		{
 			"#": "26",
 			"$if": "firmwareVersion >= 1.18",
-			"$kind": "motion_clear_delay",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Sensor Timeout",
 			"valueSize": 1,
 			"unit": "seconds",

@@ -79,7 +79,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"valueSize": 1,
 			"minValue": 0,

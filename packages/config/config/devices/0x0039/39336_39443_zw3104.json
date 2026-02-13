@@ -136,7 +136,7 @@
 		},
 		{
 			"#": "20",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dim Level",
 			"description": "Number of Steps",
 			"valueSize": 1,

@@ -146,7 +146,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Sensor Temperature Calibration",
 			"valueSize": 1,
 			"minValue": -10,

@@ -493,7 +493,7 @@
 		]
 	},
 	"current_threshold": {
-		"$kind": "reporting_threshold.current",
+		"$purpose": "reporting_threshold.current",
 		"label": "Current Change Threshold",
 		"valueSize": 1,
 		"unit": "A",
@@ -509,7 +509,7 @@
 		]
 	},
 	"kwh_threshold": {
-		"$kind": "reporting_threshold.energy",
+		"$purpose": "reporting_threshold.energy",
 		"label": "Power (kWh) Change Threshold",
 		"valueSize": 2,
 		"unit": "KwH",
@@ -525,7 +525,7 @@
 		]
 	},
 	"power_threshold": {
-		"$kind": "reporting_threshold.power",
+		"$purpose": "reporting_threshold.power",
 		"label": "Power Change Threshold",
 		"description": "Threshold change in power consumption to induce an automatic report",
 		"valueSize": 2,
@@ -590,7 +590,7 @@
 		"label": "Power Change Threshold (Whole HEM Export)"
 	},
 	"percent_threshold": {
-		"$kind": "reporting_threshold.power",
+		"$purpose": "reporting_threshold.power",
 		"label": "Power Percentage Change Threshold",
 		"description": "Threshold change in power consumption (on a percentage basis) to induce an automatic report",
 		"valueSize": 1,
@@ -811,7 +811,7 @@
 		]
 	},
 	"auto_off_timer": {
-		"$kind": "timer.auto_off",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Off Timer",
 		"description": "Allowable range: 1-86400",
 		"valueSize": 4,
@@ -829,7 +829,7 @@
 	},
 	"auto_off_timer_65535": {
 		"$import": "~/templates/master_template.json#base_0-65535",
-		"$kind": "timer.auto_off",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Off Timer",
 		"unit": "seconds",
 		"options": [
@@ -840,7 +840,7 @@
 		]
 	},
 	"auto_on_timer": {
-		"$kind": "timer.auto_on",
+		"$purpose": "timer.auto_on",
 		"label": "Auto On Timer",
 		"description": "Allowable range: 1-86400",
 		"valueSize": 4,
@@ -858,7 +858,7 @@
 	},
 	"auto_on_timer_65535": {
 		"$import": "~/templates/master_template.json#base_0-65535",
-		"$kind": "timer.auto_on",
+		"$purpose": "timer.auto_on",
 		"label": "Auto On Timer",
 		"unit": "seconds",
 		"options": [
@@ -877,7 +877,7 @@
 		"label": "Low Battery Voltage Check"
 	},
 	"reporting_threshold.low_battery": {
-		"$kind": "reporting_threshold.low_battery",
+		"$purpose": "reporting_threshold.low_battery",
 		"label": "Low Battery Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -916,11 +916,11 @@
 	},
 	"current_overload": {
 		"$import": "~/templates/master_template.json#base_enable_disable",
-		"$kind": "overload_protection",
+		"$purpose": "overload_protection",
 		"label": "Current Overload Protection"
 	},
 	"current_overload_threshold": {
-		"$kind": "overload_protection.threshold",
+		"$purpose": "overload_protection.threshold",
 		"label": "Current Overload Protection Threshold",
 		"valueSize": 2,
 		"unit": "W",
@@ -944,7 +944,7 @@
 	},
 	"auto_report_interval_watt": {
 		"$import": "~/templates/master_template.json#base_0-65535",
-		"$kind": "reporting_interval.power",
+		"$purpose": "reporting_interval.power",
 		"label": "Automatic Reporting Interval: Power Consumption",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -957,7 +957,7 @@
 	},
 	"auto_report_interval_kwh": {
 		"$import": "~/templates/master_template.json#base_0-65535",
-		"$kind": "reporting_interval.energy",
+		"$purpose": "reporting_interval.energy",
 		"label": "Automatic Reporting Interval: kWh",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -970,7 +970,7 @@
 	},
 	"auto_report_interval_v": {
 		"$import": "~/templates/master_template.json#base_0-65535",
-		"$kind": "reporting_interval.voltage",
+		"$purpose": "reporting_interval.voltage",
 		"label": "Automatic Reporting Interval: Voltage",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -983,7 +983,7 @@
 	},
 	"auto_report_interval_amp": {
 		"$import": "~/templates/master_template.json#base_0-65535",
-		"$kind": "reporting_interval.current",
+		"$purpose": "reporting_interval.current",
 		"label": "Automatic Reporting Interval: Current",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -995,7 +995,7 @@
 		]
 	},
 	"auto_report_interval_light": {
-		"$kind": "reporting_interval.brightness",
+		"$purpose": "reporting_interval.brightness",
 		"label": "Automatic Reporting Interval: Light Sensor",
 		"valueSize": 2,
 		"unit": "seconds",
@@ -3154,7 +3154,7 @@
 		"unsigned": true
 	},
 	"motion_timeout": {
-		"$kind": "motion_clear_delay",
+		"$purpose": "motion_clear_delay",
 		"label": "Motion Sensor Timeout",
 		"valueSize": 2,
 		"unit": "seconds",

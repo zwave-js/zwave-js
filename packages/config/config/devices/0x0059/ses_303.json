@@ -16,7 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -27,7 +27,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -38,7 +38,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 %rH",
@@ -49,7 +49,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_interval.humidity",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Reporting Interval",
 			"valueSize": 1,
 			"unit": "minutes",

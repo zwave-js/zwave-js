@@ -165,7 +165,7 @@
 		},
 		{
 			"#": "35[0xff]",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Report Offset",
 			"valueSize": 2,
 			"minValue": 0,
@@ -201,7 +201,7 @@
 		},
 		{
 			"#": "34[0xff]",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Reporting: Threshold",
 			"valueSize": 2,
 			"unit": "°F/C",

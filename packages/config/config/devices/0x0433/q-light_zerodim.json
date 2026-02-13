@@ -31,7 +31,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness Level",
 			"description": "Set the desired value from 1 to 98% for the minimum dim level that the dimmer is restricted to, the dimmer will not go lower than the value set here.",
 			"valueSize": 1,
@@ -42,7 +42,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness Level",
 			"description": "Set the desired value from 2 to 99% for the maximum dim level that the dimmer is restricted to; the dimmer will not go higher than the value set here.",
 			"valueSize": 1,
@@ -106,7 +106,7 @@
 		},
 		{
 			"#": "9",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",

@@ -1,6 +1,6 @@
-# Parameter kinds
+# Parameter purpose
 
-The `$kind` property describes the purpose of a configuration parameter. It allows applications to understand what a parameter does without having to parse labels or descriptions, enabling features like:
+The `$purpose` property describes the purpose of a configuration parameter. It allows applications to understand what a parameter does without having to parse labels or descriptions, enabling features like:
 
 - Grouping similar parameters across different devices
 - Providing consistent UI controls for the same functionality
@@ -8,12 +8,12 @@ The `$kind` property describes the purpose of a configuration parameter. It allo
 
 ## Usage
 
-Add the `$kind` property to a parameter definition:
+Add the `$purpose` property to a parameter definition:
 
 ```json
 {
 	"#": "3",
-	"$kind": "timer.auto_off",
+	"$purpose": "timer.auto_off",
 	"label": "Auto Turn-Off Timer",
 	"valueSize": 4,
 	"unit": "minutes",
@@ -29,9 +29,9 @@ Add the `$kind` property to a parameter definition:
 }
 ```
 
-## Available Kinds
+## Available Purposes
 
-The following semantic kinds are defined. Some kinds support sub-variants using dot notation (e.g., `ramp_rate.manual`).
+The following semantic purposes are defined. Some purposes support sub-variants using dot notation (e.g., `ramp_rate.manual`).
 
 ### `state_after_power_failure`
 
@@ -56,7 +56,7 @@ Automatic turn-on or turn-off after a delay.
 
 **Sub-variants:**
 
-| Kind             | Description                                     |
+| Purpose          | Description                                     |
 | ---------------- | ----------------------------------------------- |
 | `timer.auto_off` | Automatic turn-off after a delay when turned on |
 | `timer.auto_on`  | Automatic turn-on after a delay when turned off |
@@ -74,13 +74,13 @@ Automatic turn-on or turn-off after a delay.
 ### `ramp_rate`
 
 Speed of dimming transitions. This can be expressed as the duration of increments (e.g. time to dim by 1%), or as a qualitative speed (e.g. slow, medium, fast).
-For parameters that specify the whole duration of a full dimming transition (e.g. from off to on), use the `dimming_duration` kind instead.
+For parameters that specify the whole duration of a full dimming transition (e.g. from off to on), use `dimming_duration` instead.
 
-When a device has a single parameter that applies to both directions, use the base kind. Use `.manual` / `.zwave` variants when separate parameters exist for different control methods.
+When a device has a single parameter that applies to both directions, use the base purpose. Use `.manual` / `.zwave` variants when separate parameters exist for different control methods.
 
 **Sub-variants:**
 
-| Kind               | Description                                |
+| Purpose            | Description                                |
 | ------------------ | ------------------------------------------ |
 | `ramp_rate`        | General ramp rate (applies to all control) |
 | `ramp_rate.manual` | Ramp rate for physical/manual control only |
@@ -95,11 +95,11 @@ When a device has a single parameter that applies to both directions, use the ba
 
 ### `dimming_duration`
 
-Duration of a full dimming transition (from off to on or vice versa).
+Defines the total dimming time from the current brightness level to the target brightness level.
 
 **Sub-variants:**
 
-| Kind                           | Description                                        |
+| Purpose                        | Description                                        |
 | ------------------------------ | -------------------------------------------------- |
 | `dimming_duration`             | General dimming duration (applies to all control)  |
 | `dimming_duration.manual`      | Dimming duration for physical/manual control only  |
@@ -150,7 +150,7 @@ Inverts physical switch direction (up=on vs up=off).
 
 **Sub-variants:**
 
-| Kind                    | Description                                                          |
+| Purpose                 | Description                                                          |
 | ----------------------- | -------------------------------------------------------------------- |
 | `orientation`           | Simple toggle: Disable = normal, Enable = inverted (up=off, down=on) |
 | `orientation.momentary` | Includes momentary button mode option alongside normal/inverted      |
@@ -165,7 +165,7 @@ Inverts physical switch direction (up=on vs up=off).
 
 ### `motion_sensitivity`
 
-Sensitivity level of a motion/PIR sensor. Use the base kind when higher values mean more sensitive.
+Sensitivity level of a motion/PIR sensor. Use the base purpose when higher values mean more sensitive.
 
 Use `motion_sensitivity.inverted` when lower values mean **more** sensitive (e.g., the value represents a detection threshold where a lower threshold = easier to trigger = more sensitive).
 
@@ -209,7 +209,7 @@ Calibration offset for sensor readings.
 
 **Sub-variants:**
 
-| Kind                      | Description                                    |
+| Purpose                   | Description                                    |
 | ------------------------- | ---------------------------------------------- |
 | `calibration.temperature` | Calibration offset for temperature sensor      |
 | `calibration.humidity`    | Calibration offset for humidity sensor         |
@@ -227,7 +227,7 @@ Calibration offset for sensor readings.
 - "Brightness Offset" → `calibration.brightness`
 - "Lux Calibration" → `calibration.brightness`
 
-**NOT calibration** (do not use this kind for these):
+**NOT calibration** (do not use this purpose for these):
 
 - "Hysteresis Upper Temperature Offset" — this is a thermostat deadband/hysteresis setting, not a sensor calibration offset
 - "Temperature Control Hysteresis" — same reason
@@ -240,7 +240,7 @@ Enable/disable or threshold for overload/overcurrent protection.
 
 **Sub-variants:**
 
-| Kind                            | Description                                                 |
+| Purpose                         | Description                                                 |
 | ------------------------------- | ----------------------------------------------------------- |
 | `overload_protection`           | Enable/disable flag for overload protection                 |
 | `overload_protection.threshold` | Power (W) or current (A) threshold that triggers protection |
@@ -259,7 +259,7 @@ Threshold for automatic reporting based on value change (delta from previous rea
 
 **Sub-variants:**
 
-| Kind                              | Description                       |
+| Purpose                           | Description                       |
 | --------------------------------- | --------------------------------- |
 | `reporting_threshold.power`       | Power/wattage change threshold    |
 | `reporting_threshold.energy`      | Energy/kWh change threshold       |
@@ -292,7 +292,7 @@ Time interval for periodic automatic reporting.
 
 **Sub-variants:**
 
-| Kind                             | Description                         |
+| Purpose                          | Description                         |
 | -------------------------------- | ----------------------------------- |
 | `reporting_interval.power`       | Power/wattage reporting interval    |
 | `reporting_interval.energy`      | Energy/kWh reporting interval       |
@@ -312,7 +312,7 @@ Time interval for periodic automatic reporting.
 - "Battery Reporting Interval" → `reporting_interval.battery`
 - "Battery Level Reporting Interval" → `reporting_interval.battery`
 
-**NOT a reporting interval** (do not use this kind for these):
+**NOT a reporting interval** (do not use this purpose for these):
 
 - "Temperature & Humidity Reporting Interval" — combined parameter controlling multiple sensor types; don't tag with a single sub-variant
 - "Temperature Check Interval" / "Temperature Measuring Interval" — sensor polling/measurement interval, not a reporting interval. Some devices have separate parameters for how often a sensor is read vs. how often reports are sent
@@ -321,26 +321,26 @@ Time interval for periodic automatic reporting.
 
 ## Guidelines for Contributors
 
-When adding `$kind` to device configurations:
+When adding `$purpose` to device configurations:
 
-1. **Use existing kinds when applicable.** Check the list above before creating assumptions about new kinds.
+1. **Use existing purposes when applicable.** Check the list above before creating assumptions about new purposes.
 
-2. **Match by purpose, not label.** Parameters with different labels but the same purpose should use the same kind. For example, "Auto Shut-Off Timer", "Auto Turn-Off Timer", and "Auto Off" should all use `timer.auto_off`.
+2. **Match by purpose, not label.** Parameters with different labels but the same purpose should use the same value. For example, "Auto Shut-Off Timer", "Auto Turn-Off Timer", and "Auto Off" should all use `timer.auto_off`.
 
-3. **Use sub-variants appropriately.** Only use sub-variants (e.g., `ramp_rate.manual`) when the distinction is meaningful. If a device has a single ramp rate parameter that applies to all control methods, use the base kind `ramp_rate`.
+3. **Use sub-variants appropriately.** Only use sub-variants (e.g., `ramp_rate.manual`) when the distinction is meaningful. If a device has a single ramp rate parameter that applies to all control methods, use the base purpose `ramp_rate`.
 
-4. **Don't force kinds.** If a parameter doesn't clearly fit any existing kind, leave it without a `$kind` rather than forcing an incorrect one.
+4. **Don't force purposes.** If a parameter doesn't clearly fit any existing purpose, leave it without a `$purpose` rather than forcing an incorrect one.
 
-5. **Consider the unit field.** The `unit` field already conveys information about what's being measured. The `$kind` describes the semantic _purpose_, not the measurement type. For example, both temperature thresholds and temperature calibration offsets might have `unit: "°C"`, but they have different `$kind` values.
+5. **Consider the unit field.** The `unit` field already conveys information about what's being measured. The `$purpose` describes the semantic _purpose_, not the measurement type. For example, both temperature thresholds and temperature calibration offsets might have `unit: "°C"`, but they have different `$purpose` values.
 
 ## Template Usage
 
-The `$kind` property can be defined in templates and inherited via `$import`:
+The `$purpose` property can be defined in templates and inherited via `$import`:
 
 ```json
 // In template file
 "auto_off_timer_base": {
-	"$kind": "timer.auto_off",
+	"$purpose": "timer.auto_off",
 	"label": "Auto Turn-Off Timer",
 	"valueSize": 4,
 	"unit": "minutes",

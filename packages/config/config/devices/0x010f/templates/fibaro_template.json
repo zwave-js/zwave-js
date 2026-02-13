@@ -220,7 +220,7 @@
 		"defaultValue": 600
 	},
 	"power_report_threshold_relative": {
-		"$kind": "reporting_threshold.power",
+		"$purpose": "reporting_threshold.power",
 		"label": "Power Reports: Relative Change Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -239,7 +239,7 @@
 		"maxValue": 500
 	},
 	"energy_report_threshold": {
-		"$kind": "reporting_threshold.energy",
+		"$purpose": "reporting_threshold.energy",
 		"label": "Energy Reports: Threshold",
 		"valueSize": 2,
 		"unit": "0.01 kWh",

@@ -37,7 +37,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Meter Report Interval",
 			"valueSize": 2,
 			"unit": "minutes",

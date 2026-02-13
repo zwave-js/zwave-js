@@ -117,7 +117,7 @@
   - [Conditional parameters and settings](config-files/conditional-settings.md)
   - [Using templates](config-files/using-templates.md)
   - [Guide on partial parameters](config-files/partial-parameters.md)
-  - [Parameter kinds](config-files/parameter-kinds.md)
+  - [Parameter purpose](config-files/parameter-purpose.md)
   - [Hidden parameters](config-files/hidden-parameters.md)
 
 - Development

@@ -25,7 +25,7 @@
 		},
 		{
 			"#": "2",
-			"$kind": "reporting_threshold.temperature",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"description": "Allowable range: 5-50",
 			"valueSize": 2,
@@ -42,7 +42,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_threshold.humidity",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"description": "Allowable range: 5-50",
 			"valueSize": 2,
@@ -59,7 +59,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Calibration",
 			"valueSize": 2,
 			"unit": "°C",
@@ -70,7 +70,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "calibration.humidity",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Sensor Calibration",
 			"valueSize": 2,
 			"unit": "0.1 %",

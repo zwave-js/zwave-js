@@ -78,7 +78,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "dimming_duration",
+			"$purpose": "dimming_duration",
 			"label": "Default Dimming Speed",
 			"description": "Configure the default dimming speed: 0 = Instantly, 1 = Fast, 100 = Slow",
 			"valueSize": 1,

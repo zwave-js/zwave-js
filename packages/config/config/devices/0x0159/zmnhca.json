@@ -69,7 +69,7 @@
 		},
 		{
 			"#": "40",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Reporting in Watts on Power Change for Q1 or Q2",
 			"description": "Power consumption change threshold for sending updates",
 			"valueSize": 1,

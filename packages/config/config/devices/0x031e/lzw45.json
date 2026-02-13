@@ -63,7 +63,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Level",
 			"description": "The minimum level that the strip can be dimmed to. Useful when the user has an LED strip that does not turn on or flickers at a lower level.",
 			"valueSize": 1,
@@ -73,7 +73,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Level",
 			"description": "The maximum level that the strip can be dimmed to. Useful when the user has an LED strip that reaches its maximum level before the dimmer value of 99.",
 			"valueSize": 1,
@@ -83,7 +83,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"description": "After the strip is turned on, turn it off automatically after this time.",
 			"valueSize": 2,

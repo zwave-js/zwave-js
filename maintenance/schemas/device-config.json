@@ -518,9 +518,9 @@
 					"type": "boolean",
 					"description": "Whether this parameter should be hidden in UIs and outputs"
 				},
-				"$kind": {
+				"$purpose": {
 					"type": "string",
-					"description": "Describes the purpose of this parameter. See docs/config-files/parameter-kinds.md for details.",
+					"description": "Describes the purpose of this parameter. See docs/config-files/parameter-purpose.md for details.",
 					"enum": [
 						"state_after_power_failure",
 						"timer.auto_off",

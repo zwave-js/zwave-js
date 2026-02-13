@@ -127,7 +127,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness Level",
 			"valueSize": 1,
 			"unit": "%",
@@ -137,7 +137,7 @@
 		},
 		{
 			"#": "6",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness Level",
 			"valueSize": 1,
 			"unit": "%",
@@ -183,7 +183,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Timer Function (Auto-Off)",
 			"description": "0x00 function disabled 0x0001~0x00FF 1s~255s",
 			"valueSize": 2,

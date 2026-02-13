@@ -43,7 +43,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "state_after_power_failure",
+			"$purpose": "state_after_power_failure",
 			"label": "State After Power Restored",
 			"description": "1 = off 2 = on 3 = last state",
 			"valueSize": 1,

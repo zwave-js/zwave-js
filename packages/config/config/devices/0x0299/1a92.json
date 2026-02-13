@@ -39,7 +39,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_interval.energy",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Meter Report Interval",
 			"description": "Allowable range: 10-30240 (10 minutes to 3 weeks)",
 			"valueSize": 2,

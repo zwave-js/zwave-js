@@ -52,7 +52,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "reporting_interval.brightness",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Light Level Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -69,7 +69,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "reporting_interval.temperature",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -86,7 +86,7 @@
 		},
 		{
 			"#": "5",
-			"$kind": "calibration.temperature",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "0.1 °F",

@@ -64,7 +64,7 @@
 		},
 		{
 			"#": "3",
-			"$kind": "timer.auto_off",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -80,7 +80,7 @@
 		},
 		{
 			"#": "4",
-			"$kind": "timer.auto_on",
+			"$purpose": "timer.auto_on",
 			"label": "Auto-On Timer",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -198,7 +198,7 @@
 		},
 		{
 			"#": "11",
-			"$kind": "maximum_brightness",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dim Level",
 			"valueSize": 1,
 			"minValue": 2,
@@ -207,7 +207,7 @@
 		},
 		{
 			"#": "12",
-			"$kind": "minimum_brightness",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dim Level",
 			"valueSize": 1,
 			"minValue": 1,
@@ -216,7 +216,7 @@
 		},
 		{
 			"#": "13",
-			"$kind": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.power",
 			"label": "Meter Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -233,7 +233,7 @@
 		},
 		{
 			"#": "14",
-			"$kind": "reporting_interval.power",
+			"$purpose": "reporting_interval.power",
 			"label": "Meter Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
