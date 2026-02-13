@@ -579,7 +579,14 @@ export class BatteryCCReport extends BatteryCC {
 	public readonly lowTemperatureStatus: boolean | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([this.level]);
+		this.payload = Bytes.from([
+			this.disconnected
+				// CC:0080.02.03.11.010
+				// If this field is set to 1, the Battery Level field MUST
+				// be set to 0x00.
+				? 0
+				: this.level,
+		]);
 		if (this.chargingStatus != undefined) {
 			this.payload = Bytes.concat([
 				this.payload,
