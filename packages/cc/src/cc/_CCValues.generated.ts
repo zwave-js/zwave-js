@@ -1227,7 +1227,7 @@ export const BatteryCCValues = Object.freeze({
 		get meta() {
 			return {
 				...ValueMetadata.ReadOnlyBoolean,
-				label: "Battery disconnected",
+				label: "Battery is disconnected",
 			} as const;
 		},
 		options: {
