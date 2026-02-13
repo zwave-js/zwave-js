@@ -234,6 +234,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"defaultValue": 0,

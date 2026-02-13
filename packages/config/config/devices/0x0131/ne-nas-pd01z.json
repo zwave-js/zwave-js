@@ -16,6 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "motion_sensitivity.inverted",
 			"label": "Sensitivity Level",
 			"description": "8 = Highest sensitivity, 255 = lowest sensitivity",
 			"valueSize": 1,

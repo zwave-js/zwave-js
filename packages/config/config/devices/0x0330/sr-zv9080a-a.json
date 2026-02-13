@@ -162,6 +162,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -177,6 +178,7 @@
 		},
 		{
 			"#": "11",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -192,6 +194,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_threshold.voltage",
 			"label": "Voltage Change Report Threshold",
 			"valueSize": 1,
 			"unit": "V",
@@ -224,6 +227,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",

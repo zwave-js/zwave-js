@@ -38,6 +38,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -70,6 +71,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "motion_retrigger_interval",
 			"label": "PIR Re-Detect Interval Time",
 			"valueSize": 1,
 			"minValue": 3,
@@ -102,6 +104,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Auto Report Illumination Time",
 			"valueSize": 1,
 			"minValue": 1,
@@ -110,6 +113,7 @@
 		},
 		{
 			"#": "13",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"valueSize": 1,
 			"minValue": 1,

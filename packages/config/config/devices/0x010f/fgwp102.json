@@ -92,6 +92,7 @@
 		{
 			"#": "12",
 			"$if": "firmwareVersion >= 3.2",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"description": "defines the time interval of sending at most 5 standard power reports",
 			"valueSize": 2,
@@ -102,9 +103,11 @@
 		{
 			"#": "13",
 			"$if": "firmwareVersion >= 3.2",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Reporting Threshold",
 			"description": "specifies the minimum change in energy consumption",
 			"valueSize": 2,
+			"unit": "0.01 kWh",
 			"minValue": 0,
 			"maxValue": 500,
 			"defaultValue": 10,
@@ -538,6 +541,7 @@
 		{
 			"#": "45",
 			"$if": "firmwareVersion <= 3.1",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Reporting Changes in Energy Consumed",
 			"description": "Required change in power to generate power report.",
 			"valueSize": 1,

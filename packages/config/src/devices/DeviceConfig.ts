@@ -1035,7 +1035,7 @@ export class DeviceConfig {
 		}
 
 		if (version >= 2) {
-			// From version 2 and on, we ignore labels and descriptions, and load them dynamically
+			// From version 2 and on, we ignore labels, descriptions and $purpose, and load them dynamically
 			for (
 				const ep of Object.values<Record<string, any>>(
 					hashable.endpoints ?? {},
@@ -1044,6 +1044,7 @@ export class DeviceConfig {
 				for (const param of ep.paramInformation ?? []) {
 					delete param.label;
 					delete param.description;
+					delete param.$purpose; // added later, but the point still stands
 					for (const opt of param.options ?? []) {
 						delete opt.label;
 					}

@@ -56,6 +56,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "motion_clear_delay",
 			"label": "PIR Sensor Timeout",
 			"valueSize": 2,
 			"minValue": 10,
@@ -64,6 +65,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -89,7 +91,7 @@
 		},
 		{
 			"#": "39",
-			"$import": "templates/aeotec_template.json#low_battery_threshold",
+			"$import": "templates/aeotec_template.json#reporting_threshold.low_battery",
 			"defaultValue": 20
 		},
 		{
@@ -99,6 +101,7 @@
 		{
 			"#": "41[0xffff]",
 			"$if": "firmwareVersion <= 1.6",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 2,
 			"minValue": 10,
@@ -115,6 +118,7 @@
 		{
 			"#": "41[0xffff00]",
 			"$if": "firmwareVersion > 1.6 && firmwareVersion <= 1.9",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 3,
 			"unit": "0.1 °C/°F",
@@ -132,6 +136,7 @@
 		{
 			"#": "41[0xffff0000]",
 			"$if": "firmwareVersion >= 1.10",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Threshold",
 			"valueSize": 4,
 			"unit": "0.1 °C/°F",
@@ -142,12 +147,14 @@
 		{
 			"#": "42",
 			"$import": "~/templates/master_template.json#base_1-100_nounit",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Threshold",
 			"unit": "%",
 			"defaultValue": 10
 		},
 		{
 			"#": "43",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Luminance Change Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -158,6 +165,7 @@
 		{
 			"#": "44",
 			"$import": "~/templates/master_template.json#base_1-100_nounit",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Level Threshold",
 			"unit": "%",
 			"defaultValue": 10
@@ -520,6 +528,7 @@
 		{
 			"#": "201[0xff00]",
 			"$if": "firmwareVersion >= 1.6",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration Offset",
 			"valueSize": 2,
 			"unit": "0.1 °C/°F",
@@ -530,6 +539,7 @@
 		{
 			"#": "202",
 			"$if": "firmwareVersion >= 1.6",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Sensor Calibration",
 			"valueSize": 1,
 			"unit": "% rH",
@@ -540,6 +550,7 @@
 		{
 			"#": "203",
 			"$if": "firmwareVersion >= 1.6",
+			"$purpose": "calibration.brightness",
 			"label": "Luminance Sensor Calibration",
 			"valueSize": 2,
 			"unit": "lux",

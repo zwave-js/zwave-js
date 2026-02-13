@@ -131,6 +131,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval for Q1",
 			"valueSize": 2,
 			"minValue": 0,
@@ -140,6 +141,7 @@
 		},
 		{
 			"#": "43",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval for Q2",
 			"valueSize": 2,
 			"minValue": 0,

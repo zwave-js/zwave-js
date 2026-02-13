@@ -17,6 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "motion_sensitivity",
 			"label": "Sensitivity Level",
 			"valueSize": 1,
 			"minValue": 8,
@@ -26,6 +27,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Cleared Time Delay",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -81,6 +83,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Retrigger Interval",
 			"valueSize": 1,
 			"unit": "seconds",

@@ -62,6 +62,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Sensor: Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.5 °C",
@@ -77,6 +78,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Sensor: Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%rF",
@@ -107,6 +109,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Brightness Sensor: Change Report Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -236,6 +239,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Sensor: Auto-Report Timer",
 			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
@@ -252,6 +256,7 @@
 		},
 		{
 			"#": "15",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Sensor: Auto-Report Timer",
 			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
@@ -284,6 +289,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Brightness Sensor: Auto-Report Timer",
 			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
@@ -333,6 +339,7 @@
 		},
 		{
 			"#": "50",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "Offset = value minus 100. Example: 91 => -0.9 °",
 			"valueSize": 1,
@@ -344,6 +351,7 @@
 		},
 		{
 			"#": "51",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset",
 			"description": "Offset = value minus 20. Example: 33 => +13 %",
 			"valueSize": 1,
@@ -375,6 +383,7 @@
 		},
 		{
 			"#": "54",
+			"$purpose": "calibration.brightness",
 			"label": "Brightness Offset",
 			"description": "Offset = value minus 5000. Example: 49 => -4951 lux",
 			"valueSize": 2,

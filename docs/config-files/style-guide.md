@@ -346,3 +346,30 @@ Use `recommendedValue` sparingly and only when there's a compelling reason to su
 ```
 
 Do not set `recommendedValue` to the same value as `defaultValue` - this provides no additional value to users.
+
+### Parameter Purpose
+
+Whenever a parameter clearly fits one of the defined purposes, add the `$purpose` property. This enables applications to understand what a parameter does without parsing labels, and allows features like grouping similar parameters across devices or applying bulk changes.
+
+See [Parameter purpose](config-files/parameter-purpose.md) for the full list of available purposes and detailed guidelines.
+
+```json
+{
+	"#": "3",
+	"$purpose": "timer.auto_off",
+	"label": "Auto Turn-Off Timer",
+	"valueSize": 4,
+	"unit": "minutes",
+	"minValue": 0,
+	"maxValue": 65535,
+	"defaultValue": 0,
+	"options": [
+		{
+			"label": "Disabled",
+			"value": 0
+		}
+	]
+}
+```
+
+If a parameter doesn't clearly fit any existing purpose, leave it without `$purpose` rather than forcing an incorrect one.

@@ -163,6 +163,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "minimum_brightness",
 			"label": "Limit Minimum Light Level",
 			"description": "Minimum level should be greater than maximum.",
 			"valueSize": 1,
@@ -172,6 +173,7 @@
 		},
 		{
 			"#": "18",
+			"$purpose": "maximum_brightness",
 			"label": "Limit Maximum Light Level",
 			"description": "Maximum level should be greater than minimum. Set to 0 to act as a switch.",
 			"valueSize": 1,

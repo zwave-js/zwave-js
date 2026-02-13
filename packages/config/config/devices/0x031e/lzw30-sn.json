@@ -38,6 +38,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -224,6 +225,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_threshold.power",
 			"label": "Active Power Reports",
 			"valueSize": 1,
 			"unit": "%",
@@ -242,6 +244,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Reports",
 			"valueSize": 1,
 			"unit": "%",

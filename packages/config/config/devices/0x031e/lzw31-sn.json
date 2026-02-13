@@ -90,6 +90,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion < 1.57",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dim Level",
 			"valueSize": 1,
 			"unit": "%",
@@ -100,6 +101,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion >= 1.57",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dim Level",
 			"valueSize": 1,
 			"unit": "%",
@@ -109,6 +111,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dim Level",
 			"valueSize": 1,
 			"unit": "%",
@@ -123,6 +126,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -487,6 +491,7 @@
 		{
 			"#": "18",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Report Threshold",
 			"unit": "%",
 			"defaultValue": 10
@@ -503,6 +508,7 @@
 		{
 			"#": "20",
 			"$if": "firmwareVersion >= 1.43",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Report Threshold",
 			"valueSize": 1,
 			"unit": "0.01 kWh",
@@ -514,6 +520,7 @@
 			"#": "20",
 			"$if": "firmwareVersion < 1.43",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Report Threshold",
 			"unit": "%",
 			"defaultValue": 10

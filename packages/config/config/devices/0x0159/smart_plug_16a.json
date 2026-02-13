@@ -16,6 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "11",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"description": "When the relay is turned ON, it automatically turns OFF after the defined time",
 			"valueSize": 2,
@@ -32,6 +33,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "timer.auto_on",
 			"label": "Auto-On Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -51,6 +53,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Consumption (Watt) Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -60,6 +63,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Consumption (Watt) Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",

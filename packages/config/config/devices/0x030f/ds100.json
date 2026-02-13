@@ -101,6 +101,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"description": "0: Disable auto off function, 1: 0x0-0x7FFF 1s-32767s",
 			"valueSize": 2,

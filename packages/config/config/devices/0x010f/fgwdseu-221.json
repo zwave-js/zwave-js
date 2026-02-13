@@ -205,6 +205,7 @@
 		},
 		{
 			"#": "24",
+			"$purpose": "orientation",
 			"label": "Switch Orientation",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -492,10 +493,20 @@
 		},
 		{
 			"#": "62",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.power",
 			"label": "First Channel - Periodic Power Reports",
 			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "63",
@@ -505,10 +516,20 @@
 		},
 		{
 			"#": "64",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.power",
 			"label": "Second Channel - Periodic Power Reports",
 			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "65",
@@ -519,10 +540,20 @@
 		},
 		{
 			"#": "66",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.energy",
 			"label": "First Channel - Periodic Energy Reports",
 			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "67",
@@ -533,10 +564,20 @@
 		},
 		{
 			"#": "68",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.energy",
 			"label": "Second Channel - Periodic Energy Reports",
 			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "150",

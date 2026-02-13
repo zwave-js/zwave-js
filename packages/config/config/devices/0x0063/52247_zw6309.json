@@ -39,6 +39,7 @@
 		},
 		{
 			"#": "22",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval (on Battery)",
 			"valueSize": 2,
 			"unit": "minutes",
@@ -66,6 +67,7 @@
 		},
 		{
 			"#": "23",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"valueSize": 2,
 			"unit": "minutes",
@@ -107,6 +109,7 @@
 		},
 		{
 			"#": "52",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval (on USB)",
 			"valueSize": 2,
 			"unit": "minutes",

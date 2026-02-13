@@ -21,6 +21,7 @@
 		{
 			"#": "2",
 			"$import": "~/templates/master_template.json#base_0-65535",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power (W) Report Threshold",
 			"unit": "W",
 			"defaultValue": 5,
@@ -34,6 +35,7 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion >= 2.2",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -44,6 +46,7 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion < 2.2",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -53,6 +56,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -63,6 +67,7 @@
 		{
 			"#": "35",
 			"$if": "firmwareVersion >= 2.3",
+			"$purpose": "reporting_interval.current",
 			"label": "Current (A) Report Interval",
 			"description": "Allowable range: 0, 30-2678400 seconds",
 			"valueSize": 4,
@@ -80,6 +85,7 @@
 		{
 			"#": "37",
 			"$if": "firmwareVersion >= 4.10",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current (A) Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -96,6 +102,7 @@
 		{
 			"#": "36",
 			"$if": "firmwareVersion >= 2.3",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage (V) Report Interval",
 			"description": "Allowable range: 0, 30-2678400 seconds",
 			"valueSize": 4,

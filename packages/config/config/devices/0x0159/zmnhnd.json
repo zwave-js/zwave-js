@@ -185,6 +185,7 @@
 		},
 		{
 			"#": "110",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"minValue": 0,
@@ -194,8 +195,10 @@
 		},
 		{
 			"#": "120",
-			"label": "Digital Temperature Sensor Reporting",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
+			"unit": "°C",
 			"minValue": 0,
 			"maxValue": 255,
 			"defaultValue": 5,

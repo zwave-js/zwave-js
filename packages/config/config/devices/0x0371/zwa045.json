@@ -64,6 +64,7 @@
 	"paramInformation": [
 		{
 			"#": "3",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Untrigger Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -73,6 +74,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -255,6 +257,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -287,6 +290,7 @@
 		},
 		{
 			"#": "16",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reports: Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 (°C/°F)",
@@ -303,6 +307,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Brightness Reports: Change Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -431,6 +436,7 @@
 		{
 			"#": "28",
 			"$if": "firmwareVersion >= 2.8.4",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 2,
 			"unit": "0.1 (°C/°F)",
@@ -442,6 +448,7 @@
 		{
 			"#": "29",
 			"$if": "firmwareVersion >= 2.8.4",
+			"$purpose": "calibration.brightness",
 			"label": "Brightness Calibration",
 			"valueSize": 2,
 			"unit": "lux",

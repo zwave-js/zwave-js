@@ -139,6 +139,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -158,6 +159,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",

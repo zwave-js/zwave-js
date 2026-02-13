@@ -112,6 +112,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting (Watts) on Power Change",
 			"valueSize": 2,
 			"unit": "%",
@@ -121,6 +122,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Reporting Internal",
 			"description": "Allowable range: 60-32535",
 			"valueSize": 2,

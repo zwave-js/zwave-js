@@ -65,6 +65,7 @@
 		},
 		{
 			"#": "16",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Consumption Reports: Change Threshold",
 			"valueSize": 2,
 			"unit": "W",
@@ -80,6 +81,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Consumption Reports: Relative Change Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -95,6 +97,7 @@
 		},
 		{
 			"#": "101",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"description": "Allowable range: 5-2678400",
 			"valueSize": 4,
@@ -111,6 +114,7 @@
 		},
 		{
 			"#": "102",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"description": "Allowable range: 5-2678400",
 			"valueSize": 4,
@@ -127,6 +131,7 @@
 		},
 		{
 			"#": "103",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage (V) Report Interval",
 			"description": "Allowable range: 5-2678400",
 			"valueSize": 4,
@@ -143,6 +148,7 @@
 		},
 		{
 			"#": "104",
+			"$purpose": "reporting_interval.current",
 			"label": "Current (A) Report Interval",
 			"description": "Allowable range: 5-2678400",
 			"valueSize": 4,

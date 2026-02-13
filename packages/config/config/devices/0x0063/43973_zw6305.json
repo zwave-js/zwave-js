@@ -64,6 +64,7 @@
 		},
 		{
 			"#": "23",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"description": "This parameter allows you to choose how often the battery level is reported",
 			"valueSize": 2,

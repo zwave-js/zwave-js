@@ -30,6 +30,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -38,6 +39,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C/F",
@@ -47,6 +49,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 %",
@@ -56,6 +59,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Luminance Change Report Threshold",
 			"valueSize": 1,
 			"unit": "lux",
@@ -92,6 +96,7 @@
 		},
 		{
 			"#": "13",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Clear Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -125,6 +130,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset Value",
 			"valueSize": 1,
 			"unit": "0.1 °C/F",
@@ -135,6 +141,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset Value",
 			"valueSize": 1,
 			"unit": "0.1 %",
@@ -145,6 +152,7 @@
 		},
 		{
 			"#": "99",
+			"$purpose": "calibration.brightness",
 			"label": "Light Intensity Offset Value",
 			"description": "See manual for details",
 			"valueSize": 2,

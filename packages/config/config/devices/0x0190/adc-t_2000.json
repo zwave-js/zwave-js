@@ -763,6 +763,7 @@
 		},*/
 		{
 			"#": "33[0xffff00]",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"description": "Allowable range: 0.5 to 2 in 0.5 °F increments.",
 			"valueSize": 4,

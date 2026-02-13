@@ -37,6 +37,7 @@
 		]
 	},
 	"battery_report_interval_30m": {
+		"$purpose": "reporting_interval.battery",
 		"label": "Battery Report Interval",
 		"valueSize": 1,
 		"unit": "30 minutes",

@@ -111,6 +111,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "dimming_duration",
 			"label": "Dimmer Ramp Time",
 			"description": "Time in seconds to ramp to desired level",
 			"valueSize": 1,

@@ -33,6 +33,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

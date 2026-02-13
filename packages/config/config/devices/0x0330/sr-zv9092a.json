@@ -210,6 +210,7 @@
 		},
 		{
 			"#": "16",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Automatic Reporting: Temperature Change Threshold",
 			"description": "Allowable range: 2-10",
 			"valueSize": 1,
@@ -226,6 +227,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Automatic Reporting: Humidity Reporting Interval",
 			"description": "Allowable range: 30-28800",
 			"valueSize": 2,
@@ -242,6 +244,7 @@
 		},
 		{
 			"#": "18",
+			"$purpose": "reporting_threshold.power",
 			"label": "Automatic Reporting: Power Change Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -257,6 +260,7 @@
 		},
 		{
 			"#": "19",
+			"$purpose": "reporting_threshold.current",
 			"label": "Automatic Reporting: Current Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -272,6 +276,7 @@
 		},
 		{
 			"#": "20",
+			"$purpose": "reporting_threshold.voltage",
 			"label": "Automatic Reporting: Voltage Change Threshold",
 			"valueSize": 1,
 			"unit": "V",

@@ -26,6 +26,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dim Level",
 			"description": "Defines the lowest dimming level",
 			"valueSize": 1,
@@ -35,6 +36,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dim Level",
 			"description": "Defines the highest dimming level of the dimmer",
 			"valueSize": 1,

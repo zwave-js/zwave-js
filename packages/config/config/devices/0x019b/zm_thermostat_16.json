@@ -93,6 +93,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",

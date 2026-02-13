@@ -125,6 +125,7 @@
 		},
 		{
 			"#": "34[0xff]",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Reporting: Threshold",
 			"valueSize": 2,
 			"unit": "°F/C",
