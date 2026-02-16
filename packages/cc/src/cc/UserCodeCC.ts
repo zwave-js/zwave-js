@@ -406,6 +406,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
 		{ property, propertyKey },
 		value,
+		_options,
 	) => {
 		if (
 			property === "keypadMode"
