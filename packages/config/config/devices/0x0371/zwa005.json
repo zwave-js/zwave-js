@@ -66,7 +66,6 @@
 			"#": "3",
 			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
-			"description": "Allowable range: 1-11",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 11,

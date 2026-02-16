@@ -153,7 +153,7 @@
 		{
 			"#": "9",
 			"label": "Luminance Light Reporting",
-			"description": "Allowable range: 2 (fast filter) to 8 (slow filter)",
+			"description": "2 = fast filter; 8 = slow filter",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 8,
