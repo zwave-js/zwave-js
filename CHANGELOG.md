@@ -4,6 +4,33 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Support gaps in value range of arbitrary CC values (#8607)
+* Most changes to configuration files are now applied without needing to re-interview (#8604)
+* The `disconnected` status of batteries now influences whether the battery level and charging status is exposed (#8613)
+* The purpose of config parameters can now be annotated, allowing applications to understand what some config parameters do (#8600)
+
+### Bugfixes
+* Fixed an issue that could cause unnecessary re-transmissions and that would incorrectly mark nodes as dead in rare situations (#8577)
+* Fixed an issue where sleeping nodes would not get sent back to sleep if they woke up shortly after sending a supervised report with S2 encryption (#8612)
+* Allow compat flags to override CC support that is dictated by the device class (#8588)
+* Avoid Multilevel Switch values being exposed when Window Covering CC is supported (#8150)
+* Hide Basic CC values when Basic Set is mapped to a different CC (#8605)
+
+### Config file changes
+* Update Zooz ZSE42 config to firmware 2.30 (#8589)
+* Update Zooz ZEN32 config to the latest firmware (#8559)
+* Add Zooz ZEN56, update ZEN32, 71, 72, 77 (#8590)
+* Complete device config for Contec/Da Vinci Touch Panel (FW 10.10) (#8556)
+* Updated several config files to use value ranges with gaps and step sizes instead of mentioning the allowable range in the parameter description (#8618)
+* Unified the definition of "Basic Set Value" parameters across device files (#8621)
+
+### Changes under the hood
+* Dependency updates
+* Refactored the build process to not rely on patching TypeScript (#8576, #8593)
+* Respond to `VersionCCGet` in integration tests (#8610)
+
 ## 15.20.1 (2026-01-26)
 ### Bugfixes
 * Fixed an issue where devices whose device config was previously incorrectly marked as changed after updating to `15.18.0` or `15.19.0` would again be marked as changed after updating to `15.20.0` (#8571)
