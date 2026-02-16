@@ -423,6 +423,8 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			};
 		} else if (property === "userIdStatus") {
 			if (typeof propertyKey !== "number") return;
+			// userId 0 clears all codes, skip optimistic updates
+			if (propertyKey === 0) return;
 
 			const userIdStatusValueId = UserCodeCCValues.userIdStatus(
 				propertyKey,
@@ -435,12 +437,8 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 					_supervisedAndSuccessful,
 				) => {
 					if (!this.isSinglecast()) return;
-					const valueDB = this.tryGetValueDB();
-					if (!valueDB) return;
-
-					valueDB.setValue(userIdStatusValueId, value);
 					if (value === UserIDStatus.Available) {
-						valueDB.setValue(userCodeValueId, "");
+						this.tryGetValueDB()?.setValue(userCodeValueId, "");
 					}
 				},
 
@@ -468,8 +466,6 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 					if (!this.isSinglecast()) return;
 					const valueDB = this.tryGetValueDB();
 					if (!valueDB) return;
-
-					valueDB.setValue(userCodeValueId, value);
 
 					const currentStatus = valueDB.getValue<UserIDStatus>(
 						userIdStatusValueId,
