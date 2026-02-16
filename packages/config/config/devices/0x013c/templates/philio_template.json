@@ -1,24 +1,4 @@
 {
-	"basic_set_value": {
-		"label": "Basic Set Value",
-		"valueSize": 1,
-		"defaultValue": 255,
-		"unsigned": true,
-		"allowed": [
-			{ "range": [0, 99] },
-			{ "value": 255 }
-		],
-		"options": [
-			{
-				"label": "Off",
-				"value": 0
-			},
-			{
-				"label": "Last Brightness",
-				"value": 255
-			}
-		]
-	},
 	"association_basic_set_value": {
 		"valueSize": 1,
 		"defaultValue": 255,

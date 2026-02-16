@@ -27,24 +27,9 @@
 		},
 		{
 			"#": "2",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Level",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 99,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		}
 	],
 	"metadata": {

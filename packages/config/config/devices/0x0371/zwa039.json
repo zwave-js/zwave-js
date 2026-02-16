@@ -127,14 +127,9 @@
 		},
 		{
 			"#": "10",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "High Temperature Basic Set Value",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "6",
@@ -153,14 +148,9 @@
 		},
 		{
 			"#": "9",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Low Temperature Basic Set Value",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "7",
@@ -189,14 +179,9 @@
 		},
 		{
 			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "High Humidity Trigger Basic Set Value",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "8",
@@ -215,14 +200,9 @@
 		},
 		{
 			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Low Humidity Trigger Basic Set Value",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "13",

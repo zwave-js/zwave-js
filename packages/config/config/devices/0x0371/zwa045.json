@@ -161,27 +161,19 @@
 		},
 		{
 			"#": "8[0xff00]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Motion Group: Custom Basic Set Value (Motion Detected)",
 			"description": "Applicable when parameter 7 is set to Custom (value 6).",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "8[0x00ff]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Motion Group: Custom Basic Set Value (No Motion)",
 			"description": "Applicable when parameter 7 is set to Custom (value 6).",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "9",

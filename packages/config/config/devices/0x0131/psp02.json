@@ -16,23 +16,10 @@
 	"paramInformation": [
 		{
 			"#": "2",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Level",
 			"description": "Basic command to turn on the light",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "3",

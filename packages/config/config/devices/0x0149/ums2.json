@@ -57,69 +57,39 @@
 		},
 		{
 			"#": "4",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value for Group 2 with 1 Click on UP Button",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "5",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value for Group 2 with 1 Click on DOWN Button",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "6",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value for Group 3 with 2 Clicks on UP Button",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "7",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value for Group 3 with 2 Clicks on DOWN Button",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "8",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value for Group 4 with 3 Clicks on UP Button",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "9",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value for Group 4 with 3 Clicks on DOWN Button",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "20",
