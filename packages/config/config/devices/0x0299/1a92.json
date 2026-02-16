@@ -27,8 +27,10 @@
 			"description": "Allowable range: 3-8640 (30 seconds to 1 day)",
 			"valueSize": 2,
 			"unit": "10s",
-			"minValue": 0,
-			"maxValue": 8640,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [3, 8640] }
+			],
 			"defaultValue": 3,
 			"options": [
 				{
@@ -44,8 +46,10 @@
 			"description": "Allowable range: 10-30240 (10 minutes to 3 weeks)",
 			"valueSize": 2,
 			"unit": "minutes",
-			"minValue": 0,
-			"maxValue": 30240,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 30240] }
+			],
 			"defaultValue": 60,
 			"options": [
 				{

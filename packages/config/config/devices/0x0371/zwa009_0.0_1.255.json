@@ -83,11 +83,12 @@
 		{
 			"#": "4",
 			"label": "Automatic Reporting Interval",
-			"description": "Allowable Range: 900-65535",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 65535,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [900, 65535] }
+			],
 			"defaultValue": 43200,
 			"unsigned": true,
 			"options": [
@@ -115,21 +116,23 @@
 		{
 			"#": "10",
 			"label": "High Temperature Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		},
 		{
 			"#": "6",
 			"label": "Low Temperature Basic Set Threshold",
-			"description": "Allowable Range: 200-1000.",
 			"valueSize": 2,
 			"unit": "0.1 °(C/F)",
-			"minValue": 0,
-			"maxValue": 1000,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [200, 1000] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -141,10 +144,11 @@
 		{
 			"#": "9",
 			"label": "Low Temperature Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
@@ -166,10 +170,11 @@
 		{
 			"#": "12",
 			"label": "High Humidity Trigger Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		},
@@ -191,10 +196,11 @@
 		{
 			"#": "11",
 			"label": "Low Humidity Trigger Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},

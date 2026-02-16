@@ -29,11 +29,12 @@
 		{
 			"#": "2",
 			"label": "Overcurrent Protection",
-			"description": "Allowable range: 5-16",
 			"valueSize": 1,
 			"unit": "A",
-			"minValue": 0,
-			"maxValue": 16,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 16] }
+			],
 			"defaultValue": 16,
 			"options": [
 				{
@@ -83,11 +84,12 @@
 		{
 			"#": "6",
 			"label": "Overheat Protection",
-			"description": "Allowable range: 20-60",
 			"valueSize": 1,
 			"unit": "°C",
-			"minValue": 0,
-			"maxValue": 60,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [20, 60] }
+			],
 			"defaultValue": 45,
 			"options": [
 				{
@@ -212,11 +214,12 @@
 			"#": "16",
 			"$purpose": "reporting_threshold.temperature",
 			"label": "Automatic Reporting: Temperature Change Threshold",
-			"description": "Allowable range: 2-10",
 			"valueSize": 1,
 			"unit": "0.1 °C",
-			"minValue": 0,
-			"maxValue": 10,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [2, 10] }
+			],
 			"defaultValue": 2,
 			"options": [
 				{
@@ -229,11 +232,12 @@
 			"#": "17",
 			"$purpose": "reporting_interval.humidity",
 			"label": "Automatic Reporting: Humidity Reporting Interval",
-			"description": "Allowable range: 30-28800",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 28800,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 28800] }
+			],
 			"defaultValue": 300,
 			"options": [
 				{

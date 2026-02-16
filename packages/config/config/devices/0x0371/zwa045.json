@@ -162,20 +162,24 @@
 		{
 			"#": "8[0xff00]",
 			"label": "Motion Group: Custom Basic Set Value (Motion Detected)",
-			"description": "Applicable when parameter 7 is set to Custom (value 6). Allowable range: 0-99, 255",
+			"description": "Applicable when parameter 7 is set to Custom (value 6).",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
 		{
 			"#": "8[0x00ff]",
 			"label": "Motion Group: Custom Basic Set Value (No Motion)",
-			"description": "Applicable when parameter 7 is set to Custom (value 6). Allowable range: 0-99, 255",
+			"description": "Applicable when parameter 7 is set to Custom (value 6).",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		},

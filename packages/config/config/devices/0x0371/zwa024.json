@@ -79,11 +79,15 @@
 			"#": "2",
 			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Retrigger Timeout",
-			"description": "Allowable range: 0, 30-3600. Values 1-29 are equivalent to 30.",
+			// Values 1-29 are equivalent to 30 on this device
+			// We don't model this though, so applications can better understand
+			// this parameter automatically.
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 3600,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 3600] }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -142,7 +146,7 @@
 		{
 			"#": "6",
 			"label": "Vibration Sensor",
-			"description": "Enables vibration sensor and specifies the timeout after which the sensor will clear its status; Allowable range: 1-254 minutes",
+			"description": "Enables vibration sensor and specifies the timeout after which the sensor will clear its status",
 			"valueSize": 1,
 			"unit": "minutes",
 			"minValue": 0,

@@ -19,6 +19,8 @@
 			"#": "1",
 			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
+			// 4200 is not evenly divisible by 255, but I cannot find any
+			// documentation that states otherwise.
 			"description": "Allowable range: 255-4200 in increments of 255.",
 			"valueSize": 2,
 			"unit": "seconds",

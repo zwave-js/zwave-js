@@ -89,11 +89,12 @@
 			"#": "12",
 			"$purpose": "reporting_interval.temperature",
 			"label": "Automatic Reporting: Temperature Reporting Interval",
-			"description": "Allowable range: 10-65535",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 65535,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 65535] }
+			],
 			"defaultValue": 300,
 			"unsigned": true,
 			"options": [
@@ -176,11 +177,12 @@
 		{
 			"#": "20",
 			"label": "Overcurrent Protection",
-			"description": "Allowable range: 10-16",
 			"valueSize": 1,
 			"unit": "A",
-			"minValue": 0,
-			"maxValue": 16,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 16] }
+			],
 			"defaultValue": 16,
 			"options": [
 				{

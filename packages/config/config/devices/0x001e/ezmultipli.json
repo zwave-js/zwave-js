@@ -39,10 +39,11 @@
 		{
 			"#": "2",
 			"label": "OnLevel",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},

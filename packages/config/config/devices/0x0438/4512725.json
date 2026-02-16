@@ -57,11 +57,12 @@
 		{
 			"#": "10",
 			"label": "Overheat Protection",
-			"description": "Allowable range: 30-60",
 			"valueSize": 1,
 			"unit": "°C",
-			"minValue": 0,
-			"maxValue": 60,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 60] }
+			],
 			"defaultValue": 36,
 			"options": [
 				{
@@ -74,11 +75,12 @@
 			"#": "11",
 			"$purpose": "reporting_threshold.temperature",
 			"label": "Automatic Reporting: Temperature Change Threshold",
-			"description": "Allowable range: 2-50",
 			"valueSize": 1,
 			"unit": "0.1 °C",
-			"minValue": 0,
-			"maxValue": 50,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [2, 50] }
+			],
 			"defaultValue": 5,
 			"options": [
 				{
@@ -91,11 +93,12 @@
 			"#": "12",
 			"$purpose": "reporting_interval.temperature",
 			"label": "Automatic Reporting: Temperature Reporting Interval",
-			"description": "Allowable range: 10-65535",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 65535,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 65535] }
+			],
 			"defaultValue": 300,
 			"unsigned": true,
 			"options": [
@@ -159,11 +162,12 @@
 		{
 			"#": "17",
 			"label": "Automatic Reporting: Reporting Interval",
-			"description": "Allowable range: 60-2678400",
 			"valueSize": 4,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 2678400,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [60, 2678400] }
+			],
 			"defaultValue": 600,
 			"options": [
 				{
@@ -187,11 +191,12 @@
 		{
 			"#": "20",
 			"label": "Overcurrent Protection",
-			"description": "Allowable range: 10-16",
 			"valueSize": 1,
 			"unit": "A",
-			"minValue": 0,
-			"maxValue": 16,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 16] }
+			],
 			"defaultValue": 16,
 			"options": [
 				{

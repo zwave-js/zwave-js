@@ -141,7 +141,6 @@
 		{
 			"#": "37[0x1f]",
 			"label": "Color Change Speed Level",
-			"description": "Allowable range: 1-30",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 31,
@@ -160,10 +159,10 @@
 		},
 		{
 			"#": "37[0xff00]",
-			"$import": "~/templates/master_template.json#base_0-255_nounit",
 			"label": "Cycle Count",
-			"description": "Allowable range: 1-254",
 			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
@@ -179,10 +178,13 @@
 		},
 		{
 			"#": "37[0xff0000]",
-			"$import": "~/templates/master_template.json#base_1-255_nounit",
 			"label": "Brightness",
-			"description": "Allowable range: 1-99",
 			"valueSize": 4,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
+			"defaultValue": 1,
 			"unsigned": true,
 			"options": [
 				{

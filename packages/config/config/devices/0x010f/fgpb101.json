@@ -111,10 +111,11 @@
 		{
 			"#": "11",
 			"label": "Single Click - Association Group 2: Set Level",
-			"description": "Allowable range: 1-99",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"options": [
 				{
@@ -151,10 +152,11 @@
 		{
 			"#": "21",
 			"label": "Single Click - Association Group 3: Set Level",
-			"description": "Allowable range: 1-99",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -196,11 +198,12 @@
 		},
 		{
 			"#": "13",
-			"label": "Dobule Click - Association Group 2: Set Level",
-			"description": "Allowable range: 1-99",
+			"label": "Double Click - Association Group 2: Set Level",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -236,11 +239,12 @@
 		},
 		{
 			"#": "23",
-			"label": "Dobule Click - Association Group 3: Set Level",
-			"description": "Allowable range: 1-99",
+			"label": "Double Click - Association Group 3: Set Level",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -283,10 +287,11 @@
 		{
 			"#": "15",
 			"label": "Triple Click - Association Group 2: Set Level",
-			"description": "Allowable range: 1-99",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -323,10 +328,11 @@
 		{
 			"#": "25",
 			"label": "Triple Click: Command to Association Group 3",
-			"description": "Allowable range: 1-99",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{

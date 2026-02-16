@@ -39,20 +39,22 @@
 		{
 			"#": "2",
 			"label": "Level Used to Control Group 4",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
 		{
 			"#": "3",
 			"label": "Level Used to Control Group 5",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
@@ -92,10 +94,11 @@
 		{
 			"#": "7",
 			"label": "Level Used to Control Group 3",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		},
@@ -135,10 +138,11 @@
 		{
 			"#": "11",
 			"label": "Level Used to Control Group 2",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		}

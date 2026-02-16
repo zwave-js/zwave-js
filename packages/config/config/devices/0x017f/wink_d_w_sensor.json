@@ -28,10 +28,11 @@
 		{
 			"#": "2",
 			"label": "Basic Set Level",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 99,
 			"unsigned": true,
 			"options": [

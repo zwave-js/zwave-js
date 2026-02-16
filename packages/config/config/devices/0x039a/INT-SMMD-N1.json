@@ -16,7 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$purpose": "motion_sensitivity",
+			"$purpose": "motion_sensitivity.inverted",
 			"label": "Motion Sensitivity",
 			"description": "Higher values = lower sensitivity and lower range.",
 			"valueSize": 1,

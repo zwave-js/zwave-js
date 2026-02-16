@@ -211,11 +211,13 @@
 		{
 			"#": "13",
 			"label": "Slats Rotation Time",
-			"description": "Venetian mode only. Allowable range: 5-250 (0.5-25s)",
+			"description": "Venetian mode only",
 			"valueSize": 1,
 			"unit": "0.1s",
-			"minValue": 0,
-			"maxValue": 250,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 250] }
+			],
 			"defaultValue": 15,
 			"unsigned": true,
 			"options": [
