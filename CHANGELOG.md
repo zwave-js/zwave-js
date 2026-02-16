@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.21.0 (2026-02-16)
 ### Features
 * Support gaps in value range of arbitrary CC values (#8607)
 * Most changes to configuration files are now applied without needing to re-interview (#8604)
