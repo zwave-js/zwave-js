@@ -44,30 +44,36 @@
 		{
 			"#": "4",
 			"label": "Value Used for Devices Belonging to Group 2",
-			"description": "Value sent when the external switch receives 1 click. Allowable range: 0-99, 255",
+			"description": "Value sent when the external switch receives 1 click.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
 		{
 			"#": "5",
 			"label": "Value Used for Devices Belonging to Group 3",
-			"description": "Value sent when the external switch receives 2 clicks. Allowable range: 0-99, 255",
+			"description": "Value sent when the external switch receives 2 clicks.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
 		{
 			"#": "6",
 			"label": "Value Used for Devices Belonging to Group 4",
-			"description": "Value sent when external switch receives 3 clicks. Allowable range: 0-99, 255",
+			"description": "Value sent when external switch receives 3 clicks.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},

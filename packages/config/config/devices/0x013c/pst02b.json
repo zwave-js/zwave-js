@@ -17,10 +17,12 @@
 		{
 			"#": "2",
 			"label": "Basic Set Level",
-			"description": "BASIC command value sent when turning on lights. Allowable range: 0-99, 255",
+			"description": "BASIC command value sent when turning on lights.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},

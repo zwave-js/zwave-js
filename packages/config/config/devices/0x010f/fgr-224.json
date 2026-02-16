@@ -226,10 +226,11 @@
 		{
 			"#": "159",
 			"label": "Shutter: Favorite Position",
-			"description": "Allowable range: 0-99, 255.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 50,
 			"unsigned": true,
 			"options": [
@@ -242,10 +243,11 @@
 		{
 			"#": "160",
 			"label": "Slats: Favorite Angle",
-			"description": "Allowable range: 0-99, 255.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 50,
 			"unsigned": true,
 			"options": [

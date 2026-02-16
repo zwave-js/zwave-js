@@ -124,11 +124,12 @@
 			"#": "42",
 			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Reporting Internal",
-			"description": "Allowable range: 60-32535",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32535,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [60, 32535] }
+			],
 			"defaultValue": 600,
 			"options": [
 				{

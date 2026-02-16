@@ -249,11 +249,12 @@
 		{
 			"#": "19",
 			"label": "Power & Energy Report Interval",
-			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32767] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -351,7 +352,7 @@
 			"#": "23",
 			"$if": "firmwareVersion >= 1.4",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on. Allowable range: 0-60.",
+			"description": "Duration of initial increased power output when light turns on.",
 			"valueSize": 1,
 			"unit": "1/60 seconds",
 			"minValue": 0,

@@ -69,11 +69,12 @@
 		{
 			"#": "5[0xffff00]",
 			"label": "Calibration Temperature",
-			"description": "Allowable range: -10 to 10 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -100,
-			"maxValue": 100,
+			"allowed": [
+				{ "range": [-100, 100], "step": 10 },
+				{ "value": -1 }
+			],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -116,11 +117,12 @@
 		{
 			"#": "6[0xffff00]",
 			"label": "Swing",
-			"description": "Allowable range: 0 to 3 in 0.5 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 30,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [0, 30], "step": 5 }
+			],
 			"defaultValue": 5,
 			"options": [
 				{
@@ -163,11 +165,12 @@
 		{
 			"#": "7[0xffff00]",
 			"label": "Overshoot",
-			"description": "Allowable range: 0 to 3 in 0.5 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 30,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [0, 30], "step": 5 }
+			],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -228,11 +231,12 @@
 		{
 			"#": "10[0xffff00]",
 			"label": "Balance Setpoint",
-			"description": "Allowable range: 0 to 95 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 950,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [0, 950], "step": 10 }
+			],
 			"defaultValue": 300,
 			"options": [
 				{
@@ -302,11 +306,12 @@
 		{
 			"#": "15[0xffff00]",
 			"label": "Maximum Heat Setpoint",
-			"description": "Allowable range: 35 to 95 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 950,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [350, 950], "step": 10 }
+			],
 			"defaultValue": 950,
 			"options": [
 				{
@@ -349,11 +354,12 @@
 		{
 			"#": "16[0xffff00]",
 			"label": "Minimum Heat Setpoint",
-			"description": "Allowable range: 35 to 95 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 950,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [350, 950], "step": 10 }
+			],
 			"defaultValue": 350,
 			"options": [
 				{
@@ -396,11 +402,12 @@
 		{
 			"#": "17[0xffff00]",
 			"label": "Maximum Cool Setpoint",
-			"description": "Allowable range: 50 to 95 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 950,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [500, 950], "step": 10 }
+			],
 			"defaultValue": 950,
 			"options": [
 				{
@@ -443,11 +450,12 @@
 		{
 			"#": "18[0xffff00]",
 			"label": "Minimum Cool Setpoint",
-			"description": "Allowable range: 50 to 95 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 950,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [500, 950], "step": 10 }
+			],
 			"defaultValue": 500,
 			"options": [
 				{
@@ -1156,11 +1164,12 @@
 		{
 			"#": "31[0xffff00]",
 			"label": "Heat Differential",
-			"description": "Allowable range: 1 to 10 in 0.5 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 100,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [10, 100], "step": 5 }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -1203,11 +1212,12 @@
 		{
 			"#": "32[0xffff00]",
 			"label": "Cool Differential",
-			"description": "Allowable range: 1 to 10 in 0.5 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 100,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [10, 100], "step": 5 }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -1251,11 +1261,12 @@
 			"#": "33[0xffff00]",
 			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
-			"description": "Allowable range: 0.5 to 2 in 0.5 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 20,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [5, 20], "step": 5 }
+			],
 			"defaultValue": 10,
 			"options": [
 				{
@@ -1567,11 +1578,12 @@
 		{
 			"#": "40[0xffff00]",
 			"label": "Remote Temperature Differential",
-			"description": "Allowable range: 0 to 99 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 990,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [0, 990], "step": 10 }
+			],
 			"defaultValue": 250,
 			"options": [
 				{
@@ -1646,11 +1658,12 @@
 		{
 			"#": "46[0xffff00]",
 			"label": "Dehumidify by AC Offset",
-			"description": "Allowable range: 0 to 10 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 100,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [0, 100], "step": 10 }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -1898,11 +1911,12 @@
 		{
 			"#": "55[0xffff00]",
 			"label": "Vent Maximum Outdoor Temperature",
-			"description": "Allowable range: 0 to 99 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 990,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [0, 990], "step": 10 }
+			],
 			"defaultValue": -1,
 			"options": [
 				{
@@ -1945,11 +1959,12 @@
 		{
 			"#": "56[0xffff00]",
 			"label": "Vent Minimum Outdoor Temperature",
-			"description": "Allowable range: 0 to 99 in 1 °F increments.",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			"minValue": -1,
-			"maxValue": 990,
+			"allowed": [
+				{ "value": -1 },
+				{ "range": [0, 990], "step": 10 }
+			],
 			"defaultValue": -1,
 			"options": [
 				{

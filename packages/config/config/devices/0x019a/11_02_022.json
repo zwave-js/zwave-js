@@ -172,11 +172,12 @@
 		{
 			"#": "10",
 			"label": "High Luminance Threshold",
-			"description": "Allowable range: 20-64000",
 			"valueSize": 4,
 			"unit": "lux",
-			"minValue": 0,
-			"maxValue": 64000,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [20, 64000] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{

@@ -17,10 +17,12 @@
 		{
 			"#": "1",
 			"label": "Start-Up Status",
-			"description": "Defines the status of the device, in term of light level, following a restart. Allowable range: 0-99, 255",
+			"description": "Defines the status of the device, in term of light level, following a restart.",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},

@@ -117,13 +117,17 @@
 		]
 	},
 	"temperature_reporting_threshold": {
-		"$import": "~/templates/master_template.json#base_0-255_nounit",
 		"$purpose": "reporting_threshold.temperature",
 		"label": "Temperature Reporting Threshold",
-		"description": "Valid range: 3-255; Variation in temperature to induce automatic report",
+		"description": "Variation in temperature to induce automatic report",
 		"valueSize": 2,
 		"unit": "0.1 °F/C",
 		"defaultValue": 5,
+		"unsigned": true,
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [3, 255] }
+		],
 		"options": [
 			{
 				"label": "Disable",

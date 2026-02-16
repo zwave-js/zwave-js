@@ -1,12 +1,13 @@
 {
 	"basic_set_value": {
 		"label": "Basic Set Value",
-		"description": "Allowable range: 0-99, 255",
 		"valueSize": 1,
-		"minValue": 0,
-		"maxValue": 255,
 		"defaultValue": 255,
 		"unsigned": true,
+		"allowed": [
+			{ "range": [0, 99] },
+			{ "value": 255 }
+		],
 		"options": [
 			{
 				"label": "Off",
@@ -19,12 +20,13 @@
 		]
 	},
 	"association_basic_set_value": {
-		"description": "Allowable range: 0-99, 255",
 		"valueSize": 1,
-		"minValue": 0,
-		"maxValue": 255,
 		"defaultValue": 255,
 		"unsigned": true,
+		"allowed": [
+			{ "range": [0, 99] },
+			{ "value": 255 }
+		],
 		"options": [
 			{
 				"label": "Value of parameter 2 (Basic Set Value)",

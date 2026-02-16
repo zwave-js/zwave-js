@@ -9,12 +9,14 @@
 	},
 	"light_threshold": {
 		"label": "Light Threshold",
-		"description": "Allowable range: 0, 2-2000. Moving the potentiometer overwrites the current setting.",
+		"description": "Moving the potentiometer overwrites the current setting.",
 		"valueSize": 2,
 		"unit": "lux",
-		"minValue": 0,
-		"maxValue": 2000,
 		"defaultValue": 2000,
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [2, 2000] }
+		],
 		"options": [
 			{
 				"label": "Execute learn sequence",
@@ -28,13 +30,15 @@
 	},
 	"night_dim_mode": {
 		"label": "Night Dim Mode Duration",
-		"description": "Allowable range: 0-60, 255. External control overrides this setting.",
+		"description": "External control overrides this setting.",
 		"valueSize": 1,
 		"unit": "minutes",
-		"minValue": 0,
-		"maxValue": 255,
 		"defaultValue": 0,
 		"unsigned": true,
+		"allowed": [
+			{ "range": [0, 60] },
+			{ "value": 255 }
+		],
 		"options": [
 			{
 				"label": "Disable, light off completely",
@@ -67,12 +71,14 @@
 	},
 	"brightness_measuring_interval": {
 		"label": "Brightness Measuring Interval",
-		"description": "Lamp switches off briefly and measures the ambient light. Allowable range: 5-120.",
+		"description": "Lamp switches off briefly and measures the ambient light.",
 		"valueSize": 1,
 		"unit": "minutes",
-		"minValue": 0,
-		"maxValue": 120,
 		"defaultValue": 0,
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [5, 120] }
+		],
 		"options": [
 			{
 				"label": "Disable",

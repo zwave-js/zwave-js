@@ -58,60 +58,66 @@
 		{
 			"#": "4",
 			"label": "Value for Group 2 with 1 Click on UP Button",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
 		{
 			"#": "5",
 			"label": "Value for Group 2 with 1 Click on DOWN Button",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		},
 		{
 			"#": "6",
 			"label": "Value for Group 3 with 2 Clicks on UP Button",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
 		{
 			"#": "7",
 			"label": "Value for Group 3 with 2 Clicks on DOWN Button",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		},
 		{
 			"#": "8",
 			"label": "Value for Group 4 with 3 Clicks on UP Button",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},
 		{
 			"#": "9",
 			"label": "Value for Group 4 with 3 Clicks on DOWN Button",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 0,
 			"unsigned": true
 		},

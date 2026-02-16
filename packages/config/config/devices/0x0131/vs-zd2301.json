@@ -56,11 +56,12 @@
 			"#": "4",
 			"$purpose": "reporting_threshold.brightness",
 			"label": "Luminance Report Threshold",
-			"description": "Allowable range: 0, 5-50",
 			"valueSize": 1,
 			"unit": "%",
-			"minValue": 0,
-			"maxValue": 50,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 50] }
+			],
 			"defaultValue": 10,
 			"options": [
 				{
