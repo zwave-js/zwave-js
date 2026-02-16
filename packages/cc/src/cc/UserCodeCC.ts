@@ -412,12 +412,17 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			|| property === "adminCode"
 			|| property === "masterCode"
 		) {
+			const pollProperty = property === "masterCode"
+				? "adminCode"
+				: property;
 			return {
 				verifyChanges: () => {
 					if (this.isSinglecast()) {
-						this.schedulePoll({ property }, value, {
-							transition: "fast",
-						});
+						this.schedulePoll(
+							{ property: pollProperty },
+							value,
+							{ transition: "fast" },
+						);
 					}
 				},
 			};
@@ -452,6 +457,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			};
 		} else if (property === "userCode") {
 			if (typeof propertyKey !== "number") return;
+			if (propertyKey === 0) return;
 
 			const userIdStatusValueId = UserCodeCCValues.userIdStatus(
 				propertyKey,
