@@ -38,25 +38,15 @@
 		},
 		{
 			"#": "2",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Level Used to Control Group 4",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "3",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Level Used to Control Group 5",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "4",
@@ -93,14 +83,9 @@
 		},
 		{
 			"#": "7",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Level Used to Control Group 3",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "8",
@@ -137,14 +122,9 @@
 		},
 		{
 			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Level Used to Control Group 2",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		}
 	]
 }

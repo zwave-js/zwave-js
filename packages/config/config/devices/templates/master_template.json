@@ -63,6 +63,28 @@
 			}
 		]
 	},
+	"basic_set_value": {
+		// Template meant for all parameters that affect a
+		// Basic Set value sent by the device, with no
+		// special values.
+		// The default value needs to be set per device/parameter
+		"valueSize": 1,
+		"unsigned": true,
+		"allowed": [
+			{ "range": [0, 99] },
+			{ "value": 255 }
+		],
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "On / Previous state",
+				"value": 255
+			}
+		]
+	},
 	"base_options_nounit": {
 		// This template is meant to be used for all parameters that
 		// allow selection of predefined options without manual entry

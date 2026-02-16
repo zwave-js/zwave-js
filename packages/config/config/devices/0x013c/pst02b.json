@@ -16,15 +16,10 @@
 	"paramInformation": [
 		{
 			"#": "2",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Level",
 			"description": "BASIC command value sent when turning on lights.",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "3",

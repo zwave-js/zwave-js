@@ -214,43 +214,17 @@
 		},
 		{
 			"#": "9",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Association Group: Value of Basic Set (Motion)",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On / Last non-zero value",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "10",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Association Group: Value of Basic Set (No Motion)",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On / Last non-zero value",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "11",

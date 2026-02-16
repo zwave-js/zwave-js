@@ -65,13 +65,10 @@
 		},
 		{
 			"#": "4",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Value",
 			"description": "Send value to association group on trigger",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "5",

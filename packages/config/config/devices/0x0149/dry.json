@@ -43,39 +43,24 @@
 		},
 		{
 			"#": "4",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value Used for Devices Belonging to Group 2",
 			"description": "Value sent when the external switch receives 1 click.",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "5",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value Used for Devices Belonging to Group 3",
 			"description": "Value sent when the external switch receives 2 clicks.",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "6",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Value Used for Devices Belonging to Group 4",
 			"description": "Value sent when external switch receives 3 clicks.",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "10",

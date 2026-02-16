@@ -84,13 +84,10 @@
 		},
 		{
 			"#": "7",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Lock Basic Set Value",
-			"description": "Byte to send with set command to devices in association group 1",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"description": "Used to control devices in association group 1",
+			"defaultValue": 255
 		}
 	],
 	"compat": {

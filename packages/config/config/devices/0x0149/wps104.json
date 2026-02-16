@@ -190,15 +190,10 @@
 		},
 		{
 			"#": "38",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "UP Power Associated",
 			"description": "Defines the status of Group 2 devices.",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "39",
@@ -246,15 +241,10 @@
 		},
 		{
 			"#": "42",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "DOWN Power Associated",
 			"description": "Defines the status of Group 3 devices.",
-			"valueSize": 1,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "43",
