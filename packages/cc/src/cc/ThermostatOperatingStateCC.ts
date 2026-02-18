@@ -185,7 +185,7 @@ export class ThermostatOperatingStateCCReport
 		ctx: CCParsingContext,
 	): ThermostatOperatingStateCCReport {
 		validatePayload(raw.payload.length >= 1);
-		const state: ThermostatOperatingState = raw.payload[0];
+		const state: ThermostatOperatingState = raw.payload[0] & 0x0f;
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
