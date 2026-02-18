@@ -44,6 +44,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -53,6 +54,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Alarm Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -97,6 +99,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Automatic Reporting: Temperature Change Threshold",
 			"valueSize": 1,
 			"unit": "0.5 °C",
@@ -106,6 +109,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Automatic Reporting: Humidity Change Threshold",
 			"valueSize": 1,
 			"unit": "%",

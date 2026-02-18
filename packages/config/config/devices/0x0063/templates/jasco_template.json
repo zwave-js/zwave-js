@@ -90,10 +90,12 @@
 		"$import": "~/templates/master_template.json#dimming_timing"
 	},
 	"dim_threshold_min": {
-		"label": "Minimum Dimmer Threshold",
-		"$import": "~/templates/master_template.json#base_1-99_nounit"
+		"$import": "~/templates/master_template.json#base_1-99_nounit",
+		"$purpose": "minimum_brightness",
+		"label": "Minimum Dimmer Threshold"
 	},
 	"dim_threshold_max": {
+		"$purpose": "maximum_brightness",
 		"label": "Maximum Dimmer Threshold",
 		"valueSize": 1,
 		"minValue": 1,
@@ -176,6 +178,7 @@
 		]
 	},
 	"pir_sensitivity": {
+		"$purpose": "motion_sensitivity",
 		"label": "PIR Sensitivity",
 		"valueSize": 1,
 		"defaultValue": 3,
@@ -197,6 +200,7 @@
 		]
 	},
 	"motion_sensitivity": {
+		"$purpose": "motion_sensitivity.inverted",
 		"label": "Motion Sensitivity",
 		"valueSize": 1,
 		"defaultValue": 2,

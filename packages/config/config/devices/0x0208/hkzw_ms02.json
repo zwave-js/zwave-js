@@ -25,6 +25,7 @@
 	"paramInformation": [
 		{
 			"#": "12",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensor Sensitivity",
 			"description": "The higher the value,the more sensitive the PIR sensor",
 			"valueSize": 1,

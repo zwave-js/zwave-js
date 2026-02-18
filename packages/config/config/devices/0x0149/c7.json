@@ -38,6 +38,7 @@
 		},
 		{
 			"#": "31",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 4,
 			"unit": "0.1 seconds",
@@ -53,6 +54,7 @@
 		},
 		{
 			"#": "32",
+			"$purpose": "timer.auto_on",
 			"label": "Auto-On Timer",
 			"valueSize": 4,
 			"unit": "0.1 seconds",
@@ -326,6 +328,7 @@
 		},
 		{
 			"#": "75",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

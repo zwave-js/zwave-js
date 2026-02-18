@@ -57,6 +57,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness",
 			"valueSize": 1,
 			"unit": "%",
@@ -66,6 +67,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness",
 			"valueSize": 1,
 			"unit": "%",
@@ -104,6 +106,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold Watts",
 			"description": "When power changes above the absolute threshold, immediately report current power value",
 			"valueSize": 2,
@@ -114,6 +117,7 @@
 		},
 		{
 			"#": "15",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold Percentage",
 			"description": "When power changes above the absolute threshold, immediately report current power value",
 			"valueSize": 1,
@@ -124,6 +128,7 @@
 		},
 		{
 			"#": "21",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Metering Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -139,6 +144,7 @@
 		},
 		{
 			"#": "22",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Metering Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -154,6 +160,7 @@
 		},
 		{
 			"#": "23",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage Metering Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -169,6 +176,7 @@
 		},
 		{
 			"#": "24",
+			"$purpose": "reporting_interval.current",
 			"label": "Current Metering Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",

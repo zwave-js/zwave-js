@@ -75,6 +75,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"description": "Whenever pan15 switches to on, the auto off timer begin to count down. after the timer decrease to zero, it will switch to off automatically. however if auto off timer is set as 0, the auto off function will be disabled. the default setting is 0",
 			"valueSize": 2,

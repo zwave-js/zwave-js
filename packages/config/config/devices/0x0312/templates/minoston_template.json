@@ -77,6 +77,7 @@
 	},
 	"auto_off_timer": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "timer.auto_off",
 		"label": "Auto-Off Timer",
 		"unit": "minutes",
 		"options": [
@@ -88,6 +89,7 @@
 	},
 	"auto_on_timer": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "timer.auto_on",
 		"label": "Auto-On Timer",
 		"unit": "minutes",
 		"options": [
@@ -492,6 +494,7 @@
 		"defaultValue": 1
 	},
 	"power_reporting_threshold": {
+		"$purpose": "reporting_threshold.power",
 		"label": "Power Reporting Threshold",
 		"valueSize": 1,
 		"unit": "W",
@@ -500,6 +503,7 @@
 		"defaultValue": 5
 	},
 	"power_reporting_interval": {
+		"$purpose": "reporting_interval.power",
 		"label": "Power Reporting Interval",
 		"valueSize": 4,
 		"unit": "minutes",
@@ -509,6 +513,7 @@
 		"unsigned": true
 	},
 	"current_reporting_threshold": {
+		"$purpose": "reporting_threshold.current",
 		"label": "Current Reporting Threshold",
 		"valueSize": 1,
 		"unit": "0.1 A",
@@ -518,6 +523,7 @@
 		"unsigned": true
 	},
 	"energy_reporting_threshold": {
+		"$purpose": "reporting_threshold.energy",
 		"label": "Energy Reporting Threshold",
 		"valueSize": 1,
 		"unit": "0.01 kWh",
@@ -532,6 +538,7 @@
 		"defaultValue": 1
 	},
 	"battery_report_threshold": {
+		"$purpose": "reporting_threshold.battery",
 		"label": "Battery Report Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -541,6 +548,7 @@
 		"unsigned": true
 	},
 	"battery_alarm_report": {
+		"$purpose": "reporting_threshold.low_battery",
 		"label": "Low Battery Alarm Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -560,6 +568,7 @@
 		"defaultValue": 0
 	},
 	"current_reporting_interval": {
+		"$purpose": "reporting_interval.current",
 		"label": "Current Reporting Interval",
 		"valueSize": 4,
 		"unit": "minutes",
@@ -569,6 +578,7 @@
 		"unsigned": true
 	},
 	"voltage_reporting_interval": {
+		"$purpose": "reporting_interval.voltage",
 		"label": "Voltage Reporting Interval",
 		"valueSize": 4,
 		"unit": "minutes",

@@ -17,10 +17,9 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Command Value",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{

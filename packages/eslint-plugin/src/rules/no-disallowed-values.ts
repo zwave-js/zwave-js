@@ -1,9 +1,9 @@
-import type { AllowedConfigValue } from "@zwave-js/core";
+import type { AllowedValue } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
 import { type JSONCRule, isValueAllowed, parseAllowedField } from "../utils.js";
 
 function getAllowedEntriesAndRange(node: AST.JSONObjectExpression): {
-	allowedEntries: AllowedConfigValue[];
+	allowedEntries: AllowedValue[];
 	hasExplicitAllowed: boolean;
 	minValue: number | undefined;
 	maxValue: number | undefined;

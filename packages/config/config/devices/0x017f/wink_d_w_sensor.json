@@ -27,23 +27,9 @@
 		},
 		{
 			"#": "2",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Level",
-			"description": "Allowable range: 0-99, 255",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		}
 	],
 	"metadata": {

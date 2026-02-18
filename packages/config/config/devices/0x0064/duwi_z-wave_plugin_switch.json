@@ -48,6 +48,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 1,
 			"unit": "seconds",

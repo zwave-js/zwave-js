@@ -10,10 +10,36 @@ import {
 	CommandClasses,
 	EncapsulationFlags,
 	type LogNode,
+	type MaybeNotKnown,
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
+import type { DeviceClass } from "../DeviceClass.js";
 import type { ZWaveNode } from "../Node.js";
+
+/**
+ * Returns the CC that Basic Set/Report commands should be mapped to
+ * based on the endpoint's device class, or undefined if no mapping exists.
+ */
+export function getBasicMappingTarget(
+	deviceClass: MaybeNotKnown<DeviceClass>,
+): CommandClasses | undefined {
+	switch (deviceClass?.generic.key) {
+		case 0x20: // Binary Sensor
+			return CommandClasses["Binary Sensor"];
+		case 0x10: // Binary Switch
+			return CommandClasses["Binary Switch"];
+		case 0x11: // Multilevel Switch
+			return CommandClasses["Multilevel Switch"];
+		case 0x12: // Remote Switch
+			switch (deviceClass.specific.key) {
+				case 0x01: // Binary Remote Switch
+					return CommandClasses["Binary Switch"];
+				case 0x02: // Multilevel Remote Switch
+					return CommandClasses["Multilevel Switch"];
+			}
+	}
+}
 
 /** Handles the receipt of a BasicCC Set or Report */
 export function handleBasicCommand(
@@ -26,38 +52,12 @@ export function handleBasicCommand(
 		?? node;
 
 	// Depending on the generic device class, we may need to map the basic command to other CCs
+	const mappedTargetCCId = getBasicMappingTarget(sourceEndpoint.deviceClass);
 	let mappedTargetCC: CommandClass | undefined;
-	switch (sourceEndpoint.deviceClass?.generic.key) {
-		case 0x20: // Binary Sensor
-			mappedTargetCC = sourceEndpoint.createCCInstanceUnsafe(
-				CommandClasses["Binary Sensor"],
-			);
-			break;
-		case 0x10: // Binary Switch
-			mappedTargetCC = sourceEndpoint.createCCInstanceUnsafe(
-				CommandClasses["Binary Switch"],
-			);
-			break;
-		case 0x11: // Multilevel Switch
-			mappedTargetCC = sourceEndpoint.createCCInstanceUnsafe(
-				CommandClasses["Multilevel Switch"],
-			);
-			break;
-		case 0x12: // Remote Switch
-			switch (sourceEndpoint.deviceClass.specific.key) {
-				case 0x01: // Binary Remote Switch
-					mappedTargetCC = sourceEndpoint
-						.createCCInstanceUnsafe(
-							CommandClasses["Binary Switch"],
-						);
-					break;
-				case 0x02: // Multilevel Remote Switch
-					mappedTargetCC = sourceEndpoint
-						.createCCInstanceUnsafe(
-							CommandClasses["Multilevel Switch"],
-						);
-					break;
-			}
+	if (mappedTargetCCId != undefined) {
+		mappedTargetCC = sourceEndpoint.createCCInstanceUnsafe(
+			mappedTargetCCId,
+		);
 	}
 
 	if (command instanceof BasicCCReport) {

@@ -158,11 +158,13 @@
 	},
 	"dimmer_min": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
+		"$purpose": "minimum_brightness",
 		"label": "Dimmer: Minimum Level",
 		"defaultValue": 0
 	},
 	"dimmer_max": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
+		"$purpose": "maximum_brightness",
 		"label": "Dimmer: Maximum Level",
 		"defaultValue": 99
 	},
@@ -488,6 +490,7 @@
 		"defaultValue": 0
 	},
 	"watt_threshold_change": {
+		"$purpose": "reporting_threshold.power",
 		"label": "Power Change Threshold",
 		"valueSize": 2,
 		"unit": "W",

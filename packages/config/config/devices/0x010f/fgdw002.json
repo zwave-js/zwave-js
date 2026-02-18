@@ -161,8 +161,10 @@
 		},
 		{
 			"#": "51",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reports Threshold",
 			"valueSize": 2,
+			"unit": "0.1 °C",
 			"minValue": 0,
 			"maxValue": 300,
 			"defaultValue": 10
@@ -177,6 +179,7 @@
 		},
 		{
 			"#": "53",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"valueSize": 2,
 			"minValue": -1000,

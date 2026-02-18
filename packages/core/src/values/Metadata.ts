@@ -86,6 +86,13 @@ const define = <TBase extends ValueMetadataAny>() =>
 
 const defineAny = define<ValueMetadataAny>();
 
+export type AllowedValue =
+	| { value: number }
+	| { from: number; to: number; step?: number };
+
+/** @deprecated Use {@link AllowedValue} instead. */
+export type AllowedConfigValue = AllowedValue;
+
 export interface ValueMetadataNumeric extends ValueMetadataAny {
 	type: "number";
 	/** The minimum value that can be assigned to a CC value (optional) */
@@ -94,6 +101,8 @@ export interface ValueMetadataNumeric extends ValueMetadataAny {
 	max?: number;
 	/** When only certain values between min and max are allowed, this determines the step size */
 	steps?: number;
+	/** Defines the allowed values as a combination of single values and ranges. When present, min/max/steps are inferred from this for backwards compatibility. */
+	allowed?: readonly AllowedValue[];
 	/** The default value */
 	default?: number;
 	/** Speaking names for numeric values */
@@ -173,36 +182,18 @@ export enum ConfigValueFormat {
 /** @publicAPI */
 export type ConfigValue = number;
 
-export type ConfigValueSingle = {
-	value: number;
-};
-
-export type ConfigValueRange = {
-	from: number;
-	to: number;
-	step?: number;
-};
-
-export type AllowedConfigValue = ConfigValueSingle | ConfigValueRange;
-
-export interface ConfigurationMetadata extends ValueMetadataAny {
-	// readable and writeable are inherited from ValueMetadataAny
-	allowed?: readonly AllowedConfigValue[];
+export interface ConfigurationMetadata extends ValueMetadataNumeric {
 	min?: ConfigValue;
 	max?: ConfigValue;
 	default?: ConfigValue;
 	recommended?: ConfigValue;
-	unit?: string;
 	valueSize?: number;
 	format?: ConfigValueFormat;
-	label?: string;
-	description?: string;
 	isAdvanced?: boolean;
 	requiresReInclusion?: boolean;
-	states?: Record<number, string>;
-	allowManualEntry?: boolean;
 	isFromConfig?: boolean;
 	destructive?: boolean;
+	purpose?: string;
 }
 
 export type ValueMetadata =
@@ -213,8 +204,6 @@ export type ValueMetadata =
 	| ValueMetadataDuration
 	| ValueMetadataBuffer
 	| ConfigurationMetadata;
-
-// TODO: lists of allowed values, etc...
 
 // Mixins for value metadata
 const _default = defineAny(
@@ -764,3 +753,56 @@ export const ValueMetadata = {
 	/** A buffer (writeonly) */
 	WriteOnlyBuffer: Object.freeze(WriteOnlyBuffer),
 };
+
+/**
+ * Checks if a value is allowed by the given entries.
+ */
+export function isValueAllowed(
+	value: number,
+	entries: readonly AllowedValue[],
+): boolean {
+	for (const entry of entries) {
+		if ("value" in entry) {
+			if (entry.value === value) return true;
+		} else {
+			if (value >= entry.from && value <= entry.to) {
+				const step = entry.step ?? 1;
+				if ((value - entry.from) % step === 0) return true;
+			}
+		}
+	}
+	return false;
+}
+
+/**
+ * Computes the min, max, and (if possible) steps values from parsed allowed entries.
+ */
+export function inferMinMaxStepsFromAllowed(
+	entries: readonly AllowedValue[],
+): { min: number; max: number; steps?: number } | undefined {
+	let min = Infinity;
+	let max = -Infinity;
+
+	const rangeEntries: Array<{ from: number; to: number; step?: number }> = [];
+	for (const entry of entries) {
+		if ("value" in entry) {
+			min = Math.min(min, entry.value);
+			max = Math.max(max, entry.value);
+		} else {
+			min = Math.min(min, entry.from);
+			max = Math.max(max, entry.to);
+			rangeEntries.push(entry);
+		}
+	}
+
+	if (min === Infinity || max === -Infinity) {
+		return undefined;
+	}
+
+	// If there is exactly one range entry with a step, use it as the top-level steps value
+	const steps = rangeEntries.length === 1
+		? rangeEntries[0].step
+		: undefined;
+
+	return { min, max, steps };
+}

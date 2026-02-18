@@ -27,18 +27,10 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Command Value",
-			"description": "Allowable Range: 0-99",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "On",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "2",

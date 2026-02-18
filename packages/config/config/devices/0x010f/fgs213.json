@@ -455,9 +455,11 @@
 		},
 		{
 			"#": "50",
+			"$purpose": "reporting_threshold.power",
 			"label": "Active Power Reports",
 			"description": "Power level reporting threshold.",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 20
@@ -472,15 +474,18 @@
 		},
 		{
 			"#": "53",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Reports",
 			"description": "Energy level change resulting in sending a new energy report.",
 			"valueSize": 2,
+			"unit": "0.01 kWh",
 			"minValue": 0,
 			"maxValue": 32000,
 			"defaultValue": 100
 		},
 		{
 			"#": "58",
+			"$purpose": "reporting_interval.power",
 			"label": "Periodic Power Reports",
 			"description": "Determines time interval for periodic power reports",
 			"valueSize": 2,
@@ -490,6 +495,7 @@
 		},
 		{
 			"#": "59",
+			"$purpose": "reporting_interval.energy",
 			"label": "Periodic Energy Reports",
 			"description": "Determines time interval for periodic energy reports",
 			"valueSize": 2,

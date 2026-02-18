@@ -73,11 +73,12 @@
 		{
 			"#": "11",
 			"label": "Device: Auto Off Timer",
-			"description": "Allowable range: 30–32535 seconds",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32525,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32535] }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -89,11 +90,12 @@
 		{
 			"#": "12",
 			"label": "Relay: Auto On Timer",
-			"description": "Allowable range: 30–32535 seconds",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32525,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32535] }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -105,11 +107,12 @@
 		{
 			"#": "13",
 			"label": "Relay: Auto Off Timer",
-			"description": "Allowable range: 30–32535 seconds",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32525,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32535] }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -130,6 +133,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Reporting Threshold",
 			"valueSize": 2,
 			"unit": "%",
@@ -145,6 +149,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",

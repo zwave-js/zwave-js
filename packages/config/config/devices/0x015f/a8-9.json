@@ -62,6 +62,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Sensor: Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.5 °C",
@@ -77,6 +78,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Sensor: Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%rF",
@@ -107,6 +109,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Brightness Sensor: Change Report Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -173,11 +176,12 @@
 		{
 			"#": "10",
 			"label": "Smoke Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 60,
 			"options": [
 				{
@@ -189,11 +193,12 @@
 		{
 			"#": "11",
 			"label": "PIR Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 60,
 			"options": [
 				{
@@ -205,11 +210,12 @@
 		{
 			"#": "12",
 			"label": "PM2.5 Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 120,
 			"options": [
 				{
@@ -221,11 +227,12 @@
 		{
 			"#": "13",
 			"label": "CO2 Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 120,
 			"options": [
 				{
@@ -236,12 +243,14 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 180,
 			"options": [
 				{
@@ -252,12 +261,14 @@
 		},
 		{
 			"#": "15",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 180,
 			"options": [
 				{
@@ -269,11 +280,12 @@
 		{
 			"#": "16",
 			"label": "VOC Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 180,
 			"options": [
 				{
@@ -284,12 +296,14 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Brightness Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 300,
 			"options": [
 				{
@@ -301,11 +315,12 @@
 		{
 			"#": "18",
 			"label": "dB Sensor: Auto-Report Timer",
-			"description": "Allowable Range: 35-32767 s",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [35, 32767] }
+			],
 			"defaultValue": 300,
 			"options": [
 				{
@@ -333,6 +348,7 @@
 		},
 		{
 			"#": "50",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "Offset = value minus 100. Example: 91 => -0.9 °",
 			"valueSize": 1,
@@ -344,6 +360,7 @@
 		},
 		{
 			"#": "51",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset",
 			"description": "Offset = value minus 20. Example: 33 => +13 %",
 			"valueSize": 1,
@@ -375,6 +392,7 @@
 		},
 		{
 			"#": "54",
+			"$purpose": "calibration.brightness",
 			"label": "Brightness Offset",
 			"description": "Offset = value minus 5000. Example: 49 => -4951 lux",
 			"valueSize": 2,

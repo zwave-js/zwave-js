@@ -224,6 +224,7 @@
 		"defaultValue": 1
 	},
 	"ramp_rate": {
+		"$purpose": "dimming_duration",
 		"valueSize": 1,
 		"unit": "seconds",
 		"minValue": 0,
@@ -267,6 +268,7 @@
 		]
 	},
 	"low_battery_level": {
+		"$purpose": "reporting_threshold.low_battery",
 		"label": "Low Battery Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -380,6 +382,7 @@
 	},
 	"temp_reporting_interval": {
 		"$import": "~/templates/master_template.json#base_1-255_nounit",
+		"$purpose": "reporting_interval.temperature",
 		"label": "Temperature reportng interval when on line power",
 		"unit": "seconds",
 		"minValue": 30

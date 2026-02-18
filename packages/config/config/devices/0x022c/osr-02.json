@@ -17,6 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Period",
 			"valueSize": 1,
 			"unit": "15 minutes",

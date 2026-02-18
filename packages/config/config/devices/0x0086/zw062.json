@@ -231,9 +231,14 @@
 		},
 		{
 			"#": "43",
-			"$import": "~/templates/master_template.json#base_0-255_nounit",
 			"label": "Demo Sound Selection",
-			"description": "Allowable range: 0-100",
+			"valueSize": 1,
+			"allowed": [
+				{ "range": [0, 100] },
+				{ "value": 255 }
+			],
+			"defaultValue": 1,
+			"unsigned": true,
 			"options": [
 				{
 					"label": "Stop playing",

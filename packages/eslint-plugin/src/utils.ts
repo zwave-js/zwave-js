@@ -3,7 +3,12 @@ import {
 	type TSESLint,
 	type TSESTree,
 } from "@typescript-eslint/utils";
-import { type AllowedConfigValue, CommandClasses } from "@zwave-js/core";
+import {
+	type AllowedValue,
+	CommandClasses,
+	inferMinMaxStepsFromAllowed,
+	isValueAllowed,
+} from "@zwave-js/core";
 import type { Rule as ESLintRule } from "eslint";
 import type { AST as JSONC_AST, RuleListener } from "jsonc-eslint-parser";
 import path from "node:path";
@@ -489,6 +494,7 @@ export const paramInfoPropertyOrder: string[] = [
 	"#",
 	"$if",
 	"$import",
+	"$purpose",
 	"label",
 	"description",
 	"valueSize",
@@ -513,7 +519,7 @@ export const paramInfoPropertyOrder: string[] = [
  */
 export function parseAllowedField(
 	node: JSONC_AST.JSONObjectExpression,
-): AllowedConfigValue[] | undefined {
+): AllowedValue[] | undefined {
 	const allowedProp = node.properties.find(
 		(p) =>
 			p.key.type === "JSONLiteral"
@@ -525,7 +531,7 @@ export function parseAllowedField(
 		return undefined;
 	}
 
-	const entries: AllowedConfigValue[] = [];
+	const entries: AllowedValue[] = [];
 
 	for (const element of allowedProp.value.elements) {
 		if (!element || element.type !== "JSONObjectExpression") continue;
@@ -583,48 +589,5 @@ export function parseAllowedField(
 	return entries;
 }
 
-/**
- * Checks if a value is allowed by the given entries.
- */
-export function isValueAllowed(
-	value: number,
-	entries: AllowedConfigValue[],
-): boolean {
-	for (const entry of entries) {
-		if ("value" in entry) {
-			if (entry.value === value) return true;
-		} else {
-			if (value >= entry.from && value <= entry.to) {
-				const step = entry.step ?? 1;
-				if ((value - entry.from) % step === 0) return true;
-			}
-		}
-	}
-	return false;
-}
-
-/**
- * Computes the min and max values from parsed allowed entries.
- */
-export function inferMinMaxValueFromAllowed(
-	entries: AllowedConfigValue[],
-): { min: number; max: number } | undefined {
-	let min = Infinity;
-	let max = -Infinity;
-
-	for (const entry of entries) {
-		if ("value" in entry) {
-			min = Math.min(min, entry.value);
-			max = Math.max(max, entry.value);
-		} else {
-			min = Math.min(min, entry.from);
-			max = Math.max(max, entry.to);
-		}
-	}
-
-	if (min === Infinity || max === -Infinity) {
-		return undefined;
-	}
-
-	return { min, max };
-}
+// isValueAllowed and inferMinMaxStepsFromAllowed are re-exported from @zwave-js/core
+export { inferMinMaxStepsFromAllowed, isValueAllowed };

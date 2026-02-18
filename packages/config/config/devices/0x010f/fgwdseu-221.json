@@ -28,8 +28,10 @@
 			"description": "Allowable range: 10-45000 (single switch mode), 10-36200 (double switch mode)",
 			"valueSize": 4,
 			"unit": "0.1 W",
-			"minValue": 0,
-			"maxValue": 45000,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 45000] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -41,11 +43,13 @@
 		{
 			"#": "3",
 			"label": "Second Channel – Overload Safety Switch",
-			"description": "Allowable range: 10-36200 (double switch mode)",
+			"description": "Double switch mode only",
 			"valueSize": 4,
 			"unit": "0.1 W",
-			"minValue": 0,
-			"maxValue": 36200,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 36200] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -205,6 +209,7 @@
 		},
 		{
 			"#": "24",
+			"$purpose": "orientation",
 			"label": "Switch Orientation",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -492,10 +497,21 @@
 		},
 		{
 			"#": "62",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.power",
 			"label": "First Channel - Periodic Power Reports",
-			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32400] }
+			],
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "63",
@@ -505,10 +521,21 @@
 		},
 		{
 			"#": "64",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.power",
 			"label": "Second Channel - Periodic Power Reports",
-			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32400] }
+			],
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "65",
@@ -519,10 +546,21 @@
 		},
 		{
 			"#": "66",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.energy",
 			"label": "First Channel - Periodic Energy Reports",
-			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32400] }
+			],
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "67",
@@ -533,10 +571,21 @@
 		},
 		{
 			"#": "68",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.energy",
 			"label": "Second Channel - Periodic Energy Reports",
-			"description": "Allowable Range: 30-32400",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32400] }
+			],
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "150",

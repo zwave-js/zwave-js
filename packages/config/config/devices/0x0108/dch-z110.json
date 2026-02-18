@@ -37,6 +37,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"description": "Set the sensitivity for the PIR (Passive Infrared Sensor).",
 			"valueSize": 1,
@@ -89,6 +90,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "motion_retrigger_interval",
 			"label": "PIR Re-Detect Interval Time",
 			"valueSize": 1,
 			"minValue": 1,
@@ -105,6 +107,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_interval.battery",
 			"label": "Auto Report Battery Time",
 			"valueSize": 1,
 			"minValue": 0,
@@ -121,6 +124,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Auto Report Illumination Time",
 			"valueSize": 1,
 			"minValue": 1,
@@ -129,6 +133,7 @@
 		},
 		{
 			"#": "13",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Auto Report Temperature Time",
 			"valueSize": 1,
 			"minValue": 1,

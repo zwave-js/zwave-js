@@ -1,0 +1,18 @@
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"manufacturerId\"}","v":65535,"ts":1770634724112}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productType\"}","v":65535,"ts":1770634724112}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productId\"}","v":65534,"ts":1770634724113}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"firmwareVersions\"}","v":["1.0"],"ts":1770634724113}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"zWaveProtocolVersion\"}","v":"Z-Wave 7.17.99","ts":1770634724113}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"sdkVersion\"}","v":"7.17.99","ts":1770634724114}
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"productId\"}","v":2,"ts":1770634724240}
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"productType\"}","v":2,"ts":1770634724241}
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"manufacturerId\"}","v":65534,"ts":1770634724241}
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1770634724242}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1770634725486}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":\"isParamInformationFromConfig\"}","v":true,"ts":1770634725498}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":1}","v":50,"ts":1770634725545}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":2}","v":0,"ts":1770634725593}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":3}","v":0,"ts":1770634725641}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":4}","v":100,"ts":1770634725691}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1770634725738}
+{"k":"{\"nodeId\":2,\"commandClass\":32,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1770634726793}

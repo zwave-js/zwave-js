@@ -279,9 +279,19 @@
 		},
 		{
 			"#": "62",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reports: Interval",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "65",
@@ -291,9 +301,19 @@
 		},
 		{
 			"#": "66",
-			"$import": "templates/fibaro_template.json#reports_periodic",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Reports: Interval",
-			"maxValue": 32400
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "150[0x01]",

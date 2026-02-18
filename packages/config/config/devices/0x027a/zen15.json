@@ -83,11 +83,13 @@
 			"#": "36",
 			"$if": "firmwareVersion >= 2.10",
 			"label": "Overload Protection Turn On Delay",
-			"description": "How long to wait after the load was shut off by overload protection before turning it on again. Allowable range: 0, 10-65535.",
+			"description": "How long to wait after the load was shut off by overload protection before turning it on again.",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 65535,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 65535] }
+			],
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
@@ -141,6 +143,7 @@
 		{
 			"#": "33",
 			"$if": "firmwareVersion >= 1.6",
+			"$purpose": "timer.auto_on",
 			"label": "Auto-On Timer",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -157,6 +160,7 @@
 		{
 			"#": "34",
 			"$if": "firmwareVersion >= 1.6",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -172,6 +176,7 @@
 		},
 		{
 			"#": "151",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power (W) Change Report Threshold",
 			"valueSize": 2,
 			"unit": "W",
@@ -188,6 +193,7 @@
 		},
 		{
 			"#": "152",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Report Percentage Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -205,6 +211,7 @@
 		{
 			"#": "175",
 			"$if": "firmwareVersion >= 2.10",
+			"$purpose": "reporting_threshold.voltage",
 			"label": "Voltage (V) Change Report Threshold",
 			"valueSize": 1,
 			"unit": "V",
@@ -222,6 +229,7 @@
 		{
 			"#": "176",
 			"$if": "firmwareVersion >= 2.10",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current (A) Change Report Threshold",
 			"valueSize": 2,
 			"unit": "mA",
@@ -238,6 +246,7 @@
 		},
 		{
 			"#": "171",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -253,6 +262,7 @@
 		},
 		{
 			"#": "172",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -268,6 +278,7 @@
 		},
 		{
 			"#": "173",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage (V) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -283,6 +294,7 @@
 		},
 		{
 			"#": "174",
+			"$purpose": "reporting_interval.current",
 			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",

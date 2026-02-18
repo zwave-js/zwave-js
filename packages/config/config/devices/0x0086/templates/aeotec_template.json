@@ -493,6 +493,7 @@
 		]
 	},
 	"current_threshold": {
+		"$purpose": "reporting_threshold.current",
 		"label": "Current Change Threshold",
 		"valueSize": 1,
 		"unit": "A",
@@ -508,6 +509,7 @@
 		]
 	},
 	"kwh_threshold": {
+		"$purpose": "reporting_threshold.energy",
 		"label": "Power (kWh) Change Threshold",
 		"valueSize": 2,
 		"unit": "KwH",
@@ -523,6 +525,7 @@
 		]
 	},
 	"power_threshold": {
+		"$purpose": "reporting_threshold.power",
 		"label": "Power Change Threshold",
 		"description": "Threshold change in power consumption to induce an automatic report",
 		"valueSize": 2,
@@ -587,6 +590,7 @@
 		"label": "Power Change Threshold (Whole HEM Export)"
 	},
 	"percent_threshold": {
+		"$purpose": "reporting_threshold.power",
 		"label": "Power Percentage Change Threshold",
 		"description": "Threshold change in power consumption (on a percentage basis) to induce an automatic report",
 		"valueSize": 1,
@@ -807,8 +811,8 @@
 		]
 	},
 	"auto_off_timer": {
+		"$purpose": "timer.auto_off",
 		"label": "Auto Off Timer",
-		"description": "Allowable range: 1-86400",
 		"valueSize": 4,
 		"unit": "seconds",
 		"minValue": 0,
@@ -824,6 +828,7 @@
 	},
 	"auto_off_timer_65535": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "timer.auto_off",
 		"label": "Auto Off Timer",
 		"unit": "seconds",
 		"options": [
@@ -834,8 +839,8 @@
 		]
 	},
 	"auto_on_timer": {
+		"$purpose": "timer.auto_on",
 		"label": "Auto On Timer",
-		"description": "Allowable range: 1-86400",
 		"valueSize": 4,
 		"unit": "seconds",
 		"minValue": 0,
@@ -851,6 +856,7 @@
 	},
 	"auto_on_timer_65535": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "timer.auto_on",
 		"label": "Auto On Timer",
 		"unit": "seconds",
 		"options": [
@@ -868,7 +874,8 @@
 		"$import": "~/templates/master_template.json#base_enable_disable",
 		"label": "Low Battery Voltage Check"
 	},
-	"low_battery_threshold": {
+	"reporting_threshold.low_battery": {
+		"$purpose": "reporting_threshold.low_battery",
 		"label": "Low Battery Threshold",
 		"valueSize": 1,
 		"unit": "%",
@@ -907,9 +914,11 @@
 	},
 	"current_overload": {
 		"$import": "~/templates/master_template.json#base_enable_disable",
+		"$purpose": "overload_protection",
 		"label": "Current Overload Protection"
 	},
 	"current_overload_threshold": {
+		"$purpose": "overload_protection.threshold",
 		"label": "Current Overload Protection Threshold",
 		"valueSize": 2,
 		"unit": "W",
@@ -933,6 +942,7 @@
 	},
 	"auto_report_interval_watt": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "reporting_interval.power",
 		"label": "Automatic Reporting Interval: Power Consumption",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -945,6 +955,7 @@
 	},
 	"auto_report_interval_kwh": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "reporting_interval.energy",
 		"label": "Automatic Reporting Interval: kWh",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -957,6 +968,7 @@
 	},
 	"auto_report_interval_v": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "reporting_interval.voltage",
 		"label": "Automatic Reporting Interval: Voltage",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -969,6 +981,7 @@
 	},
 	"auto_report_interval_amp": {
 		"$import": "~/templates/master_template.json#base_0-65535",
+		"$purpose": "reporting_interval.current",
 		"label": "Automatic Reporting Interval: Current",
 		"unit": "seconds",
 		"defaultValue": 600,
@@ -980,6 +993,7 @@
 		]
 	},
 	"auto_report_interval_light": {
+		"$purpose": "reporting_interval.brightness",
 		"label": "Automatic Reporting Interval: Light Sensor",
 		"valueSize": 2,
 		"unit": "seconds",
@@ -3138,6 +3152,7 @@
 		"unsigned": true
 	},
 	"motion_timeout": {
+		"$purpose": "motion_clear_delay",
 		"label": "Motion Sensor Timeout",
 		"valueSize": 2,
 		"unit": "seconds",
@@ -4389,11 +4404,12 @@
 		"valueSize": 4
 	},
 	"button_color_brightness": {
-		"$import": "~/templates/master_template.json#base_0-255_nounit",
 		"label": "WallSwipe Button Brightness",
-		"description": "Allowable range: 0-99",
 		"valueSize": 4,
-		"defaultValue": 87
+		"minValue": 0,
+		"maxValue": 99,
+		"defaultValue": 87,
+		"unsigned": true
 	},
 	"button_color_red": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
@@ -4414,11 +4430,12 @@
 		"defaultValue": 255
 	},
 	"button_color_up_brightness": {
-		"$import": "~/templates/master_template.json#base_0-255_nounit",
 		"label": "LED Indicator on Up Gesture: Brightness",
-		"description": "Allowable range: 1-99",
 		"valueSize": 4,
-		"defaultValue": 23
+		"minValue": 1,
+		"maxValue": 99,
+		"defaultValue": 23,
+		"unsigned": true
 	},
 	"button_color_up_red": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
@@ -4439,11 +4456,12 @@
 		"defaultValue": 255
 	},
 	"button_color_down_brightness": {
-		"$import": "~/templates/master_template.json#base_0-255_nounit",
 		"label": "LED Indicator on Down Gesture: Brightness",
-		"description": "Allowable range: 0-99",
 		"valueSize": 4,
-		"defaultValue": 23
+		"minValue": 0,
+		"maxValue": 99,
+		"defaultValue": 23,
+		"unsigned": true
 	},
 	"button_color_down_red": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
@@ -4464,11 +4482,12 @@
 		"defaultValue": 255
 	},
 	"button_color_left_brightness": {
-		"$import": "~/templates/master_template.json#base_0-255_nounit",
 		"label": "LED Indicator on Left Gesture: Brightness",
-		"description": "Allowable range: 0-99",
 		"valueSize": 4,
-		"defaultValue": 23
+		"minValue": 0,
+		"maxValue": 99,
+		"defaultValue": 23,
+		"unsigned": true
 	},
 	"button_color_left_red": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
@@ -4489,11 +4508,12 @@
 		"defaultValue": 255
 	},
 	"button_color_right_brightness": {
-		"$import": "~/templates/master_template.json#base_0-255_nounit",
 		"label": "LED Indicator on Right Gesture: Brightness",
-		"description": "Allowable range: 0-99",
 		"valueSize": 4,
-		"defaultValue": 23
+		"minValue": 0,
+		"maxValue": 99,
+		"defaultValue": 23,
+		"unsigned": true
 	},
 	"button_color_right_red": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",
@@ -4514,11 +4534,12 @@
 		"defaultValue": 255
 	},
 	"button_color_night_brightness": {
-		"$import": "~/templates/master_template.json#base_0-255_nounit",
 		"label": "LED Indicator (Night): Brightness",
-		"description": "Allowable range: 0-99",
 		"valueSize": 4,
-		"defaultValue": 23
+		"minValue": 0,
+		"maxValue": 99,
+		"defaultValue": 23,
+		"unsigned": true
 	},
 	"button_color_night_red": {
 		"$import": "~/templates/master_template.json#base_0-255_nounit",

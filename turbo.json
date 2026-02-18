@@ -43,15 +43,9 @@
 		},
 
 		"lint:zwave": {
-			"dependsOn": ["bootstrap"]
+			"dependsOn": ["bootstrap"],
+			"cache": false
 			// Dummy task to enable running all lint:zwave tasks
-		},
-		"@zwave-js/config#lint:zwave": {
-			"inputs": [
-				"**/*.{ts,cts,mts}",
-				"config/**/*.json",
-				"config/eslint.config.mjs"
-			]
 		},
 
 		"extract-api": {

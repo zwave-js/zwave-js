@@ -16,13 +16,10 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Start-Up Status",
-			"description": "Defines the status of the device, in term of light level, following a restart. Allowable range: 0-99, 255",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"description": "Defines the status of the device, in term of light level, following a restart.",
+			"defaultValue": 255
 		},
 		{
 			"#": "2",
@@ -44,6 +41,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "dimming_duration",
 			"label": "Local Dimming Time",
 			"description": "Defines the time spent to switch the controlled load",
 			"valueSize": 1,
@@ -53,6 +51,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Light Level",
 			"description": "Defines which light level will correspond to 1% in the range between 1 and 98%",
 			"valueSize": 1,

@@ -41,14 +41,17 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Report (Watts) on Power Change for Q1 or Q2",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 1
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Report (Watts) by Time Interval for Q1 or Q2",
 			"valueSize": 2,
 			"minValue": 0,
@@ -156,6 +159,7 @@
 		},
 		{
 			"#": "110",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"minValue": 1,
@@ -164,8 +168,10 @@
 		},
 		{
 			"#": "120",
-			"label": "Digital Temperature Sensor Reporting",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
+			"unit": "°C",
 			"minValue": 0,
 			"maxValue": 127,
 			"defaultValue": 5

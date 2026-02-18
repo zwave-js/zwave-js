@@ -20,6 +20,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power (W) Report Threshold",
 			"valueSize": 4,
 			"unit": "W",
@@ -35,6 +36,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -44,6 +46,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -53,6 +56,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage (V) Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -62,6 +66,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_interval.current",
 			"label": "Current (A) Report Frequency",
 			"valueSize": 4,
 			"unit": "seconds",

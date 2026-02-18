@@ -65,6 +65,7 @@
 		},
 		{
 			"#": "24",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timeout",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -74,6 +75,7 @@
 		},
 		{
 			"#": "25",
+			"$purpose": "timer.auto_on",
 			"label": "Auto On Reconnect Timeout",
 			"description": "When the load is reconnected the relay output will be switched on after this time.",
 			"valueSize": 1,
@@ -149,10 +151,12 @@
 		{
 			"#": "141",
 			"$import": "templates/heltun_template.json#report_interval",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Consumption Report Interval"
 		},
 		{
 			"#": "142",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Consumption Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -163,11 +167,13 @@
 		{
 			"#": "143",
 			"$import": "templates/heltun_template.json#report_interval",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval"
 		},
 		{
 			"#": "144",
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"unit": "0.1 °C",
 			"defaultValue": 2

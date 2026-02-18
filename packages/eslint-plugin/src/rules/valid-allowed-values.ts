@@ -7,6 +7,25 @@ import {
 	removeJSONProperty,
 } from "../utils.js";
 
+/** Extracts a numeric value from a JSONLiteral or JSONUnaryExpression node (e.g. -1) */
+function getNumericValue(
+	node: AST.JSONExpression | null | undefined,
+): number | undefined {
+	if (!node) return undefined;
+	if (node.type === "JSONLiteral" && typeof node.value === "number") {
+		return node.value;
+	}
+	if (
+		node.type === "JSONUnaryExpression"
+		&& node.operator === "-"
+		&& node.argument.type === "JSONLiteral"
+		&& typeof node.argument.value === "number"
+	) {
+		return -node.argument.value;
+	}
+	return undefined;
+}
+
 export const validAllowedValues: JSONCRule.RuleModule = {
 	create(context) {
 		return {
@@ -98,17 +117,8 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 							&& p.key.value === "value"
 						);
 						if (
-							valueProp && valueProp.value.type !== "JSONLiteral"
-						) {
-							context.report({
-								loc: valueProp.value.loc,
-								messageId: "allowed-element-value-not-number",
-								data: { index: i.toString() },
-							});
-						} else if (
 							valueProp
-							&& valueProp.value.type === "JSONLiteral"
-							&& typeof valueProp.value.value !== "number"
+							&& getNumericValue(valueProp.value) === undefined
 						) {
 							context.report({
 								loc: valueProp.value.loc,
@@ -150,14 +160,10 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 
 						// Both elements must be numbers
 						const [fromElem, toElem] = rangeArray.elements;
-						let fromValue: number | undefined;
-						let toValue: number | undefined;
+						const fromValue = getNumericValue(fromElem);
+						const toValue = getNumericValue(toElem);
 
-						if (
-							!fromElem
-							|| fromElem.type !== "JSONLiteral"
-							|| typeof fromElem.value !== "number"
-						) {
+						if (fromValue === undefined) {
 							context.report({
 								loc: fromElem?.loc ?? rangeProp.value.loc,
 								messageId:
@@ -167,15 +173,9 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 									rangeIndex: "0",
 								},
 							});
-						} else {
-							fromValue = fromElem.value;
 						}
 
-						if (
-							!toElem
-							|| toElem.type !== "JSONLiteral"
-							|| typeof toElem.value !== "number"
-						) {
+						if (toValue === undefined) {
 							context.report({
 								loc: toElem?.loc ?? rangeProp.value.loc,
 								messageId:
@@ -185,8 +185,6 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 									rangeIndex: "1",
 								},
 							});
-						} else {
-							toValue = toElem.value;
 						}
 
 						// If step property exists, validate it's a number and positive
@@ -198,10 +196,8 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						let stepValid = true;
 
 						if (stepProp) {
-							if (
-								stepProp.value.type !== "JSONLiteral"
-								|| typeof stepProp.value.value !== "number"
-							) {
+							const parsedStep = getNumericValue(stepProp.value);
+							if (parsedStep === undefined) {
 								context.report({
 									loc: stepProp.value.loc,
 									messageId:
@@ -210,7 +206,7 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 								});
 								stepValid = false;
 							} else {
-								stepValue = stepProp.value.value;
+								stepValue = parsedStep;
 								if (stepValue <= 0) {
 									context.report({
 										loc: stepProp.value.loc,
@@ -275,12 +271,11 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 					const valueProp = element.properties.find((p) =>
 						p.key.type === "JSONLiteral" && p.key.value === "value"
 					);
-					if (
-						valueProp
-						&& valueProp.value.type === "JSONLiteral"
-						&& typeof valueProp.value.value === "number"
-					) {
-						return { type: "value", value: valueProp.value.value };
+					if (valueProp) {
+						const num = getNumericValue(valueProp.value);
+						if (num !== undefined) {
+							return { type: "value", value: num };
+						}
 					}
 
 					const rangeProp = element.properties.find((p) =>
@@ -292,28 +287,21 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						&& rangeProp.value.elements.length === 2
 					) {
 						const [from, to] = rangeProp.value.elements;
-						if (
-							from?.type === "JSONLiteral"
-							&& typeof from.value === "number"
-							&& to?.type === "JSONLiteral"
-							&& typeof to.value === "number"
-						) {
+						const fromNum = getNumericValue(from);
+						const toNum = getNumericValue(to);
+						if (fromNum !== undefined && toNum !== undefined) {
 							const stepProp = element.properties.find((p) =>
 								p.key.type === "JSONLiteral"
 								&& p.key.value === "step"
 							);
 							let step: number | undefined;
-							if (
-								stepProp
-								&& stepProp.value.type === "JSONLiteral"
-								&& typeof stepProp.value.value === "number"
-							) {
-								step = stepProp.value.value;
+							if (stepProp) {
+								step = getNumericValue(stepProp.value);
 							}
 							return {
 								type: "range",
-								from: from.value,
-								to: to.value,
+								from: fromNum,
+								to: toNum,
 								step,
 							};
 						}

@@ -177,6 +177,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change for Q1",
 			"valueSize": 1,
 			"unit": "%",
@@ -187,6 +188,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval for Q1",
 			"valueSize": 2,
 			"minValue": 0,

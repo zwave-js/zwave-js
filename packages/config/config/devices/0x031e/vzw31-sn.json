@@ -180,6 +180,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -230,6 +231,7 @@
 		},
 		{
 			"#": "18",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -246,10 +248,12 @@
 		{
 			"#": "19",
 			"label": "Power & Energy Report Interval",
-			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{"value": 0}, {"range": [30, 32767]}],
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32767] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -260,6 +264,7 @@
 		},
 		{
 			"#": "20",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Change Report Threshold",
 			"valueSize": 2,
 			"unit": "0.01 kWh",
@@ -346,7 +351,7 @@
 			"#": "23",
 			"$if": "firmwareVersion >= 1.4",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on. Allowable range: 0-60.",
+			"description": "Duration of initial increased power output when light turns on.",
 			"valueSize": 1,
 			"unit": "1/60 seconds",
 			"minValue": 0,

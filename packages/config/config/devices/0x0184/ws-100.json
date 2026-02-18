@@ -38,6 +38,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "orientation",
 			"label": "Orientation",
 			"description": "Controls the on/off orientation of the rocker switch",
 			"valueSize": 1,

@@ -16,26 +16,14 @@
 	"paramInformation": [
 		{
 			"#": "2",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Level",
 			"description": "Basic command to turn on the light",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "3",
+			"$purpose": "motion_sensitivity",
 			"label": "PIR Sensitivity",
 			"description": "setting",
 			"valueSize": 1,
@@ -54,6 +42,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "motion_retrigger_interval",
 			"label": "PIR Motion Re-Trigger Min Interval",
 			"valueSize": 1,
 			"unit": "8s ticks",
@@ -73,6 +62,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Level Auto-Report Interval",
 			"valueSize": 1,
 			"unit": "ticks",
@@ -100,6 +90,7 @@
 		},
 		{
 			"#": "13",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 1,
 			"unit": "ticks",
@@ -120,6 +111,7 @@
 		},
 		{
 			"#": "21",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Differential to Report",
 			"valueSize": 1,
 			"unit": "Fahrenheit",
@@ -129,6 +121,7 @@
 		},
 		{
 			"#": "22",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Min Illumination Differential",
 			"valueSize": 1,
 			"unit": "%",

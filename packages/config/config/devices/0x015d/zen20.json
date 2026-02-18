@@ -43,6 +43,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Wattage Report Frequency",
 			"description": "The number entered as value corresponds to the number of seconds",
 			"valueSize": 4,
@@ -53,6 +54,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Frequency",
 			"description": "Report interval of power consumption (W) to your controller (hub)",
 			"valueSize": 4,

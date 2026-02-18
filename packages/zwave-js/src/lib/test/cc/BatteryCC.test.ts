@@ -164,6 +164,106 @@ integrationTest(
 );
 
 integrationTest(
+	"When the battery is disconnected, level and chargingStatus values are removed but metadata is preserved",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Battery,
+			],
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			// Send a normal report first to populate values
+			let report = new BatteryCCReport({
+				nodeId: node.id,
+				level: 55,
+				chargingStatus: BatteryChargingStatus.Charging,
+				rechargeable: true,
+				backup: false,
+				overheating: false,
+				lowFluid: false,
+				rechargeOrReplace: BatteryReplacementStatus.No,
+				disconnected: false,
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(report, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
+
+			t.expect(node.getValue(BatteryCCValues.level.id)).toBe(55);
+			t.expect(node.getValue(BatteryCCValues.chargingStatus.id)).toBe(
+				BatteryChargingStatus.Charging,
+			);
+
+			// Now send a report indicating the battery is disconnected
+			report = new BatteryCCReport({
+				nodeId: node.id,
+				level: 0,
+				chargingStatus: BatteryChargingStatus.Discharging,
+				rechargeable: true,
+				backup: false,
+				overheating: false,
+				lowFluid: false,
+				rechargeOrReplace: BatteryReplacementStatus.No,
+				disconnected: true,
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(report, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
+
+			// Level and chargingStatus values should be removed
+			t.expect(node.getValue(BatteryCCValues.level.id))
+				.toBeUndefined();
+			t.expect(node.getValue(BatteryCCValues.chargingStatus.id))
+				.toBeUndefined();
+
+			// But metadata should still be present
+			t.expect(node.getValueMetadata(BatteryCCValues.level.id))
+				.toMatchObject({ label: "Battery level" });
+			t.expect(node.getValueMetadata(BatteryCCValues.chargingStatus.id))
+				.toMatchObject({ label: "Charging status" });
+
+			// Other values should still be persisted normally
+			t.expect(node.getValue(BatteryCCValues.rechargeable.id)).toBe(
+				true,
+			);
+
+			// Now send a normal report again to re-add values
+			report = new BatteryCCReport({
+				nodeId: node.id,
+				level: 80,
+				chargingStatus: BatteryChargingStatus.Maintaining,
+				rechargeable: true,
+				backup: false,
+				overheating: false,
+				lowFluid: false,
+				rechargeOrReplace: BatteryReplacementStatus.No,
+				disconnected: false,
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(report, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
+
+			// Values should be restored
+			t.expect(node.getValue(BatteryCCValues.level.id)).toBe(80);
+			t.expect(node.getValue(BatteryCCValues.chargingStatus.id)).toBe(
+				BatteryChargingStatus.Maintaining,
+			);
+		},
+	},
+);
+
+integrationTest(
 	"Receiving a BatteryReport with the level marked low should cause a notification to be emitted",
 	{
 		// debug: true,

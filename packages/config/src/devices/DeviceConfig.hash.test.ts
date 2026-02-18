@@ -45,7 +45,7 @@ test(
 );
 
 test(
-	"hash() changes when changing a parameter info",
+	"hash() does not change when changing parameter info",
 	async (t) => {
 		t.expect(testConfig).toBeDefined();
 
@@ -53,6 +53,23 @@ test(
 
 		// @ts-expect-error
 		testConfig.paramInformation!.get({ parameter: 2 })!.unit = "lightyears";
+		const hash2 = await testConfig.getHash();
+
+		t.expect(hash1).toStrictEqual(hash2);
+	},
+	// This test might take a while
+	60000,
+);
+
+test(
+	"hash() changes when changing an association setting",
+	async (t) => {
+		t.expect(testConfig).toBeDefined();
+
+		const hash1 = await testConfig.getHash();
+
+		// @ts-expect-error
+		testConfig.associations!.get(1)!.maxNodes = 10;
 		const hash2 = await testConfig.getHash();
 
 		t.expect(hash1).not.toStrictEqual(hash2);

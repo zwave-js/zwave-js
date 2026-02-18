@@ -55,6 +55,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "ramp_rate",
 			"label": "Dim Rate",
 			"description": "Dim up/down the light to the specified level quickly or slowly.",
 			"valueSize": 1,
@@ -82,6 +83,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "ramp_rate.zwave",
 			"label": "Dim Rate Timing (Z-Wave)",
 			"description": "Timing of steps or levels",
 			"valueSize": 2,
@@ -101,6 +103,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "ramp_rate.manual",
 			"label": "Dim Rate Timing (Manual)",
 			"description": "Timing of steps",
 			"valueSize": 2,

@@ -50,6 +50,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset Value",
 			"valueSize": 1,
 			"unit": "0.1 °C/°F",
@@ -60,6 +61,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset Value",
 			"valueSize": 1,
 			"unit": "0.1 %rH",
@@ -77,6 +79,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity D-Value (Report Threshold) Setting",
 			"valueSize": 1,
 			"unit": "0.1 %rH",

@@ -32,6 +32,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -41,12 +42,14 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
-			"description": "Allowable range: 5%-50%",
 			"valueSize": 1,
 			"unit": "%",
-			"minValue": 0,
-			"maxValue": 50,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 50] }
+			],
 			"defaultValue": 20,
 			"options": [
 				{
@@ -57,11 +60,14 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Light Reporting Threshold",
-			"description": "Allowable range: 5%-50%",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 50,
+			"unit": "%",
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 50] }
+			],
 			"defaultValue": 25,
 			"options": [
 				{
@@ -72,6 +78,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Trigger Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -81,6 +88,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"valueSize": 1,
 			"minValue": 1,

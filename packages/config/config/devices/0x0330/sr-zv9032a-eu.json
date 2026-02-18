@@ -27,6 +27,7 @@
 	"paramInformation": [
 		{
 			"#": "2",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -36,11 +37,14 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "motion_sensitivity.inverted",
 			"label": "Motion Sensitivity",
-			"description": "Allowable range: 8 (high) - 255 (low)",
+			"description": "8 = high, 255 = low",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [8, 255] }
+			],
 			"defaultValue": 15,
 			"options": [
 				{
@@ -51,6 +55,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Blind Time",
 			"description": "The amount of time the sensor will not report motion after it has reported motion.",
 			"valueSize": 1,
@@ -177,6 +182,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Clear Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -207,39 +213,17 @@
 		},
 		{
 			"#": "9",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Association Group: Value of Basic Set (Motion)",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 2,
-			"defaultValue": 255,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On / Last non-zero value",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "10",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Association Group: Value of Basic Set (No Motion)",
-			"description": "Allowable range: 0-99, 255",
 			"valueSize": 2,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "On / Last non-zero value",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "11",
@@ -273,12 +257,14 @@
 		},
 		{
 			"#": "13",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Brightness Report Interval",
-			"description": "Allowable range: 5-2678400",
 			"valueSize": 4,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 2678400,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 2678400] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -289,6 +275,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Brightness Change Report Threshold",
 			"valueSize": 2,
 			"unit": "lux",
@@ -311,11 +298,12 @@
 		{
 			"#": "16",
 			"label": "Temperature/Humidity Report Interval",
-			"description": "Allowable range: 5-2678400",
 			"valueSize": 4,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 2678400,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 2678400] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -326,6 +314,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 2,
 			"unit": "0.1 °C",
@@ -341,6 +330,7 @@
 		},
 		{
 			"#": "18",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 2,
 			"unit": "rh%",
@@ -356,6 +346,7 @@
 		},
 		{
 			"#": "19",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 2,
 			"unit": "0.1 °C",
@@ -365,6 +356,7 @@
 		},
 		{
 			"#": "20",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Calibration",
 			"description": "The value to be added to the actual measured humidity.",
 			"valueSize": 2,
