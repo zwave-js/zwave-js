@@ -313,10 +313,10 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 		} else {
 			nameBuffer = Bytes.from(this.name, "ascii");
 		}
-		// Copy at most 16 bytes
+		// Copy at most 16 bytes after the encoding byte
 		this.payload.set(
 			nameBuffer.subarray(0, Math.min(16, nameBuffer.length)),
-			0,
+			1,
 		);
 		return super.serialize(ctx);
 	}
@@ -425,10 +425,10 @@ export class NodeNamingAndLocationCCLocationSet
 		} else {
 			locationBuffer = Bytes.from(this.location, "ascii");
 		}
-		// Copy at most 16 bytes
+		// Copy at most 16 bytes after the encoding byte
 		this.payload.set(
 			locationBuffer.subarray(0, Math.min(16, locationBuffer.length)),
-			0,
+			1,
 		);
 		return super.serialize(ctx);
 	}
