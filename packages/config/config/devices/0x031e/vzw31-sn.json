@@ -92,7 +92,10 @@
 			"label": "Dimming Speed - Up (Remote)",
 			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 			"valueSize": 1,
-			"allowed": [{"value": 0}, {"range": [5, 254]}],
+			"allowed": [
+				{"value": 0},
+				{"range": [5, 254]}
+			],
 			"defaultValue": 25,
 			"unsigned": true,
 			"options": [
