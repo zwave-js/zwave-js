@@ -9,6 +9,7 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
+	encodeBitMask,
 	enumValuesToMetadataStates,
 	parseBitMask,
 	validatePayload,
@@ -288,31 +289,40 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		switch (cmd) {
 			// Mandatory v1 commands
 			case UserCredentialCommand.UserCapabilitiesGet:
+			case UserCredentialCommand.UserCapabilitiesReport:
 			case UserCredentialCommand.CredentialCapabilitiesGet:
+			case UserCredentialCommand.CredentialCapabilitiesReport:
 			case UserCredentialCommand.UserSet:
 			case UserCredentialCommand.UserGet:
+			case UserCredentialCommand.UserReport:
 			case UserCredentialCommand.CredentialSet:
 			case UserCredentialCommand.CredentialGet:
+			case UserCredentialCommand.CredentialReport:
 			case UserCredentialCommand.CredentialLearnStart:
 			case UserCredentialCommand.CredentialLearnCancel:
+			case UserCredentialCommand.CredentialLearnReport:
 			case UserCredentialCommand.UserCredentialAssociationSet:
+			case UserCredentialCommand.UserCredentialAssociationReport:
 				return true;
 
-			case UserCredentialCommand.AllUsersChecksumGet: {
+			case UserCredentialCommand.AllUsersChecksumGet:
+			case UserCredentialCommand.AllUsersChecksumReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
 					UserCredentialCCValues.allUsersChecksumSupport.endpoint(
 						this.endpoint.index,
 					),
 				);
 			}
-			case UserCredentialCommand.UserChecksumGet: {
+			case UserCredentialCommand.UserChecksumGet:
+			case UserCredentialCommand.UserChecksumReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
 					UserCredentialCCValues.userChecksumSupport.endpoint(
 						this.endpoint.index,
 					),
 				);
 			}
-			case UserCredentialCommand.CredentialChecksumGet: {
+			case UserCredentialCommand.CredentialChecksumGet:
+			case UserCredentialCommand.CredentialChecksumReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
 					UserCredentialCCValues.credentialChecksumSupport
 						.endpoint(
@@ -321,7 +331,8 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 				);
 			}
 			case UserCredentialCommand.AdminPinCodeSet:
-			case UserCredentialCommand.AdminPinCodeGet: {
+			case UserCredentialCommand.AdminPinCodeGet:
+			case UserCredentialCommand.AdminPinCodeReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
 					UserCredentialCCValues.adminCodeSupport.endpoint(
 						this.endpoint.index,
@@ -331,8 +342,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 
 			// V2 commands
 			case UserCredentialCommand.KeyLockerCapabilitiesGet:
+			case UserCredentialCommand.KeyLockerCapabilitiesReport:
 			case UserCredentialCommand.KeyLockerEntrySet:
 			case UserCredentialCommand.KeyLockerEntryGet:
+			case UserCredentialCommand.KeyLockerEntryReport:
 				return this.version >= 2;
 		}
 		return super.supportsCommand(cmd);
@@ -773,6 +786,211 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		}
 	}
 
+	// Send Report methods
+	@validateArgs()
+	public async sendUserCapabilitiesReport(
+		options: UserCredentialCCUserCapabilitiesReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.UserCapabilitiesReport,
+		);
+
+		const cc = new UserCredentialCCUserCapabilitiesReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendCredentialCapabilitiesReport(
+		options: UserCredentialCCCredentialCapabilitiesReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.CredentialCapabilitiesReport,
+		);
+
+		const cc = new UserCredentialCCCredentialCapabilitiesReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendKeyLockerCapabilitiesReport(
+		options: UserCredentialCCKeyLockerCapabilitiesReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.KeyLockerCapabilitiesReport,
+		);
+
+		const cc = new UserCredentialCCKeyLockerCapabilitiesReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendUserReport(
+		options: UserCredentialCCUserReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.UserReport,
+		);
+
+		const cc = new UserCredentialCCUserReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendCredentialReport(
+		options: UserCredentialCCCredentialReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.CredentialReport,
+		);
+
+		const cc = new UserCredentialCCCredentialReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendCredentialLearnReport(
+		options: UserCredentialCCCredentialLearnReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.CredentialLearnReport,
+		);
+
+		const cc = new UserCredentialCCCredentialLearnReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendUserCredentialAssociationReport(
+		options: UserCredentialCCUserCredentialAssociationReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.UserCredentialAssociationReport,
+		);
+
+		const cc = new UserCredentialCCUserCredentialAssociationReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendAllUsersChecksumReport(
+		options: UserCredentialCCAllUsersChecksumReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.AllUsersChecksumReport,
+		);
+
+		const cc = new UserCredentialCCAllUsersChecksumReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendUserChecksumReport(
+		options: UserCredentialCCUserChecksumReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.UserChecksumReport,
+		);
+
+		const cc = new UserCredentialCCUserChecksumReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendCredentialChecksumReport(
+		options: UserCredentialCCCredentialChecksumReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.CredentialChecksumReport,
+		);
+
+		const cc = new UserCredentialCCCredentialChecksumReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendAdminPinCodeReport(
+		options: UserCredentialCCAdminPinCodeReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.AdminPinCodeReport,
+		);
+
+		const cc = new UserCredentialCCAdminPinCodeReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendKeyLockerEntryReport(
+		options: UserCredentialCCKeyLockerEntryReportOptions,
+	): Promise<SupervisionResult | undefined> {
+		this.assertSupportsCommand(
+			UserCredentialCommand,
+			UserCredentialCommand.KeyLockerEntryReport,
+		);
+
+		const cc = new UserCredentialCCKeyLockerEntryReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		return this.host.sendCommand(cc, this.commandOptions);
+	}
+
 	protected override get [SET_VALUE](): SetValueImplementation {
 		return async function(
 			this: UserCredentialCCAPI,
@@ -1068,6 +1286,18 @@ export class UserCredentialCC extends CommandClass {
 // Group 1: Capabilities
 // ============================================================
 
+// @publicAPI
+export interface UserCredentialCCUserCapabilitiesReportOptions {
+	numberOfSupportedUsers: number;
+	supportedCredentialRules: UserCredentialRule[];
+	maxUserNameLength: number;
+	userScheduleSupport: boolean;
+	allUsersChecksumSupport: boolean;
+	userChecksumSupport: boolean;
+	supportedUserNameEncodings: UserCredentialNameEncoding[];
+	supportedUserTypes: UserCredentialUserType[];
+}
+
 @CCCommand(UserCredentialCommand.UserCapabilitiesReport)
 @ccValueProperty(
 	"numberOfSupportedUsers",
@@ -1100,16 +1330,9 @@ export class UserCredentialCC extends CommandClass {
 )
 export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			numberOfSupportedUsers: number;
-			supportedCredentialRules: UserCredentialRule[];
-			maxUserNameLength: number;
-			userScheduleSupport: boolean;
-			allUsersChecksumSupport: boolean;
-			userChecksumSupport: boolean;
-			supportedUserNameEncodings: UserCredentialNameEncoding[];
-			supportedUserTypes: UserCredentialUserType[];
-		}>,
+		options: WithAddress<
+			UserCredentialCCUserCapabilitiesReportOptions
+		>,
 	) {
 		super(options);
 		this.numberOfSupportedUsers = options.numberOfSupportedUsers;
@@ -1182,6 +1405,36 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 	public readonly supportedUserNameEncodings: UserCredentialNameEncoding[];
 	public readonly supportedUserTypes: UserCredentialUserType[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const credentialRulesBitmask = encodeBitMask(
+			this.supportedCredentialRules,
+			UserCredentialRule.Triple,
+			0, // Bit 0 in Bit Mask MUST be set to 0
+		);
+		const nameEncodingBitmask = encodeBitMask(
+			this.supportedUserNameEncodings,
+			UserCredentialNameEncoding.UTF16BE,
+			UserCredentialNameEncoding.ASCII,
+		);
+		const flagsByte = (this.userScheduleSupport ? 0b1000_0000 : 0)
+			| (this.allUsersChecksumSupport ? 0b0100_0000 : 0)
+			| (this.userChecksumSupport ? 0b0010_0000 : 0)
+			| (nameEncodingBitmask[0] & 0b0001_1111);
+		const userTypesBitmask = encodeBitMask(
+			this.supportedUserTypes,
+			UserCredentialUserType.RemoteOnly,
+			UserCredentialUserType.General,
+		);
+		this.payload = Bytes.alloc(6 + userTypesBitmask.length);
+		this.payload.writeUInt16BE(this.numberOfSupportedUsers, 0);
+		this.payload[2] = credentialRulesBitmask[0];
+		this.payload[3] = this.maxUserNameLength;
+		this.payload[4] = flagsByte;
+		this.payload[5] = userTypesBitmask.length;
+		this.payload.set(userTypesBitmask, 6);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -1226,6 +1479,14 @@ export interface UserCredentialCredentialCapability {
 	maxCredentialHashLength: number;
 }
 
+// @publicAPI
+export interface UserCredentialCCCredentialCapabilitiesReportOptions {
+	credentialChecksumSupport: boolean;
+	adminCodeSupport: boolean;
+	adminCodeDeactivationSupport: boolean;
+	supportedCredentialTypes: UserCredentialCredentialCapability[];
+}
+
 @CCCommand(UserCredentialCommand.CredentialCapabilitiesReport)
 @ccValueProperty(
 	"credentialChecksumSupport",
@@ -1244,12 +1505,9 @@ export class UserCredentialCCCredentialCapabilitiesReport
 	extends UserCredentialCC
 {
 	public constructor(
-		options: WithAddress<{
-			credentialChecksumSupport: boolean;
-			adminCodeSupport: boolean;
-			adminCodeDeactivationSupport: boolean;
-			supportedCredentialTypes: UserCredentialCredentialCapability[];
-		}>,
+		options: WithAddress<
+			UserCredentialCCCredentialCapabilitiesReportOptions
+		>,
 	) {
 		super(options);
 		this.credentialChecksumSupport = options.credentialChecksumSupport;
@@ -1319,6 +1577,30 @@ export class UserCredentialCCCredentialCapabilitiesReport
 	public readonly supportedCredentialTypes:
 		UserCredentialCredentialCapability[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const numberOfCredentialTypes = this.supportedCredentialTypes.length;
+		this.payload = Bytes.alloc(2 + numberOfCredentialTypes * 10);
+		this.payload[0] = (this.credentialChecksumSupport ? 0b1000_0000 : 0)
+			| (this.adminCodeSupport ? 0b0100_0000 : 0)
+			| (this.adminCodeDeactivationSupport ? 0b0010_0000 : 0);
+		this.payload[1] = numberOfCredentialTypes;
+		let offset = 2;
+		for (const ct of this.supportedCredentialTypes) {
+			this.payload[offset] = ct.credentialType;
+			this.payload[offset + 1] = ct.credentialLearnSupport
+				? 0b1000_0000
+				: 0;
+			this.payload.writeUInt16BE(ct.numberOfCredentialSlots, offset + 2);
+			this.payload[offset + 4] = ct.minCredentialLength;
+			this.payload[offset + 5] = ct.maxCredentialLength;
+			this.payload[offset + 6] = ct.credentialLearnRecommendedTimeout;
+			this.payload[offset + 7] = ct.credentialLearnNumberOfSteps;
+			this.payload.writeUInt16BE(ct.maxCredentialHashLength, offset + 8);
+			offset += 10;
+		}
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"credential checksum support": this.credentialChecksumSupport,
@@ -1357,6 +1639,11 @@ export interface UserCredentialKeyLockerCapability {
 	maxEntryDataLength: number;
 }
 
+// @publicAPI
+export interface UserCredentialCCKeyLockerCapabilitiesReportOptions {
+	supportedKeyLockerEntryTypes: UserCredentialKeyLockerCapability[];
+}
+
 @CCCommand(UserCredentialCommand.KeyLockerCapabilitiesReport)
 @ccValueProperty(
 	"supportedKeyLockerEntryTypes",
@@ -1366,9 +1653,9 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 	extends UserCredentialCC
 {
 	public constructor(
-		options: WithAddress<{
-			supportedKeyLockerEntryTypes: UserCredentialKeyLockerCapability[];
-		}>,
+		options: WithAddress<
+			UserCredentialCCKeyLockerCapabilitiesReportOptions
+		>,
 	) {
 		super(options);
 		this.supportedKeyLockerEntryTypes =
@@ -1418,6 +1705,21 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 	public readonly supportedKeyLockerEntryTypes:
 		UserCredentialKeyLockerCapability[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const numberOfEntryTypes = this.supportedKeyLockerEntryTypes.length;
+		this.payload = Bytes.alloc(1 + numberOfEntryTypes * 7);
+		this.payload[0] = numberOfEntryTypes;
+		let offset = 1;
+		for (const et of this.supportedKeyLockerEntryTypes) {
+			this.payload[offset] = et.entryType;
+			this.payload.writeUInt16BE(et.numberOfEntrySlots, offset + 1);
+			this.payload.writeUInt16BE(et.minEntryDataLength, offset + 3);
+			this.payload.writeUInt16BE(et.maxEntryDataLength, offset + 5);
+			offset += 7;
+		}
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		for (const et of this.supportedKeyLockerEntryTypes) {
@@ -1439,9 +1741,7 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 
 @CCCommand(UserCredentialCommand.KeyLockerCapabilitiesGet)
 @expectedCCResponse(UserCredentialCCKeyLockerCapabilitiesReport)
-export class UserCredentialCCKeyLockerCapabilitiesGet
-	extends UserCredentialCC
-{}
+export class UserCredentialCCKeyLockerCapabilitiesGet extends UserCredentialCC {}
 
 // ============================================================
 // Group 2: User Management
@@ -1583,22 +1883,25 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	}
 }
 
+// @publicAPI
+export interface UserCredentialCCUserReportOptions {
+	userReportType: UserCredentialUserReportType;
+	nextUserUniqueIdentifier: number;
+	userModifierType: UserCredentialModifierType;
+	userModifierNodeId: number;
+	userUniqueIdentifier: number;
+	userType: UserCredentialUserType;
+	activeState: UserCredentialActiveState;
+	credentialRule: UserCredentialRule;
+	expiringTimeoutMinutes: number;
+	nameEncoding: UserCredentialNameEncoding;
+	userName: string;
+}
+
 @CCCommand(UserCredentialCommand.UserReport)
 export class UserCredentialCCUserReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			userReportType: UserCredentialUserReportType;
-			nextUserUniqueIdentifier: number;
-			userModifierType: UserCredentialModifierType;
-			userModifierNodeId: number;
-			userUniqueIdentifier: number;
-			userType: UserCredentialUserType;
-			activeState: UserCredentialActiveState;
-			credentialRule: UserCredentialRule;
-			expiringTimeoutMinutes: number;
-			nameEncoding: UserCredentialNameEncoding;
-			userName: string;
-		}>,
+		options: WithAddress<UserCredentialCCUserReportOptions>,
 	) {
 		super(options);
 		this.userReportType = options.userReportType;
@@ -1671,6 +1974,31 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	public readonly expiringTimeoutMinutes: number;
 	public readonly nameEncoding: UserCredentialNameEncoding;
 	public readonly userName: string;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let nameBuffer: Uint8Array;
+		if (this.nameEncoding === UserCredentialNameEncoding.UTF16BE) {
+			nameBuffer = stringToUint8ArrayUTF16BE(this.userName);
+		} else {
+			nameBuffer = Bytes.from(this.userName, "ascii");
+		}
+		this.payload = Bytes.alloc(15 + nameBuffer.length);
+		this.payload[0] = this.userReportType;
+		this.payload.writeUInt16BE(this.nextUserUniqueIdentifier, 1);
+		this.payload[3] = this.userModifierType;
+		this.payload.writeUInt16BE(this.userModifierNodeId, 4);
+		this.payload.writeUInt16BE(this.userUniqueIdentifier, 6);
+		this.payload[8] = this.userType;
+		this.payload[9] = this.activeState & 0x0f;
+		this.payload[10] = this.credentialRule;
+		this.payload.writeUInt16BE(this.expiringTimeoutMinutes, 11);
+		this.payload[13] = this.nameEncoding & 0x0f;
+		this.payload[14] = nameBuffer.length;
+		if (nameBuffer.length > 0) {
+			this.payload.set(nameBuffer, 15);
+		}
+		return super.serialize(ctx);
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
@@ -1972,21 +2300,24 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 	}
 }
 
+// @publicAPI
+export interface UserCredentialCCCredentialReportOptions {
+	credentialReportType: UserCredentialCredentialReportType;
+	nextCredentialType: UserCredentialType;
+	nextCredentialSlot: number;
+	credentialModifierType: UserCredentialModifierType;
+	credentialModifierNodeId: number;
+	userUniqueIdentifier: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	credentialLength: number;
+	credentialData: Bytes;
+}
+
 @CCCommand(UserCredentialCommand.CredentialReport)
 export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			credentialReportType: UserCredentialCredentialReportType;
-			nextCredentialType: UserCredentialType;
-			nextCredentialSlot: number;
-			credentialModifierType: UserCredentialModifierType;
-			credentialModifierNodeId: number;
-			userUniqueIdentifier: number;
-			credentialType: UserCredentialType;
-			credentialSlot: number;
-			credentialLength: number;
-			credentialData: Bytes;
-		}>,
+		options: WithAddress<UserCredentialCCCredentialReportOptions>,
 	) {
 		super(options);
 		this.credentialReportType = options.credentialReportType;
@@ -2049,6 +2380,23 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	public readonly credentialSlot: number;
 	public readonly credentialLength: number;
 	public readonly credentialData: Bytes;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(13 + this.credentialData.length);
+		this.payload[0] = this.credentialReportType;
+		this.payload[1] = this.nextCredentialType;
+		this.payload.writeUInt16BE(this.nextCredentialSlot, 2);
+		this.payload[4] = this.credentialModifierType;
+		this.payload.writeUInt16BE(this.credentialModifierNodeId, 5);
+		this.payload.writeUInt16BE(this.userUniqueIdentifier, 7);
+		this.payload[9] = this.credentialType;
+		this.payload.writeUInt16BE(this.credentialSlot, 10);
+		this.payload[12] = this.credentialData.length;
+		if (this.credentialData.length > 0) {
+			this.payload.set(this.credentialData, 13);
+		}
+		return super.serialize(ctx);
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
@@ -2301,16 +2649,21 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 @useSupervision()
 export class UserCredentialCCCredentialLearnCancel extends UserCredentialCC {}
 
+// @publicAPI
+export interface UserCredentialCCCredentialLearnReportOptions {
+	userUniqueIdentifier: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	learnStatus: number;
+	learnStep: number;
+}
+
 @CCCommand(UserCredentialCommand.CredentialLearnReport)
 export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			userUniqueIdentifier: number;
-			credentialType: UserCredentialType;
-			credentialSlot: number;
-			learnStatus: number;
-			learnStep: number;
-		}>,
+		options: WithAddress<
+			UserCredentialCCCredentialLearnReportOptions
+		>,
 	) {
 		super(options);
 		this.userUniqueIdentifier = options.userUniqueIdentifier;
@@ -2346,6 +2699,16 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 	public readonly credentialSlot: number;
 	public readonly learnStatus: number;
 	public readonly learnStep: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(7);
+		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload[2] = this.credentialType;
+		this.payload.writeUInt16BE(this.credentialSlot, 3);
+		this.payload[5] = this.learnStatus;
+		this.payload[6] = this.learnStep;
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -2453,18 +2816,23 @@ export class UserCredentialCCUserCredentialAssociationSet
 	}
 }
 
+// @publicAPI
+export interface UserCredentialCCUserCredentialAssociationReportOptions {
+	sourceUserUniqueIdentifier: number;
+	sourceCredentialType: UserCredentialType;
+	sourceCredentialSlot: number;
+	destinationUserUniqueIdentifier: number;
+	reportStatus: number;
+}
+
 @CCCommand(UserCredentialCommand.UserCredentialAssociationReport)
 export class UserCredentialCCUserCredentialAssociationReport
 	extends UserCredentialCC
 {
 	public constructor(
-		options: WithAddress<{
-			sourceUserUniqueIdentifier: number;
-			sourceCredentialType: UserCredentialType;
-			sourceCredentialSlot: number;
-			destinationUserUniqueIdentifier: number;
-			reportStatus: number;
-		}>,
+		options: WithAddress<
+			UserCredentialCCUserCredentialAssociationReportOptions
+		>,
 	) {
 		super(options);
 		this.sourceUserUniqueIdentifier = options.sourceUserUniqueIdentifier;
@@ -2504,6 +2872,19 @@ export class UserCredentialCCUserCredentialAssociationReport
 	public readonly destinationUserUniqueIdentifier: number;
 	public readonly reportStatus: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(8);
+		this.payload.writeUInt16BE(this.sourceUserUniqueIdentifier, 0);
+		this.payload[2] = this.sourceCredentialType;
+		this.payload.writeUInt16BE(this.sourceCredentialSlot, 3);
+		this.payload.writeUInt16BE(
+			this.destinationUserUniqueIdentifier,
+			5,
+		);
+		this.payload[7] = this.reportStatus;
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -2527,10 +2908,17 @@ export class UserCredentialCCUserCredentialAssociationReport
 // Group 6: Checksums
 // ============================================================
 
+// @publicAPI
+export interface UserCredentialCCAllUsersChecksumReportOptions {
+	checksum: number;
+}
+
 @CCCommand(UserCredentialCommand.AllUsersChecksumReport)
 export class UserCredentialCCAllUsersChecksumReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{ checksum: number }>,
+		options: WithAddress<
+			UserCredentialCCAllUsersChecksumReportOptions
+		>,
 	) {
 		super(options);
 		this.checksum = options.checksum;
@@ -2551,6 +2939,12 @@ export class UserCredentialCCAllUsersChecksumReport extends UserCredentialCC {
 
 	public readonly checksum: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(2);
+		this.payload.writeUInt16BE(this.checksum, 0);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -2568,13 +2962,16 @@ export interface UserCredentialCCUserChecksumGetOptions {
 	userUniqueIdentifier: number;
 }
 
+// @publicAPI
+export interface UserCredentialCCUserChecksumReportOptions {
+	userUniqueIdentifier: number;
+	checksum: number;
+}
+
 @CCCommand(UserCredentialCommand.UserChecksumReport)
 export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			userUniqueIdentifier: number;
-			checksum: number;
-		}>,
+		options: WithAddress<UserCredentialCCUserChecksumReportOptions>,
 	) {
 		super(options);
 		this.userUniqueIdentifier = options.userUniqueIdentifier;
@@ -2598,6 +2995,13 @@ export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 
 	public readonly userUniqueIdentifier: number;
 	public readonly checksum: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(4);
+		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload.writeUInt16BE(this.checksum, 2);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -2656,13 +3060,18 @@ export interface UserCredentialCCCredentialChecksumGetOptions {
 	credentialType: UserCredentialType;
 }
 
+// @publicAPI
+export interface UserCredentialCCCredentialChecksumReportOptions {
+	credentialType: UserCredentialType;
+	checksum: number;
+}
+
 @CCCommand(UserCredentialCommand.CredentialChecksumReport)
 export class UserCredentialCCCredentialChecksumReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			credentialType: UserCredentialType;
-			checksum: number;
-		}>,
+		options: WithAddress<
+			UserCredentialCCCredentialChecksumReportOptions
+		>,
 	) {
 		super(options);
 		this.credentialType = options.credentialType;
@@ -2686,6 +3095,13 @@ export class UserCredentialCCCredentialChecksumReport extends UserCredentialCC {
 
 	public readonly credentialType: UserCredentialType;
 	public readonly checksum: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(3);
+		this.payload[0] = this.credentialType;
+		this.payload.writeUInt16BE(this.checksum, 1);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -2803,15 +3219,18 @@ export class UserCredentialCCAdminPinCodeSet extends UserCredentialCC {
 	}
 }
 
+// @publicAPI
+export interface UserCredentialCCAdminPinCodeReportOptions {
+	operationResult: UserCredentialAdminCodeOperationResult;
+	modifierType: UserCredentialModifierType;
+	modifierNodeId: number;
+	pinCode: string;
+}
+
 @CCCommand(UserCredentialCommand.AdminPinCodeReport)
 export class UserCredentialCCAdminPinCodeReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			operationResult: UserCredentialAdminCodeOperationResult;
-			modifierType: UserCredentialModifierType;
-			modifierNodeId: number;
-			pinCode: string;
-		}>,
+		options: WithAddress<UserCredentialCCAdminPinCodeReportOptions>,
 	) {
 		super(options);
 		this.operationResult = options.operationResult;
@@ -2850,6 +3269,19 @@ export class UserCredentialCCAdminPinCodeReport extends UserCredentialCC {
 	public readonly modifierType: UserCredentialModifierType;
 	public readonly modifierNodeId: number;
 	public readonly pinCode: string;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const pinBuffer = Bytes.from(this.pinCode, "ascii");
+		this.payload = Bytes.alloc(5 + pinBuffer.length);
+		this.payload[0] = this.operationResult & 0x0f;
+		this.payload[1] = this.modifierType;
+		this.payload.writeUInt16BE(this.modifierNodeId, 2);
+		this.payload[4] = pinBuffer.length & 0x0f;
+		if (pinBuffer.length > 0) {
+			this.payload.set(pinBuffer, 5);
+		}
+		return super.serialize(ctx);
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
@@ -2980,14 +3412,19 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 	}
 }
 
+// @publicAPI
+export interface UserCredentialCCKeyLockerEntryReportOptions {
+	occupied: boolean;
+	entryType: UserCredentialKeyLockerEntryType;
+	entrySlot: number;
+}
+
 @CCCommand(UserCredentialCommand.KeyLockerEntryReport)
 export class UserCredentialCCKeyLockerEntryReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<{
-			occupied: boolean;
-			entryType: UserCredentialKeyLockerEntryType;
-			entrySlot: number;
-		}>,
+		options: WithAddress<
+			UserCredentialCCKeyLockerEntryReportOptions
+		>,
 	) {
 		super(options);
 		this.occupied = options.occupied;
@@ -3015,6 +3452,14 @@ export class UserCredentialCCKeyLockerEntryReport extends UserCredentialCC {
 	public readonly occupied: boolean;
 	public readonly entryType: UserCredentialKeyLockerEntryType;
 	public readonly entrySlot: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(4);
+		this.payload[0] = this.occupied ? 0x01 : 0x00;
+		this.payload[1] = this.entryType;
+		this.payload.writeUInt16BE(this.entrySlot, 2);
+		return super.serialize(ctx);
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
