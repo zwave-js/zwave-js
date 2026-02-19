@@ -365,5 +365,14 @@
 				}
 			]
 		}
-	]
+	],
+	"compat": {
+		"commandClasses": {
+			"add": {
+				"Scene Activation": {
+					"isControlled": true
+				}
+			}
+		}
+	}
 }
