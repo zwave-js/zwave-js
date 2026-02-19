@@ -9,6 +9,7 @@ import { BytesView } from '@zwave-js/shared';
 import type { Database } from '@zwave-js/shared/bindings';
 import { DeflateOptions } from 'fflate';
 import type { ExpectStatic } from 'vitest';
+import { InflateOptions } from 'fflate';
 import { JSONObject } from '@zwave-js/shared';
 import { KeyPair } from '@zwave-js/shared/bindings';
 import type { TransformableInfo } from 'logform';
@@ -25,6 +26,22 @@ export const actuatorCCs: readonly CommandClasses[];
 //
 // @public
 export const allCCs: readonly CommandClasses[];
+
+// Warning: (ae-missing-release-tag) "AllowedConfigValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public @deprecated (undocumented)
+export type AllowedConfigValue = AllowedValue;
+
+// Warning: (ae-missing-release-tag) "AllowedValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type AllowedValue = {
+    value: number;
+} | {
+    from: number;
+    to: number;
+    step?: number;
+};
 
 // Warning: (ae-missing-release-tag) "applicationCCs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -490,13 +507,9 @@ export function computePRK(ecdhSharedSecret: BytesView, pubKeyA: BytesView, pubK
 // Warning: (ae-missing-release-tag) "ConfigurationMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export interface ConfigurationMetadata extends ValueMetadataAny {
-    // (undocumented)
-    allowManualEntry?: boolean;
+export interface ConfigurationMetadata extends ValueMetadataNumeric {
     // (undocumented)
     default?: ConfigValue;
-    // (undocumented)
-    description?: string;
     // (undocumented)
     destructive?: boolean;
     // (undocumented)
@@ -506,19 +519,15 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
     // (undocumented)
     isFromConfig?: boolean;
     // (undocumented)
-    label?: string;
-    // (undocumented)
     max?: ConfigValue;
     // (undocumented)
     min?: ConfigValue;
     // (undocumented)
+    purpose?: string;
+    // (undocumented)
     recommended?: ConfigValue;
     // (undocumented)
     requiresReInclusion?: boolean;
-    // (undocumented)
-    states?: Record<number, string>;
-    // (undocumented)
-    unit?: string;
     // (undocumented)
     valueSize?: number;
 }
@@ -1808,10 +1817,24 @@ export interface IndicatorProperty extends IndicatorPropertyDefinition {
     readonly id: number;
 }
 
+// Warning: (ae-missing-release-tag) "inferMinMaxStepsFromAllowed" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function inferMinMaxStepsFromAllowed(entries: readonly AllowedValue[]): {
+    min: number;
+    max: number;
+    steps?: number;
+} | undefined;
+
 // Warning: (ae-missing-release-tag) "InferStateMachineTransitions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export type InferStateMachineTransitions<T extends StateMachine<any, any, any>> = T extends StateMachine<infer S, infer I, infer E> ? StateMachineTransitionMap<S, I, E | undefined> : never;
+
+// Warning: (ae-missing-release-tag) "inflateSync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function inflateSync(data: BytesView, opts?: InflateOptions): BytesView;
 
 // Warning: (ae-missing-release-tag) "IntegerLimits" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1990,6 +2013,11 @@ export function isUnsupervisedOrSucceeded(result: SupervisionResult | undefined)
 //
 // @public (undocumented)
 export function isValidDSK(dsk: string): boolean;
+
+// Warning: (ae-missing-release-tag) "isValueAllowed" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function isValueAllowed(value: number, entries: readonly AllowedValue[]): boolean;
 
 // Warning: (ae-missing-release-tag) "isValueID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4376,6 +4404,7 @@ export interface ValueMetadataDuration extends ValueMetadataAny {
 //
 // @public (undocumented)
 export interface ValueMetadataNumeric extends ValueMetadataAny {
+    allowed?: readonly AllowedValue[];
     allowManualEntry?: boolean;
     default?: number;
     max?: number;

@@ -4,6 +4,7 @@
 
 ```ts
 
+import { AllowedValue } from '@zwave-js/core';
 import { BytesView } from '@zwave-js/shared';
 import { CommandClasses } from '@zwave-js/core';
 import { CommandClassInfo } from '@zwave-js/core';
@@ -325,6 +326,8 @@ export type ConditionalParamInfoMap = ReadonlyObjectKeyMap<{
 export class ConditionalParamInformation implements ConditionalItem<ParamInformation> {
     constructor(parent: ConditionalDeviceConfig, parameterNumber: number, valueBitMask: number | undefined, definition: JSONObject);
     // (undocumented)
+    readonly allowed?: readonly AllowedValue[];
+    // (undocumented)
     readonly allowManualEntry: boolean;
     // (undocumented)
     readonly condition?: string;
@@ -348,6 +351,8 @@ export class ConditionalParamInformation implements ConditionalItem<ParamInforma
     readonly options: readonly ConditionalConfigOption[];
     // (undocumented)
     readonly parameterNumber: number;
+    // (undocumented)
+    readonly purpose?: string;
     // (undocumented)
     readonly readOnly?: true;
     // (undocumented)
@@ -483,8 +488,9 @@ export class DeviceConfig {
         productType: number;
         productId: number;
     }[], firmwareVersion: FirmwareVersionRange, preferred: boolean, endpoints?: ReadonlyMap<number, EndpointConfig>, associations?: ReadonlyMap<number, AssociationConfig>, scenes?: ReadonlyMap<number, SceneConfig>, paramInformation?: ParamInfoMap, proprietary?: Record<string, unknown>, compat?: CompatConfig, metadata?: DeviceMetadata);
-    // (undocumented)
-    static areHashesEqual(hash: BytesView, other: BytesView): boolean;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    static areHashesEqual(currentHash: BytesView, cachedHash: BytesView): boolean;
     // (undocumented)
     readonly associations?: ReadonlyMap<number, AssociationConfig>;
     readonly compat?: CompatConfig;
@@ -509,7 +515,7 @@ export class DeviceConfig {
         deviceId?: DeviceID;
     }): Promise<DeviceConfig>;
     getAssociationConfigForEndpoint(endpointIndex: number, group: number): AssociationConfig | undefined;
-    getHash(version?: 0 | 1 | 2): Promise<BytesView>;
+    getHash(version?: DeviceConfigHashVersion): Promise<BytesView>;
     readonly isEmbedded: boolean;
     // (undocumented)
     readonly label: string;
@@ -518,7 +524,7 @@ export class DeviceConfig {
     // (undocumented)
     readonly manufacturerId: number;
     // (undocumented)
-    static get maxHashVersion(): 2;
+    static get maxHashVersion(): 4;
     readonly metadata?: DeviceMetadata;
     // (undocumented)
     readonly paramInformation?: ParamInfoMap;
@@ -527,6 +533,11 @@ export class DeviceConfig {
     // (undocumented)
     readonly scenes?: ReadonlyMap<number, SceneConfig>;
 }
+
+// Warning: (ae-missing-release-tag) "DeviceConfigHashVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type DeviceConfigHashVersion = 0 | 1 | 2 | 3 | 4;
 
 // Warning: (ae-missing-release-tag) "DeviceConfigIndex" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -672,7 +683,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.19.0";
+export const PACKAGE_VERSION = "15.21.0";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -685,16 +696,25 @@ export type ParamInfoMap = ReadonlyObjectKeyMap<{
 // Warning: (ae-missing-release-tag) "ParamInformation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type ParamInformation = Omit<ConditionalParamInformation, "condition" | "evaluateCondition" | "options" | "minValue" | "maxValue"> & {
+export type ParamInformation = Omit<ConditionalParamInformation, "condition" | "evaluateCondition" | "options" | "minValue" | "maxValue" | "allowed"> & {
     options: readonly ConfigOption[];
     minValue: NonNullable<ConditionalParamInformation["minValue"]>;
     maxValue: NonNullable<ConditionalParamInformation["maxValue"]>;
+    allowed: NonNullable<ConditionalParamInformation["allowed"]>;
 };
 
 // Warning: (ae-missing-release-tag) "parseConditionalParamInformationMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export function parseConditionalParamInformationMap(definition: JSONObject, parent: ConditionalDeviceConfig, errorPrefix?: string): ConditionalParamInfoMap;
+
+// Warning: (ae-missing-release-tag) "parseHash" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function parseDeviceConfigHash(hash: BytesView): {
+    version: number;
+    hashData: BytesView;
+} | undefined;
 
 // Warning: (ae-missing-release-tag) "saveManufacturersInternal" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

@@ -558,6 +558,7 @@ export type MockNodeResponse = {
     action: "stop";
 } | {
     action: "ok";
+    durationMs?: number;
 } | {
     action: "fail";
 };
@@ -619,6 +620,7 @@ export interface MultilevelSwitchCCCapabilities {
     defaultValue?: MaybeUnknown<number>;
     // (undocumented)
     primarySwitchType: SwitchType;
+    travelTime?: number;
 }
 
 // Warning: (ae-missing-release-tag) "NodePendingInclusion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -724,6 +726,7 @@ export interface UserCodeCCCapabilities {
 export interface WindowCoveringCCCapabilities {
     // (undocumented)
     supportedParameters: WindowCoveringParameter[];
+    travelTime?: number;
 }
 
 // (No @packageDocumentation comment for this package)

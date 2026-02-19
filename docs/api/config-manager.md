@@ -175,6 +175,7 @@ interface ConditionalParamInformation {
 	readonly label: string;
 	readonly description?: string;
 	readonly valueSize: number;
+	readonly allowed?: readonly AllowedValue[];
 	readonly minValue?: number;
 	readonly maxValue?: number;
 	readonly unsigned?: boolean;
@@ -187,6 +188,7 @@ interface ConditionalParamInformation {
 	readonly destructive?: boolean;
 	readonly options: readonly ConditionalConfigOption[];
 	readonly hidden?: boolean;
+	readonly purpose?: string;
 	readonly condition?: string;
 }
 ```
