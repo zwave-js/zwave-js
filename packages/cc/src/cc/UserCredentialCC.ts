@@ -279,58 +279,6 @@ export const UserCredentialCCValues = V.defineCCValues(
 	},
 );
 
-// Options interfaces
-// @publicAPI
-export interface UserCredentialCCUserSetOptions {
-	operationType: UserCredentialOperationType;
-	userUniqueIdentifier: number;
-	userType?: UserCredentialUserType;
-	activeState?: UserCredentialActiveState;
-	credentialRule?: UserCredentialRule;
-	expiringTimeoutMinutes?: number;
-	nameEncoding?: UserCredentialNameEncoding;
-	userName?: string;
-}
-
-// @publicAPI
-export interface UserCredentialCCCredentialSetOptions {
-	userUniqueIdentifier: number;
-	credentialType: UserCredentialType;
-	credentialSlot: number;
-	operationType: UserCredentialOperationType;
-	credentialData?: Bytes;
-}
-
-// @publicAPI
-export interface UserCredentialCCCredentialLearnStartOptions {
-	userUniqueIdentifier: number;
-	credentialType: UserCredentialType;
-	credentialSlot: number;
-	learnTimeout: number;
-	learnStep: number;
-}
-
-// @publicAPI
-export interface UserCredentialCCUserCredentialAssociationSetOptions {
-	sourceUserUniqueIdentifier: number;
-	sourceCredentialType: UserCredentialType;
-	sourceCredentialSlot: number;
-	destinationUserUniqueIdentifier: number;
-}
-
-// @publicAPI
-export interface UserCredentialCCAdminPinCodeSetOptions {
-	pinCode: string;
-}
-
-// @publicAPI
-export interface UserCredentialCCKeyLockerEntrySetOptions {
-	entryType: UserCredentialKeyLockerEntryType;
-	entrySlot: number;
-	operationType: UserCredentialOperationType;
-	entryData?: Bytes;
-}
-
 // API class
 @API(CommandClasses["User Credential"])
 export class UserCredentialCCAPI extends PhysicalCCAPI {
@@ -1116,26 +1064,6 @@ export class UserCredentialCC extends CommandClass {
 	}
 }
 
-// @publicAPI
-export interface UserCredentialCredentialCapability {
-	credentialType: UserCredentialType;
-	credentialLearnSupport: boolean;
-	numberOfCredentialSlots: number;
-	minCredentialLength: number;
-	maxCredentialLength: number;
-	credentialLearnRecommendedTimeout: number;
-	credentialLearnNumberOfSteps: number;
-	maxCredentialHashLength: number;
-}
-
-// @publicAPI
-export interface UserCredentialKeyLockerCapability {
-	entryType: UserCredentialKeyLockerEntryType;
-	numberOfEntrySlots: number;
-	minEntryDataLength: number;
-	maxEntryDataLength: number;
-}
-
 // ============================================================
 // Group 1: Capabilities
 // ============================================================
@@ -1286,6 +1214,18 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 @expectedCCResponse(UserCredentialCCUserCapabilitiesReport)
 export class UserCredentialCCUserCapabilitiesGet extends UserCredentialCC {}
 
+// @publicAPI
+export interface UserCredentialCredentialCapability {
+	credentialType: UserCredentialType;
+	credentialLearnSupport: boolean;
+	numberOfCredentialSlots: number;
+	minCredentialLength: number;
+	maxCredentialLength: number;
+	credentialLearnRecommendedTimeout: number;
+	credentialLearnNumberOfSteps: number;
+	maxCredentialHashLength: number;
+}
+
 @CCCommand(UserCredentialCommand.CredentialCapabilitiesReport)
 @ccValueProperty(
 	"credentialChecksumSupport",
@@ -1409,6 +1349,14 @@ export class UserCredentialCCCredentialCapabilitiesGet
 	extends UserCredentialCC
 {}
 
+// @publicAPI
+export interface UserCredentialKeyLockerCapability {
+	entryType: UserCredentialKeyLockerEntryType;
+	numberOfEntrySlots: number;
+	minEntryDataLength: number;
+	maxEntryDataLength: number;
+}
+
 @CCCommand(UserCredentialCommand.KeyLockerCapabilitiesReport)
 @ccValueProperty(
 	"supportedKeyLockerEntryTypes",
@@ -1498,6 +1446,18 @@ export class UserCredentialCCKeyLockerCapabilitiesGet
 // ============================================================
 // Group 2: User Management
 // ============================================================
+
+// @publicAPI
+export interface UserCredentialCCUserSetOptions {
+	operationType: UserCredentialOperationType;
+	userUniqueIdentifier: number;
+	userType?: UserCredentialUserType;
+	activeState?: UserCredentialActiveState;
+	credentialRule?: UserCredentialRule;
+	expiringTimeoutMinutes?: number;
+	nameEncoding?: UserCredentialNameEncoding;
+	userName?: string;
+}
 
 @CCCommand(UserCredentialCommand.UserSet)
 @useSupervision()
@@ -1922,6 +1882,15 @@ export class UserCredentialCCUserGet extends UserCredentialCC {
 // Group 3: Credential Management
 // ============================================================
 
+// @publicAPI
+export interface UserCredentialCCCredentialSetOptions {
+	userUniqueIdentifier: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	operationType: UserCredentialOperationType;
+	credentialData?: Bytes;
+}
+
 @CCCommand(UserCredentialCommand.CredentialSet)
 @useSupervision()
 export class UserCredentialCCCredentialSet extends UserCredentialCC {
@@ -2249,6 +2218,15 @@ export class UserCredentialCCCredentialGet extends UserCredentialCC {
 // Group 4: Credential Learn
 // ============================================================
 
+// @publicAPI
+export interface UserCredentialCCCredentialLearnStartOptions {
+	userUniqueIdentifier: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	learnTimeout: number;
+	learnStep: number;
+}
+
 @CCCommand(UserCredentialCommand.CredentialLearnStart)
 @useSupervision()
 export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
@@ -2389,6 +2367,14 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 // ============================================================
 // Group 5: Association
 // ============================================================
+
+// @publicAPI
+export interface UserCredentialCCUserCredentialAssociationSetOptions {
+	sourceUserUniqueIdentifier: number;
+	sourceCredentialType: UserCredentialType;
+	sourceCredentialSlot: number;
+	destinationUserUniqueIdentifier: number;
+}
 
 @CCCommand(UserCredentialCommand.UserCredentialAssociationSet)
 @useSupervision()
@@ -2765,6 +2751,11 @@ export class UserCredentialCCCredentialChecksumGet extends UserCredentialCC {
 // Group 7: Admin PIN Code
 // ============================================================
 
+// @publicAPI
+export interface UserCredentialCCAdminPinCodeSetOptions {
+	pinCode: string;
+}
+
 @CCCommand(UserCredentialCommand.AdminPinCodeSet)
 @useSupervision()
 export class UserCredentialCCAdminPinCodeSet extends UserCredentialCC {
@@ -2905,6 +2896,14 @@ export class UserCredentialCCAdminPinCodeGet extends UserCredentialCC {}
 // ============================================================
 // Group 8: Key Locker V2
 // ============================================================
+
+// @publicAPI
+export interface UserCredentialCCKeyLockerEntrySetOptions {
+	entryType: UserCredentialKeyLockerEntryType;
+	entrySlot: number;
+	operationType: UserCredentialOperationType;
+	entryData?: Bytes;
+}
 
 @CCCommand(UserCredentialCommand.KeyLockerEntrySet)
 @useSupervision()
