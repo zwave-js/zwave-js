@@ -30,10 +30,12 @@ integrationTest(
 			// Just have the node respond to all Supervision Get positively, but claim that more updates follow
 			const respondToSupervisionGet: MockNodeBehavior = {
 				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof SupervisionCCGet) {
+					if (
+						receivedCC.encapsulatingCC instanceof SupervisionCCGet
+					) {
 						const cc = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
+							sessionId: receivedCC.encapsulatingCC.sessionId,
 							moreUpdatesFollow: true, // <-- this is the important part
 							status: SupervisionStatus.Success,
 						});

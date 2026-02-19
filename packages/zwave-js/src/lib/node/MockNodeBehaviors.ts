@@ -43,6 +43,7 @@ import {
 	Security2CCHooks,
 } from "./mockCCBehaviors/Security2.js";
 import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch.js";
+import { SupervisionCCHooks } from "./mockCCBehaviors/Supervision.js";
 import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
 import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
 import { ThermostatSetpointCCBehaviors } from "./mockCCBehaviors/ThermostatSetpoint.js";
@@ -181,6 +182,8 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 
 		...MultiChannelCCHooks,
 		...MultiChannelCCBehaviors,
+
+		...SupervisionCCHooks,
 
 		respondToVersionCCGet,
 		respondToVersionCCCommandClassGet,

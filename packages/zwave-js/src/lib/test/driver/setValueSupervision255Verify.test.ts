@@ -5,6 +5,7 @@ import {
 	MultilevelSwitchCCValues,
 	SupervisionCCGet,
 	SupervisionCCReport,
+	SupervisionCommand,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
@@ -32,14 +33,13 @@ integrationTest(
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof SupervisionCCGet) {
-						const cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						return { action: "sendCC", cc };
+					if (
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
+					) {
+						return { action: "ok" };
 					}
 				},
 			};
@@ -49,23 +49,21 @@ integrationTest(
 			const respondToSupervisionGetWithDuration: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
-						&& receivedCC.encapsulated
-							instanceof MultilevelSwitchCCSet
-						&& !!receivedCC.encapsulated.duration
-							?.toMilliseconds()
+						receivedCC.encapsulatingCC instanceof SupervisionCCGet
+						&& receivedCC instanceof MultilevelSwitchCCSet
+						&& !!receivedCC.duration?.toMilliseconds()
 					) {
 						const cc1 = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
+							sessionId: receivedCC.encapsulatingCC.sessionId,
 							moreUpdatesFollow: true,
 							status: SupervisionStatus.Working,
-							duration: receivedCC.encapsulated.duration,
+							duration: receivedCC.duration,
 						});
 
 						const cc2 = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
+							sessionId: receivedCC.encapsulatingCC.sessionId,
 							moreUpdatesFollow: false,
 							status: SupervisionStatus.Success,
 						});
@@ -84,8 +82,7 @@ integrationTest(
 									}),
 								);
 							},
-							receivedCC.encapsulated.duration
-								.toMilliseconds(),
+							receivedCC.duration.toMilliseconds(),
 						);
 
 						return { action: "stop" };

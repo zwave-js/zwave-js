@@ -42,35 +42,33 @@ integrationTest(
 			// When receiving a Supervision Get, first respond with "Working" and after a delay with "Success"
 			const respondToSupervisionGet: MockNodeBehavior = {
 				async handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof SupervisionCCGet) {
+					if (
+						receivedCC.encapsulatingCC instanceof SupervisionCCGet
+					) {
+						const sessionId = receivedCC.encapsulatingCC.sessionId;
 						let cc = new SupervisionCCReport({
 							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
+							sessionId,
 							moreUpdatesFollow: true,
 							status: SupervisionStatus.Working,
 							duration: new Duration(10, "seconds"),
 						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
 
-						await wait(2000);
+						setTimeout(async () => {
+							cc = new SupervisionCCReport({
+								nodeId: controller.ownNodeId,
+								sessionId,
+								moreUpdatesFollow: false,
+								status: SupervisionStatus.Success,
+							});
+							await self.sendToController(
+								createMockZWaveRequestFrame(cc, {
+									ackRequested: false,
+								}),
+							);
+						}, 2000);
 
-						cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						await self.sendToController(
-							createMockZWaveRequestFrame(cc, {
-								ackRequested: false,
-							}),
-						);
-
-						return { action: "stop" };
+						return { action: "sendCC", cc };
 					}
 				},
 			};
