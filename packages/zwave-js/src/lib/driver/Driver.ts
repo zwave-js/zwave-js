@@ -93,6 +93,7 @@ import {
 	type SupervisionResult,
 	SupervisionStatus,
 	type SupervisionUpdateHandler,
+	type TXReport,
 	TransactionState,
 	TransmitOptions,
 	TransmitStatus,
@@ -135,7 +136,9 @@ import {
 	MessageHeaders,
 	type MessageParsingContext,
 	MessageType,
+	SendProtocolDataRequest,
 	type SuccessIndicator,
+	TransferProtocolCCRequest,
 	XModemMessageHeaders,
 	type ZWaveSerialBindingFactory,
 	ZWaveSerialFrameType,
@@ -157,6 +160,8 @@ import {
 	EnterBootloaderRequest,
 	GetControllerVersionRequest,
 	MAX_SEND_ATTEMPTS,
+	RequestProtocolCCEncryptionCallback,
+	RequestProtocolCCEncryptionRequest,
 	SendDataAbort,
 	SendDataBridgeRequest,
 	type SendDataMessage,
@@ -176,6 +181,7 @@ import {
 	isSendData,
 	isSendDataSinglecast,
 	isSendDataTransmitReport,
+	isSendProtocolData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
 import {
@@ -904,6 +910,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private immediateQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
 	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
+	// A transaction queue that feeds into the protocol serial API queue
+	private protocolQueue!: TransactionQueue; // Is initialized in initTransactionQueues()
+	// A parallel queue for protocol-level commands that can run alongside the serial API queue
+	private protocolSerialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initSerialAPIQueue()
 	// Timers for delayed transaction re-queuing
 	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
@@ -938,6 +948,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			name: "normal",
 			mayStartNextTransaction: (t) => this.mayStartTransaction(t),
 		});
+		this.protocolQueue = new TransactionQueue({
+			name: "protocol",
+			mayStartNextTransaction: (_t) => {
+				// Protocol transactions may always be started as long as the controller is ready
+				return this.controller.status === ControllerStatus.Ready;
+			},
+		});
 
 		this._queueIdle = false;
 
@@ -945,6 +962,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		for (const queue of this.queues) {
 			void this.drainTransactionQueue(queue);
 		}
+		// Drain the protocol transaction queue separately (it feeds into a different serial API queue)
+		void this.drainProtocolTransactionQueue();
 	}
 
 	private async destroyTransactionQueues(
@@ -976,6 +995,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		for (const queue of this.queues) {
 			queue.abort();
 		}
+
+		// Also destroy the protocol transaction queue
+		if (this.protocolQueue) {
+			this.protocolQueue.abort();
+		}
 	}
 
 	private _scheduler: TaskScheduler;
@@ -987,14 +1011,18 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	/** Used to immediately abort ongoing Serial API commands */
 	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
 
-	private initSerialAPIQueue(): void {
+	private initSerialAPIQueues(): void {
 		this.serialAPIQueue = new AsyncQueue();
 
 		// Start draining the queue
 		void this.drainSerialAPIQueue();
+
+		// Also initialize the protocol serial API queue
+		this.protocolSerialAPIQueue = new AsyncQueue();
+		void this.drainProtocolSerialAPIQueue();
 	}
 
-	private destroySerialAPIQueue(
+	private destroySerialAPIQueues(
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): void {
@@ -1010,6 +1038,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				errorCode ?? ZWaveErrorCodes.Driver_Destroyed,
 			),
 		);
+
+		// Also destroy the protocol serial API queue
+		if (this.protocolSerialAPIQueue) {
+			this.protocolSerialAPIQueue.abort();
+		}
 	}
 
 	// Keep track of which queues are currently busy
@@ -2017,7 +2050,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Create and start all queues after creating the controller instance
 		this.initTransactionQueues();
-		this.initSerialAPIQueue();
+		this.initSerialAPIQueues();
 
 		if (!this._options.testingHooks?.skipControllerIdentification) {
 			// Determine what the controller can do
@@ -3877,7 +3910,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			ZWaveErrorCodes.Driver_Destroyed,
 		);
 
-		this.destroySerialAPIQueue(
+		this.destroySerialAPIQueues(
 			"driver instance destroyed",
 			ZWaveErrorCodes.Driver_Destroyed,
 		);
@@ -3916,7 +3949,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			ZWaveErrorCodes.Driver_TaskRemoved,
 		);
 
-		this.destroySerialAPIQueue(
+		this.destroySerialAPIQueues(
 			"The controller instance is being destroyed",
 			ZWaveErrorCodes.Driver_TaskRemoved,
 		);
@@ -4195,124 +4228,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// To prevent this problem, we just ignore CCs until the controller is ready
 		if (!this._controller && containsCC(msg)) return;
 
-		// If the message could be decoded, forward it to the send thread
-		if (msg) {
-			let wasMessageLogged = false;
-			if (isCommandRequest(msg) && containsCC(msg)) {
-				// SecurityCCCommandEncapsulationNonceGet is two commands in one, but
-				// we're not set up to handle things like this. Reply to the nonce get
-				// and handle the encapsulation part normally
-				if (
-					msg.command
-						instanceof SecurityCCCommandEncapsulationNonceGet
-				) {
-					const node = this.tryGetNode(msg);
-					if (node) {
-						void this.handleSecurityNonceGet(node);
-					}
-				}
-
-				// Transport Service commands must be handled before assembling partial CCs
-				if (isTransportServiceEncapsulation(msg.command)) {
-					// Log Transport Service commands before doing anything else
-					this.driverLog.logMessage(msg, {
-						secondaryTags: ["partial"],
-						direction: "inbound",
-					});
-					wasMessageLogged = true;
-
-					void this.handleTransportServiceCommand(msg.command).catch(
-						() => {
-							// Don't care about errors in incoming transport service commands
-						},
-					);
-				}
-
-				// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
-				if (!(await this.assemblePartialCCs(msg))) {
-					// Check if a message timer needs to be refreshed.
-					for (const entry of this.awaitedMessages) {
-						if (entry.refreshPredicate?.(msg)) {
-							entry.timeout?.refresh();
-							// Since this is a partial message there may be no clear 1:1 match.
-							// Therefore we loop through all awaited messages
-						}
-					}
-					return;
-				}
-
-				// Make sure we are allowed to handle this command
-				if (
-					this.isSecurityLevelTooLow(msg.command)
-					|| this.shouldDiscardCC(msg.command)
-				) {
-					if (!wasMessageLogged) {
-						this.driverLog.logMessage(msg, {
-							direction: "inbound",
-							secondaryTags: ["discarded"],
-						});
-					}
-					return;
-				}
-
-				// When we have a complete CC, save its values
-				try {
-					this.persistCCValues(msg.command);
-				} catch (e) {
-					// Indicate invalid payloads with a special CC type
-					if (
-						isZWaveError(e)
-						&& e.code
-							=== ZWaveErrorCodes.PacketFormat_InvalidPayload
-					) {
-						this.driverLog.print(
-							`dropping CC with invalid values${
-								typeof e.context === "string"
-									? ` (Reason: ${e.context})`
-									: ""
-							}`,
-							"warn",
-						);
-						// TODO: We may need to do the S2 MOS dance here - or we can deal with it when the next valid CC arrives
-						return;
-					} else {
-						throw e;
-					}
-				}
-
-				// Transport Service CC can be eliminated from the encapsulation stack, since it is always the outermost CC
-				if (isTransportServiceEncapsulation(msg.command)) {
-					msg.command = msg.command.encapsulated;
-					// Now we do want to log the command again, so we can see what was inside
-					wasMessageLogged = false;
-				}
-			}
-
-			if (!wasMessageLogged) {
-				try {
-					this.driverLog.logMessage(msg, {
-						direction: "inbound",
-					});
-				} catch (e) {
-					// We shouldn't throw just because logging a message fails
-					this.driverLog.print(
-						`Logging a message failed: ${getErrorMessage(e)}`,
-					);
-				}
-			}
-
-			// // Check if this message is unsolicited by passing it to the Serial API command interpreter if possible
-			// if (
-			// 	this.serialAPIInterpreter?.status === InterpreterStatus.Running
-			// ) {
-			// 	this.serialAPIInterpreter.send({
-			// 		type: "message",
-			// 		message: msg,
-			// 	});
-			// } else {
-			void this.handleUnsolicitedMessage(msg);
-			// }
-		}
+		// If the message could be decoded, continue handing lit
+		if (msg) await this.handleIncomingMessage(msg);
 	}
 
 	/** Handles a decoding error and returns the desired reply to the stick */
@@ -4996,6 +4913,133 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		);
 	}
 
+	private async handleIncomingMessage(msg: Message): Promise<void> {
+		let wasMessageLogged = false;
+		if (isCommandRequest(msg) && containsCC(msg)) {
+			// SecurityCCCommandEncapsulationNonceGet is two commands in one, but
+			// we're not set up to handle things like this. Reply to the nonce get
+			// and handle the encapsulation part normally
+			if (
+				msg.command
+					instanceof SecurityCCCommandEncapsulationNonceGet
+			) {
+				const node = this.tryGetNode(msg);
+				if (node) {
+					void this.handleSecurityNonceGet(node);
+				}
+			}
+
+			// Transport Service commands must be handled before assembling partial CCs
+			if (isTransportServiceEncapsulation(msg.command)) {
+				// Log Transport Service commands before doing anything else
+				this.driverLog.logMessage(msg, {
+					secondaryTags: ["partial"],
+					direction: "inbound",
+				});
+				wasMessageLogged = true;
+
+				void this.handleTransportServiceCommand(msg.command).catch(
+					() => {
+						// Don't care about errors in incoming transport service commands
+					},
+				);
+			}
+
+			// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
+			if (!(await this.assemblePartialCCs(msg))) {
+				// Check if a message timer needs to be refreshed.
+				for (const entry of this.awaitedMessages) {
+					if (entry.refreshPredicate?.(msg)) {
+						entry.timeout?.refresh();
+						// Since this is a partial message there may be no clear 1:1 match.
+						// Therefore we loop through all awaited messages
+					}
+				}
+				return;
+			}
+
+			// Make sure we are allowed to handle this command
+			if (
+				this.isSecurityLevelTooLow(msg.command)
+				|| this.shouldDiscardCC(msg.command)
+			) {
+				if (!wasMessageLogged) {
+					this.driverLog.logMessage(msg, {
+						direction: "inbound",
+						secondaryTags: ["discarded"],
+					});
+				}
+				return;
+			}
+
+			// When we have a complete CC, save its values
+			try {
+				this.persistCCValues(msg.command);
+			} catch (e) {
+				// Indicate invalid payloads with a special CC type
+				if (
+					isZWaveError(e)
+					&& e.code
+						=== ZWaveErrorCodes.PacketFormat_InvalidPayload
+				) {
+					this.driverLog.print(
+						`dropping CC with invalid values${
+							typeof e.context === "string"
+								? ` (Reason: ${e.context})`
+								: ""
+						}`,
+						"warn",
+					);
+					// TODO: We may need to do the S2 MOS dance here - or we can deal with it when the next valid CC arrives
+					return;
+				} else {
+					throw e;
+				}
+			}
+
+			// Transport Service CC can be eliminated from the encapsulation stack, since it is always the outermost CC
+			if (isTransportServiceEncapsulation(msg.command)) {
+				msg.command = msg.command.encapsulated;
+				// Now we do want to log the command again, so we can see what was inside
+				wasMessageLogged = false;
+			}
+		}
+
+		if (!wasMessageLogged) {
+			try {
+				this.driverLog.logMessage(msg, {
+					direction: "inbound",
+				});
+			} catch (e) {
+				// We shouldn't throw just because logging a message fails
+				this.driverLog.print(
+					`Logging a message failed: ${getErrorMessage(e)}`,
+				);
+			}
+		}
+
+		// When receiving a message from a dead node, bring it back to life
+		if (hasNodeId(msg) || containsCC(msg)) {
+			const node = this.tryGetNode(msg);
+			if (node) {
+				if (node.status === NodeStatus.Dead) {
+					node.markAsAlive();
+				}
+			}
+		}
+
+		// Check if we have a dynamic handler waiting for this message
+		for (const entry of this.awaitedMessages) {
+			if (entry.predicate(msg)) {
+				// We do
+				entry.handler(msg);
+				return;
+			}
+		}
+
+		void this.handleUnsolicitedMessage(msg);
+	}
+
 	private partialCCSessions = new Map<string, CommandClass[]>();
 	private getPartialCCSession(
 		command: CommandClass,
@@ -5274,8 +5318,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 * @param msg The decoded message
 	 */
 	private async handleUnsolicitedMessage(msg: Message): Promise<void> {
-		// FIXME: Rename this - msg might not be unsolicited
-		// This is a message we might have registered handlers for
 		try {
 			if (msg.type === MessageType.Request) {
 				await this.handleRequest(msg);
@@ -5353,6 +5395,107 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 
 		return false; // Not handled
+	}
+
+	/**
+	 * Is called when the Serial API requests encryption of a protocol-level CC.
+	 */
+	private async handleProtocolCCEncryptionRequest(
+		msg: RequestProtocolCCEncryptionRequest,
+	): Promise<void> {
+		try {
+			this.ensureReady(true);
+		} catch {
+			// We are not ready to handle encryption for the Z-Wave module yet
+			return;
+		}
+
+		const node = this.controller.nodes.get(msg.destinationNodeId);
+		if (!node) {
+			return;
+		}
+
+		// Encapsulate the command
+		let cc: CommandClass = await CommandClass.parse(msg.plaintext, {
+			...this.getCCParsingContext(),
+			frameType: "singlecast",
+			sourceNodeId: this.ownNodeId,
+		});
+		cc.nodeId = msg.destinationNodeId;
+
+		if (msg.useSupervision) {
+			cc = SupervisionCC.encapsulate(
+				cc,
+				this.getNextSupervisionSessionId(msg.destinationNodeId),
+			);
+		}
+		cc = Security2CC.encapsulate(
+			cc,
+			this.ownNodeId,
+			this,
+			msg.useSupervision ? undefined : { verifyDelivery: true },
+		);
+		const sendData = new SendProtocolDataRequest({
+			command: cc,
+			protocolMetadata: msg.protocolMetadata,
+		});
+
+		let sendResult: Message | undefined;
+		let txReport: TXReport | undefined;
+		try {
+			sendResult = await this.sendMessage(sendData, {
+				// Protocol-level commands run in a separate queue
+				priority: MessagePriority.Protocol,
+				changeNodeStatusOnMissingACK: false,
+				// We need the TX report for the RPCCE callback
+				onTXReport: (report) => {
+					txReport = report;
+				},
+			});
+		} catch {
+			// SendData messages should not throw, so something must have gone terribly wrong
+			// This will be treated as TransmitStatus.Fail
+		}
+
+		let resp: RequestProtocolCCEncryptionCallback;
+		if (isTransmitReport(sendResult)) {
+			// Either we needed no Supervision, so this is the final result
+			// or sending failed. In either case, report this back to the controller
+			resp = new RequestProtocolCCEncryptionCallback({
+				transmitStatus: sendResult.transmitStatus,
+				txReport: hasTXReport(sendResult)
+					? sendResult.txReport
+					: undefined,
+				callbackId: msg.callbackId,
+			});
+		} else if (!txReport) {
+			// The message was not sent for some unknown reason
+			resp = new RequestProtocolCCEncryptionCallback({
+				transmitStatus: TransmitStatus.Fail,
+				callbackId: msg.callbackId,
+			});
+		} else {
+			// For supervision, we don't actually need to know the result here.
+			// The entire point was to eliminate waiting for a potential SOS Nonce Report.
+			// Just report success.
+			// The message was not sent for some unknown reason
+			resp = new RequestProtocolCCEncryptionCallback({
+				transmitStatus: TransmitStatus.OK,
+				txReport,
+				callbackId: msg.callbackId,
+			});
+		}
+
+		// The current draft implementation expects TRANSMIT_COMPLETE_VERIFIED with some
+		// strange implications. Let's ignore this for now.
+		//
+		// const transmitStatus = (sendResult.transmitStatus === TransmitStatus.OK
+		// 	? 0x05 /* protocol expects TRANSMIT_COMPLETE_VERIFIED */
+		// 	: sendResult.transmitStatus) as TransmitStatus;
+
+		await this.sendMessage(resp, {
+			priority: MessagePriority.Protocol,
+		}).catch(noop);
 	}
 
 	/**
@@ -5633,25 +5776,6 @@ ${handlers.length} left`,
 	private async handleRequest(msg: Message): Promise<void> {
 		let handlers: RequestHandlerEntry[] | undefined;
 
-		if (hasNodeId(msg) || containsCC(msg)) {
-			const node = this.tryGetNode(msg);
-			if (node) {
-				// We have received an unsolicited message from a dead node, bring it back to life
-				if (node.status === NodeStatus.Dead) {
-					node.markAsAlive();
-				}
-			}
-		}
-
-		// Check if we have a dynamic handler waiting for this message
-		for (const entry of this.awaitedMessages) {
-			if (entry.predicate(msg)) {
-				// We do
-				entry.handler(msg);
-				return;
-			}
-		}
-
 		if (isCommandRequest(msg) && containsCC(msg)) {
 			const nodeId = msg.getNodeId()!;
 
@@ -5930,6 +6054,9 @@ ${handlers.length} left`,
 			if (await this.handleSerialAPIStartedUnexpectedly(msg)) {
 				return;
 			}
+		} else if (msg instanceof RequestProtocolCCEncryptionRequest) {
+			// The Z-Wave module wants us to send an encrypted protocol-level command
+			return this.handleProtocolCCEncryptionRequest(msg);
 		} else {
 			if (
 				msg.functionType >= FunctionType.Proprietary_F0
@@ -6517,6 +6644,11 @@ ${handlers.length} left`,
 					node.markAsAlive();
 				}
 			}
+		} else if (isSendProtocolData(msg)) {
+			// Make sure the onTXReport callback is being called
+			if (isTransmitReport(result) && hasTXReport(result)) {
+				options.onTXReport?.(result.txReport);
+			}
 		} else {
 			this._controller?.incrementStatistics("messagesTX");
 		}
@@ -6639,6 +6771,82 @@ ${handlers.length} left`,
 				this.markQueueBusy(queue, false);
 			});
 		}
+	}
+
+	/** Drains the protocol transaction queue (feeds into protocolSerialAPIQueue) */
+	private async drainProtocolTransactionQueue(): Promise<void> {
+		for await (const transaction of this.protocolQueue) {
+			let error: ZWaveError | undefined;
+			try {
+				await this.executeProtocolTransaction(transaction);
+			} catch (e) {
+				error = e as ZWaveError;
+			} finally {
+				this.protocolQueue.finalizeTransaction();
+			}
+
+			// Handle errors after clearing the current transaction
+			if (error) {
+				transaction.setProgress({
+					state: TransactionState.Failed,
+					reason: error.message,
+				});
+				transaction.abort(error);
+			}
+		}
+	}
+
+	/** Steps through the message generator of a protocol transaction. Throws an error if the transaction should fail. */
+	private async executeProtocolTransaction(
+		transaction: Transaction,
+	): Promise<void> {
+		let prevResult: Message | undefined;
+		let msg: Message | undefined;
+
+		transaction.start();
+		transaction.setProgress({ state: TransactionState.Active });
+
+		// Step through the transaction as long as it gives us a next message
+		while ((msg = await transaction.generateNextMessage(prevResult))) {
+			attemptMessage: for (let attemptNumber = 1;; attemptNumber++) {
+				try {
+					prevResult = await this.queueProtocolSerialAPICommand(
+						msg,
+						transaction.stack,
+					);
+					if (isTransmitReport(prevResult) && !prevResult.isOK()) {
+						throw new ZWaveError(
+							"The node did not acknowledge the command",
+							ZWaveErrorCodes.Controller_CallbackNOK,
+							prevResult,
+							transaction.stack,
+						);
+					}
+					// We got a result - it will be passed to the next iteration
+					break attemptMessage;
+				} catch (e: any) {
+					if (!isZWaveError(e)) {
+						throw createMessageDroppedUnexpectedError(e);
+					}
+
+					// Check if we should retry based on maxSendAttempts
+					if (
+						msg instanceof SendProtocolDataRequest
+						&& attemptNumber < msg.maxSendAttempts
+						&& e.code !== ZWaveErrorCodes.Controller_Timeout
+					) {
+						// Retry the command
+						continue attemptMessage;
+					}
+
+					// Sending the command failed, reject the transaction
+					throw e;
+				}
+			}
+		}
+
+		// This transaction completed successfully
+		transaction.setProgress({ state: TransactionState.Completed });
 	}
 
 	/** Steps through the message generator of a transaction. Throws an error if the transaction should fail. */
@@ -6862,6 +7070,65 @@ ${handlers.length} left`,
 	): Promise<Message | undefined> {
 		const result = createDeferredPromise<Message | undefined>();
 		this.serialAPIQueue.add({
+			msg,
+			transactionSource,
+			result,
+			[Symbol.dispose]: () => {
+				// Is called when the queue is aborted
+				result.reject(
+					new ZWaveError(
+						"The message has been removed from the queue",
+						ZWaveErrorCodes.Controller_MessageDropped,
+						undefined,
+						transactionSource,
+					),
+				);
+			},
+		});
+
+		return result;
+	}
+
+	/** Handles sequencing of queued protocol serial API commands (runs in parallel with the serial API queue) */
+	private async drainProtocolSerialAPIQueue(): Promise<void> {
+		for await (const item of this.protocolSerialAPIQueue) {
+			const { msg, transactionSource, result } = item;
+
+			// Attempt the command multiple times if necessary
+			attempts: for (let attempt = 1;; attempt++) {
+				try {
+					const ret = await this.executeSerialAPICommand(
+						msg,
+						transactionSource,
+					);
+					result.resolve(ret);
+				} catch (e) {
+					if (
+						isZWaveError(e)
+						&& e.code === ZWaveErrorCodes.Controller_MessageDropped
+						&& e.context === "CAN"
+						&& attempt < 3
+					) {
+						// Retry up to 3 times if there are serial collisions
+						await wait(100);
+						continue;
+					}
+
+					// In all other cases, reject the transaction
+					result.reject(e as Error);
+				}
+				break attempts;
+			}
+		}
+	}
+
+	/** Puts a message on the protocol serial API queue and returns or throws the command result */
+	private queueProtocolSerialAPICommand(
+		msg: Message,
+		transactionSource?: string,
+	): Promise<Message | undefined> {
+		const result = createDeferredPromise<Message | undefined>();
+		this.protocolSerialAPIQueue.add({
 			msg,
 			transactionSource,
 			result,
@@ -7117,7 +7384,9 @@ ${handlers.length} left`,
 	}
 
 	private getQueueForTransaction(t: Transaction): TransactionQueue {
-		if (
+		if (t.priority === MessagePriority.Protocol) {
+			return this.protocolQueue;
+		} else if (
 			t.priority === MessagePriority.Immediate
 			|| t.priority === MessagePriority.ControllerImmediate
 		) {
@@ -7189,6 +7458,8 @@ ${handlers.length} left`,
 			&& !(msg instanceof SendDataMulticastBridgeRequest)
 			// Nonces and responses to Supervision Get have to be sent immediately
 			&& options.priority !== MessagePriority.Immediate
+			// Protocol commands also have to be sent immediately
+			&& options.priority !== MessagePriority.Protocol
 		) {
 			if (options.priority === MessagePriority.NodeQuery) {
 				// Remember that this transaction was part of an interview
@@ -7565,6 +7836,31 @@ ${handlers.length} left`,
 			maxSendAttempts: options.maxSendAttempts || 1,
 			transmitOptions: TransmitOptions.AutoRoute | TransmitOptions.ACK,
 		});
+	}
+
+	private async transferProtocolCC(
+		sourceNodeId: number,
+		securityClass: SecurityClass,
+		plaintext: BytesView,
+	): Promise<void> {
+		// Supervision commands are handled here
+		this.controllerLog.logNode(sourceNodeId, {
+			message: `Forwarding protocol CC to Z-Wave module`,
+			direction: "outbound",
+		});
+
+		const msg = new TransferProtocolCCRequest({
+			sourceNodeId,
+			securityClass,
+			plaintext,
+		});
+		try {
+			await this.sendMessage(msg);
+		} catch (e) {
+			this.driverLog.print(
+				`Failed to forward protocol CC: ${getErrorMessage(e, true)}`,
+			);
+		}
 	}
 
 	private async abortSendData(): Promise<void> {
@@ -8377,7 +8673,9 @@ ${handlers.length} left`,
 	}
 
 	/** Computes the maximum payload size that can be transmitted with the given message */
-	public getMaxPayloadLength(msg: SendDataMessage): number {
+	public getMaxPayloadLength(
+		msg: SendDataMessage,
+	): number {
 		const nodeId = msg.getNodeId();
 
 		// For ZWLR, the result is simply the maximum payload size

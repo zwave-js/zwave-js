@@ -131,7 +131,11 @@ export enum FunctionType {
 	UNKNOWN_FUNC_UNKNOWN_0x66 = 0x66, // ??
 	UNKNOWN_FUNC_UNKNOWN_0x67 = 0x67, // ??
 
-	RequestProtocolCCEncryption = 0x68, // Used by the Z-Wave API module to request encryption of a Z-Wave protocol frame
+	TransferProtocolCC = 0x69, // Forward a decrypted protocol CC frame to the Z-Wave API module
+
+	EnableNodeNLS = 0x6a, // Enable network-level security for a node
+	GetNodeNLSState = 0x6b, // Get the state of network-level security for a node
+	RequestProtocolCCEncryption = 0x6c, // Used by the Z-Wave API module to request encryption of a Z-Wave protocol frame
 
 	UNKNOWN_FUNC_TIMER_START = 0x70, // ??
 	UNKNOWN_FUNC_TIMER_RESTART = 0x71, // ??
@@ -165,6 +169,7 @@ export enum FunctionType {
 	BridgeApplicationCommand = 0xa8, // A message from another node using the Bridge API
 	SendDataBridge = 0xa9, // Send data (Bridge API)
 	SendDataMulticastBridge = 0xab, // Send data using multicast (Bridge API)
+	SendProtocolData = 0xac, // Send encrypted protocol data (NLS)
 
 	EnableWatchdog500 = 0xb6, // Enable Watchdog (500 series and older)
 	DisableWatchdog500 = 0xb7, // Disable Watchdog (500 series and older)
@@ -175,6 +180,8 @@ export enum FunctionType {
 	GetLibrary = 0xbd, // Request the Z-Wave library type running on the Z-Wave module
 	SendTestFrame = 0xbe, // Sends a NOP Power frame to the given node
 	GetProtocolStatus = 0xbf, // Request the current status of the protocol running on the Z-Wave module
+
+	GetNLSNodes = 0xc0, // Get a list of all nodes for which network-level security is enabled
 
 	FUNC_ID_ZW_SET_PROMISCUOUS_MODE = 0xd0, // Set controller into promiscuous mode to listen to all messages
 	FUNC_ID_PROMISCUOUS_APPLICATION_COMMAND_HANDLER = 0xd1, // deprecated, replaced with a flag for the ApplicationCommandHandler
