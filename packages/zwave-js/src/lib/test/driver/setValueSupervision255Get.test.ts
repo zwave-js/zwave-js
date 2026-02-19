@@ -19,7 +19,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"successful supervised setValue(255) with duration: expect validation GET",
 	{
-		debug: true,
+		// debug: true,
 
 		nodeCapabilities: {
 			commandClasses: [
