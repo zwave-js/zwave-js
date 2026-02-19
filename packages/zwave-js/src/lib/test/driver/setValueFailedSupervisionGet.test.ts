@@ -5,6 +5,7 @@ import {
 	BinarySwitchCCValues,
 	SupervisionCCGet,
 	SupervisionCCReport,
+	SupervisionCommand,
 } from "@zwave-js/cc";
 import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
@@ -31,14 +32,13 @@ integrationTest(
 			// Have the node respond to all Supervision Get negatively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof SupervisionCCGet) {
-						const cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Fail,
-						});
-						return { action: "sendCC", cc };
+					if (
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
+					) {
+						return { action: "fail" };
 					}
 				},
 			};

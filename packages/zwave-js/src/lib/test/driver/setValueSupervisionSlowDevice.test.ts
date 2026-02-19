@@ -267,31 +267,19 @@ integrationTest(
 			// Track the current value
 			let currentValue = 0;
 
-			// Respond to Supervision Get with immediate success
-			const respondToSupervisionGet: MockNodeBehavior = {
+			// Respond to WindowCoveringCCSet with immediate success
+			const respondToWindowCoveringSet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (
-						receivedCC instanceof SupervisionCCGet
-						&& receivedCC.encapsulated
-							instanceof WindowCoveringCCSet
-					) {
+					if (receivedCC instanceof WindowCoveringCCSet) {
 						// Update the internal state
-						if (receivedCC.encapsulated.targetValues.length > 0) {
-							currentValue =
-								receivedCC.encapsulated.targetValues[0].value;
+						if (receivedCC.targetValues.length > 0) {
+							currentValue = receivedCC.targetValues[0].value;
 						}
-
-						const cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						return { action: "sendCC", cc };
+						return { action: "ok" };
 					}
 				},
 			};
-			mockNode.defineBehavior(respondToSupervisionGet);
+			mockNode.defineBehavior(respondToWindowCoveringSet);
 
 			// Report Window Covering status
 			const respondToWindowCoveringGet: MockNodeBehavior = {
@@ -376,17 +364,14 @@ integrationTest(
 			let currentValue = 0;
 
 			// Respond to Supervision Get with immediate success
-			const respondToSupervisionGet: MockNodeBehavior = {
+			const respondToWindowCoveringSet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
-						&& receivedCC.encapsulated
-							instanceof WindowCoveringCCSet
+						receivedCC instanceof WindowCoveringCCSet
 					) {
 						// Update the internal state
-						if (receivedCC.encapsulated.targetValues.length > 0) {
-							currentValue =
-								receivedCC.encapsulated.targetValues[0].value;
+						if (receivedCC.targetValues.length > 0) {
+							currentValue = receivedCC.targetValues[0].value;
 						}
 
 						// Send update after a short delay
@@ -407,17 +392,12 @@ integrationTest(
 							);
 						}, 500);
 
-						const cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						return { action: "sendCC", cc };
+						return { action: "ok" };
 					}
+					return undefined;
 				},
 			};
-			mockNode.defineBehavior(respondToSupervisionGet);
+			mockNode.defineBehavior(respondToWindowCoveringSet);
 
 			// Report Window Covering status
 			const respondToWindowCoveringGet: MockNodeBehavior = {
