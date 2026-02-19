@@ -164,7 +164,10 @@ const respondToMultilevelSwitchSet: MockNodeBehavior = {
 				capabilities.travelTime,
 				capabilities.defaultValue,
 			);
-			return { action: "ok" };
+			return {
+				action: "ok",
+				durationMs: capabilities.travelTime,
+			};
 		}
 	},
 };
