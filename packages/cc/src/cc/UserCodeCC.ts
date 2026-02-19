@@ -15,7 +15,6 @@ import {
 	encodeBitMask,
 	enumValuesToMetadataStates,
 	parseBitMask,
-	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
 import {
@@ -36,7 +35,9 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	SET_VALUE,
+	SET_VALUE_HOOKS,
 	type SetValueImplementation,
+	type SetValueImplementationHooksFactory,
 	throwMissingPropertyKey,
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
@@ -398,16 +399,105 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 				throwUnsupportedProperty(this.ccId, property);
 			}
 
-			// Verify the change after a short delay, unless the command was supervised and successful
-			if (this.isSinglecast() && !supervisedCommandSucceeded(result)) {
-				this.schedulePoll({ property, propertyKey }, value, {
-					transition: "fast",
-				});
-			}
-
 			return result;
 		};
 	}
+
+	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
+		{ property, propertyKey },
+		value,
+		_options,
+	) => {
+		if (
+			property === "keypadMode"
+			|| property === "adminCode"
+			|| property === "masterCode"
+		) {
+			const pollProperty = property === "masterCode"
+				? "adminCode"
+				: property;
+			return {
+				verifyChanges: () => {
+					if (this.isSinglecast()) {
+						this.schedulePoll(
+							{ property: pollProperty },
+							value,
+							{ transition: "fast" },
+						);
+					}
+				},
+			};
+		} else if (property === "userIdStatus") {
+			if (typeof propertyKey !== "number") return;
+			// userId 0 clears all codes, skip optimistic updates
+			if (propertyKey === 0) return;
+
+			const userIdStatusValueId = UserCodeCCValues.userIdStatus(
+				propertyKey,
+			).endpoint(this.endpoint.index);
+			const userCodeValueId = UserCodeCCValues.userCode(propertyKey)
+				.endpoint(this.endpoint.index);
+
+			return {
+				optimisticallyUpdateRelatedValues: (
+					_supervisedAndSuccessful,
+				) => {
+					if (!this.isSinglecast()) return;
+					if (value === UserIDStatus.Available) {
+						this.tryGetValueDB()?.setValue(userCodeValueId, "");
+					}
+				},
+
+				verifyChanges: () => {
+					if (this.isSinglecast()) {
+						this.schedulePoll(userIdStatusValueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		} else if (property === "userCode") {
+			if (typeof propertyKey !== "number") return;
+			if (propertyKey === 0) return;
+
+			const userIdStatusValueId = UserCodeCCValues.userIdStatus(
+				propertyKey,
+			).endpoint(this.endpoint.index);
+			const userCodeValueId = UserCodeCCValues.userCode(propertyKey)
+				.endpoint(this.endpoint.index);
+
+			return {
+				optimisticallyUpdateRelatedValues: (
+					_supervisedAndSuccessful,
+				) => {
+					if (!this.isSinglecast()) return;
+					const valueDB = this.tryGetValueDB();
+					if (!valueDB) return;
+
+					const currentStatus = valueDB.getValue<UserIDStatus>(
+						userIdStatusValueId,
+					);
+					if (
+						currentStatus === UserIDStatus.Available
+						|| currentStatus == undefined
+					) {
+						valueDB.setValue(
+							userIdStatusValueId,
+							UserIDStatus.Enabled,
+						);
+					}
+				},
+
+				verifyChanges: () => {
+					if (this.isSinglecast()) {
+						this.schedulePoll(userCodeValueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		}
+	};
 
 	protected get [POLL_VALUE](): PollValueImplementation {
 		return async function(this: UserCodeCCAPI, { property, propertyKey }) {
