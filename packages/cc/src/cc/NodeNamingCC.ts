@@ -303,21 +303,21 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encoding = isASCII(this.name) ? "ascii" : "utf16le";
-		this.payload = new Bytes(
-			1 + this.name.length * (encoding === "ascii" ? 1 : 2),
-		);
-		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
+
 		let nameBuffer: BytesView;
 		if (encoding === "utf16le") {
 			nameBuffer = stringToUint8ArrayUTF16BE(this.name);
 		} else {
 			nameBuffer = Bytes.from(this.name, "ascii");
 		}
-		// Copy at most 16 bytes after the encoding byte
-		this.payload.set(
-			nameBuffer.subarray(0, Math.min(16, nameBuffer.length)),
-			1,
-		);
+		// The length of this field MUST be in the range 1..16 bytes
+		const nameLength = Math.min(16, nameBuffer.length);
+
+		this.payload = Bytes.concat([
+			[encoding === "ascii" ? 0x0 : 0x2],
+			nameBuffer.subarray(0, nameLength),
+		]);
+
 		return super.serialize(ctx);
 	}
 
@@ -415,21 +415,21 @@ export class NodeNamingAndLocationCCLocationSet
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encoding = isASCII(this.location) ? "ascii" : "utf16le";
-		this.payload = new Bytes(
-			1 + this.location.length * (encoding === "ascii" ? 1 : 2),
-		);
-		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
+
 		let locationBuffer: BytesView;
 		if (encoding === "utf16le") {
 			locationBuffer = stringToUint8ArrayUTF16BE(this.location);
 		} else {
 			locationBuffer = Bytes.from(this.location, "ascii");
 		}
-		// Copy at most 16 bytes after the encoding byte
-		this.payload.set(
-			locationBuffer.subarray(0, Math.min(16, locationBuffer.length)),
-			1,
-		);
+		// The length of this field MUST be in the range 1..16 bytes
+		const locationLength = Math.min(16, locationBuffer.length);
+
+		this.payload = Bytes.concat([
+			[encoding === "ascii" ? 0x0 : 0x2],
+			locationBuffer.subarray(0, locationLength),
+		]);
+
 		return super.serialize(ctx);
 	}
 
