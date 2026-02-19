@@ -98,6 +98,8 @@ export interface MultilevelSensorCCCapabilities {
 export interface MultilevelSwitchCCCapabilities {
 	defaultValue?: MaybeUnknown<number>;
 	primarySwitchType: SwitchType;
+	/** Full travel time from 0 to 99 in milliseconds. Default: 0 (instant) */
+	travelTime?: number;
 }
 
 export interface SoundSwitchCCCapabilities {
@@ -111,6 +113,8 @@ export interface SoundSwitchCCCapabilities {
 
 export interface WindowCoveringCCCapabilities {
 	supportedParameters: WindowCoveringParameter[];
+	/** Full travel time from 0 to 99 in milliseconds. Default: 5000 */
+	travelTime?: number;
 }
 
 export interface EnergyProductionCCCapabilities {
