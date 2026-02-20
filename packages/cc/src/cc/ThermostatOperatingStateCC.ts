@@ -251,7 +251,6 @@ export class ThermostatOperatingStateCC extends CommandClass {
 
 		await this.refreshValues(ctx);
 
-		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
 	}
 
@@ -268,7 +267,6 @@ export class ThermostatOperatingStateCC extends CommandClass {
 			priority: MessagePriority.NodeQuery,
 		});
 
-		// Query the current state
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying thermostat operating state...",
@@ -343,8 +341,6 @@ export class ThermostatOperatingStateCCReport
 		options: WithAddress<ThermostatOperatingStateCCReportOptions>,
 	) {
 		super(options);
-
-		// TODO: Check implementation:
 		this.state = options.state;
 	}
 
@@ -500,16 +496,15 @@ export class ThermostatOperatingStateCCLoggingReport
 		const loggingData: ThermostatOperatingStateLoggingData[] = [];
 		let offset = 1;
 		while (offset + 5 <= raw.payload.length) {
-			const state: ThermostatOperatingState = raw.payload[offset]
+			const state: ThermostatOperatingState = raw.payload[offset++]
 				& 0b1111;
 			loggingData.push({
 				state,
-				usageTodayHours: raw.payload[offset + 1],
-				usageTodayMinutes: raw.payload[offset + 2],
-				usageYesterdayHours: raw.payload[offset + 3],
-				usageYesterdayMinutes: raw.payload[offset + 4],
+				usageTodayHours: raw.payload[offset++],
+				usageTodayMinutes: raw.payload[offset++],
+				usageYesterdayHours: raw.payload[offset++],
+				usageYesterdayMinutes: raw.payload[offset++],
 			});
-			offset += 5;
 		}
 
 		return new this({
@@ -545,12 +540,11 @@ export class ThermostatOperatingStateCCLoggingReport
 		this.payload[0] = this.reportsToFollow;
 		let offset = 1;
 		for (const entry of this.loggingData) {
-			this.payload[offset] = entry.state & 0b1111;
-			this.payload[offset + 1] = entry.usageTodayHours;
-			this.payload[offset + 2] = entry.usageTodayMinutes;
-			this.payload[offset + 3] = entry.usageYesterdayHours;
-			this.payload[offset + 4] = entry.usageYesterdayMinutes;
-			offset += 5;
+			this.payload[offset++] = entry.state & 0b1111;
+			this.payload[offset++] = entry.usageTodayHours;
+			this.payload[offset++] = entry.usageTodayMinutes;
+			this.payload[offset++] = entry.usageYesterdayHours;
+			this.payload[offset++] = entry.usageYesterdayMinutes;
 		}
 		return super.serialize(ctx);
 	}
