@@ -1481,7 +1481,6 @@ export enum ThermostatOperatingState {
 }
 
 export interface ThermostatOperatingStateLoggingData {
-	state: ThermostatOperatingState;
 	usageTodayHours: number;
 	usageTodayMinutes: number;
 	usageYesterdayHours: number;

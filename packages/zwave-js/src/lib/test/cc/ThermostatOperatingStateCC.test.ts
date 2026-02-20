@@ -1,5 +1,6 @@
 import {
 	CommandClass,
+	InvalidCC,
 	ThermostatOperatingState,
 	ThermostatOperatingStateCC,
 	ThermostatOperatingStateCCGet,
@@ -65,6 +66,21 @@ test("the Report command should deserialize V2-only states", async (t) => {
 	t.expect(cc.constructor).toBe(ThermostatOperatingStateCCReport);
 
 	t.expect(cc.state).toBe(ThermostatOperatingState["Aux Heating"]);
+});
+
+test("the Report command should reject invalid states during parsing", async (t) => {
+	const ccData = buildCCBuffer(
+		Uint8Array.from([
+			ThermostatOperatingStateCommand.Report,
+			0x0c, // invalid state (> 0x0B)
+		]),
+	);
+
+	const cc = await CommandClass.parse(
+		ccData,
+		{ sourceNodeId: 1 } as any,
+	);
+	t.expect(cc).toBeInstanceOf(InvalidCC);
 });
 
 test("the Report command should serialize correctly", async (t) => {
@@ -163,23 +179,23 @@ test("the Logging Report should be deserialized correctly", async (t) => {
 	t.expect(cc.constructor).toBe(ThermostatOperatingStateCCLoggingReport);
 
 	t.expect(cc.reportsToFollow).toBe(0);
-	t.expect(cc.loggingData).toHaveLength(2);
+	t.expect(cc.loggingData.size).toBe(2);
 
-	t.expect(cc.loggingData[0]).toStrictEqual({
-		state: ThermostatOperatingState["Heating"],
-		usageTodayHours: 5,
-		usageTodayMinutes: 30,
-		usageYesterdayHours: 8,
-		usageYesterdayMinutes: 0,
-	});
+	t.expect(cc.loggingData.get(ThermostatOperatingState["Heating"]))
+		.toStrictEqual({
+			usageTodayHours: 5,
+			usageTodayMinutes: 30,
+			usageYesterdayHours: 8,
+			usageYesterdayMinutes: 0,
+		});
 
-	t.expect(cc.loggingData[1]).toStrictEqual({
-		state: ThermostatOperatingState["Cooling"],
-		usageTodayHours: 2,
-		usageTodayMinutes: 15,
-		usageYesterdayHours: 3,
-		usageYesterdayMinutes: 45,
-	});
+	t.expect(cc.loggingData.get(ThermostatOperatingState["Cooling"]))
+		.toStrictEqual({
+			usageTodayHours: 2,
+			usageTodayMinutes: 15,
+			usageYesterdayHours: 3,
+			usageYesterdayMinutes: 45,
+		});
 });
 
 test("the Logging Report should mask reserved bits in Operating State Log Type", async (t) => {
@@ -200,22 +216,24 @@ test("the Logging Report should mask reserved bits in Operating State Log Type",
 		{ sourceNodeId: 1 } as any,
 	) as ThermostatOperatingStateCCLoggingReport;
 
-	t.expect(cc.loggingData[0].state).toBe(
-		ThermostatOperatingState["Heating"],
+	t.expect(cc.loggingData.has(ThermostatOperatingState["Heating"])).toBe(
+		true,
 	);
 });
 
 test("the Logging Report should serialize correctly", async (t) => {
-	const cc = new ThermostatOperatingStateCCLoggingReport({
-		nodeId: 1,
-		reportsToFollow: 0,
-		loggingData: [{
-			state: ThermostatOperatingState["Heating"],
+	const loggingData = new Map([
+		[ThermostatOperatingState["Heating"], {
 			usageTodayHours: 5,
 			usageTodayMinutes: 30,
 			usageYesterdayHours: 8,
 			usageYesterdayMinutes: 0,
 		}],
+	]);
+	const cc = new ThermostatOperatingStateCCLoggingReport({
+		nodeId: 1,
+		reportsToFollow: 0,
+		loggingData,
 	});
 	const expected = buildCCBuffer(
 		Uint8Array.from([

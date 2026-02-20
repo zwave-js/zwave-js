@@ -1,6 +1,5 @@
 import {
 	CommandClasses,
-	type EndpointId,
 	type GetValueDB,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
@@ -13,7 +12,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -26,9 +25,7 @@ import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
-	type PersistValuesContext,
 	type RefreshValuesContext,
-	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -59,45 +56,8 @@ export const ThermostatOperatingStateCCValues = V.defineCCValues(
 				states: enumValuesToMetadataStates(ThermostatOperatingState),
 			} as const,
 		),
-
-		...V.staticProperty("supportedLoggingTypes", undefined, {
-			internal: true,
-			minVersion: 2,
-		}),
-
-		...V.dynamicPropertyAndKeyWithName(
-			"operatingStateLogging",
-			"operatingStateLogging",
-			(state: ThermostatOperatingState) => state,
-			({ property, propertyKey }) =>
-				property === "operatingStateLogging"
-				&& typeof propertyKey === "number",
-			undefined,
-			{ internal: true, minVersion: 2 },
-		),
 	},
 );
-
-// V1 valid operating states: 0x00-0x06
-const VALID_V1_STATES = new Set([
-	ThermostatOperatingState["Idle"],
-	ThermostatOperatingState["Heating"],
-	ThermostatOperatingState["Cooling"],
-	ThermostatOperatingState["Fan Only"],
-	ThermostatOperatingState["Pending Heat"],
-	ThermostatOperatingState["Pending Cool"],
-	ThermostatOperatingState["Vent/Economizer"],
-]);
-
-// V2 valid operating states: 0x00-0x0B
-const VALID_V2_STATES = new Set([
-	...VALID_V1_STATES,
-	ThermostatOperatingState["Aux Heating"],
-	ThermostatOperatingState["2nd Stage Heating"],
-	ThermostatOperatingState["2nd Stage Cooling"],
-	ThermostatOperatingState["2nd Stage Aux Heat"],
-	ThermostatOperatingState["3rd Stage Aux Heat"],
-]);
 
 // @noSetValueAPI This CC is read-only
 
@@ -149,7 +109,7 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 		return response?.state;
 	}
 
-	public async getLoggingSupported(): Promise<
+	public async getSupportedLoggingTypes(): Promise<
 		MaybeNotKnown<readonly ThermostatOperatingState[]>
 	> {
 		this.assertSupportsCommand(
@@ -174,7 +134,12 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 	public async getLogging(
 		states: ThermostatOperatingState[],
 	): Promise<
-		MaybeNotKnown<readonly ThermostatOperatingStateLoggingData[]>
+		MaybeNotKnown<
+			ReadonlyMap<
+				ThermostatOperatingState,
+				ThermostatOperatingStateLoggingData
+			>
+		>
 	> {
 		this.assertSupportsCommand(
 			ThermostatOperatingStateCommand,
@@ -206,48 +171,12 @@ export class ThermostatOperatingStateCC extends CommandClass {
 		ctx: InterviewContext,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
-		const endpoint = this.getEndpoint(ctx)!;
-		const api = CCAPI.create(
-			CommandClasses["Thermostat Operating State"],
-			ctx,
-			endpoint,
-		).withOptions({
-			priority: MessagePriority.NodeQuery,
-		});
 
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: `Interviewing ${this.ccName}...`,
 			direction: "none",
 		});
-
-		if (api.version >= 2) {
-			ctx.logNode(node.id, {
-				endpoint: this.endpointIndex,
-				message: "querying supported operating state logging types...",
-				direction: "outbound",
-			});
-
-			const supportedLoggingTypes = await api.getLoggingSupported();
-			if (supportedLoggingTypes) {
-				const logMessage =
-					`received supported operating state logging types: ${
-						supportedLoggingTypes
-							.map((t) =>
-								getEnumMemberName(
-									ThermostatOperatingState,
-									t,
-								)
-							)
-							.join(", ")
-					}`;
-				ctx.logNode(node.id, {
-					endpoint: this.endpointIndex,
-					message: logMessage,
-					direction: "inbound",
-				});
-			}
-		}
 
 		await this.refreshValues(ctx);
 
@@ -286,44 +215,6 @@ export class ThermostatOperatingStateCC extends CommandClass {
 				direction: "inbound",
 			});
 		}
-
-		if (api.version >= 2) {
-			const supportedLoggingTypes = ThermostatOperatingStateCC
-				.getSupportedLoggingTypesCached(ctx, endpoint);
-			if (supportedLoggingTypes?.length) {
-				ctx.logNode(node.id, {
-					endpoint: this.endpointIndex,
-					message:
-						"querying thermostat operating state logging data...",
-					direction: "outbound",
-				});
-
-				const loggingData = await api.getLogging(
-					[...supportedLoggingTypes],
-				);
-				if (loggingData) {
-					ctx.logNode(node.id, {
-						endpoint: this.endpointIndex,
-						message:
-							`received thermostat operating state logging data for ${loggingData.length} state(s)`,
-						direction: "inbound",
-					});
-				}
-			}
-		}
-	}
-
-	public static getSupportedLoggingTypesCached(
-		ctx: GetValueDB,
-		endpoint: EndpointId,
-	): MaybeNotKnown<ThermostatOperatingState[]> {
-		return ctx
-			.getValueDB(endpoint.nodeId)
-			.getValue(
-				ThermostatOperatingStateCCValues.supportedLoggingTypes.endpoint(
-					endpoint.index,
-				),
-			);
 	}
 }
 
@@ -351,34 +242,17 @@ export class ThermostatOperatingStateCCReport
 		validatePayload(raw.payload.length >= 1);
 		const state: ThermostatOperatingState = raw.payload[0];
 
+		validatePayload(
+			state <= ThermostatOperatingState["3rd Stage Aux Heat"],
+		);
+
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			state,
 		});
 	}
 
-	public state: ThermostatOperatingState;
-
-	public persistValues(ctx: PersistValuesContext): boolean {
-		const ccVersion = getEffectiveCCVersion(ctx, this);
-
-		if (ccVersion < 2) {
-			// V1 spec: Operating State is 4 bits,
-			// upper 4 bits are reserved
-			this.state = (this.state & 0x0f) as ThermostatOperatingState;
-			validatePayload.withReason(
-				`Invalid V1 operating state ${num2hex(this.state)}`,
-			)(VALID_V1_STATES.has(this.state));
-		} else {
-			// V2 spec: Operating State is 8 bits,
-			// reserved values MUST be ignored
-			validatePayload.withReason(
-				`Invalid V2 operating state ${num2hex(this.state)}`,
-			)(VALID_V2_STATES.has(this.state));
-		}
-
-		return super.persistValues(ctx);
-	}
+	public readonly state: ThermostatOperatingState;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.state]);
@@ -405,10 +279,6 @@ export interface ThermostatOperatingStateCCLoggingSupportedReportOptions {
 }
 
 @CCCommand(ThermostatOperatingStateCommand.LoggingSupportedReport)
-@ccValueProperty(
-	"supportedLoggingTypes",
-	ThermostatOperatingStateCCValues.supportedLoggingTypes,
-)
 export class ThermostatOperatingStateCCLoggingSupportedReport
 	extends ThermostatOperatingStateCC
 {
@@ -425,7 +295,7 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): ThermostatOperatingStateCCLoggingSupportedReport {
-		// Spec: Bit 0 is not allocated, bit 1 = Operating State 1, etc.
+		// Bit 0 is not allocated, bit 1 = Operating State 1, etc.
 		const supportedLoggingTypes: ThermostatOperatingState[] = parseBitMask(
 			raw.payload,
 			ThermostatOperatingState["Idle"],
@@ -469,7 +339,10 @@ export class ThermostatOperatingStateCCLoggingSupportedGet
 // @publicAPI
 export interface ThermostatOperatingStateCCLoggingReportOptions {
 	reportsToFollow: number;
-	loggingData: ThermostatOperatingStateLoggingData[];
+	loggingData: Map<
+		ThermostatOperatingState,
+		ThermostatOperatingStateLoggingData
+	>;
 }
 
 @CCCommand(ThermostatOperatingStateCommand.LoggingReport)
@@ -491,15 +364,17 @@ export class ThermostatOperatingStateCCLoggingReport
 		validatePayload(raw.payload.length >= 1);
 		const reportsToFollow = raw.payload[0];
 
-		// Each log entry is 5 bytes per spec (section 2.2.112.6):
+		// Each log entry is 5 bytes:
 		// Reserved[7:4]+StateType[3:0], TodayH, TodayM, YesterdayH, YesterdayM
-		const loggingData: ThermostatOperatingStateLoggingData[] = [];
+		const loggingData = new Map<
+			ThermostatOperatingState,
+			ThermostatOperatingStateLoggingData
+		>();
 		let offset = 1;
 		while (offset + 5 <= raw.payload.length) {
 			const state: ThermostatOperatingState = raw.payload[offset++]
 				& 0b1111;
-			loggingData.push({
-				state,
+			loggingData.set(state, {
 				usageTodayHours: raw.payload[offset++],
 				usageTodayMinutes: raw.payload[offset++],
 				usageYesterdayHours: raw.payload[offset++],
@@ -514,33 +389,47 @@ export class ThermostatOperatingStateCCLoggingReport
 		});
 	}
 
-	public readonly reportsToFollow: number;
-	public readonly loggingData: ThermostatOperatingStateLoggingData[];
+	public reportsToFollow: number;
+	public loggingData: Map<
+		ThermostatOperatingState,
+		ThermostatOperatingStateLoggingData
+	>;
 
-	public persistValues(ctx: PersistValuesContext): boolean {
-		if (!super.persistValues(ctx)) return false;
+	public getPartialCCSessionId(): Record<string, any> | undefined {
+		return {};
+	}
 
-		for (const entry of this.loggingData) {
-			const loggingValue = ThermostatOperatingStateCCValues
-				.operatingStateLogging(entry.state);
-			this.setValue(ctx, loggingValue, {
-				state: entry.state,
-				usageTodayHours: entry.usageTodayHours,
-				usageTodayMinutes: entry.usageTodayMinutes,
-				usageYesterdayHours: entry.usageYesterdayHours,
-				usageYesterdayMinutes: entry.usageYesterdayMinutes,
-			});
+	public expectMoreMessages(): boolean {
+		return this.reportsToFollow > 0;
+	}
+
+	public mergePartialCCs(
+		partials: ThermostatOperatingStateCCLoggingReport[],
+		_ctx: CCParsingContext,
+	): Promise<void> {
+		// Merge all logging data maps from partial reports
+		const merged = new Map<
+			ThermostatOperatingState,
+			ThermostatOperatingStateLoggingData
+		>();
+		for (const partial of partials) {
+			for (const [state, data] of partial.loggingData) {
+				merged.set(state, data);
+			}
 		}
-
-		return true;
+		for (const [state, data] of this.loggingData) {
+			merged.set(state, data);
+		}
+		this.loggingData = merged;
+		return Promise.resolve();
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = new Bytes(1 + this.loggingData.length * 5);
+		this.payload = new Bytes(1 + this.loggingData.size * 5);
 		this.payload[0] = this.reportsToFollow;
 		let offset = 1;
-		for (const entry of this.loggingData) {
-			this.payload[offset++] = entry.state & 0b1111;
+		for (const [state, entry] of this.loggingData) {
+			this.payload[offset++] = state & 0b1111;
 			this.payload[offset++] = entry.usageTodayHours;
 			this.payload[offset++] = entry.usageTodayMinutes;
 			this.payload[offset++] = entry.usageYesterdayHours;
@@ -553,10 +442,10 @@ export class ThermostatOperatingStateCCLoggingReport
 		const message: MessageRecord = {
 			"reports to follow": this.reportsToFollow,
 		};
-		for (const entry of this.loggingData) {
+		for (const [state, entry] of this.loggingData) {
 			const stateName = getEnumMemberName(
 				ThermostatOperatingState,
-				entry.state,
+				state,
 			);
 			message[`${stateName} today`] =
 				`${entry.usageTodayHours}h ${entry.usageTodayMinutes}m`;
