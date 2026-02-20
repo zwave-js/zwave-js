@@ -1457,13 +1457,12 @@ export enum ThermostatMode {
 }
 
 export enum ThermostatOperatingStateCommand {
+	LoggingSupportedGet = 0x01,
 	Get = 0x02,
 	Report = 0x03,
-	// TODO: Implement V2 commands
-	// LoggingSupportedGet = 0x01,
-	// LoggingSupportedReport = 0x04,
-	// LoggingGet = 0x05,
-	// LoggingReport = 0x06,
+	LoggingSupportedReport = 0x04,
+	LoggingGet = 0x05,
+	LoggingReport = 0x06,
 }
 
 export enum ThermostatOperatingState {
@@ -1479,6 +1478,14 @@ export enum ThermostatOperatingState {
 	"2nd Stage Cooling" = 0x09,
 	"2nd Stage Aux Heat" = 0x0a,
 	"3rd Stage Aux Heat" = 0x0b,
+}
+
+export interface ThermostatOperatingStateLoggingData {
+	state: ThermostatOperatingState;
+	usageTodayHours: number;
+	usageTodayMinutes: number;
+	usageYesterdayHours: number;
+	usageYesterdayMinutes: number;
 }
 
 export enum ThermostatSetbackCommand {
