@@ -323,8 +323,10 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 			...super.toLogEntry(ctx),
 			message: {
 				"supported logging types": this.supportedLoggingTypes
-					.map((t) => getEnumMemberName(ThermostatOperatingState, t))
-					.join(", "),
+					.map((t) =>
+						`\n· ${getEnumMemberName(ThermostatOperatingState, t)}`
+					)
+					.join(""),
 			},
 		};
 	}
