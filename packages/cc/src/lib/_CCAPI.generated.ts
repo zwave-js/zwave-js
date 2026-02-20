@@ -61,6 +61,7 @@ export type CCNameMap = {
 	"Thermostat Setpoint": typeof CommandClasses["Thermostat Setpoint"];
 	"Time Parameters": typeof CommandClasses["Time Parameters"];
 	"User Code": typeof CommandClasses["User Code"];
+	"User Credential": typeof CommandClasses["User Credential"];
 	"Wake Up": typeof CommandClasses["Wake Up"];
 	"Window Covering": typeof CommandClasses["Window Covering"];
 	"Z-Wave Plus Info": typeof CommandClasses["Z-Wave Plus Info"];
@@ -159,6 +160,7 @@ export interface CCAPIs {
 		import("../cc/ThermostatSetpointCC.js").ThermostatSetpointCCAPI;
 	"Time Parameters": import("../cc/TimeParametersCC.js").TimeParametersCCAPI;
 	"User Code": import("../cc/UserCodeCC.js").UserCodeCCAPI;
+	"User Credential": import("../cc/UserCredentialCC.js").UserCredentialCCAPI;
 	"Wake Up": import("../cc/WakeUpCC.js").WakeUpCCAPI;
 	"Window Covering": import("../cc/WindowCoveringCC.js").WindowCoveringCCAPI;
 	"Z-Wave Plus Info": import("../cc/ZWavePlusCC.js").ZWavePlusCCAPI;
