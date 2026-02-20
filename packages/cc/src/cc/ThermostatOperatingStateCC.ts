@@ -14,6 +14,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -169,6 +170,7 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 		return response?.supportedLoggingTypes;
 	}
 
+	@validateArgs()
 	public async getLogging(
 		states: ThermostatOperatingState[],
 	): Promise<
