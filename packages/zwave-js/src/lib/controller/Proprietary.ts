@@ -4,9 +4,11 @@ import type { Message } from "@zwave-js/serial";
 import type { Driver } from "../driver/Driver.js";
 import type { ZWaveController } from "./Controller.js";
 import { ControllerProprietary_NabuCasa } from "./proprietary/NabuCasa.js";
+import { ControllerProprietary_ZWaveMeUZB1 } from "./proprietary/ZWaveMeUZB1.js";
 
 export interface ControllerProprietary {
 	"Nabu Casa"?: ControllerProprietary_NabuCasa;
+	"Z-Wave.me UZB1"?: ControllerProprietary_ZWaveMeUZB1;
 }
 
 export function getControllerProprietary(
@@ -24,6 +26,21 @@ export function getControllerProprietary(
 			"Nabu Casa": new ControllerProprietary_NabuCasa(driver, controller),
 		};
 	}
+
+	// Z-Wave.me UZB1
+	if (
+		controller.manufacturerId === 0x0115
+		&& controller.productType === 0x0000
+		&& controller.productId === 0x0000
+	) {
+		return {
+			"Z-Wave.me UZB1": new ControllerProprietary_ZWaveMeUZB1(
+				driver,
+				controller,
+			),
+		};
+	}
+
 	return {};
 }
 
