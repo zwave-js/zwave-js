@@ -86,17 +86,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@alcalzone/monopack@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "@alcalzone/monopack@npm:1.4.0"
+"@alcalzone/monopack@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@alcalzone/monopack@npm:2.0.0"
   dependencies:
-    "@alcalzone/pak": "npm:^0.11.0"
-    fs-extra: "npm:^10.1.0"
+    "@alcalzone/pak": "npm:^0.12.0"
     p-queue: "npm:^8.1.0"
-    tar: "npm:^6.1.13"
+    tar: "npm:^7.5.9"
   bin:
     monopack: bin/cli.js
-  checksum: 10/4820cc6a08ff0d202054ab98a101fb16433c312276ff8c27d460c4ff6d45a3a1aca06af79863d1571066d6a6bc22c4579d4e3c61070408abb49e558ddf592515
+  checksum: 10/28ca44db3ced50d364dd52529e4e0763e9cc6145ed7929c42ec3b21dbb5bd028a318a450dad2991b80b3608bf6d36e4ce302056dbc06bb9833ed65690f728a75
   languageName: node
   linkType: hard
 
@@ -110,6 +109,18 @@ __metadata:
     semver: "npm:^7.3.7"
     tiny-glob: "npm:^0.2.9"
   checksum: 10/307ca30775e82e691903edcd28b1651a1726a4ccd14755eaf2f87d758dff6db36e244b657958f67fe43a3a64ea9c2931ffd60fcb18c3f9078944610c37f5fda0
+  languageName: node
+  linkType: hard
+
+"@alcalzone/pak@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@alcalzone/pak@npm:0.12.0"
+  dependencies:
+    ky: "npm:^1.14.3"
+    nano-spawn: "npm:^2.0.0"
+    semver: "npm:^7.7.4"
+    tiny-glob: "npm:^0.2.9"
+  checksum: 10/b8a7f6194453eb8ca1bf3ca324e76757999155c98eceb0bdcda837add7803d0e82613dda5dab52fe96a0a7862b488d18454badb8968c6d7ce7e7564c6fa78e9b
   languageName: node
   linkType: hard
 
@@ -913,6 +924,15 @@ __metadata:
   dependencies:
     "@isaacs/balanced-match": "npm:^4.0.1"
   checksum: 10/cf3b7f206aff12128214a1df764ac8cdbc517c110db85249b945282407e3dfc5c6e66286383a7c9391a059fc8e6e6a8ca82262fc9d2590bd615376141fbebd2d
+  languageName: node
+  linkType: hard
+
+"@isaacs/fs-minipass@npm:^4.0.0":
+  version: 4.0.1
+  resolution: "@isaacs/fs-minipass@npm:4.0.1"
+  dependencies:
+    minipass: "npm:^7.0.4"
+  checksum: 10/4412e9e6713c89c1e66d80bb0bb5a2a93192f10477623a27d08f228ba0316bb880affabc5bfe7f838f58a34d26c2c190da726e576cdfc18c49a72e89adabdcf5
   languageName: node
   linkType: hard
 
@@ -2586,7 +2606,7 @@ __metadata:
     "@actions/github": "npm:^6.0.1"
     "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@alcalzone/jsonl-db": "npm:^4.0.2"
-    "@alcalzone/monopack": "npm:^1.4.0"
+    "@alcalzone/monopack": "npm:^2.0.0"
     "@alcalzone/release-script": "npm:~5.0.0"
     "@commitlint/cli": "npm:^20.1.0"
     "@commitlint/config-conventional": "npm:^20.0.0"
@@ -3379,6 +3399,13 @@ __metadata:
   version: 2.0.0
   resolution: "chownr@npm:2.0.0"
   checksum: 10/c57cf9dd0791e2f18a5ee9c1a299ae6e801ff58fee96dc8bfd0dcb4738a6ce58dd252a3605b1c93c6418fe4f9d5093b28ffbf4d66648cb2a9c67eaef9679be2f
+  languageName: node
+  linkType: hard
+
+"chownr@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "chownr@npm:3.0.0"
+  checksum: 10/b63cb1f73d171d140a2ed8154ee6566c8ab775d3196b0e03a2a94b5f6a0ce7777ee5685ca56849403c8d17bd457a6540672f9a60696a6137c7a409097495b82c
   languageName: node
   linkType: hard
 
@@ -6022,6 +6049,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ky@npm:^1.14.3":
+  version: 1.14.3
+  resolution: "ky@npm:1.14.3"
+  checksum: 10/afd6a6ff10e33138d5338c014a051ca920c6ced7f8452748dfe960c26fb5456f36e103cd8b5868ebf2a38bf13c2b3f53b74cbea44a1b53923e1921bb9a6447b1
+  languageName: node
+  linkType: hard
+
 "ky@npm:^1.8.1":
   version: 1.8.1
   resolution: "ky@npm:1.8.1"
@@ -6562,6 +6596,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"minipass@npm:^7.0.4, minipass@npm:^7.1.2":
+  version: 7.1.3
+  resolution: "minipass@npm:7.1.3"
+  checksum: 10/175e4d5e20980c3cd316ae82d2c031c42f6c746467d8b1905b51060a0ba4461441a0c25bb67c025fd9617f9a3873e152c7b543c6b5ac83a1846be8ade80dffd6
+  languageName: node
+  linkType: hard
+
 "minizlib@npm:^2.0.0, minizlib@npm:^2.1.1":
   version: 2.1.2
   resolution: "minizlib@npm:2.1.2"
@@ -6569,6 +6610,15 @@ __metadata:
     minipass: "npm:^3.0.0"
     yallist: "npm:^4.0.0"
   checksum: 10/ae0f45436fb51344dcb87938446a32fbebb540d0e191d63b35e1c773d47512e17307bf54aa88326cc6d176594d00e4423563a091f7266c2f9a6872cdc1e234d1
+  languageName: node
+  linkType: hard
+
+"minizlib@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "minizlib@npm:3.1.0"
+  dependencies:
+    minipass: "npm:^7.1.2"
+  checksum: 10/f47365cc2cb7f078cbe7e046eb52655e2e7e97f8c0a9a674f4da60d94fb0624edfcec9b5db32e8ba5a99a5f036f595680ae6fe02a262beaa73026e505cc52f99
   languageName: node
   linkType: hard
 
@@ -7804,6 +7854,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver@npm:^7.7.4":
+  version: 7.7.4
+  resolution: "semver@npm:7.7.4"
+  bin:
+    semver: bin/semver.js
+  checksum: 10/26bdc6d58b29528f4142d29afb8526bc335f4fc04c4a10f2b98b217f277a031c66736bf82d3d3bb354a2f6a3ae50f18fd62b053c4ac3f294a3d10a61f5075b75
+  languageName: node
+  linkType: hard
+
 "semver@npm:~7.5.4":
   version: 7.5.4
   resolution: "semver@npm:7.5.4"
@@ -8335,7 +8394,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.0.2, tar@npm:^6.1.0, tar@npm:^6.1.13":
+"tar@npm:^6.0.2, tar@npm:^6.1.0":
   version: 6.2.1
   resolution: "tar@npm:6.2.1"
   dependencies:
@@ -8346,6 +8405,19 @@ __metadata:
     mkdirp: "npm:^1.0.3"
     yallist: "npm:^4.0.0"
   checksum: 10/bfbfbb2861888077fc1130b84029cdc2721efb93d1d1fb80f22a7ac3a98ec6f8972f29e564103bbebf5e97be67ebc356d37fa48dbc4960600a1eb7230fbd1ea0
+  languageName: node
+  linkType: hard
+
+"tar@npm:^7.5.9":
+  version: 7.5.9
+  resolution: "tar@npm:7.5.9"
+  dependencies:
+    "@isaacs/fs-minipass": "npm:^4.0.0"
+    chownr: "npm:^3.0.0"
+    minipass: "npm:^7.1.2"
+    minizlib: "npm:^3.1.0"
+    yallist: "npm:^5.0.0"
+  checksum: 10/1213cdde9c22d6acf8809ba5d2a025212ce3517bc99c4a4c6981b7dc0489bf3b164db9c826c9517680889194c9ba57448c8ff0da35eca9a60bb7689bf0b3897d
   languageName: node
   linkType: hard
 
@@ -9123,6 +9195,13 @@ __metadata:
   version: 4.0.0
   resolution: "yallist@npm:4.0.0"
   checksum: 10/4cb02b42b8a93b5cf50caf5d8e9beb409400a8a4d85e83bb0685c1457e9ac0b7a00819e9f5991ac25ffabb56a78e2f017c1acc010b3a1babfe6de690ba531abd
+  languageName: node
+  linkType: hard
+
+"yallist@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "yallist@npm:5.0.0"
+  checksum: 10/1884d272d485845ad04759a255c71775db0fac56308764b4c77ea56a20d56679fad340213054c8c9c9c26fcfd4c4b2a90df993b7e0aaf3cdb73c618d1d1a802a
   languageName: node
   linkType: hard
 

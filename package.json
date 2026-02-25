@@ -34,7 +34,7 @@
     "@actions/github": "^6.0.1",
     "@alcalzone/esm2cjs": "^1.4.2",
     "@alcalzone/jsonl-db": "^4.0.2",
-    "@alcalzone/monopack": "^1.4.0",
+    "@alcalzone/monopack": "^2.0.0",
     "@alcalzone/release-script": "~5.0.0",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
