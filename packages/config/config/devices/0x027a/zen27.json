@@ -91,8 +91,7 @@
 		},
 		{
 			"#": "9",
-			"$import": "templates/zooz_template.json#dimmer_ramp_rate",
-			"defaultValue": 1
+			"$import": "templates/zooz_template.json#dimmer_ramp_rate"
 		},
 		{
 			"#": "10",
