@@ -245,18 +245,19 @@ export const UserCredentialCCValues = V.defineCCValues(
 			{ internal: true },
 		),
 
-		// Per-credential values (keyed by type << 16 | slot)
+		// Per-credential values (keyed by userId << 24 | type << 16 | slot)
 		...V.dynamicPropertyAndKeyWithName(
 			"credential",
 			"credential",
-			(type: UserCredentialType, slot: number) => (type << 16) | slot,
+			(userId: number, type: UserCredentialType, slot: number) =>
+				(userId << 24) | (type << 16) | slot,
 			({ property, propertyKey }) =>
 				property === "credential"
 				&& typeof propertyKey === "number",
-			(type: UserCredentialType, slot: number) =>
+			(userId: number, type: UserCredentialType, slot: number) =>
 				({
 					...ValueMetadata.ReadOnlyBuffer,
-					label: `Credential (${
+					label: `Credential (user ${userId}, ${
 						getEnumMemberName(
 							UserCredentialType,
 							type,
@@ -264,16 +265,6 @@ export const UserCredentialCCValues = V.defineCCValues(
 					}, slot ${slot})`,
 				}) as const,
 			{ secret: true },
-		),
-		...V.dynamicPropertyAndKeyWithName(
-			"credentialUserUniqueIdentifier",
-			"credentialUserUniqueIdentifier",
-			(type: UserCredentialType, slot: number) => (type << 16) | slot,
-			({ property, propertyKey }) =>
-				property === "credentialUserUniqueIdentifier"
-				&& typeof propertyKey === "number",
-			undefined,
-			{ internal: true },
 		),
 
 		// Admin PIN Code
@@ -463,7 +454,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 
 	@validateArgs()
 	// oxlint-disable-next-line typescript/explicit-module-boundary-types
-	public async getUser(userUniqueIdentifier: number) {
+	public async getUser(userId: number) {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserGet,
@@ -472,7 +463,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		const cc = new UserCredentialCCUserGet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
-			userUniqueIdentifier,
+			userId,
 		});
 		const response = await this.host.sendCommand<
 			UserCredentialCCUserReport
@@ -480,10 +471,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		if (response) {
 			return pick(response, [
 				"userReportType",
-				"nextUserUniqueIdentifier",
+				"nextUserId",
 				"userModifierType",
 				"userModifierNodeId",
-				"userUniqueIdentifier",
+				"userId",
 				"userType",
 				"activeState",
 				"credentialRule",
@@ -515,7 +506,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCredential(
-		userUniqueIdentifier: number,
+		userId: number,
 		credentialType: UserCredentialType,
 		credentialSlot: number,
 	) {
@@ -527,7 +518,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		const cc = new UserCredentialCCCredentialGet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
-			userUniqueIdentifier,
+			userId,
 			credentialType,
 			credentialSlot,
 		});
@@ -540,7 +531,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 				// UserId, credential type and slot can be zero in the
 				// request to return the first credential, so we cannot
 				// simply omit them here
-				"userUniqueIdentifier",
+				"userId",
 				"credentialType",
 				"credentialSlot",
 				"credentialReadBack",
@@ -623,7 +614,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getUserChecksum(
-		userUniqueIdentifier: number,
+		userId: number,
 	) {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
@@ -633,7 +624,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		const cc = new UserCredentialCCUserChecksumGet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
-			userUniqueIdentifier,
+			userId,
 		});
 		const response = await this.host.sendCommand<
 			UserCredentialCCUserChecksumReport
@@ -1075,16 +1066,17 @@ export class UserCredentialCC extends CommandClass {
 
 		// Check if all-users checksum has changed
 		let skipFullSync = false;
+		let allUsersChecksum: number | undefined;
 		if (supportsAllUsersChecksum) {
-			const currentChecksum = await api.getAllUsersChecksum();
-			const storedChecksum = this.getValue<number>(
+			allUsersChecksum = await api.getAllUsersChecksum();
+			const cachedChecksum = this.getValue<number>(
 				ctx,
 				UserCredentialCCValues.allUsersChecksum,
 			);
 			if (
-				currentChecksum != undefined
-				&& storedChecksum != undefined
-				&& currentChecksum === storedChecksum
+				allUsersChecksum != undefined
+				&& cachedChecksum != undefined
+				&& allUsersChecksum === cachedChecksum
 			) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
@@ -1092,13 +1084,6 @@ export class UserCredentialCC extends CommandClass {
 					direction: "none",
 				});
 				skipFullSync = true;
-			}
-			if (currentChecksum != undefined) {
-				this.setValue(
-					ctx,
-					UserCredentialCCValues.allUsersChecksum,
-					currentChecksum,
-				);
 			}
 		}
 
@@ -1112,27 +1097,27 @@ export class UserCredentialCC extends CommandClass {
 					direction: "outbound",
 				});
 				const user = await api.getUser(nextUserId);
-				if (!user) break;
-				nextUserId = user.nextUserUniqueIdentifier;
+				if (!user?.userId) break; // No user found, stop iterating
 
 				// For each user, iterate all credentials
-				if (
-					user.userUniqueIdentifier > 0
-					&& (user.userReportType
-							=== UserCredentialUserReportType.ResponseToGet
-						|| user.userReportType
-							=== UserCredentialUserReportType.UserAdded
-						|| user.userReportType
-							=== UserCredentialUserReportType.UserModified)
-				) {
-					await this.queryCredentialsForUser(
-						ctx,
-						api,
-						node.id,
-						user.userUniqueIdentifier,
-					);
-				}
+				await this.queryCredentialsForUser(
+					ctx,
+					api,
+					node.id,
+					user.userId,
+				);
+
+				nextUserId = user.nextUserId;
 			} while (nextUserId > 0);
+		}
+
+		// After querying all users, save the checksum for the next refresh.
+		if (allUsersChecksum != undefined) {
+			this.setValue(
+				ctx,
+				UserCredentialCCValues.allUsersChecksum,
+				allUsersChecksum,
+			);
 		}
 
 		// Query admin PIN code if supported
@@ -1176,7 +1161,7 @@ export class UserCredentialCC extends CommandClass {
 		ctx: RefreshValuesContext,
 		api: UserCredentialCCAPI,
 		nodeId: number,
-		userUniqueIdentifier: number,
+		userId: number,
 	): Promise<void> {
 		// Start with credential type 0, slot 0 to get the first credential for this user
 		let nextCredType: UserCredentialType = UserCredentialType.None;
@@ -1185,15 +1170,15 @@ export class UserCredentialCC extends CommandClass {
 			ctx.logNode(nodeId, {
 				endpoint: this.endpointIndex,
 				message:
-					`querying credential for user ${userUniqueIdentifier}, type ${nextCredType}, slot ${nextCredSlot}...`,
+					`querying credential for user ${userId}, type ${nextCredType}, slot ${nextCredSlot}...`,
 				direction: "outbound",
 			});
 			const cred = await api.getCredential(
-				userUniqueIdentifier,
+				userId,
 				nextCredType,
 				nextCredSlot,
 			);
-			if (!cred) break;
+			if (!cred?.credentialSlot) break; // No credential found, stop iterating
 			nextCredType = cred.nextCredentialType;
 			nextCredSlot = cred.nextCredentialSlot;
 		} while (
@@ -1798,7 +1783,7 @@ export class UserCredentialCCKeyLockerCapabilitiesGet
 // @publicAPI
 export interface UserCredentialCCUserSetOptions {
 	operationType: UserCredentialOperationType;
-	userUniqueIdentifier: number;
+	userId: number;
 	userType?: UserCredentialUserType;
 	activeState?: UserCredentialActiveState;
 	credentialRule?: UserCredentialRule;
@@ -1815,7 +1800,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	) {
 		super(options);
 		this.operationType = options.operationType;
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.userType = options.userType ?? UserCredentialUserType.General;
 		this.activeState = options.activeState
 			?? UserCredentialActiveState.OccupiedEnabled;
@@ -1828,7 +1813,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	}
 
 	public operationType: UserCredentialOperationType;
-	public userUniqueIdentifier: number;
+	public userId: number;
 	public userType: UserCredentialUserType;
 	public activeState: UserCredentialActiveState;
 	public credentialRule: UserCredentialRule;
@@ -1843,7 +1828,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		validatePayload(raw.payload.length >= 3);
 		const operationType: UserCredentialOperationType = raw.payload[0]
 			& 0x03;
-		const userUniqueIdentifier = raw.payload.readUInt16BE(1);
+		const userId = raw.payload.readUInt16BE(1);
 
 		// For Delete, remaining fields MAY be omitted
 		if (
@@ -1853,7 +1838,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 			return new this({
 				nodeId: ctx.sourceNodeId,
 				operationType,
-				userUniqueIdentifier,
+				userId,
 			});
 		}
 
@@ -1878,7 +1863,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			operationType,
-			userUniqueIdentifier,
+			userId,
 			userType,
 			activeState,
 			credentialRule,
@@ -1892,7 +1877,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		if (this.operationType === UserCredentialOperationType.Delete) {
 			this.payload = Bytes.alloc(3);
 			this.payload[0] = this.operationType & 0x03;
-			this.payload.writeUInt16BE(this.userUniqueIdentifier, 1);
+			this.payload.writeUInt16BE(this.userId, 1);
 			return super.serialize(ctx);
 		}
 
@@ -1904,7 +1889,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		}
 		this.payload = Bytes.alloc(10 + nameBuffer.length);
 		this.payload[0] = this.operationType & 0x03;
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 1);
+		this.payload.writeUInt16BE(this.userId, 1);
 		this.payload[3] = this.userType;
 		this.payload[4] = this.activeState & 0x0f;
 		this.payload[5] = this.credentialRule;
@@ -1925,7 +1910,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 					UserCredentialOperationType,
 					this.operationType,
 				),
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				"user type": getEnumMemberName(
 					UserCredentialUserType,
 					this.userType,
@@ -1952,10 +1937,10 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 // @publicAPI
 export interface UserCredentialCCUserReportOptions {
 	userReportType: UserCredentialUserReportType;
-	nextUserUniqueIdentifier: number;
+	nextUserId: number;
 	userModifierType: UserCredentialModifierType;
 	userModifierNodeId: number;
-	userUniqueIdentifier: number;
+	userId: number;
 	userType: UserCredentialUserType;
 	activeState: UserCredentialActiveState;
 	credentialRule: UserCredentialRule;
@@ -1971,10 +1956,10 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	) {
 		super(options);
 		this.userReportType = options.userReportType;
-		this.nextUserUniqueIdentifier = options.nextUserUniqueIdentifier;
+		this.nextUserId = options.nextUserId;
 		this.userModifierType = options.userModifierType;
 		this.userModifierNodeId = options.userModifierNodeId;
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.userType = options.userType;
 		this.activeState = options.activeState;
 		this.credentialRule = options.credentialRule;
@@ -1989,10 +1974,10 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	): UserCredentialCCUserReport {
 		validatePayload(raw.payload.length >= 13);
 		const userReportType: UserCredentialUserReportType = raw.payload[0];
-		const nextUserUniqueIdentifier = raw.payload.readUInt16BE(1);
+		const nextUserId = raw.payload.readUInt16BE(1);
 		const userModifierType: UserCredentialModifierType = raw.payload[3];
 		const userModifierNodeId = raw.payload.readUInt16BE(4);
-		const userUniqueIdentifier = raw.payload.readUInt16BE(6);
+		const userId = raw.payload.readUInt16BE(6);
 		const userType: UserCredentialUserType = raw.payload[8];
 		const activeState: UserCredentialActiveState = raw.payload[9] & 0x0f;
 		const credentialRule: UserCredentialRule = raw.payload[10];
@@ -2016,10 +2001,10 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			userReportType,
-			nextUserUniqueIdentifier,
+			nextUserId,
 			userModifierType,
 			userModifierNodeId,
-			userUniqueIdentifier,
+			userId,
 			userType,
 			activeState,
 			credentialRule,
@@ -2030,10 +2015,10 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	}
 
 	public readonly userReportType: UserCredentialUserReportType;
-	public readonly nextUserUniqueIdentifier: number;
+	public readonly nextUserId: number;
 	public readonly userModifierType: UserCredentialModifierType;
 	public readonly userModifierNodeId: number;
-	public readonly userUniqueIdentifier: number;
+	public readonly userId: number;
 	public readonly userType: UserCredentialUserType;
 	public readonly activeState: UserCredentialActiveState;
 	public readonly credentialRule: UserCredentialRule;
@@ -2050,10 +2035,10 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		}
 		this.payload = Bytes.alloc(15 + nameBuffer.length);
 		this.payload[0] = this.userReportType;
-		this.payload.writeUInt16BE(this.nextUserUniqueIdentifier, 1);
+		this.payload.writeUInt16BE(this.nextUserId, 1);
 		this.payload[3] = this.userModifierType;
 		this.payload.writeUInt16BE(this.userModifierNodeId, 4);
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 6);
+		this.payload.writeUInt16BE(this.userId, 6);
 		this.payload[8] = this.userType;
 		this.payload[9] = this.activeState & 0x0f;
 		this.payload[10] = this.credentialRule;
@@ -2069,7 +2054,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		if (this.userUniqueIdentifier === 0) return true;
+		if (this.userId === 0) return true;
 
 		// Only persist data for successful responses
 		if (
@@ -2077,7 +2062,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 				=== UserCredentialUserReportType.UserDeleted
 		) {
 			// Remove all values for this user
-			const userId = this.userUniqueIdentifier;
+			const userId = this.userId;
 			this.removeValue(
 				ctx,
 				UserCredentialCCValues.userType(userId),
@@ -2124,7 +2109,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 			return true;
 		}
 
-		const userId = this.userUniqueIdentifier;
+		const userId = this.userId;
 		this.ensureMetadata(
 			ctx,
 			UserCredentialCCValues.userType(userId),
@@ -2197,13 +2182,13 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 					UserCredentialUserReportType,
 					this.userReportType,
 				),
-				"next user unique identifier": this.nextUserUniqueIdentifier,
+				"next user ID": this.nextUserId,
 				"user modifier type": getEnumMemberName(
 					UserCredentialModifierType,
 					this.userModifierType,
 				),
 				"user modifier node id": this.userModifierNodeId,
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				"user type": getEnumMemberName(
 					UserCredentialUserType,
 					this.userType,
@@ -2229,7 +2214,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 
 // @publicAPI
 export interface UserCredentialCCUserGetOptions {
-	userUniqueIdentifier: number;
+	userId: number;
 }
 
 @CCCommand(UserCredentialCommand.UserGet)
@@ -2239,26 +2224,26 @@ export class UserCredentialCCUserGet extends UserCredentialCC {
 		options: WithAddress<UserCredentialCCUserGetOptions>,
 	) {
 		super(options);
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 	}
 
-	public userUniqueIdentifier: number;
+	public userId: number;
 
 	public static from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): UserCredentialCCUserGet {
 		validatePayload(raw.payload.length >= 2);
-		const userUniqueIdentifier = raw.payload.readUInt16BE(0);
+		const userId = raw.payload.readUInt16BE(0);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			userUniqueIdentifier,
+			userId,
 		});
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(2);
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload.writeUInt16BE(this.userId, 0);
 		return super.serialize(ctx);
 	}
 
@@ -2266,7 +2251,7 @@ export class UserCredentialCCUserGet extends UserCredentialCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 			},
 		};
 	}
@@ -2278,7 +2263,7 @@ export class UserCredentialCCUserGet extends UserCredentialCC {
 
 // @publicAPI
 export interface UserCredentialCCCredentialSetOptions {
-	userUniqueIdentifier: number;
+	userId: number;
 	credentialType: UserCredentialType;
 	credentialSlot: number;
 	operationType: UserCredentialOperationType;
@@ -2292,14 +2277,14 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		options: WithAddress<UserCredentialCCCredentialSetOptions>,
 	) {
 		super(options);
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
 		this.operationType = options.operationType;
 		this.credentialData = options.credentialData ?? new Bytes();
 	}
 
-	public userUniqueIdentifier: number;
+	public userId: number;
 	public credentialType: UserCredentialType;
 	public credentialSlot: number;
 	public operationType: UserCredentialOperationType;
@@ -2310,7 +2295,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		ctx: CCParsingContext,
 	): UserCredentialCCCredentialSet {
 		validatePayload(raw.payload.length >= 6);
-		const userUniqueIdentifier = raw.payload.readUInt16BE(0);
+		const userId = raw.payload.readUInt16BE(0);
 		const credentialType: UserCredentialType = raw.payload[2];
 		const credentialSlot = raw.payload.readUInt16BE(3);
 		const operationType: UserCredentialOperationType = raw.payload[5]
@@ -2328,7 +2313,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			userUniqueIdentifier,
+			userId,
 			credentialType,
 			credentialSlot,
 			operationType,
@@ -2339,7 +2324,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (this.operationType === UserCredentialOperationType.Delete) {
 			this.payload = Bytes.alloc(6);
-			this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+			this.payload.writeUInt16BE(this.userId, 0);
 			this.payload[2] = this.credentialType;
 			this.payload.writeUInt16BE(this.credentialSlot, 3);
 			this.payload[5] = this.operationType & 0x03;
@@ -2347,7 +2332,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		}
 
 		this.payload = Bytes.alloc(7 + this.credentialData.length);
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload.writeUInt16BE(this.userId, 0);
 		this.payload[2] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 3);
 		this.payload[5] = this.operationType & 0x03;
@@ -2362,7 +2347,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				"credential type": getEnumMemberName(
 					UserCredentialType,
 					this.credentialType,
@@ -2383,7 +2368,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 // @publicAPI
 export interface UserCredentialCCCredentialReportOptions {
 	credentialReportType: UserCredentialCredentialReportType;
-	userUniqueIdentifier: number;
+	userId: number;
 	credentialType: UserCredentialType;
 	credentialSlot: number;
 	credentialReadBack: boolean;
@@ -2402,7 +2387,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	) {
 		super(options);
 		this.credentialReportType = options.credentialReportType;
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
 		this.credentialReadBack = options.credentialReadBack;
@@ -2421,7 +2406,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		validatePayload(raw.payload.length >= 8);
 		const credentialReportType: UserCredentialCredentialReportType =
 			raw.payload[0];
-		const userUniqueIdentifier = raw.payload.readUInt16BE(1);
+		const userId = raw.payload.readUInt16BE(1);
 		const credentialType: UserCredentialType = raw.payload[3];
 		const credentialSlot = raw.payload.readUInt16BE(4);
 		const credentialReadBack = !!(raw.payload[6] & 0x80);
@@ -2443,7 +2428,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			credentialReportType,
-			userUniqueIdentifier,
+			userId,
 			credentialType,
 			credentialSlot,
 			credentialReadBack,
@@ -2457,7 +2442,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	}
 
 	public readonly credentialReportType: UserCredentialCredentialReportType;
-	public readonly userUniqueIdentifier: number;
+	public readonly userId: number;
 	public readonly credentialType: UserCredentialType;
 	public readonly credentialSlot: number;
 	public readonly credentialReadBack: boolean;
@@ -2471,7 +2456,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(14 + this.credentialData.length);
 		this.payload[0] = this.credentialReportType;
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 1);
+		this.payload.writeUInt16BE(this.userId, 1);
 		this.payload[3] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 4);
 		this.payload[6] = this.credentialReadBack ? 0x80 : 0x00;
@@ -2504,13 +2489,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			this.removeValue(
 				ctx,
 				UserCredentialCCValues.credential(
-					this.credentialType,
-					this.credentialSlot,
-				),
-			);
-			this.removeValue(
-				ctx,
-				UserCredentialCCValues.credentialUserUniqueIdentifier(
+					this.userId,
 					this.credentialType,
 					this.credentialSlot,
 				),
@@ -2532,6 +2511,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		this.ensureMetadata(
 			ctx,
 			UserCredentialCCValues.credential(
+				this.userId,
 				this.credentialType,
 				this.credentialSlot,
 			),
@@ -2539,18 +2519,11 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		this.setValue(
 			ctx,
 			UserCredentialCCValues.credential(
+				this.userId,
 				this.credentialType,
 				this.credentialSlot,
 			),
 			this.credentialData,
-		);
-		this.setValue(
-			ctx,
-			UserCredentialCCValues.credentialUserUniqueIdentifier(
-				this.credentialType,
-				this.credentialSlot,
-			),
-			this.userUniqueIdentifier,
 		);
 
 		return true;
@@ -2564,7 +2537,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 					UserCredentialCredentialReportType,
 					this.credentialReportType,
 				),
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				"credential type": getEnumMemberName(
 					UserCredentialType,
 					this.credentialType,
@@ -2591,7 +2564,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 
 // @publicAPI
 export interface UserCredentialCCCredentialGetOptions {
-	userUniqueIdentifier: number;
+	userId: number;
 	credentialType: UserCredentialType;
 	credentialSlot: number;
 }
@@ -2603,12 +2576,12 @@ export class UserCredentialCCCredentialGet extends UserCredentialCC {
 		options: WithAddress<UserCredentialCCCredentialGetOptions>,
 	) {
 		super(options);
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
 	}
 
-	public userUniqueIdentifier: number;
+	public userId: number;
 	public credentialType: UserCredentialType;
 	public credentialSlot: number;
 
@@ -2617,13 +2590,13 @@ export class UserCredentialCCCredentialGet extends UserCredentialCC {
 		ctx: CCParsingContext,
 	): UserCredentialCCCredentialGet {
 		validatePayload(raw.payload.length >= 5);
-		const userUniqueIdentifier = raw.payload.readUInt16BE(0);
+		const userId = raw.payload.readUInt16BE(0);
 		const credentialType: UserCredentialType = raw.payload[2];
 		const credentialSlot = raw.payload.readUInt16BE(3);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			userUniqueIdentifier,
+			userId,
 			credentialType,
 			credentialSlot,
 		});
@@ -2631,7 +2604,7 @@ export class UserCredentialCCCredentialGet extends UserCredentialCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(5);
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload.writeUInt16BE(this.userId, 0);
 		this.payload[2] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 3);
 		return super.serialize(ctx);
@@ -2641,7 +2614,7 @@ export class UserCredentialCCCredentialGet extends UserCredentialCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				"credential type": getEnumMemberName(
 					UserCredentialType,
 					this.credentialType,
@@ -2658,7 +2631,7 @@ export class UserCredentialCCCredentialGet extends UserCredentialCC {
 
 // @publicAPI
 export interface UserCredentialCCCredentialLearnStartOptions {
-	userUniqueIdentifier: number;
+	userId: number;
 	credentialType: UserCredentialType;
 	credentialSlot: number;
 	operationType: UserCredentialOperationType;
@@ -2674,14 +2647,14 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 		>,
 	) {
 		super(options);
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
 		this.operationType = options.operationType;
 		this.learnTimeout = options.learnTimeout;
 	}
 
-	public userUniqueIdentifier: number;
+	public userId: number;
 	public credentialType: UserCredentialType;
 	public credentialSlot: number;
 	public operationType: UserCredentialOperationType;
@@ -2692,7 +2665,7 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 		ctx: CCParsingContext,
 	): UserCredentialCCCredentialLearnStart {
 		validatePayload(raw.payload.length >= 7);
-		const userUniqueIdentifier = raw.payload.readUInt16BE(0);
+		const userId = raw.payload.readUInt16BE(0);
 		const credentialType: UserCredentialType = raw.payload[2];
 		const credentialSlot = raw.payload.readUInt16BE(3);
 		const operationType: UserCredentialOperationType = raw.payload[5]
@@ -2701,7 +2674,7 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			userUniqueIdentifier,
+			userId,
 			credentialType,
 			credentialSlot,
 			operationType,
@@ -2711,7 +2684,7 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(7);
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload.writeUInt16BE(this.userId, 0);
 		this.payload[2] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 3);
 		this.payload[5] = this.operationType & 0x03;
@@ -2723,7 +2696,7 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				"credential type": getEnumMemberName(
 					UserCredentialType,
 					this.credentialType,
@@ -2746,7 +2719,7 @@ export class UserCredentialCCCredentialLearnCancel extends UserCredentialCC {}
 // @publicAPI
 export interface UserCredentialCCCredentialLearnReportOptions {
 	learnStatus: number;
-	userUniqueIdentifier: number;
+	userId: number;
 	credentialType: UserCredentialType;
 	credentialSlot: number;
 	credentialLearnStepsRemaining: number;
@@ -2761,7 +2734,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 	) {
 		super(options);
 		this.learnStatus = options.learnStatus;
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
 		this.credentialLearnStepsRemaining =
@@ -2774,7 +2747,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 	): UserCredentialCCCredentialLearnReport {
 		validatePayload(raw.payload.length >= 7);
 		const learnStatus = raw.payload[0];
-		const userUniqueIdentifier = raw.payload.readUInt16BE(1);
+		const userId = raw.payload.readUInt16BE(1);
 		const credentialType: UserCredentialType = raw.payload[3];
 		const credentialSlot = raw.payload.readUInt16BE(4);
 		const credentialLearnStepsRemaining = raw.payload[6];
@@ -2782,7 +2755,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			learnStatus,
-			userUniqueIdentifier,
+			userId,
 			credentialType,
 			credentialSlot,
 			credentialLearnStepsRemaining,
@@ -2790,7 +2763,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 	}
 
 	public readonly learnStatus: number;
-	public readonly userUniqueIdentifier: number;
+	public readonly userId: number;
 	public readonly credentialType: UserCredentialType;
 	public readonly credentialSlot: number;
 	public readonly credentialLearnStepsRemaining: number;
@@ -2798,7 +2771,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(7);
 		this.payload[0] = this.learnStatus;
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 1);
+		this.payload.writeUInt16BE(this.userId, 1);
 		this.payload[3] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 4);
 		this.payload[6] = this.credentialLearnStepsRemaining;
@@ -2810,7 +2783,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 			...super.toLogEntry(ctx),
 			message: {
 				"learn status": this.learnStatus,
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				"credential type": getEnumMemberName(
 					UserCredentialType,
 					this.credentialType,
@@ -2831,7 +2804,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 export interface UserCredentialCCUserCredentialAssociationSetOptions {
 	credentialType: UserCredentialType;
 	credentialSlot: number;
-	destinationUserUniqueIdentifier: number;
+	destinationUserId: number;
 }
 
 @CCCommand(UserCredentialCommand.UserCredentialAssociationSet)
@@ -2847,13 +2820,12 @@ export class UserCredentialCCUserCredentialAssociationSet
 		super(options);
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
-		this.destinationUserUniqueIdentifier =
-			options.destinationUserUniqueIdentifier;
+		this.destinationUserId = options.destinationUserId;
 	}
 
 	public credentialType: UserCredentialType;
 	public credentialSlot: number;
-	public destinationUserUniqueIdentifier: number;
+	public destinationUserId: number;
 
 	public static from(
 		raw: CCRaw,
@@ -2862,7 +2834,7 @@ export class UserCredentialCCUserCredentialAssociationSet
 		validatePayload(raw.payload.length >= 5);
 		const credentialType: UserCredentialType = raw.payload[0];
 		const credentialSlot = raw.payload.readUInt16BE(1);
-		const destinationUserUniqueIdentifier = raw.payload.readUInt16BE(
+		const destinationUserId = raw.payload.readUInt16BE(
 			3,
 		);
 
@@ -2870,7 +2842,7 @@ export class UserCredentialCCUserCredentialAssociationSet
 			nodeId: ctx.sourceNodeId,
 			credentialType,
 			credentialSlot,
-			destinationUserUniqueIdentifier,
+			destinationUserId,
 		});
 	}
 
@@ -2879,7 +2851,7 @@ export class UserCredentialCCUserCredentialAssociationSet
 		this.payload[0] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 1);
 		this.payload.writeUInt16BE(
-			this.destinationUserUniqueIdentifier,
+			this.destinationUserId,
 			3,
 		);
 		return super.serialize(ctx);
@@ -2894,8 +2866,7 @@ export class UserCredentialCCUserCredentialAssociationSet
 					this.credentialType,
 				),
 				"credential slot": this.credentialSlot,
-				"destination user unique identifier":
-					this.destinationUserUniqueIdentifier,
+				"destination user ID": this.destinationUserId,
 			},
 		};
 	}
@@ -2905,7 +2876,7 @@ export class UserCredentialCCUserCredentialAssociationSet
 export interface UserCredentialCCUserCredentialAssociationReportOptions {
 	credentialType: UserCredentialType;
 	credentialSlot: number;
-	destinationUserUniqueIdentifier: number;
+	destinationUserId: number;
 	status: number;
 }
 
@@ -2921,8 +2892,7 @@ export class UserCredentialCCUserCredentialAssociationReport
 		super(options);
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
-		this.destinationUserUniqueIdentifier =
-			options.destinationUserUniqueIdentifier;
+		this.destinationUserId = options.destinationUserId;
 		this.status = options.status;
 	}
 
@@ -2933,7 +2903,7 @@ export class UserCredentialCCUserCredentialAssociationReport
 		validatePayload(raw.payload.length >= 6);
 		const credentialType: UserCredentialType = raw.payload[0];
 		const credentialSlot = raw.payload.readUInt16BE(1);
-		const destinationUserUniqueIdentifier = raw.payload.readUInt16BE(
+		const destinationUserId = raw.payload.readUInt16BE(
 			3,
 		);
 		const status = raw.payload[5];
@@ -2942,14 +2912,14 @@ export class UserCredentialCCUserCredentialAssociationReport
 			nodeId: ctx.sourceNodeId,
 			credentialType,
 			credentialSlot,
-			destinationUserUniqueIdentifier,
+			destinationUserId: destinationUserId,
 			status,
 		});
 	}
 
 	public readonly credentialType: UserCredentialType;
 	public readonly credentialSlot: number;
-	public readonly destinationUserUniqueIdentifier: number;
+	public readonly destinationUserId: number;
 	public readonly status: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -2957,7 +2927,7 @@ export class UserCredentialCCUserCredentialAssociationReport
 		this.payload[0] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 1);
 		this.payload.writeUInt16BE(
-			this.destinationUserUniqueIdentifier,
+			this.destinationUserId,
 			3,
 		);
 		this.payload[5] = this.status;
@@ -2973,8 +2943,7 @@ export class UserCredentialCCUserCredentialAssociationReport
 					this.credentialType,
 				),
 				"credential slot": this.credentialSlot,
-				"destination user unique identifier":
-					this.destinationUserUniqueIdentifier,
+				"destination user ID": this.destinationUserId,
 				status: this.status,
 			},
 		};
@@ -3036,7 +3005,7 @@ export class UserCredentialCCAllUsersChecksumGet extends UserCredentialCC {}
 
 // @publicAPI
 export interface UserCredentialCCUserChecksumReportOptions {
-	userUniqueIdentifier: number;
+	userId: number;
 	checksum: number;
 }
 
@@ -3046,7 +3015,7 @@ export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 		options: WithAddress<UserCredentialCCUserChecksumReportOptions>,
 	) {
 		super(options);
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 		this.checksum = options.checksum;
 	}
 
@@ -3055,22 +3024,22 @@ export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 		ctx: CCParsingContext,
 	): UserCredentialCCUserChecksumReport {
 		validatePayload(raw.payload.length >= 4);
-		const userUniqueIdentifier = raw.payload.readUInt16BE(0);
+		const userId = raw.payload.readUInt16BE(0);
 		const checksum = raw.payload.readUInt16BE(2);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			userUniqueIdentifier,
+			userId,
 			checksum,
 		});
 	}
 
-	public readonly userUniqueIdentifier: number;
+	public readonly userId: number;
 	public readonly checksum: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(4);
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload.writeUInt16BE(this.userId, 0);
 		this.payload.writeUInt16BE(this.checksum, 2);
 		return super.serialize(ctx);
 	}
@@ -3079,7 +3048,7 @@ export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 				checksum: this.checksum,
 			},
 		};
@@ -3088,7 +3057,7 @@ export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 
 // @publicAPI
 export interface UserCredentialCCUserChecksumGetOptions {
-	userUniqueIdentifier: number;
+	userId: number;
 }
 
 @CCCommand(UserCredentialCommand.UserChecksumGet)
@@ -3098,27 +3067,27 @@ export class UserCredentialCCUserChecksumGet extends UserCredentialCC {
 		options: WithAddress<UserCredentialCCUserChecksumGetOptions>,
 	) {
 		super(options);
-		this.userUniqueIdentifier = options.userUniqueIdentifier;
+		this.userId = options.userId;
 	}
 
-	public userUniqueIdentifier: number;
+	public userId: number;
 
 	public static from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): UserCredentialCCUserChecksumGet {
 		validatePayload(raw.payload.length >= 2);
-		const userUniqueIdentifier = raw.payload.readUInt16BE(0);
+		const userId = raw.payload.readUInt16BE(0);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			userUniqueIdentifier,
+			userId,
 		});
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(2);
-		this.payload.writeUInt16BE(this.userUniqueIdentifier, 0);
+		this.payload.writeUInt16BE(this.userId, 0);
 		return super.serialize(ctx);
 	}
 
@@ -3126,7 +3095,7 @@ export class UserCredentialCCUserChecksumGet extends UserCredentialCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"user unique identifier": this.userUniqueIdentifier,
+				"user ID": this.userId,
 			},
 		};
 	}

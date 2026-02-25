@@ -9753,9 +9753,9 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 	),
 	credential: Object.assign(
-		(type: UserCredentialType, slot: number) => {
+		(userId: number, type: UserCredentialType, slot: number) => {
 			const property = "credential";
-			const propertyKey = (type << 16) | slot;
+			const propertyKey = (userId << 24) | (type << 16) | slot;
 
 			return {
 				id: {
@@ -9772,7 +9772,7 @@ export const UserCredentialCCValues = Object.freeze({
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBuffer,
-						label: `Credential (${
+						label: `Credential (user ${userId}, ${
 							getEnumMemberName(
 								UserCredentialType,
 								type,
@@ -9794,46 +9794,6 @@ export const UserCredentialCCValues = Object.freeze({
 				internal: false,
 				minVersion: 1,
 				secret: true,
-				stateful: true,
-				supportsEndpoints: true,
-				autoCreate: true,
-			} as const satisfies CCValueOptions,
-		},
-	),
-	credentialUserUniqueIdentifier: Object.assign(
-		(type: UserCredentialType, slot: number) => {
-			const property = "credentialUserUniqueIdentifier";
-			const propertyKey = (type << 16) | slot;
-
-			return {
-				id: {
-					commandClass: CommandClasses["User Credential"],
-					property,
-					propertyKey,
-				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
-				get meta() {
-					return ValueMetadata.Any;
-				},
-			};
-		},
-		{
-			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
-					&& (({ property, propertyKey }) =>
-						property === "credentialUserUniqueIdentifier"
-						&& typeof propertyKey === "number")(valueId);
-			},
-			options: {
-				internal: true,
-				minVersion: 1,
-				secret: false,
 				stateful: true,
 				supportsEndpoints: true,
 				autoCreate: true,
