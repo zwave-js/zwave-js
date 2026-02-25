@@ -1513,8 +1513,6 @@ export type {
 	UserCredentialCCUserGetOptions,
 	UserCredentialCCUserReportOptions,
 	UserCredentialCCUserSetOptions,
-	UserCredentialCredentialCapability,
-	UserCredentialKeyLockerCapability,
 } from "./UserCredentialCC.js";
 import {
 	UserCredentialCC,

@@ -53,8 +53,10 @@ import { V } from "../lib/Values.js";
 import {
 	UserCredentialActiveState,
 	UserCredentialAdminCodeOperationResult,
+	type UserCredentialCapability,
 	UserCredentialCommand,
 	UserCredentialCredentialReportType,
+	type UserCredentialKeyLockerEntryCapability,
 	UserCredentialKeyLockerEntryType,
 	UserCredentialModifierType,
 	UserCredentialNameEncoding,
@@ -64,6 +66,7 @@ import {
 	UserCredentialUserReportType,
 	UserCredentialUserType,
 } from "../lib/_Types.js";
+export type { UserCredentialCapability as UserCredentialCredentialCapability } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 function credentialToLogString(credential: string | Bytes): string {
@@ -84,13 +87,13 @@ export const UserCredentialCCValues = V.defineCCValues(
 		...V.staticProperty("maxUserNameLength", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty("userScheduleSupport", undefined, {
+		...V.staticProperty("supportsUserSchedule", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty("allUsersChecksumSupport", undefined, {
+		...V.staticProperty("supportsAllUsersChecksum", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty("userChecksumSupport", undefined, {
+		...V.staticProperty("supportsUserChecksum", undefined, {
 			internal: true,
 		}),
 		...V.staticProperty("supportedUserNameEncodings", undefined, {
@@ -99,25 +102,45 @@ export const UserCredentialCCValues = V.defineCCValues(
 		...V.staticProperty("supportedUserTypes", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty("credentialChecksumSupport", undefined, {
+		...V.staticProperty("supportsCredentialChecksum", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty("adminCodeSupport", undefined, {
+		...V.staticProperty("supportsAdminCode", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty("adminCodeDeactivationSupport", undefined, {
+		...V.staticProperty("supportsAdminCodeDeactivation", undefined, {
 			internal: true,
 		}),
 		...V.staticProperty("supportedCredentialTypes", undefined, {
 			internal: true,
 		}),
+		...V.dynamicPropertyAndKeyWithName(
+			"credentialCapabilities",
+			"credentialCapabilities",
+			(credentialType: UserCredentialType) => credentialType,
+			({ property, propertyKey }) =>
+				property === "credentialCapabilities"
+				&& typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
 		...V.staticProperty("allUsersChecksum", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty("keyLockerCapabilities", undefined, {
+		...V.staticProperty("supportedKeyLockerEntryTypes", undefined, {
 			internal: true,
 			minVersion: 2,
 		}),
+		...V.dynamicPropertyAndKeyWithName(
+			"keyLockerCapabilities",
+			"keyLockerCapabilities",
+			(entryType: UserCredentialKeyLockerEntryType) => entryType,
+			({ property, propertyKey }) =>
+				property === "keyLockerCapabilities"
+				&& typeof propertyKey === "number",
+			undefined,
+			{ internal: true, minVersion: 2 },
+		),
 
 		// Per-user values
 		...V.dynamicPropertyAndKeyWithName(
@@ -308,7 +331,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			case UserCredentialCommand.AllUsersChecksumGet:
 			case UserCredentialCommand.AllUsersChecksumReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
-					UserCredentialCCValues.allUsersChecksumSupport.endpoint(
+					UserCredentialCCValues.supportsAllUsersChecksum.endpoint(
 						this.endpoint.index,
 					),
 				);
@@ -316,7 +339,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			case UserCredentialCommand.UserChecksumGet:
 			case UserCredentialCommand.UserChecksumReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
-					UserCredentialCCValues.userChecksumSupport.endpoint(
+					UserCredentialCCValues.supportsUserChecksum.endpoint(
 						this.endpoint.index,
 					),
 				);
@@ -324,7 +347,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			case UserCredentialCommand.CredentialChecksumGet:
 			case UserCredentialCommand.CredentialChecksumReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
-					UserCredentialCCValues.credentialChecksumSupport
+					UserCredentialCCValues.supportsCredentialChecksum
 						.endpoint(
 							this.endpoint.index,
 						),
@@ -334,7 +357,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			case UserCredentialCommand.AdminPinCodeGet:
 			case UserCredentialCommand.AdminPinCodeReport: {
 				return this.tryGetValueDB()?.getValue<boolean>(
-					UserCredentialCCValues.adminCodeSupport.endpoint(
+					UserCredentialCCValues.supportsAdminCode.endpoint(
 						this.endpoint.index,
 					),
 				);
@@ -351,22 +374,8 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		return super.supportsCommand(cmd);
 	}
 
-	// Capabilities
-	public async getUserCapabilities(): Promise<
-		MaybeNotKnown<
-			Pick<
-				UserCredentialCCUserCapabilitiesReport,
-				| "numberOfSupportedUsers"
-				| "supportedCredentialRules"
-				| "maxUserNameLength"
-				| "userScheduleSupport"
-				| "allUsersChecksumSupport"
-				| "userChecksumSupport"
-				| "supportedUserNameEncodings"
-				| "supportedUserTypes"
-			>
-		>
-	> {
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
+	public async getUserCapabilities() {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserCapabilitiesGet,
@@ -384,26 +393,17 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 				"numberOfSupportedUsers",
 				"supportedCredentialRules",
 				"maxUserNameLength",
-				"userScheduleSupport",
-				"allUsersChecksumSupport",
-				"userChecksumSupport",
+				"supportsUserSchedule",
+				"supportsAllUsersChecksum",
+				"supportsUserChecksum",
 				"supportedUserNameEncodings",
 				"supportedUserTypes",
 			]);
 		}
 	}
 
-	public async getCredentialCapabilities(): Promise<
-		MaybeNotKnown<
-			Pick<
-				UserCredentialCCCredentialCapabilitiesReport,
-				| "credentialChecksumSupport"
-				| "adminCodeSupport"
-				| "adminCodeDeactivationSupport"
-				| "supportedCredentialTypes"
-			>
-		>
-	> {
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
+	public async getCredentialCapabilities() {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.CredentialCapabilitiesGet,
@@ -418,22 +418,16 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		>(cc, this.commandOptions);
 		if (response) {
 			return pick(response, [
-				"credentialChecksumSupport",
-				"adminCodeSupport",
-				"adminCodeDeactivationSupport",
-				"supportedCredentialTypes",
+				"supportsCredentialChecksum",
+				"supportsAdminCode",
+				"supportsAdminCodeDeactivation",
+				"credentialTypes",
 			]);
 		}
 	}
 
-	public async getKeyLockerCapabilities(): Promise<
-		MaybeNotKnown<
-			Pick<
-				UserCredentialCCKeyLockerCapabilitiesReport,
-				"supportedKeyLockerEntryTypes"
-			>
-		>
-	> {
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
+	public async getKeyLockerCapabilities() {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.KeyLockerCapabilitiesGet,
@@ -446,9 +440,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		const response = await this.host.sendCommand<
 			UserCredentialCCKeyLockerCapabilitiesReport
 		>(cc, this.commandOptions);
-		if (response) {
-			return pick(response, ["supportedKeyLockerEntryTypes"]);
-		}
+		return response?.keyLockerCapabilities;
 	}
 
 	// User Management
@@ -470,26 +462,8 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
-	public async getUser(
-		userUniqueIdentifier: number,
-	): Promise<
-		MaybeNotKnown<
-			Pick<
-				UserCredentialCCUserReport,
-				| "userReportType"
-				| "nextUserUniqueIdentifier"
-				| "userModifierType"
-				| "userModifierNodeId"
-				| "userUniqueIdentifier"
-				| "userType"
-				| "activeState"
-				| "credentialRule"
-				| "expiringTimeoutMinutes"
-				| "nameEncoding"
-				| "userName"
-			>
-		>
-	> {
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
+	public async getUser(userUniqueIdentifier: number) {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserGet,
@@ -539,28 +513,12 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCredential(
 		userUniqueIdentifier: number,
 		credentialType: UserCredentialType,
 		credentialSlot: number,
-	): Promise<
-		MaybeNotKnown<
-			Pick<
-				UserCredentialCCCredentialReport,
-				| "credentialReportType"
-				| "userUniqueIdentifier"
-				| "credentialType"
-				| "credentialSlot"
-				| "credentialReadBack"
-				| "credentialLength"
-				| "credentialData"
-				| "credentialModifierType"
-				| "credentialModifierNodeId"
-				| "nextCredentialType"
-				| "nextCredentialSlot"
-			>
-		>
-	> {
+	) {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.CredentialGet,
@@ -596,7 +554,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// Credential Learn
 	@validateArgs()
 	public async startCredentialLearn(
 		options: UserCredentialCCCredentialLearnStartOptions,
@@ -629,7 +586,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// Association
 	@validateArgs()
 	public async setUserCredentialAssociation(
 		options: UserCredentialCCUserCredentialAssociationSetOptions,
@@ -647,8 +603,8 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	// Checksums
-	public async getAllUsersChecksum(): Promise<MaybeNotKnown<number>> {
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
+	public async getAllUsersChecksum() {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.AllUsersChecksumGet,
@@ -665,9 +621,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getUserChecksum(
 		userUniqueIdentifier: number,
-	): Promise<MaybeNotKnown<number>> {
+	) {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserChecksumGet,
@@ -685,9 +642,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCredentialChecksum(
 		credentialType: UserCredentialType,
-	): Promise<MaybeNotKnown<number>> {
+	) {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.CredentialChecksumGet,
@@ -704,7 +662,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		return response?.checksum;
 	}
 
-	// Admin PIN Code
 	@validateArgs()
 	public async setAdminPinCode(
 		options: UserCredentialCCAdminPinCodeSetOptions,
@@ -722,7 +679,8 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	public async getAdminPinCode(): Promise<MaybeNotKnown<string>> {
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
+	public async getAdminPinCode() {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.AdminPinCodeGet,
@@ -738,7 +696,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		return response?.pinCode;
 	}
 
-	// Key Locker (V2)
 	@validateArgs()
 	public async setKeyLockerEntry(
 		options: UserCredentialCCKeyLockerEntrySetOptions,
@@ -757,17 +714,11 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	}
 
 	@validateArgs()
+	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getKeyLockerEntry(
 		entryType: UserCredentialKeyLockerEntryType,
 		entrySlot: number,
-	): Promise<
-		MaybeNotKnown<
-			Pick<
-				UserCredentialCCKeyLockerEntryReport,
-				"occupied" | "entryType" | "entrySlot"
-			>
-		>
-	> {
+	) {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.KeyLockerEntryGet,
@@ -791,7 +742,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		}
 	}
 
-	// Send Report methods
 	@validateArgs()
 	public async sendUserCapabilitiesReport(
 		options: UserCredentialCCUserCapabilitiesReportOptions,
@@ -1030,7 +980,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	}
 }
 
-// Base CC class
 @commandClass(CommandClasses["User Credential"])
 @implementedVersion(2)
 @ccValues(UserCredentialCCValues)
@@ -1109,24 +1058,24 @@ export class UserCredentialCC extends CommandClass {
 			priority: MessagePriority.NodeQuery,
 		});
 
-		const allUsersChecksumSupport = this.getValue<boolean>(
+		const supportsAllUsersChecksum = this.getValue<boolean>(
 			ctx,
-			UserCredentialCCValues.allUsersChecksumSupport,
+			UserCredentialCCValues.supportsAllUsersChecksum,
 		);
-		const adminCodeSupport = this.getValue<boolean>(
+		const supportsAdminCode = this.getValue<boolean>(
 			ctx,
-			UserCredentialCCValues.adminCodeSupport,
+			UserCredentialCCValues.supportsAdminCode,
 		);
-		const keyLockerCapabilities = this.getValue<
-			UserCredentialKeyLockerCapability[]
+		const supportedKeyLockerEntryTypes = this.getValue<
+			UserCredentialKeyLockerEntryType[]
 		>(
 			ctx,
-			UserCredentialCCValues.keyLockerCapabilities,
+			UserCredentialCCValues.supportedKeyLockerEntryTypes,
 		);
 
 		// Check if all-users checksum has changed
 		let skipFullSync = false;
-		if (allUsersChecksumSupport) {
+		if (supportsAllUsersChecksum) {
 			const currentChecksum = await api.getAllUsersChecksum();
 			const storedChecksum = this.getValue<number>(
 				ctx,
@@ -1187,7 +1136,7 @@ export class UserCredentialCC extends CommandClass {
 		}
 
 		// Query admin PIN code if supported
-		if (adminCodeSupport) {
+		if (supportsAdminCode) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: "querying admin PIN code...",
@@ -1197,8 +1146,15 @@ export class UserCredentialCC extends CommandClass {
 		}
 
 		// Query key locker entries (V2)
-		if (api.version >= 2 && keyLockerCapabilities?.length) {
-			for (const entry of keyLockerCapabilities) {
+		if (api.version >= 2 && supportedKeyLockerEntryTypes?.length) {
+			for (const entryType of supportedKeyLockerEntryTypes) {
+				const entry = this.getValue<
+					UserCredentialKeyLockerEntryCapability
+				>(
+					ctx,
+					UserCredentialCCValues.keyLockerCapabilities(entryType),
+				);
+				if (!entry) continue;
 				for (
 					let slot = 1;
 					slot <= entry.numberOfEntrySlots;
@@ -1207,10 +1163,10 @@ export class UserCredentialCC extends CommandClass {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
 						message:
-							`querying key locker entry type ${entry.entryType}, slot ${slot}...`,
+							`querying key locker entry type ${entryType}, slot ${slot}...`,
 						direction: "outbound",
 					});
-					await api.getKeyLockerEntry(entry.entryType, slot);
+					await api.getKeyLockerEntry(entryType, slot);
 				}
 			}
 		}
@@ -1261,13 +1217,27 @@ export class UserCredentialCC extends CommandClass {
 	public static getSupportedCredentialTypesCached(
 		ctx: GetValueDB,
 		endpoint: EndpointId,
-	): MaybeNotKnown<UserCredentialCredentialCapability[]> {
+	): MaybeNotKnown<UserCredentialType[]> {
 		return ctx
 			.getValueDB(endpoint.nodeId)
 			.getValue(
 				UserCredentialCCValues.supportedCredentialTypes.endpoint(
 					endpoint.index,
 				),
+			);
+	}
+
+	public static getCredentialCapabilitiesCached(
+		ctx: GetValueDB,
+		endpoint: EndpointId,
+		credentialType: UserCredentialType,
+	): MaybeNotKnown<UserCredentialCapability> {
+		return ctx
+			.getValueDB(endpoint.nodeId)
+			.getValue(
+				UserCredentialCCValues.credentialCapabilities(
+					credentialType,
+				).endpoint(endpoint.index),
 			);
 	}
 
@@ -1279,7 +1249,7 @@ export class UserCredentialCC extends CommandClass {
 			ctx
 				.getValueDB(endpoint.nodeId)
 				.getValue<boolean>(
-					UserCredentialCCValues.adminCodeSupport.endpoint(
+					UserCredentialCCValues.supportsAdminCode.endpoint(
 						endpoint.index,
 					),
 				) ?? false
@@ -1296,9 +1266,9 @@ export interface UserCredentialCCUserCapabilitiesReportOptions {
 	numberOfSupportedUsers: number;
 	supportedCredentialRules: UserCredentialRule[];
 	maxUserNameLength: number;
-	userScheduleSupport: boolean;
-	allUsersChecksumSupport: boolean;
-	userChecksumSupport: boolean;
+	supportsUserSchedule: boolean;
+	supportsAllUsersChecksum: boolean;
+	supportsUserChecksum: boolean;
 	supportedUserNameEncodings: UserCredentialNameEncoding[];
 	supportedUserTypes: UserCredentialUserType[];
 }
@@ -1314,16 +1284,16 @@ export interface UserCredentialCCUserCapabilitiesReportOptions {
 )
 @ccValueProperty("maxUserNameLength", UserCredentialCCValues.maxUserNameLength)
 @ccValueProperty(
-	"userScheduleSupport",
-	UserCredentialCCValues.userScheduleSupport,
+	"supportsUserSchedule",
+	UserCredentialCCValues.supportsUserSchedule,
 )
 @ccValueProperty(
-	"allUsersChecksumSupport",
-	UserCredentialCCValues.allUsersChecksumSupport,
+	"supportsAllUsersChecksum",
+	UserCredentialCCValues.supportsAllUsersChecksum,
 )
 @ccValueProperty(
-	"userChecksumSupport",
-	UserCredentialCCValues.userChecksumSupport,
+	"supportsUserChecksum",
+	UserCredentialCCValues.supportsUserChecksum,
 )
 @ccValueProperty(
 	"supportedUserNameEncodings",
@@ -1343,9 +1313,9 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 		this.numberOfSupportedUsers = options.numberOfSupportedUsers;
 		this.supportedCredentialRules = options.supportedCredentialRules;
 		this.maxUserNameLength = options.maxUserNameLength;
-		this.userScheduleSupport = options.userScheduleSupport;
-		this.allUsersChecksumSupport = options.allUsersChecksumSupport;
-		this.userChecksumSupport = options.userChecksumSupport;
+		this.supportsUserSchedule = options.supportsUserSchedule;
+		this.supportsAllUsersChecksum = options.supportsAllUsersChecksum;
+		this.supportsUserChecksum = options.supportsUserChecksum;
 		this.supportedUserNameEncodings = options.supportedUserNameEncodings;
 		this.supportedUserTypes = options.supportedUserTypes;
 	}
@@ -1366,9 +1336,9 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 
 		validatePayload(raw.payload.length >= 5);
 		const flagsByte = raw.payload[4];
-		const userScheduleSupport = !!(flagsByte & 0b1000_0000);
-		const allUsersChecksumSupport = !!(flagsByte & 0b0100_0000);
-		const userChecksumSupport = !!(flagsByte & 0b0010_0000);
+		const supportsUserSchedule = !!(flagsByte & 0b1000_0000);
+		const supportsAllUsersChecksum = !!(flagsByte & 0b0100_0000);
+		const supportsUserChecksum = !!(flagsByte & 0b0010_0000);
 
 		// Name encoding bitmask in bits 4:2
 		const nameEncodingBitmask = (flagsByte >> 2) & 0b111;
@@ -1402,9 +1372,9 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 			numberOfSupportedUsers,
 			supportedCredentialRules,
 			maxUserNameLength,
-			userScheduleSupport,
-			allUsersChecksumSupport,
-			userChecksumSupport,
+			supportsUserSchedule,
+			supportsAllUsersChecksum,
+			supportsUserChecksum,
 			supportedUserNameEncodings,
 			supportedUserTypes,
 		});
@@ -1413,9 +1383,9 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 	public readonly numberOfSupportedUsers: number;
 	public readonly supportedCredentialRules: UserCredentialRule[];
 	public readonly maxUserNameLength: number;
-	public readonly userScheduleSupport: boolean;
-	public readonly allUsersChecksumSupport: boolean;
-	public readonly userChecksumSupport: boolean;
+	public readonly supportsUserSchedule: boolean;
+	public readonly supportsAllUsersChecksum: boolean;
+	public readonly supportsUserChecksum: boolean;
 	public readonly supportedUserNameEncodings: UserCredentialNameEncoding[];
 	public readonly supportedUserTypes: UserCredentialUserType[];
 
@@ -1430,9 +1400,9 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 			UserCredentialNameEncoding.UTF16BE,
 			UserCredentialNameEncoding.ASCII,
 		);
-		const flagsByte = (this.userScheduleSupport ? 0b1000_0000 : 0)
-			| (this.allUsersChecksumSupport ? 0b0100_0000 : 0)
-			| (this.userChecksumSupport ? 0b0010_0000 : 0)
+		const flagsByte = (this.supportsUserSchedule ? 0b1000_0000 : 0)
+			| (this.supportsAllUsersChecksum ? 0b0100_0000 : 0)
+			| (this.supportsUserChecksum ? 0b0010_0000 : 0)
 			| ((nameEncodingBitmask[0] & 0b111) << 2);
 		const userTypesBitmask = encodeBitMask(
 			this.supportedUserTypes,
@@ -1458,9 +1428,9 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 					.map((r) => getEnumMemberName(UserCredentialRule, r))
 					.join(", "),
 				"max user name length": this.maxUserNameLength,
-				"user schedule support": this.userScheduleSupport,
-				"all users checksum support": this.allUsersChecksumSupport,
-				"user checksum support": this.userChecksumSupport,
+				"user schedule support": this.supportsUserSchedule,
+				"all users checksum support": this.supportsAllUsersChecksum,
+				"user checksum support": this.supportsUserChecksum,
 				"supported name encodings": this.supportedUserNameEncodings
 					.map((e) =>
 						getEnumMemberName(
@@ -1482,38 +1452,22 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 export class UserCredentialCCUserCapabilitiesGet extends UserCredentialCC {}
 
 // @publicAPI
-export interface UserCredentialCredentialCapability {
-	credentialType: UserCredentialType;
-	credentialLearnSupport: boolean;
-	numberOfCredentialSlots: number;
-	minCredentialLength: number;
-	maxCredentialLength: number;
-	credentialLearnRecommendedTimeout: number;
-	credentialLearnNumberOfSteps: number;
-	maxCredentialHashLength: number;
-}
-
-// @publicAPI
 export interface UserCredentialCCCredentialCapabilitiesReportOptions {
-	credentialChecksumSupport: boolean;
-	adminCodeSupport: boolean;
-	adminCodeDeactivationSupport: boolean;
-	supportedCredentialTypes: UserCredentialCredentialCapability[];
+	supportsCredentialChecksum: boolean;
+	supportsAdminCode: boolean;
+	supportsAdminCodeDeactivation: boolean;
+	credentialTypes: Map<UserCredentialType, UserCredentialCapability>;
 }
 
 @CCCommand(UserCredentialCommand.CredentialCapabilitiesReport)
 @ccValueProperty(
-	"credentialChecksumSupport",
-	UserCredentialCCValues.credentialChecksumSupport,
+	"supportsCredentialChecksum",
+	UserCredentialCCValues.supportsCredentialChecksum,
 )
-@ccValueProperty("adminCodeSupport", UserCredentialCCValues.adminCodeSupport)
+@ccValueProperty("supportsAdminCode", UserCredentialCCValues.supportsAdminCode)
 @ccValueProperty(
-	"adminCodeDeactivationSupport",
-	UserCredentialCCValues.adminCodeDeactivationSupport,
-)
-@ccValueProperty(
-	"supportedCredentialTypes",
-	UserCredentialCCValues.supportedCredentialTypes,
+	"supportsAdminCodeDeactivation",
+	UserCredentialCCValues.supportsAdminCodeDeactivation,
 )
 export class UserCredentialCCCredentialCapabilitiesReport
 	extends UserCredentialCC
@@ -1524,11 +1478,11 @@ export class UserCredentialCCCredentialCapabilitiesReport
 		>,
 	) {
 		super(options);
-		this.credentialChecksumSupport = options.credentialChecksumSupport;
-		this.adminCodeSupport = options.adminCodeSupport;
-		this.adminCodeDeactivationSupport =
-			options.adminCodeDeactivationSupport;
-		this.supportedCredentialTypes = options.supportedCredentialTypes;
+		this.supportsCredentialChecksum = options.supportsCredentialChecksum;
+		this.supportsAdminCode = options.supportsAdminCode;
+		this.supportsAdminCodeDeactivation =
+			options.supportsAdminCodeDeactivation;
+		this.credentialTypes = options.credentialTypes;
 	}
 
 	public static from(
@@ -1537,16 +1491,18 @@ export class UserCredentialCCCredentialCapabilitiesReport
 	): UserCredentialCCCredentialCapabilitiesReport {
 		validatePayload(raw.payload.length >= 2);
 		const flagsByte = raw.payload[0];
-		const credentialChecksumSupport = !!(flagsByte & 0b1000_0000);
-		const adminCodeSupport = !!(flagsByte & 0b0100_0000);
-		const adminCodeDeactivationSupport = !!(flagsByte & 0b0010_0000);
+		const supportsCredentialChecksum = !!(flagsByte & 0b1000_0000);
+		const supportsAdminCode = !!(flagsByte & 0b0100_0000);
+		const supportsAdminCodeDeactivation = !!(flagsByte & 0b0010_0000);
 
 		const numberOfCredentialTypes = raw.payload[1];
 		const n = numberOfCredentialTypes;
 		validatePayload(raw.payload.length >= 2 + n * 9);
 
-		const supportedCredentialTypes: UserCredentialCredentialCapability[] =
-			[];
+		const credentialTypes = new Map<
+			UserCredentialType,
+			UserCredentialCapability
+		>();
 		// Grouped block offsets
 		const credTypeOff = 2;
 		const clSupportOff = credTypeOff + n;
@@ -1561,7 +1517,7 @@ export class UserCredentialCCCredentialCapabilitiesReport
 			const credentialType: UserCredentialType =
 				raw.payload[credTypeOff + i];
 			const clByte = raw.payload[clSupportOff + i];
-			const credentialLearnSupport = !!(clByte & 0b1000_0000);
+			const supportsCredentialLearn = !!(clByte & 0b1000_0000);
 			const numberOfCredentialSlots = raw.payload.readUInt16BE(
 				numSlotsOff + i * 2,
 			);
@@ -1571,9 +1527,8 @@ export class UserCredentialCCCredentialCapabilitiesReport
 				raw.payload[clTimeoutOff + i];
 			const credentialLearnNumberOfSteps = raw.payload[clStepsOff + i];
 			const maxCredentialHashLength = raw.payload[maxHashLenOff + i];
-			supportedCredentialTypes.push({
-				credentialType,
-				credentialLearnSupport,
+			credentialTypes.set(credentialType, {
+				supportsCredentialLearn,
 				numberOfCredentialSlots,
 				minCredentialLength,
 				maxCredentialLength,
@@ -1585,25 +1540,49 @@ export class UserCredentialCCCredentialCapabilitiesReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			credentialChecksumSupport,
-			adminCodeSupport,
-			adminCodeDeactivationSupport,
-			supportedCredentialTypes,
+			supportsCredentialChecksum,
+			supportsAdminCode,
+			supportsAdminCodeDeactivation,
+			credentialTypes: credentialTypes,
 		});
 	}
 
-	public readonly credentialChecksumSupport: boolean;
-	public readonly adminCodeSupport: boolean;
-	public readonly adminCodeDeactivationSupport: boolean;
-	public readonly supportedCredentialTypes:
-		UserCredentialCredentialCapability[];
+	public readonly supportsCredentialChecksum: boolean;
+	public readonly supportsAdminCode: boolean;
+	public readonly supportsAdminCodeDeactivation: boolean;
+	public readonly credentialTypes: Map<
+		UserCredentialType,
+		UserCredentialCapability
+	>;
+
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
+
+		this.setValue(
+			ctx,
+			UserCredentialCCValues.supportedCredentialTypes,
+			[...this.credentialTypes.keys()],
+		);
+
+		for (
+			const [credentialType, capability] of this.credentialTypes
+		) {
+			this.setValue(
+				ctx,
+				UserCredentialCCValues.credentialCapabilities(credentialType),
+				capability,
+			);
+		}
+
+		return true;
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const n = this.supportedCredentialTypes.length;
+		const n = this.credentialTypes.size;
 		this.payload = Bytes.alloc(2 + n * 9);
-		this.payload[0] = (this.credentialChecksumSupport ? 0b1000_0000 : 0)
-			| (this.adminCodeSupport ? 0b0100_0000 : 0)
-			| (this.adminCodeDeactivationSupport ? 0b0010_0000 : 0);
+		this.payload[0] = (this.supportsCredentialChecksum ? 0b1000_0000 : 0)
+			| (this.supportsAdminCode ? 0b0100_0000 : 0)
+			| (this.supportsAdminCodeDeactivation ? 0b0010_0000 : 0);
 		this.payload[1] = n;
 
 		const credTypeOff = 2;
@@ -1615,10 +1594,10 @@ export class UserCredentialCCCredentialCapabilitiesReport
 		const clStepsOff = clTimeoutOff + n;
 		const maxHashLenOff = clStepsOff + n;
 
-		for (let i = 0; i < n; i++) {
-			const ct = this.supportedCredentialTypes[i];
-			this.payload[credTypeOff + i] = ct.credentialType;
-			this.payload[clSupportOff + i] = ct.credentialLearnSupport
+		let i = 0;
+		for (const [credentialType, ct] of this.credentialTypes) {
+			this.payload[credTypeOff + i] = credentialType;
+			this.payload[clSupportOff + i] = ct.supportsCredentialLearn
 				? 0b1000_0000
 				: 0;
 			this.payload.writeUInt16BE(
@@ -1631,23 +1610,24 @@ export class UserCredentialCCCredentialCapabilitiesReport
 				ct.credentialLearnRecommendedTimeout;
 			this.payload[clStepsOff + i] = ct.credentialLearnNumberOfSteps;
 			this.payload[maxHashLenOff + i] = ct.maxCredentialHashLength;
+			i++;
 		}
 		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
-			"credential checksum support": this.credentialChecksumSupport,
-			"admin code support": this.adminCodeSupport,
+			"credential checksum support": this.supportsCredentialChecksum,
+			"admin code support": this.supportsAdminCode,
 			"admin code deactivation support":
-				this.adminCodeDeactivationSupport,
+				this.supportsAdminCodeDeactivation,
 		};
-		for (const ct of this.supportedCredentialTypes) {
+		for (const [credentialType, ct] of this.credentialTypes) {
 			message[
 				`credential type ${
 					getEnumMemberName(
 						UserCredentialType,
-						ct.credentialType,
+						credentialType,
 					)
 				}`
 			] = `slots: ${ct.numberOfCredentialSlots}, length: ${ct.minCredentialLength}-${ct.maxCredentialLength}`;
@@ -1666,23 +1646,14 @@ export class UserCredentialCCCredentialCapabilitiesGet
 {}
 
 // @publicAPI
-export interface UserCredentialKeyLockerCapability {
-	entryType: UserCredentialKeyLockerEntryType;
-	numberOfEntrySlots: number;
-	minEntryDataLength: number;
-	maxEntryDataLength: number;
-}
-
-// @publicAPI
 export interface UserCredentialCCKeyLockerCapabilitiesReportOptions {
-	supportedKeyLockerEntryTypes: UserCredentialKeyLockerCapability[];
+	keyLockerCapabilities: Map<
+		UserCredentialKeyLockerEntryType,
+		UserCredentialKeyLockerEntryCapability
+	>;
 }
 
 @CCCommand(UserCredentialCommand.KeyLockerCapabilitiesReport)
-@ccValueProperty(
-	"supportedKeyLockerEntryTypes",
-	UserCredentialCCValues.keyLockerCapabilities,
-)
 export class UserCredentialCCKeyLockerCapabilitiesReport
 	extends UserCredentialCC
 {
@@ -1692,8 +1663,7 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 		>,
 	) {
 		super(options);
-		this.supportedKeyLockerEntryTypes =
-			options.supportedKeyLockerEntryTypes;
+		this.keyLockerCapabilities = options.keyLockerCapabilities;
 	}
 
 	public static from(
@@ -1705,8 +1675,10 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 		const n = numberOfEntryTypes;
 		validatePayload(raw.payload.length >= 1 + n * 7);
 
-		const supportedKeyLockerEntryTypes:
-			UserCredentialKeyLockerCapability[] = [];
+		const keyLockerCapabilities = new Map<
+			UserCredentialKeyLockerEntryType,
+			UserCredentialKeyLockerEntryCapability
+		>();
 		// Grouped block offsets
 		const entryTypeOff = 1;
 		const numSlotsOff = entryTypeOff + n;
@@ -1725,8 +1697,7 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 			const maxEntryDataLength = raw.payload.readUInt16BE(
 				maxLenOff + i * 2,
 			);
-			supportedKeyLockerEntryTypes.push({
-				entryType,
+			keyLockerCapabilities.set(entryType, {
 				numberOfEntrySlots,
 				minEntryDataLength,
 				maxEntryDataLength,
@@ -1735,15 +1706,37 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			supportedKeyLockerEntryTypes,
+			keyLockerCapabilities,
 		});
 	}
 
-	public readonly supportedKeyLockerEntryTypes:
-		UserCredentialKeyLockerCapability[];
+	public readonly keyLockerCapabilities: Map<
+		UserCredentialKeyLockerEntryType,
+		UserCredentialKeyLockerEntryCapability
+	>;
+
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
+
+		this.setValue(
+			ctx,
+			UserCredentialCCValues.supportedKeyLockerEntryTypes,
+			[...this.keyLockerCapabilities.keys()],
+		);
+
+		for (const [entryType, capability] of this.keyLockerCapabilities) {
+			this.setValue(
+				ctx,
+				UserCredentialCCValues.keyLockerCapabilities(entryType),
+				capability,
+			);
+		}
+
+		return true;
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const n = this.supportedKeyLockerEntryTypes.length;
+		const n = this.keyLockerCapabilities.size;
 		this.payload = Bytes.alloc(1 + n * 7);
 		this.payload[0] = n;
 
@@ -1752,36 +1745,38 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 		const minLenOff = numSlotsOff + n * 2;
 		const maxLenOff = minLenOff + n * 2;
 
-		for (let i = 0; i < n; i++) {
-			const et = this.supportedKeyLockerEntryTypes[i];
-			this.payload[entryTypeOff + i] = et.entryType;
+		let i = 0;
+		for (const [entryType, capability] of this.keyLockerCapabilities) {
+			this.payload[entryTypeOff + i] = entryType;
 			this.payload.writeUInt16BE(
-				et.numberOfEntrySlots,
+				capability.numberOfEntrySlots,
 				numSlotsOff + i * 2,
 			);
 			this.payload.writeUInt16BE(
-				et.minEntryDataLength,
+				capability.minEntryDataLength,
 				minLenOff + i * 2,
 			);
 			this.payload.writeUInt16BE(
-				et.maxEntryDataLength,
+				capability.maxEntryDataLength,
 				maxLenOff + i * 2,
 			);
+
+			i++;
 		}
 		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
-		for (const et of this.supportedKeyLockerEntryTypes) {
+		for (const [entryType, capability] of this.keyLockerCapabilities) {
 			message[
 				`entry type ${
 					getEnumMemberName(
 						UserCredentialKeyLockerEntryType,
-						et.entryType,
+						entryType,
 					)
 				}`
-			] = `slots: ${et.numberOfEntrySlots}, length: ${et.minEntryDataLength}-${et.maxEntryDataLength}`;
+			] = `slots: ${capability.numberOfEntrySlots}, length: ${capability.minEntryDataLength}-${capability.maxEntryDataLength}`;
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -3040,11 +3035,6 @@ export class UserCredentialCCAllUsersChecksumReport extends UserCredentialCC {
 export class UserCredentialCCAllUsersChecksumGet extends UserCredentialCC {}
 
 // @publicAPI
-export interface UserCredentialCCUserChecksumGetOptions {
-	userUniqueIdentifier: number;
-}
-
-// @publicAPI
 export interface UserCredentialCCUserChecksumReportOptions {
 	userUniqueIdentifier: number;
 	checksum: number;
@@ -3096,6 +3086,11 @@ export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 	}
 }
 
+// @publicAPI
+export interface UserCredentialCCUserChecksumGetOptions {
+	userUniqueIdentifier: number;
+}
+
 @CCCommand(UserCredentialCommand.UserChecksumGet)
 @expectedCCResponse(UserCredentialCCUserChecksumReport)
 export class UserCredentialCCUserChecksumGet extends UserCredentialCC {
@@ -3135,11 +3130,6 @@ export class UserCredentialCCUserChecksumGet extends UserCredentialCC {
 			},
 		};
 	}
-}
-
-// @publicAPI
-export interface UserCredentialCCCredentialChecksumGetOptions {
-	credentialType: UserCredentialType;
 }
 
 // @publicAPI
@@ -3197,6 +3187,11 @@ export class UserCredentialCCCredentialChecksumReport extends UserCredentialCC {
 			},
 		};
 	}
+}
+
+// @publicAPI
+export interface UserCredentialCCCredentialChecksumGetOptions {
+	credentialType: UserCredentialType;
 }
 
 @CCCommand(UserCredentialCommand.CredentialChecksumGet)

@@ -9033,19 +9033,19 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	userScheduleSupport: {
+	supportsUserSchedule: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
-			property: "userScheduleSupport",
+			property: "supportsUserSchedule",
 		} as const,
 		endpoint: (endpoint: number = 0) => ({
 			commandClass: CommandClasses["User Credential"],
 			endpoint,
-			property: "userScheduleSupport",
+			property: "supportsUserSchedule",
 		} as const),
 		is: (valueId: ValueID): boolean => {
 			return valueId.commandClass === CommandClasses["User Credential"]
-				&& valueId.property === "userScheduleSupport"
+				&& valueId.property === "supportsUserSchedule"
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
@@ -9060,19 +9060,19 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	allUsersChecksumSupport: {
+	supportsAllUsersChecksum: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
-			property: "allUsersChecksumSupport",
+			property: "supportsAllUsersChecksum",
 		} as const,
 		endpoint: (endpoint: number = 0) => ({
 			commandClass: CommandClasses["User Credential"],
 			endpoint,
-			property: "allUsersChecksumSupport",
+			property: "supportsAllUsersChecksum",
 		} as const),
 		is: (valueId: ValueID): boolean => {
 			return valueId.commandClass === CommandClasses["User Credential"]
-				&& valueId.property === "allUsersChecksumSupport"
+				&& valueId.property === "supportsAllUsersChecksum"
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
@@ -9087,19 +9087,19 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	userChecksumSupport: {
+	supportsUserChecksum: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
-			property: "userChecksumSupport",
+			property: "supportsUserChecksum",
 		} as const,
 		endpoint: (endpoint: number = 0) => ({
 			commandClass: CommandClasses["User Credential"],
 			endpoint,
-			property: "userChecksumSupport",
+			property: "supportsUserChecksum",
 		} as const),
 		is: (valueId: ValueID): boolean => {
 			return valueId.commandClass === CommandClasses["User Credential"]
-				&& valueId.property === "userChecksumSupport"
+				&& valueId.property === "supportsUserChecksum"
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
@@ -9168,19 +9168,19 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	credentialChecksumSupport: {
+	supportsCredentialChecksum: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
-			property: "credentialChecksumSupport",
+			property: "supportsCredentialChecksum",
 		} as const,
 		endpoint: (endpoint: number = 0) => ({
 			commandClass: CommandClasses["User Credential"],
 			endpoint,
-			property: "credentialChecksumSupport",
+			property: "supportsCredentialChecksum",
 		} as const),
 		is: (valueId: ValueID): boolean => {
 			return valueId.commandClass === CommandClasses["User Credential"]
-				&& valueId.property === "credentialChecksumSupport"
+				&& valueId.property === "supportsCredentialChecksum"
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
@@ -9195,19 +9195,19 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	adminCodeSupport: {
+	supportsAdminCode: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
-			property: "adminCodeSupport",
+			property: "supportsAdminCode",
 		} as const,
 		endpoint: (endpoint: number = 0) => ({
 			commandClass: CommandClasses["User Credential"],
 			endpoint,
-			property: "adminCodeSupport",
+			property: "supportsAdminCode",
 		} as const),
 		is: (valueId: ValueID): boolean => {
 			return valueId.commandClass === CommandClasses["User Credential"]
-				&& valueId.property === "adminCodeSupport"
+				&& valueId.property === "supportsAdminCode"
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
@@ -9222,19 +9222,19 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	adminCodeDeactivationSupport: {
+	supportsAdminCodeDeactivation: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
-			property: "adminCodeDeactivationSupport",
+			property: "supportsAdminCodeDeactivation",
 		} as const,
 		endpoint: (endpoint: number = 0) => ({
 			commandClass: CommandClasses["User Credential"],
 			endpoint,
-			property: "adminCodeDeactivationSupport",
+			property: "supportsAdminCodeDeactivation",
 		} as const),
 		is: (valueId: ValueID): boolean => {
 			return valueId.commandClass === CommandClasses["User Credential"]
-				&& valueId.property === "adminCodeDeactivationSupport"
+				&& valueId.property === "supportsAdminCodeDeactivation"
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
@@ -9276,6 +9276,46 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
+	credentialCapabilities: Object.assign(
+		(credentialType: UserCredentialType) => {
+			const property = "credentialCapabilities";
+			const propertyKey = credentialType;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credentialCapabilities"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
 	allUsersChecksum: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
@@ -9303,19 +9343,19 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	keyLockerCapabilities: {
+	supportedKeyLockerEntryTypes: {
 		id: {
 			commandClass: CommandClasses["User Credential"],
-			property: "keyLockerCapabilities",
+			property: "supportedKeyLockerEntryTypes",
 		} as const,
 		endpoint: (endpoint: number = 0) => ({
 			commandClass: CommandClasses["User Credential"],
 			endpoint,
-			property: "keyLockerCapabilities",
+			property: "supportedKeyLockerEntryTypes",
 		} as const),
 		is: (valueId: ValueID): boolean => {
 			return valueId.commandClass === CommandClasses["User Credential"]
-				&& valueId.property === "keyLockerCapabilities"
+				&& valueId.property === "supportedKeyLockerEntryTypes"
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
@@ -9330,6 +9370,46 @@ export const UserCredentialCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
+	keyLockerCapabilities: Object.assign(
+		(entryType: UserCredentialKeyLockerEntryType) => {
+			const property = "keyLockerCapabilities";
+			const propertyKey = entryType;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "keyLockerCapabilities"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 2,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
 	userType: Object.assign(
 		(userId: number) => {
 			const property = "userType";
