@@ -170,7 +170,10 @@ const respondToWindowCoveringSet: MockNodeBehavior = {
 					capabilities.travelTime,
 				);
 			}
-			return { action: "ok" };
+			return {
+				action: "ok",
+				durationMs: capabilities.travelTime,
+			};
 		}
 	},
 };

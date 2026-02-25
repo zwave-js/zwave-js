@@ -4,20 +4,16 @@ import {
 	BinarySwitchCCReport,
 	BinarySwitchCCValues,
 	type CommandClass,
-	InvalidCC,
 	Security2CC,
 	Security2CCMessageEncapsulation,
-	Security2CCNonceGet,
-	Security2CCNonceReport,
 	SupervisionCC,
-	SupervisionCCGet,
 	SupervisionCCReport,
+	SupervisionCommand,
 } from "@zwave-js/cc";
 import {
+	CommandClasses,
 	SecurityClass,
-	SecurityManager2,
 	SupervisionStatus,
-	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
@@ -49,15 +45,12 @@ integrationTest(
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
 					) {
-						let cc: CommandClass = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						return { action: "sendCC", cc };
+						return { action: "ok" };
 					}
 				},
 			};
@@ -183,20 +176,12 @@ integrationTest(
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
 					) {
-						let cc: CommandClass = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						cc = Security2CC.encapsulate(
-							cc,
-							self.id,
-							self.securityManagers,
-						);
-						return { action: "sendCC", cc };
+						return { action: "ok" };
 					}
 				},
 			};
@@ -283,20 +268,12 @@ integrationTest(
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
 					) {
-						let cc: CommandClass = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						cc = Security2CC.encapsulate(
-							cc,
-							self.id,
-							self.securityManagers,
-						);
-						return { action: "sendCC", cc };
+						return { action: "ok" };
 					}
 				},
 			};

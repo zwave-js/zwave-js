@@ -1,20 +1,15 @@
 import {
-	type CommandClass,
 	InvalidCC,
-	Security2CC,
-	Security2CCMessageEncapsulation,
 	Security2CCNonceGet,
 	Security2CCNonceReport,
 	SecurityCCCommandEncapsulation,
 	SecurityCCCommandsSupportedGet,
-	SupervisionCCGet,
-	SupervisionCCReport,
+	SupervisionCommand,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	SecurityClass,
 	SecurityManager2,
-	SupervisionStatus,
 	ZWaveErrorCodes,
 	securityClassOrder as allSecurityClasses,
 } from "@zwave-js/core";
@@ -129,21 +124,12 @@ integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {
 		const respondToSupervisionGet: MockNodeBehavior = {
 			handleCC(controller, self, receivedCC) {
 				if (
-					receivedCC instanceof Security2CCMessageEncapsulation
-					&& receivedCC.encapsulated instanceof SupervisionCCGet
+					receivedCC.isEncapsulatedWith(
+						CommandClasses.Supervision,
+						SupervisionCommand.Get,
+					)
 				) {
-					let cc: CommandClass = new SupervisionCCReport({
-						nodeId: controller.ownNodeId,
-						sessionId: receivedCC.encapsulated.sessionId,
-						moreUpdatesFollow: false,
-						status: SupervisionStatus.Success,
-					});
-					cc = Security2CC.encapsulate(
-						cc,
-						self.id,
-						self.securityManagers,
-					);
-					return { action: "sendCC", cc };
+					return { action: "ok" };
 				}
 			},
 		};

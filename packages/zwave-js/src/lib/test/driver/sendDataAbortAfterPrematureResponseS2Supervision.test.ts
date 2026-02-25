@@ -1,12 +1,7 @@
+import { BasicCCGet, BasicCCReport, SupervisionCommand } from "@zwave-js/cc";
 import {
-	BasicCCGet,
-	BasicCCReport,
-	SupervisionCCGet,
-	SupervisionCCReport,
-} from "@zwave-js/cc";
-import {
+	CommandClasses,
 	SecurityClass,
-	SupervisionStatus,
 	TransmitStatus,
 	isSupervisionResult,
 } from "@zwave-js/core";
@@ -100,15 +95,12 @@ integrationTest(
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
 					) {
-						const cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						return { action: "sendCC", cc };
+						return { action: "ok" };
 					}
 				},
 			};

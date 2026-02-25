@@ -94,15 +94,13 @@ function encodeNodeTextPayload(text: string): Bytes {
 		textBuffer = Bytes.from(text, "ascii");
 	}
 
-	const truncatedText = textBuffer.subarray(
-		0,
-		Math.min(16, textBuffer.length),
-	);
-	const payload = new Bytes(1 + truncatedText.length);
-	payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-	payload.set(truncatedText, 1);
+	// The length of this field MUST be in the range 1..16 bytes
+	const textLength = Math.min(16, textBuffer.length);
 
-	return payload;
+	return Bytes.concat([
+		[encoding === "ascii" ? 0x0 : 0x2],
+		textBuffer.subarray(0, textLength),
+	]);
 }
 
 @API(CommandClasses["Node Naming and Location"])

@@ -490,8 +490,10 @@ export class MockNode {
 			// If no behavior handled the frame, or we're supposed to stop, stop
 			if (!response || response.action === "stop") return;
 
-			// Transform responses with hooks, e.g. to support Supervision or other encapsulation
-			for (const behavior of this.behaviors) {
+			// Transform responses with hooks, e.g. to support Supervision or other encapsulation.
+			// Iterate in reverse order so wrapping happens opposite to unwrapping.
+			for (let i = this.behaviors.length - 1; i >= 0; i--) {
+				const behavior = this.behaviors[i];
 				if (behavior.transformResponse) {
 					response = await behavior.transformResponse(
 						this.controller,
@@ -642,6 +644,8 @@ export type MockNodeResponse = {
 } | {
 	// indicate success to the sending node
 	action: "ok";
+	/** If set, indicates how long the action will take to complete */
+	durationMs?: number;
 } | {
 	// indicate failure to the sending node
 	action: "fail";

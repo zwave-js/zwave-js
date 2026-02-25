@@ -1,9 +1,5 @@
-import {
-	MultilevelSwitchCCValues,
-	SupervisionCCGet,
-	SupervisionCCReport,
-} from "@zwave-js/cc";
-import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
+import { MultilevelSwitchCCValues, SupervisionCommand } from "@zwave-js/cc";
+import { CommandClasses } from "@zwave-js/core";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 import path from "node:path";
 import { integrationTest } from "../integrationTestSuite.js";
@@ -41,14 +37,13 @@ integrationTest(
 			// Just have the node respond to all Supervision Get positively
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof SupervisionCCGet) {
-						const cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						return { action: "sendCC", cc };
+					if (
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
+					) {
+						return { action: "ok" };
 					}
 				},
 			};
