@@ -63,6 +63,11 @@ export interface NotificationCCCapabilities {
 	notificationTypesAndEvents: Record<number, number[]>;
 }
 
+export interface NodeNamingAndLocationCCCapabilities {
+	name?: string;
+	location?: string;
+}
+
 export interface MeterCCCapabilities {
 	meterType: number;
 	supportedScales: number[];
@@ -178,6 +183,7 @@ export interface ScheduleEntryLockCCCapabilities {
 export type CCSpecificCapabilities = {
 	[CommandClasses.Configuration]: ConfigurationCCCapabilities;
 	[CommandClasses.Notification]: NotificationCCCapabilities;
+	[0x77 /* Node Naming and Location */]: NodeNamingAndLocationCCCapabilities;
 	[48 /* Binary Sensor */]: BinarySensorCCCapabilities;
 	[0x25 /* Binary Switch */]: BinarySwitchCCCapabilities;
 	[49 /* Multilevel Sensor */]: MultilevelSensorCCCapabilities;

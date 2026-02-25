@@ -7,6 +7,7 @@ import {
 import {
 	BinarySwitchCCValues,
 	MultilevelSwitchCCValues,
+	NodeNamingAndLocationCCValues,
 	NotificationCCValues,
 	SoundSwitchCCValues,
 	SwitchType,
@@ -39,6 +40,7 @@ import {
 	type MockNodeBehavior,
 	type MockNodeOptions,
 	type MultilevelSwitchCCCapabilities,
+	type NodeNamingAndLocationCCCapabilities,
 	type NotificationCCCapabilities,
 	type PartialCCCapabilities,
 	type SoundSwitchCCCapabilities,
@@ -415,6 +417,11 @@ function createCCCapabilitiesFromDump(
 		Object.assign(ret, createMultilevelSwitchCCCapabilitiesFromDump(dump));
 	} else if (ccId === CommandClasses["Sound Switch"]) {
 		Object.assign(ret, createSoundSwitchCCCapabilitiesFromDump(dump));
+	} else if (ccId === CommandClasses["Node Naming and Location"]) {
+		Object.assign(
+			ret,
+			createNodeNamingAndLocationCCCapabilitiesFromDump(dump),
+		);
 	}
 
 	return ret;
@@ -575,6 +582,28 @@ function createSoundSwitchCCCapabilitiesFromDump(
 	}
 
 	return ret;
+}
+
+function createNodeNamingAndLocationCCCapabilitiesFromDump(
+	dump: CommandClassDump,
+): NodeNamingAndLocationCCCapabilities {
+	const name = findDumpedValue(
+		dump,
+		CommandClasses["Node Naming and Location"],
+		NodeNamingAndLocationCCValues.name.id,
+		undefined,
+	);
+	const location = findDumpedValue(
+		dump,
+		CommandClasses["Node Naming and Location"],
+		NodeNamingAndLocationCCValues.location.id,
+		undefined,
+	);
+
+	return {
+		name,
+		location,
+	};
 }
 
 function findDumpedValue<T>(
