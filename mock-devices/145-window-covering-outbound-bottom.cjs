@@ -17,7 +17,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name: "Window Covering Outbound Bottom",
+						name: "WinCov OutBot",
 					}),
 					ccCaps({
 						ccId: CommandClasses["Window Covering"],

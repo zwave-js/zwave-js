@@ -17,7 +17,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name: "Multilevel Switch V1",
+						name: "Multilevel Sw1",
 					}),
 					ccCaps({
 						ccId: CommandClasses["Multilevel Switch"],

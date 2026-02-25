@@ -17,8 +17,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name:
-							"Fast Single-Channel Multilevel Switch, with Supervision",
+						name: "Fast Single Sup",
 					}),
 					{
 						ccId: CommandClasses.Supervision,

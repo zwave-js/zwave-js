@@ -17,7 +17,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name: "Window Covering Horizontal Angle Open/Close",
+						name: "WinCov Ang O/C",
 					}),
 					ccCaps({
 						ccId: CommandClasses["Window Covering"],

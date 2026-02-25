@@ -14,7 +14,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name: "Multilevel Sensor V4",
+						name: "Multilevel Sen4",
 					}),
 					ccCaps({
 						ccId: CommandClasses["Multilevel Sensor"],

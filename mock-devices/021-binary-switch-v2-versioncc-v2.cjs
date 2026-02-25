@@ -17,7 +17,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name: "Binary Switch V2 with Version V2",
+						name: "Bin Switch V2+V2",
 					}),
 					ccCaps({
 						ccId: CommandClasses["Binary Switch"],

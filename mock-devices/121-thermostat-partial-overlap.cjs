@@ -15,7 +15,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name: "Thermostat Partial Overlap",
+						name: "Thermostat Part",
 					}),
 					ccCaps({
 						ccId: CommandClasses["Thermostat Mode"],

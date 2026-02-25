@@ -17,7 +17,7 @@ module.exports.default = {
 					CommandClasses["Manufacturer Specific"],
 					ccCaps({
 						ccId: CommandClasses["Node Naming and Location"],
-						name: "Window Covering + Multilevel Switch",
+						name: "WinCov + MultiSw",
 					}),
 					ccCaps({
 						ccId: CommandClasses["Multilevel Switch"],
