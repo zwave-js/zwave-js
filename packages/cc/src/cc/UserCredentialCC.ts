@@ -470,7 +470,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		>(cc, this.commandOptions);
 		if (response) {
 			return pick(response, [
-				"userReportType",
 				"nextUserId",
 				"userModifierType",
 				"userModifierNodeId",
@@ -527,7 +526,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		>(cc, this.commandOptions);
 		if (response) {
 			return pick(response, [
-				"credentialReportType",
 				// UserId, credential type and slot can be zero in the
 				// request to return the first credential, so we cannot
 				// simply omit them here
@@ -2218,8 +2216,21 @@ export interface UserCredentialCCUserGetOptions {
 	userId: number;
 }
 
+function testResponseForUserCredentialUserGet(
+	sent: UserCredentialCCUserGet,
+	received: UserCredentialCCUserReport,
+) {
+	return (
+		received.userReportType
+			=== UserCredentialUserReportType.ResponseToGet
+	);
+}
+
 @CCCommand(UserCredentialCommand.UserGet)
-@expectedCCResponse(UserCredentialCCUserReport)
+@expectedCCResponse(
+	UserCredentialCCUserReport,
+	testResponseForUserCredentialUserGet,
+)
 export class UserCredentialCCUserGet extends UserCredentialCC {
 	public constructor(
 		options: WithAddress<UserCredentialCCUserGetOptions>,
@@ -2570,8 +2581,21 @@ export interface UserCredentialCCCredentialGetOptions {
 	credentialSlot: number;
 }
 
+function testResponseForUserCredentialCredentialGet(
+	_sent: UserCredentialCCCredentialGet,
+	received: UserCredentialCCCredentialReport,
+) {
+	return (
+		received.credentialReportType
+			=== UserCredentialCredentialReportType.ResponseToGet
+	);
+}
+
 @CCCommand(UserCredentialCommand.CredentialGet)
-@expectedCCResponse(UserCredentialCCCredentialReport)
+@expectedCCResponse(
+	UserCredentialCCCredentialReport,
+	testResponseForUserCredentialCredentialGet,
+)
 export class UserCredentialCCCredentialGet extends UserCredentialCC {
 	public constructor(
 		options: WithAddress<UserCredentialCCCredentialGetOptions>,
@@ -3350,8 +3374,21 @@ export class UserCredentialCCAdminPinCodeReport extends UserCredentialCC {
 	}
 }
 
+function testResponseForUserCredentialAdminPinCodeGet(
+	_sent: UserCredentialCCAdminPinCodeGet,
+	received: UserCredentialCCAdminPinCodeReport,
+) {
+	return (
+		received.operationResult
+			=== UserCredentialAdminCodeOperationResult.ResponseToGet
+	);
+}
+
 @CCCommand(UserCredentialCommand.AdminPinCodeGet)
-@expectedCCResponse(UserCredentialCCAdminPinCodeReport)
+@expectedCCResponse(
+	UserCredentialCCAdminPinCodeReport,
+	testResponseForUserCredentialAdminPinCodeGet,
+)
 export class UserCredentialCCAdminPinCodeGet extends UserCredentialCC {}
 
 // ============================================================
