@@ -44,6 +44,10 @@
 			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x"
 		},
 		{
+			"#": "7",
+			"$import": "templates/zooz_template.json#association_reports"
+		},
+		{
 			"#": "8",
 			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		},

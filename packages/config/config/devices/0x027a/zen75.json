@@ -41,28 +41,8 @@
 			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x"
 		},
 		{
-			"#": "7[0x01]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Control Group 2 with Physical Switch",
-			"defaultValue": 1
-		},
-		{
-			"#": "7[0x02]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Control Group 2 with Connected 3-Way Switch",
-			"defaultValue": 1
-		},
-		{
-			"#": "7[0x04]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Control Group 2 with Z-Wave Commands",
-			"defaultValue": 1
-		},
-		{
-			"#": "7[0x08]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Control Group 2 with On/Off Timers",
-			"defaultValue": 1
+			"#": "7",
+			"$import": "templates/zooz_template.json#association_reports"
 		},
 		{
 			"#": "8",
