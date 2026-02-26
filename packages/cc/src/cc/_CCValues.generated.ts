@@ -9712,6 +9712,46 @@ export const UserCredentialCCValues = Object.freeze({
 			} as const satisfies CCValueOptions,
 		},
 	),
+	userChecksum: Object.assign(
+		(userId: number) => {
+			const property = "userChecksum";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "userChecksum"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
 	credentialModifierType: Object.assign(
 		(userId: number, type: UserCredentialType, slot: number) => {
 			const property = "credentialModifierType";

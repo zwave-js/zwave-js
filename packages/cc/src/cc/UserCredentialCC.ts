@@ -234,6 +234,16 @@ export const UserCredentialCCValues = V.defineCCValues(
 			undefined,
 			{ internal: true },
 		),
+		...V.dynamicPropertyAndKeyWithName(
+			"userChecksum",
+			"userChecksum",
+			(userId: number) => userId,
+			({ property, propertyKey }) =>
+				property === "userChecksum"
+				&& typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
 
 		// Per-credential modifier info (keyed by userId << 24 | type << 16 | slot)
 		...V.dynamicPropertyAndKeyWithName(
@@ -1065,6 +1075,10 @@ export class UserCredentialCC extends CommandClass {
 			ctx,
 			UserCredentialCCValues.supportsAllUsersChecksum,
 		);
+		const supportsUserChecksum = this.getValue<boolean>(
+			ctx,
+			UserCredentialCCValues.supportsUserChecksum,
+		);
 		const supportsAdminCode = this.getValue<boolean>(
 			ctx,
 			UserCredentialCCValues.supportsAdminCode,
@@ -1102,6 +1116,7 @@ export class UserCredentialCC extends CommandClass {
 		if (!skipFullSync) {
 			// Iterate all users starting from UUID 0
 			let nextUserId = 0;
+			let previousUserId = 0;
 			do {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
@@ -1111,14 +1126,60 @@ export class UserCredentialCC extends CommandClass {
 				const user = await api.getUser(nextUserId);
 				if (!user?.userId) break; // No user found, stop iterating
 
-				// For each user, iterate all credentials
-				await this.queryCredentialsForUser(
-					ctx,
-					api,
-					node.id,
-					user.userId,
-				);
+				const currentUserId = user.userId;
 
+				// Purge cached data for any users in the gap between the
+				// last reported user and this one
+				for (
+					let gapUserId = previousUserId + 1;
+					gapUserId < currentUserId;
+					gapUserId++
+				) {
+					this.purgeUserFromCache(ctx, gapUserId);
+				}
+
+				// If possible use the checksum to determine whether to sync credentials for this user
+				let userChecksum: number | undefined;
+				let syncCredentials = true;
+
+				if (supportsUserChecksum) {
+					userChecksum = await api.getUserChecksum(currentUserId);
+					const cachedUserChecksum = this.getValue<number>(
+						ctx,
+						UserCredentialCCValues.userChecksum(currentUserId),
+					);
+					if (
+						userChecksum != undefined
+						&& cachedUserChecksum != undefined
+						&& userChecksum === cachedUserChecksum
+					) {
+						ctx.logNode(node.id, {
+							endpoint: this.endpointIndex,
+							message:
+								`user ${currentUserId} checksum unchanged, skipping credential sync`,
+							direction: "none",
+						});
+						syncCredentials = false;
+					}
+				}
+
+				if (syncCredentials) {
+					await this.queryCredentialsForUser(
+						ctx,
+						api,
+						node.id,
+						currentUserId,
+					);
+					if (userChecksum != undefined) {
+						this.setValue(
+							ctx,
+							UserCredentialCCValues.userChecksum(currentUserId),
+							userChecksum,
+						);
+					}
+				}
+
+				previousUserId = currentUserId;
 				nextUserId = user.nextUserId;
 			} while (nextUserId > 0);
 		}
@@ -1166,6 +1227,49 @@ export class UserCredentialCC extends CommandClass {
 					await api.getKeyLockerEntry(entryType, slot);
 				}
 			}
+		}
+	}
+
+	private purgeUserFromCache(
+		ctx: RefreshValuesContext,
+		userId: number,
+	): void {
+		// Remove all per-user values
+		this.removeValue(ctx, UserCredentialCCValues.userType(userId));
+		this.removeValue(ctx, UserCredentialCCValues.userActiveState(userId));
+		this.removeValue(ctx, UserCredentialCCValues.credentialRule(userId));
+		this.removeValue(
+			ctx,
+			UserCredentialCCValues.expiringTimeoutMinutes(userId),
+		);
+		this.removeValue(ctx, UserCredentialCCValues.userName(userId));
+		this.removeValue(ctx, UserCredentialCCValues.userModifierType(userId));
+		this.removeValue(
+			ctx,
+			UserCredentialCCValues.userModifierNodeId(userId),
+		);
+		this.removeValue(ctx, UserCredentialCCValues.userChecksum(userId));
+
+		// Remove all credential values for this user
+		const valueDB = this.getValueDB(ctx);
+		const credentialValues = valueDB.findValues(
+			(vid) =>
+				(UserCredentialCCValues.credential.is(vid)
+					|| UserCredentialCCValues.credentialModifierType.is(vid)
+					|| UserCredentialCCValues.credentialModifierNodeId.is(vid))
+				// The property key is constructed as (userId << 24) | (type << 16) | slot, so we can filter by userId
+				&& (vid.propertyKey as number >> 24) === userId,
+		);
+		for (
+			const { commandClass, endpoint, property, propertyKey }
+				of credentialValues
+		) {
+			valueDB.removeValue({
+				commandClass,
+				endpoint,
+				property,
+				propertyKey,
+			});
 		}
 	}
 
