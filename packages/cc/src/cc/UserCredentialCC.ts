@@ -3226,8 +3226,18 @@ export interface UserCredentialCCUserChecksumGetOptions {
 	userId: number;
 }
 
+function testResponseForUserCredentialUserChecksumGet(
+	sent: UserCredentialCCUserChecksumGet,
+	received: UserCredentialCCUserChecksumReport,
+) {
+	return received.userId === sent.userId;
+}
+
 @CCCommand(UserCredentialCommand.UserChecksumGet)
-@expectedCCResponse(UserCredentialCCUserChecksumReport)
+@expectedCCResponse(
+	UserCredentialCCUserChecksumReport,
+	testResponseForUserCredentialUserChecksumGet,
+)
 export class UserCredentialCCUserChecksumGet extends UserCredentialCC {
 	public constructor(
 		options: WithAddress<UserCredentialCCUserChecksumGetOptions>,
@@ -3329,8 +3339,18 @@ export interface UserCredentialCCCredentialChecksumGetOptions {
 	credentialType: UserCredentialType;
 }
 
+function testResponseForUserCredentialCredentialChecksumGet(
+	sent: UserCredentialCCCredentialChecksumGet,
+	received: UserCredentialCCCredentialChecksumReport,
+) {
+	return received.credentialType === sent.credentialType;
+}
+
 @CCCommand(UserCredentialCommand.CredentialChecksumGet)
-@expectedCCResponse(UserCredentialCCCredentialChecksumReport)
+@expectedCCResponse(
+	UserCredentialCCCredentialChecksumReport,
+	testResponseForUserCredentialCredentialChecksumGet,
+)
 export class UserCredentialCCCredentialChecksumGet extends UserCredentialCC {
 	public constructor(
 		options: WithAddress<
@@ -3717,8 +3737,19 @@ export interface UserCredentialCCKeyLockerEntryGetOptions {
 	entrySlot: number;
 }
 
+function testResponseForUserCredentialKeyLockerEntryGet(
+	sent: UserCredentialCCKeyLockerEntryGet,
+	received: UserCredentialCCKeyLockerEntryReport,
+) {
+	return received.entryType === sent.entryType
+		&& received.entrySlot === sent.entrySlot;
+}
+
 @CCCommand(UserCredentialCommand.KeyLockerEntryGet)
-@expectedCCResponse(UserCredentialCCKeyLockerEntryReport)
+@expectedCCResponse(
+	UserCredentialCCKeyLockerEntryReport,
+	testResponseForUserCredentialKeyLockerEntryGet,
+)
 export class UserCredentialCCKeyLockerEntryGet extends UserCredentialCC {
 	public constructor(
 		options: WithAddress<UserCredentialCCKeyLockerEntryGetOptions>,
