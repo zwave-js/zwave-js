@@ -54,9 +54,24 @@
 			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x"
 		},
 		{
-			"#": "7",
+			"#": "7[0x01]",
 			"$if": "firmwareVersion >= 10.20 || firmwareVersion >= 2.20 && firmwareVersion < 10.0",
-			"$import": "templates/zooz_template.json#association_reports"
+			"$import": "templates/zooz_template.json#association_reports_physical"
+		},
+		{
+			"#": "7[0x02]",
+			"$if": "firmwareVersion >= 10.20 || firmwareVersion >= 2.20 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#association_reports_3way"
+		},
+		{
+			"#": "7[0x04]",
+			"$if": "firmwareVersion >= 10.20 || firmwareVersion >= 2.20 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#association_reports_zwave"
+		},
+		{
+			"#": "7[0x08]",
+			"$if": "firmwareVersion >= 10.20 || firmwareVersion >= 2.20 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#association_reports_timer"
 		},
 		{
 			"#": "8",

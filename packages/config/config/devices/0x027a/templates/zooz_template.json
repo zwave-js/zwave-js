@@ -442,81 +442,34 @@
 			}
 		]
 	},
-	"association_reports": {
-		"label": "Association Reports",
-		"description": "Choose which physical and Z-Wave triggers should prompt the switch to send a status change report to the associated devices (Group 2). See values for details.",
-		"valueSize": 1,
-		"minValue": 0,
-		"maxValue": 15,
-		"defaultValue": 15,
-		"unsigned": true,
-		"allowManualEntry": false,
-		"options": [
-			{
-				"label": "None",
-				"value": 0
-			},
-			{
-				"label": "Physical tap on device only",
-				"value": 1
-			},
-			{
-				"label": "Phyiscal tap on connected 3-way switch only",
-				"value": 2
-			},
-			{
-				"label": "Physical tap on device or connected 3-way switch",
-				"value": 3
-			},
-			{
-				"label": "Z-Wave command from hub",
-				"value": 4
-			},
-			{
-				"label": "Physical tap on device or Z-Wave command from hub",
-				"value": 5
-			},
-			{
-				"label": "Physical tap on connected 3-way switch or Z-Wave command",
-				"value": 6
-			},
-			{
-				"label": "Physical tap on device, connected 3-way switch, or Z-Wave command from hub",
-				"value": 7
-			},
-			{
-				"label": "Timer only",
-				"value": 8
-			},
-			{
-				"label": "Physical tap on device or timer",
-				"value": 9
-			},
-			{
-				"label": "Physical tap on connected 3-way switch or timer",
-				"value": 10
-			},
-			{
-				"label": "Physical tap on device, connected 3-way switch, or timer",
-				"value": 11
-			},
-			{
-				"label": "Z-wave command from hub or timer",
-				"value": 12
-			},
-			{
-				"label": "Physical tap on device, connected 3-way switch, or timer",
-				"value": 13
-			},
-			{
-				"label": "Physical tap on device, connected 3-way switch, Z-Wave command from hub, or timer",
-				"value": 14
-			},
-			{
-				"label": "All of the the above",
-				"value": 15
-			}
-		]
+	// Separate out the bitmask for association reports into individual parameters for better clarity in the UI
+	// [0x01] Physical tap of the device
+	// [0x02] Physical tap of connected 3-way switch
+	// [0x04] Z-Wave control of the switch
+	// [0x08] Timer trigger
+	"association_reports_physical": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Association Reports: Phyiscal tap",
+		"description": "Send status change report on physical tap of device to the associated devices (Group 2).",
+		"defaultValue": 1
+	},
+	"association_reports_3way": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Association Reports: 3-Way Switch Tap",
+		"description": "Send status change report on physical tap of connected 3-way switch to the associated devices (Group 2).",
+		"defaultValue": 1
+	},
+	"association_reports_zwave": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Association Reports: Z-Wave Control",
+		"description": "Send status change report on Z-Wave control of the switch to the associated devices (Group 2).",
+		"defaultValue": 1
+	},
+	"association_reports_timer": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Association Reports: Timer",
+		"description": "Send status change report on timer trigger to the associated devices (Group 2).",
+		"defaultValue": 1
 	},
 	"dimmer_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
