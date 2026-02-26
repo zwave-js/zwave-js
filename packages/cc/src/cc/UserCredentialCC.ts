@@ -1090,7 +1090,8 @@ export class UserCredentialCC extends CommandClass {
 			UserCredentialCCValues.supportedKeyLockerEntryTypes,
 		);
 
-		// Check if all-users checksum has changed
+		// If possible use the all-users checksum to determine whether to
+		// skip full sync of all users and credentials
 		let skipFullSync = false;
 		let allUsersChecksum: number | undefined;
 		if (supportsAllUsersChecksum) {
@@ -1138,7 +1139,8 @@ export class UserCredentialCC extends CommandClass {
 					this.purgeUserFromCache(ctx, gapUserId);
 				}
 
-				// If possible use the checksum to determine whether to sync credentials for this user
+				// If possible use the checksum to determine whether to sync
+				// credentials for this user
 				let userChecksum: number | undefined;
 				let syncCredentials = true;
 
