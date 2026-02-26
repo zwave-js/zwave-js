@@ -1385,9 +1385,9 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 			UserCredentialNameEncoding.UTF16BE,
 			UserCredentialNameEncoding.ASCII,
 		);
-		const flagsByte = (this.supportsUserSchedule ? 0b1000_0000 : 0)
-			| (this.supportsAllUsersChecksum ? 0b0100_0000 : 0)
-			| (this.supportsUserChecksum ? 0b0010_0000 : 0)
+		const flagsByte = (this.supportsUserSchedule ? 0x80 : 0)
+			| (this.supportsAllUsersChecksum ? 0x40 : 0)
+			| (this.supportsUserChecksum ? 0x20 : 0)
 			| ((nameEncodingBitmask[0] & 0b111) << 2);
 		const userTypesBitmask = encodeBitMask(
 			this.supportedUserTypes,
@@ -1565,9 +1565,9 @@ export class UserCredentialCCCredentialCapabilitiesReport
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const n = this.credentialTypes.size;
 		this.payload = Bytes.alloc(2 + n * 9);
-		this.payload[0] = (this.supportsCredentialChecksum ? 0b1000_0000 : 0)
-			| (this.supportsAdminCode ? 0b0100_0000 : 0)
-			| (this.supportsAdminCodeDeactivation ? 0b0010_0000 : 0);
+		this.payload[0] = (this.supportsCredentialChecksum ? 0x80 : 0)
+			| (this.supportsAdminCode ? 0x40 : 0)
+			| (this.supportsAdminCodeDeactivation ? 0x20 : 0);
 		this.payload[1] = n;
 
 		const credTypeOff = 2;
@@ -1583,7 +1583,7 @@ export class UserCredentialCCCredentialCapabilitiesReport
 		for (const [credentialType, ct] of this.credentialTypes) {
 			this.payload[credTypeOff + i] = credentialType;
 			this.payload[clSupportOff + i] = ct.supportsCredentialLearn
-				? 0b1000_0000
+				? 0x80
 				: 0;
 			this.payload.writeUInt16BE(
 				ct.numberOfCredentialSlots,
@@ -1827,7 +1827,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	): UserCredentialCCUserSet {
 		validatePayload(raw.payload.length >= 3);
 		const operationType: UserCredentialOperationType = raw.payload[0]
-			& 0x03;
+			& 0b11;
 		const userId = raw.payload.readUInt16BE(1);
 
 		// For Delete, remaining fields MAY be omitted
@@ -1843,10 +1843,10 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		}
 
 		const userType: UserCredentialUserType = raw.payload[3];
-		const activeState: UserCredentialActiveState = raw.payload[4] & 0x0f;
+		const activeState: UserCredentialActiveState = raw.payload[4] & 0b1111;
 		const credentialRule: UserCredentialRule = raw.payload[5];
 		const expiringTimeoutMinutes = raw.payload.readUInt16BE(6);
-		const nameEncoding: UserCredentialNameEncoding = raw.payload[8] & 0x07;
+		const nameEncoding: UserCredentialNameEncoding = raw.payload[8] & 0b111;
 		const nameLength = raw.payload[9];
 		validatePayload(raw.payload.length >= 10 + nameLength);
 		let userName: string;
@@ -1876,7 +1876,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (this.operationType === UserCredentialOperationType.Delete) {
 			this.payload = Bytes.alloc(3);
-			this.payload[0] = this.operationType & 0x03;
+			this.payload[0] = this.operationType & 0b11;
 			this.payload.writeUInt16BE(this.userId, 1);
 			return super.serialize(ctx);
 		}
@@ -1888,13 +1888,13 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 			nameBuffer = Bytes.from(this.userName, "ascii");
 		}
 		this.payload = Bytes.alloc(10 + nameBuffer.length);
-		this.payload[0] = this.operationType & 0x03;
+		this.payload[0] = this.operationType & 0b11;
 		this.payload.writeUInt16BE(this.userId, 1);
 		this.payload[3] = this.userType;
-		this.payload[4] = this.activeState & 0x0f;
+		this.payload[4] = this.activeState & 0b1111;
 		this.payload[5] = this.credentialRule;
 		this.payload.writeUInt16BE(this.expiringTimeoutMinutes, 6);
-		this.payload[8] = this.nameEncoding & 0x07;
+		this.payload[8] = this.nameEncoding & 0b111;
 		this.payload[9] = nameBuffer.length;
 		if (nameBuffer.length > 0) {
 			this.payload.set(nameBuffer, 10);
@@ -1979,12 +1979,13 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		const userModifierNodeId = raw.payload.readUInt16BE(4);
 		const userId = raw.payload.readUInt16BE(6);
 		const userType: UserCredentialUserType = raw.payload[8];
-		const activeState: UserCredentialActiveState = raw.payload[9] & 0x0f;
+		const activeState: UserCredentialActiveState = raw.payload[9] & 0b1111;
 		const credentialRule: UserCredentialRule = raw.payload[10];
 		const expiringTimeoutMinutes = raw.payload.readUInt16BE(11);
 
 		validatePayload(raw.payload.length >= 15);
-		const nameEncoding: UserCredentialNameEncoding = raw.payload[13] & 0x07;
+		const nameEncoding: UserCredentialNameEncoding = raw.payload[13]
+			& 0b111;
 		const nameLength = raw.payload[14];
 		validatePayload(raw.payload.length >= 15 + nameLength);
 		let userName: string;
@@ -2040,10 +2041,10 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		this.payload.writeUInt16BE(this.userModifierNodeId, 4);
 		this.payload.writeUInt16BE(this.userId, 6);
 		this.payload[8] = this.userType;
-		this.payload[9] = this.activeState & 0x0f;
+		this.payload[9] = this.activeState & 0b1111;
 		this.payload[10] = this.credentialRule;
 		this.payload.writeUInt16BE(this.expiringTimeoutMinutes, 11);
-		this.payload[13] = this.nameEncoding & 0x07;
+		this.payload[13] = this.nameEncoding & 0b111;
 		this.payload[14] = nameBuffer.length;
 		if (nameBuffer.length > 0) {
 			this.payload.set(nameBuffer, 15);
@@ -2299,7 +2300,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		const credentialType: UserCredentialType = raw.payload[2];
 		const credentialSlot = raw.payload.readUInt16BE(3);
 		const operationType: UserCredentialOperationType = raw.payload[5]
-			& 0x03;
+			& 0b11;
 
 		// For Delete, credential data MAY be omitted
 		let credentialData: Bytes | undefined;
@@ -2327,7 +2328,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 			this.payload.writeUInt16BE(this.userId, 0);
 			this.payload[2] = this.credentialType;
 			this.payload.writeUInt16BE(this.credentialSlot, 3);
-			this.payload[5] = this.operationType & 0x03;
+			this.payload[5] = this.operationType & 0b11;
 			return super.serialize(ctx);
 		}
 
@@ -2335,7 +2336,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		this.payload.writeUInt16BE(this.userId, 0);
 		this.payload[2] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 3);
-		this.payload[5] = this.operationType & 0x03;
+		this.payload[5] = this.operationType & 0b11;
 		this.payload[6] = this.credentialData.length;
 		if (this.credentialData.length > 0) {
 			this.payload.set(this.credentialData, 7);
@@ -2409,7 +2410,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		const userId = raw.payload.readUInt16BE(1);
 		const credentialType: UserCredentialType = raw.payload[3];
 		const credentialSlot = raw.payload.readUInt16BE(4);
-		const credentialReadBack = !!(raw.payload[6] & 0x80);
+		const credentialReadBack = !!(raw.payload[6] & 0b1000_0000);
 		const credentialLength = raw.payload[7];
 		validatePayload(raw.payload.length >= 8 + credentialLength + 6);
 		const credentialData = Bytes.from(
@@ -2669,7 +2670,7 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 		const credentialType: UserCredentialType = raw.payload[2];
 		const credentialSlot = raw.payload.readUInt16BE(3);
 		const operationType: UserCredentialOperationType = raw.payload[5]
-			& 0x03;
+			& 0b11;
 		const learnTimeout = raw.payload[6];
 
 		return new this({
@@ -2687,7 +2688,7 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 		this.payload.writeUInt16BE(this.userId, 0);
 		this.payload[2] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 3);
-		this.payload[5] = this.operationType & 0x03;
+		this.payload[5] = this.operationType & 0b11;
 		this.payload[6] = this.learnTimeout;
 		return super.serialize(ctx);
 	}
@@ -3235,7 +3236,7 @@ export class UserCredentialCCAdminPinCodeSet extends UserCredentialCC {
 		ctx: CCParsingContext,
 	): UserCredentialCCAdminPinCodeSet {
 		validatePayload(raw.payload.length >= 1);
-		const pinLength = raw.payload[0] & 0x0f;
+		const pinLength = raw.payload[0] & 0b1111;
 		validatePayload(raw.payload.length >= 1 + pinLength);
 		const pinCode = raw.payload
 			.subarray(1, 1 + pinLength)
@@ -3248,10 +3249,10 @@ export class UserCredentialCCAdminPinCodeSet extends UserCredentialCC {
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		validatePayload(this.pinCode.length <= 0x0f);
+		const pinCode = this.pinCode.slice(0, 15);
 		this.payload = Bytes.concat([
-			[this.pinCode.length & 0x0f],
-			Bytes.from(this.pinCode, "ascii"),
+			[pinCode.length & 0b1111],
+			Bytes.from(pinCode, "ascii"),
 		]);
 		return super.serialize(ctx);
 	}
@@ -3288,8 +3289,8 @@ export class UserCredentialCCAdminPinCodeReport extends UserCredentialCC {
 	): UserCredentialCCAdminPinCodeReport {
 		validatePayload(raw.payload.length >= 1);
 		const operationResult: UserCredentialAdminCodeOperationResult =
-			(raw.payload[0] >> 4) & 0x0f;
-		const pinLength = raw.payload[0] & 0x0f;
+			(raw.payload[0] >> 4) & 0b1111;
+		const pinLength = raw.payload[0] & 0b1111;
 		validatePayload(raw.payload.length >= 1 + pinLength);
 		const pinCode = raw.payload
 			.subarray(1, 1 + pinLength)
@@ -3308,8 +3309,8 @@ export class UserCredentialCCAdminPinCodeReport extends UserCredentialCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const pinBuffer = Bytes.from(this.pinCode, "ascii");
 		this.payload = Bytes.alloc(1 + pinBuffer.length);
-		this.payload[0] = ((this.operationResult & 0x0f) << 4)
-			| (pinBuffer.length & 0x0f);
+		this.payload[0] = ((this.operationResult & 0b1111) << 4)
+			| (pinBuffer.length & 0b1111);
 		if (pinBuffer.length > 0) {
 			this.payload.set(pinBuffer, 1);
 		}
@@ -3393,7 +3394,7 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 		const entryType: UserCredentialKeyLockerEntryType = raw.payload[0];
 		const entrySlot = raw.payload.readUInt16BE(1);
 		const operationType: UserCredentialOperationType = raw.payload[3]
-			& 0x03;
+			& 0b11;
 
 		// For Delete, entry data MAY be omitted
 		let entryData: Bytes | undefined;
@@ -3419,14 +3420,14 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 			this.payload = Bytes.alloc(4);
 			this.payload[0] = this.entryType;
 			this.payload.writeUInt16BE(this.entrySlot, 1);
-			this.payload[3] = this.operationType & 0x03;
+			this.payload[3] = this.operationType & 0b11;
 			return super.serialize(ctx);
 		}
 
 		this.payload = Bytes.alloc(6 + this.entryData.length);
 		this.payload[0] = this.entryType;
 		this.payload.writeUInt16BE(this.entrySlot, 1);
-		this.payload[3] = this.operationType & 0x03;
+		this.payload[3] = this.operationType & 0b11;
 		this.payload.writeUInt16BE(this.entryData.length, 4);
 		if (this.entryData.length > 0) {
 			this.payload.set(this.entryData, 6);
