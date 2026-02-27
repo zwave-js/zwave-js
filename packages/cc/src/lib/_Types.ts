@@ -1743,15 +1743,24 @@ export enum UserCredentialKeyLockerEntryType {
 	DESFireApplicationIdAndKey = 0x01,
 }
 
-export interface UserCredentialCapability {
-	supportsCredentialLearn: boolean;
-	numberOfCredentialSlots: number;
-	minCredentialLength: number;
-	maxCredentialLength: number;
-	credentialLearnRecommendedTimeout: number;
-	credentialLearnNumberOfSteps: number;
-	maxCredentialHashLength: number;
-}
+export type UserCredentialCapability =
+	& {
+		numberOfCredentialSlots: number;
+		minCredentialLength: number;
+		maxCredentialLength: number;
+		maxCredentialHashLength: number;
+	}
+	& (
+		{
+			supportsCredentialLearn: true;
+			credentialLearnRecommendedTimeout: number;
+			credentialLearnNumberOfSteps: number;
+		} | {
+			supportsCredentialLearn: false;
+			credentialLearnRecommendedTimeout?: undefined;
+			credentialLearnNumberOfSteps?: undefined;
+		}
+	);
 
 export interface UserCredentialKeyLockerEntryCapability {
 	numberOfEntrySlots: number;

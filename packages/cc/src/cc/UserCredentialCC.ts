@@ -9,6 +9,8 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
+	ZWaveError,
+	ZWaveErrorCodes,
 	encodeBitMask,
 	enumValuesToMetadataStates,
 	parseBitMask,
@@ -1630,15 +1632,30 @@ export class UserCredentialCCCredentialCapabilitiesReport
 				raw.payload[clTimeoutOff + i];
 			const credentialLearnNumberOfSteps = raw.payload[clStepsOff + i];
 			const maxCredentialHashLength = raw.payload[maxHashLenOff + i];
-			credentialTypes.set(credentialType, {
-				supportsCredentialLearn,
-				numberOfCredentialSlots,
-				minCredentialLength,
-				maxCredentialLength,
-				credentialLearnRecommendedTimeout,
-				credentialLearnNumberOfSteps,
-				maxCredentialHashLength,
-			});
+
+			if (supportsCredentialLearn) {
+				validatePayload(credentialLearnRecommendedTimeout > 0);
+				validatePayload(credentialLearnNumberOfSteps > 0);
+				credentialTypes.set(credentialType, {
+					supportsCredentialLearn,
+					numberOfCredentialSlots,
+					minCredentialLength,
+					maxCredentialLength,
+					credentialLearnRecommendedTimeout,
+					credentialLearnNumberOfSteps,
+					maxCredentialHashLength,
+				});
+			} else {
+				validatePayload(credentialLearnRecommendedTimeout === 0);
+				validatePayload(credentialLearnNumberOfSteps === 0);
+				credentialTypes.set(credentialType, {
+					supportsCredentialLearn,
+					numberOfCredentialSlots,
+					minCredentialLength,
+					maxCredentialLength,
+					maxCredentialHashLength,
+				});
+			}
 		}
 
 		return new this({
@@ -1710,8 +1727,8 @@ export class UserCredentialCCCredentialCapabilitiesReport
 			this.payload[minLenOff + i] = ct.minCredentialLength;
 			this.payload[maxLenOff + i] = ct.maxCredentialLength;
 			this.payload[clTimeoutOff + i] =
-				ct.credentialLearnRecommendedTimeout;
-			this.payload[clStepsOff + i] = ct.credentialLearnNumberOfSteps;
+				ct.credentialLearnRecommendedTimeout ?? 0;
+			this.payload[clStepsOff + i] = ct.credentialLearnNumberOfSteps ?? 0;
 			this.payload[maxHashLenOff + i] = ct.maxCredentialHashLength;
 			i++;
 		}
@@ -1899,16 +1916,43 @@ export class UserCredentialCCKeyLockerCapabilitiesGet
 // ============================================================
 
 // @publicAPI
-export interface UserCredentialCCUserSetOptions {
-	operationType: UserCredentialOperationType;
-	userId: number;
-	userType?: UserCredentialUserType;
-	activeState?: UserCredentialActiveState;
-	credentialRule?: UserCredentialRule;
-	expiringTimeoutMinutes?: number;
-	nameEncoding?: UserCredentialNameEncoding;
-	userName?: string;
-}
+export type UserCredentialCCUserSetOptions =
+	& {
+		userId: number;
+	}
+	& (
+		| {
+			operationType:
+				| UserCredentialOperationType.Add
+				| UserCredentialOperationType.Modify;
+			activeState?: UserCredentialActiveState;
+			credentialRule?: UserCredentialRule;
+			nameEncoding?: UserCredentialNameEncoding;
+			userName?: string;
+		}
+			& (
+				| {
+					userType: UserCredentialUserType.Expiring;
+					expiringTimeoutMinutes: number;
+				}
+				| {
+					userType?: Exclude<
+						UserCredentialUserType,
+						UserCredentialUserType.Expiring
+					>;
+					expiringTimeoutMinutes?: undefined;
+				}
+			)
+		| {
+			operationType: UserCredentialOperationType.Delete;
+			userType?: undefined;
+			activeState?: undefined;
+			credentialRule?: undefined;
+			expiringTimeoutMinutes?: undefined;
+			nameEncoding?: undefined;
+			userName?: undefined;
+		}
+	);
 
 @CCCommand(UserCredentialCommand.UserSet)
 @useSupervision()
@@ -1919,25 +1963,25 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		super(options);
 		this.operationType = options.operationType;
 		this.userId = options.userId;
-		this.userType = options.userType ?? UserCredentialUserType.General;
-		this.activeState = options.activeState
-			?? UserCredentialActiveState.OccupiedEnabled;
-		this.credentialRule = options.credentialRule
-			?? UserCredentialRule.Single;
-		this.expiringTimeoutMinutes = options.expiringTimeoutMinutes ?? 0;
-		this.nameEncoding = options.nameEncoding
-			?? UserCredentialNameEncoding.ASCII;
-		this.userName = options.userName ?? "";
+
+		if (options.operationType !== UserCredentialOperationType.Delete) {
+			this.userType = options.userType;
+			this.activeState = options.activeState;
+			this.credentialRule = options.credentialRule;
+			this.expiringTimeoutMinutes = options.expiringTimeoutMinutes;
+			this.nameEncoding = options.nameEncoding;
+			this.userName = options.userName;
+		}
 	}
 
 	public operationType: UserCredentialOperationType;
 	public userId: number;
-	public userType: UserCredentialUserType;
-	public activeState: UserCredentialActiveState;
-	public credentialRule: UserCredentialRule;
-	public expiringTimeoutMinutes: number;
-	public nameEncoding: UserCredentialNameEncoding;
-	public userName: string;
+	public userType: UserCredentialUserType | undefined;
+	public activeState: UserCredentialActiveState | undefined;
+	public credentialRule: UserCredentialRule | undefined;
+	public expiringTimeoutMinutes: number | undefined;
+	public nameEncoding: UserCredentialNameEncoding | undefined;
+	public userName: string | undefined;
 
 	public static from(
 		raw: CCRaw,
@@ -1948,11 +1992,16 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 			& 0b11;
 		const userId = raw.payload.readUInt16BE(1);
 
-		// For Delete, remaining fields MAY be omitted
-		if (
-			operationType === UserCredentialOperationType.Delete
-			|| raw.payload.length < 10
-		) {
+		if (operationType === UserCredentialOperationType.Delete) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				operationType,
+				userId,
+			});
+		}
+
+		// For Delete, the remaining fields MAY be omitted
+		if (raw.payload.length < 10) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
 				operationType,
@@ -1978,6 +2027,20 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 				.toString("ascii");
 		}
 
+		if (userType === UserCredentialUserType.Expiring) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				operationType,
+				userId,
+				userType,
+				expiringTimeoutMinutes,
+				activeState,
+				credentialRule,
+				nameEncoding,
+				userName,
+			});
+		}
+
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			operationType,
@@ -1985,13 +2048,13 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 			userType,
 			activeState,
 			credentialRule,
-			expiringTimeoutMinutes,
 			nameEncoding,
 			userName,
 		});
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		// For Delete, remaining user-detail fields MAY be omitted
 		if (this.operationType === UserCredentialOperationType.Delete) {
 			this.payload = Bytes.alloc(3);
 			this.payload[0] = this.operationType & 0b11;
@@ -1999,20 +2062,54 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 			return super.serialize(ctx);
 		}
 
-		let nameBuffer: Uint8Array;
-		if (this.nameEncoding === UserCredentialNameEncoding.UTF16BE) {
-			nameBuffer = stringToUint8ArrayUTF16BE(this.userName);
+		if (this.userType == undefined) {
+			throw new ZWaveError(
+				`${this.constructor.name}: user type must be set for Add/Modify operations`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		if (this.activeState == undefined) {
+			throw new ZWaveError(
+				`${this.constructor.name}: active state must be set for Add/Modify operations`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		// Credential rule defaults to Single
+		const credentialRule = this.credentialRule ?? UserCredentialRule.Single;
+		// Expiring timeout MUST be 0 for non-Expiring user types
+		let expiringTimeoutMinutes: number;
+		if (this.userType === UserCredentialUserType.Expiring) {
+			if (this.expiringTimeoutMinutes == undefined) {
+				throw new ZWaveError(
+					`${this.constructor.name}: expiring timeout minutes must be set for Expiring user type`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			expiringTimeoutMinutes = this.expiringTimeoutMinutes;
 		} else {
-			nameBuffer = Bytes.from(this.userName, "ascii");
+			expiringTimeoutMinutes = 0;
+		}
+		// Name encoding defaults to ASCII
+		const nameEncoding = this.nameEncoding
+			?? UserCredentialNameEncoding.ASCII;
+		// User name defaults to empty string
+		const userName = this.userName ?? "";
+
+		let nameBuffer: Uint8Array;
+		if (nameEncoding === UserCredentialNameEncoding.UTF16BE) {
+			nameBuffer = stringToUint8ArrayUTF16BE(userName);
+		} else {
+			nameBuffer = Bytes.from(userName, "ascii");
 		}
 		this.payload = Bytes.alloc(10 + nameBuffer.length);
 		this.payload[0] = this.operationType & 0b11;
 		this.payload.writeUInt16BE(this.userId, 1);
 		this.payload[3] = this.userType;
 		this.payload[4] = this.activeState & 0b1111;
-		this.payload[5] = this.credentialRule;
-		this.payload.writeUInt16BE(this.expiringTimeoutMinutes, 6);
-		this.payload[8] = this.nameEncoding & 0b111;
+		this.payload[5] = credentialRule;
+		this.payload.writeUInt16BE(expiringTimeoutMinutes, 6);
+		this.payload[8] = nameEncoding & 0b111;
 		this.payload[9] = nameBuffer.length;
 		if (nameBuffer.length > 0) {
 			this.payload.set(nameBuffer, 10);
@@ -2021,34 +2118,44 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		return {
-			...super.toLogEntry(ctx),
-			message: {
-				"operation type": getEnumMemberName(
-					UserCredentialOperationType,
-					this.operationType,
-				),
-				"user ID": this.userId,
-				"user type": getEnumMemberName(
-					UserCredentialUserType,
-					this.userType,
-				),
-				"active state": getEnumMemberName(
-					UserCredentialActiveState,
-					this.activeState,
-				),
-				"credential rule": getEnumMemberName(
-					UserCredentialRule,
-					this.credentialRule,
-				),
-				"expiring timeout (minutes)": this.expiringTimeoutMinutes,
-				"name encoding": getEnumMemberName(
-					UserCredentialNameEncoding,
-					this.nameEncoding,
-				),
-				"user name": this.userName,
-			},
+		const message: MessageRecord = {
+			"operation type": getEnumMemberName(
+				UserCredentialOperationType,
+				this.operationType,
+			),
+			"user ID": this.userId,
 		};
+		if (this.userType != undefined) {
+			message["user type"] = getEnumMemberName(
+				UserCredentialUserType,
+				this.userType,
+			);
+		}
+		if (this.activeState != undefined) {
+			message["active state"] = getEnumMemberName(
+				UserCredentialActiveState,
+				this.activeState,
+			);
+		}
+		if (this.credentialRule != undefined) {
+			message["credential rule"] = getEnumMemberName(
+				UserCredentialRule,
+				this.credentialRule,
+			);
+		}
+		if (this.expiringTimeoutMinutes != undefined) {
+			message["expiring timeout (minutes)"] = this.expiringTimeoutMinutes;
+		}
+		if (this.nameEncoding != undefined) {
+			message["name encoding"] = getEnumMemberName(
+				UserCredentialNameEncoding,
+				this.nameEncoding,
+			);
+		}
+		if (this.userName != undefined) {
+			message["user name"] = this.userName;
+		}
+		return { ...super.toLogEntry(ctx), message };
 	}
 }
 
@@ -2385,13 +2492,24 @@ export class UserCredentialCCUserGet extends UserCredentialCC {
 // ============================================================
 
 // @publicAPI
-export interface UserCredentialCCCredentialSetOptions {
-	userId: number;
-	credentialType: UserCredentialType;
-	credentialSlot: number;
-	operationType: UserCredentialOperationType;
-	credentialData?: Bytes;
-}
+export type UserCredentialCCCredentialSetOptions =
+	& {
+		userId: number;
+		credentialType: UserCredentialType;
+		credentialSlot: number;
+	}
+	& (
+		| {
+			operationType:
+				| UserCredentialOperationType.Add
+				| UserCredentialOperationType.Modify;
+			credentialData: Bytes;
+		}
+		| {
+			operationType: UserCredentialOperationType.Delete;
+			credentialData?: undefined;
+		}
+	);
 
 @CCCommand(UserCredentialCommand.CredentialSet)
 @useSupervision()
@@ -2404,14 +2522,16 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
 		this.operationType = options.operationType;
-		this.credentialData = options.credentialData ?? new Bytes();
+		if (options.operationType !== UserCredentialOperationType.Delete) {
+			this.credentialData = options.credentialData;
+		}
 	}
 
 	public userId: number;
 	public credentialType: UserCredentialType;
 	public credentialSlot: number;
 	public operationType: UserCredentialOperationType;
-	public credentialData: Bytes;
+	public credentialData: Bytes | undefined;
 
 	public static from(
 		raw: CCRaw,
@@ -2424,8 +2544,17 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		const operationType: UserCredentialOperationType = raw.payload[5]
 			& 0b11;
 
-		// For Delete, credential data MAY be omitted
-		let credentialData: Bytes | undefined;
+		if (operationType === UserCredentialOperationType.Delete) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				userId,
+				credentialType,
+				credentialSlot,
+				operationType,
+			});
+		}
+
+		let credentialData = new Bytes();
 		if (raw.payload.length >= 7) {
 			const credentialLength = raw.payload[6];
 			validatePayload(raw.payload.length >= 7 + credentialLength);
@@ -2445,6 +2574,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		// For Delete, credential data MAY be omitted
 		if (this.operationType === UserCredentialOperationType.Delete) {
 			this.payload = Bytes.alloc(6);
 			this.payload.writeUInt16BE(this.userId, 0);
@@ -2452,6 +2582,13 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 			this.payload.writeUInt16BE(this.credentialSlot, 3);
 			this.payload[5] = this.operationType & 0b11;
 			return super.serialize(ctx);
+		}
+
+		if (this.credentialData == undefined) {
+			throw new ZWaveError(
+				`${this.constructor.name}: credential data must be set for Add/Modify operations`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
 		}
 
 		this.payload = Bytes.alloc(7 + this.credentialData.length);
@@ -2467,24 +2604,24 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		return {
-			...super.toLogEntry(ctx),
-			message: {
-				"user ID": this.userId,
-				"credential type": getEnumMemberName(
-					UserCredentialType,
-					this.credentialType,
-				),
-				"credential slot": this.credentialSlot,
-				"operation type": getEnumMemberName(
-					UserCredentialOperationType,
-					this.operationType,
-				),
-				"credential data": credentialToLogString(
-					this.credentialData,
-				),
-			},
+		const message: MessageRecord = {
+			"user ID": this.userId,
+			"credential type": getEnumMemberName(
+				UserCredentialType,
+				this.credentialType,
+			),
+			"credential slot": this.credentialSlot,
+			"operation type": getEnumMemberName(
+				UserCredentialOperationType,
+				this.operationType,
+			),
 		};
+		if (this.credentialData != undefined) {
+			message["credential data"] = credentialToLogString(
+				this.credentialData,
+			);
+		}
+		return { ...super.toLogEntry(ctx), message };
 	}
 }
 
@@ -3557,12 +3694,23 @@ export class UserCredentialCCAdminPinCodeGet extends UserCredentialCC {}
 // ============================================================
 
 // @publicAPI
-export interface UserCredentialCCKeyLockerEntrySetOptions {
-	entryType: UserCredentialKeyLockerEntryType;
-	entrySlot: number;
-	operationType: UserCredentialOperationType;
-	entryData?: Bytes;
-}
+export type UserCredentialCCKeyLockerEntrySetOptions =
+	& {
+		entryType: UserCredentialKeyLockerEntryType;
+		entrySlot: number;
+	}
+	& (
+		| {
+			operationType:
+				| UserCredentialOperationType.Add
+				| UserCredentialOperationType.Modify;
+			entryData: Bytes;
+		}
+		| {
+			operationType: UserCredentialOperationType.Delete;
+			entryData?: undefined;
+		}
+	);
 
 @CCCommand(UserCredentialCommand.KeyLockerEntrySet)
 @useSupervision()
@@ -3576,13 +3724,15 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 		this.entryType = options.entryType;
 		this.entrySlot = options.entrySlot;
 		this.operationType = options.operationType;
-		this.entryData = options.entryData ?? new Bytes();
+		if (options.operationType !== UserCredentialOperationType.Delete) {
+			this.entryData = options.entryData;
+		}
 	}
 
 	public entryType: UserCredentialKeyLockerEntryType;
 	public entrySlot: number;
 	public operationType: UserCredentialOperationType;
-	public entryData: Bytes;
+	public entryData: Bytes | undefined;
 
 	public static from(
 		raw: CCRaw,
@@ -3594,8 +3744,16 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 		const operationType: UserCredentialOperationType = raw.payload[3]
 			& 0b11;
 
-		// For Delete, entry data MAY be omitted
-		let entryData: Bytes | undefined;
+		if (operationType === UserCredentialOperationType.Delete) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				entryType,
+				entrySlot,
+				operationType,
+			});
+		}
+
+		let entryData = new Bytes();
 		if (raw.payload.length >= 6) {
 			const entryDataLength = raw.payload.readUInt16BE(4);
 			validatePayload(raw.payload.length >= 6 + entryDataLength);
@@ -3614,12 +3772,20 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		// For Delete, entry data MAY be omitted
 		if (this.operationType === UserCredentialOperationType.Delete) {
 			this.payload = Bytes.alloc(4);
 			this.payload[0] = this.entryType;
 			this.payload.writeUInt16BE(this.entrySlot, 1);
 			this.payload[3] = this.operationType & 0b11;
 			return super.serialize(ctx);
+		}
+
+		if (this.entryData == undefined) {
+			throw new ZWaveError(
+				`${this.constructor.name}: entry data must be set for Add/Modify operations`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
 		}
 
 		this.payload = Bytes.alloc(6 + this.entryData.length);
@@ -3634,21 +3800,21 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		return {
-			...super.toLogEntry(ctx),
-			message: {
-				"entry type": getEnumMemberName(
-					UserCredentialKeyLockerEntryType,
-					this.entryType,
-				),
-				"entry slot": this.entrySlot,
-				"operation type": getEnumMemberName(
-					UserCredentialOperationType,
-					this.operationType,
-				),
-				"entry data length": this.entryData.length,
-			},
+		const message: MessageRecord = {
+			"entry type": getEnumMemberName(
+				UserCredentialKeyLockerEntryType,
+				this.entryType,
+			),
+			"entry slot": this.entrySlot,
+			"operation type": getEnumMemberName(
+				UserCredentialOperationType,
+				this.operationType,
+			),
 		};
+		if (this.entryData != undefined) {
+			message["entry data length"] = this.entryData.length;
+		}
+		return { ...super.toLogEntry(ctx), message };
 	}
 }
 

@@ -47,6 +47,7 @@ import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
 import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
 import { ThermostatSetpointCCBehaviors } from "./mockCCBehaviors/ThermostatSetpoint.js";
 import { UserCodeCCBehaviors } from "./mockCCBehaviors/UserCode.js";
+import { UserCredentialCCBehaviors } from "./mockCCBehaviors/UserCredential.js";
 import { WindowCoveringCCBehaviors } from "./mockCCBehaviors/WindowCovering.js";
 
 const respondToRequestNodeInfo: MockNodeBehavior = {
@@ -206,6 +207,7 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...ThermostatSetpointCCBehaviors,
 		...ThermostatSetbackCCBehaviors,
 		...UserCodeCCBehaviors,
+		...UserCredentialCCBehaviors,
 		...WindowCoveringCCBehaviors,
 	];
 }
