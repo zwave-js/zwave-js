@@ -193,6 +193,44 @@ To change the frequency of the Zniffer, use the `setFrequency` method:
 async setFrequency(frequency: number): Promise<void>;
 ```
 
+## Long Range channel configuration
+
+On 800 series Zniffers with Long Range support, the LR channel configuration can be queried and changed.
+
+### `lrRegions`
+
+```ts
+readonly lrRegions: ReadonlySet<number>
+```
+
+A set of region identifiers that are Long Range capable.
+
+### `currentLRChannelConfig`
+
+```ts
+readonly currentLRChannelConfig: number | undefined
+```
+
+The currently configured Long Range channel configuration, or `undefined` if not yet known.
+
+### `supportedLRChannelConfigs`
+
+```ts
+readonly supportedLRChannelConfigs: ReadonlyMap<number, string>
+```
+
+A map of supported Long Range channel configuration identifiers and their names.
+
+### `setLRChannelConfig`
+
+```ts
+async setLRChannelConfig(channelConfig: number): Promise<void>
+```
+
+Sets the Long Range channel configuration. The `channelConfig` parameter must be one of the keys from `supportedLRChannelConfigs`.
+
+> [!ATTENTION] This will throw if the current frequency is not a Long Range region.
+
 ## Handling frames
 
 A frame is considered corrupt if its checksum is invalid. This can happen if the Zniffer was not able to capture the frame correctly, or if the frame was corrupted in transit:

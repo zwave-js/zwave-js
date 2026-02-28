@@ -780,6 +780,97 @@ The health rating expressed as a number from 0 (not working at all) to 10 (perfe
 
 > [!NOTE] The test results are also printed to the driver logs. If you want to format the results in the same way in your application, you can use the `formatRouteHealthCheckSummary` and/or `formatRouteHealthCheckRound` methods which are exposed from `zwave-js/Utils`.
 
+### `checkLinkReliability`
+
+```ts
+async checkLinkReliability(
+	options: LinkReliabilityCheckOptions,
+): Promise<LinkReliabilityCheckResult>
+```
+
+Tests the reliability of the link between the controller and this node and returns the results.
+
+The options parameter has the following shape:
+
+<!-- #import LinkReliabilityCheckOptions from "zwave-js" -->
+
+```ts
+interface LinkReliabilityCheckOptions {
+	mode: LinkReliabilityCheckMode;
+	interval: number;
+	rounds?: number;
+	onProgress?: (progress: LinkReliabilityCheckResult) => void;
+}
+```
+
+where the mode is one of the following:
+
+<!-- #import LinkReliabilityCheckMode from "zwave-js" -->
+
+```ts
+enum LinkReliabilityCheckMode {
+	BasicSetOnOff,
+}
+```
+
+The returned result (and progress callback argument) has the following shape:
+
+<!-- #import LinkReliabilityCheckResult from "zwave-js" -->
+
+```ts
+interface LinkReliabilityCheckResult {
+	rounds: number;
+
+	commandsSent: number;
+	commandErrors: number;
+	missingResponses?: number;
+
+	latency?: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	rtt: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	ackRSSI: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	responseRSSI?: {
+		min: number;
+		max: number;
+		average: number;
+	};
+}
+```
+
+> [!NOTE] This call will throw when there is already a link reliability check in progress for this node.
+
+### `isLinkReliabilityCheckInProgress`
+
+```ts
+isLinkReliabilityCheckInProgress(): boolean
+```
+
+Returns whether a link reliability check is currently in progress for this node.
+
+### `abortLinkReliabilityCheck`
+
+```ts
+abortLinkReliabilityCheck(): void
+```
+
+Aborts an ongoing link reliability check if one is currently in progress.
+
+> [!NOTE] The link reliability check may take a few seconds to actually be aborted. When it is, the promise returned by `checkLinkReliability` will be resolved with the results obtained so far.
+
 ### `isFirmwareUpdateInProgress`
 
 ```ts

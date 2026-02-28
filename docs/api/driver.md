@@ -134,6 +134,30 @@ Instruct the controller to soft-reset (restart). The returned Promise will resol
 
 > [!WARNING] USB modules will reconnect, meaning that they might get a new address. Make sure to configure your device address in a way that prevents it from changing, e.g. by using `/dev/serial/by-id/...` on Linux.
 
+### `softResetAndRestart`
+
+```ts
+async softResetAndRestart(): Promise<void>
+```
+
+Soft-resets the Z-Wave module and restarts the driver instance.
+
+### `enterBootloader`
+
+```ts
+async enterBootloader(): Promise<void>
+```
+
+Puts the Z-Wave module into bootloader mode. This is useful for performing firmware updates using the bootloader protocol.
+
+### `leaveBootloader`
+
+```ts
+async leaveBootloader(): Promise<void>
+```
+
+Leaves the bootloader by running the application. This restarts the Z-Wave module from bootloader mode back into normal operation.
+
 ### `hardReset`
 
 ```ts

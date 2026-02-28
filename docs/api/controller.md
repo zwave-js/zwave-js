@@ -344,6 +344,49 @@ To get around this:
 2. Batch all `getNodeNeighbors` requests together
 3. Turn the radio back on with `controller.toggleRF(true`)
 
+### `discoverNodeNeighbors`
+
+```ts
+async discoverNodeNeighbors(nodeId: number): Promise<boolean>
+```
+
+Instructs a node to (re-)discover its neighbors. Returns `true` if the update was successful and the new neighbors can be retrieved using [`getNodeNeighbors`](#getNodeNeighbors). `false` if the update failed.
+
+> [!WARNING] On some controllers, this can cause new SUC return routes to be assigned.
+
+### `getLongRangeNodes`
+
+```ts
+async getLongRangeNodes(): Promise<readonly number[]>
+```
+
+Returns the list of Z-Wave Long Range node IDs from the controller.
+
+### `getBackgroundRSSI`
+
+```ts
+async getBackgroundRSSI(): Promise<{
+	rssiChannel0: RSSI;
+	rssiChannel1: RSSI;
+	rssiChannel2?: RSSI;
+	rssiChannel3?: RSSI;
+}>
+```
+
+Requests the most recent background RSSI levels detected by the controller.
+
+> [!NOTE] This only returns useful values if something was transmitted recently.
+
+### `getDSK`
+
+```ts
+async getDSK(): Promise<Buffer>
+```
+
+Returns the **controller's own** device specific key (DSK) in binary format.
+
+> [!NOTE] This is different from the [`dsk` property on `ZWaveNode`](api/node.md), which returns the DSK of an end device that has joined the network. `getDSK` is only for the controller itself.
+
 ### `getKnownLifelineRoutes`
 
 The routing table of the controller is stored in its memory and not easily accessible during normal operation. Z-Wave JS gets around this by keeping statistics for each node that include the last used routes, the used repeaters, protocol and speed, as well as RSSI readings. This information can be read using
@@ -880,6 +923,29 @@ getSupportedRFRegions(filterSubsets: boolean): MaybeNotKnown<readonly RFRegion[]
 
 The `filterSubsets` parameter (`true` by default) can be used to filter out regions that are subsets of other supported regions. For example, if the controller supports both `USA` and `USA (Long Range)`, only `USA (Long Range)` will be returned, since it includes the `USA` region.
 
+##### `querySupportedRFRegions`
+
+```ts
+async querySupportedRFRegions(): Promise<RFRegion[]>
+```
+
+Queries the supported RF regions directly from the Z-Wave API Module.
+
+> [!NOTE] Applications should prefer using [`getSupportedRFRegions`](#configure-rf-region) instead.
+
+##### `queryRFRegionInfo`
+
+```ts
+async queryRFRegionInfo(region: RFRegion): Promise<{
+	region: RFRegion;
+	supportsZWave: boolean;
+	supportsLongRange: boolean;
+	includesRegion?: RFRegion;
+}>
+```
+
+Queries detailed information about a specific RF region from the Z-Wave API Module, including whether it supports Z-Wave Classic and/or Long Range, and whether it includes another region (e.g. `USA (Long Range)` includes `USA`).
+
 #### Configure TX powerlevel
 
 ```ts
@@ -1104,6 +1170,63 @@ externalNVMWriteBuffer700(offset: number, buffer: Buffer): Promise<boolean>
 Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to [`externalNVMClose`](#externalNVMClose).
 
 > [!WARNING] This method can write in the full NVM address space and are not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
+
+#### Opening the NVM (700+ series, extended)
+
+```ts
+externalNVMOpenExt(): Promise<{
+	size: number;
+	supportedOperations: ExtendedNVMOperationsCommand[];
+}>
+```
+
+Opens the controller's external NVM for reading/writing and returns the NVM size and supported operations. Unlike `externalNVMOpen`, this supports NVMs larger than 64 KiB.
+
+The supported operations are indicated by the returned enum values:
+
+```ts
+enum ExtendedNVMOperationsCommand {
+	Open = 0x00,
+	Read = 0x01,
+	Write = 0x02,
+	Close = 0x03,
+}
+```
+
+#### Closing the NVM (700+ series, extended)
+
+```ts
+externalNVMCloseExt(): Promise<void>
+```
+
+Closes the controller's external NVM. Unlike `externalNVMClose`, this supports NVMs larger than 64 KiB.
+
+#### Reading from the NVM (700+ series, extended)
+
+```ts
+externalNVMReadBufferExt(offset: number, length: number): Promise<{
+	buffer: Buffer;
+	endOfFile: boolean;
+}>
+```
+
+Reads a buffer from the external NVM at the given offset. The returned `buffer` length is limited by the Serial API capabilities and not guaranteed to equal `length`. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to `externalNVMCloseExt`.
+
+Unlike `externalNVMReadBuffer700`, this supports NVMs larger than 64 KiB.
+
+#### Writing to the NVM (700+ series, extended)
+
+```ts
+externalNVMWriteBufferExt(offset: number, buffer: Buffer): Promise<{
+	endOfFile: boolean;
+}>
+```
+
+Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to `externalNVMCloseExt`.
+
+Unlike `externalNVMWriteBuffer700`, this supports NVMs larger than 64 KiB.
+
+> [!WARNING] This method can write in the full NVM address space and is not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
 
 ### Updating the firmware of a node (OTA)
 
@@ -1464,14 +1587,6 @@ Returns the ID of the controller in the current network.
 * readonly sucNodeId: number
 * readonly supportsTimers: boolean
 -->
-
-#### `dsk`
-
-```ts
-dsk(): Buffer
-```
-
-Returns the controller's DSK in binary format.
 
 ### `status`
 

@@ -86,6 +86,45 @@ supportsCCAPI(cc: CommandClasses): boolean
 
 Allows checking whether a CC API is supported before calling it with [`invokeCCAPI`](#invokeCCAPI)
 
+### `getCCs`
+
+```ts
+getCCs(): Iterable<[ccId: CommandClasses, info: CommandClassInfo]>
+```
+
+Returns an iterable of all Command Classes implemented by this endpoint, along with their information. Each entry is a tuple of the CC ID and an info object:
+
+<!-- #import CommandClassInfo from "@zwave-js/core" -->
+
+```ts
+interface CommandClassInfo {
+	/** Whether the endpoint or node can react to this CC */
+	isSupported: boolean;
+	/** Whether the endpoint or node can control other nodes with this CC */
+	isControlled: boolean;
+	/** Whether this CC is ONLY supported securely */
+	secure: boolean;
+	/** The maximum version of the CC that is supported or controlled */
+	version: number;
+}
+```
+
+### `maySupportBasicCC`
+
+```ts
+maySupportBasicCC(): boolean
+```
+
+Checks if this endpoint is allowed to support Basic CC per the Z-Wave specification. This depends on the device type and the other supported CCs — Basic CC must not be offered if any actuator CC is supported.
+
+### `wasCCRemovedViaConfig`
+
+```ts
+wasCCRemovedViaConfig(cc: CommandClasses): boolean
+```
+
+Determines if support for the given CC was force-removed via a device config file.
+
 ## Endpoint properties
 
 ### `nodeId`
