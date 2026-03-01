@@ -54,7 +54,7 @@
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.55.1",
-    "@types/node": "^20.19.23",
+    "@types/node": "^20.19.35",
     "del-cli": "^7.0.0",
     "typescript": "5.9.3"
   }

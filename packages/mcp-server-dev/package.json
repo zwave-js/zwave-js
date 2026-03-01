@@ -42,7 +42,7 @@
     "nano-spawn": "^2.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.19.23",
+    "@types/node": "^20.19.35",
     "typescript": "5.9.3"
   },
   "scripts": {

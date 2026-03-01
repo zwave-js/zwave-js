@@ -46,7 +46,7 @@
     "@dprint/markdown": "^0.20.0",
     "@dprint/typescript": "^0.95.13",
     "@types/globrex": "^0.1.4",
-    "@types/node": "^20.19.23",
+    "@types/node": "^20.19.35",
     "@types/yargs": "^17.0.34",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/fmt": "^1.0.6",

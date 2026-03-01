@@ -45,7 +45,7 @@
     "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {
-    "@types/node": "^20.19.23",
+    "@types/node": "^20.19.35",
     "@types/yargs": "^17.0.34",
     "del-cli": "^7.0.0",
     "typescript": "5.9.3"
