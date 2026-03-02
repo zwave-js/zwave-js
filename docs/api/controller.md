@@ -385,7 +385,7 @@ async getDSK(): Promise<BytesView>
 
 Returns the **controller's own** device specific key (DSK) in binary format.
 
-> [!NOTE] This is different from the `dsk` property on `ZWaveNode`, which returns the DSK of an end device that has joined the network. `getDSK` is only for the controller itself.
+> [!NOTE] This is different from the [`dsk` property on `ZWaveNode`](api/node.md#dsk), which returns the DSK of an end device that has joined the network. `getDSK` is only for the controller itself.
 
 ### `getKnownLifelineRoutes`
 

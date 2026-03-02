@@ -1241,6 +1241,14 @@ readonly isSecure: boolean | "unknown";
 
 Whether this node is communicating securely with the controller, meaning that it was granted at least one security class. More specific information can be retrieved with the [`hasSecurityClass`](#hasSecurityClass) or the [`getHighestSecurityClass`](#getHighestSecurityClass) methods.
 
+### `dsk`
+
+```ts
+readonly dsk: BytesView | undefined;
+```
+
+The device specific key (DSK) of this node in binary format. This is only set if the node was included with Security S2.
+
 ### `supportsBeaming`
 
 ```ts
