@@ -268,6 +268,38 @@ getAllEndpoints(): Endpoint[]
 
 This method returns an array of all endpoints on this node. At each index `i` the returned array contains the endpoint instance that would be returned by `getEndpoint(i)`.
 
+### `endpointCountIsDynamic`
+
+```ts
+readonly endpointCountIsDynamic: MaybeNotKnown<boolean>
+```
+
+Whether the endpoint count is dynamic, i.e. can change at runtime.
+
+### `endpointsHaveIdenticalCapabilities`
+
+```ts
+readonly endpointsHaveIdenticalCapabilities: MaybeNotKnown<boolean>
+```
+
+Whether all endpoints have identical capabilities.
+
+### `individualEndpointCount`
+
+```ts
+readonly individualEndpointCount: MaybeNotKnown<number>
+```
+
+The number of individual endpoints.
+
+### `aggregatedEndpointCount`
+
+```ts
+readonly aggregatedEndpointCount: MaybeNotKnown<number>
+```
+
+The number of aggregated endpoints.
+
 ### `hasSecurityClass`
 
 ```ts
@@ -1028,6 +1060,14 @@ readonly isControllerNode: boolean
 
 Returns whether this node is the controller node, i.e. has the ID of the primary controller.
 
+### `interviewAttempts`
+
+```ts
+readonly interviewAttempts: number
+```
+
+How many attempts to interview this node have already been made.
+
 ### `interviewStage`
 
 ```ts
@@ -1069,6 +1109,14 @@ enum InterviewStage {
 > [!WARNING]
 > DO NOT rely on the numeric values of the enum if you're using it in your application.
 > The ordinal values are likely to change in future updates. Instead, refer to the enum properties directly.
+
+### `nodeType`
+
+```ts
+readonly nodeType: MaybeNotKnown<NodeType>
+```
+
+The node type of this node (Controller or End Node).
 
 ### `deviceClass`
 
@@ -1199,6 +1247,14 @@ readonly canSleep: boolean | undefined;
 
 Whether this node can sleep. If this is the case it must be expected to be asleep most of the time.
 
+### `supportsWakeUpOnDemand`
+
+```ts
+readonly supportsWakeUpOnDemand: MaybeNotKnown<boolean>
+```
+
+Whether this node supports waking up on demand (via a beam).
+
 ### `isRouting`
 
 ```ts
@@ -1292,6 +1348,14 @@ readonly firmwareVersion: string
 
 The version of this node's firmware.
 
+### `hardwareVersion`
+
+```ts
+readonly hardwareVersion: MaybeNotKnown<number>
+```
+
+The hardware version of this node.
+
 ### `manufacturerId`, `productId` and `productType`
 
 ```ts
@@ -1368,6 +1432,22 @@ readonly protocol: Protocols
 ```
 
 Which protocol is used to communicate with this node, Z-Wave (Classic) or Z-Wave Long Range.
+
+### `hasSUCReturnRoute`
+
+```ts
+readonly hasSUCReturnRoute: boolean
+```
+
+Whether a SUC return route was configured for this node.
+
+### `statistics`
+
+```ts
+readonly statistics: Readonly<NodeStatistics>
+```
+
+Returns the current statistics for this node. The shape of the statistics object is described in the [`"statistics updated"` event](#statistics-updated).
 
 ## ZWaveNode events
 

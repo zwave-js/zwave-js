@@ -1576,21 +1576,151 @@ Returns the ID of the controller in the current network.
 > [!WARNING]
 > This property is only defined after the controller interview!
 
-<!-- TODO: Document the other properties of the Controller class:
-* readonly isSecondary: boolean
-* readonly isUsingHomeIdFromOtherNetwork: boolean
-* readonly isSISPresent: boolean
-* readonly wasRealPrimary: boolean
-* readonly isStaticUpdateController: boolean
-* readonly isSlave: boolean
-* readonly firmwareVersion: string
-* readonly manufacturerId: number
-* readonly productType: number
-* readonly productId: number
-* readonly supportedFunctionTypes: FunctionType[]
-* readonly sucNodeId: number
-* readonly supportsTimers: boolean
--->
+### `isSISPresent`
+
+```ts
+readonly isSISPresent: MaybeNotKnown<boolean>
+```
+
+Whether a SIS (SUC ID Server) is present in the current network.
+
+### `isSIS`
+
+```ts
+readonly isSIS: MaybeNotKnown<boolean>
+```
+
+Whether this controller is the SIS (SUC ID Server) in the current network.
+
+### `isSUC`
+
+```ts
+readonly isSUC: MaybeNotKnown<boolean>
+```
+
+Whether this controller is a SUC (Static Update Controller).
+
+### `nodeType`
+
+```ts
+readonly nodeType: MaybeNotKnown<NodeType>
+```
+
+The node type of this controller.
+
+<!-- #import NodeType from "@zwave-js/core" -->
+
+```ts
+enum NodeType {
+	Controller,
+	"End Node" = 1,
+}
+```
+
+### `manufacturerId`
+
+```ts
+readonly manufacturerId: MaybeNotKnown<number>
+```
+
+The manufacturer ID of the controller hardware.
+
+### `productType`
+
+```ts
+readonly productType: MaybeNotKnown<number>
+```
+
+The product type of the controller hardware.
+
+### `productId`
+
+```ts
+readonly productId: MaybeNotKnown<number>
+```
+
+The product ID of the controller hardware.
+
+### `firmwareVersion`
+
+```ts
+readonly firmwareVersion: MaybeNotKnown<string>
+```
+
+The firmware version of the controller.
+
+### `zwaveApiVersion`
+
+```ts
+readonly zwaveApiVersion: MaybeNotKnown<ZWaveApiVersion>
+```
+
+The version of the Z-Wave API supported by the controller.
+
+<!-- #import ZWaveApiVersion from "@zwave-js/core" -->
+
+```ts
+interface ZWaveApiVersion {
+	kind: "official" | "legacy";
+	version: number;
+}
+```
+
+### `zwaveChipType`
+
+```ts
+readonly zwaveChipType: MaybeNotKnown<string | UnknownZWaveChipType>
+```
+
+The Z-Wave chip type used by the controller. If the chip type is known, this returns a human-readable string. Otherwise, an object with numeric `type` and `version` fields is returned.
+
+### `supportedFunctionTypes`
+
+```ts
+readonly supportedFunctionTypes: MaybeNotKnown<readonly FunctionType[]>
+```
+
+The Serial API function types supported by the controller.
+
+### `sucNodeId`
+
+```ts
+readonly sucNodeId: MaybeNotKnown<number>
+```
+
+The node ID of the SUC (Static Update Controller) in the current network.
+
+### `supportsTimers`
+
+```ts
+readonly supportsTimers: MaybeNotKnown<boolean>
+```
+
+Whether the controller supports timers.
+
+### `maxPayloadSize`
+
+```ts
+readonly maxPayloadSize: MaybeNotKnown<number>
+```
+
+The maximum payload size that can be transmitted with a Z-Wave explorer frame.
+
+### `maxPayloadSizeLR`
+
+```ts
+readonly maxPayloadSizeLR: MaybeNotKnown<number>
+```
+
+The maximum payload size that can be transmitted with a Z-Wave Long Range frame.
+
+### `statistics`
+
+```ts
+readonly statistics: Readonly<ControllerStatistics>
+```
+
+Returns the current controller statistics. The shape of the statistics object is described in the [`"statistics updated"` event](#statistics-updated).
 
 ### `status`
 

@@ -480,6 +480,22 @@ readonly userAgent: string
 
 Returns the user agent string used for service requests.
 
+### `configVersion`
+
+```ts
+readonly configVersion: string
+```
+
+The version of the device configuration package (`@zwave-js/config`) in use by the driver.
+
+### `options`
+
+```ts
+readonly options: Readonly<ZWaveOptions>
+```
+
+Returns the read-only options the driver was initialized with. The shape of `ZWaveOptions` is described [below](#ZWaveOptions).
+
 ## Driver events
 
 The `Driver` class inherits from the Node.js [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) and thus also supports its methods like `on`, `removeListener`, etc. The following events are implemented:

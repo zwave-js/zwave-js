@@ -145,6 +145,14 @@ readonly index: number
 
 The index of this endpoint. 0 for the root device, 1+ otherwise.
 
+### `deviceClass`
+
+```ts
+readonly deviceClass: MaybeNotKnown<DeviceClass>
+```
+
+This property returns the endpoint's **DeviceClass**, which provides further information about the kind of device this endpoint represents. See [`deviceClass` on `ZWaveNode`](api/node.md#deviceClass) for details about the `DeviceClass` type.
+
 ### `endpointLabel`
 
 ```ts

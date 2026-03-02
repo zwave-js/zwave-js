@@ -19,8 +19,13 @@
 		},
 		{
 			"path": "../maintenance/tsconfig.build.json"
+		},
+		{
+			"path": "../transformers/tsconfig.build.json"
 		}
 	],
-	"include": ["src_gen/**/*.ts"],
+	"include": [
+		"src_gen/**/*.ts"
+	],
 	"exclude": []
 }
