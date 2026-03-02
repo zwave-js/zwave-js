@@ -380,12 +380,12 @@ Requests the most recent background RSSI levels detected by the controller.
 ### `getDSK`
 
 ```ts
-async getDSK(): Promise<Buffer>
+async getDSK(): Promise<BytesView>
 ```
 
 Returns the **controller's own** device specific key (DSK) in binary format.
 
-> [!NOTE] This is different from the [`dsk` property on `ZWaveNode`](api/node.md), which returns the DSK of an end device that has joined the network. `getDSK` is only for the controller itself.
+> [!NOTE] This is different from the `dsk` property on `ZWaveNode`, which returns the DSK of an end device that has joined the network. `getDSK` is only for the controller itself.
 
 ### `getKnownLifelineRoutes`
 
@@ -946,6 +946,8 @@ async queryRFRegionInfo(region: RFRegion): Promise<{
 
 Queries detailed information about a specific RF region from the Z-Wave API Module, including whether it supports Z-Wave Classic and/or Long Range, and whether it includes another region (e.g. `USA (Long Range)` includes `USA`).
 
+> [!NOTE] Applications should prefer using [`getSupportedRFRegions`](#configure-rf-region) instead.
+
 #### Configure TX powerlevel
 
 ```ts
@@ -1171,6 +1173,8 @@ Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true
 
 > [!WARNING] This method can write in the full NVM address space and are not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
 
+> [!NOTE] Applications should prefer using the higher-level [`backupNVMRaw`](#backupnvmraw) and [`restoreNVMRaw`](#restorenvmraw) methods for NVM access.
+
 #### Opening the NVM (700+ series, extended)
 
 ```ts
@@ -1205,7 +1209,7 @@ Closes the controller's external NVM. Unlike `externalNVMClose`, this supports N
 
 ```ts
 externalNVMReadBufferExt(offset: number, length: number): Promise<{
-	buffer: Buffer;
+	buffer: BytesView;
 	endOfFile: boolean;
 }>
 ```
@@ -1217,7 +1221,7 @@ Unlike `externalNVMReadBuffer700`, this supports NVMs larger than 64 KiB.
 #### Writing to the NVM (700+ series, extended)
 
 ```ts
-externalNVMWriteBufferExt(offset: number, buffer: Buffer): Promise<{
+externalNVMWriteBufferExt(offset: number, buffer: BytesView): Promise<{
 	endOfFile: boolean;
 }>
 ```

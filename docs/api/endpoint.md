@@ -117,6 +117,8 @@ maySupportBasicCC(): boolean
 
 Checks if this endpoint is allowed to support Basic CC per the Z-Wave specification. This depends on the device type and the other supported CCs — Basic CC must not be offered if any actuator CC is supported.
 
+> [!NOTE] Z-Wave JS handles this internally and there is generally no need for an application to use this method.
+
 ### `wasCCRemovedViaConfig`
 
 ```ts
