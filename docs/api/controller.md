@@ -188,6 +188,14 @@ async stopInclusion(): Promise<boolean>
 
 Stops the inclusion process for a new node. The returned promise resolves to `true` if stopping the inclusion was successful, `false` if it failed or if it was not active.
 
+#### `cancelSecureBootstrapS2`
+
+```ts
+cancelSecureBootstrapS2(reason: KEXFailType): void
+```
+
+Cancels an ongoing Security S2 bootstrapping process with the given reason. This can be used to abort the S2 key exchange if the application determines that inclusion should not proceed (e.g. the user rejected the DSK).
+
 #### `beginExclusion`
 
 ```ts

@@ -330,6 +330,14 @@ Updates a subset of the driver options without having to restart the driver. The
 - `preferences`
 - `userAgent` (behaves like `updateUserAgent`)
 
+### `sendTestFrame`
+
+```ts
+async sendTestFrame(nodeId: number, powerlevel: Powerlevel): Promise<TransmitStatus | undefined>
+```
+
+Sends a NOP Power frame to the given node at the specified powerlevel and returns the transmit status. Returns `undefined` if the frame could not be sent. This is primarily used for testing link quality between nodes.
+
 ### Updating the firmware of the Z-Wave module (OTW)
 
 ```ts

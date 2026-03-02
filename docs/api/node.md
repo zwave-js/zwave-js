@@ -994,6 +994,14 @@ Z-Wave JS discovers a lot of device metadata by interviewing the device. However
 
 When a device config file is updated, this information may be stale and and the device must be re-interviewed using `refreshInfo()` to pick up the changes. This method can be used to determine whether a re-interview is necessary.
 
+### `createDump`
+
+```ts
+createDump(): NodeDump
+```
+
+Returns a dump of this node's information for debugging purposes. The dump includes device metadata, endpoint information, and current values.
+
 ## ZWaveNode properties
 
 ### `id`

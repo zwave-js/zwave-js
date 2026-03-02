@@ -109,6 +109,14 @@ interface CommandClassInfo {
 }
 ```
 
+### `getSupportedCCInstances`
+
+```ts
+getSupportedCCInstances(): readonly CommandClass[]
+```
+
+Returns instances for all CCs this endpoint supports that are implemented in this library.
+
 ### `maySupportBasicCC`
 
 ```ts
