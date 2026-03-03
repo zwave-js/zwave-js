@@ -37,7 +37,9 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	SET_VALUE,
+	SET_VALUE_HOOKS,
 	type SetValueImplementation,
+	type SetValueImplementationHooksFactory,
 	throwMissingPropertyKey,
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
@@ -129,6 +131,15 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 			minVersion: 2,
 			secret: true,
 		} as const,
+	),
+	...V.staticPropertyWithName(
+		"_deprecated_masterCode",
+		"masterCode",
+		undefined,
+		{
+			internal: true,
+			autoCreate: false,
+		},
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"userIdStatus",
@@ -399,16 +410,59 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 				throwUnsupportedProperty(this.ccId, property);
 			}
 
-			// Verify the change after a short delay, unless the command was supervised and successful
-			if (this.isSinglecast() && !supervisedCommandSucceeded(result)) {
-				this.schedulePoll({ property, propertyKey }, value, {
-					transition: "fast",
-				});
-			}
-
 			return result;
 		};
 	}
+
+	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
+		{ property, propertyKey },
+		value,
+	) => {
+		const valueId = {
+			commandClass: this.ccId,
+			endpoint: this.endpoint.index,
+			property,
+			propertyKey,
+		};
+
+		if (
+			UserCodeCCValues.keypadMode.is(valueId)
+			|| UserCodeCCValues.adminCode.is(valueId)
+			// Support devices that were interviewed before the rename to adminCode
+			|| UserCodeCCValues._deprecated_masterCode.is(valueId)
+		) {
+			// Keypad mode, admin/master code should update immediately.
+			// Optimistically update when supervised successfully, otherwise verify
+			// For the deprecated masterCode, the canonical target is adminCode
+			return {
+				forceVerifyChanges: () => true,
+				verifyChanges: (result) => {
+					if (supervisedCommandSucceeded(result)) {
+						this.tryGetValueDB()?.setValue(valueId, value);
+					} else if (this.isSinglecast()) {
+						this.schedulePoll(valueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		} else if (
+			UserCodeCCValues.userCode.is(valueId)
+			|| UserCodeCCValues.userIdStatus.is(valueId)
+		) {
+			// Simply verify the change in any case
+			return {
+				forceVerifyChanges: () => true,
+				verifyChanges: (_result) => {
+					if (this.isSinglecast()) {
+						this.schedulePoll(valueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		}
+	};
 
 	public isSetValueOptimistic(_valueId: ValueID): boolean {
 		return false; // Always verify changes, do not assume changes were applied
