@@ -274,10 +274,10 @@ integrationTest(
 	},
 );
 
-integrationTest.only(
+integrationTest(
 	"A normal-priority command inserted while a poll is waiting resets the poll delay",
 	{
-		debug: true,
+		// debug: true,
 
 		provisioningDirectory: path.join(__dirname, "fixtures/basicCC"),
 
