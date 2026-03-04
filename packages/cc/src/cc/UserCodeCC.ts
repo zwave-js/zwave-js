@@ -51,6 +51,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -1001,7 +1002,10 @@ export class UserCodeCC extends CommandClass {
 		// Synchronize user codes and settings
 		await this.refreshValues(
 			ctx,
-			ctx.getInterviewOptions()?.queryAllUserCodes ?? false,
+			{
+				queryAllUserCodes: ctx.getInterviewOptions()?.queryAllUserCodes
+					?? false,
+			},
 		);
 
 		// Remember that the interview is complete
@@ -1010,17 +1014,18 @@ export class UserCodeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void>;
 
 	/** @internal */
 	public async refreshValues(
 		ctx: RefreshValuesContext,
-		queryAllUserCodes: boolean,
+		options: RefreshValuesOptions & { queryAllUserCodes: boolean },
 	): Promise<void>;
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
-		queryAllUserCodes: boolean = false,
+		options?: RefreshValuesOptions & { queryAllUserCodes: boolean },
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -1029,8 +1034,10 @@ export class UserCodeCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
+
+		const { queryAllUserCodes = false } = options ?? {};
 
 		const supportsAdminCode: boolean = UserCodeCC.supportsAdminCodeCached(
 			ctx,

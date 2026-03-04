@@ -2215,7 +2215,10 @@ protocol version:      ${this.protocolVersion}`;
 				});
 
 				try {
-					await cc.refreshValues(this.driver);
+					await cc.refreshValues(
+						this.driver,
+						{ priority: MessagePriority.Poll },
+					);
 				} catch (e) {
 					this.driver.controllerLog.logNode(this.id, {
 						message: `failed to refresh values for ${

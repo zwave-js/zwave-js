@@ -1,0 +1,9 @@
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"manufacturerId\"}","v":{"type":"number","readable":true,"writeable":false,"min":0,"max":65535,"label":"Manufacturer ID"}}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productType\"}","v":{"type":"number","readable":true,"writeable":false,"min":0,"max":65535,"label":"Product type"}}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productId\"}","v":{"type":"number","readable":true,"writeable":false,"min":0,"max":65535,"label":"Product ID"}}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"firmwareVersions\"}","v":{"type":"string[]","readable":true,"writeable":false,"label":"Z-Wave chip firmware versions"}}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"zWaveProtocolVersion\"}","v":{"type":"string","readable":true,"writeable":false,"label":"Z-Wave protocol version"}}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"sdkVersion\"}","v":{"type":"string","readable":true,"writeable":false,"label":"SDK version"}}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"firmwareVersions\"}","v":{"type":"string[]","readable":true,"writeable":false,"label":"Z-Wave chip firmware versions"}}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"protocolVersion\"}","v":{"type":"string","readable":true,"writeable":false,"label":"Z-Wave protocol version"}}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"libraryType\"}","v":{"type":"number","readable":true,"writeable":false,"label":"Library type","states":{"0":"Unknown","1":"Static Controller","2":"Controller","3":"Enhanced Slave","4":"Slave","5":"Installer","6":"Routing Slave","7":"Bridge Controller","8":"Device under Test","9":"N/A","10":"AV Remote","11":"AV Device"}}}

@@ -1,0 +1,11 @@
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"manufacturerId\"}","v":65535,"ts":1}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productType\"}","v":65535,"ts":1}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productId\"}","v":65534,"ts":1}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"firmwareVersions\"}","v":["1.0"],"ts":1}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"zWaveProtocolVersion\"}","v":"Z-Wave 7.17.99","ts":1}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"sdkVersion\"}","v":"7.17.99","ts":1}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"firmwareVersions\"}","v":["1.0"],"ts":1}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"protocolVersion\"}","v":"7.0","ts":1}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"libraryType\"}","v":3,"ts":1}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1}
+{"k":"{\"nodeId\":2,\"commandClass\":32,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1}
