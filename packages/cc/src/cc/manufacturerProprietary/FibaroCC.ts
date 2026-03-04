@@ -32,6 +32,7 @@ import type {
 	InterviewContext,
 	PersistValuesContext,
 	RefreshValuesContext,
+	RefreshValuesOptions,
 } from "../../lib/CommandClass.js";
 import { expectedCCResponse } from "../../lib/CommandClassDecorators.js";
 import type { CCEncodingContext, CCParsingContext } from "../../lib/traits.js";
@@ -266,6 +267,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 
@@ -275,7 +277,7 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 			const SubConstructor = getFibaroCCConstructor(ccId);
 			if (SubConstructor) {
 				const instance = new SubConstructor({ nodeId: node.id });
-				await instance.refreshValues(ctx);
+				await instance.refreshValues(ctx, options);
 			}
 		}
 	}
@@ -331,7 +333,10 @@ export class FibaroVenetianBlindCC extends FibaroCC {
 		await this.refreshValues(ctx);
 	}
 
-	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
+	): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -343,6 +348,9 @@ export class FibaroVenetianBlindCC extends FibaroCC {
 				nodeId: this.nodeId,
 				endpointIndex: this.endpointIndex,
 			}),
+			{
+				priority: options?.priority,
+			},
 		);
 		if (resp) {
 			const logMessage = `received venetian blind state:

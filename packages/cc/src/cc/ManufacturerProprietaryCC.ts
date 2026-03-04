@@ -16,6 +16,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -255,6 +256,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 
@@ -267,7 +269,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		}
 		const pcInstance = this.createSpecificInstance();
 		if (pcInstance) {
-			await pcInstance.refreshValues(ctx);
+			await pcInstance.refreshValues(ctx, options);
 		} else {
 			ctx.logNode(node.id, {
 				message:
