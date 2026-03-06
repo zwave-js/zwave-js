@@ -11,7 +11,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"remapNotifications compat flag syncs doorStateSimple when remapping to/clearing door open/closed events",
 	{
-		debug: true,
+		// debug: true,
 
 		nodeCapabilities: {
 			manufacturerId: 0xdead,
