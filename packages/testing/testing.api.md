@@ -67,6 +67,7 @@ export type CCIdToCapabilities<T extends CommandClasses = CommandClasses> = T ex
 export type CCSpecificCapabilities = {
     [CommandClasses.Configuration]: ConfigurationCCCapabilities;
     [CommandClasses.Notification]: NotificationCCCapabilities;
+    [0x77]: NodeNamingAndLocationCCCapabilities;
     [48]: BinarySensorCCCapabilities;
     [0x25]: BinarySwitchCCCapabilities;
     [49]: MultilevelSensorCCCapabilities;
@@ -558,6 +559,7 @@ export type MockNodeResponse = {
     action: "stop";
 } | {
     action: "ok";
+    durationMs?: number;
 } | {
     action: "fail";
 };
@@ -619,6 +621,17 @@ export interface MultilevelSwitchCCCapabilities {
     defaultValue?: MaybeUnknown<number>;
     // (undocumented)
     primarySwitchType: SwitchType;
+    travelTime?: number;
+}
+
+// Warning: (ae-missing-release-tag) "NodeNamingAndLocationCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface NodeNamingAndLocationCCCapabilities {
+    // (undocumented)
+    location?: string;
+    // (undocumented)
+    name?: string;
 }
 
 // Warning: (ae-missing-release-tag) "NodePendingInclusion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -724,6 +737,7 @@ export interface UserCodeCCCapabilities {
 export interface WindowCoveringCCCapabilities {
     // (undocumented)
     supportedParameters: WindowCoveringParameter[];
+    travelTime?: number;
 }
 
 // (No @packageDocumentation comment for this package)
