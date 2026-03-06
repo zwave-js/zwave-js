@@ -74,6 +74,56 @@ export function handleNotificationReport(
 		return;
 	}
 
+	// Apply notification remapping from compat config
+	const remappings = node.deviceConfig?.compat?.remapNotifications;
+	if (remappings?.length) {
+		const match = remappings.find(
+			(m) =>
+				m.from.notificationType === command.notificationType
+				&& m.from.notificationEvent === command.notificationEvent,
+		);
+		if (match) {
+			ctx.logNode(node.id, {
+				message: `Notification remapped via compat flag`,
+				direction: "inbound",
+				level: "verbose",
+			});
+
+			if (match.action.type === "clear" || match.action.type === "idle") {
+				for (const target of match.action.targets) {
+					const targetNotification = getNotification(
+						target.notificationType,
+					);
+					if (!targetNotification) continue;
+
+					const targetValueConfig = getNotificationValue(
+						targetNotification,
+						target.notificationEvent,
+					);
+					if (targetValueConfig?.type !== "state") continue;
+
+					const valueId = NotificationCCValues
+						.notificationVariable(
+							targetNotification.name,
+							targetValueConfig.variableName,
+						).endpoint(command.endpointIndex);
+
+					if (match.action.type === "clear") {
+						node.valueDB.removeValue(valueId);
+					} else {
+						node.valueDB.setValue(valueId, 0 /* idle */);
+					}
+				}
+				return;
+			} else {
+				// Normal remap: overwrite notification type and event
+				const to = match.action.to;
+				command.notificationType = to.notificationType;
+				command.notificationEvent = to.notificationEvent;
+			}
+		}
+	}
+
 	const ccVersion = getEffectiveCCVersion(ctx, command);
 
 	// Look up the received notification in the config

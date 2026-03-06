@@ -1,0 +1,72 @@
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0xdead",
+	"label": "Test Lock",
+	"description": "With notification remapping",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"remapNotifications": [
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 1
+				},
+				"to": {
+					"notificationType": 6,
+					"notificationEvent": 25
+				}
+			},
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 2
+				},
+				"to": {
+					"notificationType": 6,
+					"notificationEvent": 24
+				}
+			},
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 7
+				},
+				"clear": [
+					{
+						"notificationType": 6,
+						"notificationEvent": 24
+					},
+					{
+						"notificationType": 6,
+						"notificationEvent": 25
+					}
+				]
+			},
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 9
+				},
+				"idle": [
+					{
+						"notificationType": 6,
+						"notificationEvent": 24
+					},
+					{
+						"notificationType": 6,
+						"notificationEvent": 25
+					}
+				]
+			}
+		]
+	}
+}
