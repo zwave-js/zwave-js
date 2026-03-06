@@ -21,9 +21,11 @@ import {
 	type GetSupportedCCVersion,
 	type GetValueDB,
 	type LogNode,
+	NOT_KNOWN,
 	type NodeId,
 	type Notification,
 	type NotificationState,
+	UNKNOWN_STATE,
 	type ValueID,
 	type ValueMetadataNumeric,
 	getNotification,
@@ -109,7 +111,7 @@ export function handleNotificationReport(
 						).endpoint(command.endpointIndex);
 
 					if (match.action.type === "clear") {
-						node.valueDB.removeValue(valueId);
+						node.valueDB.setValue(valueId, UNKNOWN_STATE);
 					} else {
 						node.valueDB.setValue(valueId, 0 /* idle */);
 					}
