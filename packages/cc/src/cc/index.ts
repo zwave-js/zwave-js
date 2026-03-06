@@ -1300,16 +1300,29 @@ export {
 	ThermostatModeCCSupportedReport,
 	ThermostatModeCCValues,
 };
-export type { ThermostatOperatingStateCCReportOptions } from "./ThermostatOperatingStateCC.js";
+export type {
+	ThermostatOperatingStateCCLoggingGetOptions,
+	ThermostatOperatingStateCCLoggingReportOptions,
+	ThermostatOperatingStateCCLoggingSupportedReportOptions,
+	ThermostatOperatingStateCCReportOptions,
+} from "./ThermostatOperatingStateCC.js";
 import {
 	ThermostatOperatingStateCC,
 	ThermostatOperatingStateCCGet,
+	ThermostatOperatingStateCCLoggingGet,
+	ThermostatOperatingStateCCLoggingReport,
+	ThermostatOperatingStateCCLoggingSupportedGet,
+	ThermostatOperatingStateCCLoggingSupportedReport,
 	ThermostatOperatingStateCCReport,
 	ThermostatOperatingStateCCValues,
 } from "./ThermostatOperatingStateCC.js";
 export {
 	ThermostatOperatingStateCC,
 	ThermostatOperatingStateCCGet,
+	ThermostatOperatingStateCCLoggingGet,
+	ThermostatOperatingStateCCLoggingReport,
+	ThermostatOperatingStateCCLoggingSupportedGet,
+	ThermostatOperatingStateCCLoggingSupportedReport,
 	ThermostatOperatingStateCCReport,
 	ThermostatOperatingStateCCValues,
 };
@@ -2150,6 +2163,10 @@ export function registerCCs(): void {
 	void ThermostatOperatingStateCC;
 	void ThermostatOperatingStateCCReport;
 	void ThermostatOperatingStateCCGet;
+	void ThermostatOperatingStateCCLoggingSupportedGet;
+	void ThermostatOperatingStateCCLoggingSupportedReport;
+	void ThermostatOperatingStateCCLoggingGet;
+	void ThermostatOperatingStateCCLoggingReport;
 	void ThermostatSetbackCC;
 	void ThermostatSetbackCCSet;
 	void ThermostatSetbackCCReport;
