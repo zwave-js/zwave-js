@@ -2,7 +2,11 @@ import {
 	NotificationCCReport,
 	NotificationCCValues,
 } from "@zwave-js/cc/NotificationCC";
-import { CommandClasses, type ValueMetadataNumeric } from "@zwave-js/core";
+import {
+	CommandClasses,
+	UNKNOWN_STATE,
+	type ValueMetadataNumeric,
+} from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
@@ -44,6 +48,18 @@ integrationTest(
 		},
 
 		async testBody(t, driver, node, mockController, mockNode) {
+			// Track value events to ensure "clear" doesn't fire "value removed"
+			const valueRemovedEvents: any[] = [];
+			const valueUpdatedEvents: any[] = [];
+
+			node.on("value removed", (_, args) => {
+				valueRemovedEvents.push(args);
+			});
+
+			node.on("value updated", (_, args) => {
+				valueUpdatedEvents.push(args);
+			});
+
 			// Verify the compat flag is loaded
 			t.expect(node.deviceConfig?.compat?.remapNotifications)
 				.toBeDefined();
@@ -121,7 +137,11 @@ integrationTest(
 			// The "Door handle state" variable tracks the last event, but
 			// event 0x18 and 0x19 share the same variable, so only the
 			// last one persists. To properly test multi-clear, verify the
-			// value is removed after clearing.
+			// value is set to undefined after clearing.
+
+			// Clear the event trackers before the clear action
+			valueRemovedEvents.length = 0;
+			valueUpdatedEvents.length = 0;
 
 			// Send a "Manual not fully locked operation" (0x07) report - should clear both handle events
 			cc = new NotificationCCReport({
@@ -138,7 +158,18 @@ integrationTest(
 			await wait(100);
 
 			doorHandleValue = node.getValue(doorHandleStateId);
-			t.expect(doorHandleValue).toBeUndefined();
+			t.expect(doorHandleValue).toBe(UNKNOWN_STATE);
+
+			// Verify that "clear" action emits "value updated" with UNKNOWN_STATE, NOT "value removed"
+			t.expect(valueRemovedEvents).toHaveLength(0);
+			t.expect(valueUpdatedEvents.length).toBeGreaterThan(0);
+			const clearEvent = valueUpdatedEvents.find(
+				(e) =>
+					e.property === "Access Control"
+					&& e.propertyKey === "Door handle state",
+			);
+			t.expect(clearEvent).toBeDefined();
+			t.expect(clearEvent.newValue).toBe(UNKNOWN_STATE);
 
 			// Send a "Manual lock operation" (0x01) again to set the value
 			cc = new NotificationCCReport({
