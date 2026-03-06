@@ -2,7 +2,11 @@ import {
 	NotificationCCReport,
 	NotificationCCValues,
 } from "@zwave-js/cc/NotificationCC";
-import { CommandClasses, UNKNOWN_STATE, type ValueMetadataNumeric } from "@zwave-js/core";
+import {
+	CommandClasses,
+	UNKNOWN_STATE,
+	type ValueMetadataNumeric,
+} from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
@@ -154,9 +158,9 @@ integrationTest(
 			await wait(100);
 
 			doorHandleValue = node.getValue(doorHandleStateId);
-			t.expect(doorHandleValue).toBeUndefined();
+			t.expect(doorHandleValue).toBe(UNKNOWN_STATE);
 
-			// Verify that "clear" action emits "value updated" with undefined, NOT "value removed"
+			// Verify that "clear" action emits "value updated" with UNKNOWN_STATE, NOT "value removed"
 			t.expect(valueRemovedEvents).toHaveLength(0);
 			t.expect(valueUpdatedEvents.length).toBeGreaterThan(0);
 			const clearEvent = valueUpdatedEvents.find(

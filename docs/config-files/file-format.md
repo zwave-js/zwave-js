@@ -626,7 +626,7 @@ This property has the following shape:
 The `from` object specifies which incoming notification event should be remapped.
 
 - With `to`: the incoming notification is treated as if the device sent the target notification event instead.
-- With `clear`: receiving the source notification causes each listed target notification value to be set to `undefined` (unknown state).
+- With `clear`: receiving the source notification causes each listed target notification value to be set to unknown state (`UNKNOWN_STATE`).
 - With `idle`: receiving the source notification causes each listed target notification value to be set to idle (0).
 
 When a notification is remapped, the original notification event is removed from the list of supported events and the mapping target is added instead. Mappings with `clear` or `idle` do not add to the list of supported notification events.
