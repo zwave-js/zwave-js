@@ -188,6 +188,14 @@ async stopInclusion(): Promise<boolean>
 
 Stops the inclusion process for a new node. The returned promise resolves to `true` if stopping the inclusion was successful, `false` if it failed or if it was not active.
 
+#### `cancelSecureBootstrapS2`
+
+```ts
+cancelSecureBootstrapS2(reason: KEXFailType): void
+```
+
+Cancels an ongoing Security S2 bootstrapping process with the given reason. This can be used to abort the S2 key exchange if the application determines that inclusion should not proceed (e.g. the user rejected the DSK).
+
 #### `beginExclusion`
 
 ```ts
@@ -343,6 +351,49 @@ To get around this:
 1. Turn the radio off with `controller.toggleRF(false)`
 2. Batch all `getNodeNeighbors` requests together
 3. Turn the radio back on with `controller.toggleRF(true`)
+
+### `discoverNodeNeighbors`
+
+```ts
+async discoverNodeNeighbors(nodeId: number): Promise<boolean>
+```
+
+Instructs a node to (re-)discover its neighbors. Returns `true` if the update was successful and the new neighbors can be retrieved using [`getNodeNeighbors`](#getNodeNeighbors). `false` if the update failed.
+
+> [!WARNING] On some controllers, this can cause new SUC return routes to be assigned.
+
+### `getLongRangeNodes`
+
+```ts
+async getLongRangeNodes(): Promise<readonly number[]>
+```
+
+Returns the list of Z-Wave Long Range node IDs from the controller.
+
+### `getBackgroundRSSI`
+
+```ts
+async getBackgroundRSSI(): Promise<{
+	rssiChannel0: RSSI;
+	rssiChannel1: RSSI;
+	rssiChannel2?: RSSI;
+	rssiChannel3?: RSSI;
+}>
+```
+
+Requests the most recent background RSSI levels detected by the controller.
+
+> [!NOTE] This only returns useful values if something was transmitted recently.
+
+### `getDSK`
+
+```ts
+async getDSK(): Promise<BytesView>
+```
+
+Returns the **controller's own** device specific key (DSK) in binary format.
+
+> [!NOTE] This is different from the [`dsk` property on `ZWaveNode`](api/node.md#dsk), which returns the DSK of an end device that has joined the network. `getDSK` is only for the controller itself.
 
 ### `getKnownLifelineRoutes`
 
@@ -880,6 +931,31 @@ getSupportedRFRegions(filterSubsets: boolean): MaybeNotKnown<readonly RFRegion[]
 
 The `filterSubsets` parameter (`true` by default) can be used to filter out regions that are subsets of other supported regions. For example, if the controller supports both `USA` and `USA (Long Range)`, only `USA (Long Range)` will be returned, since it includes the `USA` region.
 
+##### `querySupportedRFRegions`
+
+```ts
+async querySupportedRFRegions(): Promise<RFRegion[]>
+```
+
+Queries the supported RF regions directly from the Z-Wave API Module.
+
+> [!NOTE] Applications should prefer using [`getSupportedRFRegions`](#configure-rf-region) instead.
+
+##### `queryRFRegionInfo`
+
+```ts
+async queryRFRegionInfo(region: RFRegion): Promise<{
+	region: RFRegion;
+	supportsZWave: boolean;
+	supportsLongRange: boolean;
+	includesRegion?: RFRegion;
+}>
+```
+
+Queries detailed information about a specific RF region from the Z-Wave API Module, including whether it supports Z-Wave Classic and/or Long Range, and whether it includes another region (e.g. `USA (Long Range)` includes `USA`).
+
+> [!NOTE] Applications should prefer using [`getSupportedRFRegions`](#configure-rf-region) instead.
+
 #### Configure TX powerlevel
 
 ```ts
@@ -1104,6 +1180,65 @@ externalNVMWriteBuffer700(offset: number, buffer: Buffer): Promise<boolean>
 Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to [`externalNVMClose`](#externalNVMClose).
 
 > [!WARNING] This method can write in the full NVM address space and are not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
+
+> [!NOTE] Applications should prefer using the higher-level [`backupNVMRaw`](#backupnvmraw) and [`restoreNVMRaw`](#restorenvmraw) methods for NVM access.
+
+#### Opening the NVM (700+ series, extended)
+
+```ts
+externalNVMOpenExt(): Promise<{
+	size: number;
+	supportedOperations: ExtendedNVMOperationsCommand[];
+}>
+```
+
+Opens the controller's external NVM for reading/writing and returns the NVM size and supported operations. Unlike `externalNVMOpen`, this supports NVMs larger than 64 KiB.
+
+The supported operations are indicated by the returned enum values:
+
+```ts
+enum ExtendedNVMOperationsCommand {
+	Open = 0x00,
+	Read = 0x01,
+	Write = 0x02,
+	Close = 0x03,
+}
+```
+
+#### Closing the NVM (700+ series, extended)
+
+```ts
+externalNVMCloseExt(): Promise<void>
+```
+
+Closes the controller's external NVM. Unlike `externalNVMClose`, this supports NVMs larger than 64 KiB.
+
+#### Reading from the NVM (700+ series, extended)
+
+```ts
+externalNVMReadBufferExt(offset: number, length: number): Promise<{
+	buffer: BytesView;
+	endOfFile: boolean;
+}>
+```
+
+Reads a buffer from the external NVM at the given offset. The returned `buffer` length is limited by the Serial API capabilities and not guaranteed to equal `length`. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to `externalNVMCloseExt`.
+
+Unlike `externalNVMReadBuffer700`, this supports NVMs larger than 64 KiB.
+
+#### Writing to the NVM (700+ series, extended)
+
+```ts
+externalNVMWriteBufferExt(offset: number, buffer: BytesView): Promise<{
+	endOfFile: boolean;
+}>
+```
+
+Writes a buffer to the external NVM at the given offset. If `endOfFile` is `true`, the end of the NVM has been reached and the NVM should be closed with a call to `externalNVMCloseExt`.
+
+Unlike `externalNVMWriteBuffer700`, this supports NVMs larger than 64 KiB.
+
+> [!WARNING] This method can write in the full NVM address space and is not offset to start at the application area. Take care not to accidentally overwrite the protocol NVM area!
 
 ### Updating the firmware of a node (OTA)
 
@@ -1449,29 +1584,151 @@ Returns the ID of the controller in the current network.
 > [!WARNING]
 > This property is only defined after the controller interview!
 
-<!-- TODO: Document the other properties of the Controller class:
-* readonly isSecondary: boolean
-* readonly isUsingHomeIdFromOtherNetwork: boolean
-* readonly isSISPresent: boolean
-* readonly wasRealPrimary: boolean
-* readonly isStaticUpdateController: boolean
-* readonly isSlave: boolean
-* readonly firmwareVersion: string
-* readonly manufacturerId: number
-* readonly productType: number
-* readonly productId: number
-* readonly supportedFunctionTypes: FunctionType[]
-* readonly sucNodeId: number
-* readonly supportsTimers: boolean
--->
-
-#### `dsk`
+### `isSISPresent`
 
 ```ts
-dsk(): Buffer
+readonly isSISPresent: MaybeNotKnown<boolean>
 ```
 
-Returns the controller's DSK in binary format.
+Whether a SIS (SUC ID Server) is present in the current network.
+
+### `isSIS`
+
+```ts
+readonly isSIS: MaybeNotKnown<boolean>
+```
+
+Whether this controller is the SIS (SUC ID Server) in the current network.
+
+### `isSUC`
+
+```ts
+readonly isSUC: MaybeNotKnown<boolean>
+```
+
+Whether this controller is a SUC (Static Update Controller).
+
+### `nodeType`
+
+```ts
+readonly nodeType: MaybeNotKnown<NodeType>
+```
+
+The node type of this controller.
+
+<!-- #import NodeType from "@zwave-js/core" -->
+
+```ts
+enum NodeType {
+	Controller,
+	"End Node" = 1,
+}
+```
+
+### `manufacturerId`
+
+```ts
+readonly manufacturerId: MaybeNotKnown<number>
+```
+
+The manufacturer ID of the controller hardware.
+
+### `productType`
+
+```ts
+readonly productType: MaybeNotKnown<number>
+```
+
+The product type of the controller hardware.
+
+### `productId`
+
+```ts
+readonly productId: MaybeNotKnown<number>
+```
+
+The product ID of the controller hardware.
+
+### `firmwareVersion`
+
+```ts
+readonly firmwareVersion: MaybeNotKnown<string>
+```
+
+The firmware version of the controller.
+
+### `zwaveApiVersion`
+
+```ts
+readonly zwaveApiVersion: MaybeNotKnown<ZWaveApiVersion>
+```
+
+The version of the Z-Wave API supported by the controller.
+
+<!-- #import ZWaveApiVersion from "@zwave-js/core" -->
+
+```ts
+interface ZWaveApiVersion {
+	kind: "official" | "legacy";
+	version: number;
+}
+```
+
+### `zwaveChipType`
+
+```ts
+readonly zwaveChipType: MaybeNotKnown<string | UnknownZWaveChipType>
+```
+
+The Z-Wave chip type used by the controller. If the chip type is known, this returns a human-readable string. Otherwise, an object with numeric `type` and `version` fields is returned.
+
+### `supportedFunctionTypes`
+
+```ts
+readonly supportedFunctionTypes: MaybeNotKnown<readonly FunctionType[]>
+```
+
+The Serial API function types supported by the controller.
+
+### `sucNodeId`
+
+```ts
+readonly sucNodeId: MaybeNotKnown<number>
+```
+
+The node ID of the SUC (Static Update Controller) in the current network.
+
+### `supportsTimers`
+
+```ts
+readonly supportsTimers: MaybeNotKnown<boolean>
+```
+
+Whether the controller supports timers.
+
+### `maxPayloadSize`
+
+```ts
+readonly maxPayloadSize: MaybeNotKnown<number>
+```
+
+The maximum payload size that can be transmitted with a Z-Wave explorer frame.
+
+### `maxPayloadSizeLR`
+
+```ts
+readonly maxPayloadSizeLR: MaybeNotKnown<number>
+```
+
+The maximum payload size that can be transmitted with a Z-Wave Long Range frame.
+
+### `statistics`
+
+```ts
+readonly statistics: Readonly<ControllerStatistics>
+```
+
+Returns the current controller statistics. The shape of the statistics object is described in the [`"statistics updated"` event](#statistics-updated).
 
 ### `status`
 
