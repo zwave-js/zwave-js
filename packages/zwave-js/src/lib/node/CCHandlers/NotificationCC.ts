@@ -21,7 +21,6 @@ import {
 	type GetSupportedCCVersion,
 	type GetValueDB,
 	type LogNode,
-	NOT_KNOWN,
 	type NodeId,
 	type Notification,
 	type NotificationState,
@@ -111,14 +110,43 @@ export function handleNotificationReport(
 						).endpoint(command.endpointIndex);
 
 					if (match.action.type === "clear") {
-						node.valueDB.setValue(valueId, UNKNOWN_STATE);
+						// Only clear if the variable currently reflects this specific event,
+						// to avoid spurious updates when multiple targets share the same variable.
+						if (
+							node.valueDB.getValue(valueId)
+								=== target.notificationEvent
+						) {
+							node.valueDB.setValue(valueId, UNKNOWN_STATE);
+						}
+
+						// Special case for doorStateSimple. If the parent value
+						// gets cleared, this also needs to get cleared.
+						if (
+							target.notificationType === 0x06
+							&& (target.notificationEvent === 0x16
+								|| target.notificationEvent === 0x17)
+						) {
+							const simpleDoorStateId = NotificationCCValues
+								.doorStateSimple
+								.endpoint(command.endpointIndex);
+							if (
+								node.valueDB.getValue(simpleDoorStateId)
+									=== target.notificationEvent
+							) {
+								node.valueDB.setValue(
+									simpleDoorStateId,
+									UNKNOWN_STATE,
+								);
+							}
+						}
 					} else {
 						node.valueDB.setValue(valueId, 0 /* idle */);
 					}
 				}
 				return;
 			} else {
-				// Normal remap: overwrite notification type and event
+				// Normal remap: overwrite notification type and event, then fall through
+				// to normal handling.
 				const to = match.action.to;
 				command.notificationType = to.notificationType;
 				command.notificationEvent = to.notificationEvent;
