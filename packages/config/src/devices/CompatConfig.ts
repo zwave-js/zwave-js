@@ -590,6 +590,23 @@ compat option alarmMapping must be an array where all items are objects!`,
 			);
 		}
 
+		if (definition.remapNotifications != undefined) {
+			if (
+				!isArray(definition.remapNotifications)
+				|| !definition.remapNotifications.every((m: any) => isObject(m))
+			) {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+compat option remapNotifications must be an array where all items are objects!`,
+				);
+			}
+			this.remapNotifications = (definition.remapNotifications as any[])
+				.map(
+					(m, i) => new CompatRemapNotification(filename, m, i + 1),
+				);
+		}
+
 		if (definition.overrideQueries != undefined) {
 			if (!isObject(definition.overrideQueries)) {
 				throwInvalidConfig(
@@ -606,6 +623,7 @@ compat option overrideQueries must be an object!`,
 	}
 
 	public readonly alarmMapping?: readonly CompatMapAlarm[];
+	public readonly remapNotifications?: readonly CompatRemapNotification[];
 	public readonly addCCs?: ReadonlyMap<CommandClasses, CompatAddCC>;
 	public readonly removeCCs?: ReadonlyMap<
 		CommandClasses,
@@ -654,6 +672,7 @@ compat option overrideQueries must be an object!`,
 		if (!conditionApplies(this, deviceId)) return;
 		const ret = pick(this, [
 			"alarmMapping",
+			"remapNotifications",
 			"addCCs",
 			"removeCCs",
 			"disableAutoRefresh",
@@ -872,6 +891,133 @@ error in compat option alarmMapping, mapping #${index}: property "to.eventParame
 
 	public readonly from: CompatMapAlarmFrom;
 	public readonly to: CompatMapAlarmTo;
+}
+
+export interface CompatRemapNotificationFrom {
+	notificationType: number;
+	notificationEvent: number;
+}
+
+export interface CompatRemapNotificationTo {
+	notificationType: number;
+	notificationEvent: number;
+}
+
+export type CompatRemapNotificationAction =
+	| { type: "remap"; to: CompatRemapNotificationTo }
+	| { type: "clear"; targets: CompatRemapNotificationTo[] }
+	| { type: "idle"; targets: CompatRemapNotificationTo[] };
+
+export class CompatRemapNotification {
+	public constructor(
+		filename: string,
+		definition: JSONObject,
+		index: number,
+	) {
+		if (!isObject(definition.from)) {
+			throwInvalidConfig(
+				"devices",
+				`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: property "from" must be an object!`,
+			);
+		} else {
+			if (typeof definition.from.notificationType !== "number") {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: property "from.notificationType" must be a number!`,
+				);
+			}
+			if (typeof definition.from.notificationEvent !== "number") {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: property "from.notificationEvent" must be a number!`,
+				);
+			}
+		}
+
+		this.from = pick(definition.from, [
+			"notificationType",
+			"notificationEvent",
+		]);
+
+		const validateToObject = (obj: any, label: string) => {
+			if (!isObject(obj)) {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: ${label} must be an object!`,
+				);
+			}
+			if (typeof obj.notificationType !== "number") {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: ${label} must have a numeric "notificationType"!`,
+				);
+			}
+			if (typeof obj.notificationEvent !== "number") {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: ${label} must have a numeric "notificationEvent"!`,
+				);
+			}
+		};
+
+		const validateTargetArray = (arr: any, label: string): void => {
+			if (!isArray(arr) || arr.length === 0) {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: property "${label}" must be a non-empty array of objects!`,
+				);
+			}
+			for (let j = 0; j < arr.length; j++) {
+				validateToObject(
+					arr[j],
+					`"${label}[${j}]"`,
+				);
+			}
+		};
+
+		if (definition.to != undefined) {
+			validateToObject(definition.to, `property "to"`);
+			this.action = {
+				type: "remap",
+				to: pick(definition.to, [
+					"notificationType",
+					"notificationEvent",
+				]),
+			};
+		} else if (definition.clear != undefined) {
+			validateTargetArray(definition.clear, "clear");
+			this.action = {
+				type: "clear",
+				targets: (definition.clear as any[]).map((target) =>
+					pick(target, ["notificationType", "notificationEvent"])
+				),
+			};
+		} else if (definition.idle != undefined) {
+			validateTargetArray(definition.idle, "idle");
+			this.action = {
+				type: "idle",
+				targets: (definition.idle as any[]).map((target) =>
+					pick(target, ["notificationType", "notificationEvent"])
+				),
+			};
+		} else {
+			throwInvalidConfig(
+				"devices",
+				`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: exactly one of "to", "clear", or "idle" must be defined!`,
+			);
+		}
+	}
+
+	public readonly from: CompatRemapNotificationFrom;
+	public readonly action: CompatRemapNotificationAction;
 }
 
 export class CompatOverrideQueries {
