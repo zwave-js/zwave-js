@@ -54,8 +54,10 @@
 			"label": "Dimming Speed - Up (Remote)",
 			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 254,
+			"allowed": [
+				{"value": 0},
+				{"range": [5, 254]}
+			],
 			"defaultValue": 25,
 			"unsigned": true,
 			"options": [
@@ -891,22 +893,25 @@
 		{
 			"#": "116[0xff]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 1 (Read Only)"
+			"label": "mmWave Person in the Reporting Area 1 (Read Only)",
+			"hidden": true
 		},
 		{
 			"#": "116[0xff00]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 2 (Read Only)"
+			"label": "mmWave Person in the Reporting Area 2 (Read Only)",
+			"hidden": true
 		},
 		{
 			"#": "116[0xff0000]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 3 (Read Only)"
+			"label": "mmWave Person in the Reporting Area 3 (Read Only)",
+			"hidden": true
 		},
 		{
 			"#": "116[0xff000000]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 4 (Read Only)"
+			"label": "mmWave Person in the Reporting Area (Read Only)"
 		},
 		{
 			"#": "117",
