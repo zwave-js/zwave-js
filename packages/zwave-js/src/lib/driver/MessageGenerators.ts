@@ -49,8 +49,10 @@ import type { Message } from "@zwave-js/serial";
 import {
 	type ContainsCC,
 	type SendDataMessage,
+	SendProtocolDataRequest,
 	containsCC,
 	isSendData,
+	isSendProtocolData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
 import { type BytesView, getErrorMessage } from "@zwave-js/shared";
@@ -145,7 +147,9 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 		additionalCommandTimeoutMs = 0,
 	) {
 		// Make sure we can send this message
-		if (isSendData(msg) && await driver.exceedsMaxPayloadLength(msg)) {
+		if (
+			isSendData(msg) && await driver.exceedsMaxPayloadLength(msg)
+		) {
 			// We use explorer frames by default, but this reduces the maximum payload length by 2 bytes compared to AUTO_ROUTE
 			// Try disabling explorer frames for this message and see if it fits now.
 			function fail(): never {
@@ -220,7 +224,7 @@ export const simpleMessageGenerator: MessageGeneratorImplementation<Message> =
 
 /** A generator for singlecast SendData messages that automatically uses Transport Service when necessary */
 export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
-	SendDataMessage & ContainsCC
+	(SendDataMessage | SendProtocolDataRequest) & ContainsCC
 > = async function*(
 	driver,
 	ctx,
@@ -243,7 +247,9 @@ export const maybeTransportServiceGenerator: MessageGeneratorImplementation<
 
 	const node = msg.tryGetNode(driver);
 	const mayUseTransportService =
-		node?.supportsCC(CommandClasses["Transport Service"])
+		// Protocol level commands must not use Transport Service
+		!isSendProtocolData(msg)
+		&& node?.supportsCC(CommandClasses["Transport Service"])
 		&& node.getCCVersion(CommandClasses["Transport Service"]) >= 2;
 
 	if (
@@ -490,11 +496,22 @@ async function* sendCommandGenerator<
 >(
 	driver: Driver,
 	ctx: CCEncodingContext,
+	originalMessage: Message,
 	command: CommandClass,
 	onMessageSent: (msg: Message, result: Message | undefined) => void,
 	options?: SendCommandOptions,
 ) {
-	const msg = driver.createSendDataMessage(command, options);
+	let msg: (SendDataMessage | SendProtocolDataRequest) & ContainsCC;
+	if (isSendProtocolData(originalMessage)) {
+		// When the original message is a SendProtocolDataRequest, sub-messages should also be
+		msg = new SendProtocolDataRequest({
+			command,
+			protocolMetadata: originalMessage.protocolMetadata,
+			maxSendAttempts: options?.maxSendAttempts,
+		}) as SendProtocolDataRequest & ContainsCC;
+	} else {
+		msg = driver.createSendDataMessage(command, options);
+	}
 
 	const resp = yield* maybeTransportServiceGenerator(
 		driver,
@@ -502,6 +519,7 @@ async function* sendCommandGenerator<
 		msg,
 		onMessageSent,
 	);
+
 	if (resp && containsCC(resp)) {
 		driver.unwrapCommands(resp);
 		return resp.command as TResponse;
@@ -547,10 +565,11 @@ export const secureMessageGeneratorS0: MessageGeneratorImplementation<
 		>(
 			driver,
 			ctx,
+			msg,
 			cc,
-			(msg, result) => {
-				additionalTimeoutMs = Math.ceil(msg.rtt! / 1e6);
-				onMessageSent(msg, result);
+			(innerMsg, result) => {
+				additionalTimeoutMs = Math.ceil(innerMsg.rtt! / 1e6);
+				onMessageSent(innerMsg, result);
 			},
 			{
 				// Only try getting a nonce once
@@ -579,11 +598,11 @@ export const secureMessageGeneratorS0: MessageGeneratorImplementation<
 
 /** A message generator for security encapsulated messages (S2) */
 export const secureMessageGeneratorS2: MessageGeneratorImplementation<
-	SendDataMessage & ContainsCC
+	(SendDataMessage | SendProtocolDataRequest) & ContainsCC
 > = async function*(driver, ctx, msg, onMessageSent) {
-	if (!isSendData(msg) || !containsCC(msg)) {
+	if (!(isSendData(msg) || isSendProtocolData(msg)) || !containsCC(msg)) {
 		throw new ZWaveError(
-			"Cannot use the S2 message generator for a command that's not a SendData message!",
+			"Cannot use the S2 message generator for a command that's not a SendData or SendProtocolData message!",
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	} else if (typeof msg.command.nodeId !== "number") {
@@ -627,10 +646,11 @@ export const secureMessageGeneratorS2: MessageGeneratorImplementation<
 		>(
 			driver,
 			ctx,
+			msg,
 			cc,
-			(msg, result) => {
-				additionalTimeoutMs = Math.ceil(msg.rtt! / 1e6);
-				onMessageSent(msg, result);
+			(innerMsg, result) => {
+				additionalTimeoutMs = Math.ceil(innerMsg.rtt! / 1e6);
+				onMessageSent(innerMsg, result);
 			},
 			{
 				// Only try getting a nonce once
@@ -751,9 +771,10 @@ export const secureMessageGeneratorS2: MessageGeneratorImplementation<
 export const secureMessageGeneratorS2Multicast: MessageGeneratorImplementation<
 	SendDataMessage & ContainsCC
 > = async function*(driver, ctx, msg, onMessageSent) {
+	// Note: SendProtocolDataRequest is always singlecast, so it cannot use this generator
 	if (!isSendData(msg) || !containsCC(msg)) {
 		throw new ZWaveError(
-			"Cannot use the S2 multicast message generator for a command that's not a SendData message!",
+			"Cannot use the S2 multicast message generator for a command that's not a multicast SendData message!",
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	} else if (msg.command.isSinglecast()) {
@@ -862,6 +883,7 @@ export const secureMessageGeneratorS2Multicast: MessageGeneratorImplementation<
 					yield* sendCommandGenerator(
 						driver,
 						ctx,
+						msg,
 						cc,
 						onMessageSent,
 						{
@@ -948,7 +970,7 @@ export function createMessageGenerator<TResponse extends Message = Message>(
 				// Determine which message generator implementation should be used
 				let implementation: MessageGeneratorImplementation<Message> =
 					simpleMessageGenerator;
-				if (isSendData(msg)) {
+				if (isSendData(msg) || isSendProtocolData(msg)) {
 					if (!containsCC(msg)) {
 						throw new ZWaveError(
 							"Cannot create a message generator for a message that doesn't contain a command class",
