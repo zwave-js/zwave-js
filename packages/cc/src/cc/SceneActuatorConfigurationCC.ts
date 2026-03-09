@@ -58,7 +58,7 @@ export const SceneActuatorConfigurationCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				label: `Level (${sceneId})`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
@@ -70,7 +70,7 @@ export const SceneActuatorConfigurationCCValues = V.defineCCValues(
 			(sceneId: number) => ({
 				...ValueMetadata.Duration,
 				label: `Dimming duration (${sceneId})`,
-			} as const),
+			}),
 		),
 	},
 );

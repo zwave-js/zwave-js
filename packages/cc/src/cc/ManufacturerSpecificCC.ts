@@ -39,7 +39,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt16,
 				label: "Manufacturer ID",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.staticProperty(
@@ -47,7 +47,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt16,
 				label: "Product type",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.staticProperty(
@@ -55,7 +55,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt16,
 				label: "Product ID",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.dynamicPropertyAndKeyWithName(
@@ -70,7 +70,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyString,
 				label: `Device ID (${getEnumMemberName(DeviceIdType, type)})`,
 			}),
-			{ minVersion: 2 } as const,
+			{ minVersion: 2 },
 		),
 	},
 );

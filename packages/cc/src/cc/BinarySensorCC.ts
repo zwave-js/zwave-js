@@ -64,7 +64,7 @@ export const BinarySensorCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { sensorType },
-			} as const),
+			}),
 		),
 	},
 );

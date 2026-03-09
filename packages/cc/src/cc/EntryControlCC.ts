@@ -65,7 +65,7 @@ export const EntryControlCCValues = V.defineCCValues(
 					"Number of character that must be stored before sending",
 				min: 1,
 				max: 32,
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"keyCacheTimeout",
@@ -77,7 +77,7 @@ export const EntryControlCCValues = V.defineCCValues(
 					"How long the key cache must wait for additional characters",
 				min: 1,
 				max: 10,
-			} as const,
+			},
 		),
 		...V.staticProperty("supportedDataTypes", undefined, {
 			internal: true,

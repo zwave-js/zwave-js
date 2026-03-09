@@ -108,14 +108,14 @@ export const NotificationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Alarm Type",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"alarmLevel",
 			{
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Alarm Level",
-			} as const,
+			},
 		),
 		...V.staticPropertyAndKeyWithName(
 			"doorStateSimple",
@@ -132,10 +132,10 @@ export const NotificationCCValues = V.defineCCValues(
 				ccSpecific: {
 					notificationType: 0x06,
 				},
-			} as const,
+			},
 			{
 				autoCreate: shouldAutoCreateSimpleDoorSensorValue,
-			} as const,
+			},
 		),
 		...V.staticPropertyAndKeyWithName(
 			"doorTiltState",
@@ -152,11 +152,11 @@ export const NotificationCCValues = V.defineCCValues(
 				ccSpecific: {
 					notificationType: 0x06,
 				},
-			} as const,
+			},
 			{
 				// This is created when the tilt state is first received.
 				autoCreate: false,
-			} as const,
+			},
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"supportedNotificationEvents",
@@ -183,7 +183,7 @@ export const NotificationCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { notificationType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"unknownNotificationVariable",
@@ -196,7 +196,7 @@ export const NotificationCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyUInt8,
 				label: `${notificationName}: Unknown value`,
 				ccSpecific: { notificationType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"notificationVariable",

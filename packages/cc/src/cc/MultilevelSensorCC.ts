@@ -98,7 +98,7 @@ export const MultilevelSensorCCValues = V.defineCCValues(
 				// Just the base metadata, to be extended using a config manager
 				...ValueMetadata.ReadOnlyNumber,
 				label: sensorTypeName,
-			} as const),
+			}),
 		),
 	},
 );

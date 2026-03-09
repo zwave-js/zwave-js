@@ -146,7 +146,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 			ccSpecific: {
 				indicatorId: 0,
 			},
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"identify",
@@ -156,8 +156,8 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 			states: {
 				true: "Identify",
 			},
-		} as const,
-		{ minVersion: 3 } as const,
+		},
+		{ minVersion: 3 },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"supportedPropertyIDs",
@@ -185,7 +185,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 				propertyId,
 			},
 		}),
-		{ minVersion: 2 } as const,
+		{ minVersion: 2 },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"timeout",
@@ -201,14 +201,14 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 				indicatorId,
 			},
 		}),
-		{ minVersion: 3 } as const,
+		{ minVersion: 3 },
 	),
 	...V.dynamicPropertyWithName(
 		"indicatorDescription",
 		(indicatorId: number) => indicatorId,
 		({ property }) => typeof property === "number",
 		undefined,
-		{ internal: true, minVersion: 4 } as const,
+		{ internal: true, minVersion: 4 },
 	),
 });
 

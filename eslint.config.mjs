@@ -110,6 +110,7 @@ export default tseslint.config(
 		files: ["packages/cc/src/**"],
 		rules: {
 			"@zwave-js/consistent-cc-classes": "error",
+			"@zwave-js/consistent-cc-value-definitions": "error",
 		},
 	},
 	// Enable consistent mock node behaviors for mock CC behaviors
