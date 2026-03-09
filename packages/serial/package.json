@@ -82,6 +82,7 @@
     "@zwave-js/shared": "workspace:*",
     "alcalzone-shared": "^5.0.0",
     "serialport": "^13.0.0",
+    "tslib": "^2.8.1",
     "winston": "^3.18.3"
   },
   "devDependencies": {
