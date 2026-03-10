@@ -133,10 +133,10 @@ export const NotificationCCValues = V.defineCCValues(
 				ccSpecific: {
 					notificationType: 0x06,
 				},
-			} as const,
+			},
 			{
 				autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
-			} as const,
+			},
 		),
 		// Previous attempts at fixing the door state mess, but only made things worse.
 		...V.staticPropertyAndKeyWithName(
