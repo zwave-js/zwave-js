@@ -148,11 +148,12 @@
     "semver": "^7.7.2",
     "serialport": "^13.0.0",
     "source-map-support": "^0.5.21",
+    "tslib": "^2.8.1",
     "winston": "^3.18.3"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.55.1",
+    "@microsoft/api-extractor": "^7.57.6",
     "@types/node": "^20.19.35",
     "@types/semver": "^7.7.1",
     "@types/sinon": "^21.0.0",

@@ -128,7 +128,7 @@ export const WindowCoveringCCValues = V.defineCCValues(
 				ccSpecific: {
 					parameter,
 				},
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeUp",

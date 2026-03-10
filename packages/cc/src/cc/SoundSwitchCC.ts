@@ -61,7 +61,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				states: {
 					0: "default",
 				},
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"toneId",
@@ -69,7 +69,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				label: "Play Tone",
 				valueChangeOptions: ["volume"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"defaultVolume",
@@ -79,7 +79,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				max: 100,
 				unit: "%",
 				label: "Default volume",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"defaultToneId",
@@ -88,7 +88,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				min: 1,
 				max: 254,
 				label: "Default tone ID",
-			} as const,
+			},
 		),
 	},
 );

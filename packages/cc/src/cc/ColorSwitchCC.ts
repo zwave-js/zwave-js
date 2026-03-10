@@ -115,7 +115,7 @@ export const ColorSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnly,
 				label: `Current color`,
-			} as const,
+			},
 		),
 		...V.staticPropertyWithName(
 			"targetColor",
@@ -124,14 +124,14 @@ export const ColorSwitchCCValues = V.defineCCValues(
 				...ValueMetadata.Any,
 				label: `Target color`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"duration",
 			{
 				...ValueMetadata.ReadOnlyDuration,
 				label: "Remaining duration",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"hexColor",
@@ -141,7 +141,7 @@ export const ColorSwitchCCValues = V.defineCCValues(
 				maxLength: 7, // to allow #rrggbb
 				label: `RGB Color`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"currentColorChannel",

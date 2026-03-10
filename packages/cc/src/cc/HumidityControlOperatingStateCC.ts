@@ -50,7 +50,7 @@ export const HumidityControlOperatingStateCCValues = V.defineCCValues(
 					HumidityControlOperatingState,
 				),
 				label: "Humidity control operating state",
-			} as const,
+			},
 		),
 	},
 );

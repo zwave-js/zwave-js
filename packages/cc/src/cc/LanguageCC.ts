@@ -42,14 +42,14 @@ export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
 		{
 			...ValueMetadata.ReadOnlyString,
 			label: "Language code",
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"country",
 		{
 			...ValueMetadata.ReadOnlyString,
 			label: "Country code",
-		} as const,
+		},
 	),
 });
 

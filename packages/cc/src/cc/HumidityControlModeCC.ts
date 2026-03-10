@@ -59,7 +59,7 @@ export const HumidityControlModeCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				states: enumValuesToMetadataStates(HumidityControlMode),
 				label: "Humidity control mode",
-			} as const,
+			},
 		),
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
 	},

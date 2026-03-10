@@ -82,7 +82,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 				label: "Barrier Position",
 				unit: "%",
 				max: 100,
-			} as const,
+			},
 		),
 
 		...V.staticProperty(
@@ -94,7 +94,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 					BarrierState.Open,
 					BarrierState.Closed,
 				]),
-			} as const,
+			},
 		),
 
 		...V.staticProperty(
@@ -103,7 +103,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Current Barrier State",
 				states: enumValuesToMetadataStates(BarrierState),
-			} as const,
+			},
 		),
 
 		...V.dynamicPropertyAndKeyWithName(
@@ -122,7 +122,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 					)
 				})`,
 				states: enumValuesToMetadataStates(SubsystemState),
-			} as const),
+			}),
 		),
 	},
 );

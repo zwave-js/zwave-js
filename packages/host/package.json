@@ -49,11 +49,12 @@
     "@zwave-js/config": "workspace:*",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/shared": "workspace:*",
-    "alcalzone-shared": "^5.0.0"
+    "alcalzone-shared": "^5.0.0",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.55.1",
+    "@microsoft/api-extractor": "^7.57.6",
     "@types/node": "^20.19.35",
     "del-cli": "^7.0.0",
     "typescript": "5.9.3"

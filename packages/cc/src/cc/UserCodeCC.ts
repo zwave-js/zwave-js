@@ -117,8 +117,8 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 		{
 			...ValueMetadata.ReadOnlyNumber,
 			label: "Keypad Mode",
-		} as const,
-		{ minVersion: 2 } as const,
+		},
+		{ minVersion: 2 },
 	),
 	...V.staticProperty(
 		"adminCode",
@@ -127,11 +127,11 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 			label: "Admin Code",
 			minLength: 4,
 			maxLength: 10,
-		} as const,
+		},
 		{
 			minVersion: 2,
 			secret: true,
-		} as const,
+		},
 	),
 	...V.staticPropertyWithName(
 		"_deprecated_masterCode",
@@ -151,7 +151,7 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 		(userId: number) => ({
 			...ValueMetadata.Number,
 			label: `User ID status (${userId})`,
-		} as const),
+		}),
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"userCode",

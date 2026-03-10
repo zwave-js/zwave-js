@@ -50,7 +50,7 @@ export const ThermostatFanStateCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyUInt8,
 				states: enumValuesToMetadataStates(ThermostatFanState),
 				label: "Thermostat fan state",
-			} as const,
+			},
 		),
 	},
 );
