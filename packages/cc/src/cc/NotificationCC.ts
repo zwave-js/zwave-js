@@ -117,8 +117,30 @@ export const NotificationCCValues = V.defineCCValues(
 				label: "Alarm Level",
 			} as const,
 		),
+		// Synthetic notification variable to simplify working with Open/Close/Tilted states
 		...V.staticPropertyAndKeyWithName(
-			"doorStateSimple",
+			"openingState",
+			"Access Control",
+			"Opening state",
+			{
+				// Must be a number for compatibility reasons
+				...ValueMetadata.ReadOnlyUInt8,
+				label: "Opening state",
+				states: {
+					[0x00]: "Closed",
+					[0x01]: "Open",
+				},
+				ccSpecific: {
+					notificationType: 0x06,
+				},
+			} as const,
+			{
+				autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
+			} as const,
+		),
+		// Previous attempts at fixing the door state mess, but only made things worse.
+		...V.staticPropertyAndKeyWithName(
+			"deprecated_doorStateSimple",
 			"Access Control",
 			"Door state (simple)",
 			{
@@ -134,11 +156,12 @@ export const NotificationCCValues = V.defineCCValues(
 				},
 			} as const,
 			{
-				autoCreate: shouldAutoCreateSimpleDoorSensorValue,
+				autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
 			} as const,
 		),
+		// Previous attempts at fixing the door state mess, but only made things worse.
 		...V.staticPropertyAndKeyWithName(
-			"doorTiltState",
+			"deprecated_doorTiltState",
 			"Access Control",
 			"Door tilt state",
 			{
@@ -212,7 +235,7 @@ export const NotificationCCValues = V.defineCCValues(
 	},
 );
 
-export function shouldAutoCreateSimpleDoorSensorValue(
+export function shouldAutoCreateSyntheticDoorSensorValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {

@@ -147,7 +147,20 @@ export async function generateCCValueDefinitionsFile(
 				}
 				return undefined;
 			})
-			.filter((decl) => decl != undefined);
+			.filter((decl): decl is Statement => decl != undefined)
+			// deduplicate top-level declarations that might be referenced multiple times
+			// in the value definitions
+			.filter((decl, index, declarations) => {
+				const key =
+					`${decl.getSourceFile().getFilePath()}:${decl.getPos()}`;
+				return (
+					declarations.findIndex(
+						(candidate) =>
+							`${candidate.getSourceFile().getFilePath()}:${candidate.getPos()}`
+								=== key,
+					) === index
+				);
+			});
 
 		// Functions are hoisted and might need access to the CCValues definition
 		const localFunctionsToCopy = localDeclarationsToCopy.filter(

@@ -440,7 +440,7 @@ function handleKnownNotification(
 		// Actual status
 		0x16,
 		0x17,
-		// Synthetic status with enum
+		// Synthetic status with enum (deprecated)
 		0x1600,
 		0x1601,
 	];
@@ -486,10 +486,38 @@ function handleKnownNotification(
 		// very cumbersome. Also, this is currently the only notification where the enum values
 		// extend the state value.
 
-		// To work around this, we hard-code a notification value for the door status
-		// which only includes the "legacy" states for open/closed.
+		// To work around this, we synthesize a stable door/window state that only
+		// exposes tilt after we've actually seen a tilted notification.
+		const isTilted = command.notificationEvent === 0x16
+			&& command.eventParameters === 0x01;
+		const openingStateValue = NotificationCCValues.openingState;
+		const openingStateValueId = openingStateValue.endpoint(
+			command.endpointIndex,
+		);
+		const openingStateTiltMetadata: ValueMetadataNumeric = {
+			...openingStateValue.meta,
+			states: {
+				...openingStateValue.meta.states,
+				[0x02]: "Tilted",
+			},
+		};
+		const openingStateMetadata = node.valueDB.getMetadata(
+			openingStateValueId,
+		) as ValueMetadataNumeric | undefined;
+		if (isTilted && !openingStateMetadata?.states?.[2]) {
+			node.valueDB.setMetadata(
+				openingStateValueId,
+				openingStateTiltMetadata,
+			);
+		}
 		node.valueDB.setValue(
-			NotificationCCValues.doorStateSimple.endpoint(
+			openingStateValueId,
+			command.notificationEvent === 0x17 ? 0x00 : isTilted ? 0x02 : 0x01,
+		);
+
+		// Keep the legacy compatibility value limited to the historic open/closed states.
+		node.valueDB.setValue(
+			NotificationCCValues.deprecated_doorStateSimple.endpoint(
 				command.endpointIndex,
 			),
 			command.notificationEvent === 0x17 ? 0x17 : 0x16,
@@ -499,17 +527,17 @@ function handleKnownNotification(
 		// This will only be created after receiving a notification for the tilted state.
 		// Only after it exists, it will be updated. Otherwise, we'd get phantom
 		// values, since some devices send the enum value, even when they don't support tilt.
-		const tiltValue = NotificationCCValues.doorTiltState;
+		const tiltValue = NotificationCCValues.deprecated_doorTiltState;
 		const tiltValueId = tiltValue.endpoint(command.endpointIndex);
 		let tiltValueWasCreated = node.valueDB.hasMetadata(tiltValueId);
-		if (command.eventParameters === 0x01 && !tiltValueWasCreated) {
+		if (isTilted && !tiltValueWasCreated) {
 			node.valueDB.setMetadata(tiltValueId, tiltValue.meta);
 			tiltValueWasCreated = true;
 		}
 		if (tiltValueWasCreated) {
 			node.valueDB.setValue(
 				tiltValueId,
-				command.eventParameters === 0x01 ? 0x01 : 0x00,
+				isTilted ? 0x01 : 0x00,
 			);
 		}
 	} else if (
