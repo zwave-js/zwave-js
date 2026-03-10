@@ -65,14 +65,14 @@ export const ThermostatModeCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				states: enumValuesToMetadataStates(ThermostatMode),
 				label: "Thermostat mode",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"manufacturerData",
 			{
 				...ValueMetadata.ReadOnlyBuffer,
 				label: "Manufacturer data",
-			} as const,
+			},
 		),
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
 	},

@@ -55,7 +55,7 @@ export const NodeNamingAndLocationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.String,
 				label: "Node name",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.staticProperty(
@@ -63,7 +63,7 @@ export const NodeNamingAndLocationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.String,
 				label: "Node location",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 	},

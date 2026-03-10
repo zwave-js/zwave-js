@@ -70,7 +70,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyLevel,
 				label: "Current value",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"targetValue",
@@ -78,14 +78,14 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				...ValueMetadata.Level,
 				label: "Target value",
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"duration",
 			{
 				...ValueMetadata.ReadOnlyDuration,
 				label: "Remaining duration",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"restorePrevious",
@@ -95,7 +95,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				states: {
 					true: "Restore",
 				},
-			} as const,
+			},
 		),
 		...V.staticPropertyWithName(
 			"compatEvent",
@@ -103,7 +103,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Event value",
-			} as const,
+			},
 			{
 				stateful: false,
 				autoCreate: (applHost, endpoint) =>

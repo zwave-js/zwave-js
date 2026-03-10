@@ -67,7 +67,7 @@ export const CentralSceneCCValues = V.defineCCValues(
 				label: "Send held down notifications at a slow rate",
 				description:
 					"When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
-			} as const,
+			},
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"scene",
@@ -80,8 +80,8 @@ export const CentralSceneCCValues = V.defineCCValues(
 			(sceneNumber: number) => ({
 				...ValueMetadata.ReadOnlyUInt8,
 				label: `Scene ${sceneNumber.toString().padStart(3, "0")}`,
-			} as const),
-			{ stateful: false } as const,
+			}),
+			{ stateful: false },
 		),
 	},
 );

@@ -57,8 +57,8 @@ export const ThermostatFanModeCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.Boolean,
 				label: "Thermostat fan turned off",
-			} as const,
-			{ minVersion: 3 } as const,
+			},
+			{ minVersion: 3 },
 		),
 		...V.staticPropertyWithName(
 			"fanMode",
@@ -67,7 +67,7 @@ export const ThermostatFanModeCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				states: enumValuesToMetadataStates(ThermostatFanMode),
 				label: "Thermostat fan mode",
-			} as const,
+			},
 		),
 		...V.staticPropertyWithName(
 			"supportedFanModes",

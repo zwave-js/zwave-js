@@ -59,7 +59,7 @@ export const EnergyProductionCCValues = V.defineCCValues(
 					parameter,
 				),
 				// unit and ccSpecific are set dynamically
-			} as const),
+			}),
 		),
 	},
 );

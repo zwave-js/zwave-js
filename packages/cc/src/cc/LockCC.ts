@@ -52,7 +52,7 @@ export const LockCCValues = V.defineCCValues(CommandClasses.Lock, {
 			...ValueMetadata.Boolean,
 			label: "Locked",
 			description: "Whether the lock is locked",
-		} as const,
+		},
 	),
 });
 

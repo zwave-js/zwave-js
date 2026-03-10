@@ -59,7 +59,7 @@ export const BinarySwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyBoolean,
 				label: "Current value",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"targetValue",
@@ -67,15 +67,15 @@ export const BinarySwitchCCValues = V.defineCCValues(
 				...ValueMetadata.Boolean,
 				label: "Target value",
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"duration",
 			{
 				...ValueMetadata.ReadOnlyDuration,
 				label: "Remaining duration",
-			} as const,
-			{ minVersion: 2 } as const,
+			},
+			{ minVersion: 2 },
 		),
 	},
 );

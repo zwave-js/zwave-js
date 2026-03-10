@@ -102,7 +102,7 @@ export const ThermostatSetpointCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { setpointType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",

@@ -96,7 +96,7 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 			states: {
 				true: "Reset",
 			},
-		} as const,
+		},
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"resetSingle",
@@ -123,7 +123,7 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 				rateType,
 				scale,
 			},
-		} as const),
+		}),
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"value",
@@ -139,7 +139,7 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 				rateType,
 				scale,
 			},
-		} as const),
+		}),
 	),
 });
 

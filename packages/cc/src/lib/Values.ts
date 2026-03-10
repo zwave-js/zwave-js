@@ -178,8 +178,8 @@ export const V = {
 		TName extends string,
 		TProp extends string | number,
 		TKey extends string | number,
-		TMeta extends ValueMetadata,
-		TOptions extends CCValueOptions,
+		const TMeta extends ValueMetadata,
+		const TOptions extends CCValueOptions,
 	>(
 		name: TName,
 		property: TProp,

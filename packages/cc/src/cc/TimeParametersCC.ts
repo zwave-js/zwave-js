@@ -53,7 +53,7 @@ export const TimeParametersCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.Any,
 				label: "Date and Time",
-			} as const,
+			},
 		),
 	},
 );

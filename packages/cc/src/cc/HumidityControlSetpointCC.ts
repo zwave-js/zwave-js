@@ -79,7 +79,7 @@ export const HumidityControlSetpointCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { setpointType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
@@ -95,7 +95,7 @@ export const HumidityControlSetpointCCValues = V.defineCCValues(
 						setpointType,
 					)
 				})`,
-			} as const),
+			}),
 		),
 	},
 );
