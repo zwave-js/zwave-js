@@ -94,8 +94,7 @@ export const consistentCCValueDefinitions = ESLintUtils.RuleCreator.withoutDocs(
 			fixable: "code",
 			schema: [],
 			messages: {
-				"no-as-const":
-					"Unnecessary `as const` in CC value definition.",
+				"no-as-const": "Unnecessary `as const` in CC value definition.",
 			},
 		},
 		defaultOptions: [],
