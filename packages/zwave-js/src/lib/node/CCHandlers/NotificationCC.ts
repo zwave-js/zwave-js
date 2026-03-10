@@ -127,7 +127,7 @@ export function handleNotificationReport(
 								|| target.notificationEvent === 0x17)
 						) {
 							const simpleDoorStateId = NotificationCCValues
-								.doorStateSimple
+								.deprecated_doorStateSimple
 								.endpoint(command.endpointIndex);
 							if (
 								node.valueDB.getValue(simpleDoorStateId)
