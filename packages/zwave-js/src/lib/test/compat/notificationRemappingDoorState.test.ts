@@ -44,7 +44,8 @@ integrationTest(
 		},
 
 		async testBody(t, driver, node, mockController, mockNode) {
-			const doorStateSimpleId = NotificationCCValues.deprecated_doorStateSimple.id;
+			const doorStateSimpleId =
+				NotificationCCValues.deprecated_doorStateSimple.id;
 
 			// Send event 0x01 - should be remapped to door open (0x16) and sync doorStateSimple
 			let cc = new NotificationCCReport({
