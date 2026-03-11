@@ -63,7 +63,7 @@
     "reflect-metadata": "^0.2.2",
     "ts-morph": "^27.0.2",
     "tsx": "^4.20.5",
-    "typescript": "5.9.3",
+    "typescript": "6.0.1-rc",
     "yargs": "^18.0.0"
   }
 }

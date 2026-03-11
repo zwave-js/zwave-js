@@ -2375,7 +2375,7 @@ __metadata:
     "@zwave-js/serial": "workspace:*"
     "@zwave-js/shared": "workspace:*"
     del-cli: "npm:^7.0.0"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     zwave-js: "workspace:*"
   languageName: unknown
   linkType: soft
@@ -2401,7 +2401,7 @@ __metadata:
     reflect-metadata: "npm:^0.2.2"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
   languageName: unknown
   linkType: soft
@@ -2437,7 +2437,7 @@ __metadata:
     sinon: "npm:^21.0.1"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
     xml2js: "npm:^0.6.2"
@@ -2471,7 +2471,7 @@ __metadata:
     triple-beam: "npm:*"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
     winston-daily-rotate-file: "npm:^5.0.0"
@@ -2568,7 +2568,7 @@ __metadata:
     reflect-metadata: "npm:^0.2.2"
     ts-morph: "npm:^27.0.2"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     yargs: "npm:^18.0.0"
   languageName: unknown
   linkType: soft
@@ -2603,7 +2603,7 @@ __metadata:
     semver: "npm:^7.7.2"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
     yargs: "npm:^18.0.0"
   bin:
@@ -2679,7 +2679,7 @@ __metadata:
     ts-morph: "npm:^27.0.2"
     tsx: "npm:^4.20.5"
     turbo: "npm:2.6.1"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     typescript-eslint: "npm:^8.54.0"
     vitest: "npm:^4.0.18"
     xml2js: "npm:^0.6.2"
@@ -2709,7 +2709,7 @@ __metadata:
     sinon: "npm:^21.0.1"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
   languageName: unknown
@@ -2729,7 +2729,7 @@ __metadata:
     sinon: "npm:^21.0.1"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
   languageName: unknown
   linkType: soft
@@ -2753,7 +2753,7 @@ __metadata:
     triple-beam: "npm:*"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     winston-transport: "npm:^4.9.0"
   languageName: unknown
   linkType: soft
@@ -2766,7 +2766,7 @@ __metadata:
     nano-spawn: "npm:^2.0.0"
     ts-morph: "npm:^27.0.2"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
   languageName: unknown
   linkType: soft
@@ -8808,6 +8808,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:6.0.1-rc":
+  version: 6.0.1-rc
+  resolution: "typescript@npm:6.0.1-rc"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10/f54cabfb644efaca5edd0722c83f7039e783c7fcec499a99c6f962cf0523db7b8f3b4d0e30e9fea72e0d9702272f3666936f073653b220a05b67767250990644
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>":
   version: 5.8.2
   resolution: "typescript@patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=5786d5"
@@ -8825,6 +8835,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10/696e1b017bc2635f4e0c94eb4435357701008e2f272f553d06e35b494b8ddc60aa221145e286c28ace0c89ee32827a28c2040e3a69bdc108b1a5dc8fb40b72e3
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@npm%3A6.0.1-rc#optional!builtin<compat/typescript>":
+  version: 6.0.1-rc
+  resolution: "typescript@patch:typescript@npm%3A6.0.1-rc#optional!builtin<compat/typescript>::version=6.0.1-rc&hash=5786d5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10/cd5eac83bb20b383951e7c9bb2dbf985c20e80dfcbc79c584e93bb1d64c48e2972a8009de2c36af3e3b845fbec052b978ecc11d6efd2bad41d15ffc0914569ae
   languageName: node
   linkType: hard
 
@@ -9394,7 +9414,7 @@ __metadata:
     source-map-support: "npm:^0.5.21"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
+    typescript: "npm:6.0.1-rc"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
   bin:

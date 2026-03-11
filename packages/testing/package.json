@@ -62,7 +62,7 @@
     "del-cli": "^7.0.0",
     "triple-beam": "*",
     "tsx": "^4.20.5",
-    "typescript": "5.9.3",
+    "typescript": "6.0.1-rc",
     "winston-transport": "^4.9.0"
   }
 }

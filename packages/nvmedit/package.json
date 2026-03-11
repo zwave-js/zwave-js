@@ -72,7 +72,7 @@
     "@types/yargs": "^17.0.34",
     "del-cli": "^7.0.0",
     "tsx": "^4.20.5",
-    "typescript": "5.9.3",
+    "typescript": "6.0.1-rc",
     "vitest": "^4.0.18"
   }
 }
