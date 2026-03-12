@@ -1,0 +1,813 @@
+{
+	"manufacturer": "Inovelli",
+	"manufacturerId": "0x031e",
+	"label": "VZW30-SN",
+	"description": "On/Off Switch",
+	"devices": [
+		{
+			"productType": "0x0018",
+			"productId": "0x0001"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.3",
+		"max": "255.255"
+	},
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 10,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Basic Set",
+					"maxNodes": 10
+				},
+				"3": {
+					"label": "Multilevel Switch Set",
+					"maxNodes": 10
+				},
+				"4": {
+					"label": "Multilevel Switch Start/Stop",
+					"maxNodes": 10
+				},
+				"5": {
+					"label": "Basic Set Double-tap",
+					"maxNodes": 10
+				},
+				"6": {
+					"label": "Basic Set Triple-tap",
+					"maxNodes": 10
+				},
+				"7": {
+					"label": "Multilevel Switch Set (Config Button)",
+					"maxNodes": 10
+				}
+			}
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Dimming Speed - Up (Remote)",
+			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
+			"valueSize": 1,
+			"allowed": [
+				{"value": 0},
+				{"range": [5, 254]}
+			],
+			"defaultValue": 25,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Immediate",
+					"value": 0
+				},
+				{
+					"label": "500 ms",
+					"value": 5
+				},
+				{
+					"label": "1 second",
+					"value": 10
+				},
+				{
+					"label": "2 seconds",
+					"value": 20
+				},
+				{
+					"label": "2.5 seconds",
+					"value": 25
+				},
+				{
+					"label": "3 seconds",
+					"value": 30
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$import": "templates/inovelli_templates.json#dimming_speed_0_255_sync_1",
+			"label": "Dimming Speed - Up (Local)"
+		},
+		{
+			"#": "3",
+			"$import": "templates/inovelli_templates.json#dimming_speed_0_255_sync_1",
+			"label": "Ramp Rate - Off to On (Remote)"
+		},
+		{
+			"#": "4",
+			"$import": "templates/inovelli_templates.json#dimming_speed_0_255_sync_3",
+			"label": "Ramp Rate - Off to On (Local)"
+		},
+		{
+			"#": "5",
+			"$import": "templates/inovelli_templates.json#dimming_speed_0_255_sync_1",
+			"label": "Dimming Speed - Down (Remote)"
+		},
+		{
+			"#": "6",
+			"$import": "templates/inovelli_templates.json#dimming_speed_0_255_sync_2",
+			"label": "Dimming Speed - Down (Local)"
+		},
+		{
+			"#": "7",
+			"$import": "templates/inovelli_templates.json#dimming_speed_0_255_sync_3",
+			"label": "Ramp Rate - On to Off (Remote)"
+		},
+		{
+			"#": "8",
+			"$import": "templates/inovelli_templates.json#dimming_speed_0_255_sync_4",
+			"label": "Ramp Rate - On to Off (Local)"
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Invert Switch"
+		},
+		{
+			"#": "12",
+			"$purpose": "timer.auto_off",
+			"label": "Auto Off Timer",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "13",
+			"$import": "templates/inovelli_templates.json#level_1-99_0_previous",
+			"label": "Default Level (Local)"
+		},
+		{
+			"#": "14",
+			"$import": "templates/inovelli_templates.json#level_1-99_0_previous",
+			"label": "Default Level (Remote)"
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion < 1.2",
+			"$import": "~/templates/master_template.json#state_after_power_failure_prev_on_off"
+		},
+		{
+			"#": "15",
+			"$import": "templates/inovelli_templates.json#level_0-99_100_previous",
+			"label": "State After Power Restored",
+			"defaultValue": 100
+		},
+		{
+			"#": "17",
+			"label": "Load Level Indicator Timeout",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 11,
+			"defaultValue": 11,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 0
+				},
+				{
+					"label": "Always on",
+					"value": 11
+				}
+			]
+		},
+		{
+			"#": "18",
+			"$purpose": "reporting_threshold.power",
+			"label": "Power Change Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "19",
+			"label": "Power & Energy Report Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{"value": 0},
+				{"range": [30, 32767]}
+			],
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "20",
+			"$purpose": "reporting_threshold.power",
+			"label": "Energy Change Report Threshold",
+			"valueSize": 2,
+			"unit": "0.01 kWh",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "22",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single pole",
+					"value": 0
+				},
+				{
+					"label": "Multi-Way with aux switch",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "32",
+			"label": "Internal Temperature",
+			"description": "Temperature inside of the switch",
+			"valueSize": 1,
+			"unit": "°C",
+			"minValue": 0,
+			"maxValue": 127,
+			"readOnly": true
+		},
+		{
+			"#": "33",
+			"$import": "~/templates/master_template.json#base_true_false",
+			"label": "Overheat Detected",
+			"readOnly": true
+		},
+		{
+			"#": "50",
+			"label": "Button Delay Time",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No delay (Config button still has 500 ms delay)",
+					"value": 0
+				},
+				{
+					"label": "300 ms",
+					"value": 3
+				},
+				{
+					"label": "400 ms",
+					"value": 4
+				},
+				{
+					"label": "500 ms",
+					"value": 5
+				},
+				{
+					"label": "600 ms",
+					"value": 6
+				},
+				{
+					"label": "700 ms",
+					"value": 7
+				},
+				{
+					"label": "800 ms",
+					"value": 8
+				},
+				{
+					"label": "900 ms",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": "52",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Smart Bulb Mode"
+		},
+		{
+			"#": "53",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Double Up Level Enable"
+		},
+		{
+			"#": "54",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Double Down Level Enable"
+		},
+		{
+			"#": "55",
+			"$import": "~/templates/master_template.json#base_1-99_nounit",
+			"label": "Double Up Level",
+			"defaultValue": 99
+		},
+		{
+			"#": "56",
+			"$import": "~/templates/master_template.json#base_0-99_nounit",
+			"label": "Double Down Level"
+		},
+		{
+			"#": "58",
+			"label": "Exclusion Behavior",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Light does not pulse",
+					"value": 0
+				},
+				{
+					"label": "Light pulses blue",
+					"value": 1
+				},
+				{
+					"label": "Exclusion disabled (Must factory reset to exclude, or change this parameter)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "59[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Local Commands to Associated Devices",
+			"defaultValue": 1
+		},
+		{
+			"#": "59[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Forward Z-Wave Commands to Associated Devices"
+		},
+		{
+			"#": "64[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "LED1 Strip Effect - Duration"
+		},
+		{
+			"#": "64[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "LED1 Strip Effect - Level"
+		},
+		{
+			"#": "64[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "LED1 Strip Effect - Color"
+		},
+		{
+			"#": "64[0xff000000]",
+			"$import": "templates/inovelli_templates.json#led_effect_effect",
+			"label": "LED1 Strip Effect - Effect"
+		},
+		{
+			"#": "69[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "LED2 Strip Effect - Duration"
+		},
+		{
+			"#": "69[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "LED2 Strip Effect - Level"
+		},
+		{
+			"#": "69[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "LED2 Strip Effect - Color"
+		},
+		{
+			"#": "69[0xff000000]",
+			"$import": "templates/inovelli_templates.json#led_effect_effect",
+			"label": "LED2 Strip Effect - Effect"
+		},
+		{
+			"#": "74[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "LED3 Strip Effect - Duration"
+		},
+		{
+			"#": "74[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "LED3 Strip Effect - Level"
+		},
+		{
+			"#": "74[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "LED3 Strip Effect - Color"
+		},
+		{
+			"#": "74[0xff000000]",
+			"$import": "templates/inovelli_templates.json#led_effect_effect",
+			"label": "LED3 Strip Effect - Effect"
+		},
+		{
+			"#": "79[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "LED4 Strip Effect - Duration"
+		},
+		{
+			"#": "79[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "LED4 Strip Effect - Level"
+		},
+		{
+			"#": "79[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "LED4 Strip Effect - Color"
+		},
+		{
+			"#": "79[0xff000000]",
+			"$import": "templates/inovelli_templates.json#led_effect_effect",
+			"label": "LED4 Strip Effect - Effect"
+		},
+		{
+			"#": "84[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "LED5 Strip Effect - Duration"
+		},
+		{
+			"#": "84[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "LED5 Strip Effect - Level"
+		},
+		{
+			"#": "84[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "LED5 Strip Effect - Color"
+		},
+		{
+			"#": "84[0xff000000]",
+			"$import": "templates/inovelli_templates.json#led_effect_effect",
+			"label": "LED5 Strip Effect - Effect"
+		},
+		{
+			"#": "89[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "LED6 Strip Effect - Duration"
+		},
+		{
+			"#": "89[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "LED6 Strip Effect - Level"
+		},
+		{
+			"#": "89[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "LED6 Strip Effect - Color"
+		},
+		{
+			"#": "89[0xff000000]",
+			"$import": "templates/inovelli_templates.json#led_effect_effect",
+			"label": "LED6 Strip Effect - Effect"
+		},
+		{
+			"#": "94[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "LED7 Strip Effect - Duration"
+		},
+		{
+			"#": "94[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "LED7 Strip Effect - Level"
+		},
+		{
+			"#": "94[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "LED7 Strip Effect - Color"
+		},
+		{
+			"#": "94[0xff000000]",
+			"$import": "templates/inovelli_templates.json#led_effect_effect",
+			"label": "LED7 Strip Effect - Effect"
+		},
+		{
+			"#": "95",
+			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
+			"label": "Default All LED Strip Color When On",
+			"valueSize": 1,
+			"defaultValue": 170
+		},
+		{
+			"#": "96",
+			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
+			"label": "Default All LED Strip Color When Off",
+			"valueSize": 1,
+			"defaultValue": 170
+		},
+		{
+			"#": "97",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Default All LED Strip Brightness When On",
+			"defaultValue": 33
+		},
+		{
+			"#": "98",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Default All LED Strip Brightness When Off"
+		},
+		{
+			"#": "99[0xff]",
+			"$import": "templates/inovelli_templates.json#led_effect_duration",
+			"label": "All LED Strip Effect - Duration"
+		},
+		{
+			"#": "99[0xff00]",
+			"$import": "templates/inovelli_templates.json#led_effect_level",
+			"label": "All LED Strip Effect - Level"
+		},
+		{
+			"#": "99[0xff0000]",
+			"$import": "templates/inovelli_templates.json#led_effect_color",
+			"label": "All LED Strip Effect - Color"
+		},
+		{
+			"#": "99[0xff000000]",
+			"$import": "templates/inovelli_templates.json#all_led_effect_effect",
+			"label": "All LED Strip Effect - Effect"
+		},
+		{
+			"#": "100",
+			"label": "LED Brightness Scaling",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Match VZM31 (Blue series)",
+					"value": 0
+				},
+				{
+					"label": "Match LZW31 (Red series)",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "120",
+			"label": "Single-Tap Behavior",
+			"description": "What happens when the switch is single-tapped",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Up - On, down - Off",
+					"value": 0
+				},
+				{
+					"label": "Up - Increment level up (Off > low > medium > high), down - Increment level down (High > medium > low > off)",
+					"value": 1
+				},
+				{
+					"label": "Up - Increment level up (Off > low > medium > high > low > ...), down - Off",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "121",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Advanced Timer Mode",
+			"description": "Control timer with up taps, 1x = on, 2x = 5 min, 3x = 10 min, 4x = 15 min, 5x = 30 min. Overrides P12 and P53."
+		},
+		{
+			"#": "123",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Aux Switch Scenes",
+			"description": "Send different scene numbers when the Aux switch is clicked"
+		},
+		{
+			"#": "130",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Group 7: Enable"
+		},
+		{
+			"#": "131",
+			"label": "Group 7: Level 1",
+			"description": "Low level to use when group 7 cycles levels",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 25
+		},
+		{
+			"#": "132",
+			"label": "Group 7: Level 2",
+			"description": "Medium level to use when group 7 cycles levels",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 50
+		},
+		{
+			"#": "133",
+			"label": "Group 7: Level 3",
+			"description": "High level to use when group 7 cycles levels",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 99
+		},
+		{
+			"#": "134",
+			"$import": "templates/inovelli_templates.json#hue_color_wheel_white",
+			"label": "Group 7: LED Color",
+			"description": "Color to use for the LED bar while briefly indicating group 7 command transmission",
+			"valueSize": 1,
+			"defaultValue": 255
+		},
+		{
+			"#": "140",
+			"$if": "firmwareVersion >= 1.2",
+			"label": "Temperature Min Report Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{"value": 0},
+				{"range": [30, 65535]}
+			],
+			"defaultValue": 60,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable temperature reporting",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "141",
+			"$if": "firmwareVersion >= 1.2",
+			"label": "Temperature Max Report Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{"value": 0},
+				{"range": [30, 65535]}
+			],
+			"defaultValue": 3600,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable temperature reporting",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "142",
+			"label": "Temperature Change Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1C",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable temperature reporting",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "143",
+			"$if": "firmwareVersion >= 1.2",
+			"label": "Humidity Min Report Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{"value": 0},
+				{"range": [30, 65535]}
+			],
+			"defaultValue": 60,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable humidity reporting",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "144",
+			"$if": "firmwareVersion >= 1.2",
+			"label": "Humidity Max Report Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{"value": 0},
+				{"range": [30, 65535]}
+			],
+			"defaultValue": 3600,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable humidity reporting",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "145",
+			"label": "Humidity Change Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 3,
+			"options": [
+				{
+					"label": "Disable humidity reporting",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "158",
+			"label": "Dimmer Mode",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Dimmer mode",
+					"value": 0
+				},
+				{
+					"label": "On/Off mode",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "159",
+			"label": "LED Bar in On/Off Mode",
+			"description": "When the device is in On/off mode, use full LED bar or just one LED",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Full LED bar",
+					"value": 0
+				},
+				{
+					"label": "Just one LED",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "160",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Firmware Progress LED",
+			"defaultValue": 1
+		},
+		{
+			"#": "162",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Double-Tap Config to Clear Notification",
+			"defaultValue": 0
+		},
+		{
+			"#": "240",
+			"label": "Factory Reset",
+			"description": "Set to 120935937 to perform a factory reset",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 4294967295,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Triple-click config button",
+		"exclusion": "Triple-click config button",
+		"reset": "Simultaneously hold the config button and the up button until the LED bar turns red. Release the buttons and the switch will reset to factory defaults.",
+		"manual": "https://help.inovelli.com/en/collections/5565113-switches-modules"
+	}
+}
