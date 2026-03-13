@@ -34,7 +34,7 @@
     "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "bootstrap": "yarn build",
     "pretest": "tsx --conditions=@@dev test/pretest.ts",
@@ -42,6 +42,7 @@
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260312.1",
     "del-cli": "^7.0.0",
     "nano-spawn": "^2.0.0",
     "ts-morph": "^27.0.2",
