@@ -161,8 +161,9 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 
 	/**
 	 * Requests the device to start the firmware update process and waits for a response.
-	 * This response may time out on some devices, in which case the caller of this method
-	 * should wait manually.
+	 * On some devices, the response can take up to 10 seconds due to a storage slot erase
+	 * at OTA start. On other devices, the response may not arrive at all because the firmware
+	 * update requires manual out-of-band activation, in which case the caller should wait manually.
 	 */
 	@validateArgs()
 	public requestUpdate(
@@ -179,7 +180,12 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 			...options,
 		});
 
-		return this.host.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand(cc, {
+			...this.commandOptions,
+			// Firmware update initiation can take up to 10 seconds on some devices due to
+			// storage slot erase at OTA start. Use 15 seconds to have some safety margin.
+			reportTimeoutMs: 15000,
+		});
 	}
 
 	/**
