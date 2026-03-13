@@ -54,7 +54,7 @@
     "@zwave-js/serial": "workspace:*",
     "@zwave-js/shared": "workspace:*",
     "del-cli": "^7.0.0",
-    "typescript": "5.9.3",
+    "typescript": "6.0.1-rc",
     "zwave-js": "workspace:*"
   }
 }
