@@ -1114,6 +1114,10 @@ export type {
 	Security2CCKEXReportOptions,
 	Security2CCKEXSetOptions,
 	Security2CCMessageEncapsulationOptions,
+	Security2CCNLSNodeListGetOptions,
+	Security2CCNLSNodeListReportOptions,
+	Security2CCNLSStateReportOptions,
+	Security2CCNLSStateSetOptions,
 	Security2CCNetworkKeyGetOptions,
 	Security2CCNetworkKeyReportOptions,
 	Security2CCNonceGetOptions,
@@ -1130,6 +1134,11 @@ import {
 	Security2CCKEXReport,
 	Security2CCKEXSet,
 	Security2CCMessageEncapsulation,
+	Security2CCNLSNodeListGet,
+	Security2CCNLSNodeListReport,
+	Security2CCNLSStateGet,
+	Security2CCNLSStateReport,
+	Security2CCNLSStateSet,
 	Security2CCNetworkKeyGet,
 	Security2CCNetworkKeyReport,
 	Security2CCNetworkKeyVerify,
@@ -1147,6 +1156,11 @@ export {
 	Security2CCKEXReport,
 	Security2CCKEXSet,
 	Security2CCMessageEncapsulation,
+	Security2CCNLSNodeListGet,
+	Security2CCNLSNodeListReport,
+	Security2CCNLSStateGet,
+	Security2CCNLSStateReport,
+	Security2CCNLSStateSet,
 	Security2CCNetworkKeyGet,
 	Security2CCNetworkKeyReport,
 	Security2CCNetworkKeyVerify,
@@ -2100,6 +2114,11 @@ export function registerCCs(): void {
 	void Security2CCTransferEnd;
 	void Security2CCCommandsSupportedReport;
 	void Security2CCCommandsSupportedGet;
+	void Security2CCNLSNodeListReport;
+	void Security2CCNLSNodeListGet;
+	void Security2CCNLSStateReport;
+	void Security2CCNLSStateGet;
+	void Security2CCNLSStateSet;
 	void SecurityCC;
 	void SecurityCCNonceReport;
 	void SecurityCCNonceGet;
