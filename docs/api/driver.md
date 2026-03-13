@@ -889,6 +889,12 @@ interface ZWaveOptions {
 		 * to polling the API for the responsiveness check.
 		 */
 		serialAPIStarted: number; // [1000...30000], default: 5000 ms
+
+		/**
+		 * The minimum time to wait before and between automatic polling of nodes.
+		 * This should not be too low to avoid congesting the Z-Wave network.
+		 */
+		pollTime: number; // [1000...30000], default: 10000 ms
 	};
 
 	attempts: {
