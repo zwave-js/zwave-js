@@ -4,6 +4,13 @@ import type {
 	SwitchType,
 	ThermostatMode,
 	ThermostatSetpointType,
+	UserCredentialCapability,
+	UserCredentialKeyLockerEntryCapability,
+	UserCredentialKeyLockerEntryType,
+	UserCredentialNameEncoding,
+	UserCredentialRule,
+	UserCredentialType,
+	UserCredentialUserType,
 	UserIDStatus,
 	WindowCoveringParameter,
 } from "@zwave-js/cc";
@@ -180,6 +187,28 @@ export interface ScheduleEntryLockCCCapabilities {
 	numDailyRepeatingSlots: number;
 }
 
+export interface UserCredentialCCCapabilities {
+	numberOfSupportedUsers: number;
+	supportedCredentialRules: UserCredentialRule[];
+	maxUserNameLength: number;
+	supportsUserSchedule?: boolean;
+	supportsAllUsersChecksum?: boolean;
+	supportsUserChecksum?: boolean;
+	supportedUserNameEncodings?: UserCredentialNameEncoding[];
+	supportedUserTypes?: UserCredentialUserType[];
+	supportsCredentialChecksum?: boolean;
+	supportsAdminCode?: boolean;
+	supportsAdminCodeDeactivation?: boolean;
+	supportedCredentialTypes: Map<
+		UserCredentialType,
+		UserCredentialCapability
+	>;
+	supportedKeyLockerEntryTypes?: Map<
+		UserCredentialKeyLockerEntryType,
+		UserCredentialKeyLockerEntryCapability
+	>;
+}
+
 export type CCSpecificCapabilities = {
 	[CommandClasses.Configuration]: ConfigurationCCCapabilities;
 	[CommandClasses.Notification]: NotificationCCCapabilities;
@@ -196,6 +225,7 @@ export type CCSpecificCapabilities = {
 	[67 /* Thermostat Setpoint */]: ThermostatSetpointCCCapabilities;
 	[99 /* User Code */]: UserCodeCCCapabilities;
 	[78 /* Schedule Entry Lock */]: ScheduleEntryLockCCCapabilities;
+	[0x83 /* User Credential */]: UserCredentialCCCapabilities;
 	[CommandClasses.Meter]: MeterCCCapabilities;
 	[CommandClasses.Indicator]: IndicatorCCCapabilities;
 };
