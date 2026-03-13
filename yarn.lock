@@ -2671,7 +2671,7 @@ __metadata:
     openai: "npm:^5.12.2"
     oxlint: "npm:^1.42.0"
     oxlint-tsgolint: "npm:^0.11.4"
-    p-queue: "npm:^8.1.0"
+    p-queue: "npm:^9.1.0"
     reflect-metadata: "npm:^0.2.2"
     semver: "npm:^7.7.2"
     source-map-support: "npm:^0.5.21"
@@ -7131,10 +7131,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"p-queue@npm:^9.1.0":
+  version: 9.1.0
+  resolution: "p-queue@npm:9.1.0"
+  dependencies:
+    eventemitter3: "npm:^5.0.1"
+    p-timeout: "npm:^7.0.0"
+  checksum: 10/7221f58c20852fe1d9283fdcfb2c62628384daf4ccd7a936ba826637d41e1e66f606bc2eaa6d1705513daccb47c21eb890400fc0a91f8566c83d176e63fd3664
+  languageName: node
+  linkType: hard
+
 "p-timeout@npm:^6.1.2":
   version: 6.1.2
   resolution: "p-timeout@npm:6.1.2"
   checksum: 10/ca3ede368d792bd86fcfa4e133220536382225d31e5f62e2cedb8280df267b25f6684aa0056b22e8aa538cc85014b310058d8fdddeb0a1ff363093d56e87ac3a
+  languageName: node
+  linkType: hard
+
+"p-timeout@npm:^7.0.0":
+  version: 7.0.1
+  resolution: "p-timeout@npm:7.0.1"
+  checksum: 10/1d65827a07fd10eae5bc1fa493ef5c40522acda21cbbb04131cdb0f63f703c91e5fac2701431e28e308992284a86807d7138dbc2be694e2b8342bee20be652f6
   languageName: node
   linkType: hard
 
@@ -9385,7 +9402,7 @@ __metadata:
     ky: "npm:^1.8.1"
     mdns-server: "npm:^1.0.11"
     mockdate: "npm:^3.0.5"
-    p-queue: "npm:^8.1.0"
+    p-queue: "npm:^9.1.0"
     pathe: "npm:^2.0.3"
     reflect-metadata: "npm:^0.2.2"
     semver: "npm:^7.7.2"
