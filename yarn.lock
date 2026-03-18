@@ -2646,7 +2646,6 @@ __metadata:
     "@zwave-js/serial": "workspace:*"
     "@zwave-js/shared": "workspace:*"
     del-cli: "npm:^7.0.0"
-    typescript: "npm:5.9.3"
     zwave-js: "workspace:*"
   languageName: unknown
   linkType: soft
@@ -2710,7 +2709,6 @@ __metadata:
     sinon: "npm:^21.0.1"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
     xml2js: "npm:^0.6.2"
@@ -2745,7 +2743,6 @@ __metadata:
     triple-beam: "npm:*"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
     winston-daily-rotate-file: "npm:^5.0.0"
@@ -2778,7 +2775,6 @@ __metadata:
     "@zwave-js/core": "workspace:*"
     del-cli: "npm:^7.0.0"
     pathe: "npm:^2.0.3"
-    typescript: "npm:5.9.3"
     yargs: "npm:^18.0.0"
     zwave-js: "workspace:*"
   bin:
@@ -2814,7 +2810,6 @@ __metadata:
     alcalzone-shared: "npm:^5.0.0"
     del-cli: "npm:^7.0.0"
     tslib: "npm:^2.8.1"
-    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -2882,7 +2877,6 @@ __metadata:
     semver: "npm:^7.7.2"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
     vitest: "npm:^4.0.18"
     yargs: "npm:^18.0.0"
   bin:
@@ -2990,7 +2984,6 @@ __metadata:
     sinon: "npm:^21.0.1"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
   languageName: unknown
@@ -3011,7 +3004,6 @@ __metadata:
     sinon: "npm:^21.0.1"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
     vitest: "npm:^4.0.18"
   languageName: unknown
   linkType: soft
@@ -3036,7 +3028,6 @@ __metadata:
     triple-beam: "npm:*"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
     winston-transport: "npm:^4.9.0"
   languageName: unknown
   linkType: soft
@@ -10009,7 +10000,6 @@ __metadata:
     source-map-support: "npm:^0.5.21"
     tslib: "npm:^2.8.1"
     tsx: "npm:^4.20.5"
-    typescript: "npm:5.9.3"
     vitest: "npm:^4.0.18"
     winston: "npm:^3.18.3"
   bin:

@@ -67,7 +67,7 @@
     "ts": "tsx --conditions=@@dev",
     "codegen": "yarn ts maintenance/codegen.ts",
     "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
+    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "lint:zwave": "yarn lint:config:custom && yarn lint:config:eslint",
@@ -110,7 +110,6 @@
     "ky": "^1.8.1",
     "sinon": "^21.0.1",
     "tsx": "^4.20.5",
-    "typescript": "5.9.3",
     "vitest": "^4.0.18",
     "xml2js": "^0.6.2",
     "yargs": "^18.0.0"

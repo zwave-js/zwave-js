@@ -57,7 +57,7 @@
   },
   "scripts": {
     "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
+    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "test:ts": "vitest",
@@ -72,7 +72,6 @@
     "del-cli": "^7.0.0",
     "sinon": "^21.0.1",
     "tsx": "^4.20.5",
-    "typescript": "5.9.3",
     "vitest": "^4.0.18"
   }
 }
