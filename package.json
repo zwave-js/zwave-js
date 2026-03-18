@@ -112,7 +112,7 @@
     "foreach": "yarn workspaces foreach --all -pvi --exclude @zwave-js/repo",
     "clean": "yarn turbo run clean",
     "build": "yarn ts maintenance/build.ts",
-    "check:browser": "yarn workspace zwave-js exec tsc -p tsconfig.browser.json --pretty",
+    "check:browser": "yarn workspace zwave-js exec tsgo -p tsconfig.browser.json --pretty",
     "watch": "yarn w build",
     "test:ts": "vitest run",
     "test": "yarn ts maintenance/test.mts",

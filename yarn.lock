@@ -2857,8 +2857,8 @@ __metadata:
   dependencies:
     "@modelcontextprotocol/sdk": "npm:^1.26.0"
     "@types/node": "npm:^20.19.35"
+    "@typescript/native-preview": "npm:7.0.0-dev.20260318.1"
     nano-spawn: "npm:^2.0.0"
-    typescript: "npm:5.9.3"
   bin:
     zwave-dev-mcp: ./build/index.js
   languageName: unknown
