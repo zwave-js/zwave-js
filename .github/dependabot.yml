@@ -11,7 +11,7 @@ updates:
     allow:
       # Z-Wave JS is a library. We have no control over which transient dependencies
       # get installed when Z-Wave JS is used elsewhere.
-      - dependency-type: "direct"
+      - dependency-type: 'direct'
     ignore:
       # Typescript should not be updated automatically, except patch updates
       # it does not follow semver and minor updates are usually breaking
