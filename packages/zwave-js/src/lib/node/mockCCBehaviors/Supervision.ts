@@ -5,7 +5,9 @@ import type { MockNodeBehavior } from "@zwave-js/testing";
 const encapsulateSupervisionCC: MockNodeBehavior = {
 	transformIncomingCC(controller, self, receivedCC) {
 		if (receivedCC instanceof SupervisionCCGet) {
-			return receivedCC.encapsulated;
+			const inner = receivedCC.encapsulated;
+			inner.endpointIndex = receivedCC.endpointIndex;
+			return inner;
 		}
 		return receivedCC;
 	},

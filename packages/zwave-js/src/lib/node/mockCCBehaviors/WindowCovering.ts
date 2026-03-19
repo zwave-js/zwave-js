@@ -1,3 +1,4 @@
+import { type CommandClass } from "@zwave-js/cc";
 import {
 	WindowCoveringCCGet,
 	WindowCoveringCCReport,
@@ -10,9 +11,10 @@ import {
 import { CommandClasses, Duration } from "@zwave-js/core";
 import { setTimer } from "@zwave-js/shared";
 import {
+	type MockController,
+	type MockNode,
 	type MockNodeBehavior,
 	type WindowCoveringCCCapabilities,
-	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import {
 	type MockTransition,
@@ -37,9 +39,9 @@ function transitionKey(param: number): string {
 
 /** Stops any running transition for the given parameter and snaps state. */
 function stopParameterTransition(
-	self: Parameters<NonNullable<MockNodeBehavior["handleCC"]>>[1],
+	self: MockNode,
 	param: number,
-): void {
+): { wasSupervised: boolean } | undefined {
 	const existing = self.state.get(
 		transitionKey(param),
 	) as MockTransition | undefined;
@@ -47,6 +49,7 @@ function stopParameterTransition(
 		const value = stopTransition(existing);
 		self.state.set(currentValueKey(param), value);
 		self.state.delete(transitionKey(param));
+		return { wasSupervised: existing.supervised };
 	}
 }
 
@@ -55,12 +58,16 @@ function stopParameterTransition(
  * Manages all state reads/writes.
  */
 function beginTransition(
-	controller: Parameters<NonNullable<MockNodeBehavior["handleCC"]>>[0],
-	self: Parameters<NonNullable<MockNodeBehavior["handleCC"]>>[1],
+	controller: MockController,
+	self: MockNode,
+	receivedCC: CommandClass,
 	param: number,
 	targetValue: number,
 	travelTime: number,
-): void {
+	supervised: boolean,
+	onCompleteSupervised?: () => Promise<void>,
+	onAbortSupervised?: () => Promise<void>,
+): number {
 	stopParameterTransition(self, param);
 
 	const currentValue =
@@ -70,9 +77,15 @@ function beginTransition(
 		currentValue,
 		targetValue,
 		duration: travelTime,
+		supervised,
 		onComplete: async () => {
 			self.state.set(currentValueKey(param), targetValue);
 			self.state.delete(transitionKey(param));
+
+			if (supervised) {
+				await onCompleteSupervised?.();
+				return;
+			}
 
 			const cc = new WindowCoveringCCReport({
 				nodeId: controller.ownNodeId,
@@ -81,18 +94,23 @@ function beginTransition(
 				targetValue,
 				duration: new Duration(0, "seconds"),
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
+			await self.sendResponse(receivedCC, {
+				action: "sendCC",
+				cc,
+			});
+		},
+		onAbort: async () => {
+			if (!supervised) return;
+			await onAbortSupervised?.();
 		},
 	});
 
 	if (transition) {
 		self.state.set(transitionKey(param), transition);
+		return transition.durationMs;
 	} else {
 		self.state.set(currentValueKey(param), targetValue);
+		return 0;
 	}
 }
 
@@ -161,18 +179,58 @@ const respondToWindowCoveringSet: MockNodeBehavior = {
 					receivedCC.endpointIndex,
 				),
 			};
+			const supervised = receivedCC.isEncapsulatedWith(
+				CommandClasses.Supervision,
+			);
+			const supervisedState = supervised
+				? {
+					activeParams: new Set<number>(),
+					finished: false,
+				}
+				: undefined;
+			let durationMs = 0;
 			for (const { parameter, value } of receivedCC.targetValues) {
-				beginTransition(
+				const completeSupervised = async (): Promise<void> => {
+					if (!supervisedState || supervisedState.finished) return;
+					supervisedState.finished = true;
+					await self.sendResponse(receivedCC, {
+						action: "ok",
+					});
+				};
+				const abortSupervised = async (): Promise<void> => {
+					if (!supervisedState || supervisedState.finished) return;
+					supervisedState.finished = true;
+					supervisedState.activeParams.delete(parameter);
+					for (const otherParam of supervisedState.activeParams) {
+						stopParameterTransition(self, otherParam);
+					}
+					supervisedState.activeParams.clear();
+					await self.sendResponse(receivedCC, {
+						action: "fail",
+					});
+				};
+				const transitionDurationMs = beginTransition(
 					controller,
 					self,
+					receivedCC,
 					parameter,
 					value,
 					capabilities.travelTime,
+					supervised,
+					completeSupervised,
+					abortSupervised,
 				);
+				durationMs = Math.max(
+					durationMs,
+					transitionDurationMs,
+				);
+				if (transitionDurationMs > 0 && supervisedState) {
+					supervisedState.activeParams.add(parameter);
+				}
 			}
 			return {
 				action: "ok",
-				durationMs: capabilities.travelTime,
+				durationMs,
 			};
 		}
 	},
@@ -189,14 +247,30 @@ const respondToWindowCoveringStartLevelChange: MockNodeBehavior = {
 				),
 			};
 			const targetValue = receivedCC.direction === "up" ? 99 : 0;
-			beginTransition(
+			const supervised = receivedCC.isEncapsulatedWith(
+				CommandClasses.Supervision,
+			);
+			const durationMs = beginTransition(
 				controller,
 				self,
+				receivedCC,
 				receivedCC.parameter,
 				targetValue,
 				capabilities.travelTime,
+				supervised,
+				async () =>
+					self.sendResponse(receivedCC, {
+						action: "ok",
+					}),
+				async () =>
+					self.sendResponse(receivedCC, {
+						action: "fail",
+					}),
 			);
-			return { action: "ok" };
+			return {
+				action: "ok",
+				durationMs,
+			};
 		}
 	},
 };
@@ -205,27 +279,28 @@ const respondToWindowCoveringStopLevelChange: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof WindowCoveringCCStopLevelChange) {
 			const param = receivedCC.parameter;
-			stopParameterTransition(self, param);
+			const stoppedTransition = stopParameterTransition(self, param);
 
-			const currentValue = (self.state.get(currentValueKey(param)) as
-				| number
-				| undefined) ?? 0;
+			const currentValue = (
+				self.state.get(currentValueKey(param)) ?? 0
+			) as number;
 
-			// Send a delayed report with the final state
-			setTimer(async () => {
-				const cc = new WindowCoveringCCReport({
-					nodeId: controller.ownNodeId,
-					parameter: param,
-					currentValue,
-					targetValue: currentValue,
-					duration: new Duration(0, "seconds"),
-				});
-				await self.sendToController(
-					createMockZWaveRequestFrame(cc, {
-						ackRequested: false,
-					}),
-				);
-			}, 100).unref();
+			if (!stoppedTransition?.wasSupervised) {
+				// Send a delayed report with the final state
+				setTimer(async () => {
+					const cc = new WindowCoveringCCReport({
+						nodeId: controller.ownNodeId,
+						parameter: param,
+						currentValue,
+						targetValue: currentValue,
+						duration: new Duration(0, "seconds"),
+					});
+					await self.sendResponse(receivedCC, {
+						action: "sendCC",
+						cc,
+					});
+				}, 100).unref();
+			}
 
 			return { action: "ok" };
 		}

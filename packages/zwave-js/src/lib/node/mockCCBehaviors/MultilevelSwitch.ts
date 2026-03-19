@@ -1,4 +1,4 @@
-import { SwitchType } from "@zwave-js/cc";
+import { type CommandClass, SwitchType } from "@zwave-js/cc";
 import {
 	MultilevelSwitchCCGet,
 	MultilevelSwitchCCReport,
@@ -20,7 +20,6 @@ import {
 	type MockNode,
 	type MockNodeBehavior,
 	type MultilevelSwitchCCCapabilities,
-	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import {
 	type MockTransition,
@@ -44,8 +43,8 @@ const StateKeys = {
 
 /** Stops any running transition and snaps state. */
 function stopCurrentTransition(
-	self: Parameters<NonNullable<MockNodeBehavior["handleCC"]>>[1],
-): void {
+	self: MockNode,
+): { wasSupervised: boolean } | undefined {
 	const existing = self.state.get(
 		StateKeys.transition,
 	) as MockTransition | undefined;
@@ -53,6 +52,7 @@ function stopCurrentTransition(
 		const value = stopTransition(existing);
 		self.state.set(StateKeys.currentValue, value);
 		self.state.delete(StateKeys.transition);
+		return { wasSupervised: existing.supervised };
 	}
 }
 
@@ -63,10 +63,12 @@ function stopCurrentTransition(
 function beginTransition(
 	controller: MockController,
 	self: MockNode,
+	receivedCC: CommandClass,
 	targetValue: number,
 	travelTime: number,
 	defaultValue: MaybeUnknown<number> | undefined,
-): void {
+	supervised: boolean,
+): number {
 	stopCurrentTransition(self);
 
 	const currentValue = (
@@ -79,9 +81,17 @@ function beginTransition(
 		currentValue,
 		targetValue,
 		duration: travelTime,
+		supervised,
 		onComplete: async () => {
 			self.state.set(StateKeys.currentValue, targetValue);
 			self.state.delete(StateKeys.transition);
+
+			if (supervised) {
+				await self.sendResponse(receivedCC, {
+					action: "ok",
+				});
+				return;
+			}
 
 			const cc = new MultilevelSwitchCCReport({
 				nodeId: controller.ownNodeId,
@@ -89,18 +99,25 @@ function beginTransition(
 				targetValue,
 				duration: new Duration(0, "seconds"),
 			});
-			await self.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
+			await self.sendResponse(receivedCC, {
+				action: "sendCC",
+				cc,
+			});
+		},
+		onAbort: async () => {
+			if (!supervised) return;
+			await self.sendResponse(receivedCC, {
+				action: "fail",
+			});
 		},
 	});
 
 	if (transition) {
 		self.state.set(StateKeys.transition, transition);
+		return transition.durationMs;
 	} else {
 		self.state.set(StateKeys.currentValue, targetValue);
+		return 0;
 	}
 }
 
@@ -157,16 +174,18 @@ const respondToMultilevelSwitchSet: MockNodeBehavior = {
 					receivedCC.endpointIndex,
 				),
 			};
-			beginTransition(
+			const durationMs = beginTransition(
 				controller,
 				self,
+				receivedCC,
 				receivedCC.targetValue,
 				capabilities.travelTime,
 				capabilities.defaultValue,
+				receivedCC.isEncapsulatedWith(CommandClasses.Supervision),
 			);
 			return {
 				action: "ok",
-				durationMs: capabilities.travelTime,
+				durationMs,
 			};
 		}
 	},
@@ -202,14 +221,19 @@ const respondToMultilevelSwitchStartLevelChange: MockNodeBehavior = {
 				),
 			};
 			const targetValue = receivedCC.direction === "up" ? 99 : 0;
-			beginTransition(
+			const durationMs = beginTransition(
 				controller,
 				self,
+				receivedCC,
 				targetValue,
 				capabilities.travelTime,
 				capabilities.defaultValue,
+				receivedCC.isEncapsulatedWith(CommandClasses.Supervision),
 			);
-			return { action: "ok" };
+			return {
+				action: "ok",
+				durationMs,
+			};
 		}
 	},
 };
@@ -217,26 +241,26 @@ const respondToMultilevelSwitchStartLevelChange: MockNodeBehavior = {
 const respondToMultilevelSwitchStopLevelChange: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof MultilevelSwitchCCStopLevelChange) {
-			stopCurrentTransition(self);
-
+			const stoppedTransition = stopCurrentTransition(self);
 			const currentValue = (
 				self.state.get(StateKeys.currentValue) ?? 0
 			) as number;
 
-			// Send a delayed report with the final state
-			setTimer(async () => {
-				const cc = new MultilevelSwitchCCReport({
-					nodeId: controller.ownNodeId,
-					currentValue,
-					targetValue: currentValue,
-					duration: new Duration(0, "seconds"),
-				});
-				await self.sendToController(
-					createMockZWaveRequestFrame(cc, {
-						ackRequested: false,
-					}),
-				);
-			}, 100).unref();
+			if (!stoppedTransition?.wasSupervised) {
+				// Send a delayed report with the final state
+				setTimer(async () => {
+					const cc = new MultilevelSwitchCCReport({
+						nodeId: controller.ownNodeId,
+						currentValue,
+						targetValue: currentValue,
+						duration: new Duration(0, "seconds"),
+					});
+					await self.sendResponse(receivedCC, {
+						action: "sendCC",
+						cc,
+					});
+				}, 100).unref();
+			}
 
 			return { action: "ok" };
 		}
