@@ -8,6 +8,8 @@ updates:
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
     versioning-strategy: increase
+    cooldown:
+      default-days: 7 # In line with yarn configuration npmMinimalAgeGate
     allow:
       # Z-Wave JS is a library. We have no control over which transient dependencies
       # get installed when Z-Wave JS is used elsewhere.
@@ -36,3 +38,5 @@ updates:
       time: '04:00'
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
