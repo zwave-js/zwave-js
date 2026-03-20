@@ -135,7 +135,7 @@
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.57.6",
+    "@microsoft/api-extractor": "^7.57.7",
     "@types/node": "^20.19.35",
     "@types/semver": "^7.7.1",
     "@types/sinon": "^21.0.0",
@@ -143,7 +143,7 @@
     "@typescript/native-preview": "7.0.0-dev.20260318.1",
     "del-cli": "^7.0.0",
     "sinon": "^21.0.1",
-    "tsx": "^4.20.5",
-    "vitest": "^4.0.18"
+    "tsx": "^4.21.0",
+    "vitest": "^4.1.0"
   }
 }
