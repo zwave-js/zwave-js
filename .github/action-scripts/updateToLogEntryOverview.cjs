@@ -4,7 +4,6 @@
 /// <reference path="../bot-scripts/types.d.ts" />
 
 const c = require("ansi-colors");
-const exec = require("@actions/exec");
 
 const ISSUE_NUMBER = 54;
 
@@ -12,11 +11,11 @@ const ISSUE_NUMBER = 54;
  * @param {{github: Github, context: Context}} param
  */
 async function main(param) {
+	const { exec } = await import("@actions/exec");
 	const { github, context } = param;
 
 	let result = "";
 
-	/** @type {exec.ExecOptions} */
 	const options = {
 		listeners: {
 			stderr: (data) => {
@@ -25,7 +24,7 @@ async function main(param) {
 		},
 	};
 
-	await exec.exec("yarn", ["run", "toLogEntryOverview"], options);
+	await exec("yarn", ["run", "toLogEntryOverview"], options);
 
 	const {
 		data: { body: oldBody },
