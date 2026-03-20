@@ -104,7 +104,6 @@ export const noDisallowedDefaultValue: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				"Ensures that defaultValue is within the allowed range",
@@ -204,7 +203,6 @@ export const noDisallowedOptionValues: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				"Ensures that option values are within the allowed range",

@@ -300,7 +300,6 @@ export const autoUnsigned: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				`Ensures that "unsigned = true" is used when necessary and omitted when not.`,

@@ -41,7 +41,6 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				`Ensures that the defaultValue property is used instead of mentioning in text that an option/value is the default`,
