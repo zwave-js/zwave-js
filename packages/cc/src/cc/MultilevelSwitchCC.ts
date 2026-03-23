@@ -396,6 +396,8 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				);
 
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				// Multilevel Switch commands may take some time to be executed.
 				// Therefore we try to supervise the command execution and delay the
 				// optimistic update until the final result is received.

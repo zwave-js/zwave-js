@@ -83,6 +83,10 @@ export type SetValueImplementationHooks =
 		supervisionOnFailure: () => void | Promise<void>;
 	}>
 	& {
+		// Whether the value is a target value for a CC using split
+		// target/current values. If so, the value will be updated optimistically,
+		// even if the device class does not support optimistic updates.
+		isSplitStateTargetValue?: boolean;
 		// Optimistically update related cached values (if allowed)
 		optimisticallyUpdateRelatedValues?: (
 			supervisedAndSuccessful: boolean,

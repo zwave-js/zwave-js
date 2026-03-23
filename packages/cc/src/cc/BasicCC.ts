@@ -149,6 +149,8 @@ export class BasicCCAPI extends CCAPI {
 				this.endpoint.index,
 			);
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				optimisticallyUpdateRelatedValues: (
 					_supervisedAndSuccessful,
 				) => {
