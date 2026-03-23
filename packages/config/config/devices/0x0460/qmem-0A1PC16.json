@@ -5,6 +5,11 @@
 	"description": "Wave PM Mini",
 	"devices": [
 		{
+			"productType": "0x0007",
+			"productId": "0x0081",
+			"zwaveAllianceId": 5078
+		},
+		{
 			"productType": "0x0004",
 			"productId": "0x0081",
 			"zwaveAllianceId": 5078
