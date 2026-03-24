@@ -9126,7 +9126,9 @@ integrity: ${update.integrity}`;
 			};
 			return result;
 		} finally {
-			await this.leaveBootloader();
+			if (this._options.bootloaderMode !== "stay") {
+				await this.leaveBootloader();
+			}
 			this._otwFirmwareUpdateInProgress = false;
 		}
 	}
