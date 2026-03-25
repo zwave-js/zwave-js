@@ -5,12 +5,12 @@
 	"description": "Wave PM Mini",
 	"devices": [
 		{
-			// Firmware version < 12.0
+			// Firmware version < 12.0 and 12.0 <
 			"productType": "0x0007",
 			"productId": "0x0081"
 		},
 		{
-			// Firmware version >= 12.0
+			// Firmware version = 12.0
 			"productType": "0x0004",
 			"productId": "0x0081"
 		}
