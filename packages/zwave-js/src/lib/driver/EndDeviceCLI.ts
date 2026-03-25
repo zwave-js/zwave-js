@@ -21,20 +21,22 @@ export class EndDeviceCLI {
 	}
 
 	public async executeCommand(command: string): Promise<string | undefined> {
-		if (!this.commands.has(command)) {
+		const normalizedCommand = command.trim();
+		const commandName = normalizedCommand.split(/\s+/, 1)[0];
+		if (!this.commands.has(commandName)) {
 			throw new ZWaveError(
-				`Unknown CLI command ${command}`,
+				`Unknown CLI command ${normalizedCommand}`,
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
 		const response = this.expectMessage();
-		await this.writeSerial(Bytes.from(command.trim() + "\r\n", "ascii"));
+		await this.writeSerial(Bytes.from(normalizedCommand + "\r\n", "ascii"));
 		let ret = await response;
 		if (!ret) return;
 
 		// Successful commands echo the command itself, followed by a line break
-		if (ret.startsWith(command.trim() + "\r\n")) {
-			ret = ret.slice(command.length + 2);
+		if (ret.startsWith(normalizedCommand + "\r\n")) {
+			ret = ret.slice(normalizedCommand.length + 2);
 		}
 		ret = ret.trim();
 		// Most commands prefix their response with the log level, usually "[I] "
