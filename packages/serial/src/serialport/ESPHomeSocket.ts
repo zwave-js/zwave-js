@@ -205,7 +205,7 @@ export function createESPHomeFactory(
 			reader: ReadableStreamDefaultReader<ESPHomeMessage>,
 		): Promise<void> {
 			// Helper to read until we get a message of the expected type,
-			// skipping any Z-Wave proxy messages that may arrive during handshake
+			// skipping any other messages that may arrive during handshake
 			async function readExpected<T extends ESPHomeMessage>(
 				expectedType: abstract new (...args: any[]) => T,
 			): Promise<T> {
@@ -214,17 +214,7 @@ export function createESPHomeFactory(
 					if (message instanceof expectedType) {
 						return message;
 					}
-					// Skip Z-Wave proxy messages during handshake
-					if (
-						message instanceof ZWaveProxyFrame
-						|| message instanceof ZWaveProxyRequest
-					) {
-						continue;
-					}
-					throw new ZWaveError(
-						`Expected ${expectedType.name}, got ${message?.constructor.name}`,
-						ZWaveErrorCodes.Driver_SerialPortClosed,
-					);
+					// Skip unexpected messages during handshake
 				}
 			}
 
