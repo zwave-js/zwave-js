@@ -40,3 +40,31 @@ test("executeCommand trims the command before validating and matching echoes", a
 	t.expect(written).toBe("set_region EU\r\n");
 	t.expect(response).toBe("OK");
 });
+
+test("detectCommands ignores wrapped descriptions and arguments", async (t) => {
+	let written: string | undefined;
+	const cli = new EndDeviceCLI(
+		async (data) => {
+			written = Buffer.from(data).toString("ascii");
+		},
+		async () =>
+			`help\r
+set_learn_mode                Include / exclude the device into / from a z-w\r
+                              ave network\r
+set_region                    Set the current region\r
+                              [string] <region>\r
+bootloader                    Restart into bootloader`,
+	);
+
+	await cli.detectCommands();
+
+	t.expect(written).toBe("help\r\n");
+	t.expect([...cli.commands.entries()]).toStrictEqual([
+		[
+			"set_learn_mode",
+			"Include / exclude the device into / from a z-wave network",
+		],
+		["set_region", "Set the current region [string] <region>"],
+		["bootloader", "Restart into bootloader"],
+	]);
+});
