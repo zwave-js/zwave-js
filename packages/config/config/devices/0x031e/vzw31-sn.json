@@ -916,12 +916,20 @@
 		{
 			"#": "240",
 			"label": "Factory Reset",
-			"description": "Set to 120935937 to perform a factory reset",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 4294967295,
 			"defaultValue": 0,
-			"unsigned": true
+			"destructive": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Default",
+					"value": 0
+				},
+				{
+					"label": "Perform a factory reset",
+					"value": 120935937
+				}
+			]
 		}
 	],
 	"metadata": {
