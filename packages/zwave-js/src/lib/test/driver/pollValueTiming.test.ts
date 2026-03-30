@@ -6,7 +6,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"Node.pollValue should not wait more than a few milliseconds before sending the command",
 	{
-		debug: true,
+		// debug: true,
 
 		provisioningDirectory: path.join(__dirname, "fixtures/basicCC"),
 
