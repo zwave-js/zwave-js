@@ -797,10 +797,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				valueId.commandClass
 			] as CCAPI
 		).withOptions({
-			// We do not want to delay more important communication by polling, so give it
-			// the lowest priority and don't retry unless overwritten by the options
+			// We do not want to delay more important communication by polling, so...
+			// ...don't retry
 			maxSendAttempts: 1,
-			priority: MessagePriority.Poll,
+			// ...and give it the lowest priority for user interactions
+			priority: MessagePriority.NodeQuery,
+			// ...unless overwritten by the options
 			...sendCommandOptions,
 		});
 
