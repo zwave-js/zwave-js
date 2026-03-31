@@ -125,6 +125,7 @@
 		{
 			"#": "11",
 			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$purpose": "orientation",
 			"label": "Invert Switch"
 		},
 		{
@@ -161,6 +162,7 @@
 		{
 			"#": "15",
 			"$import": "templates/inovelli_templates.json#level_0-99_100_previous",
+			"$purpose": "state_after_power_failure",
 			"label": "State After Power Restored",
 			"defaultValue": 100
 		},
@@ -218,7 +220,7 @@
 		},
 		{
 			"#": "20",
-			"$purpose": "reporting_threshold.power",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Change Report Threshold",
 			"valueSize": 2,
 			"unit": "0.01 kWh",
@@ -643,6 +645,7 @@
 		{
 			"#": "140",
 			"$if": "firmwareVersion >= 1.2",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Min Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -662,6 +665,7 @@
 		{
 			"#": "141",
 			"$if": "firmwareVersion >= 1.2",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Max Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -680,6 +684,7 @@
 		},
 		{
 			"#": "142",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1C",
@@ -696,6 +701,7 @@
 		{
 			"#": "143",
 			"$if": "firmwareVersion >= 1.2",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Min Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -715,6 +721,7 @@
 		{
 			"#": "144",
 			"$if": "firmwareVersion >= 1.2",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Max Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -733,6 +740,7 @@
 		},
 		{
 			"#": "145",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
