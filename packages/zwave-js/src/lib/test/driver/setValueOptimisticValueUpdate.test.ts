@@ -100,6 +100,14 @@ integrationTest(
 			);
 			t.expect(windowCoveringCurrentValue).toBe(50); // Should remain at initial value for slow device classes
 
+			// Verify that the target value IS optimistically updated even for slow device classes
+			const windowCoveringTargetValue = windowCoverNode.getValue(
+				WindowCoveringCCValues.targetValue(
+					WindowCoveringParameter["Outbound Left"],
+				).id,
+			);
+			t.expect(windowCoveringTargetValue).toBe(75);
+
 			await windowCoveringPromise;
 
 			// Clear frames for next test
@@ -117,6 +125,11 @@ integrationTest(
 			t.expect(
 				motorControlNode.getValue(BinarySwitchCCValues.currentValue.id),
 			).toBe(false); // Should remain false for slow device classes
+
+			// Verify that the target value IS optimistically updated even for slow device classes
+			t.expect(
+				motorControlNode.getValue(BinarySwitchCCValues.targetValue.id),
+			).toBe(true);
 
 			await motorControlPromise;
 

@@ -490,31 +490,7 @@ export class MockNode {
 			// If no behavior handled the frame, or we're supposed to stop, stop
 			if (!response || response.action === "stop") return;
 
-			// Transform responses with hooks, e.g. to support Supervision or other encapsulation.
-			// Iterate in reverse order so wrapping happens opposite to unwrapping.
-			for (let i = this.behaviors.length - 1; i >= 0; i--) {
-				const behavior = this.behaviors[i];
-				if (behavior.transformResponse) {
-					response = await behavior.transformResponse(
-						this.controller,
-						this,
-						cc,
-						response,
-					);
-				}
-			}
-
-			// Finally send a CC to the controller if we're supposed to
-			if (response.action === "sendCC") {
-				await this.sendToController(
-					createMockZWaveRequestFrame(response.cc, {
-						ackRequested: response.ackRequested,
-					}),
-				);
-			} else if (response.action === "ack") {
-				// Or ack the frame
-				await this.ackControllerRequestFrame(frame);
-			}
+			await this.sendResponse(cc, response, frame);
 		}
 	}
 
@@ -529,6 +505,39 @@ export class MockNode {
 				repeaters: frame?.repeaters,
 			}),
 		);
+	}
+
+	/**
+	 * Applies all response transformation hooks to a mock response and sends the
+	 * final result to the controller.
+	 */
+	public async sendResponse(
+		receivedCC: CommandClass,
+		response: MockNodeResponse,
+		frame?: MockZWaveRequestFrame,
+	): Promise<void> {
+		// Iterate in reverse order so wrapping happens opposite to unwrapping.
+		for (let i = this.behaviors.length - 1; i >= 0; i--) {
+			const behavior = this.behaviors[i];
+			if (behavior.transformResponse) {
+				response = await behavior.transformResponse(
+					this.controller,
+					this,
+					receivedCC,
+					response,
+				);
+			}
+		}
+
+		if (response.action === "sendCC") {
+			await this.sendToController(
+				createMockZWaveRequestFrame(response.cc, {
+					ackRequested: response.ackRequested,
+				}),
+			);
+		} else if (response.action === "ack" && frame) {
+			await this.ackControllerRequestFrame(frame);
+		}
 	}
 
 	/** Adds information about a CC to this mock node */

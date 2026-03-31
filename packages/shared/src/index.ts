@@ -11,7 +11,7 @@ export * from "./errors.js";
 export * from "./fs.js";
 export * from "./inheritance.js";
 export * from "./strings.js";
-export * from "./types.js";
+export type * from "./types.js";
 export {
 	areUint8ArraysEqual,
 	assertUint8Array,

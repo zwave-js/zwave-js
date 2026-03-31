@@ -1,0 +1,56 @@
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0xdead",
+	"label": "Test Door Sensor",
+	"description": "With notification remapping to simple door state",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcaff"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"remapNotifications": [
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 1
+				},
+				"to": {
+					"notificationType": 6,
+					"notificationEvent": 22
+				}
+			},
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 2
+				},
+				"to": {
+					"notificationType": 6,
+					"notificationEvent": 23
+				}
+			},
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 254
+				},
+				"clear": [
+					{
+						"notificationType": 6,
+						"notificationEvent": 22
+					},
+					{
+						"notificationType": 6,
+						"notificationEvent": 23
+					}
+				]
+			}
+		]
+	}
+}

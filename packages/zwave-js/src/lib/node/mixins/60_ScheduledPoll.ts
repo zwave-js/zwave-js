@@ -131,10 +131,12 @@ export abstract class SchedulePollMixin extends EndpointsMixin
 				valueId.commandClass
 			] as CCAPI
 		).withOptions({
-			// We do not want to delay more important communication by polling, so give it
-			// the lowest priority and don't retry unless overwritten by the options
+			// Verifying a value change after a user-initiated command is required for UI
+			// feedback and should not be subject to the poll time requirements for background polling.
+			// However we do not want to delay more important communication by polling, so reduce the
+			// priority to NodeQuery - the same as for device interviews.
 			maxSendAttempts: 1,
-			priority: MessagePriority.Poll,
+			priority: MessagePriority.NodeQuery,
 		});
 
 		// Check if the pollValue method is implemented

@@ -1,4 +1,4 @@
-export * from "./CCSpecificCapabilities.js";
+export type * from "./CCSpecificCapabilities.js";
 export * from "./MockController.js";
 export {
 	type MockControllerCapabilities,

@@ -46,6 +46,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -81,7 +82,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 				label: "Barrier Position",
 				unit: "%",
 				max: 100,
-			} as const,
+			},
 		),
 
 		...V.staticProperty(
@@ -93,7 +94,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 					BarrierState.Open,
 					BarrierState.Closed,
 				]),
-			} as const,
+			},
 		),
 
 		...V.staticProperty(
@@ -102,7 +103,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Current Barrier State",
 				states: enumValuesToMetadataStates(BarrierState),
-			} as const,
+			},
 		),
 
 		...V.dynamicPropertyAndKeyWithName(
@@ -121,7 +122,7 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 					)
 				})`,
 				states: enumValuesToMetadataStates(SubsystemState),
-			} as const),
+			}),
 		),
 	},
 );
@@ -313,6 +314,8 @@ export class BarrierOperatorCCAPI extends CCAPI {
 				: BarrierState.Open;
 
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				// Barrier Operator commands may take some time to be executed.
 				// Therefore we try to supervise the command execution and delay the
 				// optimistic update until the final result is received.
@@ -489,6 +492,7 @@ export class BarrierOperatorCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -497,7 +501,7 @@ export class BarrierOperatorCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const supportedSubsystems: SubsystemType[] = this.getValue(

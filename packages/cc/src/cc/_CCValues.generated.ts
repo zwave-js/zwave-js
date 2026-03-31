@@ -6919,7 +6919,47 @@ export const NotificationCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	doorStateSimple: {
+	openingState: {
+		id: {
+			commandClass: CommandClasses.Notification,
+			property: "Access Control",
+			propertyKey: "Opening state",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses.Notification,
+			endpoint,
+			property: "Access Control",
+			propertyKey: "Opening state",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses.Notification
+				&& valueId.property === "Access Control"
+				&& valueId.propertyKey == "Opening state";
+		},
+		get meta() {
+			return {
+				// Must be a number for compatibility reasons
+				...ValueMetadata.ReadOnlyUInt8,
+				label: "Opening state",
+				states: {
+					[0x00]: "Closed",
+					[0x01]: "Open",
+				},
+				ccSpecific: {
+					notificationType: 0x06,
+				},
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
+		} as const satisfies CCValueOptions,
+	},
+	deprecated_doorStateSimple: {
 		id: {
 			commandClass: CommandClasses.Notification,
 			property: "Access Control",
@@ -6956,10 +6996,10 @@ export const NotificationCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateSimpleDoorSensorValue,
+			autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
 		} as const satisfies CCValueOptions,
 	},
-	doorTiltState: {
+	deprecated_doorTiltState: {
 		id: {
 			commandClass: CommandClasses.Notification,
 			property: "Access Control",
@@ -7166,7 +7206,7 @@ export const NotificationCCValues = Object.freeze({
 	),
 });
 
-function shouldAutoCreateSimpleDoorSensorValue(
+function shouldAutoCreateSyntheticDoorSensorValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -8861,6 +8901,33 @@ export const UserCodeCCValues = Object.freeze({
 			stateful: true,
 			supportsEndpoints: true,
 			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	_deprecated_masterCode: {
+		id: {
+			commandClass: CommandClasses["User Code"],
+			property: "masterCode",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Code"],
+			endpoint,
+			property: "masterCode",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Code"]
+				&& valueId.property === "masterCode"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: false,
 		} as const satisfies CCValueOptions,
 	},
 	userIdStatus: Object.assign(

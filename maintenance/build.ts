@@ -45,7 +45,6 @@ async function main() {
 			"@zwave-js/maintenance",
 			"run",
 			"build",
-			"--verbose",
 			...buildArgs,
 		],
 		execOptions,
@@ -64,7 +63,6 @@ async function main() {
 			"@zwave-js/transformers",
 			"run",
 			"build",
-			"--verbose",
 			...buildArgs,
 		],
 		execOptions,
@@ -106,7 +104,7 @@ async function main() {
 
 	if (project === "all") {
 		// Simply build all projects that depend on zwave-js - this will
-		// build everything
+		// build everything via project references
 		for (const project of dependsOnZwaveJs) {
 			console.log();
 			console.log(`Building ${project}...`);
@@ -117,7 +115,6 @@ async function main() {
 					project,
 					"run",
 					"build",
-					"--verbose",
 					...buildArgs,
 				],
 				execOptions,
@@ -129,7 +126,7 @@ async function main() {
 		console.log(`Building ${project}...`);
 		await spawn(
 			"yarn",
-			["workspace", project, "run", "build", "--verbose", ...buildArgs],
+			["workspace", project, "run", "build", ...buildArgs],
 			execOptions,
 		);
 	}

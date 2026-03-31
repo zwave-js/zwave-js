@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/host",
-  "version": "15.21.0",
+  "version": "15.22.5",
   "description": "zwave-js: Host abstractions",
   "keywords": [],
   "publishConfig": {
@@ -40,8 +40,8 @@
     "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node18",
+    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
+    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run"
   },
@@ -49,13 +49,14 @@
     "@zwave-js/config": "workspace:*",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/shared": "workspace:*",
-    "alcalzone-shared": "^5.0.0"
+    "alcalzone-shared": "^5.0.0",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.55.1",
-    "@types/node": "^20.19.23",
-    "del-cli": "^7.0.0",
-    "typescript": "5.9.3"
+    "@microsoft/api-extractor": "^7.57.7",
+    "@types/node": "^20.19.35",
+    "@typescript/native-preview": "7.0.0-dev.20260318.1",
+    "del-cli": "^7.0.0"
   }
 }

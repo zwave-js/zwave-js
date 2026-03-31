@@ -323,6 +323,7 @@ const defaultOptions: ZWaveOptions = {
 		refreshValue: 5000, // Default should handle most slow devices until we have a better solution
 		refreshValueAfterTransition: 1000, // To account for delays in the device
 		serialAPIStarted: 5000,
+		pollTime: 10000, // PollTime SHOULD be 10 seconds + CommandTime as per the spec
 	},
 	attempts: {
 		openSerialPort: 10,
@@ -416,6 +417,15 @@ function checkOptions(options: ZWaveOptions): void {
 	if (options.timeouts.sendDataCallback < 10000) {
 		throw new ZWaveError(
 			`The Send Data Callback timeout must be at least 10000 milliseconds!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.timeouts.pollTime < 1000
+		|| options.timeouts.pollTime > 30000
+	) {
+		throw new ZWaveError(
+			`The Poll Time must be between 1000 and 30000 milliseconds!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
@@ -907,6 +917,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	// Timers for delayed transaction re-queuing
 	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
+	// Poll timing state per the Z-Wave specification.
+	// After any transaction completes, we must wait at least pollTime
+	// before starting the next poll transaction.
+	private _lastTransactionEnd: number = 0;
+	// CommandTime is measured from when the poll command is sent to when
+	// the successful transmit report is received. The required wait before
+	// the next poll is pollTime + commandTime.
+	private _lastPollCommandTime: number = 0;
+	private _pollDelayTimer: Timer | undefined;
+
 	/** Gives access to the transaction queues, ordered by priority */
 	private get queues(): TransactionQueue[] {
 		return [this.immediateQueue, this.queue];
@@ -958,6 +978,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		}
 		this.requeueTimers.clear();
+
+		// Clear the poll delay timer
+		this._pollDelayTimer?.clear();
+		this._pollDelayTimer = undefined;
 
 		// The queues might not have been initialized yet
 		for (const queue of this.queues) {
@@ -3990,6 +4014,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...[...this.requeueTimers.values()].flatMap(
 					(t) => [...t.values()],
 				),
+				this._pollDelayTimer,
 			]
 		) {
 			timeout?.clear();
@@ -6592,6 +6617,24 @@ ${handlers.length} left`,
 		// Pings may always be sent
 		if (messageIsPing(message)) return true;
 
+		// Enforce polling timing requirements from the spec.
+		// After a poll transaction completes, wait at least 10 seconds before starting the next one.
+		if (transaction.priority === MessagePriority.Poll) {
+			const elapsed = Date.now() - this._lastTransactionEnd;
+			const requiredDelay = this._options.timeouts.pollTime
+				+ this._lastPollCommandTime;
+			if (elapsed < requiredDelay) {
+				// Schedule a re-trigger of the queue when the delay has elapsed
+				if (!this._pollDelayTimer) {
+					this._pollDelayTimer = setTimer(() => {
+						this._pollDelayTimer = undefined;
+						this.queue.trigger();
+					}, requiredDelay - elapsed).unref();
+				}
+				return false;
+			}
+		}
+
 		return (
 			targetNode.status !== NodeStatus.Asleep
 			|| (!targetNode.supportsCC(CommandClasses["Wake Up"])
@@ -6620,6 +6663,9 @@ ${handlers.length} left`,
 			}
 			this.markQueueBusy(queue, true);
 
+			const isPoll = transaction.priority === MessagePriority.Poll;
+			const pollStart = isPoll ? Date.now() : undefined;
+
 			let error: ZWaveError | undefined;
 			try {
 				await this.executeTransaction(transaction);
@@ -6627,6 +6673,18 @@ ${handlers.length} left`,
 				error = e as ZWaveError;
 			} finally {
 				queue.finalizeTransaction();
+			}
+
+			// Per spec, PollTime MUST NOT be less than 1 second + CommandTime after any
+			// command, including failed ones. Track when the last transaction ended.
+			this._lastTransactionEnd = Date.now();
+			if (isPoll) {
+				// CommandTime is measured from when the poll was first sent to when the
+				// transmit report was received. For simplicity, we approximate it as the
+				// full transaction duration, which includes retransmissions in case of failure
+				// but also the time it takes the node to respond. So we tend to wait a bit
+				// longer than necessary.
+				this._lastPollCommandTime = Date.now() - pollStart!;
 			}
 
 			// Handle errors after clearing the current transaction.
@@ -9068,7 +9126,9 @@ integrity: ${update.integrity}`;
 			};
 			return result;
 		} finally {
-			await this.leaveBootloader();
+			if (this._options.bootloaderMode !== "stay") {
+				await this.leaveBootloader();
+			}
 			this._otwFirmwareUpdateInProgress = false;
 		}
 	}

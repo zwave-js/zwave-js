@@ -6,7 +6,9 @@ export interface MockTransition {
 	targetValue: number;
 	startTime: number;
 	durationMs: number;
+	supervised: boolean;
 	timer: Timer;
+	onAbort?: () => void | Promise<void>;
 }
 
 /** Computes the interpolated current value from a running transition. */
@@ -38,7 +40,9 @@ export function getTransitionRemainingDuration(
  */
 export function stopTransition(transition: MockTransition): number {
 	transition.timer.clear();
-	return getTransitionCurrentValue(transition);
+	const value = getTransitionCurrentValue(transition);
+	void transition.onAbort?.();
+	return value;
 }
 
 /**
@@ -50,9 +54,18 @@ export function startTransition(options: {
 	currentValue: number;
 	targetValue: number;
 	duration: number;
+	supervised: boolean;
 	onComplete: () => void | Promise<void>;
+	onAbort?: () => void | Promise<void>;
 }): MockTransition | undefined {
-	const { currentValue, targetValue, duration, onComplete } = options;
+	const {
+		currentValue,
+		targetValue,
+		duration,
+		supervised,
+		onComplete,
+		onAbort,
+	} = options;
 
 	if (currentValue === targetValue || duration === 0) {
 		return undefined;
@@ -67,6 +80,8 @@ export function startTransition(options: {
 		targetValue,
 		startTime: Date.now(),
 		durationMs,
+		supervised,
+		onAbort,
 		timer: setTimer(onComplete, durationMs).unref(),
 	};
 }

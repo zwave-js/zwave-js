@@ -41,6 +41,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -68,7 +69,7 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 			max: 100,
 			unit: "%",
 			label: "Battery level",
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -78,10 +79,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 			max: 100,
 			unit: "%",
 			label: "Maximum capacity",
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -92,10 +93,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 			// For now, only °C is specified as a valid unit
 			// If this ever changes, update the unit in persistValues on the fly
 			unit: "°C",
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -104,10 +105,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 			...ValueMetadata.ReadOnlyUInt8,
 			label: "Charging status",
 			states: enumValuesToMetadataStates(BatteryChargingStatus),
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -115,10 +116,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		{
 			...ValueMetadata.ReadOnlyBoolean,
 			label: "Rechargeable",
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -126,10 +127,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		{
 			...ValueMetadata.ReadOnlyBoolean,
 			label: "Used as backup",
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -137,10 +138,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		{
 			...ValueMetadata.ReadOnlyBoolean,
 			label: "Overheating",
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -148,10 +149,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		{
 			...ValueMetadata.ReadOnlyBoolean,
 			label: "Fluid is low",
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -160,10 +161,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 			...ValueMetadata.ReadOnlyUInt8,
 			label: "Recharge or replace",
 			states: enumValuesToMetadataStates(BatteryReplacementStatus),
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -171,10 +172,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		{
 			...ValueMetadata.ReadOnlyBoolean,
 			label: "Battery is disconnected",
-		} as const,
+		},
 		{
 			minVersion: 2,
-		} as const,
+		},
 	),
 
 	...V.staticProperty(
@@ -182,10 +183,10 @@ export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
 		{
 			...ValueMetadata.ReadOnlyBoolean,
 			label: "Battery temperature is low",
-		} as const,
+		},
 		{
 			minVersion: 3,
-		} as const,
+		},
 	),
 });
 
@@ -298,6 +299,7 @@ export class BatteryCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -306,7 +308,7 @@ export class BatteryCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {

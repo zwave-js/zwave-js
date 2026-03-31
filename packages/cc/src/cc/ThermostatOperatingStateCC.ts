@@ -26,6 +26,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -54,7 +55,7 @@ export const ThermostatOperatingStateCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Operating state",
 				states: enumValuesToMetadataStates(ThermostatOperatingState),
-			} as const,
+			},
 		),
 	},
 );
@@ -185,6 +186,7 @@ export class ThermostatOperatingStateCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -193,7 +195,7 @@ export class ThermostatOperatingStateCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {
