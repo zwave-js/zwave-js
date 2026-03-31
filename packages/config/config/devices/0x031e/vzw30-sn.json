@@ -55,8 +55,8 @@
 			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 			"valueSize": 1,
 			"allowed": [
-				{"value": 0},
-				{"range": [5, 254]}
+				{ "value": 0 },
+				{ "range": [5, 254] }
 			],
 			"defaultValue": 25,
 			"unsigned": true,
@@ -205,8 +205,8 @@
 			"valueSize": 2,
 			"unit": "seconds",
 			"allowed": [
-				{"value": 0},
-				{"range": [30, 32767]}
+				{ "value": 0 },
+				{ "range": [30, 32767] }
 			],
 			"defaultValue": 3600,
 			"options": [
@@ -647,8 +647,8 @@
 			"valueSize": 2,
 			"unit": "seconds",
 			"allowed": [
-				{"value": 0},
-				{"range": [30, 65535]}
+				{ "value": 0 },
+				{ "range": [30, 65535] }
 			],
 			"defaultValue": 60,
 			"unsigned": true,
@@ -666,8 +666,8 @@
 			"valueSize": 2,
 			"unit": "seconds",
 			"allowed": [
-				{"value": 0},
-				{"range": [30, 65535]}
+				{ "value": 0 },
+				{ "range": [30, 65535] }
 			],
 			"defaultValue": 3600,
 			"unsigned": true,
@@ -700,8 +700,8 @@
 			"valueSize": 2,
 			"unit": "seconds",
 			"allowed": [
-				{"value": 0},
-				{"range": [30, 65535]}
+				{ "value": 0 },
+				{ "range": [30, 65535] }
 			],
 			"defaultValue": 60,
 			"unsigned": true,
@@ -719,8 +719,8 @@
 			"valueSize": 2,
 			"unit": "seconds",
 			"allowed": [
-				{"value": 0},
-				{"range": [30, 65535]}
+				{ "value": 0 },
+				{ "range": [30, 65535] }
 			],
 			"defaultValue": 3600,
 			"unsigned": true,
