@@ -299,7 +299,9 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 		const supportedLoggingTypes: ThermostatOperatingState[] = parseBitMask(
 			raw.payload,
 			ThermostatOperatingState["Idle"],
-		);
+		)
+			// Bit 0 MUST be set to zero, so we ignore it when set
+			.filter((state) => state !== ThermostatOperatingState.Idle);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -310,8 +312,13 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 	public readonly supportedLoggingTypes: ThermostatOperatingState[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const supportedLoggingTypes = this.supportedLoggingTypes
+			// Bit 0 MUST be set to zero, so we filter it out
+			.filter(
+				(t) => t !== ThermostatOperatingState.Idle,
+			);
 		this.payload = encodeBitMask(
-			this.supportedLoggingTypes,
+			supportedLoggingTypes,
 			undefined,
 			ThermostatOperatingState["Idle"],
 		);
