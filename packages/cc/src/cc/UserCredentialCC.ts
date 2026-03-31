@@ -151,14 +151,13 @@ export const UserCredentialCCValues = V.defineCCValues(
 			(userId: number) => userId,
 			({ property, propertyKey }) =>
 				property === "userType" && typeof propertyKey === "number",
-			(userId: number) =>
-				({
-					...ValueMetadata.ReadOnlyUInt8,
-					label: `User type (${userId})`,
-					states: enumValuesToMetadataStates(
-						UserCredentialUserType,
-					),
-				}) as const,
+			(userId: number) => ({
+				...ValueMetadata.ReadOnlyUInt8,
+				label: `User type (${userId})`,
+				states: enumValuesToMetadataStates(
+					UserCredentialUserType,
+				),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"userActiveState",
@@ -167,14 +166,13 @@ export const UserCredentialCCValues = V.defineCCValues(
 			({ property, propertyKey }) =>
 				property === "userActiveState"
 				&& typeof propertyKey === "number",
-			(userId: number) =>
-				({
-					...ValueMetadata.ReadOnlyUInt8,
-					label: `Active state (${userId})`,
-					states: enumValuesToMetadataStates(
-						UserCredentialActiveState,
-					),
-				}) as const,
+			(userId: number) => ({
+				...ValueMetadata.ReadOnlyUInt8,
+				label: `Active state (${userId})`,
+				states: enumValuesToMetadataStates(
+					UserCredentialActiveState,
+				),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"credentialRule",
@@ -183,12 +181,11 @@ export const UserCredentialCCValues = V.defineCCValues(
 			({ property, propertyKey }) =>
 				property === "credentialRule"
 				&& typeof propertyKey === "number",
-			(userId: number) =>
-				({
-					...ValueMetadata.ReadOnlyUInt8,
-					label: `Credential rule (${userId})`,
-					states: enumValuesToMetadataStates(UserCredentialRule),
-				}) as const,
+			(userId: number) => ({
+				...ValueMetadata.ReadOnlyUInt8,
+				label: `Credential rule (${userId})`,
+				states: enumValuesToMetadataStates(UserCredentialRule),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"expiringTimeoutMinutes",
@@ -197,11 +194,10 @@ export const UserCredentialCCValues = V.defineCCValues(
 			({ property, propertyKey }) =>
 				property === "expiringTimeoutMinutes"
 				&& typeof propertyKey === "number",
-			(userId: number) =>
-				({
-					...ValueMetadata.ReadOnlyUInt16,
-					label: `Expiring timeout minutes (${userId})`,
-				}) as const,
+			(userId: number) => ({
+				...ValueMetadata.ReadOnlyUInt16,
+				label: `Expiring timeout minutes (${userId})`,
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"userName",
@@ -210,11 +206,10 @@ export const UserCredentialCCValues = V.defineCCValues(
 			({ property, propertyKey }) =>
 				property === "userName"
 				&& typeof propertyKey === "number",
-			(userId: number) =>
-				({
-					...ValueMetadata.ReadOnlyString,
-					label: `User name (${userId})`,
-				}) as const,
+			(userId: number) => ({
+				...ValueMetadata.ReadOnlyString,
+				label: `User name (${userId})`,
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"userModifierType",
@@ -280,16 +275,15 @@ export const UserCredentialCCValues = V.defineCCValues(
 			({ property, propertyKey }) =>
 				property === "credential"
 				&& typeof propertyKey === "number",
-			(userId: number, type: UserCredentialType, slot: number) =>
-				({
-					...ValueMetadata.ReadOnlyBuffer,
-					label: `Credential (user ${userId}, ${
-						getEnumMemberName(
-							UserCredentialType,
-							type,
-						)
-					}, slot ${slot})`,
-				}) as const,
+			(userId: number, type: UserCredentialType, slot: number) => ({
+				...ValueMetadata.ReadOnlyBuffer,
+				label: `Credential (user ${userId}, ${
+					getEnumMemberName(
+						UserCredentialType,
+						type,
+					)
+				}, slot ${slot})`,
+			}),
 			{ secret: true },
 		),
 
@@ -299,10 +293,10 @@ export const UserCredentialCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.String,
 				label: "Admin PIN Code",
-			} as const,
+			},
 			{
 				secret: true,
-			} as const,
+			},
 		),
 
 		// V2 Key Locker entries
